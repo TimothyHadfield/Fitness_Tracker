@@ -51,7 +51,7 @@ Isolation work is hard to overload: starting at 15s and adding 5 lb weekly puts 
 - **When you can't add even one rep without form breaking:** rotate the exercise and restart the progression. Dumbbells → cables → machine, each with its own double progression.
 
 ## 7. Target all heads of the delt
-Anatomy research dissected 60 cadavers and found that instead of three heads (anterior, lateral, posterior) the deltoid has seven intramuscular segments, each with its own tendon: the posterior head branches into three tendons, the middle head has one, and the front head branches into three. Each segment has a slightly different function. (Researchers not named in the video.)
+Anatomy research dissected 60 cadavers and found that instead of three heads (anterior, lateral, posterior) the deltoid has seven intramuscular segments, each with its own tendon: the posterior head branches into three tendons, the middle head has one, and the front head branches into three ([Sakoma 2011](https://pubmed.ncbi.nlm.nih.gov/21118198/)). Each segment has a slightly different function. (Researchers not named in the video.)
 
 Practical response: add movements for the planes between the usual front, side and rear raises.
 - **A2 and A3 segments:** incline dumbbell Y raises — lifting up and out in a Y puts the resistance line through those in-between fibres.

@@ -15,18 +15,18 @@ Two mechanistic arguments:
 2. **Low glycogen.** Overnight-depleted carbohydrate stores should push the body toward stored fat as fuel.
 
 Both had real supporting evidence:
-- **Ahlborg and Felig, 1976** (names uncertain from captions) had all subjects do four hours of light cardio; one group consumed **200 g of glucose 90 minutes in**. After the glucose, carbohydrate use rose sharply and fat use fell, while controls burned progressively more fat as the session went on.
-- A **1997** study found that even small elevations in plasma insulin before exercise suppress lipolysis and appear to limit fat oxidation.
+- **Ahlborg and Felig, 1976** had all subjects do four hours of light cardio; one group consumed **200 g of glucose 90 minutes in**. After the glucose, carbohydrate use rose sharply and fat use fell, while controls burned progressively more fat as the session went on ([Ahlborg 1976](https://www.ncbi.nlm.nih.gov/pubmed/993155)).
+- A **1997** study found that even small elevations in plasma insulin before exercise suppress lipolysis and appear to limit fat oxidation ([Horowitz 1997](https://www.ncbi.nlm.nih.gov/pubmed/9357807)).
 
 That remained the dogma for about 20 years.
 
 ## Where it goes wrong
 Burning more fat *during* a session doesn't mean losing more fat over 24 hours.
 
-- **Paoli et al., 2011** measured **respiratory exchange ratio (RER)**, a proxy for substrate use — burning a carbohydrate molecule yields a higher RER than burning a fat molecule. Before the session the fed group had a higher RER (burning less fat). But by **12 and 24 hours post-exercise the pattern reversed**: the fasted group was now burning significantly less fat. The authors concluded that over longer periods, exercising *after* breakfast would be more effective for weight loss via increased metabolism and reduced RER in the hours afterward. In short: burn more of one substrate during a session and you burn less of it over the following 24 hours.
+- **Paoli et al., 2011** measured **respiratory exchange ratio (RER)**, a proxy for substrate use — burning a carbohydrate molecule yields a higher RER than burning a fat molecule. Before the session the fed group had a higher RER (burning less fat). But by **12 and 24 hours post-exercise the pattern reversed**: the fasted group was now burning significantly less fat. The authors concluded that over longer periods, exercising *after* breakfast would be more effective for weight loss via increased metabolism and reduced RER in the hours afterward. In short: burn more of one substrate during a session and you burn less of it over the following 24 hours ([Paoli 2011](https://www.ncbi.nlm.nih.gov/pubmed/21411835)).
 
 ## The long-term trials
-- **Schoenfeld et al., 2014** — the first study of its kind. 20 young women split into fasted and fed cardio groups, both on a **500 kcal deficit** with matched macros, doing **1 hour of moderate-intensity cardio, 3 days/week** for **4 weeks**. Both groups lost significant fat, with **no difference between groups**. The authors said this refuted the hypothesis that fasted exercise reduces body fat to a greater extent.
+- **Schoenfeld et al., 2014** — the first study of its kind. 20 young women split into fasted and fed cardio groups, both on a **500 kcal deficit** with matched macros, doing **1 hour of moderate-intensity cardio, 3 days/week** for **4 weeks**. Both groups lost significant fat, with **no difference between groups**. The authors said this refuted the hypothesis that fasted exercise reduces body fat to a greater extent ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/25429252)).
   - Limitations Jeff notes: only 10 women per group; only 4 weeks; average body fat ~**25%**, so not a lean population. He doesn't expect leaner men to differ, given how equivocal the acute mechanistic data is and how many people get very lean using either approach.
 - **2017 systematic review and meta-analysis** of five independent 4-6 week trials: fasted versus fed exercise **does not increase weight loss**. Weight and fat loss from exercise is more likely enhanced by creating a meaningful caloric deficit over time. The review also found **no detrimental effect** of fasted cardio on body mass or composition, while acknowledging the data is limited.
 

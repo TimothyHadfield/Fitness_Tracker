@@ -13,7 +13,7 @@
 ## Where the 10-20 set range came from
 Jeff's earlier video recommended 10-20 sets per body part per week, sketched as a curve where most of the available growth arrives by 10 sets, 20 sets adds a diminishing amount, and 20-30 sets risks overreaching and blunting gains. He got heavy pushback that this was too low.
 
-The 10-set floor comes from a 2017 systematic review and meta-analysis by Brad Schoenfeld, Dan Ogborn (auto-captions garble this as "dan OGG Warren" — name uncertain) and James Krieger [01:01]. It found that more than 10 weekly sets per muscle roughly **doubled** hypertrophy compared with fewer than 10. What it did *not* establish was an upper bound — the 10-20 "sweet spot" was expert opinion layered on top of the data, including the researchers' own, and it lined up with Mike Israetel's MRV (maximum recoverable volume) framework (captions render him as "Mike Israel").
+The 10-set floor comes from a 2017 systematic review and meta-analysis by Brad Schoenfeld, Dan Ogborn and James Krieger [01:01] ([Schoenfeld 2017](https://www.ncbi.nlm.nih.gov/pubmed/27433992)). It found that more than 10 weekly sets per muscle roughly **doubled** hypertrophy compared with fewer than 10. What it did *not* establish was an upper bound — the 10-20 "sweet spot" was expert opinion layered on top of the data, including the researchers' own, and it lined up with Mike Israetel's MRV (maximum recoverable volume) framework (captions render him as "Mike Israel").
 
 Jeff's own practical heuristic at the time [01:33]: 10 sets/week/body part is a minimum effective dose for the average intermediate. 20 isn't magic, but if you're consistently doing more than 20 sets for a muscle and progress has stalled while recovery feels burdened, cut back. If you're doing 8 sets and it isn't working, volume is probably not too high.
 
@@ -42,7 +42,6 @@ Krieger's suggested use for high volume is a specialization block: push one lagg
 - The upper limit of useful volume is unknown; anyone quoting one is speculating.
 - Findings are averages — individual recovery capacity, exercise selection, training age and life stress all shift where your own ceiling sits.
 - Higher volume raises injury exposure, which can cost more training time than the extra gains are worth.
-- Researcher name Dan Ogborn is inferred from garbled auto-captions; verify before citing.
 
 ## References
 

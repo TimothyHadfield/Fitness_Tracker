@@ -22,13 +22,13 @@ The front deltoid contributes its **maximum force above horizontal** — above s
 ## 3. Grip width and deltoid activation [02:04]
 The answer depends on **bench angle**:
 
-- **Decline and flat bench press:** a **narrower grip** produces greater anterior deltoid activation (per **Barnett et al.** — name uncertain, rendered "Baretta" in the auto-captions).
+- **Decline and flat bench press:** a **narrower grip** produces greater anterior deltoid activation (per [Barnett et al.](https://www.researchgate.net/publication/232217991_Effects_of_Variations_of_the_Bench_Press_Exercise_on_the_EMG_Activity_of_Five_Shoulder_Muscles), rendered "Baretta" in the auto-captions).
 - **Incline and vertical (overhead) press:** not much difference, with a **wider grip slightly better**.
 
 Because the differences on shoulder presses specifically are small, the recommendation is to **find a grip that feels comfortable and safe for your shoulder joint and use it**.
 
 ## 4. Why a neutral grip beats pronated for rear delt EMG [03:04]
-In a **neutral hand position**, the shoulder can perform **horizontal abduction *and* external rotation**, and the deltoid contributes to both. With hands **pronated**, you lose the external rotation component, so you're not using that secondary function of the shoulder. Neutral engages both functions, which shows up as higher EMG.
+In a **neutral hand position**, the shoulder can perform **horizontal abduction *and* external rotation**, and the deltoid contributes to both. With hands **pronated**, you lose the external rotation component, so you're not using that secondary function of the shoulder. Neutral engages both functions, which shows up as higher EMG ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/23302754)).
 
 **A possible confound** raised in the comments (credited to viewer Evan Godby): the rotator cuff muscles also externally rotate, and they sit in close proximity to the rear delt. Surface electrodes may have been picking up rotator cuff signal rather than pure rear deltoid activity — a genuine confounding variable rather than a true rear delt difference.
 

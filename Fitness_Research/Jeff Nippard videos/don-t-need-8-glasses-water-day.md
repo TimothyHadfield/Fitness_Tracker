@@ -19,14 +19,14 @@ Individual water requirements vary greatly with body size and physical activity 
 **Exception:** the elderly, in whom thirst feedback can be dysregulated. They may need to drink prophylactically or monitor intake more closely.
 
 ## Do coffee and alcohol count? [01:34]
-**Caffeine.** Caffeine is a mild diuretic, which is why people discount coffee and tea. But a 2007 review on hydration needs throughout the lifespan notes that coffee, tea and other caffeine-containing beverages do not increase urine output or negatively affect indicators of hydration status in people accustomed to consuming caffeine.
+**Caffeine.** Caffeine is a mild diuretic, which is why people discount coffee and tea. But a 2007 review on hydration needs throughout the lifespan notes that coffee, tea and other caffeine-containing beverages do not increase urine output or negatively affect indicators of hydration status in people accustomed to consuming caffeine ([Campbell 2007](https://www.ncbi.nlm.nih.gov/pubmed/17921469)).
 
 **Alcohol.** Often described as a net diuretic. This holds for roughly the first three hours after consumption, but alcohol actually increases water retention from about 6 to 12 hours post-consumption. The Institute of Medicine concluded alcohol would not result in appreciable fluid losses over a 24-hour period.
 
 ## Where thirst isn't enough: training [02:34]
 Thirst has a delayed onset — you are probably already around 2% dehydrated by the time you feel thirsty. That matters because dehydration hurts gym performance materially.
 
-A 2015 meta-analysis (author name garbled in the auto-captions as "civilian and colleagues" — treat the attribution as uncertain) found that 3% dehydration, which is commonly seen in hard-training athletes, significantly decreased muscular strength, power and endurance. Across all 28 studies the average performance drop was about 5%.
+A 2015 meta-analysis by **Savoie and colleagues** found that 3% dehydration, which is commonly seen in hard-training athletes, significantly decreased muscular strength, power and endurance ([Savoie 2015](https://www.ncbi.nlm.nih.gov/pubmed/26178327)). Across all 28 studies the average performance drop was about 5%.
 
 ## Concrete hydration numbers [03:05]
 From a 2016 issue of Alan Aragon's Research Review, for athletes:
@@ -38,7 +38,7 @@ From a 2016 issue of Alan Aragon's Research Review, for athletes:
 For daily intake, Jeff likes an old recommendation from Lyle McDonald: urine should be clear or slightly yellow throughout the whole day, and if you're urinating about five times during the day plus twice after a workout, you're doing well. His closing summary phrases the target as at least five to seven clear urinations per day.
 
 ## Water and fat loss [03:35]
-The claim that water — especially cold water — aids fat loss by boosting metabolism is not supported. A 2015 study found the vast majority of studies showed little or no increase in resting energy expenditure from water consumption; any effect would be negligible in the grand scheme.
+The claim that water — especially cold water — aids fat loss by boosting metabolism is not supported. A 2015 study found the vast majority of studies showed little or no increase in resting energy expenditure from water consumption; any effect would be negligible in the grand scheme ([Charrière 2015](https://www.ncbi.nlm.nih.gov/pubmed/26690288)).
 
 Water *does* help weight loss, but through mundane mechanisms: swapping calorie-containing drinks such as alcohol and sugary soda for water reduces total daily calorie intake, and water increases fullness, especially when consumed with a meal. That's straightforward calorie reduction plus satiety, not a metabolic property of water.
 
@@ -52,7 +52,6 @@ Water *does* help weight loss, but through mundane mechanisms: swapping calorie-
 - Use water as a substitute for caloric drinks if fat loss is the goal — that's where the real benefit lies.
 
 ## Caveats & unknowns
-- The 2015 dehydration meta-analysis author name is mangled in the captions and should be verified before citing.
 - The daily-urination guideline is a heuristic from Lyle McDonald, not a research-derived threshold.
 - "Drink to thirst" assumes a healthy adult; medical conditions and heat/altitude extremes are outside the scope of the video.
 

@@ -21,7 +21,7 @@ Failure on the OHP tends to arrive suddenly: six or seven reps feel manageable a
 **Technique cue:** lift the chin and tilt the head back to clear the bar path, rather than pushing the bar forward around the face and arcing it back. The bar should travel in a straight vertical line.
 
 ## Wide-grip pull-up — 3 sets of 6
-Research from Doma and colleagues (captions render this "doumitt") found no significant difference in lat activation between a pull-up and a pulldown, but the pull-up came out ahead for the **biceps and spinal erectors** — the erectors being what create the appearance of back thickness up the spine. Both movements have a place, but leaving pull-ups out likely costs back thickness.
+Research from Doma and colleagues ([Doma 2013](https://www.ncbi.nlm.nih.gov/pubmed/24245055)) found no significant difference in lat activation between a pull-up and a pulldown, but the pull-up came out ahead for the **biceps and spinal erectors** — the erectors being what create the appearance of back thickness up the spine. Both movements have a place, but leaving pull-ups out likely costs back thickness.
 
 Loaded here with a 30 lb dumbbell; the requirement is simply to be reasonably close to failure on rep six. Newer or heavier lifters should use bodyweight or an assisted machine.
 
@@ -39,7 +39,7 @@ The physique advantage of the close grip is upper chest: the majority of EMG stu
 
 **Lateral raise.** Supersetted purely to save time; there's little interference between the two. Jeff normally does leaning cable laterals, but the dumbbell version is fine with two modifications:
 1. **Lean forward 15–30°** — braced against a steep incline bench, or hinging at the hips without chest support. This aligns the line of pull with the lateral delt fibres while keeping the raise in the scapular plane.
-2. **Stop 10–15° short of the very bottom.** Research from McMahon and colleagues shows the bottom of the range is handled mostly by the rotator cuff, with the lateral delt only taking over later in the ROM. There is also no tension there anyway — with the dumbbell hanging directly beneath the shoulder, gravity can't produce any shoulder-muscle tension.
+2. **Stop 10–15° short of the very bottom.** Research from McMahon and colleagues shows the bottom of the range is handled mostly by the rotator cuff, with the lateral delt only taking over later in the ROM ([McMahon 1995](https://www.ncbi.nlm.nih.gov/pubmed/7552678)). There is also no tension there anyway — with the dumbbell hanging directly beneath the shoulder, gravity can't produce any shoulder-muscle tension.
 
 ## Superset B — cable crossover 3×(10+10) + rope face pull 3×20
 **Crossovers.** Set the cables low and fly upward to involve shoulder flexion and target the **clavicular (upper) chest** for 10 reps. Then raise the cables to shoulder height and do another 10 reps to burn out the **sternal head**.
@@ -67,7 +67,7 @@ Full session in order:
 
 ## Caveats & unknowns
 - This is a generalised version of a specific programme; the underlying programme carries more detailed progression, periodisation and week-to-week variation.
-- The Doma and McMahon citations come through the auto-captions imperfectly and should be verified before being quoted.
+- The Doma and McMahon names come through the auto-captions imperfectly; both have been matched to the papers linked above.
 - EMG activation is a proxy for stimulus, not a direct measure of hypertrophy.
 
 ## References

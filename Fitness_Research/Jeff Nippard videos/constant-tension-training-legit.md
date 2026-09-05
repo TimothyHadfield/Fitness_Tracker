@@ -11,7 +11,7 @@
 - Both pieces come from the July 2017 issue of MASS (Monthly Applications in Strength Sport).
 
 ## Cryotherapy vs cold water immersion [00:31]
-Summarised by **Dr. Mike Zourdos** from a 2017 paper. Ten men were split into two groups. Both performed muscle-damaging exercise — five sets of eccentric-only leg curls — then completed recovery tests (perceived muscle soreness, perceived recovery, creatine kinase). They then received either:
+Summarised by **Dr. Mike Zourdos** from a 2017 paper ([Abaïdia 2017](https://www.ncbi.nlm.nih.gov/pubmed/27396361)). Ten men were split into two groups. Both performed muscle-damaging exercise — five sets of eccentric-only leg curls — then completed recovery tests (perceived muscle soreness, perceived recovery, creatine kinase). They then received either:
 
 - **Cold water immersion (CWI):** bath at 10°C for 10 minutes, or
 - **Whole-body cryotherapy:** chamber at −110°C for 3 minutes.
@@ -25,8 +25,8 @@ Proposed mechanisms for how body cooling might aid recovery: vasoconstriction re
 ### But is cold water immersion even worth doing?
 Two further findings undercut CWI:
 
-- A 2017 paper in the *Journal of Physiology* found CWI gave **no additional inflammatory reduction** over a simple 10-minute cycling cooldown after training.
-- **Roberts and colleagues (2015)** found the 10-minute bike cooldown produced **more lower-body lean mass and strength gains** than CWI — likely because cold water attenuates the anabolic signal and reduces muscle protein synthesis.
+- A 2017 paper in the *Journal of Physiology* found CWI gave **no additional inflammatory reduction** over a simple 10-minute cycling cooldown after training ([Peake 2017](https://www.ncbi.nlm.nih.gov/pubmed/27704555)).
+- **Roberts and colleagues (2015)** found the 10-minute bike cooldown produced **more lower-body lean mass and strength gains** than CWI ([Roberts 2015](https://www.ncbi.nlm.nih.gov/pubmed/?term=26174323)) — likely because cold water attenuates the anabolic signal and reduces muscle protein synthesis.
 
 Zourdos's conclusion: cold exposure may have short-term value for athletes who accumulate heavy muscle damage and train multiple times per day (strongman competitors, CrossFitters). For most lifters, a simple **10-minute cooldown is the most practical recovery method**.
 
@@ -37,7 +37,7 @@ Summarised by **Greg Nuckols** from a 2017 paper by **Goto and colleagues** (nam
 
 **Design:** skull crushers. One group trained full ROM, the other trained a partial range covering roughly the **middle third** of the full range. Eight weeks.
 
-**Result:** the constant-tension group gained **nearly twice the triceps cross-sectional area** as the full-ROM group.
+**Result:** the constant-tension group gained **nearly twice the triceps cross-sectional area** as the full-ROM group ([Goto 2017](http://journals.lww.com/nsca-jscr/Abstract/publishahead/Partial_range_of_motion_exercise_is_effective_for.95936.aspx)).
 
 **Proposed mechanism:** hypoxia — reduced oxygen in the muscle can signal for growth. Nuckols's objection: if hypoxia alone explained it, you'd expect to see comparable differences in the blood flow restriction literature, and you simply don't.
 

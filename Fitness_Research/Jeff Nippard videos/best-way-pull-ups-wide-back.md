@@ -14,7 +14,7 @@
 Primary: **lats, rhomboids and teres** muscles via shoulder adduction (bringing the arm down to the side). **Brachialis, biceps and brachioradialis** handle elbow flexion. **Lower traps** produce scapular depression. The **rectus abdominis** works isometrically, resisting spinal extension so the torso doesn't bend backward through the range.
 
 ## Why the pull-up [00:37]
-- **More total musculature than the lat pulldown.** Doma and colleagues (2013 — name uncertain in the auto-captions) found no significant difference in lat activation between pulldown and pull-up, but the pull-up came out ahead for the **biceps** and the **spinal erectors**.
+- **More total musculature than the lat pulldown.** Doma and colleagues found no significant difference in lat activation between pulldown and pull-up, but the pull-up came out ahead for the **biceps** and the **spinal erectors** ([Doma 2013](https://www.ncbi.nlm.nih.gov/pubmed/24245055)).
 - **High overload potential.** It is not a bodyweight-only exercise; incrementally adding external load strengthens and grows all the pulling muscles.
 - **Better for teres major and minor** than chin-ups or rows, which are primarily shoulder-extension based.
 
@@ -59,7 +59,7 @@ Reasonable substitute, especially for beginners — lat activation is virtually 
 - Every rep: shoulder blades down first, chest to bar, glutes tight, controlled negative to a near dead hang.
 
 ## Caveats & unknowns
-- The "Doma 2013" attribution comes from auto-captions and may be misspelled — verify before citing.
+- The "Doma 2013" attribution comes from auto-captions; it has been matched to the paper linked above.
 - The Massey 2016 study found only a mid-trap difference between grips, so grip choice matters less than consistency and ROM.
 - These are EMG/activation findings, not direct hypertrophy trials.
 

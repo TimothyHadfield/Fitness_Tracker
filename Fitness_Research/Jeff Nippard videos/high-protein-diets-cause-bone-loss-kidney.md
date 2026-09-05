@@ -17,7 +17,7 @@
 - This grew into the **acid-ash hypothesis**: extra amino acids from a high-protein diet create a state of acidosis; the body buffers it by releasing alkaline stores from bone; the result is calcium loss and eventually osteoporosis.
 
 ## Where the bone myth went wrong [01:34]
-The 1970s–80s studies were simply wrong about intestinal absorption. A **2007 systematic review from the National Osteoporosis Foundation** reports that improved dietary intervention studies using **dual stable calcium isotopes** found increasing dietary protein was associated with a significant **increase in intestinal calcium absorption** — enough that nearly the entire rise in urinary calcium is accounted for by the improved absorption, with **no increase in skeletal catabolism** in the short term.
+The 1970s–80s studies were simply wrong about intestinal absorption. A **2007 systematic review from the National Osteoporosis Foundation** reports that improved dietary intervention studies using **dual stable calcium isotopes** found increasing dietary protein was associated with a significant **increase in intestinal calcium absorption** — enough that nearly the entire rise in urinary calcium is accounted for by the improved absorption, with **no increase in skeletal catabolism** in the short term ([Shams-White 2017](https://www.ncbi.nlm.nih.gov/pubmed/28404575)).
 
 In other words, the extra calcium in the urine was coming from the diet, not the skeleton. The acid-ash hypothesis, as applied to protein causing bone loss, is founded on an outdated and erroneous finding.
 
@@ -31,7 +31,7 @@ The starting point is genuinely correct: in patients with **pre-existing kidney 
 The error is a recurring move in nutrition myths — assuming that because something is bad for people who already have a disease, it must help cause that disease. Jeff's parallel: because diabetics must regulate sugar intake, people conclude sugar plays a central causative role in developing diabetes.
 
 The evidence against:
-- **2015 review, *Applied Physiology, Nutrition, and Metabolism*:** the belief that higher protein intakes lead to renal failure "has no foundation." In people with normal renal function, more protein actually produces an **increase in glomerular filtration rate (GFR)** — a marker of improved kidney function.
+- **2015 review, *Applied Physiology, Nutrition, and Metabolism*:** the belief that higher protein intakes lead to renal failure "has no foundation." In people with normal renal function, more protein actually produces an **increase in glomerular filtration rate (GFR)** — a marker of improved kidney function ([Phillips 2016](https://www.ncbi.nlm.nih.gov/pubmed/26960445)).
 - **World Health Organization, 2007:** while there is clear evidence that high protein intakes in patients with kidney disease worsen kidney function, the idea that the age-related decline in GFR in **healthy** subjects can be slowed by reducing dietary protein "appears to have no foundation."
 
 ## Practical application

@@ -39,7 +39,7 @@ For when cables aren't available, or just for variety. Bend over at the hips unt
 ## Reverse pec deck
 Highest rear delt activation of all exercises tested in the Botton EMG data — though face pulls weren't included in that study, so the comparison is incomplete. Being locked into position lets you do pure shoulder abduction without external rotation, which is good for isolating and burning out the rear delts.
 
-**Grip:** research from Schoenfeld and colleagues found a **neutral grip with the shoulders more externally rotated** produced more rear delt activation — plausibly because external rotation is one of the muscle's functions. But some subjects did better with a pronated (palms-down) grip, and Jeff personally gets a better mind-muscle connection that way. Advice: either alternate periodically between neutral and pronated, or use whichever lets you feel the rear delts best.
+**Grip:** research from Schoenfeld and colleagues found a **neutral grip with the shoulders more externally rotated** produced more rear delt activation ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/23302754)) — plausibly because external rotation is one of the muscle's functions. But some subjects did better with a pronated (palms-down) grip, and Jeff personally gets a better mind-muscle connection that way. Advice: either alternate periodically between neutral and pronated, or use whichever lets you feel the rear delts best.
 
 **Cue:** rounding the scapulae forward via protraction, and thinking about swinging the weight **out** instead of back, can improve the mind-muscle connection.
 

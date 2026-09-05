@@ -14,7 +14,7 @@
 *Good Health* magazine ran an article in 1917 asserting outright that breakfast was the most important meal of the day, should not be rushed, and should be eaten by the whole family together. No evidence was offered. John Harvey Kellogg — inventor of corn flakes — was an editor of the magazine at the time, which likely helped push the idea into the public mind. It also sounds intuitive: eat first thing to fuel the day.
 
 ## Defining breakfast
-Literally, "breakfast" means breaking a fast, so any first meal qualifies — not a useful definition. The video uses the operational definition from Betts and colleagues (2016): **any meal of at least 50 calories eaten within two hours of waking**.
+Literally, "breakfast" means breaking a fast, so any first meal qualifies — not a useful definition. The video uses the operational definition from Betts and colleagues (2016): **any meal of at least 50 calories eaten within two hours of waking** ([Betts 2016](https://www.ncbi.nlm.nih.gov/pubmed/27292940)).
 
 ## Metabolism and energy balance [01:32]
 A 2014 study from Betts and colleagues examined breakfast skipping and metabolism:
@@ -28,7 +28,7 @@ So skippers eat less but also burn less. Netted out, the difference between the 
 ## Muscle, training and protein timing [04:33]
 Two potential concerns:
 
-1. **Training performance.** Some people train well fasted, but in Nippard's coaching experience most are stronger and more fatigue-resistant with a pre-workout meal. As Betts's review put it, if your morning involves exercise and that day's performance is a priority, a carbohydrate-rich breakfast *is* the most important meal. Train later in the day, or thrive fasted, and it matters much less.
+1. **Training performance.** Some people train well fasted, but in Nippard's coaching experience most are stronger and more fatigue-resistant with a pre-workout meal. As Betts's review put it, if your morning involves exercise and that day's performance is a priority, a carbohydrate-rich breakfast *is* the most important meal ([Betts 2016](https://www.ncbi.nlm.nih.gov/pubmed/27292940)). Train later in the day, or thrive fasted, and it matters much less.
 2. **Muscle protein synthesis.** Based on MPS data, roughly **4-5 meals per day with at least 20 g of protein each** appears best. Delaying breakfast to noon and eating a final meal before bed still fits 4-5 meals in comfortably. But progressively narrowing the eating window raises the risk of missing that maximum MPS stimulation. (He points to his interview with protein researcher Jorn Trommelen for detail — captions garble the name.)
 
 Bottom line for muscle: as long as total daily protein is sufficient (~0.8-1 g/lb), how you distribute it probably has no measurable impact. Extreme first-meal delays are the only likely problem.

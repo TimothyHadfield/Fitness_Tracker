@@ -22,12 +22,12 @@ Opinion then swung to HIIT via the **afterburn / EPOC** (excess post-exercise ox
 
 ## Why EPOC doesn't carry the argument [02:38]
 EPOC is real and well-supported, but its practical relevance is overblown.
-- Reviewing a 2006 EPOC study, **Lyle McDonald** highlighted that after 80 minutes of high-intensity cardio the EPOC effect lasted 7 hours — but amounted to only about **80 extra calories**. Compare that with the 700-800 calories burned during the session itself.
+- Reviewing a 2006 EPOC study, **Lyle McDonald** highlighted that after 80 minutes of high-intensity cardio the EPOC effect lasted 7 hours — but amounted to only about **80 extra calories** ([LaForgia 2006](https://www.ncbi.nlm.nih.gov/pubmed/17101527)). Compare that with the 700-800 calories burned during the session itself.
 - 80 minutes is far more cardio than most people do. At a more realistic ~40 minutes you'd be looking at roughly **40 extra calories**.
-- A **2017 systematic review and meta-analysis of 28 studies** concluded EPOC is unlikely to account for any apparent greater fat-loss potential with HIIT.
+- A **2017 systematic review and meta-analysis of 28 studies** concluded EPOC is unlikely to account for any apparent greater fat-loss potential with HIIT ([Keating 2017](https://www.ncbi.nlm.nih.gov/pubmed/28513103)).
 
 ## The time-efficiency claim [03:39]
-A 2017 meta-analysis (lead author garbled in the auto-captions — rendered as "me Gian," treat as uncertain) across 13 studies found **no significant differences between HIIT and moderate-intensity continuous training for any body composition measure**, but HIIT required approximately **40% less training time**.
+A 2017 meta-analysis by **Wewege and colleagues** across 13 studies found **no significant differences between HIIT and moderate-intensity continuous training for any body composition measure**, but HIIT required approximately **40% less training time** ([Wewege 2017](https://www.ncbi.nlm.nih.gov/pubmed/28401638)).
 
 Nippard's caveats: those subjects were obese and overweight, with no dietary control. Two plausible confounders — HIIT may have blunted appetite so the HIIT group simply ate less, and people who feel like they're working harder may push harder elsewhere in their routine and believe more in the process. Under controlled conditions in healthy, non-obese subjects, he expects the time-efficiency gap to shrink.
 
@@ -60,7 +60,6 @@ Borrowing again from Dr Eric Helms: cardio should not be the primary vehicle for
 - The 40%-less-time meta-analysis used obese/overweight subjects with no dietary control, so it may not generalise to lean, trained lifters.
 - The proposed mechanisms behind that result (appetite blunting, greater self-driven effort) are Nippard's hypotheses, not tested findings.
 - Choice ultimately comes down to individual recovery capacity and preference.
-- One cited 2017 meta-analysis author name is garbled in the captions and should be verified.
 
 ## References
 

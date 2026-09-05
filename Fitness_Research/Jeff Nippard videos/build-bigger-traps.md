@@ -15,7 +15,7 @@ The shrug mainly targets the upper trapezius and levator scapulae through scapul
 
 The traditional barbell shrug is hit-or-miss: some people feel a strong upper trap contraction, others feel it mostly in the levator scapulae along the side of the neck. Nothing wrong with training the neck, but the goal here is isolating the upper trap fibres.
 
-**The 30-degree principle.** A 1994 study found that because of the orientation of the upper trap fibres, they can't elevate the scapula as effectively when the arm hangs neutral. Recruitment improves with the arms roughly 30 degrees abducted.
+**The 30-degree principle.** A 1994 study found that because of the orientation of the upper trap fibres, they can't elevate the scapula as effectively when the arm hangs neutral. Recruitment improves with the arms roughly 30 degrees abducted ([Johnson 1994](https://www.ncbi.nlm.nih.gov/pubmed/23916077)).
 
 ## Rep range and load
 Use a moderate range, around **8-15 reps**. Loading heavier usually kills range of motion, especially at the top end. A power shrug (leg drive to launch the weight) is an advanced cheating technique — it must still be lowered under eccentric control, used sparingly, and only once strict shrug technique is mastered.

@@ -25,7 +25,7 @@ Load it too heavily and the lower back and momentum take over, which reduces ove
 
 ## Setup and execution [02:01]
 1. **Adjust the knee pads first.** If you have to go onto your toes for your knees to brace, you lose stability and your hips will lift each rep. If you can't keep heels planted with knees secure, stack a couple of 10 or 25 lb plates under your feet.
-2. **Grip roughly 1.5x shoulder width, double overhand.** Many people find a **thumbless (suicide) grip** improves lat mind-muscle connection — and unlike on the bench press, there's no safety risk here.
+2. **Grip roughly 1.5x shoulder width, double overhand** ([Andersen 2014](https://www.ncbi.nlm.nih.gov/pubmed/24662157)). Many people find a **thumbless (suicide) grip** improves lat mind-muscle connection — and unlike on the bench press, there's no safety risk here.
 3. Take the bar, sit, brace knees under the pads, heels down.
 4. Before rep one, **lift the chest into thoracic extension**. Some prefer a flat upper back to pull straight down; he thinks an extended upper back is a more secure, more powerful position.
 5. **Depress the scapulae** — tuck the shoulder blades down — as you pull the elbows in toward your sides at about a **10-15 degree angle viewed from above**. Think elbows down and in, not pulling with the hands and arms.
@@ -40,7 +40,7 @@ As an advanced technique, moderate cheating on the concentric is acceptable **pr
 
 ## Grip variations [04:34]
 - **Neutral grip** — emphasises shoulder extension, and many people feel their lats better here. Not his favourite, since rows already supply plenty of extension work, but a solid option.
-- **Supinated (underhand)** — same principles, but grip **closer, about 1x shoulder width**, to avoid wrist pain. Reasonable if you want more biceps involvement.
+- **Supinated (underhand)** — same principles, but grip **closer, about 1x shoulder width**, to avoid wrist pain. Reasonable if you want more biceps involvement ([Signorile 2002](https://www.ncbi.nlm.nih.gov/pubmed/12423182)).
 
 ## Common errors [05:05]
 1. **Too much body English.** Outside deliberate eccentric-overload work, stay stable and focus on contracting the lats rather than yanking with arms, lower back and traps.

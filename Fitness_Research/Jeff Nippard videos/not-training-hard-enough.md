@@ -11,7 +11,7 @@
 - Roughly half the six-rep gap is bad RPE judgement, half is unwillingness to sit in the discomfort near failure.
 
 ## The study design
-160 males, all with at least 6 months of training experience and bench press a regular part of their routine. Researchers asked each: *what weight would you typically use for a set of 10?* — not their 10RM, just a normal training day's working weight. They then had subjects perform a set with that weight **to failure** rather than stopping at 10, to see how many reps trainees habitually leave unused.
+160 males, all with at least 6 months of training experience and bench press a regular part of their routine. Researchers asked each: *what weight would you typically use for a set of 10?* — not their 10RM, just a normal training day's working weight. They then had subjects perform a set with that weight **to failure** rather than stopping at 10, to see how many reps trainees habitually leave unused ([Barbosa-Netto 2021](https://www.ncbi.nlm.nih.gov/pubmed/29112055)).
 
 80% of subjects normally benched first in their workout, so most were tested in roughly their usual fresh state.
 

@@ -7,7 +7,7 @@
 - Heavy compound pulling builds forearms, but likely isn't enough to **optimise** their growth — direct work adds more.
 - Cover three functions: **wrist flexion**, **wrist extension**, and **grip**, plus a **reverse-grip curl** for the brachioradialis.
 - Prescription: **2-3 exercises per workout, 2-3 sets each, 10-20 reps** with relatively light loads, done at the **end** of an upper body session.
-- Frequency: **2-3x per week**. Volume-equated research found training forearms **10x/week is no better than 3x/week** for strength or size.
+- Frequency: **2-3x per week**. Volume-equated research found training forearms **10x/week is no better than 3x/week** for strength or size ([Boyes 2017](https://www.ncbi.nlm.nih.gov/pubmed/28249351)).
 - Reverse-grip curls beat hammer curls for isolating the brachioradialis, and finishing with **partial reps in the top half** biases it further.
 
 ## Anatomy [00:31]
@@ -23,14 +23,14 @@ About **five of the 20** muscles perform elbow flexion (curling) and forearm pro
 
 ## Targeting the brachioradialis [01:01]
 
-- A paper titled *The Function of Brachioradialis* found it is **equally active in neutral, supinated and pronated positions**. Since the biceps are strongest when supinated (palms up), the way to shift emphasis toward the brachioradialis is to curl with a **pronated / reverse grip** — reducing biceps contribution rather than increasing brachioradialis contribution.
-- **Murray et al.**, *Journal of Biomechanics*: peak torque for the brachioradialis occurs between **100 and 120 degrees of elbow flexion**, while peak biceps torque is nearer **80 degrees**. So **partial reps in the top end of the range** bias the brachioradialis over the biceps.
+- A paper titled *The Function of Brachioradialis* found it is **equally active in neutral, supinated and pronated positions** ([Boland 2008](https://www.ncbi.nlm.nih.gov/pubmed/19084189)). Since the biceps are strongest when supinated (palms up), the way to shift emphasis toward the brachioradialis is to curl with a **pronated / reverse grip** — reducing biceps contribution rather than increasing brachioradialis contribution.
+- **Murray et al.**, *Journal of Biomechanics*: peak torque for the brachioradialis occurs between **100 and 120 degrees of elbow flexion**, while peak biceps torque is nearer **80 degrees** ([Murray 1995](https://www.ncbi.nlm.nih.gov/pubmed/7775488)). So **partial reps in the top end of the range** bias the brachioradialis over the biceps.
 - Nippard's top brachioradialis builder: the **reverse-grip barbell curl, finished with partial reps in the top half of the range**.
 - **Hammer curls** are a good exercise but, like most curls, hit the biceps substantially and aren't great for isolation.
 
 ## Does direct forearm work matter? [02:04]
 
-A **2004 study** on high school baseball players ran 12 weeks of training in two groups:
+A **2004 study** on high school baseball players ran 12 weeks of training in two groups ([Szymanski 2004](https://www.ncbi.nlm.nih.gov/pubmed/15320673)):
 
 - **Group 1:** a typical full-body 3x/week program including grip-intensive exercises (Romanian deadlifts, bent rows).
 - **Group 2:** the identical program **plus six forearm exercises**, including wrist curls and wrist extensions.

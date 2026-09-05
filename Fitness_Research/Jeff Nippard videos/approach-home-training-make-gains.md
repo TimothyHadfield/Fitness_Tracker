@@ -13,7 +13,7 @@
 ## The two categories
 [01:06] With gym closures looking like months rather than weeks, the honest answer depends on training age.
 
-**Beginner to early intermediate (0-2 years).** The literature is reassuring. The relevant evidence isn't the three-week complete-detraining study he covered previously — this scenario is extended *suboptimal* training, not detraining. The better fit is a 2011 study in which subjects reduced training volume to a fraction of normal (one-ninth) and maintained the muscle they had built for months, while a group that did nothing at all returned to baseline. It is far better to do something than nothing.
+**Beginner to early intermediate (0-2 years).** The literature is reassuring. The relevant evidence isn't the three-week complete-detraining study he covered previously — this scenario is extended *suboptimal* training, not detraining. The better fit is a 2011 study in which subjects reduced training volume to a fraction of normal (one-ninth) and maintained the muscle they had built for months, while a group that did nothing at all returned to baseline ([Bickel 2011](https://www.ncbi.nlm.nih.gov/pubmed/21131862)). It is far better to do something than nothing.
 
 He goes further: beginners can actually keep progressing at home, especially if the muscle is being stimulated in an unfamiliar way. If you've never done hard sets of 50-60 reps, that novel stimulus can spark new growth.
 

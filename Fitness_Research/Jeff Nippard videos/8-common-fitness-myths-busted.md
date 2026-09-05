@@ -12,17 +12,17 @@
 
 ## 1. You must eat breakfast
 **Verdict: busted.**
-[00:31] Research from Betts and colleagues found no difference in resting metabolic rate — the biggest chunk of total metabolism — between groups eating and skipping breakfast. Breakfast eaters did move around more and burn more calories through the day, but this was almost perfectly offset by eating about the same number of extra calories, i.e. the breakfast itself. Under free-living conditions there's little difference in total daily energy balance either way.
+[00:31] Research from Betts and colleagues found no difference in resting metabolic rate — the biggest chunk of total metabolism — between groups eating and skipping breakfast ([Betts 2014](https://www.ncbi.nlm.nih.gov/pubmed/24898233)). Breakfast eaters did move around more and burn more calories through the day, but this was almost perfectly offset by eating about the same number of extra calories, i.e. the breakfast itself. Under free-living conditions there's little difference in total daily energy balance either way.
 
 James Krieger's Weightology review summarises the practical position: breakfast is a personal preference; if you eat it, make it large and high in protein, and if you don't, make your first meal of the day large and high in protein. Skipping breakfast is simply one strategy to reduce caloric intake — you have to determine whether it actually makes you eat less overall.
 
 ## 2. Spot reduction (targeted fat loss)
 **Verdict: uncertain — a skeptical question mark, not a bust.**
 [02:04] Nippard calls this the most controversial one for him. Four studies:
-1. Observational: the active swinging arms of tennis players weren't leaner than the non-swinging arms. Limited by being observational rather than interventional.
-2. Interventional: 12 weeks of single-arm training produced no difference in fat volume between trained and untrained arms — but the study didn't produce much fat loss overall, so spot reduction may just not have been detectable.
-3. A third study did see significant overall fat loss and still found no spot reduction between trained and untrained legs.
-4. A newer study (published the year before the video) pushed back hard: an upper-body-only training group lost substantially more arm fat over 12 weeks, while a lower-body-only group lost substantially more leg fat, implying local fat reduction.
+1. Observational: the active swinging arms of tennis players weren't leaner than the non-swinging arms ([Gwinup 1971](https://www.ncbi.nlm.nih.gov/pubmed/5552114)). Limited by being observational rather than interventional.
+2. Interventional: 12 weeks of single-arm training produced no difference in fat volume between trained and untrained arms — but the study didn't produce much fat loss overall, so spot reduction may just not have been detectable ([Kostek 2007](https://www.ncbi.nlm.nih.gov/pubmed/17596787)).
+3. A third study did see significant overall fat loss and still found no spot reduction between trained and untrained legs ([Ramírez-Campillo 2013](https://www.ncbi.nlm.nih.gov/pubmed/23222084)).
+4. A newer study (published the year before the video) pushed back hard: an upper-body-only training group lost substantially more arm fat over 12 weeks, while a lower-body-only group lost substantially more leg fat, implying local fat reduction ([Scotto di Palumbo 2017](https://www.ncbi.nlm.nih.gov/pubmed/28497942)).
 
 An important detail in the fourth study: all subjects did **30 minutes of light cycling after training**. That hints at a mechanism — the body may increase fat mobilisation from stores near the exercising muscle, and if that fat is burned as fuel immediately afterward, it could yield more net fat loss in that region.
 
@@ -38,7 +38,7 @@ But the sample size was small and the finding runs against the prevailing consen
 
 Hydration does matter for lifting: dehydration as low as **3%** has been shown to impair athletic performance including strength and power. Alan Aragon's research review gives specific pre- and intra-workout recommendations, but Nippard prefers Lyle McDonald's simpler heuristic: **your urine should be clear or slightly yellow throughout the day, and you should be urinating about five times a day.**
 
-Increasing water intake has a near-negligible effect on metabolic rate, so drinking past thirst does nothing extra for fat loss — unless it makes you feel fuller and cuts total intake.
+Increasing water intake has a near-negligible effect on metabolic rate ([Charrière 2015](https://www.ncbi.nlm.nih.gov/pubmed/26690288)), so drinking past thirst does nothing extra for fat loss — unless it makes you feel fuller and cuts total intake.
 
 ## 5. Milk and dairy are bad for you
 **Verdict: busted.**
@@ -50,9 +50,9 @@ Verdict: setting aside ethical concerns about the dairy industry, the weight of 
 
 ## 6. There are three body types (somatotypes)
 **Verdict: busted.**
-[07:11] The endomorph/mesomorph/ectomorph scheme comes from eugenics-riddled 1940s pseudoscience whose original goal was linking body type to personality, intelligence and future achievement. It later took root in fitness and bodybuilding.
+[07:11] The endomorph/mesomorph/ectomorph scheme comes from eugenics-riddled 1940s pseudoscience whose original goal was linking body type to personality, intelligence and future achievement ([Vertinsky 2007](https://www.ncbi.nlm.nih.gov/pubmed/18447308)). It later took root in fitness and bodybuilding.
 
-The core problem: somatotype classifications imply you can't change your body composition or shape, which you plainly can. Bone structure and muscle insertions are fixed. But whether you currently look like an ectomorph or an endomorph, you will still lose fat in a caloric deficit and still build muscle through progressive resistance training with sufficient protein and calories. Results come more or less easily to different people for genetic reasons, but **training protocol differences should be based on specific goals, level of advancement and personal preference — not somatotype.**
+The core problem: somatotype classifications imply you can't change your body composition or shape, which you plainly can. Bone structure and muscle insertions are fixed. But whether you currently look like an ectomorph or an endomorph, you will still lose fat in a caloric deficit and still build muscle through progressive resistance training with sufficient protein and calories. Results come more or less easily to different people for genetic reasons ([Hubal 2005](https://www.ncbi.nlm.nih.gov/pubmed/15947721)), but **training protocol differences should be based on specific goals, level of advancement and personal preference — not somatotype.**
 
 ## 7. Detox diets work
 **Verdict: busted, and potentially dangerous.**
@@ -60,7 +60,7 @@ The core problem: somatotype classifications imply you can't change your body co
 
 ## 8. The mind-muscle connection
 **Verdict: NOT busted — the bros were onto something.**
-[09:14] New data shows significantly more biceps hypertrophy when subjects focus on establishing a mind-muscle connection. The effect may be body-part specific: it didn't work for the quads in that study, though the subjects were untrained, so more experienced bodybuilders — better at mindfully activating lower-body muscles — might see quad growth too.
+[09:14] New data shows significantly more biceps hypertrophy when subjects focus on establishing a mind-muscle connection. The effect may be body-part specific: it didn't work for the quads in that study ([Schoenfeld 2018](https://www.ncbi.nlm.nih.gov/pubmed/29533715)), though the subjects were untrained, so more experienced bodybuilders — better at mindfully activating lower-body muscles — might see quad growth too.
 
 **Recommendation: don't use internal focus on everything. Reserve the mind-muscle connection for isolation, single-joint exercises with rep counts above 8. For everything else, focus on how the body executes the movement as a whole — proper technique and lifting tempo.**
 

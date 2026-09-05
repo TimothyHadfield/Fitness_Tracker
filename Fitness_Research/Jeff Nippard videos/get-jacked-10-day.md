@@ -7,7 +7,7 @@
 - A full day of training, four high-protein meals and supplements came to $8.92. The $10,000 day produced no gains advantage — only convenience, taste and enjoyment.
 - Cheapest protein sources, in order: lentils, milk, chicken breast (protein powder ranks 6th). Cheapest carbs: white rice, brown rice, oats; bananas for fruit. Cheapest fats: sunflower seeds and peanut butter.
 - Creatine is both one of the most effective and one of the cheapest supplements — 5 g cost 15 cents bought in bulk.
-- Plain coffee (~25 c) works as well as a multi-ingredient pre-workout (~50 c–87 c per scoop); a new study found caffeine alone matched a full pre-workout formula. Caffeine tablets are ~5 c.
+- Plain coffee (~25 c) works as well as a multi-ingredient pre-workout (~50 c–87 c per scoop); a new study found caffeine alone matched a full pre-workout formula ([Kruszewski 2022](https://pubmed.ncbi.nlm.nih.gov/35565718/)). Caffeine tablets are ~5 c.
 - A productive hypertrophy session takes 45 minutes: 1–2 exercises per muscle, 1–2 sets each, taken to failure.
 
 ## The $10 day, meal by meal

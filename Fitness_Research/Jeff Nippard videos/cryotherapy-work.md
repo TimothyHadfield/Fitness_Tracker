@@ -18,7 +18,7 @@ Two distinct things get lumped together [00:31]:
 Cold treatment as medicine is ancient — Egyptian cold compresses around 2500 BC, Napoleon's surgeon using extreme cold as anaesthetic in the late 1700s.
 
 ## Head-to-head: WBC vs CWI
-A 2016 study on 10 subjects who did 5×15 leg curls compared the two, measuring at 0, 24, 48 and 72 hours post-training via soreness, countermovement jump height and creatine kinase. Cold water immersion came out ahead of whole-body cryotherapy [02:34]. A 2013 meta-analysis comparing the two reached the same conclusion. All available research at the time favoured CWI over WBC.
+A 2016 study on 10 subjects who did 5×15 leg curls compared the two, measuring at 0, 24, 48 and 72 hours post-training via soreness, countermovement jump height and creatine kinase. Cold water immersion came out ahead of whole-body cryotherapy [02:34]. A 2013 meta-analysis comparing the two reached the same conclusion ([Poppendieck 2013](https://www.ncbi.nlm.nih.gov/pubmed/23434565)). All available research at the time favoured CWI over WBC.
 
 ## Does cold do anything for soreness?
 A 2015 systematic review and meta-analysis of 36 articles found cooling significantly reduced DOMS symptoms at 24 hours vs a control (sitting or standing at comfortable temperature), with the effect persisting up to 96 hours in the studies that measured that far [03:36].
@@ -29,12 +29,12 @@ Three problems with reading that as "cold aids recovery":
 3. The comparator is doing nothing. Newer work highlighted in MASS Research Review found CWI is no better than a simple 10-minute low-intensity cycling bout.
 
 ## The inflammation confusion
-A 2017 *Journal of Physiology* paper noted that no research had examined whether CWI actually reduces local inflammation in human skeletal muscle after resistance training — the animal-injury data doesn't transfer automatically. Muscle repair involves many mediators and pathways, and reducing inflammation may actually *impair* repair. The authors' tone was skeptical, though they conceded that reduced soreness is the most consistent observed effect of CWI. As of 2017 the mechanism was unknown; possibly nociceptor (pain receptor) activity [06:09].
+A 2017 *Journal of Physiology* paper ([Peake 2017](https://www.ncbi.nlm.nih.gov/pubmed/27704555)) noted that no research had examined whether CWI actually reduces local inflammation in human skeletal muscle after resistance training — the animal-injury data doesn't transfer automatically. Muscle repair involves many mediators and pathways, and reducing inflammation may actually *impair* repair. The authors' tone was skeptical, though they conceded that reduced soreness is the most consistent observed effect of CWI. As of 2017 the mechanism was unknown; possibly nociceptor (pain receptor) activity [06:09].
 
 Related misconception: DOMS is probably not caused by inflammation at all. That means anti-inflammatory strategies — NSAIDs, ice — are being used for a job they were never suited to, and even if they did reduce local inflammation, that wouldn't imply soreness relief.
 
 ## The cost: Roberts et al. 2015
-21 trained men, lower-body training twice weekly for 12 weeks. One group did 10 minutes of cold water immersion after every session; the other did 10 minutes of low-intensity cycling [06:39].
+21 trained men, lower-body training twice weekly for 12 weeks. One group did 10 minutes of cold water immersion after every session; the other did 10 minutes of low-intensity cycling ([Roberts 2015](https://www.ncbi.nlm.nih.gov/pubmed/26174323)) [06:39].
 
 Result: the cycling group gained more muscle mass and more strength than the cold water group **on every measure tested**. A follow-up from the same group attributed the deficit to a dampened anabolic signal and reduced satellite cell activity. Their conclusion: strategies intended to blunt the physiological stress of exercise may be counterproductive to muscle adaptation.
 

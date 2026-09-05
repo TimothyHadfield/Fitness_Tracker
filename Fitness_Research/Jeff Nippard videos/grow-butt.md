@@ -5,7 +5,7 @@
 
 ## Bottom line
 - The glutes fire hardest at or near **full hip extension** — which is exactly where squats *don't* load them. Squats are overrated as a glute builder.
-- **Hip thrusts** produce more glute activation than squats (Contreras et al., 2015) because they load the glutes at full hip extension.
+- **Hip thrusts** produce more glute activation than squats ([Contreras 2015](https://www.ncbi.nlm.nih.gov/pubmed/26214739)) because they load the glutes at full hip extension.
 - **Deep squats do not increase glute activation** once you correct for load; the classic study showing otherwise used the same absolute weight at every depth.
 - Train the glutes with **variety** — they perform hip extension, external rotation, transverse abduction and posterior pelvic tilt, so no one movement covers them.
 - Structure: pre-activation → hip thrust → lunges → hip hinge → abduction burnout.
@@ -23,9 +23,9 @@ Start with a pre-activation movement. Useful for any target muscle, but especial
 ## Squats: useful, but overrated for glutes [02:33]
 Nippard (self-declared powerlifter bias) still considers squats a staple of any program you can safely perform them in. But:
 
-1. **Biomechanics.** A 2001 study (name garbled in captions — *uncertain*) showed the glutes fire hardest at or near full hip extension. Squats load the glutes largely away from full hip extension.
-2. **Activation.** Many studies show squats activate the quads far more than the glutes, and **Contreras et al. (2015)** found the hip thrust produced more glute activation than the squat.
-3. **Depth doesn't help.** A 2002 study by Caterisano et al. did find deeper squats gave more glute activation — but it had a methodological flaw: the weight on the bar wasn't changed across depths. Same absolute load through a deeper squat is simply harder. When **Contreras et al. (2016)** assigned *relative* rather than absolute loads, the depth differences disappeared.
+1. **Biomechanics.** A 2001 study by Worrell et al. showed the glutes fire hardest at or near full hip extension ([Worrell 2001](https://www.ncbi.nlm.nih.gov/pubmed/11767248)). Squats load the glutes largely away from full hip extension.
+2. **Activation.** Many studies show squats activate the quads far more than the glutes, and **Contreras et al. (2015)** found the hip thrust produced more glute activation than the squat ([Contreras 2015](https://www.ncbi.nlm.nih.gov/pubmed/26214739)).
+3. **Depth doesn't help.** A 2002 study by Caterisano et al. did find deeper squats gave more glute activation ([Caterisano 2002](https://www.ncbi.nlm.nih.gov/pubmed/12173958)) — but it had a methodological flaw: the weight on the bar wasn't changed across depths. Same absolute load through a deeper squat is simply harder. When **Contreras et al. (2016)** assigned *relative* rather than absolute loads, the depth differences disappeared ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26252837)).
 
 **Three ways to make a squat more glute-focused:**
 - **Point the toes out** (external rotation increases glute activation).
@@ -67,7 +67,7 @@ Sample glute session:
 ## Caveats & unknowns
 - Almost all the evidence cited is acute EMG activation, not long-term hypertrophy; higher activation is an assumption about growth, not a demonstration of it.
 - The claim that single-leg hip thrusts recruit more glute medius or different glute regions is Nippard's own speculation, explicitly flagged as such.
-- Two researcher names (the 2001 hip-extension study and the 2009 wide-stance study) were garbled by the auto-captions; treat as uncertain.
+- One researcher name (the 2009 wide-stance study) was garbled by the auto-captions; treat as uncertain.
 - No set/rep prescriptions are given for the main lifts in this video beyond the high-rep abduction finisher.
 
 ## References

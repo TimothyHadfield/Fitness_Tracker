@@ -43,7 +43,7 @@ Food choice matters far less than hitting the targets — the 6.2% natural bodyb
 
 ## Supplements
 [07:00]
-- **Protein powder** — not required, but an easy way to hit the daily total. Jeff has a 30-50 g shake after training, purely for convenience, not because of an anabolic window.
+- **Protein powder** — not required, but an easy way to hit the daily total. Jeff has a 30-50 g shake after training, purely for convenience, not because of an anabolic window ([Schoenfeld 2018](https://pubmed.ncbi.nlm.nih.gov/30702982/)).
 - **Creatine monohydrate, 5 g daily.** Timing irrelevant, no cycling needed, decades of research show no negative side effects, no watery or bloated look. One of the only legal supplements meaningfully boosting strength and muscle mass. Roughly **25% of people are non-responders** — test it yourself.
 - **Caffeine** (pre-workout, coffee or tablets). Small thermogenic effect and burns some extra calories, though long-term fat-loss relevance is unclear. Jeff takes it for focus and alertness. Tolerance builds, so use only on days you need it or cycle off for a few weeks every few months.
 

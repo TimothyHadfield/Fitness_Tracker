@@ -25,12 +25,12 @@ Because the soleus crosses only the ankle, it's better targeted with a bent-leg 
 - **Calf jumps** — explode out of the stretched position where the calves are strongest, exploiting the natural strength curve and targeting the less abundant fast-twitch fibres. Far more room for form inconsistency, so keep slow controlled raises as the bread-and-butter work.
 
 ## Rep ranges [01:32]
-There's merit in training across 6 to 20+ reps. The most recent evidence suggests both the gastroc and soleus are type I dominant, which favours higher reps — but the ankle moves through a full range in a biomechanically strong position, so excluding low-rep strength work would be negligent. Hence: one heavier day at 6-12, one lighter day at 12-20. Seated calf raises deserve slightly higher reps still, since the soleus is even more slow-twitch dominant.
+There's merit in training across 6 to 20+ reps. The most recent evidence suggests both the gastroc and soleus are type I dominant ([Dahmane 2005](https://www.ncbi.nlm.nih.gov/pubmed/16214493)), which favours higher reps — but the ankle moves through a full range in a biomechanically strong position, so excluding low-rep strength work would be negligent. Hence: one heavier day at 6-12, one lighter day at 12-20. Seated calf raises deserve slightly higher reps still, since the soleus is even more slow-twitch dominant.
 
 ## Setup and execution
 1. **Priming sets.** One or two bodyweight-only sets through a full range to establish the mind-muscle connection and loosen the ankle joint.
 2. **Full stretch available.** On a Smith machine, stand on plates or a riser so the heels can drop below the toes.
-3. **Foot position.** Straight ahead or a slight flare. A 2011 study found that externally rotating the toes may increase medial (inner) gastroc activation, but later studies found no significant difference between foot positions — so use whatever is most comfortable.
+3. **Foot position.** Straight ahead or a slight flare. A 2011 study found that externally rotating the toes may increase medial (inner) gastroc activation ([Riemann 2011](https://www.ncbi.nlm.nih.gov/pubmed/20581696)), but later studies found no significant difference between foot positions — so use whatever is most comfortable.
 4. **Balls of the feet on the edge** of the platform for a true full range. Barefoot is fine if the stretch or contraction feels better; shoes are fine provided they don't restrict ankle mobility (high-top Chucks are a bad choice).
 5. **Flex the quads before the raise.** This fully extends the knees, keeping the emphasis on the gastroc, and prevents cheating by "squatting" the weight up with the quads.
 6. **Bottom position** should feel like the calves are being pulled apart, similar to the hamstrings at the bottom of a Romanian deadlift.

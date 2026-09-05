@@ -50,7 +50,7 @@ For visible abs you also need to be around **10–12% body fat as a male and aro
 ## 6. Kelso shrug
 Underrated back thickness builder. Completely isolates the mid traps and rhomboids without fatiguing the lower back or involving the biceps. Despite the name it's more of a row than a shrug: on a normal row you bend the elbows and squeeze the back at once; here the elbows stay locked and you isolate the scapular squeeze.
 
-Rationale: the elbow flexion portion of a row does nothing for your back — that's biceps. Research shows rows do grow biceps to some extent, but curls grow them about twice as well. Since the biceps are far smaller than the back, they limit the tension the back receives. Evidence: after hitting failure on a normal row you can usually crank out another 4–5 Kelso shrugs — your biceps and rear delts failed, your mid back didn't.
+Rationale: the elbow flexion portion of a row does nothing for your back — that's biceps. Research shows rows do grow biceps to some extent, but curls grow them about twice as well ([Mannarino 2021](https://pubmed.ncbi.nlm.nih.gov/31268995/)). Since the biceps are far smaller than the back, they limit the tension the back receives. Evidence: after hitting failure on a normal row you can usually crank out another 4–5 Kelso shrugs — your biceps and rear delts failed, your mid back didn't.
 
 **Technique:** on a chest-supported T-bar row machine, chest against the pad, grip roughly **1.5x shoulder width**. Unrack and with completely locked arms squeeze the shoulder blades together as hard as possible. **Pause ~1 second at the top**, then let the shoulder blades peel apart on the negative. Done right the weight only travels about **4–5 inches** — that is the real full ROM of the mid back.
 

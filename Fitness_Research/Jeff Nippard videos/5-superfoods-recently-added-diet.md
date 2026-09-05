@@ -21,16 +21,16 @@ Per cup: ~85 kcal, 21 g carbs (about 4 g fibre), 24% DV vitamin C, 36% DV vitami
 On phenolic content blueberries beat raspberries, strawberries and blackberries, sitting just behind black currants (US currant farming was banned in 1911, which is why Russia dominates the crop today). Aronia berries also rank very high.
 
 Anthocyanins are the blue pigment and can cross the blood-brain barrier, which may explain the cognitive effects:
-- A 2016 study by Bowtell and colleagues (captions render this "Bothwell") found an anthocyanin-rich blueberry concentrate improved brain perfusion and activation in regions tied to cognitive function.
-- Work from Krikorian et al. (captions garble this as "Krekorian natal") showed blueberry supplementation improves memory in older adults.
-- Other research found significant reductions in diastolic blood pressure and LDL cholesterol plus improved insulin sensitivity, with no difference in caloric intake between blueberry and control groups.
+- A 2016 study by Bowtell and colleagues (captions render this "Bothwell") found an anthocyanin-rich blueberry concentrate improved brain perfusion and activation in regions tied to cognitive function ([Bowtell 2017](https://www.ncbi.nlm.nih.gov/pubmed/28249119)).
+- Work from Krikorian et al. (captions garble this as "Krekorian natal") showed blueberry supplementation improves memory in older adults ([Krikorian 2010](https://www.ncbi.nlm.nih.gov/pubmed/20047325)).
+- Other research found significant reductions in diastolic blood pressure and LDL cholesterol plus improved insulin sensitivity, with no difference in caloric intake between blueberry and control groups ([Basu 2010](https://www.ncbi.nlm.nih.gov/pubmed/20660279)).
 
 **Dose: 0.5–1 cup per day.**
 
 ## Garlic
 Examine.com's database rates including garlic cloves as one of the healthiest dietary habits available.
-- A study from Nantz et al. (captions: "Nancy tall") found 90 days of garlic reduced cold and flu symptom severity and produced significantly fewer days missed from school and work.
-- A meta-analysis of 39 trials found garlic reduces total cholesterol when used for at least two months.
+- A study from Nantz et al. (captions: "Nancy tall") found 90 days of garlic reduced cold and flu symptom severity and produced significantly fewer days missed from school and work ([Nantz 2012](https://www.ncbi.nlm.nih.gov/pubmed/22280901)).
+- A meta-analysis of 39 trials found garlic reduces total cholesterol when used for at least two months ([Ried 2013](https://www.ncbi.nlm.nih.gov/pubmed/23590705)).
 
 **Dose: add it to food where possible (garlic powder in eggs, diced cloves in stir-fries); if you dislike the taste, 600–1500 mg/day in capsules.**
 
@@ -45,9 +45,9 @@ Zinc matters specifically for lifters: trainees and athletes can become deficien
 **Frequency: once or twice per week.** Preparation: mussels boiled in salt water for 2 minutes, eaten fresh; scallops pan-fried in olive or macadamia oil with garlic.
 
 ## Leafy greens
-The lifting-specific reason to eat greens is their very high nitrate content. Nitrates raise nitric oxide production; nitric oxide is a vasodilator, so it improves pumps, lowers blood pressure and protects the heart.
+The lifting-specific reason to eat greens is their very high nitrate content. Nitrates raise nitric oxide production; nitric oxide is a vasodilator, so it improves pumps, lowers blood pressure and protects the heart ([Siervo 2013](https://www.ncbi.nlm.nih.gov/pubmed/23596162)).
 
-A paper by Mosher et al. (captions: "Moser") found **400 mg of beetroot nitrates per day for six days increased total reps and total weight lifted on a bench press program.**
+A paper by Mosher et al. (captions: "Moser") found **400 mg of beetroot nitrates per day for six days increased total reps and total weight lifted on a bench press program** ([Mosher 2016](https://www.ncbi.nlm.nih.gov/pubmed/27050244)).
 
 **Frequency: spinach, kale and similar every day, as often as you can manage.**
 

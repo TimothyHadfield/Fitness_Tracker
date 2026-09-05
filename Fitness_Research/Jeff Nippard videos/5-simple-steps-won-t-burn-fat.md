@@ -17,11 +17,11 @@
 ## Tip 1: "Eat more frequently for a faster, hotter metabolism"
 False. A **2009 systematic review referencing 60 studies** concluded there is strong evidence of **no association between eating frequency and weight status**, and the limited available evidence suggests **no association between body composition and eating frequency**.
 
-Hyman also dismisses calories-in-calories-out out of hand. Nippard quotes the **2004 landmark paper "Is a calorie a calorie?"**: a calorie is a calorie from a purely thermodynamic standpoint, because the human body — like any living organism — cannot create or destroy energy, only convert it between forms.
+Hyman also dismisses calories-in-calories-out out of hand. Nippard quotes the **2004 landmark paper "Is a calorie a calorie?"** ([Buchholz & Schoeller 2004](http://www.ncbi.nlm.nih.gov/pubmed/15113737)): a calorie is a calorie from a purely thermodynamic standpoint, because the human body — like any living organism — cannot create or destroy energy, only convert it between forms.
 
-On late-night eating: a myth. A study on **78 police officers** found **greater weight loss** after a six-month diet where **most carbohydrates were eaten in the evening** rather than at breakfast. Nippard treats even this as noise — over time, energy balance is the major determinant.
+On late-night eating: a myth. A study on **78 police officers** found **greater weight loss** after a six-month diet where **most carbohydrates were eaten in the evening** rather than at breakfast ([Sofer 2011](http://www.ncbi.nlm.nih.gov/pubmed/21475137)). Nippard treats even this as noise — over time, energy balance is the major determinant.
 
-On breakfast: a **2014 paper in the American Journal of Clinical Nutrition** concluded that a recommendation to eat or skip breakfast for weight loss had **no discernible effect on weight loss in free-living adults attempting to lose weight**.
+On breakfast: a **2014 paper in the American Journal of Clinical Nutrition** concluded that a recommendation to eat or skip breakfast for weight loss had **no discernible effect on weight loss in free-living adults attempting to lose weight** ([Dhurandhar 2014](http://www.ncbi.nlm.nih.gov/pubmed/24898236)).
 
 **The one frequency caveat he grants:** eating **3 to 5 high-protein meals per day** does appear beneficial for lean mass accrual and building muscle compared with a lower-frequency diet — he points to the research of **Dr. Stuart Phillips** on this.
 
@@ -33,7 +33,7 @@ Hyman's biggest error in this tip is a bad extrapolation: he cites a study where
 Hyman's associated claims that low-fat diets don't work, and that low-carb diets work but are unhealthy and cause haemorrhoids, are dismissed: **any diet produces weight loss if it puts you in a calorie deficit.**
 
 ## Tip 3: "Green tea turns up your fat-burning thermostat"
-Hyman cites a study where supplementing **catechins** (green tea compounds) without changing caloric intake increased thermogenesis. Nippard again calls this over-weighting a small thermogenic effect, and cites **examine.com**'s conclusion: there appears to be a **slight but unreliable increase in fat oxidation** associated with green tea catechin consumption.
+Hyman cites a study where supplementing **catechins** (green tea compounds) without changing caloric intake increased thermogenesis. Nippard again calls this over-weighting a small thermogenic effect, and cites **examine.com**'s conclusion: there appears to be a **slight but unreliable increase in fat oxidation** associated with green tea catechin consumption ([Examine.com](http://examine.com/supplements/Green+Tea+Catechins/)).
 
 On the antioxidant claims — that catechins prevent free-radical damage to metabolism (presumably meaning oxidative damage to mitochondrial function) — Nippard makes three points:
 - The body produces **its own antioxidants** to defend against reactive oxygen species.

@@ -4,7 +4,7 @@
 **Topic:** Exercise Selection
 
 ## Bottom line
-- If you could only pick one exercise, pick a squat — over half of body muscle mass sits in the legs (~55% men, ~58% women on MRI), and squat strength carries over to other lifts.
+- If you could only pick one exercise, pick a squat — over half of body muscle mass sits in the legs (~55% men, ~58% women on MRI) ([Janssen 2000](https://pubmed.ncbi.nlm.nih.gov/10904038/)), and squat strength carries over to other lifts.
 - The top 10 (squat, pull-up, incline bench, RDL, chest-supported T-bar row, lateral raise, preacher curl, overhead cable triceps extension, leg extension, seated leg curl) are the ten to keep if you only get ten.
 - Commonly skipped visible muscles — calves, forearms, neck, abs, traps — need direct work and grow fast once you start.
 - Fundamentals like deadlift, overhead press and bench press are ranked on movement-pattern importance, not pure hypertrophy efficiency.
@@ -14,11 +14,11 @@
 
 **24. Dumbbell shrugs.** Upper traps have an outsized effect on how muscular you look and are usually neglected. Dumbbells keep it simple.
 
-**23. Standing calf raise.** Calves are the one leg muscle always visible in shorts. Research shows standing straight-leg raises are significantly more effective than seated bent-leg raises, so standing is the main lift.
+**23. Standing calf raise.** Calves are the one leg muscle always visible in shorts. Research shows standing straight-leg raises are significantly more effective than seated bent-leg raises ([Kinoshita 2023](https://pubmed.ncbi.nlm.nih.gov/38156065/)), so standing is the main lift.
 
 **22. Dumbbell wrist curls and extensions.** Forearms are the calves of the upper body — always visible in a t-shirt. He supersets curls with extensions, 3 sets of each, ~5 minutes total.
 
-**21. Neck curls and extensions.** A thicker neck reads as jacked and may reduce headaches, prevent neck pain and improve ability to take a punch. Prescription for beginners: plate-weighted neck curls supersetted with head-harness extensions, twice a week, 10–15 reps. Heavy deadlifts and shrugs do not grow the neck — it needs direct work. No evidence neck training causes sleep apnea in natural lifters; newer evidence points to tongue fat as the driver.
+**21. Neck curls and extensions.** A thicker neck reads as jacked and may reduce headaches ([Ylinen 2010](https://pubmed.ncbi.nlm.nih.gov/20461336/)), prevent neck pain and improve ability to take a punch. Prescription for beginners: plate-weighted neck curls supersetted with head-harness extensions, twice a week, 10–15 reps. Heavy deadlifts and shrugs do not grow the neck — it needs direct work. No evidence neck training causes sleep apnea in natural lifters; newer evidence points to tongue fat as the driver.
 
 **20. Cable crunch.** One of the few ab exercises you can progressively overload by adding weight weekly. Abs grow like any other muscle.
 
@@ -38,18 +38,18 @@
 
 **12. Walking lunge.** Little research, but nothing crushes the glutes like lunges — one hard set can leave you sore for days. Barbell, dumbbells or stationary on a Smith machine all work. Wide steps bias glutes; shorter steps with more forward knee travel bias quads.
 
-**11. Bench press.** He credits most of his own pec development to building to a 365 lb bench at 165 lb bodyweight and 390 at 180. Research shows a strong relationship between bench strength and pec growth. Benchmarks: most men should bench bodyweight within their first year or two; most women half bodyweight in year one. Technique: slightly wider grip, shoulder blades tucked down, press up and slightly back. But nothing beats simply tracking your lifts and adding weight or a rep each week.
+**11. Bench press.** He credits most of his own pec development to building to a 365 lb bench at 165 lb bodyweight and 390 at 180. Research shows a strong relationship between bench strength and pec growth ([Nigro 2024](https://pubmed.ncbi.nlm.nih.gov/39552386/)). Benchmarks: most men should bench bodyweight within their first year or two; most women half bodyweight in year one. Technique: slightly wider grip, shoulder blades tucked down, press up and slightly back. But nothing beats simply tracking your lifts and adding weight or a rep each week.
 
 ## Top 10
 **10. Seated leg curl.** Hamstrings are ~40% of thigh mass and matter more for knee health than most realise. A 12-week training study found about 50% more hamstring growth with seated vs lying leg curls. Lying curls or Nordics still work.
 
 **9. Leg extension.** Easiest, most accessible quad isolation. Recent anatomy research suggests the quads are the largest muscle in the body — bigger than glutes or lats. Setting the seat back better targets the long rectus femoris head than any compound, including squats. Research shows leg extensions are safe for the knees; warm up and do not use weight you cannot control.
 
-**8. Overhead cable triceps extension.** Big triceps stimulus without taxing chest, delts or core. Research from May and colleagues found overhead extensions produced about 40% more overall triceps growth than pressdowns over 12 weeks, likely because the long head is more lengthened overhead.
+**8. Overhead cable triceps extension.** Big triceps stimulus without taxing chest, delts or core. Research from Maeo and colleagues found overhead extensions produced about 40% more overall triceps growth than pressdowns over 12 weeks ([Maeo 2023](https://pubmed.ncbi.nlm.nih.gov/35819335/)), likely because the long head is more lengthened overhead.
 
 **7. Preacher curl.** His one pick if limited to a single biceps exercise — easier to execute and harder to mess up than the Bayesian curl, high tension from the start at a still-lengthened position, and impossible to cheat. Get stronger in the 6–12 rep range and the biceps, brachialis and brachioradialis all grow.
 
-**6. Lateral raise.** Side delts may be the single most important muscle aesthetically — they create the broad-shouldered X-frame from front and back, and get shortchanged on presses. Dumbbells, machines and cables all work similarly well in research; he prefers cables with a high handle position for more tension in the lengthened position and smoother tension throughout.
+**6. Lateral raise.** Side delts may be the single most important muscle aesthetically — they create the broad-shouldered X-frame from front and back, and get shortchanged on presses. Dumbbells, machines and cables all work similarly well in research ([Larsen 2025](https://pubmed.ncbi.nlm.nih.gov/40692697/)); he prefers cables with a high handle position for more tension in the lengthened position and smoother tension throughout.
 
 **5. Chest-supported T-bar row.** Any horizontal row fits here. Chest support removes the lower back as a limiter and prevents cheating. Row with elbows at roughly 45° for a mix of mid traps, rhomboids, lats and rear delts. Kelso shrugs are a good advanced progression; get strong on plain T-bar rows first.
 

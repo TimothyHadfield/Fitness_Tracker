@@ -13,7 +13,7 @@
 ## Why it differs from the back squat
 Any squat trains simultaneous knee extension (quads) and hip extension (glutes). Using a figure from Bret Contreras's biomechanics book, Nippard points out that in both variations the bar must stay centred over the mid-foot. With the bar racked in front, the only way to keep that balance is a much more upright back angle — the back squat lifter leans forward, the front squat lifter stays vertical. That single difference produces slightly more quad demand and much greater upper back demand.
 
-A 2015 study from Contreras and colleagues found the front squat delivers a similar training stimulus to the back squat despite requiring lighter loads. Practical upshot: comparable hypertrophic stimulus at lower absolute loading, which may reduce cumulative injury risk.
+A 2015 study from Contreras and colleagues found the front squat delivers a similar training stimulus to the back squat despite requiring lighter loads ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26252837)). Practical upshot: comparable hypertrophic stimulus at lower absolute loading, which may reduce cumulative injury risk.
 
 ## Rack position and grip
 **Olympic grip (recommended).** Bar rests just behind the shoulders, actually touching the front of the neck — if it feels like you're being slightly choked, it's probably right. Don't hold it in the palm; let it sit on the first two or three fingers, hands just outside the shoulders. Drive the elbows up until the humerus is parallel to the floor; from the front the elbows point straight ahead.

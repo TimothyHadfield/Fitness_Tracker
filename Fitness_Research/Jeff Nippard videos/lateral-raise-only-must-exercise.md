@@ -7,7 +7,7 @@
 - Coach Cliff Wilson claimed bodybuilders over-emphasise squat/bench/deadlift and that the closest thing to a mandatory movement is the dumbbell lateral raise. Jeff agrees with the spirit, disagrees on details.
 - For bodybuilding there are genuinely no required exercises — the judges (and the beach) only see the physique, not how it was built. Muscle responds to tension, and tension can be created many ways.
 - The powerlifts are still excellent bodybuilding tools: highly motivating, huge muscle mass recruited, very time-efficient. Injuries usually come from ego and bad programming, not from the lifts themselves.
-- Exercise variation beats a single-exercise approach: Fonseca and colleagues (2014, Jacob Wilson a co-author) found varied leg exercises grew all quadriceps heads, while squat-only produced no significant growth in vastus medialis or rectus femoris.
+- Exercise variation beats a single-exercise approach: Fonseca and colleagues (2014, Jacob Wilson a co-author) found varied leg exercises grew all quadriceps heads, while squat-only produced no significant growth in vastus medialis or rectus femoris ([Fonseca 2014](https://www.ncbi.nlm.nih.gov/pubmed/24832974)).
 - Jeff's own pick for the single most "must-do" movement would be the **upright row** (side delts plus upper traps), or a cable lateral raise ahead of the dumbbell version.
 
 ## The claim being answered

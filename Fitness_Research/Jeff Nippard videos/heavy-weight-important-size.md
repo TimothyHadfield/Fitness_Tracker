@@ -26,7 +26,7 @@ The failure point is the word **always**. You could substitute almost any two va
 
 The research says otherwise. Studies comparing very high vs very low rep and light vs heavy load groups show **roughly equal hypertrophy across a very wide spectrum**, from around **30% of 1RM** up to **85% of 1RM** (roughly a 5-rep load), as long as sets are taken to failure or close to it.
 
-A **2018 study covered in the MASS Research Review** put a floor on that: the bottom threshold appears to be somewhere between **20 and 30% of 1RM**. That fits intuition — you shouldn't expect the same bicep growth from 2 lb pink dumbbells for sets of 50-100 as from 30-35 lb dumbbells for sets of 6-12.
+A **2018 study covered in the MASS Research Review** put a floor on that: the bottom threshold appears to be somewhere between **20 and 30% of 1RM** ([Lasevicius 2018](https://www.ncbi.nlm.nih.gov/pubmed/29564973)). That fits intuition — you shouldn't expect the same bicep growth from 2 lb pink dumbbells for sets of 50-100 as from 30-35 lb dumbbells for sets of 6-12.
 
 **His practical recommendation: 6-12 reps** for most muscles and exercises, because that range:
 - lets you use enough load to generate a significant tensile stimulus,

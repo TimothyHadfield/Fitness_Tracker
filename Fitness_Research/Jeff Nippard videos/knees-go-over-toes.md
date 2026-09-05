@@ -21,7 +21,7 @@ Common sense first: walking down stairs puts the knees well past the toes and al
 The stronger argument is methodological: you cannot write technique rules for a multi-joint movement by looking at the forces at one joint alone and ignoring the hip and lower back.
 
 ## The key study [02:03]
-A 2003 study — Nippard names the lead author, but the auto-captions render it as "fry," so treat the name as uncertain — compared knee and hip torque in two squat variations taken to parallel:
+A 2003 study by Fry and colleagues ([Fry 2003](https://www.ncbi.nlm.nih.gov/pubmed/14636100)) compared knee and hip torque in two squat variations taken to parallel:
 - **Unrestricted (knees free to travel forward):** knee torque 150 Nm, hip torque 28 Nm.
 - **Restricted (a wooden board blocked forward knee travel):** knee torque 117 Nm, hip torque 302 Nm.
 
@@ -45,7 +45,7 @@ Everything beyond that is individual anatomy. Forward lean is driven mostly by f
 ## Caveats & unknowns
 - Recommendations apply to healthy, regularly active people. Anyone already dealing with knee pain should get assessed by a qualified professional rather than self-prescribing.
 - The original 1972 paper had only 12 subjects and poor methodological control; the "excessive" threshold for forward knee travel is never quantified.
-- Researcher names in the 2003 and follow-up citations are garbled by the auto-captions and should be verified before being repeated.
+- The researcher name in the follow-up citation is garbled by the auto-captions and should be verified before being repeated.
 
 ## References
 

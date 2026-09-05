@@ -20,7 +20,7 @@ Altered version: the same lifter *has* trained forearms directly for five years.
 ## Evidence on lean mass loss during contest prep
 Case studies of natural bodybuilders getting very lean almost without exception show lean mass loss. Lean mass isn't identical to muscle mass (water shifts count), but Jeff thinks real muscle loss is likely at very low body fat.
 
-He cites **Kistler and colleagues (2014)**, with **Peter Fitschen** a contributor, and Fitschen's 2015 summary of the three or four natural bodybuilding prep case studies then available. Across those three studies, **21%, 32% and 43% of total weight lost was lean mass**. The **43% figure (Robinson et al.)** came from the case where weight was lost fastest — hence Fitschen's argument that slower dieting preserves more muscle, and hence the trend toward longer preps.
+He cites **Kistler and colleagues (2014)** ([Kistler 2014](https://www.ncbi.nlm.nih.gov/pubmed/24901578)), with **Peter Fitschen** a contributor, and Fitschen's 2015 summary of the three or four natural bodybuilding prep case studies then available. Across those three studies, **21%, 32% and 43% of total weight lost was lean mass**. The **43% figure (Robinson et al.)** came from the case where weight was lost fastest — hence Fitschen's argument that slower dieting preserves more muscle, and hence the trend toward longer preps.
 
 Jeff's caution: other factors (cardio volume, training quality, macronutrient breakdown) confound this, so don't over-weight the finding — but the trend across the three studies is real.
 
@@ -42,7 +42,7 @@ He is explicit that energy balance holds — dozens of metabolic ward studies sh
 
 ## Numbers and sources
 - The **3,500 kcal per pound** rule: Jeff recommends **Lyle McDonald's** article "The 3500 Calorie Rule," which explains why it works as a rough ballpark for most people but breaks down once training is in the equation, and ignores water weight (water carries no energy).
-- The **~9,400 kcal per kilogram of fat mass** figure comes from **Hall (2008)**, who calculated the required energy deficit per unit of weight loss. It's an average — the true value shifts with body composition as hydration status and tissue energy density change.
+- The **~9,400 kcal per kilogram of fat mass** figure comes from **Hall (2008)**, who calculated the required energy deficit per unit of weight loss ([Hall 2008](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2376744/)). It's an average — the true value shifts with body composition as hydration status and tissue energy density change.
 - **Eric Helms'** November 2015 article on Shredded By Science (with co-authors/contributors, one named in the captions as Lawrence Judd — spelling uncertain) covers the same territory. It lists the flawed assumptions people make, starting with **homogeneity of the human system** (treating all tissues as having equal metabolisable energy). It also summarises lean body mass and fat mass changes across many studies, showing recomposition occurring in both surpluses and deficits — including in **trained subjects with 9+ years of experience** in the **Jose Antonio** papers, and in elite athletes.
 - Helms' opening example: a woman 12 weeks into training whose clothes fit far better and who looks visibly leaner, but whose scale weight hasn't moved — classic beginner recomposition. Jeff's balance: don't stress the scale early in a diet, but don't use recomposition as a cop-out for a stalled fat loss phase either. Look for visual and measurement change.
 

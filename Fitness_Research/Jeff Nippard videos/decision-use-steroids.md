@@ -13,7 +13,7 @@
 ## His three reasons for staying natural [00:06]
 
 1. **Aesthetic preference.** He's drawn to the classic pre-steroid-era and 1970s Olympia look — Frank Zane and similar — which he thinks a genetically elite natural lifter can approach with optimised training and diet. He notes there's no clean "natural look" versus "enhanced look" except at the extremes; in the middle it mostly comes down to genetics.
-2. **Simplicity.** Staying natural means he only manages the two variables fully within his control — training and diet — without micromanaging dosages and cycles. He acknowledges steroids are not a shortcut exactly, but they do work: one case study of an internationally competitive elite bodybuilder documented a **16 lb increase in lean mass in one year**, roughly **16x** what a natural lifter at that level of advancement could realistically expect.
+2. **Simplicity.** Staying natural means he only manages the two variables fully within his control — training and diet — without micromanaging dosages and cycles. He acknowledges steroids are not a shortcut exactly, but they do work: one case study of an internationally competitive elite bodybuilder documented a **16 lb increase in lean mass in one year**, roughly **16x** what a natural lifter at that level of advancement could realistically expect ([Alén 1985](https://www.ncbi.nlm.nih.gov/pubmed/3921472)).
 3. **Health** — the focus of the video.
 
 ## Research quality caveat [02:39]
@@ -24,7 +24,7 @@ The most-used class is **androgenic anabolic steroids** (testosterone and deriva
 
 A **2014 paper in *Endocrine Reviews***, written as a position statement for the Endocrine Society, listed an extensive set of potential harms with **cardiovascular effects at the top of the severity list**, alongside "well recognised and probably serious" evidence for testicular dysregulation, major mood disorders (mania, depression) and dependence.
 
-A **2015 paper** referenced **25 independent case studies** of athletes — mostly bodybuilders, aged **19 to 54** — on high-dose anabolic steroids who suffered fatal and non-fatal cardiopathy including heart attack and stroke. The authors noted unfavourable blood lipid changes — **HDL dropping, LDL spiking — appearing just two months into a cycle**. Long-term routine use leads to **atherosclerosis**, which with enough accumulation produces heart attack and heart failure.
+A **2015 paper** referenced **25 independent case studies** of athletes — mostly bodybuilders, aged **19 to 54** — on high-dose anabolic steroids who suffered fatal and non-fatal cardiopathy including heart attack and stroke ([Nieschlag 2015](https://www.ncbi.nlm.nih.gov/pubmed/26373946)). The authors noted unfavourable blood lipid changes — **HDL dropping, LDL spiking — appearing just two months into a cycle**. Long-term routine use leads to **atherosclerosis**, which with enough accumulation produces heart attack and heart failure.
 
 **Hypertension.** Steroid-associated water retention has been linked to high blood pressure that, per a study out of the **University of Saarland, Germany**, can persist for **up to a year after discontinuation**.
 
@@ -32,18 +32,18 @@ A **2015 paper** referenced **25 independent case studies** of athletes — most
 
 ## Liver [05:13]
 
-Direct hepatotoxicity is well documented, especially with chronic abuse of **orally administered 17-alpha-alkylated steroids** (as opposed to intramuscular injection). **Liver adenomas** (benign tumours) have appeared as early as **6 months** and as late as **15 years** into abuse. In cases from **Socas** and colleagues (name uncertain from the captions — transcribed as "sokka's"), two bodybuilders taking **five different steroids at high doses**, including **stanozolol and oxymetholone**, developed tumours that disappeared without surgery once they stopped. Two more recent cases — bodybuilders aged **29 and 39** — progressed to **liver carcinoma**, at which stage, without surgery or transplant, death by liver coma is imminent.
+Direct hepatotoxicity is well documented, especially with chronic abuse of **orally administered 17-alpha-alkylated steroids** (as opposed to intramuscular injection). **Liver adenomas** (benign tumours) have appeared as early as **6 months** and as late as **15 years** into abuse. In cases from **Socas** and colleagues (name uncertain from the captions — transcribed as "sokka's"), two bodybuilders taking **five different steroids at high doses**, including **stanozolol and oxymetholone**, developed tumours that disappeared without surgery once they stopped. Two more recent cases — bodybuilders aged **29 and 39** — progressed to **liver carcinoma** ([Solbach 2015](https://www.ncbi.nlm.nih.gov/pubmed/25986067)), at which stage, without surgery or transplant, death by liver coma is imminent.
 
 ## Neuropsychiatric [06:13]
 
-A **2008 review out of Harvard Medical School** found that evidence of persistent toxicity in other organ systems is **modest**, and there is **not much evidence of increased prostate cancer risk**. However, because of apoptotic (cell-death-inducing) effects on neural cells, the authors say **irreversible neuropsychiatric toxicity is a possibility**.
+A **2008 review out of Harvard Medical School** found that evidence of persistent toxicity in other organ systems is **modest**, and there is **not much evidence of increased prostate cancer risk** ([Kanayama 2008](https://www.ncbi.nlm.nih.gov/pubmed/18599224)). However, because of apoptotic (cell-death-inducing) effects on neural cells, the authors say **irreversible neuropsychiatric toxicity is a possibility**.
 
 "Roid rage" was likely media overhype, but experimental and naturalistic field studies show steroids can directly cause **hypomania and severe mania** — elevated mood, inflated self-esteem, reduced need for sleep — and manic episodes have been linked to aggression and violence. Other studies report **no mood changes at all**, indicating the psychological response is highly individual. More consistent is **depression during withdrawal**, i.e. at the end of a cycle — plausibly worsened by the fact that steroid-driven body composition changes fade quickly after discontinuation.
 
 ## Endocrine and cosmetic [06:44]
 
 - **Hypogonadism.** Exogenous testosterone shuts down natural production, causing testicular shrinkage, reduced sperm count and infertility. Often reversible within weeks or months — but not always.
-- **Gynecomastia**, from testosterone-to-estrogen conversion — **37% of users** in a 2000 study, and **generally not reversible except by surgery**.
+- **Gynecomastia**, from testosterone-to-estrogen conversion — **37% of users** in a 2000 study, and **generally not reversible except by surgery** ([O'Sullivan 2000](https://www.ncbi.nlm.nih.gov/pubmed/11061405)).
 - The same study: **43% acne**, **61% negative changes in libido**, especially at cycle's end.
 
 **Women.** Effects are arguably more severe and more permanent: on top of the general health risks, women experience **deepening of the voice, clitoral enlargement, decreased breast size, altered menstruation and baldness**.

@@ -18,7 +18,7 @@ For recreational lifters the same logic applies in clothing. Side and rear angle
 On attractiveness [04:37]: there is a fair body of research on why men find glutes attractive on women — Jeff cites a Brett Contreras article arguing the popularity of denim and its advertising helped push the glutes past the breasts as the primary sexual characteristic. There is much less research on the reverse, but survey and interview data suggest women do find muscular glutes attractive in men, with a sweet spot somewhere between flat and Ronnie Coleman.
 
 ## Reason 2: Performance [05:41]
-EMG research shows the squat trains the quads more than the glutes, but that does not mean the glutes are idle. The squat has two biomechanical demands: knee extension (quads) and hip extension. Of the two primary hip extensors, the hamstrings are near-silent in the squat because they lengthen at the knee while shortening at the hip simultaneously — leaving the glutes to contribute substantially to hip extension.
+EMG research shows the squat trains the quads more than the glutes ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26252837)), but that does not mean the glutes are idle. The squat has two biomechanical demands: knee extension (quads) and hip extension. Of the two primary hip extensors, the hamstrings are near-silent in the squat because they lengthen at the knee while shortening at the hip simultaneously — leaving the glutes to contribute substantially to hip extension.
 
 Because of biomechanical differences, the deadlift involves the glutes more than the squat does. Jeff's observation from dozens of powerlifting meets: he has never seen a high-level lifter with an impressive squat and a flat butt.
 

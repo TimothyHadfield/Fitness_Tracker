@@ -15,13 +15,13 @@ A 2009 paper on digestion and absorption states that virtually all ingested prot
 
 ## The case for a ~20 g ceiling — the "muscle full" effect
 **Stuart Phillips' research group, 2015 review** described a *muscle full effect*: as protein dose increases you eventually hit a plateau beyond which more protein does nothing extra for MPS. That ceiling has commonly been placed around **20 g**.
-- The first study to show it compared **20 g vs 40 g of whole egg protein** after a leg workout — no significant difference.
-- Another found **30 g of beef protein** as effective as **90 g** for stimulating MPS.
+- The first study to show it compared **20 g vs 40 g of whole egg protein** after a leg workout — no significant difference ([Moore 2009](https://www.ncbi.nlm.nih.gov/pubmed/19056590)).
+- Another found **30 g of beef protein** as effective as **90 g** for stimulating MPS ([Symons 2009](https://www.ncbi.nlm.nih.gov/pubmed/19699838)).
 - Further research showed protein beyond 20 g increased **amino acid oxidation** (burned for energy) and **urea production**, implying a per-meal utilisation limit.
 
 ## Three factors that push the ceiling up
 1. **Body size.** More muscle means more protein to max out MPS. The Phillips review's **0.4 g/kg (~0.18 g/lb)** per-meal figure accounts for this and for individual variability — meaning 22-30 g may be genuinely insufficient for larger lifters.
-2. **Amount of muscle trained.** A **2016 study** found **40 g of whey beat 20 g** for MPS. The earlier studies used lower-body-only training; this one used a **full-body routine**. Activating more muscle mass requires more protein to max the response.
+2. **Amount of muscle trained.** A **2016 study** found **40 g of whey beat 20 g** for MPS ([Macnaughton 2016](https://www.ncbi.nlm.nih.gov/pubmed/27511985)). The earlier studies used lower-body-only training; this one used a **full-body routine**. Activating more muscle mass requires more protein to max the response.
 3. **Age.** **Anabolic resistance** is a well-established phenomenon — older people need more protein for the same MPS response.
 
 So older, larger trainees doing full-body work could plausibly benefit from **40, 50 g or more** in a single sitting.
@@ -29,7 +29,7 @@ So older, larger trainees doing full-body work could plausibly benefit from **40
 ## The counter-evidence: intermittent fasting
 Most of the above rests on **acute MPS measurements**, not long-term hypertrophy trials, which makes strong conclusions about a hard ceiling speculative. Pushback comes largely from the IF community, where people eat 75-100 g of protein across one or two meals in a 4-8 hour window and still build muscle.
 - An IF study (researcher name garbled in captions — flagged as uncertain) found ~**101 g of protein in a single 4-hour eating window** produced **no difference in lean mass preservation** versus a conventional spread-out pattern.
-- Another paper found **one meal per day with ~86 g of protein** actually improved body composition versus the same protein split across three meals.
+- Another paper found **one meal per day with ~86 g of protein** actually improved body composition versus the same protein split across three meals ([Stote 2007](https://www.ncbi.nlm.nih.gov/pubmed/17413096)).
 - Limitations: both used **bioelectrical impedance**, which is unreliable, and total daily protein intake was low, which limits real-world applicability.
 
 ## Practical application

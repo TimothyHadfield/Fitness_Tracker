@@ -11,7 +11,7 @@
 - **Borrow the drink calories from dietary fat, not carbs** — alcohol suppresses fat oxidation, making dietary fat much more likely to be stored.
 
 ## Why fat, not carbs, is the macro to cut on drinking days [05:10]
-Alcohol is metabolised mainly in the **liver** (and in the brain, which is why you get drunk). The body has **no capacity to store alcohol**, so it is handled metabolically as a poison and given **top priority for oxidation**. The consequence: **oxidation of dietary fat for energy slows substantially**, leaving that fat far more available for storage.
+Alcohol is metabolised mainly in the **liver** (and in the brain, which is why you get drunk). The body has **no capacity to store alcohol**, so it is handled metabolically as a poison and given **top priority for oxidation**. The consequence: **oxidation of dietary fat for energy slows substantially**, leaving that fat far more available for storage ([Siler 1999](https://www.ncbi.nlm.nih.gov/pubmed/10539756)).
 
 Two implications:
 - Because carbs are not readily converted to and stored as fat anyway, it is smarter to **cut fat intake rather than carb intake** on days you drink.
@@ -24,14 +24,14 @@ Two implications:
 **2. The non-tracking method.** Eat **light, low-calorie, high-volume meals during the day** — high protein, high fibre, low carb, low fat — then drink in the evening from **low-calorie sources**: avoid sugary drinks and cocktails, choose light beer, mix spirits with diet soda or water, or take shots neat. The goal is to hold total calories down without logging anything.
 
 ## Testosterone: mixed and unimportant [06:41]
-- A **2000 paper (author name garbled — sounds like "Kyle et al.", uncertain)** found **no change in testosterone** across a 3-day period after subjects were intoxicated following a training session.
-- A **1990 paper** showed a **23% reduction** in testosterone — but after **120 g of alcohol**, roughly **8.5 beers**.
-- A **2013 paper (author garbled — possibly "Vingren et al.", uncertain)** actually showed a **small increase** in testosterone after training.
+- A **2000 paper by Koziris and colleagues** found **no change in testosterone** across a 3-day period after subjects were intoxicated following a training session ([Koziris 2000](https://www.ncbi.nlm.nih.gov/pubmed/10642377)).
+- A **1990 paper** showed a **23% reduction** in testosterone — but after **120 g of alcohol**, roughly **8.5 beers** ([Välimäki 1990](https://www.ncbi.nlm.nih.gov/pubmed/2128439)).
+- A **2013 paper by Vingren and colleagues** actually showed a **small increase** in testosterone after training ([Vingren 2013](https://www.ncbi.nlm.nih.gov/pubmed/23470309)).
 
 Verdict: with data this mixed, and given that even a 23% acute swing is unlikely to be meaningfully anabolic or catabolic on its own, **the acute link between a drinking episode and testosterone is not enough to affect your gains**.
 
 ## Recovery and muscle damage [07:11]
-- A **single episode of moderate intoxication does not appear to worsen the muscle damage caused by training.**
+- A **single episode of moderate intoxication does not appear to worsen the muscle damage caused by training** ([Barnes 2011](https://www.ncbi.nlm.nih.gov/pubmed/20878178?dopt=Abstract)).
 - **Higher doses — around 1 gram of alcohol per kilogram of bodyweight — do impair recovery markers**: raised cortisol, slowed reaction times, impaired cognitive recovery.
 
 ## Muscle protein synthesis: the real effect [07:41]
@@ -50,7 +50,7 @@ So protein **partially but not fully rescues** the effect. His judgement: a ~24%
 - Avoid heavy doses (~1 g/kg bodyweight and up) if recovery matters that week.
 
 ## Caveats & unknowns
-- Several researcher names are garbled by the auto-captions (2000 testosterone paper, 2013 testosterone paper, 2014 MPS paper) — flagged above, verify before citing.
+- One researcher name is still garbled by the auto-captions (2014 MPS paper) — flagged above, verify before citing. The 2000 and 2013 testosterone papers have been matched to Koziris and Vingren respectively.
 - Most of the MPS evidence base is rodent work; only one high-quality human study is cited.
 - The recovery and testosterone effects are strongly dose-dependent, and "moderate intoxication" is not precisely defined.
 - "A calorie is a calorie" is presented as a useful heuristic rather than a hard rule.

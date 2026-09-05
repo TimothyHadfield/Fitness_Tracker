@@ -26,7 +26,7 @@ There is a ceiling in the other direction too: too much frequency for one body p
 ## 2. Exercise order
 Training a body part early in a session means you're stronger for it than if it's last — that much research and experience agree on. But putting the weak point *first* isn't automatically right: if it's a small muscle, fatiguing it early can wreck the rest of the workout. Lagging biceps trained first will be fresher, but then they're pre-fatigued for all your back work, capping the loads you can use there.
 
-**Pre-exhaustion is a bro-science error.** Research on pre-exhaustion shows that fatiguing a target muscle before a compound makes it *less* active in that compound, not more — burning out the quads with leg extensions before leg press just causes other muscles to take over. Counterproductive.
+**Pre-exhaustion is a bro-science error.** Research on pre-exhaustion shows that fatiguing a target muscle before a compound makes it *less* active in that compound, not more — burning out the quads with leg extensions before leg press just causes other muscles to take over ([Augustsson 2003](https://www.ncbi.nlm.nih.gov/pubmed/12741886)). Counterproductive.
 
 **Pre-activation is different and does work.** You're not fatiguing the muscle, just warming it up and establishing a mind-muscle connection. A few banded lateral walks or light glute bridges before squats will get the glutes more involved. High-rep kickbacks to burnout before squats will do the opposite — the quads and hamstrings take over.
 

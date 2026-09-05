@@ -16,7 +16,7 @@ Capped lateral delts create the X-frame — wider shoulders and the illusion of 
 **Muscles involved:** primarily **shoulder abduction** (raising the arm out to the side), handled by the lateral deltoid. Unless the raise is perfectly out to the side there's some shoulder flexion as the dumbbells drift forward, involving the **front delts**. The scapular upward rotation component is handled by the **upper traps** — which cueing can partly take out of the movement.
 
 ## Variation choice [01:09]
-Jeff's personal favourite is the **Egyptian cable lateral raise**: pass the cable between your legs and lean *into* the direction of the raise. The rationale for leaning comes from data from McMahon et al. (auto-captions render this "mcmahon atoll") showing the middle deltoid matters more near the **end range** of motion while the supraspinatus is more involved near the **beginning**. Passing the cable between the legs also gives a comfortable position where the cable can't hit your body.
+Jeff's personal favourite is the **Egyptian cable lateral raise**: pass the cable between your legs and lean *into* the direction of the raise. The rationale for leaning comes from data from McMahon et al. showing the middle deltoid matters more near the **end range** of motion while the supraspinatus is more involved near the **beginning** ([McMahon 1995](https://www.ncbi.nlm.nih.gov/pubmed/7552678)). Passing the cable between the legs also gives a comfortable position where the cable can't hit your body.
 
 Cables also provide more consistent tension than dumbbells, since a dumbbell's circular resistance path means peak tension at the top and minimal tension at the bottom. The hypertrophy implications of that aren't clear, so Jeff's advice is to pick a variation you like, can feel in your delts, and can get better at over time. Bands, machines and kettlebells all work; experimentation is fine, but there's a limit to the extra benefit from making the movement increasingly convoluted.
 
@@ -64,7 +64,6 @@ Apart from cable, band and machine variations, Jeff doesn't think there's much o
 - Sit down or keep glutes flexed to kill momentum.
 
 ## Caveats & unknowns
-- The McMahon citation's name is garbled in the auto-captions; treat the spelling as uncertain.
 - Whether the dumbbell's inconsistent resistance curve matters for hypertrophy is unclear.
 - The pinky-up internal rotation cue carries a possible impingement risk per research Jeff references but does not name.
 - Greg Nuckols' multi-rotation suggestion is offered as an idea worth trying, not an evidenced protocol.

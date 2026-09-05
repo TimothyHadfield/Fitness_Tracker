@@ -20,9 +20,9 @@ A sample leg day: 2 sets squats, 2 sets leg curls, 1 set lunges, 2 sets leg exte
 For context, the standard science-based guideline is 10–20 hard sets per muscle per week, not counting warmups.
 
 ## The volume literature
-[02:50] **Krieger 2010** — meta-analysis of 8 studies comparing 1 set vs 2–3 sets per exercise. 2–3 sets was about 40% more effective than 1 set.
+[02:50] **Krieger 2010** — meta-analysis of 8 studies comparing 1 set vs 2–3 sets per exercise. 2–3 sets was about 40% more effective than 1 set ([Krieger 2010](https://pubmed.ncbi.nlm.nih.gov/20300012/)).
 
-**Krieger and colleagues, 2016** — meta-analysis switching the unit to sets per muscle per week; found a clear dose-response, more volume meant more gains.
+**Krieger and colleagues, 2016** — meta-analysis switching the unit to sets per muscle per week; found a clear dose-response, more volume meant more gains ([Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/27433992/)).
 
 **Pelland and colleagues (2024)** — the largest volume meta-analysis to date, 35 studies. Clear dose-response holding from 4 sets per muscle per week all the way up to 43 sets per week.
 
@@ -35,11 +35,11 @@ For context, the standard science-based guideline is 10–20 hard sets per muscl
 He explicitly declines to use the "it's just edema, not real muscle" criticism — he thinks the effect is too large across too many studies, and the Pelland authors address it in the paper.
 
 ## Evidence for low volume
-**Bickel and colleagues** — 70 subjects trained legs 3x/week for 16 weeks: 3 sets squats + 3 sets leg press + 3 sets leg extension each session, 27 sets/week for quads. Half then dropped to **one set of each exercise once per week — 3 sets total per week**. They maintained 100% of size and strength for 16 weeks, then another 16 weeks: 32 weeks (224 days) of maintenance on 3 sets a week. Some subjects kept gaining.
+**Bickel and colleagues** — 70 subjects trained legs 3x/week for 16 weeks: 3 sets squats + 3 sets leg press + 3 sets leg extension each session, 27 sets/week for quads. Half then dropped to **one set of each exercise once per week — 3 sets total per week**. They maintained 100% of size and strength for 16 weeks, then another 16 weeks: 32 weeks (224 days) of maintenance on 3 sets a week. Some subjects kept gaining ([Bickel 2011](https://pubmed.ncbi.nlm.nih.gov/21131862/)).
 
-**Herman and colleagues, September 2025** — 42 resistance-trained subjects on two full-body workouts per week, one set per exercise, ~30 minutes per session. Split into a failure group and a 2-RIR group. After 8 weeks both made significant gains, but **the failure group grew better overall**. Two takeaways: experienced lifters can gain on low volume, and on low volume you should train to failure.
+**Hermann and colleagues, September 2025** — 42 resistance-trained subjects on two full-body workouts per week, one set per exercise, ~30 minutes per session. Split into a failure group and a 2-RIR group. After 8 weeks both made significant gains, but **the failure group grew better overall** ([Hermann 2025](https://pubmed.ncbi.nlm.nih.gov/40249908/)). Two takeaways: experienced lifters can gain on low volume, and on low volume you should train to failure.
 
-**Robinson and colleagues, 2023 meta-analysis** — the closer you train to failure, the more muscle you gain. Nippard's conclusion: if any variable deserves the crown, it's training hard, not volume.
+**Robinson and colleagues, 2023 meta-analysis** — the closer you train to failure, the more muscle you gain ([Robinson 2023](https://www.researchgate.net/publication/370837310)). Nippard's conclusion: if any variable deserves the crown, it's training hard, not volume.
 
 The logic that ties it together: with only a small number of sets you can afford to push nearly every one to failure. On a high-volume plan the accumulated fatigue and injury risk would outweigh the marginal benefit.
 

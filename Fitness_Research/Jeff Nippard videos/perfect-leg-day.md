@@ -46,7 +46,7 @@ The leg press already grew the quads, but the rectus femoris is the only quad he
 Use a 3-second count on every negative. Two payoffs: the eccentric is likely more hypertrophic than the concentric, and slowing it forces lighter loads, which spares the knees without costing stimulus.
 
 ## Seated calf raise [05:04]
-He is more ambivalent about seated calf raises than he used to be. A 2020 study found the soleus responds poorly to both high-rep and low-rep training, so the old "target the slow-twitch soleus with high reps" logic looks outdated. The soleus appears substantially less responsive to training than the gastroc.
+He is more ambivalent about seated calf raises than he used to be. A 2020 study found the soleus responds poorly to both high-rep and low-rep training ([Schoenfeld 2020](https://pubmed.ncbi.nlm.nih.gov/32342648/)), so the old "target the slow-twitch soleus with high reps" logic looks outdated. The soleus appears substantially less responsive to training than the gastroc.
 
 Arguably you would be better off putting that volume into straight-leg work to involve the gastroc. He thinks swapping seated for standing calf work is defensible, but wants a long-term hypertrophy study comparing soleus and gastroc growth on seated vs standing before dropping seated entirely. Until then: include both, one bent-knee and one straight-knee. If you have no seated machine, you are probably not missing much.
 

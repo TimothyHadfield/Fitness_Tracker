@@ -11,12 +11,12 @@
 - The catch: diet breaks **substantially lengthen the diet** (30 weeks vs 16 in the study), and going from a 33% deficit to maintenance may not feel like much of a break for smaller people.
 
 ## Background
-The diet break was popularised by **Lyle McDonald** in *The Guide to Flexible Dieting*, drawing on a **2003 paper by Wing and Jeffery**. That study compared 20 weeks of continuous dieting, 20 weeks with a single 6-week break in the middle, and 20 weeks with three evenly spaced 2-week breaks. **Weight loss was about the same across all three.**
+The diet break was popularised by **Lyle McDonald** in *The Guide to Flexible Dieting*, drawing on a **2003 paper by Wing and Jeffery** ([Wing 2003](https://www.ncbi.nlm.nih.gov/pubmed/12582226)). That study compared 20 weeks of continuous dieting, 20 weeks with a single 6-week break in the middle, and 20 weeks with three evenly spaced 2-week breaks. **Weight loss was about the same across all three.**
 
 That surprised the researchers — they had introduced the breaks expecting to *induce* weight regain. Their speculation was that breaks help with long-term sustainability and long-term weight loss. Then nothing much was published on the question until 2017.
 
 ## The Byrne study [01:02]
-36 obese men, split into two groups, with **total net caloric deficit matched** across groups:
+36 obese men, split into two groups, with **total net caloric deficit matched** across groups ([Byrne 2018](https://www.ncbi.nlm.nih.gov/pubmed/28925405)):
 
 - **Group 1 (continuous):** 16 weeks straight at a **33% deficit** — eating 67% of maintenance. Worked example: 3,000 kcal maintenance → 2,000 kcal per day for 16 weeks.
 - **Group 2 (diet breaks):** alternating **2 weeks at the same 33% deficit / 2 weeks at maintenance**, repeated for **30 total weeks**. Same example: 2,000 kcal for two weeks, 3,000 kcal for two weeks, repeat.

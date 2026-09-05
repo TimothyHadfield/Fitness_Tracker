@@ -21,7 +21,7 @@ The stringy goop in unfiltered ACV, credited by advocates with containing health
 - Most ACV people actually buy doesn't contain the mother at all.
 
 ## Weight and fat loss [02:04]
-One high-quality study exists: a **2009 trial in 175 obese Japanese subjects**, randomised, double-blind, placebo-controlled, over **12 weeks**, three groups:
+One high-quality study exists: a **2009 trial in 175 obese Japanese subjects** ([Kondo 2009](https://www.ncbi.nlm.nih.gov/pubmed/19661687)), randomised, double-blind, placebo-controlled, over **12 weeks**, three groups:
 - placebo (made to taste like vinegar),
 - **15 ml** (~1 tablespoon) vinegar daily,
 - **30 ml** (~2 tablespoons) vinegar daily,
@@ -34,17 +34,17 @@ Reasons for scepticism:
 - At a **4-week follow-up after the study ended, all three groups had regained the weight**.
 - Energy intake was tracked by **self-reported diet diary**, universally recognised as unreliable and inaccurate for calorie reporting.
 
-A **2013 study** did show increased satiety when vinegar was taken with breakfast — but the effect was driven by vinegar making people **nauseous**, which led the author to discourage its use as an appetite suppressant.
+A **2013 study** did show increased satiety when vinegar was taken with breakfast — but the effect was driven by vinegar making people **nauseous**, which led the author to discourage its use as an appetite suppressant ([Darzi 2014](https://www.ncbi.nlm.nih.gov/pubmed/23979220)).
 
 ## Blood glucose — the strongest claim [04:37]
-A **2017 meta-analysis of 11 studies** found a significant effect in favour of vinegar for both glucose and insulin response. Five of those comparisons did use apple cider vinegar specifically. However:
+A **2017 meta-analysis of 11 studies** found a significant effect in favour of vinegar for both glucose and insulin response ([Shishehbor 2017](https://www.ncbi.nlm.nih.gov/pubmed/28292654)). Five of those comparisons did use apple cider vinegar specifically. However:
 - Effects are generally larger in subjects with **diabetes or insulin resistance** — that's where the practical significance lies, not in healthy individuals.
 - The effect is **carbohydrate-type dependent, and ironically backwards**: it works by inhibiting **starch digestion**, so it helps meaningfully with complex/starchy carbohydrates (where the glycemic response is already lower) and **doesn't seem to work at all with simple sugars** — precisely the situation, like sugary drinks and processed food, where you'd most want it. A catch-22.
 
 ## The other claims [05:40]
 - **Acne:** it can apparently dry out pimples, but because of the smell and the risk of chemical burns, experts recommend safer and more effective skincare methods.
 - **Digestion:** possible if the mother is prebiotic, but an actual apple contains far more prebiotics, plus more nutrients and fibre. On probiotics, the Vinegar Institute states the mother is produced by and contains **acetobacter** — a line of bacteria unlikely to be probiotic. Digestive benefits are not well supported, though Nippard stays open to individual benefit for reasons not yet understood.
-- **Tooth whitening:** actively unwise. The acid clearly erodes enamel.
+- **Tooth whitening:** actively unwise. The acid clearly erodes enamel ([Mandel 2005](https://www.ncbi.nlm.nih.gov/pubmed/15693499)).
 - **Cancer and cardiovascular disease:** no convincing human evidence.
 - **House cleaning:** chemical disinfectants are simply more effective.
 

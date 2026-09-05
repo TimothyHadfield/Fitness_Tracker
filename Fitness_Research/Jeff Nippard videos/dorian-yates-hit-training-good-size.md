@@ -17,7 +17,7 @@ Dorian Yates-style HIT — roughly one all-out working set to failure per exerci
 Nippard isn't convinced. Too many confounders: drug protocols have changed considerably since then, and modern competitors tend to look more bloated for reasons unrelated to set counts. There are also very grainy, dense-looking lifters (he names Branch Warren) who don't train in a Yates-like style. He doesn't rule it out, but there's no clean case for training style being the cause.
 
 ## The two research camps
-- **Higher-volume camp:** researchers such as Brad Schoenfeld and James Krieger, whose work generally supports a dose-response relationship between weekly volume and muscle growth.
+- **Higher-volume camp:** researchers such as Brad Schoenfeld and James Krieger, whose work generally supports a dose-response relationship between weekly volume and muscle growth ([Schoenfeld 2017](https://pubmed.ncbi.nlm.nih.gov/27433992/)).
 - **Lower-volume camp:** James Fisher and James Steele (Nippard says on camera he can't recall their first names). They argue you capture most of the hypertrophic return from a single all-out set to failure — far closer to what Yates advocated.
 
 Nippard says he's open to both bodies of literature and interviews researchers from the volume side, but doesn't treat the low-volume work as refuted.

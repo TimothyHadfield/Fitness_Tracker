@@ -11,7 +11,7 @@
 - **Preacher curls and standing curls complement each other** — opposite activation profiles across the range of motion, so pair them.
 
 ## Press angle and grip width: front delt activation [05:19]
-**Barnett et al. 1995** is the main study. It compared four bench angles:
+**Barnett et al. 1995** is the main study ([Barnett 1995](http://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_variations_of_the_bench_press_exercise.3.aspx)). It compared four bench angles:
 - **−8° (decline)**
 - **0° (flat / horizontal)**
 - **40° (incline)**
@@ -25,14 +25,14 @@ Findings:
 His conclusion: because the incline press also recruits **both the sternocostal and clavicular heads of the pecs** far more than a strict vertical press does, the **40° incline with a wide grip gives more bang for your buck** — near-maximal delt activation plus substantial chest work.
 
 Two supporting studies:
-- **Trebs et al. 2010** — inclines beat flat for delt activation.
-- **A 2015 paper (author garbled in captions, uncertain)** — same result.
+- **Trebs et al. 2010** — inclines beat flat for delt activation ([Trebs 2010](https://www.researchgate.net/publication/44639244_An_Electromyography_Analysis_of_3_Muscles_Surrounding_the_Shoulder_Joint_During_the_Performance_of_a_Chest_Press_Exercise_at_Several_Angles)).
+- **Lauver et al. 2016** — same result ([Lauver 2016](https://www.ncbi.nlm.nih.gov/pubmed/25799093)).
 
 ## Free weights vs machines for the delts [06:51]
 Three papers:
-1. **Schick et al. 2010** — compared **flat barbell bench press vs Smith machine bench press**. **No difference in anterior deltoid activation.** However, **medial/lateral delt activation was higher with the free-weight version**, presumably because the lateral delt takes on more of a **stabilisation** role.
-2. **Saeterbakken et al. 2011** — essentially the same result: **no difference between machine and free-weight pressing.**
-3. **A 1994 paper (author garbled — possibly "McCaw et al.", uncertain)** — in contrast, found **deltoid activity much higher for the free-weight press.** Two things distinguish it: it was **the only one of the three to test a vertical press** rather than a horizontal press, which may matter; and the result was **load-dependent** — at **60% of 1RM free weights produced more activation**, while at **80% of 1RM there was no difference** between machine and free weights.
+1. **Schick et al. 2010** — compared **flat barbell bench press vs Smith machine bench press**. **No difference in anterior deltoid activation.** However, **medial/lateral delt activation was higher with the free-weight version**, presumably because the lateral delt takes on more of a **stabilisation** role ([Schick 2010](https://www.ncbi.nlm.nih.gov/pubmed/20093960)).
+2. **Saeterbakken et al. 2011** — essentially the same result: **no difference between machine and free-weight pressing** ([Saeterbakken 2013](https://www.ncbi.nlm.nih.gov/pubmed/23096062)).
+3. **McCaw et al. 1994** ([McCaw 1994](http://journals.lww.com/nsca-jscr/Abstract/1994/11000/A_Comparison_of_Muscle_Activity_Between_a_Free.11.aspx)) — in contrast, found **deltoid activity much higher for the free-weight press.** Two things distinguish it: it was **the only one of the three to test a vertical press** rather than a horizontal press, which may matter; and the result was **load-dependent** — at **60% of 1RM free weights produced more activation**, while at **80% of 1RM there was no difference** between machine and free weights.
 
 **Mechanism proposed by the authors:** the anterior deltoid resists lateral rotation of the humerus and the lateral deltoid resists adduction of the humerus, so the extra activity on free weights likely reflects their contribution to **stabilising the shoulder**, not extra prime-mover work.
 
@@ -61,7 +61,7 @@ On **one-arm dumbbell upright rows vs rope upright rows**: the dumbbell gives mo
 ## Caveats & unknowns
 - Everything here is **EMG activation data**, which is a proxy for hypertrophy, not a measure of it.
 - The three free-weight-vs-machine studies **disagree**, and the outlier used a different press direction (vertical vs horizontal) and different loads — the discrepancy is not resolved.
-- Three of the six researcher names are garbled by the auto-captions (the 2015 incline paper, the 1994 press paper, the 2009 curl paper) — verify before citing.
+- One researcher name remains garbled by the auto-captions (the 2009 curl paper) — verify before citing.
 - The claim that machine press handles force greater front-delt bias is his reasoning, not a tested finding.
 
 ## References

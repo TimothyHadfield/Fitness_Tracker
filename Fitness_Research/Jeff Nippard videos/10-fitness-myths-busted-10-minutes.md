@@ -12,7 +12,7 @@
 
 ## 1. High protein wrecks your bones and kidneys
 **Verdict: busted.**
-[00:31] The osteoporosis claim traces to a handful of outdated studies from the 1970s and 80s using obsolete methodology. A 2017 systematic review from the National Osteoporosis Foundation, using newer and better methods, concluded dietary protein's effect on the skeleton appears favourable to a small extent and is not detrimental. On kidneys, a 2007 World Health Organization report concluded that while high protein intake clearly contributes to deterioration in patients who *already have* renal disease, restricting protein in healthy subjects has no foundation.
+[00:31] The osteoporosis claim traces to a handful of outdated studies from the 1970s and 80s using obsolete methodology. A 2017 systematic review from the National Osteoporosis Foundation, using newer and better methods, concluded dietary protein's effect on the skeleton appears favourable to a small extent and is not detrimental ([Shams-White 2017](https://www.ncbi.nlm.nih.gov/pubmed/28404575)). On kidneys, a 2007 World Health Organization report concluded that while high protein intake clearly contributes to deterioration in patients who *already have* renal disease, restricting protein in healthy subjects has no foundation.
 
 ## 2. The post-workout anabolic window
 **Verdict: busted as commonly stated.**
@@ -28,21 +28,21 @@ Numbers: the WHO recommends sugar occupy no more than 10% of total calories, but
 
 ## 4. Weight training stunts growth in kids
 **Verdict: busted, cleanly.**
-[03:06] The myth originates in 1960s observational data finding Japanese child labourers tended to be short. Correlation isn't causation, and essentially every regulatory body now holds the position that no scientific evidence indicates resistance training adversely affects growth during childhood or adolescence.
+[03:06] The myth originates in 1960s observational data finding Japanese child labourers tended to be short. Correlation isn't causation, and essentially every regulatory body now holds the position that no scientific evidence indicates resistance training adversely affects growth during childhood or adolescence ([Lloyd 2014](https://www.ncbi.nlm.nih.gov/pubmed/24055781)).
 
 ## 5. You can only absorb 20-30 g of protein per meal
 **Verdict: busted on "absorb", real question is "use".**
 [03:37] The gut has a virtually unlimited capacity to absorb amino acids into the blood — eat 500 g of protein in one meal and essentially all of it is absorbed. The useful question is how much can be used for muscle building. A study published a month after his original video answered it: consume **0.4 to 0.55 g of protein per kg bodyweight per meal, spread across four meals per day**. For an 80 kg (175 lb) person that's **32-44 g per meal, four meals a day**.
 
-Counterpoint: intermittent fasting research suggests you can still maximise muscle building eating all your protein at once, and IF adherents eating 80-100+ g in a single meal don't appear to struggle to build muscle. Setting IF aside, his best guess for the per-meal maximum is somewhere between 20 and 40 g for most people. Total daily protein still takes priority over distribution or timing.
+Counterpoint: intermittent fasting research suggests you can still maximise muscle building eating all your protein at once ([Soeters 2009](https://www.ncbi.nlm.nih.gov/pubmed/19776143)), and IF adherents eating 80-100+ g in a single meal don't appear to struggle to build muscle. Setting IF aside, his best guess for the per-meal maximum is somewhere between 20 and 40 g for most people. Total daily protein still takes priority over distribution or timing.
 
 ## 6. Fasted cardio burns more fat
 **Verdict: busted.**
-[05:08] Burning more fat during a session doesn't mean losing more fat over 24 hours. Paoli and colleagues (captions render this "peléan" — name uncertain) showed that burning more fat during a cardio session means burning less over the following 24 hours. A 2017 systematic review concluded fasted versus fed exercise doesn't increase weight loss or fat mass loss. There's no specific harm either — no negative impact on muscle mass. Do cardio when it fits your schedule and energy; net 24-hour energy balance decides fat loss.
+[05:08] Burning more fat during a session doesn't mean losing more fat over 24 hours. Paoli and colleagues showed that burning more fat during a cardio session means burning less over the following 24 hours ([Paoli 2011](https://www.ncbi.nlm.nih.gov/pubmed/21411835)). A 2017 systematic review concluded fasted versus fed exercise doesn't increase weight loss or fat mass loss. There's no specific harm either — no negative impact on muscle mass. Do cardio when it fits your schedule and energy; net 24-hour energy balance decides fat loss.
 
 ## 7. Carbs before bed make you fat
 **Verdict: busted.**
-[06:12] The reasoning is that metabolism slows during sleep. It doesn't reliably: sleep metabolic rate is lower than resting metabolic rate in obese subjects but *higher* than resting metabolic rate in healthy non-obese subjects. On top of that, dietary carbohydrate isn't readily converted to body fat — de novo lipogenesis is uncommon in humans. Eat on the schedule that suits your preferences, appetite and life, while staying aware that late-night snacking driven by sleep deprivation or TV can add calories.
+[06:12] The reasoning is that metabolism slows during sleep. It doesn't reliably: sleep metabolic rate is lower than resting metabolic rate in obese subjects but *higher* than resting metabolic rate in healthy non-obese subjects ([Zhang 2002](https://www.ncbi.nlm.nih.gov/pubmed/11896493)). On top of that, dietary carbohydrate isn't readily converted to body fat — de novo lipogenesis is uncommon in humans. Eat on the schedule that suits your preferences, appetite and life, while staying aware that late-night snacking driven by sleep deprivation or TV can add calories.
 
 ## 8. Foam rolling
 **Verdict: mixed, no strong case either way.**
@@ -54,7 +54,7 @@ Counterpoint: intermittent fasting research suggests you can still maximise musc
 
 ## 10. Starvation mode
 **Verdict: busted.**
-[08:43] Metabolism does slow as you lose weight, but there's no point at which fat loss stops or reverses on very low calories — visibly true in genuinely starving people, who are emaciated, not weight-stable. If you're not losing on low calories, three likelier explanations:
+[08:43] Metabolism does slow as you lose weight ([Müller 2015](https://www.ncbi.nlm.nih.gov/pubmed/26399868)), but there's no point at which fat loss stops or reverses on very low calories — visibly true in genuinely starving people, who are emaciated, not weight-stable. If you're not losing on low calories, three likelier explanations:
 1. **You're eating more than you think.** People are notoriously bad at tracking and reporting intake, and overweight people tend to under-report most.
 2. **Water retention is masking fat loss.** Stress, poor sleep, high fibre intake and similar can hold water mass while fat mass falls.
 3. **Suppressed spontaneous physical activity.** Very low calories subconsciously cut fidgeting, walking around and general movement, lowering total daily energy expenditure.

@@ -11,7 +11,7 @@
 - No obvious harm either. If keto works for you and you adhere to it, keep going — the best diet is the one you stick to.
 
 ## What keto is, and where it came from
-Medical use began in the early 1900s as an epilepsy treatment; in 1921 Dr Russell Wilder coined the term "ketogenic diet," named for the ketone bodies that rise in blood when dietary carbohydrate is too low to serve as the main fuel. It remains an effective epilepsy treatment. Mainstream popularity arrived in the 1970s with the Atkins diet, most of whose ideas were rejected by sound medical science, and resurged in fitness circles in the mid-2010s.
+Medical use began in the early 1900s as an epilepsy treatment; in 1921 Dr Russell Wilder coined the term "ketogenic diet," named for the ketone bodies that rise in blood when dietary carbohydrate is too low to serve as the main fuel. It remains an effective epilepsy treatment ([Levy 2012](https://www.ncbi.nlm.nih.gov/pubmed/22419282)). Mainstream popularity arrived in the 1970s with the Atkins diet, most of whose ideas were rejected by sound medical science, and resurged in fitness circles in the mid-2010s.
 
 **Typical macros in practice:** ~5% of calories from carbohydrate, ~20% protein, ~75% fat. Carbs are generally capped at **no more than 50 g/day**, mostly from fibrous sources like vegetables or trace amounts in other foods.
 
@@ -19,7 +19,7 @@ Medical use began in the early 1900s as an epilepsy treatment; in 1921 Dr Russel
 The argument: since insulin drives lipogenesis, keeping insulin low by restricting carbs means less fat storage and more fat mobilisation.
 
 Problems:
-- The hypothesis has been experimentally falsified as too simplistic.
+- The hypothesis has been experimentally falsified as too simplistic ([Hall 2017](https://www.ncbi.nlm.nih.gov/pubmed/28074888)).
 - Carbs are not the only insulinogenic nutrient — protein is highly insulinogenic too.
 - Insulin isn't required for fat storage. Even on a zero-carb diet, a caloric surplus stores fat via acylation stimulating protein (ASP).
 
@@ -36,17 +36,17 @@ It suppresses appetite — an effect repeatedly noted in the literature. But car
 Keto also eliminates whole categories of food, so people often eat fewer calories without noticing because the more appetising aisles are off-limits. Neither mechanism requires cutting out food groups — you can impose a deficit without it.
 
 ## The outcome data [05:07]
-- **2014 JAMA meta-analysis, 48 studies** on popular diets (Atkins, Weight Watchers, etc.): essentially all calorie-reducing diets produced clinically important weight loss as long as they were maintained, and differences between them were small and likely unimportant. Atkins beat the Zone diet slightly. The authors' conclusion: since diets are tolerated differently by different people, the ideal diet is the one best adhered to.
-- **Meta-analysis of low-carb vs calorie-matched conventional diets in overweight adults:** short-term weight loss occurred irrespective of macronutrient composition.
-- **2013 meta-analysis, Bueno and colleagues** (only studies restricting carbs below 50 g/day, 13 studies): a statistically significant effect favouring keto, but only about **1 kg** more loss on average. The authors themselves noted the long-term difference is of little clinical significance despite being statistically significant.
+- **2014 JAMA meta-analysis, 48 studies** on popular diets (Atkins, Weight Watchers, etc.): essentially all calorie-reducing diets produced clinically important weight loss as long as they were maintained, and differences between them were small and likely unimportant. Atkins beat the Zone diet slightly. The authors' conclusion: since diets are tolerated differently by different people, the ideal diet is the one best adhered to ([Johnston 2014](https://www.ncbi.nlm.nih.gov/pubmed/25182101)).
+- **Meta-analysis of low-carb vs calorie-matched conventional diets in overweight adults:** short-term weight loss occurred irrespective of macronutrient composition ([Naude 2014](https://www.ncbi.nlm.nih.gov/pubmed/25007189)).
+- **2013 meta-analysis, Bueno and colleagues** (only studies restricting carbs below 50 g/day, 13 studies): a statistically significant effect favouring keto, but only about **1 kg** more loss on average ([Bueno 2013](https://www.ncbi.nlm.nih.gov/pubmed/23651522)). The authors themselves noted the long-term difference is of little clinical significance despite being statistically significant.
 - **Confound:** protein intake typically isn't controlled in these trials — keto groups usually eat more protein in place of carbs. Protein is both more thermogenic (costlier to metabolise) and more satiating than carbs or fat, so it inflates the keto result.
-- **2012 study, Soenen et al., 132 subjects, four calorie-matched groups** (normal protein/normal carb, normal protein/low carb, high protein/normal carb, high protein/low carb): after 1 year, **no difference between normal-carb and low-carb groups when protein was matched**, and high protein outperformed normal protein in both carb conditions. Protein, not carbs, is the central variable — before even counting protein's role in preserving muscle.
+- **2012 study, Soenen et al., 132 subjects, four calorie-matched groups** (normal protein/normal carb, normal protein/low carb, high protein/normal carb, high protein/low carb): after 1 year, **no difference between normal-carb and low-carb groups when protein was matched**, and high protein outperformed normal protein in both carb conditions ([Soenen 2012](https://www.ncbi.nlm.nih.gov/pubmed/22935440)). Protein, not carbs, is the central variable — before even counting protein's role in preserving muscle.
 
 Early keto weight loss is exaggerated by glycogen depletion and water loss; after the first few weeks the difference against a balanced diet disappears and it becomes a question of sustainability.
 
 ## Health outcomes [08:39]
 - **Insulin sensitivity / diabetes:** a 2018 American Diabetes Association report found some studies showing modest benefits from very low-carb or ketogenic diets, but concluded the approach may only be appropriate short-term — **up to three or four months** — and only if the patient wants it, given little long-term data on benefit or harm. Even in existing diabetes, there is no single ideal carb-to-fat distribution; macronutrients should be individualised around total calorie and metabolic goals.
-- **Cardiovascular:** one meta-analysis found significantly greater increases in **both HDL and LDL cholesterol** on low-carb, with no significant difference in systolic or diastolic blood pressure. Given how multifactorial CVD is, the practical significance of these differences between calorie-matched diets is questionable.
+- **Cardiovascular:** one meta-analysis found significantly greater increases in **both HDL and LDL cholesterol** on low-carb, with no significant difference in systolic or diastolic blood pressure ([Mansoor 2016](https://www.ncbi.nlm.nih.gov/pubmed/26768850)). Given how multifactorial CVD is, the practical significance of these differences between calorie-matched diets is questionable.
 - **Diet quality:** eliminating all grains removes their nutrients, and while leafy greens fit within keto, fruit usually doesn't — a poor trade given fruit is nutrient-rich and palatable.
 - Keto won't kill you either: the body handles ketosis fine once adapted, and carbohydrates aren't an essential nutrient.
 

@@ -13,7 +13,7 @@
 ## What the paper actually challenges
 The chain of reasoning EMG research implicitly relies on runs: greater excitation → greater activation → greater motor unit recruitment → greater muscle protein synthesis → greater hypertrophy. The paper's authors attack the **last link** in that chain.
 
-Their key citation is a 2014 study whose title was roughly "myofibrillar protein synthesis does not correlate with long-term hypertrophic adaptations." It found that muscle protein synthesis measured in the ~6 hours after a resistance training session did not correlate with hypertrophy across a ~12-week training programme.
+Their key citation is a 2014 study whose title was roughly "myofibrillar protein synthesis does not correlate with long-term hypertrophic adaptations." It found that muscle protein synthesis measured in the ~6 hours after a resistance training session did not correlate with hypertrophy across a ~12-week training programme ([Mitchell 2014](https://www.ncbi.nlm.nih.gov/pubmed/24586775)).
 
 They also cite stretch research showing significant hypertrophy can occur from stretching **in the absence of activation** — a clean demonstration that activation is not a necessary condition for growth.
 

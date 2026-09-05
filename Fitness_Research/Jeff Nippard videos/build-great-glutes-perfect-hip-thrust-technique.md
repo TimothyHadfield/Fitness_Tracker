@@ -15,7 +15,7 @@ It trains almost pure **hip extension** (hips moving from flexed to extended). A
 
 Two qualities make it unusual: a huge capacity for overload, and an excellent basis for building a mind-muscle connection with the glutes. Overload capacity is illustrated by Bret Contreras hip thrusting over 700 lb and Katy Sonnier doing over 500 lb for reps at 120 lb body weight.
 
-**Research:** Contreras and colleagues (2015) found the hip thrust produced higher glute EMG activation than the back squat. This was followed by the first hip thrust twin case study: over six weeks, the twin who hip thrusted gained significantly more upper *and* lower glute growth than the twin who squatted. The likely mechanism is that the hip thrust loads the glutes at and past neutral hip position, whereas vertically loaded lifts like the squat and deadlift shed tension exactly where the glutes reach full hip extension.
+**Research:** Contreras and colleagues (2015) found the hip thrust produced higher glute EMG activation than the back squat ([Contreras 2015](https://www.ncbi.nlm.nih.gov/pubmed/26214739)). This was followed by the first hip thrust twin case study: over six weeks, the twin who hip thrusted gained significantly more upper *and* lower glute growth than the twin who squatted. The likely mechanism is that the hip thrust loads the glutes at and past neutral hip position, whereas vertically loaded lifts like the squat and deadlift shed tension exactly where the glutes reach full hip extension.
 
 ## Setup [01:33]
 The main downside of the exercise is the setup. Specialty equipment (the Hip Thruster) makes it easier; without it, three steps:

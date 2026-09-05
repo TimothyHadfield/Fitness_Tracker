@@ -19,7 +19,7 @@ Four heads. Medial to lateral: **vastus medialis** (the teardrop), **vastus inte
 Because all four contribute to knee extension, knee-extension exercises are the way to hit the whole group.
 
 ## Where the leg extension fits
-Start any quad-focused session with a heavy compound: back squat, front squat, or hack squat. A 2015 study found the **front squat gives a similar training stimulus to the back squat with lighter loads**, which may reduce injury risk over time.
+Start any quad-focused session with a heavy compound: back squat, front squat, or hack squat. A 2015 study found the **front squat gives a similar training stimulus to the back squat with lighter loads**, which may reduce injury risk over time ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26252837)).
 
 The leg extension's job is to add quad volume without piling recovery demand onto other muscles and joints. If quads are a priority body part, compounds alone may not get you there — some isolation is likely needed.
 
@@ -38,7 +38,7 @@ Many believe leg extensions are dangerous due to shear forces and ACL stress. Dr
 
 **2. Pull your butt down into the seat.** Locks you into the machine so power doesn't leak. A butt that pops up usually means you're cutting range of motion short at the bottom.
 
-**3. Toes straight ahead or slightly in.** Two independent EMG studies both found toes-in produced more vastus lateralis activation — useful if you want the outer sweep / X-frame look. No meaningful toe-position effect for the other heads. Beginners: whatever's comfortable.
+**3. Toes straight ahead or slightly in.** Two independent EMG studies both found toes-in produced more vastus lateralis activation ([Stoutenberg 2005](https://www.ncbi.nlm.nih.gov/pubmed/16437818)) — useful if you want the outer sweep / X-frame look. No meaningful toe-position effect for the other heads. Beginners: whatever's comfortable.
 
 ## Common errors [04:40]
 - **Half reps.** Bouncing through only half the range, usually a sign the weight is too heavy. Or setting the pins so high you only do the top half. Both rob you of growth.

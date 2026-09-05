@@ -11,9 +11,9 @@
 - When the cut ends, jump straight to maintenance (200-600 kcal above your end-of-cut intake). Do not reverse diet slowly.
 
 ## Why diets rebound
-The Biggest Loser follow-up study tracked 14 participants from the 2009 season six years later: only one had kept the weight off, five had regained all of it, and two weighed more than before the show. Half the group had at least fully regained.
+The Biggest Loser follow-up study tracked 14 participants from the 2009 season six years later: only one had kept the weight off, five had regained all of it, and two weighed more than before the show. Half the group had at least fully regained ([Fothergill 2016](https://pubmed.ncbi.nlm.nih.gov/27136388/)).
 
-A 2020 systematic review ("the challenge of keeping it off") pooled eight weight loss studies. Every one produced weight loss during the dieting period, and every one showed average regain afterwards — a few with overshoot past the original starting weight. [00:30]
+A 2020 systematic review ("the challenge of keeping it off") ([Nordmo 2020](https://pubmed.ncbi.nlm.nih.gov/31675146/)) pooled eight weight loss studies. Every one produced weight loss during the dieting period, and every one showed average regain afterwards — a few with overshoot past the original starting weight. [00:30]
 
 ## How fat loss works, and why the numbers move
 Energy out has four components: resting energy expenditure, exercise activity thermogenesis, non-exercise activity thermogenesis (NEAT — fidgeting, standing, typing), and the thermic effect of food. Burn 2,500 and eat 3,000 and you are 500 over; eat 2,000 and you are 500 under, which is roughly one pound of loss per week — a reasonable target for most people.
@@ -42,7 +42,7 @@ Two failure modes. Most common: no plan at all — motivation fades, old habits 
 
 Then treat maintenance as a **dynamic range**, not a fixed number — you might hold weight anywhere from 2,600 to 3,000. Monitor the weekly weight trend and add calories when you are still maintaining, pushing toward the top of the range. This is not a metabolism trick; eating more simply feels less restrictive (easier to sustain) and improves training performance, which matters if a lean gaining phase comes next. [12:12]
 
-**Keep weighing yourself.** Regular self-weighing is associated with better long-term weight maintenance in the literature. Two to three days a week during maintenance is enough — skip it if it causes emotional stress.
+**Keep weighing yourself.** Regular self-weighing is associated with better long-term weight maintenance in the literature ([Butryn 2007](https://pubmed.ncbi.nlm.nih.gov/18198319/)). Two to three days a week during maintenance is enough — skip it if it causes emotional stress.
 
 ## Practical application
 1. Find maintenance, subtract 20%. Target 0.5-1% bodyweight loss per week, or deliberately slower.

@@ -18,11 +18,11 @@ On the low-rep side: a 2015 study compared **25-35 reps per set** against **8-12
 Why he still recommends **6-15 reps** in practice: above 15 reps costs disproportionate recovery for no extra growth; below 6 reps adds injury risk from heavy loading. Dip above or below occasionally, but live in that band.
 
 ## Myth 2: one body part per workout
-The classic Mon-chest / Tue-back / Wed-legs / Thu-shoulders / Fri-arms split assumes a muscle needs a full week to recover. Research suggests there is a **per-session volume threshold** — 12 chest sets on one day is worse than 6 sets on each of two push days.
+The classic Mon-chest / Tue-back / Wed-legs / Thu-shoulders / Fri-arms split assumes a muscle needs a full week to recover. Research suggests there is a **per-session volume threshold** ([Barbalho 2019](https://www.ncbi.nlm.nih.gov/pubmed/30779716)) — 12 chest sets on one day is worse than 6 sets on each of two push days.
 
 Mechanism: training spikes muscle protein synthesis for roughly 24 hours, then it falls back toward baseline around **48-72 hours** post-workout (figure from Damas and colleagues). In trained lifters the response is shorter still — MPS starts dropping after roughly 10 hours and is near baseline within a day or two, which is a theoretical argument for higher-frequency full-body work in advanced lifters.
 
-Counterpoint he makes himself: a 2019 systematic review and meta-analysis of 25 studies found **frequency does not significantly affect hypertrophy when weekly volume is equated**. Bro splits work — he built muscle on one for 3-4 years and knows natural competitors who use them. The real problems are practical: performance on later sets in a huge single session degrades, and higher frequency usually ends up producing more total weekly volume, which does drive growth.
+Counterpoint he makes himself: a 2019 systematic review and meta-analysis of 25 studies found **frequency does not significantly affect hypertrophy when weekly volume is equated** ([Schoenfeld 2019](https://www.ncbi.nlm.nih.gov/pubmed/30558493)). Bro splits work — he built muscle on one for 3-4 years and knows natural competitors who use them. The real problems are practical: performance on later sets in a huge single session degrades, and higher frequency usually ends up producing more total weekly volume, which does drive growth.
 
 ## Myth 3: you need to be sore
 Soreness signals a novel stimulus, not an effective one. A marathon would make him very sore with zero hypertrophy; stabbing his leg would make him sorer than a good leg day. Soreness can actively hurt progress by degrading performance on the next session two days later — and it's that next session's performance that matters.

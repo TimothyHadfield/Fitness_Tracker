@@ -27,11 +27,11 @@ Reviewed in that month's issue of MASS (Greg Nuckols / Eric Helms' research revi
 
 ## Findings
 
-**Order effect [07:11].** Doing cardio first improved endurance measures; doing weights first improved strength and size measures. Straightforward specificity — train the priority quality when you're fresh.
+**Order effect [07:11].** Doing cardio first improved endurance measures; doing weights first improved strength and size measures ([Küüsmaa-Schildt 2017](https://www.ncbi.nlm.nih.gov/pubmed/28704882)). Straightforward specificity — train the priority quality when you're fresh.
 
 Nippard notes a common claim (raised by Greg in the MASS piece) that cardio should go first because cardio is catabolic and would otherwise blunt the post-workout anabolic signal. He is unaware of data supporting this, and this study found the opposite. Go with the data.
 
-**Time of day [10:44].** No difference between morning and evening in the first 12 weeks. In the **second 12 weeks, the evening group gained significantly more muscle.** Two earlier papers cited in the review agree that evening training tends to produce more hypertrophy. The authors didn't speculate on mechanism; Nippard's hypothesis is that it's performance-driven — better hydration, more fed, more glycogen, more awake.
+**Time of day [10:44].** No difference between morning and evening in the first 12 weeks. In the **second 12 weeks, the evening group gained significantly more muscle** ([Küüsmaa 2016](https://www.ncbi.nlm.nih.gov/pubmed/27863207)). Two earlier papers cited in the review agree that evening training tends to produce more hypertrophy. The authors didn't speculate on mechanism; Nippard's hypothesis is that it's performance-driven — better hydration, more fed, more glycogen, more awake.
 
 He dismisses the "train in the morning for growth hormone" argument: manipulating hormones within the natural physiological range is a fool's errand (as covered in his testosterone and steroids videos). Structure training around when you actually perform best.
 

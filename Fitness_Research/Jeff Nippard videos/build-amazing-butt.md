@@ -16,7 +16,7 @@ Gluteus maximus is the largest muscle in the body. It performs hip extension, hi
 Gluteus medius is about **half the weight** of the glute max — not a trivial share of the butt. It is slightly more **slow-twitch dominant**, so a somewhat **higher rep range** suits it. Its main job is stabilisation, but you can target it directly through hip abduction.
 
 ## Targeting the glute medius [01:01]
-A **2014 study by Lee (name uncertain — auto-captions render it "lien") and colleagues** found that **internal rotation (toes pointed in)** activated the glute medius more effectively. Since external rotation biases the glute max, the practical rule is:
+A **2014 study by Lee and colleagues** found that **internal rotation (toes pointed in)** activated the glute medius more effectively ([Lee 2014](https://www.ncbi.nlm.nih.gov/pubmed/24560168)). Since external rotation biases the glute max, the practical rule is:
 
 - **Toes in** → glute medius
 - **Toes out** → glute maximus
@@ -24,10 +24,10 @@ A **2014 study by Lee (name uncertain — auto-captions render it "lien") and co
 Unilateral exercises with a stabilisation demand also load the medius: single-leg hip thrusts, split squats, walking lunges.
 
 ## Pre-activation [01:34]
-A **2016 study by Fisher and colleagues** found that targeted glute training improved glute recruitment in larger compound movements, attributed to changes in **cortical motor excitability**. Practical read: isolation-style glute activation drills carry over to heavier compounds like the hip thrust.
+A **2016 study by Fisher and colleagues** found that targeted glute training improved glute recruitment in larger compound movements, attributed to changes in **cortical motor excitability** ([Fisher 2016](https://www.ncbi.nlm.nih.gov/pubmed/26981714)). Practical read: isolation-style glute activation drills carry over to heavier compounds like the hip thrust.
 
 ## Hip thrust variations [02:05]
-A **2016 study by Contreras and colleagues** compared three variations:
+A **2016 study by Contreras and colleagues** compared three variations ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26695353)):
 
 - **Barbell hip thrust** — neutral pelvis, body positioned further down the bench
 - **American hip thrust** — posterior pelvic tilt, body further up the bench
@@ -40,10 +40,10 @@ Individual variation is real: **11 of 13 subjects** peaked with the traditional 
 Since most trainees are chasing the upper glute "shelf", other data suggests pairing hip thrusts with **hip abduction work such as banded clams**, which selectively targets the upper glutes.
 
 ## Abduction and line of pull [03:05]
-A **2013 study** found that **30° of hip abduction** increased glute activation during prone hip extension. The mechanism given: the glute max is a **fusiform** muscle, so activation is optimised when the fibres run parallel to the line of pull. Abducting the hips or widening the stance achieves that alignment.
+A **2013 study** found that **30° of hip abduction** increased glute activation during prone hip extension ([Kang 2013](https://www.ncbi.nlm.nih.gov/pubmed/23312068)). The mechanism given: the glute max is a **fusiform** muscle, so activation is optimised when the fibres run parallel to the line of pull. Abducting the hips or widening the stance achieves that alignment.
 
 ## Frequency and recovery [03:36]
-Literature generally favours training a muscle **2x/week over 1x/week**. But per **Brett Contreras**, glute exercises differ in how long they take to recover from:
+Literature generally favours training a muscle **2x/week over 1x/week** ([Schoenfeld 2016](https://www.ncbi.nlm.nih.gov/pubmed/27102172)). But per **Bret Contreras**, glute exercises differ in how long they take to recover from:
 
 - **Stretchers** (Romanian deadlifts, squats, lunges) — **3-4 days** recovery
 - **Activators** (hip thrusts, cable pull-throughs) — **2-3 days**
@@ -65,8 +65,8 @@ Research points to **periodic variation** as the key factor, so the routine shou
 ## Caveats & unknowns
 - Nearly all of the evidence cited is **EMG activation** data, not long-term hypertrophy data — higher activation is a proxy, not proof of more growth.
 - The hip thrust findings showed meaningful **individual variation** (2 of 13 subjects responded better to non-traditional variations), so test the variants on yourself.
-- The researcher name in the 2014 abduction/internal-rotation study is garbled in the captions and is flagged as uncertain; the 2013 prone hip extension study was not attributed by name.
-- The recovery-time categories come from **Brett Contreras' practical framework**, not from a cited trial.
+- The researcher name in the 2014 abduction/internal-rotation study is garbled in the captions, and the 2013 prone hip extension study was not attributed by name in the video; both are resolved from Nippard's reference list (Lee et al. 2014, Kang et al. 2013).
+- The recovery-time categories come from **Bret Contreras' practical framework**, not from a cited trial.
 
 ## References
 

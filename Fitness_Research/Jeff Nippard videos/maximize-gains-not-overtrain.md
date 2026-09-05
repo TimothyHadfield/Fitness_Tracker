@@ -16,10 +16,10 @@ Overtraining is an imbalance between training and recovery producing a decrement
 Nippard notes PubMed returns ~869 results on overtraining, but most studies are on elite endurance and track athletes with clinical overtraining syndrome — not bodybuilders, and much less general lifters trying to add mass.
 
 ## How much training is too much
-- **Brad Schoenfeld's 2010 review** concluded overtraining results more from excessive **volume** than from intensity.
-- A study by **Fry and colleagues** (name from auto-captions, spelling uncertain) had trained men perform a **1RM machine squat 6 days/week for 2 weeks**; 1RM strength **dropped 12%**.
-- Recent volume-matched data cited: **3x10 vs 7x3** produced the **same hypertrophy**, but the heavy group experienced more fatigue. So unless training specifically for strength, keep loads moderate — mostly **6-12 reps** for maximum muscle.
-- Volume ballpark, credited to **Eric Helms**: a low-end target of **40-70 reps per body part, 2-3 sessions per week**. Advanced lifters typically need more, so add workload gradually while assessing recovery.
+- **Brad Schoenfeld's 2010 review** concluded overtraining results more from excessive **volume** than from intensity ([Schoenfeld 2010](https://www.ncbi.nlm.nih.gov/pubmed/20847704)).
+- A study by **Fry and colleagues** had trained men perform a **1RM machine squat 6 days/week for 2 weeks**; 1RM strength **dropped 12%** ([Fry 1994](https://www.ncbi.nlm.nih.gov/pubmed/7808252)).
+- Recent volume-matched data cited: **3x10 vs 7x3** produced the **same hypertrophy**, but the heavy group experienced more fatigue ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/24714538)). So unless training specifically for strength, keep loads moderate — mostly **6-12 reps** for maximum muscle.
+- Volume ballpark, credited to **Eric Helms**: a low-end target of **40-70 reps per body part, 2-3 sessions per week** ([Helms 2015](https://www.ncbi.nlm.nih.gov/pubmed/24998610)). Advanced lifters typically need more, so add workload gradually while assessing recovery.
 
 ## Monitoring recovery
 Two options, subjective and objective.
@@ -41,7 +41,7 @@ Deloads serve two purposes: preventing overuse injury, and resensitising the bod
 - Cut training **volume roughly in half**, and drop the **weight by 25-50%**.
 - More intuitive alternative: stop a few extra reps shy of failure and **halve the sets on every exercise** for a couple of weeks.
 
-**Full training breaks** are also worth taking occasionally — they give connective tissue a complete rest with no loss of progress. A **2011 study** found a group training continuously for **15 weeks** gained the same muscle as a group that took a **3-week break halfway through**.
+**Full training breaks** are also worth taking occasionally — they give connective tissue a complete rest with no loss of progress. A **2011 study** found a group training continuously for **15 weeks** gained the same muscle as a group that took a **3-week break halfway through** ([Ogasawara 2011](https://www.ncbi.nlm.nih.gov/pubmed/21771261)).
 
 ## Practical application
 - Train mostly at **6-12 reps**; reserve heavy low-rep work for genuine strength goals.
@@ -55,7 +55,6 @@ Deloads serve two purposes: preventing overuse injury, and resensitising the bod
 - Most overtraining research comes from elite endurance/track athletes, not resistance-trained lifters, so direct transfer is limited.
 - This guidance targets **advanced trainees**, who must overreach more regularly to progress. **Beginners** can usually progress linearly without deliberate overreaching or deloads.
 - Overtraining is not the only cause of a stall: **program monotony** (never varying the plan) can stunt progress, and sometimes the actual fix is pushing harder, not resting more.
-- The researcher name behind the 6-days-per-week 1RM squat study was garbled in the captions (heard as "Fry") — verify before citing.
 
 ## References
 

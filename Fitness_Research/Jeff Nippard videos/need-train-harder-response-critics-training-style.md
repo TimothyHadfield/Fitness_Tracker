@@ -11,7 +11,7 @@
 - "Just train harder" is correct advice for some people and exactly the wrong advice for people already pushing appropriately.
 
 ## His position on failure
-The gap in muscle growth between taking a set to true failure and stopping with a couple of reps left is small in either direction — some studies favour failure slightly, some favour stopping short. He cites a then-new study using a within-subject leg extension design: one leg to failure, the other to roughly RPE 8 (up to 2 reps in reserve). Growth was essentially equal, with a non-significant trend favouring the *non-failure* leg.
+The gap in muscle growth between taking a set to true failure and stopping with a couple of reps left is small in either direction — some studies favour failure slightly, some favour stopping short. He cites a then-new study using a within-subject leg extension design: one leg to failure, the other to roughly RPE 8 (up to 2 reps in reserve). Growth was essentially equal, with a non-significant trend favouring the *non-failure* leg ([Lacerda 2020](https://www.ncbi.nlm.nih.gov/pubmed/31809457)).
 
 He pushes back on his own side too: failure is not categorically more fatiguing. A set of deadlifts taken to failure at 8-10 reps is enormously fatiguing; a set of lateral raises or curls to failure leaves him recovered within a minute or two with no impact on next-day training. The generalisation holds well enough for heavy compounds, so failure should be a spice, not the meal.
 
@@ -23,7 +23,7 @@ He rejects the caricature that he advocates low-effort, go-through-the-motions t
 ## Critique 2: "RPE is fine for beginners, advanced lifters must go to failure"
 He argues the reverse. RPE in its modern form was developed by Mike Tuchscherer (auto-captions render this as "Mike Teixeira") for elite world-stage powerlifters, and is now near-universal among top powerlifting coaches, with lifters like Bryce Lewis relying on it heavily.
 
-He then surveyed the placing finishers at the WNBF World Championships (a drug-tested federation, chosen deliberately — steroids build more muscle than training itself does, which muddies any anecdote about training method):
+He then surveyed the placing finishers at the WNBF World Championships (a drug-tested federation, chosen deliberately — steroids build more muscle than training itself does ([Bhasin 1996](https://www.ncbi.nlm.nih.gov/pubmed/8637535)), which muddies any anecdote about training method):
 
 - **Overall winner Kendall Richmond:** never trains to failure, but does use intensity techniques such as running the rack on drop sets without reaching failure.
 - **Middleweight winner Stephen Chang:** situation-dependent, but does not train to failure.
@@ -33,7 +33,7 @@ He then surveyed the placing finishers at the WNBF World Championships (a drug-t
 None of them trains at maximum effort year-round. They all work hard; the approach is just more nuanced than "harder every session."
 
 ## Critique 3: "People can't judge reps in reserve, so RPE is too subjective"
-Partly true. He references a study he covered previously: subjects picked their usual 10-rep bench weight and were told to take it to failure. Over 40% got 6-10 more reps than expected, and 26% got 19-20 reps with their supposed 10-rep load — meaning 9+ reps left in reserve, nowhere near enough intensity to drive growth beyond the newbie phase.
+Partly true. He references a study he covered previously: subjects picked their usual 10-rep bench weight and were told to take it to failure ([Barbosa-Netto 2021](https://www.ncbi.nlm.nih.gov/pubmed/29112055)). Over 40% got 6-10 more reps than expected, and 26% got 19-20 reps with their supposed 10-rep load — meaning 9+ reps left in reserve, nowhere near enough intensity to drive growth beyond the newbie phase.
 
 His read: this shows that untrained-to-effort lifters left to their own devices train lazily, not that RPE is invalid. Other research shows experienced lifters predict reps-in-reserve accurately, especially at moderate-to-low rep counts. If you have gone to failure often enough to know what it feels like, estimating 1-2 reps left is not hard — and accuracy improves with deliberate practice.
 

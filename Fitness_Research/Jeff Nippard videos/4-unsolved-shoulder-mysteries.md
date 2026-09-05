@@ -16,7 +16,7 @@
 
 **3. Grip width and deltoid activation.** Does a wider grip or a narrower grip produce greater deltoid activation in pressing?
 
-**4. Neutral vs pronated grip on the reverse pec deck.** **Schoenfeld and colleagues** found a neutral (palms facing each other) grip activated the rear delts better than a pronated (palms down) grip. This was surprising because biomechanically, external rotation of the shoulder should put the lateral delt in a better position to contract through horizontal abduction. Why did the EMG find the opposite of what biomechanics predicts?
+**4. Neutral vs pronated grip on the reverse pec deck.** **Schoenfeld and colleagues** found a neutral (palms facing each other) grip activated the rear delts better than a pronated (palms down) grip ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/23302754)). This was surprising because biomechanically, external rotation of the shoulder should put the lateral delt in a better position to contract through horizontal abduction. Why did the EMG find the opposite of what biomechanics predicts?
 
 ## Practical application
 No recommendations are made in this video. It sets up the reasoning covered in the follow-up.

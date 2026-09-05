@@ -46,7 +46,7 @@ And this is from his own audience — women presumably already gym-inclined and 
 Men's stated goals: most wanted level 4, with 33% wanting level 5. So a third of men chase a physique only 10% of women rate as most attractive.
 
 ## The broader research
-[11:14] The largest study Jeff found was a meta-analysis of **over 170,000 subjects** testing which of six stereotypically masculine traits best predicts mating and reproductive success: height, voice pitch, facial masculinity, testosterone levels, 2D:4D finger ratio, and strength/muscularity.
+[11:14] The largest study Jeff found was a meta-analysis of **over 170,000 subjects** testing which of six stereotypically masculine traits best predicts mating and reproductive success: height, voice pitch, facial masculinity, testosterone levels, 2D:4D finger ratio, and strength/muscularity ([Lidborg 2022](https://pubmed.ncbi.nlm.nih.gov/35179485/)).
 
 Winner: **strength and muscularity** — ahead of height and voice pitch. But all six combined accounted for only about **5% of the variance** in mating outcomes.
 

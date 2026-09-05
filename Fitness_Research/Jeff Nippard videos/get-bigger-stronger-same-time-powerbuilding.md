@@ -13,14 +13,14 @@
 ## Rep range and hypertrophy
 [00:30] The classic personal-training table — heavy for strength, moderate for size, light for endurance — drives the Instagram claim that heavy makes you strong but not big. The evidence doesn't support the size half.
 
-A study by **Schoenfeld and colleagues** split 20 trained men into a moderate-load group (10 reps per set) and a heavy group (3 reps per set), with total volume matched. After **8 weeks both groups gained the same amount of muscle**.
+A study by **Schoenfeld and colleagues** split 20 trained men into a moderate-load group (10 reps per set) and a heavy group (3 reps per set), with total volume matched. After **8 weeks both groups gained the same amount of muscle** ([Schoenfeld 2014](https://pubmed.ncbi.nlm.nih.gov/24714538/)).
 
 Reviewing the whole literature, **Greg Nuckols** plotted every high-rep vs low-rep hypertrophy dataset: there is **no obvious relationship between rep count and growth**. Heavy, moderate and light all work provided effort is sufficient.
 
-The one floor: a **2018 paper** found growth drops off once you go down to **20% of 1RM** — that's 50-100 reps for most people, so not a practical concern.
+The one floor: a **2018 paper** ([Lasevicius 2018](https://pubmed.ncbi.nlm.nih.gov/29564973/)) found growth drops off once you go down to **20% of 1RM** — that's 50-100 reps for most people, so not a practical concern.
 
 ## Rep range and strength
-[02:31] Here the range does matter. In the same Schoenfeld study the heavy 3-rep group saw **significantly better bench press strength gains** than the moderate group. Strength is a skill: to get better at lifting heavy, lift heavy. Good news for the powerbuilder — heavy "pure strength" work still counts toward size.
+[02:31] Here the range does matter. In the same Schoenfeld study the heavy 3-rep group saw **significantly better bench press strength gains** than the moderate group ([Schoenfeld 2014](https://pubmed.ncbi.nlm.nih.gov/24714538/)). Strength is a skill: to get better at lifting heavy, lift heavy. Good news for the powerbuilder — heavy "pure strength" work still counts toward size.
 
 ## Why not just do heavy low reps then?
 [03:01] The heavy sessions in that study took **more than four times as long** to complete and produced higher reported mental and physical fatigue. Mixing ranges is also likely to recruit different growth mechanisms: lower reps signal growth primarily through **mechanical tension**, higher reps primarily through **metabolic stress**, and mid-range reps through a combination. Using all three makes sense.

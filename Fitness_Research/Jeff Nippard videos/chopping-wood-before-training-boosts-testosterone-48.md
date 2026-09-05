@@ -13,7 +13,7 @@
 ## The study in question [00:00]
 A viewer asked about a study in the Journal of Evolution and Human Behavior reporting a **48% rise in testosterone after one hour of chopping wood**, versus roughly **20%** from lifting weights — should you chop wood before leg day?
 
-Nippard looked it up. It was published in **2013**, not new. The subjects were forager-horticulturalist men from a community in Bolivia; the auto-captions garble the group's name ("Simon forager farmers"), so the exact population name shouldn't be trusted as transcribed. Key details:
+Nippard looked it up. It was published in **2013**, not new ([Trumble 2013](https://www.ncbi.nlm.nih.gov/pubmed/24187482)). The subjects were **Tsimane** forager-horticulturalist men from a community in Bolivia (the auto-captions garble the group's name as "Simon forager farmers"). Key details:
 - Subjects ranged from **age 16 to 80**.
 - Their **baseline salivary testosterone was already one third lower** than age-matched US males.
 - The paper itself notes that non-industrialised populations facing energetic constraints and pathogenic stress show lower testosterone across all adult ages compared with men in industrialised nations.
@@ -23,7 +23,7 @@ Nippard's objection: comparing deprived men in that setting with men living in W
 ## The bigger point: the hormone hypothesis is dead
 The broader question — should you care about acute hormonal changes around a training session? Probably not.
 
-The idea was popular a decade or more ago. Recent literature has converged on a consensus: focus on progressive tension and progressive overload. Building a program around acute spikes in testosterone, growth hormone or IGF-1 is futile because those spikes are (a) extremely transient and (b) don't take you far enough outside the normal physiological range to affect muscle growth. Nippard credits work by **Brad Schoenfeld** (transcript garbles this as "Bradshaw infilled") and **Stuart Phillips**, and says essentially every expert in the field now agrees.
+The idea was popular a decade or more ago. Recent literature has converged on a consensus: focus on progressive tension and progressive overload. Building a program around acute spikes in testosterone, growth hormone or IGF-1 is futile because those spikes are (a) extremely transient and (b) don't take you far enough outside the normal physiological range to affect muscle growth. Nippard credits work by **Brad Schoenfeld** (transcript garbles this as "Bradshaw infilled") ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/23442269)) and **Stuart Phillips** ([Morton 2018](https://www.ncbi.nlm.nih.gov/pubmed/30356739)), and says essentially every expert in the field now agrees.
 
 ## What testosterone actually does matter for
 Testosterone is unambiguously anabolic — but what counts is **prolonged elevation** and where your **baseline** sits.
@@ -40,7 +40,7 @@ The natural physiological range runs roughly **300 to 1000 ng/dL**. Reasoning th
 
 ## Caveats & unknowns
 - Nippard explicitly says he doesn't know how much within-range testosterone change is needed for physique-level effects — the literature hasn't answered it.
-- The Bolivian population's name is garbled in the auto-captions and is not reproduced here.
+- The Bolivian population's name is garbled in the auto-captions; the reference list confirms it as the Tsimane.
 - The 48% and 20% figures come from the viewer's framing of the 2013 paper; Nippard doesn't dispute them but argues they don't generalise.
 
 ## References

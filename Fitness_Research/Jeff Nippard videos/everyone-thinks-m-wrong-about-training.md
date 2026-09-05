@@ -49,7 +49,7 @@ Notably, Dr Wolf had been training with **lengthened partials exclusively for a 
 - If you like full ROM, keep it — it's clearly effective.
 - Substitute lengthened partials on exercises where the full squeeze is uncomfortable, awkward, or where the top of the movement is easy anyway.
 - If you skip the stretch entirely, you're probably leaving growth on the table.
-- Calves and hamstrings are the muscles where the earlier studies found the biggest lengthened-partial advantages — reasonable places to bias toward partials.
+- Calves and hamstrings are the muscles where the earlier studies found the biggest lengthened-partial advantages ([Kassiano 2023](https://pubmed.ncbi.nlm.nih.gov/37015016/)) — reasonable places to bias toward partials.
 
 ## Caveats & unknowns
 This is one 8-week study; a single null result shouldn't overturn nine prior studies favouring the stretched position. Effects may be exercise-specific and muscle-specific. The subject pool was experienced lifters, so the beginner literature still stands on its own. Jeff is an author on the study, which is a conflict of interest worth noting, though he had the results withheld from him until all statistics were finalised.

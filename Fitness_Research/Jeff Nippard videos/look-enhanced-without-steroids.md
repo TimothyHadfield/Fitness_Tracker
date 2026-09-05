@@ -22,7 +22,7 @@ Nearly every interviewee pointed at the biceps of the four men in the "questiona
 Nippard coached one subject to the all-time Canadian bench press record for his weight class in drug-tested powerlifting, and rates the bench press highly for chest development despite the science-based community's preference for machines. For upper pecs specifically, **incline pressing is clearly better** — include an incline press or incline fly for complete pec development.
 
 ### 4. Traps
-Big traps genuinely are a statistical indicator of PED use, because the **upper traps have a higher androgen receptor density** than most other muscles — more receptors for injected testosterone to bind to. To build them naturally:
+Big traps genuinely are a statistical indicator of PED use, because the **upper traps have a higher androgen receptor density** than most other muscles ([Kadi 2000](https://pubmed.ncbi.nlm.nih.gov/10664066/)) — more receptors for injected testosterone to bind to. To build them naturally:
 - Shrugs with a **slightly wider grip**, thinking about shrugging **up and in** — upper trap fibres run far more horizontally than most people realise, so this matches fibre orientation.
 - Include an overhead raise: a full-ROM lateral raise or an overhead cable lateral raise.
 - **Direct neck training** still makes a difference here even though it has fallen out of fashion.
@@ -35,7 +35,7 @@ Two lighting setups were shot on the same group: under standard diffuse lighting
 
 ## The bloodwork
 Nippard's reference framework for judging natural status by testosterone:
-- Most healthy young men: **~200–850 ng/dL**
+- Most healthy young men: **~200–850 ng/dL** ([Zhu 2022](https://pubmed.ncbi.nlm.nih.gov/36282060/))
 - **Over 1,000** is slightly suspicious
 - **Over 1,200** is very suspicious
 - **Over 1,500** is basically impossible without steroid use
@@ -43,7 +43,7 @@ Nippard's reference framework for judging natural status by testosterone:
 
 Results for the eight subjects: **415 to 689 ng/dL**, except one subject at **928**. To check that outlier, Nippard measured his **luteinizing hormone (LH) and follicle stimulating hormone (FSH)** — both drop very low with steroid use, so high testosterone with suppressed LH/FSH would be damning. His LH and FSH sat right in the middle of the reference range, as did everyone else's. 928 is high but unremarkable for an active male in his late teens.
 
-Key finding: **more testosterone did not correlate with more muscle within the natural range.** Research supports this — as long as you're in the normal healthy range, testosterone does far less for muscle growth than people assume. Only supraphysiological injected levels pack on serious size.
+Key finding: **more testosterone did not correlate with more muscle within the natural range.** Research supports this — as long as you're in the normal healthy range, testosterone does far less for muscle growth than people assume ([Morton 2018](https://pubmed.ncbi.nlm.nih.gov/30356739/)). Only supraphysiological injected levels pack on serious size.
 
 ## The genetics argument
 Two photographic reference points for extreme natural development: Melvin Wells in **1949** (first corroborated reports of testosterone use in lifting were 1952, so almost certainly natural, though Soviet lifters used it in the late 1940s), and an unnamed lifter photographed in **1912** — two decades before injectable testosterone was isolated — with bicep peaks resembling the modern subject who drew the most accusations.

@@ -21,28 +21,28 @@ Four muscles make up the midsection, from outside in:
 ## Squats and deadlifts don't train the abs [01:31]
 Two opposing camps are both wrong: one says compounds make direct ab work unnecessary, the other says compounds thicken the waist. Biomechanically the lumbar spine shouldn't be flexing or rotating under a squat or deadlift, and EMG agrees.
 
-- **Aspe and colleagues (2014)**, rugby players: back squat was ineffective at activating rectus abdominis and external obliques — **under 20% of maximum voluntary contraction**. A simple sit-up produced more than twice that.
-- **Willardson et al.** found even less: roughly **10% for the overhead press, under 5% for squat and deadlift** — and these used heavy 75% 1RM loads.
+- **Aspe and colleagues (2014)**, rugby players: back squat was ineffective at activating rectus abdominis and external obliques — **under 20% of maximum voluntary contraction** ([Aspe 2014](https://www.ncbi.nlm.nih.gov/pubmed/24662228)). A simple sit-up produced more than twice that.
+- **Willardson et al.** found even less: roughly **10% for the overhead press, under 5% for squat and deadlift** — and these used heavy 75% 1RM loads ([Willardson 2009](https://www.ncbi.nlm.nih.gov/pubmed/19417231)).
 
 **Dr. Brett Contreras**, on women worried about a blocky midsection: ditch the targeted abdominal and oblique work rather than avoiding squats and deadlifts — because it's the *isolation* work that actually grows those muscles. The corollary: if you want abs, you must isolate them.
 
 ## Exercise ranking from the EMG data [03:03]
-- **Crunch and sit-up variations** produce very high abdominal activity, consistent with the rectus abdominis's spinal-flexion role. **Morrison and colleagues (2009)**, *Journal of Physical Therapy and Sport*, found activation trended upward with increasing load — supporting **weighted crunches** as a progressive overload vehicle.
-- **Youdas et al. (2008)** compared crunch, ab slide (similar to an ab wheel), supine double leg thrust, and side bridge. The **ab slide produced the greatest rectus abdominis EMG** and also did well for obliques. The **double leg thrust** performed well across all muscles, generally beating the traditional crunch and side bridge. Limitation: exercises weren't loaded relative to 1RM, so the ab slide and double leg thrust groups may simply have been training harder.
+- **Crunch and sit-up variations** produce very high abdominal activity, consistent with the rectus abdominis's spinal-flexion role. **Moraes and colleagues (2009)**, *Journal of Physical Therapy and Sport*, found activation trended upward with increasing load — supporting **weighted crunches** as a progressive overload vehicle ([Moraes 2009](https://www.ncbi.nlm.nih.gov/pubmed/19376473)).
+- **Youdas et al. (2008)** compared crunch, ab slide (similar to an ab wheel), supine double leg thrust, and side bridge. The **ab slide produced the greatest rectus abdominis EMG** and also did well for obliques. The **double leg thrust** performed well across all muscles, generally beating the traditional crunch and side bridge ([Youdas 2008](https://www.ncbi.nlm.nih.gov/pubmed/18978615)). Limitation: exercises weren't loaded relative to 1RM, so the ab slide and double leg thrust groups may simply have been training harder.
 - **Bohack, Barens and Buskies** (names uncertain from auto-captions) compared **12 different ab exercises** and showed upper and lower ab regions can be targeted distinctly. In that data the **hanging leg raise was best for the lower abs** — consistent with the reasoning that movements bringing the pelvis toward the chest bias the lower region. The **arms-extended crunch was best for the upper abs**, with the hanging leg raise second. The **side bend** topped the list for obliques. This data came from the University of Dortmund, Germany; the **vertical hip flexor / lying leg raise showed the highest rectus abdominis EMG** among the 12.
-- **Sedar/Back and Nal** (names garbled — uncertain) corroborated distinct upper/lower activation using a BOSU ball crunch. Main finding: both upper and lower abs were about **20% more active** when a BOSU ball was placed under the *lower back* to make the surface unstable for the upper body, using 10RM loads.
+- **Saeterbakken and colleagues** corroborated distinct upper/lower activation using a BOSU ball crunch. Main finding: both upper and lower abs were about **20% more active** when a BOSU ball was placed under the *lower back* to make the surface unstable for the upper body, using 10RM loads ([Saeterbakken 2014](https://www.ncbi.nlm.nih.gov/pubmed/24936903)).
 
 ### Practical notes on specific movements
-- **Hanging leg raise** caveats: grip may fail before the abs do (use straps), and weak hip flexors can stop you reaching muscular failure (strengthen them). Establishing a mind-muscle connection with the lower abs helps — related data shows coaching cues to recruit or not recruit specific ab muscles change activation levels.
+- **Hanging leg raise** caveats: grip may fail before the abs do (use straps), and weak hip flexors can stop you reaching muscular failure (strengthen them). Establishing a mind-muscle connection with the lower abs helps — related data shows coaching cues to recruit or not recruit specific ab muscles change activation levels ([Karst 2004](https://www.ncbi.nlm.nih.gov/pubmed/14964586)).
 - **Reverse crunch** underperformed in the 12-exercise data, which is surprising given the similar double leg thrust ranked highly. Likely because it's easier, especially bodyweight. **Loading it with a weight between the ankles** makes it one of the best lower-ab movements available.
 - **Obliques:** side bends allow progressive overload with heavier dumbbells but train a limited pattern. Preference is for a more dynamic range covering lateral flexion and trunk rotation — e.g. **half-kneeling cable chops with a rope** — despite the lack of direct EMG data.
 
 ## Planks and unstable surfaces [07:07]
-A 2014 paper in the *Journal of Sports Biomechanics* found the **traditional front plank was not good at activating the core**. Modifying it into the **long lever posterior pelvic tilt plank** produced **over 100% MVC activation** for upper abs, lower abs and obliques.
+A 2014 paper in the *Journal of Sports Biomechanics* found the **traditional front plank was not good at activating the core**. Modifying it into the **long lever posterior pelvic tilt plank** produced **over 100% MVC activation** for upper abs, lower abs and obliques ([Schoenfeld 2014](https://www.ncbi.nlm.nih.gov/pubmed/25325773)).
 
 **How to do it:** move the elbows forward so they sit more under the eyes (long lever), and squeeze the glutes as hard as possible (posterior pelvic tilt). It is very difficult — start with a regular plank if new. Weighted planks also work well for progressive tension.
 
-**Unstable surfaces are not a core solution.** Willardson and colleagues found **no increase in core muscle activity** performing squat, deadlift, overhead press or biceps curl on a BOSU ball versus stable ground. (Note the contrast with the BOSU-under-the-lower-back crunch above — that's a different application.)
+**Unstable surfaces are not a core solution.** Willardson and colleagues found **no increase in core muscle activity** performing squat, deadlift, overhead press or biceps curl on a BOSU ball versus stable ground ([Willardson 2009](https://www.ncbi.nlm.nih.gov/pubmed/19417231)). (Note the contrast with the BOSU-under-the-lower-back crunch above — that's a different application.)
 
 ## Programming
 There is **no research supporting ultra-high-rep ab training**. The abs are roughly a **55/45 split of type I and type II fibres**, so like most muscles a combination of high and low reps is likely optimal.
@@ -59,8 +59,8 @@ There is **no research supporting ultra-high-rep ab training**. The abs are roug
 ## Caveats & unknowns
 - Nearly all rankings here come from EMG activation data, which is a proxy for hypertrophy, not a direct measure of it.
 - The Youdas comparison did not normalise loads to 1RM, which may have favoured the ab slide and double leg thrust.
-- Several researcher names are garbled in the auto-captions (the 12-exercise comparison authors, and the BOSU crunch authors) — treat those spellings as uncertain.
-- Crunch safety remains contested in personal training and physical therapy circles. Schoenfeld and Contreras (2011) state there is no convincing evidence that crunches performed within a total-body resistance programme harm posture, and cite benefits including increased fluid flow to discs, mobility improvements and performance enhancement.
+- Several researcher names are garbled in the auto-captions (the 12-exercise comparison authors) — treat those spellings as uncertain.
+- Crunch safety remains contested in personal training and physical therapy circles. Schoenfeld and Contreras (2011) state there is no convincing evidence that crunches performed within a total-body resistance programme harm posture, and cite benefits including increased fluid flow to discs, mobility improvements and performance enhancement ([Schoenfeld 2011](https://www.researchgate.net/publication/232156729_To_Crunch_or_Not_to_Crunch_An_Evidence-Based_Examination_of_Spinal_Flexion_Exercises_Their_Potential_Risks_and_Their_Applicability_to_Program_Design)).
 
 ## References
 

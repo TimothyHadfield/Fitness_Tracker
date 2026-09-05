@@ -37,8 +37,8 @@ His own everyday illustration [06:12]: Pop-Tarts come in packets of two. Fitting
 Before anyone concludes that junk food should be eliminated: there is **not a shred of evidence that any food causes fat gain above and beyond its excess calories**. Fat loss and fat gain are a matter of calories in versus calories out. Impaired sensory-specific satiety doesn't break that equation — it simply pushes more calories in on one side of it. This keeps the finding in the category of *appetite regulation*, not *metabolic magic*.
 
 ## Why not eliminate junk food entirely [07:14]
-- A 2002 study found people who were very rigid with their dietary approach had worse mood disturbances *and* tended toward higher body weight and more eating-disorder symptoms.
-- A later study (transcript says 2011; the year is garbled as "201") concluded rigid dietary control strategies were inversely related to dieting success while flexible control strategies were positively associated with it.
+- A 2002 study found people who were very rigid with their dietary approach had worse mood disturbances *and* tended toward higher body weight and more eating-disorder symptoms ([Stewart 2002](http://www.ncbi.nlm.nih.gov/pubmed/11883916)).
+- A later study (transcript says 2011; the year is garbled as "201") concluded rigid dietary control strategies were inversely related to dieting success while flexible control strategies were positively associated with it ([Meule 2011](http://www.ncbi.nlm.nih.gov/pubmed/21824503)).
 
 So excessive strictness predicts failure, and the answer to a satiety-inhibiting food environment is to change the environment rather than to police the food list.
 

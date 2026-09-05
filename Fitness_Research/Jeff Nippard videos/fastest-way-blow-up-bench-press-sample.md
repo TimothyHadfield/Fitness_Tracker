@@ -33,7 +33,7 @@ Ease your grip out by roughly **one finger-width per workout over the next few w
 ## Step 3: bench more often [05:04]
 Strength is a skill — practice it more. But practicing bad habits doesn't help, which is why technique came first.
 
-He has personally run 4-5x/week bench programs, but those demand tightly controlled per-session volume and intensity to avoid overtraining. For most people, **3 days per week is the sweet spot**, set up as **daily undulating periodization** targeting a different quality each day. A DUP study from **Dr. Mike Zourdos** (name garbled in the auto-captions as "Mike's or toes") showed this design increased 1RM strength.
+He has personally run 4-5x/week bench programs, but those demand tightly controlled per-session volume and intensity to avoid overtraining. For most people, **3 days per week is the sweet spot**, set up as **daily undulating periodization** targeting a different quality each day. A DUP study from **Dr. Mike Zourdos** showed this design increased 1RM strength ([Zourdos 2016](https://www.ncbi.nlm.nih.gov/pubmed/26332783)).
 
 Sample week:
 - **Day 1 — hypertrophy:** sets of 8

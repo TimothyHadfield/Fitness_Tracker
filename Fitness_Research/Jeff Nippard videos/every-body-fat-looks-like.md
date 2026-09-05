@@ -11,10 +11,10 @@
 - The number matters less than finding a range you can live in. Focus on training, eating and how you feel.
 
 ## Method
-Every subject was measured by DEXA (fasted) plus bioelectrical impedance (BIA), and photographed under identical lighting. DEXA is the reference standard for body composition in exercise science and clinical practice; a 2020 review found DEXA and MRI comparably accurate. Standard online charts use calipers, handheld devices or pure eyeballing, which lighting alone can distort badly.
+Every subject was measured by DEXA (fasted) plus bioelectrical impedance (BIA), and photographed under identical lighting. DEXA is the reference standard for body composition in exercise science and clinical practice; a 2020 review found DEXA and MRI comparably accurate ([Messina 2020](https://pubmed.ncbi.nlm.nih.gov/32742961/)). Standard online charts use calipers, handheld devices or pure eyeballing, which lighting alone can distort badly.
 
 ## Population benchmarks (US, 2017–2018 NHANES)
-- Average American woman: ~39% body fat. Average American man: ~27%.
+- Average American woman: ~39% body fat. Average American man: ~27% ([Liu 2021](https://pubmed.ncbi.nlm.nih.gov/33727242/)).
 - A man at 30% is leaner than ~40% of men. At 20% only ~12% of men are leaner. At 15% only ~2% of American men are below you.
 - A woman at 30% is leaner than ~90% of women. At 20%, under 1% of US women are leaner; only ~2% of US women are under 25%.
 - In a data report of over 9,000 American men, exactly **one** was under 12% body fat.

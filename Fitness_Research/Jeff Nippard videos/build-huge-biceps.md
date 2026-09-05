@@ -5,7 +5,7 @@
 
 ## Bottom line
 - Load light-to-moderate in the **8-20 rep range**; heavier loading just recruits other muscles to heave the weight.
-- Focus on **squeezing the biceps**, not moving the weight — a Schoenfeld 8-week training study found an internal focus on the biceps produced significantly more hypertrophy than focusing on the load.
+- Focus on **squeezing the biceps**, not moving the weight — a Schoenfeld 8-week training study found an internal focus on the biceps produced significantly more hypertrophy than focusing on the load ([Schoenfeld 2018](https://www.ncbi.nlm.nih.gov/pubmed/29533715)).
 - Curl the bar **out in an arc**, not straight up: this increases the moment arm between the elbow and the bar, generating far more torque and biceps tension at the same load.
 - **Actively supinate** by driving pressure through the pinky and ring fingers; supination is the biceps' unique job because the brachialis cannot supinate.
 - Barbell, EZ-bar and dumbbell curls are near-equivalent. Use whichever suits your wrists; the barbell's only real edge is finer load progression (2.5 lb/side vs 5 lb/side with dumbbells).

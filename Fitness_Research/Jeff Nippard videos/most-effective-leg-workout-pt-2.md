@@ -12,7 +12,7 @@
 
 ## The routine
 
-**Warm-up.** 5-10 min low-to-moderate cardio (elliptical or Stairmaster preferred — less impact than a treadmill, sweat comes on faster than a bike). Then 2-3 min dynamic stretching: a 2010 review on stretching and performance found static stretching before training generally hurts performance, while dynamic stretching is neutral to beneficial. Finish with light foam rolling on tight areas only. The foam rolling literature is mixed on soreness and ROM; Jeff leans toward it helping and notes there is nothing to lose.
+**Warm-up.** 5-10 min low-to-moderate cardio (elliptical or Stairmaster preferred — less impact than a treadmill, sweat comes on faster than a bike). Then 2-3 min dynamic stretching: a 2010 review on stretching and performance found static stretching before training generally hurts performance, while dynamic stretching is neutral to beneficial ([Behm 2011](https://www.ncbi.nlm.nih.gov/pubmed/21373870)). Finish with light foam rolling on tight areas only. The foam rolling literature is mixed on soreness and ROM ([Schroeder 2015](https://www.ncbi.nlm.nih.gov/pubmed/25968853)); Jeff leans toward it helping and notes there is nothing to lose.
 
 | # | Exercise | Sets x Reps | Key notes |
 |---|---|---|---|
@@ -38,17 +38,17 @@ He adds a broader argument: muscle and strength adaptations are well correlated 
 ## Deficit Bulgarian split squat [05:04]
 Complements the deadlift precisely because it delivers a huge range of motion and a large stretch on the glutes, quads and to a degree hamstrings. Setup: lower the Smith bar to the first or second lowest notch, lay the laces of the rear shoe over the pad, stand on a plate to deepen the ROM, and place the plate slightly out to the side to allow some hip external rotation for extra ROM.
 
-**Alternative:** front squat. A 2016 study found the front squat may provide a similar training stimulus to the back squat despite requiring lighter loads — which makes it a good deadlift partner, since the deadlift's recovery cost is high and the front squat's is comparatively low.
+**Alternative:** front squat. A 2016 study found the front squat may provide a similar training stimulus to the back squat despite requiring lighter loads ([Contreras 2016](https://www.ncbi.nlm.nih.gov/pubmed/26252837)) — which makes it a good deadlift partner, since the deadlift's recovery cost is high and the front squat's is comparatively low.
 
 ## Hip thrust [06:05]
 The single fixed rep count (15) is deliberate: master execution before adding reps or weight. You may not add load for several weeks. Form points: keep chin and ribcage tucked down, move only from the hips, don't extend the lower back, and build the mind-muscle connection. Add weight only once RPE has dropped by a point — roughly, once it feels about 10% easier than the previous week.
 
-Rationale: work from Barbell (name likely garbled in the captions — treat as uncertain) and colleagues, 2001, showed the glutes fire hardest at or near full hip extension. Since the hip thrust loads the glutes exactly there, it is unsurprising that later research from Brett Contreras found the barbell hip thrust activates the glutes more than the back squat.
+Rationale: work from Worrell and colleagues, 2001, showed the glutes fire hardest at or near full hip extension ([Worrell 2001](https://www.ncbi.nlm.nih.gov/pubmed/11767248)). Since the hip thrust loads the glutes exactly there, it is unsurprising that later research from Brett Contreras found the barbell hip thrust activates the glutes more than the back squat ([Contreras 2015](https://www.ncbi.nlm.nih.gov/pubmed/26214739)).
 
 ## The final four [07:35]
 **3-second eccentric goblet squat, 3x15.** Offsets the deadlift's eccentric deficit; slow eccentrics allow a similar hypertrophic response with lighter loads. Also trains the squat skill — stay very upright, let the knees travel as far forward as needed. Optionally elevate heels with squat shoes or a 2.5 lb plate if ankle mobility is limited.
 
-**Enhanced eccentric lying leg curl, 3x10.** Per a 2011 NSCA report from Dr. Brad Schoenfeld, eccentric strength is generally 20-50% greater than concentric strength. A partner applies manual resistance on the negative to exploit that; solo, use a 3-4 second lowering phase instead.
+**Enhanced eccentric lying leg curl, 3x10.** Per a 2011 NSCA report from Dr. Brad Schoenfeld, eccentric strength is generally 20-50% greater than concentric strength ([Schoenfeld 2011](https://www.researchgate.net/publication/232131783_The_Use_of_Specialized_Training_Techniques_to_Maximize_Muscle_Hypertrophy)). A partner applies manual resistance on the negative to exploit that; solo, use a 3-4 second lowering phase instead.
 
 **Machine seated hip abduction, 3x30.** Essentially unmatched for the glute medius and upper glutes, which men in particular neglect. High reps generate significant metabolic stress, one prong of Schoenfeld's three-pronged hypertrophy model. Placed last so recovery cost doesn't compromise other work. Keep the butt planted, focus on mind-muscle connection (touching the target area helps some people). Possible bonus: technique carryover to the squat, training the knees against caving into valgus.
 
@@ -63,7 +63,7 @@ Rationale: work from Barbell (name likely garbled in the captions — treat as u
 ## Caveats & unknowns
 - The eccentric-vs-concentric hypertrophy advantage and the metabolic-stress pathway are both areas where the evidence is suggestive rather than settled.
 - Foam rolling evidence is explicitly mixed; Jeff includes it on personal preference.
-- The "Barbell and colleagues 2001" citation is almost certainly a caption mangling of a researcher's name — verify before relying on it.
+- The "Barbell and colleagues 2001" citation was a caption mangling of Worrell and colleagues (2001), now corrected above.
 
 ## References
 

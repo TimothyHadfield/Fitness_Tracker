@@ -12,9 +12,9 @@
 
 ## The evidence
 
-A 2015 study on resistance-trained young men and women found that eight weeks of heavy weight training produced simultaneous fat loss and muscle gain, and the effect was stronger on a **higher-protein diet**. Nippard flags the limitations himself: short duration, questionable reliability of the Bod Pod, and possible compliance issues.
+A 2015 study on resistance-trained young men and women found that eight weeks of heavy weight training produced simultaneous fat loss and muscle gain, and the effect was stronger on a **higher-protein diet** ([Antonio 2015](https://www.ncbi.nlm.nih.gov/pubmed/26500462)). Nippard flags the limitations himself: short duration, questionable reliability of the Bod Pod, and possible compliance issues.
 
-A 2011 study from **Garthe** (name partly garbled in the captions — likely Garthe et al.) and colleagues showed even elite athletes gained lean mass and lost body fat over a 2-3 month window. Caveat: the effect was mostly in the female athletes, possibly because they started with higher body fat, and the athletes were elite at their sports (football, volleyball, hockey) rather than elite at resistance training — so some novice-gains effect may have been in play.
+A 2011 study from **Garthe** and colleagues showed even elite athletes gained lean mass and lost body fat over a 2-3 month window ([Garthe 2011](https://www.ncbi.nlm.nih.gov/pubmed/21558571)). Caveat: the effect was mostly in the female athletes, possibly because they started with higher body fat, and the athletes were elite at their sports (football, volleyball, hockey) rather than elite at resistance training — so some novice-gains effect may have been in play.
 
 ## Why the four groups work
 

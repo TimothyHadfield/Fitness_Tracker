@@ -13,11 +13,11 @@
 ## Why these exercise choices
 **Dumbbell over barbell press.** Two reasons: dumbbells save time (no plate loading), and they allow more range of motion. Normally a barbell's limited ROM is compensated for by adding a stretch exercise like a cable fly, but on a minimalist plan you cannot afford the extra movement — so pick a press that supplies the stretch itself. **A dumbbell press or a dip are the best options.**
 
-**Overhead triceps extension over pressdowns.** [03:36] The flat dumbbell press already trains triceps in a neutral shoulder position, so pressdowns are redundant. Also, a **2022 study from Mayo and colleagues** found overhead triceps extensions produced about **40% more hypertrophy than pressdowns even when volume-matched**. There has been online pushback claiming a fluke, but the MASS research review judged it well-designed and offered at least three plausible mechanisms. Don't over-weight one study — but if you can only fit one triceps isolation exercise, choose the overhead version.
+**Overhead triceps extension over pressdowns.** [03:36] The flat dumbbell press already trains triceps in a neutral shoulder position, so pressdowns are redundant. Also, a **2022 study from Maeo and colleagues** found overhead triceps extensions produced about **40% more hypertrophy than pressdowns even when volume-matched** ([Maeo 2023](https://pubmed.ncbi.nlm.nih.gov/35819335/)). There has been online pushback claiming a fluke, but the MASS research review judged it well-designed and offered at least three plausible mechanisms. Don't over-weight one study — but if you can only fit one triceps isolation exercise, choose the overhead version.
 
 **Hack squat over barbell back squat.** Machines need fewer warm-up sets. A barbell squat warm-up can take half an hour; the hack squat takes 2-3 quick warm-up sets and he's into working sets within 5-10 minutes.
 
-**Seated over lying leg curl.** A 2020 12-week study showed greater hamstring growth from seated leg curls than lying leg curls, likely because of the greater stretch. Lean forward over the machine throughout the set to accentuate it.
+**Seated over lying leg curl.** A 2020 12-week study showed greater hamstring growth from seated leg curls than lying leg curls, likely because of the greater stretch ([Maeo 2021](https://pubmed.ncbi.nlm.nih.gov/33009197/)). Lean forward over the machine throughout the set to accentuate it.
 
 ## Full body day 1
 Warm-up: 2-3 minutes brisk treadmill walking plus a few arm and leg swings.

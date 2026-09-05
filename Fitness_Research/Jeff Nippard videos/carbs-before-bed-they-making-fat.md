@@ -18,8 +18,8 @@ Total daily energy expenditure (TDEE) has four components:
 - **TEF** — thermic effect of food, a small sliver.
 
 While asleep you aren't exercising, moving around or eating, so only RMR is in play. The real question is whether sleeping RMR differs from waking resting RMR — and it doesn't.
-- **Seale and Conway** (name uncertain from captions) found overnight metabolic rate and basal/resting metabolic rate are equivalent.
-- **Zhang and colleagues** found sleeping metabolic rate is slightly *lower* than RMR in obese subjects but slightly *higher* in healthy non-obese subjects; pooled, sleeping and waking rates were near-identical, with a mean sleep:awake ratio of **1.0011**.
+- **Seale and Conway** found overnight metabolic rate and basal/resting metabolic rate are equivalent ([Seale 1999](https://www.ncbi.nlm.nih.gov/pubmed/10099943)).
+- **Zhang and colleagues** found sleeping metabolic rate is slightly *lower* than RMR in obese subjects but slightly *higher* in healthy non-obese subjects; pooled, sleeping and waking rates were near-identical, with a mean sleep:awake ratio of **1.0011** ([Zhang 2002](https://www.ncbi.nlm.nih.gov/pubmed/11896493)).
 
 So eating carbs at 10 pm is metabolically no different from eating them at lunch and returning to your desk.
 
@@ -28,13 +28,13 @@ So eating carbs at 10 pm is metabolically no different from eating them at lunch
 2. **Carbs aren't readily turned into body fat.** De novo lipogenesis is rare in humans under normal eating conditions. What actually happens when you eat carbohydrate is that **fat oxidation is suppressed** — so more *dietary fat* goes into storage — while the carbohydrate itself is mostly shuttled into muscle or liver glycogen, or burned as fuel. Nothing about carbs specifically makes them fat-generating.
 
 ## Theory 2: insulin sensitivity is worse in the evening
-- **Biston and colleagues** (name uncertain) compared an 8:30 am meal with an evening meal matched for carbs and found a better insulin response to the morning meal. But that morning meal followed an overnight fast, and fasting acutely improves insulin sensitivity.
+- **Biston and colleagues** compared an 8:30 am meal with an evening meal matched for carbs and found a better insulin response to the morning meal ([Biston 1996](https://www.ncbi.nlm.nih.gov/pubmed/8901836)). But that morning meal followed an overnight fast, and fasting acutely improves insulin sensitivity.
 - Supporting that interpretation: in the **same paper**, a mid-afternoon meal (no preceding fast) versus a nighttime meal showed **no difference** in insulin sensitivity.
 
 So evening insulin sensitivity isn't uniquely poor — sensitivity simply peaks before the first meal of the day and is lower for every subsequent meal. Insulin sensitivity is worth improving over the long term via healthy body composition, regular exercise and a good diet, not by chasing hour-to-hour fluctuations.
 
 ## The direct evidence on evening meals
-**Fong and colleagues, 2017** — systematic review and meta-analysis. They screened 121 studies down to **5 clinical trials** meeting inclusion criteria (isoenergetic/calorie-matched arms; excluding shift workers and people with night eating syndrome). Four of the five individual trials showed greater weight loss with a smaller evening meal, **but pooled results were not statistically significant**. The authors concluded no sound conclusions can be drawn, and that the findings challenge the popular belief that a smaller dinner benefits weight management.
+**Fong and colleagues, 2017** — systematic review and meta-analysis ([Fong 2017](https://www.ncbi.nlm.nih.gov/pubmed/28967343)). They screened 121 studies down to **5 clinical trials** meeting inclusion criteria (isoenergetic/calorie-matched arms; excluding shift workers and people with night eating syndrome). Four of the five individual trials showed greater weight loss with a smaller evening meal, **but pooled results were not statistically significant**. The authors concluded no sound conclusions can be drawn, and that the findings challenge the popular belief that a smaller dinner benefits weight management.
 
 ## Practical application
 - Distribute carbs (and calories generally) in whatever pattern suits your **schedule and appetite**. Late carbs will not hinder fat loss.

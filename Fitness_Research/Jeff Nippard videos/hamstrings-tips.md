@@ -21,10 +21,10 @@ Four muscles: **biceps femoris long head, biceps femoris short head, semitendino
 Note that the **short head of biceps femoris does not cross the hip joint**, so it contributes nothing to hip extension — it is knee-flexion only.
 
 ## Can you bias regions? The EMG evidence [03:35]
-- **Schoenfeld, Contreras et al. 2015:** the **lying leg curl produced greater distal hamstring activation than the stiff-leg deadlift.** This makes mechanical sense — knee flexion happens only in the leg curl, and the short head of biceps femoris is knee-flexion only.
+- **Schoenfeld, Contreras et al. 2015:** the **lying leg curl produced greater distal hamstring activation than the stiff-leg deadlift** ([Schoenfeld 2015](https://www.ncbi.nlm.nih.gov/pubmed/24978835)). This makes mechanical sense — knee flexion happens only in the leg curl, and the short head of biceps femoris is knee-flexion only.
 - Surprisingly, the **same study found no significant difference in proximal (upper) hamstring activation** between the leg curl and the stiff-leg deadlift, contrary to the intuition that a hip-extension movement should preferentially load the hip end. He flags that this intuition had no empirical basis.
-- **Medial vs lateral:** that same paper found **no difference** between leg curl and stiff-leg deadlift. A **2013 paper (author name garbled in the captions — sounds like "Zebis et al.", treat as uncertain)** found the **RDL** activated more **inner (medial)** hamstrings while the **lying leg curl** hit more **outer (lateral)**. Other studies conflict. Overall the data does not support a clear inner/outer split between these two exercises.
-- **Foot position does work.** **Lynn and Costigan 2009** found that **internally rotating the feet (toes in) increased medial hamstring activation**, while **externally rotating (toes out) increased lateral hamstring activation.**
+- **Medial vs lateral:** that same paper found **no difference** between leg curl and stiff-leg deadlift. **Zebis et al. 2013** found the **RDL** activated more **inner (medial)** hamstrings while the **lying leg curl** hit more **outer (lateral)** ([Zebis 2013](https://www.ncbi.nlm.nih.gov/pubmed/22736206)). Other studies conflict. Overall the data does not support a clear inner/outer split between these two exercises.
+- **Foot position does work.** **Lynn and Costigan 2009** found that **internally rotating the feet (toes in) increased medial hamstring activation**, while **externally rotating (toes out) increased lateral hamstring activation** ([Lynn 2009](https://www.ncbi.nlm.nih.gov/pubmed/18331800)).
 
 ## Practical application
 - **Base programming:** include at least one **knee-flexion** movement (lying/seated leg curl) and one **hip-extension** movement (Romanian or stiff-leg deadlift). This is described as the smartest way to program hamstrings.
@@ -40,7 +40,6 @@ From a guest lecture clip: one way to organise training is **block periodisation
 ## Caveats & unknowns
 - All of the regional findings are **EMG activation data**, not hypertrophy outcomes — greater activation is a proxy, not proof of greater regional growth.
 - The medial/lateral exercise comparisons are **directly contradictory across studies**; only the foot-position finding is presented as reasonably consistent.
-- The 2013 medial/lateral paper's author name is garbled in the auto-captions and should be verified before citing.
 
 ## References
 

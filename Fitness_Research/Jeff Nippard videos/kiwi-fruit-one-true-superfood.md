@@ -16,7 +16,7 @@ The label cycles through foods — coconut oil, kale, avocado, açaí — with n
 
 ## The nutrition case for kiwi
 
-A 2013 review described kiwi fruit as a "daily prescription for health." Compared head to head against apples, oranges, bananas, strawberries and blueberries, kiwi wins outright on:
+A 2013 review described kiwi fruit as a "daily prescription for health" ([Stonehouse 2013](https://www.ncbi.nlm.nih.gov/pubmed/23746068)). Compared head to head against apples, oranges, bananas, strawberries and blueberries, kiwi wins outright on:
 
 - **Total fibre**
 - **Vitamin C**
@@ -30,7 +30,7 @@ Despite this, kiwi occupies only about **0.2% of global fruit consumption**, dom
 ## Documented effects
 
 - **Digestion / constipation.** *Advances in Food and Nutrition Research* cites clinical studies across a range of adult populations consistently showing kiwi is an effective dietary intervention for constipation. Mechanism: high fibre plus **actinidin**, a protease that helps digest protein and improves gastric emptying. (Note: the auto-captions here say kiwi "promotes lactation," which is almost certainly a mis-transcription of *laxation*.)
-- **Sleep.** A study from **Lin** and colleagues (name uncertain from the captions) found that eating **two kiwis before bed for four weeks** improved sleep onset, sleep duration and sleep quality in adults with self-reported sleep disturbance.
+- **Sleep.** A study from **Lin** and colleagues found that eating **two kiwis before bed for four weeks** improved sleep onset, sleep duration and sleep quality in adults with self-reported sleep disturbance ([Lin 2011](https://www.ncbi.nlm.nih.gov/pubmed/21669584)).
 - **Mood.** A 2013 paper reports an association between regular kiwi consumption and mood improvement.
 - **Immunity.** Reduced risk of cold and flu-like illness — reported as more beneficial than supplementing vitamin C alone.
 - **Iron status.** Improved when kiwi is eaten alongside iron-rich foods (consistent with vitamin C's effect on non-heme iron absorption).

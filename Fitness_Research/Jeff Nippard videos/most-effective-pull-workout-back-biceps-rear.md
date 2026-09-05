@@ -13,7 +13,7 @@
 ## The routine
 
 **1. One-arm cable pullover (straight-arm pulldown) — 2 × 15-20, light, well short of failure**
-Lat pre-activation. Not a term from the literature, but built on sound principles: **Fisher and colleagues (2016)** found glute pre-activation drills carried activation over to heavier compounds like the hip thrust, and the same neural logic should apply to lats — a muscle many lifters struggle to feel. A study published the month of filming found that using an **internal focus** (consciously thinking about the working muscle) produced greater biceps thickness across an 8-week programme. At minimum it warms up the tissue, raises blood flow and improves the pump.
+Lat pre-activation. Not a term from the literature, but built on sound principles: **Fisher and colleagues (2016)** found glute pre-activation drills carried activation over to heavier compounds like the hip thrust ([Fisher 2016](https://www.ncbi.nlm.nih.gov/pubmed/26981714)), and the same neural logic should apply to lats — a muscle many lifters struggle to feel. A study published the month of filming found that using an **internal focus** (consciously thinking about the working muscle) produced greater biceps thickness across an 8-week programme ([Schoenfeld 2018](https://www.ncbi.nlm.nih.gov/pubmed/29533715)). At minimum it warms up the tissue, raises blood flow and improves the pump.
 
 Execution: treat it as the opposite of a lateral raise. Instead of shoulder abduction, perform pure **shoulder adduction** — drive the elbow down and in toward your side, in the mid-frontal plane (the plane that splits your body evenly front and back). You can crunch laterally toward the pulling side for a stronger contraction, since the lats weakly contribute to lateral spinal flexion. Light weight, mindful contractions, no failure.
 
@@ -25,7 +25,7 @@ Load with a dip belt if bodyweight doesn't get you close enough to failure in 6-
 Execution — range of motion and tempo:
 - Descend until the elbows are nearly fully extended, but **don't relax into a dead hang** — keep some tension at the bottom without shortchanging the range.
 - Pull as high as you comfortably can: at minimum eyes clearing the bar, aiming to bring the chest toward the bar even if it doesn't touch.
-- Tempo: roughly **1 second up, 1 second down**, control being the criterion. In a follow-up article to his 2015 systematic review and meta-analysis, **Dr Brad Schoenfeld** wrote that a wide range of tempos can maximise hypertrophy, but concentrics shouldn't exceed 3 seconds (slower may be detrimental) and eccentrics must be controlled against gravity rather than dropped, since dropping fails to provide sufficient tension. For heavy compounds, prioritise progressive load at a normal tempo.
+- Tempo: roughly **1 second up, 1 second down**, control being the criterion. In a follow-up article to his 2015 systematic review and meta-analysis ([Schoenfeld 2015](https://www.ncbi.nlm.nih.gov/pubmed/25601394)), **Dr Brad Schoenfeld** wrote that a wide range of tempos can maximise hypertrophy, but concentrics shouldn't exceed 3 seconds (slower may be detrimental) and eccentrics must be controlled against gravity rather than dropped, since dropping fails to provide sufficient tension. For heavy compounds, prioritise progressive load at a normal tempo.
 - Between sets: 5-6 second lat stretches. Holds that short won't hinder subsequent performance and improve the pump.
 
 **3. Meadows row — 3 × 10-12**
@@ -36,14 +36,14 @@ No research exists on the Meadows row specifically, but **Lehmann and colleagues
 Setup: load with **25 lb plates** for extra range of motion at the bottom. Stagger the stance and get fairly bent over with a flat back so you row directly out to the side — best mid-trap feel. To bias the lats instead, stand more side-on to the bar and row backward, closer to a dumbbell row done with a barbell.
 
 **4. Omni-grip lat pulldown — 3 × 12-15, one set per grip**
-Set 1 wide, set 2 medium, set 3 reverse (underhand). The literature shows no strong trend favouring wider or narrower grips for lat recruitment, but **large individual variability** — so using a variety is the practical answer. **Lusk et al. (2010)** (surname uncertain — captioned as "lusca Tao") found a supinated grip was worse for lat recruitment, plausibly because the biceps take over and leave less for the lats.
+Set 1 wide, set 2 medium, set 3 reverse (underhand). The literature shows no strong trend favouring wider or narrower grips for lat recruitment, but **large individual variability** — so using a variety is the practical answer. **Lusk et al. (2010)** found a supinated grip was worse for lat recruitment, plausibly because the biceps take over and leave less for the lats ([Lusk 2010](https://www.ncbi.nlm.nih.gov/pubmed/20543740)).
 
 That's exactly why the **sequence** matters: start wide while the lats are freshest, move to a closer grip so the biceps contribute more as lat fatigue builds, then finish reverse-grip with the biceps most involved. This lets you keep the same load across all three sets while hitting the lats from slightly different angles.
 
 **5. Rear delt tri-set — rope face pull → reverse pec deck → band pull-apart, minimal rest**
 Packs rear-delt volume into a short window.
 - **Rope face pull:** the multi-joint movement of the three — treat it as a **high row** and go fairly heavy. Brace a foot against the upright so balance isn't a limiter. Target everything back there: rear delts, traps, rhomboids. Squeeze the shoulder blades hard every rep.
-- **Reverse pec deck:** lighter, isolation-focused. Drive the arms out and back **using the rear delts** rather than squeezing the shoulder blades — minimise trap involvement here. Experiment with pronated (palms down) and neutral grips: a **2013 study** found the neutral grip produced higher average EMG activation, though some subjects did better pronated (Nippard is in that camp himself).
+- **Reverse pec deck:** lighter, isolation-focused. Drive the arms out and back **using the rear delts** rather than squeezing the shoulder blades — minimise trap involvement here. Experiment with pronated (palms down) and neutral grips: a **2013 study** found the neutral grip produced higher average EMG activation ([Schoenfeld 2013](https://www.ncbi.nlm.nih.gov/pubmed/23302754)), though some subjects did better pronated (Nippard is in that camp himself).
 - **Band pull-aparts:** burn out the rear delts, generate local metabolic stress, and provide a different tension profile — the pec deck gives near-constant resistance while the band peaks at the top of the range. Externally rotate slightly, since the rear delts assist external rotation.
 
 **6. EZ-bar biceps curl — 3 × 6-8**

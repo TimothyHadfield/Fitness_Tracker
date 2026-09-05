@@ -32,7 +32,7 @@ Nippard and Dr. Layne Norton (PhD in nutritional sciences, pro natural bodybuild
 
 **Detoxing — overrated.** Norton's standard challenge: which specific compounds, by what mechanism, and why isn't the liver and kidneys already doing it? Nobody has an answer. It will not help you lose weight either — most detox products are laxatives, and the weight lost is from not eating and defecating.
 
-**Kiwi fruit — split.** Norton calls it overrated as a policy: no single food is necessary. Nippard says underrated relative to more popular fruits like apples, oranges and bananas — it has more vitamin C per calorie than almost any fruit, and a few studies show improved sleep from eating kiwis. Both agree no food should be on a pedestal.
+**Kiwi fruit — split.** Norton calls it overrated as a policy: no single food is necessary. Nippard says underrated relative to more popular fruits like apples, oranges and bananas — it has more vitamin C per calorie than almost any fruit ([Stonehouse 2013](https://pubmed.ncbi.nlm.nih.gov/23746068/)), and a few studies show improved sleep from eating kiwis ([Doherty 2019](https://pubmed.ncbi.nlm.nih.gov/30979048/)). Both agree no food should be on a pedestal.
 
 **"Eating clean" — overrated.** There is no objective definition (a vegan and a carnivore will give opposite answers). Even seemingly obvious cases fail: when calories are equated, high-sugar and low-sugar diets show no difference in body composition. Norton notes the concept drives disordered relationships with food.
 

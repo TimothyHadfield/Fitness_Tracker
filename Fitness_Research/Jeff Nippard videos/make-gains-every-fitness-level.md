@@ -15,7 +15,7 @@
 - **Muscle gain:** 10–20% above maintenance drives growth without excessive fat gain.
 - **Recomposition:** calories at maintenance plus optimized training can build muscle and lose fat simultaneously — but this works best for beginners and early intermediates and gets harder as you advance.
 - **Fat loss:** 10–20% below maintenance. Muscle gain in a deficit is possible but less feasible the more advanced you are.
-- **Protein:** 1.6–2.2 g/kg bodyweight per day.
+- **Protein:** 1.6–2.2 g/kg bodyweight per day ([Morton 2018](https://pubmed.ncbi.nlm.nih.gov/28698222/)).
 
 ## Beginner (first 1–2 years)
 [02:32] Three priorities.

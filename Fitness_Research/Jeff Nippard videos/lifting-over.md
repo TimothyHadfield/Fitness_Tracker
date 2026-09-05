@@ -18,7 +18,7 @@
 
 Jeff called Mike Israetel, who is publicly associated with slow negatives. Mike's actual position: slowing the eccentric does **not** directly cause more hypertrophy. He uses it because (a) it is substantially safer, so it's an upside with no downside, and (b) some individuals get meaningfully better mind-muscle connection from it, which produces small but real differences. Mike's own eccentrics are 1–2 seconds — just enough to control the load.
 
-A 2024 scientific review of lifting technique Jeff co-authored found that as long as a **whole rep lasts 2–8 seconds**, you're fine. His practical rule:
+A 2024 scientific review of lifting technique Jeff co-authored found that as long as a **whole rep lasts 2–8 seconds**, you're fine ([Androulakis Korakakis 2023](https://pubmed.ncbi.nlm.nih.gov/38249086/)). His practical rule:
 - Under 1 s eccentric — too fast, slow it down.
 - 1–7 s — the sweet spot; go by preference.
 - 8 s or longer — too slow, speed up.
@@ -40,7 +40,7 @@ Basic guidelines that do matter on a squat: keep the bar over midfoot so you don
 - **One-arm cable pulldown:** for someone who has already done their compounds and needs extra lat volume — it adds lat volume for almost no systemic fatigue.
 - **Why the barbell row is only B tier:** better tools exist for the same job — the deficit Pendlay row (same job, bigger stretch, more standardised ROM) and the chest-supported machine row (same job, more stability, less fatigue).
 
-Critically: **there has never been a single study directly measuring back muscle hypertrophy.** Not one. All that exists is biomechanics research and EMG studies, and it isn't known whether EMG predicts hypertrophy. His rankings came from indirect evidence and personal experience. Any exercise taken to or near failure will build muscle; fine-tune from there using stretch, tension, overload and what feels good.
+Critically: **there has never been a single study directly measuring back muscle hypertrophy.** Not one. All that exists is biomechanics research and EMG studies, and it isn't known whether EMG predicts hypertrophy ([Vigotsky 2022](https://pubmed.ncbi.nlm.nih.gov/35006527/)). His rankings came from indirect evidence and personal experience. Any exercise taken to or near failure will build muscle; fine-tune from there using stretch, tension, overload and what feels good.
 
 ## Effort
 [12:48] The latest meta-analysis pooled 15 studies comparing training to failure vs stopping short. Growth increases as you get closer to failure, but there's a point where too much failure training causes recovery problems. His rule: **1–3 reps shy of failure**. The practical hazard is that people who aim to leave 3 reps in the tank often actually leave 5–6 without realising, and that under-exertion costs gains. So he deliberately errs closer to failure: 1–2 RIR on most sets, last set of an exercise to true failure when he can fail safely.

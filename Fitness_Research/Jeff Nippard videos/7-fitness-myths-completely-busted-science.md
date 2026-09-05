@@ -12,7 +12,7 @@
 
 ## 1. Cryotherapy and cold water immersion aid recovery
 **Verdict: busted — and worse, it's counterproductive for hypertrophy.**
-[00:31] A 2017 issue of the MASS research review summarises the area: 10-minute cold water immersion beats whole-body cryotherapy (standing in a cold chamber) for recovery, especially for reduced muscle soreness. But a 2017 study found cold water immersion was no better for recovery than a simple 10-minute low-intensity cooldown on the bike. Two separate studies from Roberts and colleagues found cryotherapy reduced anabolic signalling after training **and** stunted muscle growth across a 12-week program compared with a plain 10-minute cooldown.
+[00:31] A 2017 issue of the MASS research review summarises the area: 10-minute cold water immersion beats whole-body cryotherapy (standing in a cold chamber) for recovery, especially for reduced muscle soreness. But a 2017 study found cold water immersion was no better for recovery than a simple 10-minute low-intensity cooldown on the bike ([Peake 2017](https://www.ncbi.nlm.nih.gov/pubmed/27704555)). Two separate studies from Roberts and colleagues found cryotherapy reduced anabolic signalling after training **and** stunted muscle growth across a 12-week program compared with a plain 10-minute cooldown ([Roberts 2015](https://www.ncbi.nlm.nih.gov/pubmed/26174323)).
 
 ## 2. HIIT burns far more calories through the afterburn
 **Verdict: busted.**
@@ -24,14 +24,14 @@ Pros: possibly more time efficient, less boring for some. Cons: harder to recove
 
 ## 3. Keto is superior for fat loss
 **Verdict: busted as a special mechanism; fine as a personal preference.**
-[02:34] A 2014 American Medical Association meta-analysis of 48 unique studies concluded that most calorie-reducing diets produce clinically important weight loss as long as the diet is maintained; since diets are variably tolerated, the ideal diet is the one best adhered to.
+[02:34] A 2014 American Medical Association meta-analysis of 48 unique studies concluded that most calorie-reducing diets produce clinically important weight loss as long as the diet is maintained; since diets are variably tolerated, the ideal diet is the one best adhered to ([Johnston 2014](https://www.ncbi.nlm.nih.gov/pubmed/25182101)).
 
 Nippard's read is that the cons generally outweigh the pros:
 - Keto does suppress appetite well, but carb restriction isn't the only route — intermittent fasting has a similar effect, and much milder approaches like increasing water or fibre intake may work equally well.
-- A 2013 meta-analysis found about **1 kg more weight loss** on keto versus conventional diets, which the authors themselves note isn't clinically significant. Other researchers attribute the advantage to temporary water weight loss or to the higher protein intake keto diets tend to carry.
+- A 2013 meta-analysis found about **1 kg more weight loss** on keto versus conventional diets, which the authors themselves note isn't clinically significant ([Bueno 2013](https://www.ncbi.nlm.nih.gov/pubmed/23651522)). Other researchers attribute the advantage to temporary water weight loss or to the higher protein intake keto diets tend to carry.
 - It reduces or eliminates nutrient-dense foods like fruits and grains.
 - The adaptation period into ketosis can be rough.
-- Burke and colleagues (captions: "birkin") argued fat-adaptation strategies may impair exercise performance via impaired muscle glycogen utilisation, though other data suggests it's worse for endurance than for strength training.
+- Burke and colleagues (captions: "birkin") argued fat-adaptation strategies may impair exercise performance via impaired muscle glycogen utilisation ([Burke 2015](https://www.ncbi.nlm.nih.gov/pubmed/26553488)), though other data suggests it's worse for endurance than for strength training.
 
 If keto works for you or gives you other benefits like improved focus, keep doing it — response is highly individual.
 
@@ -41,23 +41,23 @@ If keto works for you or gives you other benefits like improved focus, keep doin
 
 ## 5. Your knees shouldn't travel past your toes when squatting
 **Verdict: busted.**
-[05:38] Easy to dismantle once you look at the hip and low back, not just the knee. Fry and colleagues (2003) found that restricting knee travel with a wooden board forced subjects to lean further forward, increasing strain on the hips and low back. Researchers have suggested practitioners shouldn't be overly strict about coaching against anterior knee displacement in the squat.
+[05:38] Easy to dismantle once you look at the hip and low back, not just the knee. Fry and colleagues (2003) found that restricting knee travel with a wooden board forced subjects to lean further forward, increasing strain on the hips and low back ([Fry 2003](https://www.ncbi.nlm.nih.gov/pubmed/14636100)). Researchers have suggested practitioners shouldn't be overly strict about coaching against anterior knee displacement in the squat.
 
 **What to cue instead:** heels planted on the floor, bar centred over the middle of the foot, knees pushed out and tracking in the same direction as the toes.
 
 ## 6. Apple cider vinegar has powerful health benefits
 **Verdict: mostly hype; one modest real effect.**
-[06:09] The best-documented benefit is blood sugar control — a 2017 meta-analysis across 11 studies found significantly improved blood glucose and insulin response, but the effects are larger and more relevant for people who already have diabetes or insulin resistance. Research showing improved satiety attributed the effect to vinegar making people nauseous, and the authors themselves discouraged using it for that purpose.
+[06:09] The best-documented benefit is blood sugar control — a 2017 meta-analysis across 11 studies found significantly improved blood glucose and insulin response ([Shishehbor 2017](https://www.ncbi.nlm.nih.gov/pubmed/28292654)), but the effects are larger and more relevant for people who already have diabetes or insulin resistance. Research showing improved satiety attributed the effect to vinegar making people nauseous, and the authors themselves discouraged using it for that purpose ([Darzi 2014](https://www.ncbi.nlm.nih.gov/pubmed/23979220)).
 
-On weight loss, the only high-quality interventional study he's aware of did find better weight loss with vinegar, but subjects were obese, lost only about **2 kg over 12 weeks** on average, and at a four-week follow-up both the vinegar and non-vinegar groups had regained all of it.
+On weight loss, the only high-quality interventional study he's aware of did find better weight loss with vinegar, but subjects were obese, lost only about **2 kg over 12 weeks** on average, and at a four-week follow-up both the vinegar and non-vinegar groups had regained all of it ([Kondo 2009](https://www.ncbi.nlm.nih.gov/pubmed/19661687)).
 
 Digestive claims: skeptical. The Vinegar Institute notes the strain of bacteria in the "mother" isn't likely to be probiotic, and any prebiotics in ACV should already be present in a plain apple. No evidence of reduced cancer or heart disease risk. And since ACV clearly erodes tooth enamel, using it to whiten teeth is a bad idea.
 
 ## 7. Alcohol ruins all your progress
 **Verdict: true in excess, overstated in moderation.**
-[08:10] Alcohol doesn't break thermodynamics — you won't stop losing weight in a deficit — but it works against getting lean while holding muscle. Siler and colleagues showed fat oxidation is blunted following alcohol consumption, so if drinking heavily, consider lowering fat intake for that day and definitely avoid the high-fat post-drinking binge. Combined with lowered inhibitions, empty calories and poor satiating ability, it isn't on your side for fat loss.
+[08:10] Alcohol doesn't break thermodynamics — you won't stop losing weight in a deficit — but it works against getting lean while holding muscle. Siler and colleagues showed fat oxidation is blunted following alcohol consumption ([Siler 1999](https://www.ncbi.nlm.nih.gov/pubmed/10539756)), so if drinking heavily, consider lowering fat intake for that day and definitely avoid the high-fat post-drinking binge. Combined with lowered inhibitions, empty calories and poor satiating ability, it isn't on your side for fat loss.
 
-For muscle, alcohol has been shown to reduce post-workout muscle protein synthesis by as much as **37%**. However a study from Duplanty et al. suggests alcohol only attenuates anabolic signalling in men, without much effect in women.
+For muscle, alcohol has been shown to reduce post-workout muscle protein synthesis by as much as **37%** ([Parr 2014](https://www.ncbi.nlm.nih.gov/pubmed/24533082)). However a study from Duplanty et al. suggests alcohol only attenuates anabolic signalling in men, without much effect in women ([Duplanty 2017](https://www.ncbi.nlm.nih.gov/pubmed/27135475)).
 
 Bottom line: moderate alcohol is unlikely to cause significant fat gain or muscle loss provided total calories and protein are controlled. In excess it's far more likely to hinder progress.
 

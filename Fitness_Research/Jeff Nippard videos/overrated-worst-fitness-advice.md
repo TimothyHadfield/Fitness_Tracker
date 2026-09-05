@@ -16,7 +16,7 @@
 
 **Muscle soreness — split.** Jeff: overrated. It is a reasonable proxy that you hit the target muscle, but the belief that no soreness means no growth is false. Mike pushes back on the fashionable "soreness is only novelty" line: more volume, more intensity, proper progression, proximity to failure, metabolite accumulation, eccentric focus and training at long muscle lengths all increase soreness, and all link positively to hypertrophy. His practical rule: not getting sore is fine, but if you are not progressing and feel under-stimulated, trying to get sore is a reasonable move; if you are sore, stimulus isn't your problem.
 
-**Bro split (each muscle once weekly) — overrated (both).** Mike: small muscles like rear delts or biceps do not need a week to recover, so you are wasting days; train a muscle when it recovers, which is roughly every day to twice a week. Jeff: the latest frequency research shows a bro split is viable, just not optimal — for the same number of gym days you get better results from another structure.
+**Bro split (each muscle once weekly) — overrated (both).** Mike: small muscles like rear delts or biceps do not need a week to recover, so you are wasting days; train a muscle when it recovers, which is roughly every day to twice a week. Jeff: the latest frequency research shows a bro split is viable, just not optimal ([Schoenfeld 2019](https://pubmed.ncbi.nlm.nih.gov/30558493/)) — for the same number of gym days you get better results from another structure.
 
 **Training to failure — overrated (both).** [02:34] Jeff's original take: research shows little hypertrophy or strength difference between going to failure and stopping a couple of reps short; you should know what failure feels like, but its importance is overstated. Mike adds that failure advocacy is often psychological catharsis rather than optimisation.
 
@@ -36,7 +36,7 @@
 
 **Body recomposition — split.** Jeff: underrated — most of the general population can build muscle and lose fat simultaneously, contrary to "you must bulk and cut." Mike: valid, but effective isn't optimal — anything recomping achieves, dedicated cutting and bulking achieves better, and recomping runs its course in roughly a year, after which you need bigger levers.
 
-**Diet soda — underrated (both).** Mike: essentially inert healthwise by almost all research accounts, and beliefs that it is as bad as or worse than regular soda are unfounded. Jeff: switching from regular to diet alone produces weight loss for many, and it is an underused tool for satiety and craving control while dieting.
+**Diet soda — underrated (both).** Mike: essentially inert healthwise by almost all research accounts, and beliefs that it is as bad as or worse than regular soda are unfounded. Jeff: switching from regular to diet alone produces weight loss for many ([McGlynn 2022](https://pubmed.ncbi.nlm.nih.gov/35285920/)), and it is an underused tool for satiety and craving control while dieting.
 
 **Diet breaks — underrated (both).** Jeff: people rush fat loss; easing off periodically lets training improve and muscles refill — a week or two at maintenance or slightly above pays off long term. Mike's protocol: if you need to lose more than about 10% of bodyweight, you will need a multi-month break for diet fatigue to clear. **Lose 5-8% of bodyweight, take 2-3 months at maintenance, then diet again.**
 
@@ -48,7 +48,7 @@
 
 **"Natural training is completely different from enhanced training" — overrated.** Mike: an excuse for naturals who aren't growing and for enhanced lifters who don't want to read the science. Enhanced lifters do recover better, but the moment they get bigger and stronger that advantage is cancelled out by the recovery cost of carrying more muscle — it levels out, so training principles are training principles.
 
-**Cold showers — overrated (both).** Mike calls them a research-vetted way to reduce hypertrophy; if you need shock therapy for sympathetic drive, you aren't training hard enough. Jeff: lots of hype, very little evidence — except for the blunting of hypertrophy, which does appear real.
+**Cold showers — overrated (both).** Mike calls them a research-vetted way to reduce hypertrophy ([Fyfe 2019](https://pubmed.ncbi.nlm.nih.gov/31513450/)); if you need shock therapy for sympathetic drive, you aren't training hard enough. Jeff: lots of hype, very little evidence — except for the blunting of hypertrophy, which does appear real.
 
 **NoFap / semen retention — overrated.** Mike: no research support for the claimed toxicity of masturbation; genuinely unhealthy patterns exist but affect a small minority who should seek treatment. Jeff: no evidence of a substantial long-term testosterone boost or improved training performance.
 

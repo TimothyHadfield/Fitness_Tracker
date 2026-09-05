@@ -61,7 +61,7 @@ Individual biomechanics vary, so self-experimentation matters, but going into th
 [00:31] He found essentially no performance impact. Reason: his compound work is mostly low reps (rarely above 8-10 on squats, bench, deadlifts) so breathing isn't the limiter, and high-rep isolation work isn't hard enough to matter. The one exception was a set of 8 on squats, where getting a big Valsalva breath in on reps 7-8 was brutal. Masks would plausibly matter more for cardio or CrossFit-style high-rep compound work.
 
 ## Fitting a cardio-intensive sport around lifting
-[18:42] Three variables determine interference: **frequency, intensity and mode (impact)**. Low-impact modes like swimming and cycling tolerate higher frequency and intensity without interfering. Basketball is **high impact**, so keep frequency lower — his own limit is **2-3 times per week**, played at low intensity (mostly shooting around).
+[18:42] Three variables determine interference: **frequency, intensity and mode (impact)**. Low-impact modes like swimming and cycling tolerate higher frequency and intensity without interfering ([Wilson 2012](https://pubmed.ncbi.nlm.nih.gov/22002517/)). Basketball is **high impact**, so keep frequency lower — his own limit is **2-3 times per week**, played at low intensity (mostly shooting around).
 
 Then audit your own recovery. Still progressing week to week on a linear program means you're probably fine. Slowing progression, feeling banged up, extra soreness, achy joints, worse sleep, lower motivation = too much total demand; pull back cardio by a session a week, reduce its intensity, or switch to a lower-impact mode.
 
