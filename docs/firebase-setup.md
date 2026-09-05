@@ -227,6 +227,44 @@ document means opening the app costs about five reads.
 
 ## Verified end to end
 
+🔒 **THE HARNESS IS `tools/live-check.mjs` SINCE 2026-09-17, AND THAT IS THE CORRECTION THIS SECTION
+MOST NEEDED.** The 2026-08-15 run below was a scratchpad script that was deleted afterwards, so the
+whole technique had to be reconstructed from the one sentence describing it. It is a tool in the
+repository now. **Read `docs/handbook.md` §0.16 before running it** — it writes to the live project
+and refuses to start without `--yes-write-to-live`.
+
+### 2026-09-17 — the two paths that had only ever been reviewed
+
+**39 checks, 0 failures**, as two throwaway anonymous accounts, both deleted afterwards and every uid
+recursive-deleted. Full write-up: `docs/history.md`, 2026-09-17.
+
+**D32's publish, against the DEPLOYED rules** (2026-09-16 — the thing that fails silently, because
+`republish()` is fire-and-forget):
+- both `shared/friends` and `shared/public` accepted, carrying `profile.gender`, `profile.age` and
+  `connections`; read back off the server and checked field by field
+- body weight present in the friends document and absent from the public one **on the server**
+- refused with `permission-denied`: an unnamed key, a public document carrying body weight, a
+  `connections` list of 501, a write to a legacy tier id. 🚨 **Those four are what prove the deployed
+  rules are the NEW ones** — an acceptance alone proves only that something got through
+- ✅ a document with **no `connections` key at all** is still accepted, which every account published
+  before 2026-09-16 depends on
+- a second signed-in account: reads the public document, reads the friends document while in
+  `viewers`, is refused once dropped from it, cannot write, cannot reach the private training
+
+**The read pattern** (2026-09-08, Open work 26 — the app's whole cost model):
+- the cursor is a **real server timestamp kept to the nanosecond**, read off the document
+- 💷 **an unchanged sync bills ZERO document reads** — one `where updatedAt >` query returning
+  nothing, one aggregation count
+- a changed sync bills **2 of 4** documents; a save writes **2 of 4**
+- the **aggregation query is accepted by the deployed rules**, and needs no composite index
+- a delete this device never saw is caught by the count, at the cost of one full read;
+  **delete-one-add-one, with the raw count unmoved, is caught too**
+
+⚠️ **What it does NOT prove**: scale (it ran on three or four sessions, not a training history), a
+non-anonymous account, or `getCountFromServer`'s own billing.
+
+### 2026-08-15 — the original run
+
 `js/firebase-backend.js` was run against the live project by redirecting its gstatic imports to a
 locally installed SDK, so **the shipped module itself** was exercised, not a lookalike. 33 checks
 across two suites, all passing:
@@ -262,6 +300,10 @@ written, so write the date beside it.
 
 ### Still not verified
 
+- **`createAccountPurge()` against real Firestore.** Open work 27's fix is proved on the emulator and
+  against the double, and it is now the last never-run network path of any size. ⚠️ It deletes
+  accounts, so it is not something to bolt onto a spare half hour — but `tools/live-check.mjs` is the
+  shape it would be proved in, on a throwaway account, the day somebody asks.
 - **The Google REDIRECT path.** ⚠️ Not merely untested — **known unusable in this configuration**,
   because the auth domain differs from the origin. It is no longer offered where it cannot finish.
   ~~And Google sign-in inside the installed PWA.~~ ✅ **That one is tested and works** (2026-08-22).

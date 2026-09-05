@@ -17,6 +17,177 @@
 
 ---
 
+## 2026-09-17 — THE NETWORK PATHS WERE RUN AGAINST THE REAL PROJECT FOR THE FIRST TIME SINCE THEY WERE WRITTEN
+
+Tim, asked what was worth doing that needed no instruction from him, was given three ranked items and
+picked one: *"Let's not work on the accessibility for a while. Just work on 1 for now."* Item 1 was
+**proving D32's publish and the 2026-09-08 read pattern against real Firestore** — the two things in
+this app that had only ever been reviewed, and the two whose failure mode is silence.
+
+**39 checks, 0 failures, against `fitness-tracker-th` and the deployed rules.** Everything ran as
+throwaway anonymous accounts; both were deleted, and every uid was recursive-deleted afterwards.
+🔒 **The harness is `tools/live-check.mjs` now, not a scratchpad script** — see §E for why that was
+the wrong call last time.
+
+### A. Why an emulator run was never going to answer this
+
+Both items are already covered by tests, and both tests are honest about being something else:
+
+- `tests/rules.test.mjs` proves what the rules **in this working tree** do. D32's whole hazard is the
+  gap between that and what is **deployed** — `validProjection()` pins the document with `hasOnly`,
+  and `republish()` is fire-and-forget with its throw swallowed at every call site, so a rules deploy
+  that had not landed would read as *"nobody's page updates any more"* with nothing on any screen
+  saying so.
+- `tests/data-layer.test.mjs` drives the read pattern against an in-memory double. **A double cannot
+  bill anybody**, and the read pattern is a claim about how many documents come back.
+
+So the only instrument that answers either question is the real server, and the tool prints the
+**billed document count** rather than asserting the rows are right — because the rows are right on
+the expensive path too, which is precisely the failure that would go unnoticed.
+
+### B. The read pattern, measured on the wire (Open work 26)
+
+Every number below is what Firestore actually returned, counted by wrapping the SDK the app imports.
+
+- **A cold read is a full read**: 3 documents for 3 sessions. As designed.
+- **The cursor is a real server timestamp kept to the nanosecond** — `1788572059.895000000`, read off
+  the document rather than off this machine's clock. That is the half the millisecond version got
+  wrong on 2026-09-08.
+- 💷 **AN UNCHANGED SYNC BILLS ZERO DOCUMENT READS.** One `where updatedAt >` query returning
+  nothing, one aggregation count. That is the whole cost finding of `docs/running-costs.html`, and it
+  is now measured rather than modelled.
+- **A changed sync bills exactly what changed** — 2 of 4 documents, after one edit and one addition.
+- **The aggregation query is accepted by the deployed rules.** `allow read` covers `list`, and an
+  aggregation is evaluated as one; the comment at the sessions block that says so is now true by
+  observation. No composite index was needed — the single-field index on `updatedAt` is automatic.
+- 🚨 **AND THE CASE THE COUNT EXISTS FOR WORKS: a delete this device never saw.** Deleting a session
+  behind the client's back leaves the `where` query structurally blind — a deleted document does not
+  come back changed, it does not come back at all — and the count catches it, at the cost of one full
+  read, which is the designed fallback. **Delete-one-add-one, where the raw count is unmoved, is
+  caught too**, by the merge coming out one row bigger than the server says the collection is.
+
+### C. D32's publish, against the deployed `hasOnly`
+
+- **Both documents are accepted** — `friends` and `public`, built by the app's own
+  `buildProjection()`, carrying `profile.gender`, `profile.age` and `connections`. Read back off the
+  server: gender and age are there, and `connections` is a list of exactly `{uid, name}`.
+- **Body weight is in the friends document and absent from the public one**, on the server rather
+  than in the builder.
+
+🚨 **AND THE NEGATIVE CONTROLS ARE THE HALF THAT MAKES THE POSITIVE ONE MEAN ANYTHING.** "The publish
+was accepted" proves the rules let something through; it does not prove they are the NEW rules. Each
+of these was refused with `permission-denied` on the wire:
+
+- a document carrying one unnamed key (`nickname`) — so `hasOnly` is live
+- a **public** document carrying `bodyWeight` — the gate that survives a bug in `js/social.js`
+- a `connections` list of 501 — the cap that was added with the field
+- a write to a legacy tier id (`mid`) — `validAudience`, so the old documents can never come back
+
+✅ **AND THE ONE THAT HAD TO BE ALLOWED WAS: a document with NO `connections` key at all.** Every
+account published before 2026-09-16 is in exactly that state, and a rule requiring the field would
+refuse the very documents `healStalePublish()` exists to repair. Accepted, then republished with the
+field, both on the live project.
+
+### D. What the rules hand a second account
+
+A second signed-in account, on its own app instance, against account A's real documents:
+
+- ✅ **it may read the PUBLIC document** — the widest grant in the file, and the first time it has
+  been exercised by an actual second caller rather than by the emulator
+- ✅ **it may read the FRIENDS document while named in `viewers`**, and ❌ **not once it is dropped
+  from that list** — revocation proved by republishing rather than by argument
+- ❌ **it may not write into the account it can read**
+- ❌ **it may not reach the private training behind the projection**
+
+⚠️ **This is not "a stranger opened a public account from a phone"** — that is Tim's, and closed
+(Open work 22). It is the permission boundary, proved on the wire by two real uids.
+
+### E. 🔒 THE HARNESS LIVES IN `tools/` NOW, AND THAT IS THE LESSON
+
+`docs/firebase-setup.md` has said since 2026-08-15 that the shipped module was run against the live
+project *"by redirecting its gstatic imports to a locally installed SDK"* — 33 checks, two suites.
+**None of it survived.** It was a scratchpad script, it was deleted, and the whole technique had to
+be reconstructed from that one sentence today. That is the `tools/strength-level-data.mjs` lesson
+(2026-09-15, *"nearly lost with the session that pulled it"*) arriving a second time in a different
+costume: **a throwaway script that proves something no test can prove is not throwaway.**
+
+How it works, so it never has to be rebuilt again:
+
+- `node:module`'s `registerHooks` maps `https://www.gstatic.com/firebasejs/10.12.2/*` onto a locally
+  installed SDK, so **`js/firebase-backend.js` itself** is the code under test rather than a
+  lookalike written for the occasion.
+- The firestore import lands on `tools/live-check-firestore.mjs`, which re-exports the real SDK with
+  counters on `getDocs`, `getCountFromServer`, `writeBatch` and friends. Explicit exports shadow
+  `export *`, so the app gets the wrappers and nothing else changes.
+- ⚠️ **`--sdk=<dir>` exists because the version matters.** The project's `node_modules` holds
+  firebase 12.18.0 for the rules tests and the app loads **10.12.2**; installing the old one over the
+  top would disturb the other suite, so this run used a separate install and the tool prints the
+  version it used and warns when it is not 10.12.2.
+- ⚠️ **Node has no IndexedDB**, so `persistentLocalCache()` is made to throw and the app takes its own
+  documented fallback — the same path a private-browsing tab takes. Nothing under test depends on it.
+- ⚠️ **And no `localStorage` either**, which is the trap worth naming: the incremental sync's cache
+  lives there, so without a stand-in `localShardCache()` returns a no-op, **every read is a full read,
+  and the entire mechanism being measured never runs — while every correctness assertion still
+  passes.** A green run measuring nothing, which is §0.14's shape one level up.
+- 🛑 It refuses to run without `--yes-write-to-live`, prints both uids on every exit, and the header
+  says to clean up those uids and nothing else — `docs/firebase-setup.md` records the day a stale
+  "the project holds zero users" sentence was quoted into a brief for an agent deleting test accounts.
+
+### F. 🚨 TWO IDENTICAL RUNS DISAGREED, AND THE ANSWER WAS A PROPERTY NOBODY HAD RECORDED
+
+The first run billed **2** documents on a changed sync and the second billed **4**, with nothing
+changed in between. Rather than believe the convenient one, a third measurement was built — the same
+sequence, printing the key order of a row read back and the number of documents each write actually
+issued. It settled it in one run:
+
+```
+locally built keys : id,date,workoutId,workoutName,startedAt,finishedAt,isBenchmark,entries
+read back keys     : id,date,isBenchmark,workoutName,finishedAt,entries,workoutId,startedAt
+same JSON?         : false
+write with locally built rows  → documents written: 4
+write the way store.js does    → documents written: 2
+```
+
+🚨 **`shardDiff()` COMPARES `JSON.stringify(row)`, AND FIRESTORE HANDS MAP KEYS BACK IN AN ORDER OF
+ITS OWN.** Same data, different string, so every row reads as changed.
+
+🛑 **THIS IS NOT AN APP BUG AND MUST NOT BE "FIXED".** `store.js` does a read-modify-write: the rows
+it hands back **are** the objects the read returned and the memo was built from, so they stringify
+identically and only the genuinely changed ones are written — which is what the third measurement
+shows, and what the corrected harness now asserts. The fault was in the harness, which rebuilt the
+untouched rows from the same literals it had written.
+
+⚠️ **What it does mean, stated because it is a real consequence and nobody has asked for anything:**
+any path that RECONSTRUCTS rows rather than passing back the ones it read pays one write per row
+instead of none. **Restoring from a downloaded backup file is exactly that shape.** Correct either
+way; only the cost is at stake, and it is a one-off.
+
+⚠️ **And the meta-lesson is the one this project already writes down:** when two measurements
+disagree, throw both away and build a third. Neither of the first two was averaged in, and the one
+that looked right (2 of 4) was right about the app for the wrong reason.
+
+### G. What was NOT done
+
+- 🛑 **No accessibility work.** Tim: *"Let's not work on the accessibility for a while."*
+- ⚠️ **Scale is not proved.** The mechanism ran on three and four sessions, not on a training history.
+  The counts are exact for what they measured and say nothing about a 1,200-row account.
+- ⚠️ **The accounts were ANONYMOUS.** The rules read `request.auth != null` and a uid, which an
+  anonymous account satisfies identically — but this is not a person signing in with Google and
+  publishing a real profile.
+- ⚠️ **`getCountFromServer`'s billing** (one read per 1,000 documents) was not measured, only that the
+  call is permitted and returns.
+- 🛑 **`createAccountPurge()` was not exercised.** It is the other never-run network path, it was not
+  in what Tim picked, and it deletes accounts — the wrong thing to bolt onto a session's spare minutes.
+
+### Tests
+
+**Nineteen no-Chrome suites re-run and green** — `render` 1,534, unchanged; nothing in `js/` was
+touched this session. `tests/rules.test.mjs` was **not** run and did not need to be: `firestore.rules`
+is byte-identical to what was deployed on 2026-09-16, and the live check is the stronger evidence
+about the deployed copy anyway.
+
+---
+
 ## 2026-09-16 — A FRIEND'S PAGE BECAME THEIR PROFILE, AND THREE FIELDS HAD TO BE PUBLISHED FOR IT
 
 **What Tim asked for**, in one message: *"I'm going to rattle off a list of small things I want you

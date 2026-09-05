@@ -4,8 +4,11 @@
 > DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
 > here** — the environment traps, the working agreement, the architecture, the binding design rules
 > and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
-> **438 KB together as of 2026-09-16** (155 + 173 + 109), and none of it is optional. ⚠️ That figure
+> **446 KB together as of 2026-09-17** (157 + 179 + 110), and none of it is optional. ⚠️ That figure
 > grows every session and each file has a byte budget with a test behind it — see §0.3.
+> 🚩 **THIS FILE IS AT 157 KB OF 160** even after 2026-09-04's summary and three method lessons were
+> folded out on 2026-09-17. **The next session to write anything long here collapses another day
+> first** — the routine is in §0.3 and the failure message names the fix.
 >
 > 🚨 **EVERY `§N` REFERENCE IN THIS PROJECT MEANS `docs/handbook.md` — EXCEPT `§3`, WHICH IS
 > `docs/state.md`.** `§4` the architecture, `§6` the locked decisions, `§9` the known gaps, `§0.10`
@@ -26,8 +29,22 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-16 — **five asks, five sub-agents, and one of them was not small.** The
-friends list shows faces; **a friend's page is their PROFILE now** with their Data screen pulled up
+**Last updated:** 2026-09-17 — **the network paths were run against the real project.** Tim was asked
+what was worth doing that needed nothing from him, was given three ranked items, and picked one:
+*"Let's not work on the accessibility for a while. Just work on 1 for now."* **39 checks, 0 failures**
+against `fitness-tracker-th` and the **deployed** rules, as throwaway anonymous accounts that were
+deleted afterwards. 💷 **An unchanged sync bills ZERO document reads** — the cost finding, measured
+rather than modelled — and **D32's three new fields are accepted while four negative controls are
+refused**, which is what proves the deployed rules are the new ones. 🔒 The harness is
+**`tools/live-check.mjs`** now rather than a scratchpad script, because the 2026-08-15 one was thrown
+away and had to be rebuilt from a single sentence. **Nothing in `js/` was touched.**
+🚩 **One thing to know**: `shardDiff()` compares `JSON.stringify(row)` and Firestore returns map keys
+in an order of its own — **not a bug**, because `store.js` hands back the rows it read, but a path
+that REBUILDS rows (restoring a downloaded backup) pays a write per row. Full write-up:
+`docs/history.md`, 2026-09-17.
+
+**2026-09-16, the session before it** — **five asks, five sub-agents, and one of them was not
+small.** The friends list shows faces; **a friend's page is their PROFILE now** with their Data screen pulled up
 behind a "View data" button; **a system folds open and closed** in the Workouts and Record lists;
 **a system can carry an optional weekly or cycle plan**, drawn as boxes; and **an empty month is one
 line**, with a bar chart of days per month once there are more than five months of recordings.
@@ -36,10 +53,11 @@ line**, with a bar chart of days per month once there are more than five months 
 `firestore.rules` had to go out with the client or every publish would have been denied in silence.
 
 ✅ **NOTHING IS HALF-BUILT.** Everything below is committed and pushed, the working tree is clean, and
-**all nineteen no-Chrome suites are green — 5,187 assertions** (from 4,944), `render` **1,534** and
-`data-layer` **2,141**. ✅ **`rules` is 221 and was RUN this session** (emulator, §0.9) because D32
-changed `firestore.rules`, **and the rules are deployed**; `sw-update` needs Chrome and remains
-flaky (§ below).
+**all nineteen no-Chrome suites are green — 5,187 assertions**, `render` **1,534** and `data-layer`
+**2,141**, unchanged on 2026-09-17 because nothing in `js/` was touched. ✅ **`rules` is 221**, run on
+the emulator on 2026-09-16 (§0.9) and **deployed** — and since 2026-09-17 the deployed copy is
+verified from the outside as well, by `tools/live-check.mjs` (§0.16). `sw-update` needs Chrome and
+remains flaky (§ below).
 
 🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT. IT IS NOT A GO-AHEAD FOR ANYTHING.** Tim,
 2026-09-11, having caught a session already building: *"When I tell you to catch up with progress.md,
@@ -50,9 +68,16 @@ work list, however green the light looks in these notes. Read all four files, sa
 lines what changed and what is open, **then stop.**
 
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Open work 29 closed on 2026-09-11; **Open
-work 30's plan was approved and its Phases 0–3 are BUILT** (2026-09-14); **Open work 31 is this
-session and is finished** (2026-09-16). Every other item on the list is either Tim's, pinned, or
-parked.
+work 30's plan was approved and its Phases 0–3 are BUILT** (2026-09-14); **Open work 31 finished on
+2026-09-16 and its two "never run against real Firestore" caveats were closed on 2026-09-17**, along
+with Open work 26's. Every other item on the list is either Tim's, pinned, or parked.
+
+🆕 **WHERE 2026-09-17 STOPPED.** One job, given and finished: prove the publish and the read pattern
+against the real project. **Nothing was left half-done and no agent was run.** 🛑 **The two items Tim
+did NOT pick are not authorised** — the accessibility work (*"let's not work on the accessibility for
+a while"*, so it is now a deferral by name rather than something merely unstarted) and pointing the
+audit at a friend's screens through the demo's deterministic uid. ⚠️ **Do not offer the
+accessibility one again** until he raises it.
 
 🆕 **WHERE 2026-09-16 STOPPED.** Tim ended with *"prepare md files for chat reset."* **Nothing was
 left half-done and no agent was killed.** Eight asks in one session, six sub-agents, two commits
@@ -234,19 +259,12 @@ artifact. `docs/history.md`, 2026-09-06 fifth pass, is how it was built.
 - ⚠️ **PRICES WERE CONFIRMED 2026-09-01 AND WILL DRIFT. The measurements will not** — they are
   properties of this code. Re-confirm every price before re-quoting one.
 
-### 🔒 Three lessons from today that are about METHOD, not about this app
+### 🔒 Three lessons from that day that are about METHOD — MOVED TO THE HANDBOOK, 2026-09-17
 
-- 🔒 **A RULE GUARDED BY ITS WEAKEST REASON GETS OVERTURNED BY WHOEVER SOLVES THAT REASON.** §9 and
-  `exercises.js` both gave "the app does not record the height" as why two exercises are unrankable —
-  **a problem the app can obviously solve** — when the binding reason was an unfixable mismatch of
-  measurement bases. A session read it and set out to build the field. **State the binding reason
-  first.** Corrected in three places, including the test that exists to stop somebody filling them in.
-- ⚠️ **A MUTATION CHECK CAN LIE IN THE REASSURING DIRECTION.** One of mine passed because the
-  mutation landed on a hex **in a comment** rather than in the rule it was testing. **A passing
-  mutation check is evidence only once you know the mutation hit the code** — see §0.14.
-- ⚠️ **A GREEN BROWSER AUDIT WITH A ZERO TEXT-NODE COUNT IS NOT A PASS.** The first run measured 404
-  pages end to end — a stale server on the port — and reported zero contrast failures and zero
-  overflow across all 128 routes. **Check the node count before reading anything else.**
+⚠️ **They were durable rules sitting in a dated summary, which is the thing §0.3 says not to do.**
+They are **§0.14** (a mutation check can lie in the reassuring direction), **§0.17** (a rule guarded
+by its weakest reason gets overturned by whoever solves that reason) and **§0.18** (a green browser
+audit with a zero text-node count is not a pass).
 
 ## 2026-09-05 and 2026-09-06 — COLLAPSED TO POINTERS, 2026-09-10
 
@@ -345,35 +363,37 @@ donation or ad revenue to cover its own costs. Scope order is **weightlifting �
 diet → others**. A **rename is coming** and he will bring it. He works on it **most days**, with no
 deadline. 🛑 **He reads none of these notes — they are for you.**
 
-## What changed on 2026-09-04, in one line each
+## What changed on 2026-09-04 — COLLAPSED TO A POINTER, 2026-09-17
 
-1. **The docs were split into five files** so they can be read at all — see the section above.
-2. **The direction interview** — `docs/direction.md`, and the four rules it reversed.
-3. 🆕 **CORE IS A RANKED MUSCLE.** Key lift **Cable Crunch**, median 151/106 measured from Strength
-   Level's 12,596 results, **its own log-spread (σ 0.48, not the global 0.32)** and its own
-   **reliability penalty** so identical evidence reads *fair* on Core where it reads *high* on Chest.
-   `UNRANKABLE` is down to Neck, Cardio, Activity. 🚨 **It rates about a QUARTER of how people train
-   abs** — 22 of 30 core exercises record no load, and they keep the hatch. `docs/research.md` §14 is
-   the pull and it is graded 🟡, the only 🟡 in the standards table, because the cross-check
-   disagrees by 17 % where every other lift agrees within 3 %.
-4. 🆕 **A NOTE TO THE DEVELOPER.** Users can send Tim an idea or a problem from the Account screen; his account reads them at `#/notes`. 🚨 **Enforced by `firestore.rules` against a hard-coded uid, not by hiding a screen** — the author cannot even read their own note back, and nobody can edit one. **Deliberately temporary**: it should come out when the first users stop being new. Rules deployed; proved with a real account on the live project and cleaned up after.
-5. 🆕 **THE DEMO TRAINS ABS AND A NECK** — Cable Crunch so Core RANKS, Neck Curl so Neck HATCHES, which is the only way both of 2026-09-04's states are visible in the one account this project uses to look at every screen. Open work 25 closed. ⚠️ **It re-rolled the seeded year**; the golden table was re-baselined after checking every number was still plausible.
-6. 🆕 **`research.md` §2's transcription error is fixed** — 95 % is ~2 reps, not ~5, and a second cell was wrong too. Both were SHIFTS from neighbouring cells, which is why it looked sound. Open work 20 closed.
-7. 🆕 **THE ABS COLOUR IS FIXED.** A muscle with no published standards but recorded work is now
-   **hatched**, with its own key entry, and tapping it says what HAS been logged. It used to wear the
-   same grey as a muscle nobody had ever trained, while the same screen printed *"Core and Neck can't
-   be ranked"* two lines below — **the app was right in words and wrong in colour at the same time**.
-   Full write-up in `docs/history.md`. ⚠️ **The demo cannot show this state and a fix for that was
-   deliberately reverted** — see Open work 25.
+⚠️ **The routine maintenance** — this file reached 159 KB of its 160 KB budget writing up
+2026-09-17, and §0.3's rule is that the oldest day summaries fold into pointers rather than the
+budget being raised. Full write-ups: `docs/history.md`, 2026-09-04 and its two further passes. **The
+interview above is that day's other half and stays.**
+
+- **The docs were split into five files** so they can be read at all (the section above), and
+  **`docs/direction.md`** was written.
+- 🔒 **CORE BECAME A RANKED MUSCLE** — key lift Cable Crunch, its own log-spread and its own
+  reliability penalty, leaving `UNRANKABLE` as Neck, Cardio, Activity. ⚠️ **It rates about a quarter
+  of how people train abs**, and `docs/research.md` §14 is graded 🟡 — the only 🟡 in the standards
+  table — because its cross-check disagrees by 17 %. **The abs COLOUR was the other half**: a
+  trained-but-unrankable muscle is hatched now, with its own key entry.
+- 🔒 **A NOTE TO THE DEVELOPER** shipped (Open work 23), the **demo gained abs and a neck**
+  (Open work 25), and **`research.md` §2's transcription error was fixed** (Open work 20). All three
+  rows carry the detail.
 
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
 **Everything is committed and pushed, the working tree is clean, and every runnable suite was green
-at the end of 2026-09-16.** ✅ **The rules suite was RUN this session — 221 assertions, 0 failures**
+at the end of 2026-09-17.** ✅ **The rules suite was run on 2026-09-16 — 221 assertions, 0 failures**
 (emulator, §0.9), because `firestore.rules` changed with D32 and **the rules were deployed with the
 client rather than after it.** 🚨 **That order is not a preference**: `validProjection()` pins the
 document with `hasOnly`, so a client publishing a field the rules do not name has every publish
 denied in silence.
+
+✅ **AND ON 2026-09-17 THE DEPLOYED COPY WAS CHECKED FROM THE OUTSIDE**, which is a different question
+from what the emulator answers. `tools/live-check.mjs` (§0.16) published both documents against the
+live project and had four negative controls refused on the wire, so the deploy provably landed.
+💷 **It also measured the read pattern: an unchanged sync bills ZERO document reads.**
 
 ## 🛑 THE SIX THINGS WAITING ON TIM — unchanged since 2026-09-15
 
@@ -401,11 +421,15 @@ NOT A BUG.** Their gender, age and friends list are in **their** published docum
 not when Tim opens theirs. Until then the screen says their app has not published it yet rather than
 claiming they have no friends. `healStalePublish()` is what makes it happen on their next open.
 
-⏸️ **What was ranked and NOT started** (a real ranked answer was asked for and given): **the
-accessibility work nobody has ever done** — no keyboard path walked, no screen reader run, nothing
-tested at larger text, all three still recorded as unknown in `docs/state.md`. It needs nothing from
-Tim and it is the biggest untested surface left before the App Store. **He picked the σ work instead
-and this was not refused, only unpicked.**
+🛑 **THE ACCESSIBILITY WORK IS DEFERRED BY TIM, 2026-09-17: *"Let's not work on the accessibility for
+a while."*** It had been ranked and offered twice — no keyboard path walked, no screen reader run,
+nothing tested at larger text, all three still recorded as unknown in `docs/state.md` — and it is
+still the biggest untested surface left before the App Store. **It is now unpicked by name rather
+than merely unstarted. Do not offer it again; he will raise it.**
+
+⏸️ **The other item he did not pick, from the same answer, and it is small**: `tools/a11y-audit.mjs`
+still cannot reach any screen behind `#/friend/<uid>` because a real uid is generated — **but the
+demo account's is deterministic**, which is the opening nobody has taken. Not refused, just unpicked.
 
 ## ✅ THE 2026-09-14 HANDOVER IS CLOSED — what the killed agents actually left
 
@@ -773,12 +797,12 @@ than left at the top where they were written.
 
 | | What | State |
 |---|---|---|
-| **31** | 🆕 **THE FRIEND PROFILE, AND WHAT IT MADE EVERY ACCOUNT PUBLISH — BUILT 2026-09-16** | ✅ **Two more asks arrived mid-session and were built the same day**: a system's **optional weekly or cycle plan** (`js/schedule.js` — display only, on Tim's own answer; Rest and "nothing planned" are deliberately different words, and deleting a workout empties its day rather than resting it), and the calendar's **collapsed empty months plus a bar chart of days per month** over five months of history (Months only; **published**, not *trained*, on a friend's). 🔄 **AND THREE CORRECTIONS HE REPORTED WITHIN MINUTES OF THE PUSH, all built the same session**: a friend's data panel **lost its Calendar tab** (their calendar is on their profile now — four tabs, and `#/friend/<uid>/calendar`, which was never reserved and used to read *"that workout is not here"*, lands on their profile); **Months now runs from the first recording to the last**, so ten empty months no longer sit before anybody's first workout; and **the back arrow on a friend's profile always lands on `#/me`**, whatever route arrived — the narrow depth-based version shipped hours earlier could not cover *"go into a user's view data section, then close … then go back"*, because history correctly handed back the panel he had just dismissed. 🔒 **The depth mechanism was DELETED the same day it was written** rather than left standing. 🟢 Three asks in one message, three agents on disjoint files. ✅ **Built**: the avatar fix on `#/me/friends`; a friend's page as a **profile** (`js/profile-shape.js`, one module and two subjects) with **Workouts shared · Friends**, their body, their best lifts and their calendar; **"View data"** pulling their Data screen up on Record's own rise with **no Research**; their Workouts and Friends lists openable and walkable friend-to-friend; **`backExact` to `#/me` from depth ≥ 2**, Tim's explicit override of Rule 8, with the depth STAMPED on the history entry; and **systems that fold** on both lists. 🚨 **D32 is the part that is not a screen** — `profile.gender`, `profile.age` and `connections` in both shared documents, the first field naming OTHER PEOPLE, with `firestore.rules` shipped alongside because `hasOnly` would otherwise have denied **every publish in silence** (rules 218 → 221, mutation-checked). ⏸️ **NOT done, and none of it blocking**: the accessibility audit still cannot reach any screen behind `#/friend/<uid>` (their uid is generated — ⚠️ **but the demo's is deterministic, which is an opening nobody has taken**); the three published fields have never been written to real Firestore; and a friend's new details only appear after **their** app republishes. `docs/history.md` 2026-09-16 |
+| **31** | 🆕 **THE FRIEND PROFILE, AND WHAT IT MADE EVERY ACCOUNT PUBLISH — BUILT 2026-09-16** | ✅ **Two more asks arrived mid-session and were built the same day**: a system's **optional weekly or cycle plan** (`js/schedule.js` — display only, on Tim's own answer; Rest and "nothing planned" are deliberately different words, and deleting a workout empties its day rather than resting it), and the calendar's **collapsed empty months plus a bar chart of days per month** over five months of history (Months only; **published**, not *trained*, on a friend's). 🔄 **AND THREE CORRECTIONS HE REPORTED WITHIN MINUTES OF THE PUSH, all built the same session**: a friend's data panel **lost its Calendar tab** (their calendar is on their profile now — four tabs, and `#/friend/<uid>/calendar`, which was never reserved and used to read *"that workout is not here"*, lands on their profile); **Months now runs from the first recording to the last**, so ten empty months no longer sit before anybody's first workout; and **the back arrow on a friend's profile always lands on `#/me`**, whatever route arrived — the narrow depth-based version shipped hours earlier could not cover *"go into a user's view data section, then close … then go back"*, because history correctly handed back the panel he had just dismissed. 🔒 **The depth mechanism was DELETED the same day it was written** rather than left standing. 🟢 Three asks in one message, three agents on disjoint files. ✅ **Built**: the avatar fix on `#/me/friends`; a friend's page as a **profile** (`js/profile-shape.js`, one module and two subjects) with **Workouts shared · Friends**, their body, their best lifts and their calendar; **"View data"** pulling their Data screen up on Record's own rise with **no Research**; their Workouts and Friends lists openable and walkable friend-to-friend; **`backExact` to `#/me` from depth ≥ 2**, Tim's explicit override of Rule 8, with the depth STAMPED on the history entry; and **systems that fold** on both lists. 🚨 **D32 is the part that is not a screen** — `profile.gender`, `profile.age` and `connections` in both shared documents, the first field naming OTHER PEOPLE, with `firestore.rules` shipped alongside because `hasOnly` would otherwise have denied **every publish in silence** (rules 218 → 221, mutation-checked). ⏸️ **NOT done, and none of it blocking**: the accessibility audit still cannot reach any screen behind `#/friend/<uid>` (their uid is generated — ⚠️ **but the demo's is deterministic, which is an opening nobody has taken**), and a friend's new details only appear after **their** app republishes. ✅ ~~the three published fields have never been written to real Firestore~~ **WRITTEN AND READ BACK 2026-09-17** — both documents accepted by the deployed rules with gender, age and `connections`; an unnamed key, a public document carrying body weight, an over-cap list and a legacy audience id all refused on the wire; a document with **no** `connections` key still accepted, which every pre-D32 account depends on; and a second account proved the read side, including losing access when dropped from `viewers`. `docs/history.md` 2026-09-16 and 2026-09-17 |
 | **30** | 🔄 **THE STRENGTH-ACCURACY PLAN — PHASES 0–3 BUILT 2026-09-14**; §6 is what is left | 🟢 Approved in full (*"I like all your fixes as well as all of your advice for the decisions you want me to make. Start building the improvements now."*) — all fourteen decisions as recommended. ✅ **Built**: the nine defects (§2), the model decisions (§3), the fatigue items §5.1–§5.4. 🛑 **§5.5 (the reps-in-reserve tap) was NOT built** — it was stated with both sides and not recommended, and he did not name it. ✅ **§6.3 AND §6.4 DONE 2026-09-15** — all 105 comparable entries re-derived against Strength Level with the check made sex-aware first (**inside 5 % went 38 → 85**, pairs 51 → 62, three refused because their published page is a different implement), then **σ per entry** (`js/ratio-sigma.js`, generated) and an **inverse-variance blend**. 🛑 **What §6.4 proposed and did NOT ship**: confidence's quality term as `exp(−σ_post)`, and the ± band on `estimateOneRM`. ⏸️ **NOT DONE, and none of it is blocking**: the **backtest tool** (§6.1) needs **Tim's own export**, which is decision (n) and has not been given — it is the only thing that turns "consistent" into "accurate"; **personal ratios learned from a lifter's own paired lifts** (§6.5). 🛑 **AND THE FALL LIMIT IS A DECISION, NOT A LEFTOVER** — this row called it "half of decision (a)" until 2026-09-15 and plan §3.1 offered a window **or** a smoothed series; the window shipped. Wiring `estimateAt()` replays each exercise as a series, moves every rating, re-baselines the golden table and needs hysteresis with it. `docs/history.md` 2026-09-14 and -15 |
-| **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ⚠️ **What is NOT done**: this has never run against real Firestore — the aggregation query, the `>` on a real server timestamp and the rules' `list` on an aggregation are all reviewed rather than executed, exactly like the rest of this file's network paths. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass |
+| **26** | ✅ ~~the read pattern — the running cost of this app~~ **BUILT 2026-09-08, on Tim's pick** | `where('updatedAt', '>', cursor)` plus an aggregation **count to catch deletes**, so a cold open pays for what CHANGED rather than for a whole training history. **~20× at every scale** — free servers to ~1,894 users instead of ~94. 🚨 **The first version used a MILLISECOND cursor with `>=` and was worse than useless for the accounts with the most data**: Firestore stamps a batch with one instant, so a restore or a 1,200-row adoption pinned the cursor and re-read everything every sync. A test caught it. 🔒 **Every uncertain path falls back to the full read.** ✅ ~~**What is NOT done**: this has never run against real Firestore~~ **RUN 2026-09-17, and it does what it claims.** `tools/live-check.mjs` (§0.16) measured it on the wire: the cursor is a real server timestamp kept to the nanosecond, **an unchanged sync bills ZERO document reads**, a changed sync bills 2 of 4, the aggregation query is accepted by the deployed rules and needs no composite index, and **a delete this device never saw is caught by the count** — including delete-one-add-one, where the raw count is unmoved. ⚠️ **Scale is still unproved**: it ran on three or four sessions, not on a training history. `docs/running-costs.html`, `docs/history.md` 2026-09-08 second pass and 2026-09-17 |
 | **28** | ✅ ~~"followers / following" is Instagram's vocabulary for a graph this app does not have~~ **DECIDED AND DONE 2026-09-09 — THE WORDS CHANGED, NOT THE MODEL** | Tim, asked which way and given both costs: *"just combine the 2 and call them 'friends' instead. We might change it to following/folowers later."* **One count, called Friends.** ⚠️ **He kept the other door open, and the thing that keeps it cheap is that there is no migration** — nothing was built or deleted here; `connections` is the same list it always was and this is two labels over it. 🔒 **`#/me/followers` and `#/me/following` still resolve**, onto the one list, which is titled Friends however you arrive — asserted, because a screen still headed "Followers" would be the rename half-done. ✂️ **The "?" went with the second number** (it existed to explain why two figures were equal); 🚨 **the public-account caveat did NOT** — *"Your account is public, so people can see your training without being friends"* is on the screen, only where it is true, because without it the number reads as an audience. `docs/history.md` 2026-09-09 third pass ~~ Tim asked for those three counts by name and they shipped, honestly: connections here are **mutual**, so the two numbers are always equal, and the "?" beside them says so. ⚠️ **On a PUBLIC account the number is also a floor rather than an audience** — anybody signed in can read you without connecting, and none of them are in the graph; the ? says that too. 🚩 **The open question is which way to resolve it**: change the words to match the model (Friends / Connections — cheap, and it is what the rest of the app already calls them), or change the model to match the words — **a real follow model, with new rules, a migration, an asymmetric graph and a moderation surface attached**, which is a feature nobody has asked for. 🛑 **Do not pick one on his behalf.** `docs/history.md` 2026-09-08 third pass, §C |
 | **29** | ✅ ~~**THE PROFILE/DATA SPLIT**~~ **FINISHED 2026-09-11 — all five steps** | 🟢 Authorised 2026-09-10 (*"I like all of that. Start working on it now."*), steps 1 and 3 that day, **2, 4 and 5 on 2026-09-11**. ✅ **Step 2** — sex, age and current weight on `#/me`, ⚠️ a DISPLAY move: the row opens `#/profile`, which stays the form. ✅ **Step 4** — Goals off Settings, 🚨 the old row **deleted rather than left as a second door**, `#/goals` still resolving, and 🛑 **no verdict followed it onto the tab**. ✅ **Step 5** — the facts readout came off the Account row (Profile prints them now) and a "Profile" heading over one row went, that word having meant a TAB since 2026-09-08. 🚨 **Building it found that `#/me` had never been in the accessibility audit's route list** — the row called *Profile* is `#/profile`, the form. Fixed and swept. 🔒 **`#/me` holds no field at all, asserted** — `direction.md` §4a's line between the two profile screens. `docs/history.md` 2026-09-11 ~~ The plan he approved, in his order: **1 Calendar → Profile**, **2 body facts (gender, birth year, body weight) → Profile**, **3 personal bests → Profile**, **4 Goals: Settings → Profile**, **5 Account cleanup — whatever is left after 2 and 4.** 🚨 **The rule the whole thing rests on: Data answers what your training MEANS, Profile answers what you DID.** That is what fixed the segment overflow and the empty Profile in one cut. ⚠️ **Step 2 is a DISPLAY move, not a form move** — `#/me` never writes, and `#/profile` stays the form; Profile shows sex, age and current weight and links to it. ⚠️ **Every moved route must keep resolving** (`#/calendar`, `#/day`, `#/edit`, `#/profile`, `#/goals`) — asserted, and `#/calendar` has survived four moves without breaking a link. 🛑 **Nothing goes on Home** — `direction.md` §4a is a placement rule, not a request |
-| **27** | ✅ ~~**"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE**~~ **FIXED 2026-09-10** | The finding was bigger than the entry: **five of ten collections were never named** (bodyWeight, systems, goals, people, guestSessions), `sessions` was named and still failed on the mass-delete guard, and **`write()` cannot address `shared/*` at all** — so a public account that deleted itself left its published training readable by anybody signed in, permanently, because after `deleteUser()` every rule is `isOwner` and the owner is gone. ✅ `createAccountPurge()` in `js/firebase-backend.js` walks every subcollection, `shared` and `reactions` first (the revocation order), empties the ten whole-list documents that rules forbid deleting, then **RE-READS and refuses to delete the auth user if anything survived**. 🚨 **`wholesale` was deliberately not the fix** — the guard exists so nobody sprinkles it, and the flows allowed to use it snapshot to the cloud first, which for an account about to stop existing is one more unreachable billable document. Proved on the emulator (218 assertions) and against the double. ⚠️ **Still never run against real Firestore.** ~~ |
+| **27** | ✅ ~~**"DELETE ACCOUNT" LEAVES THE SESSIONS IN FIRESTORE**~~ **FIXED 2026-09-10** | The finding was bigger than the entry: **five of ten collections were never named** (bodyWeight, systems, goals, people, guestSessions), `sessions` was named and still failed on the mass-delete guard, and **`write()` cannot address `shared/*` at all** — so a public account that deleted itself left its published training readable by anybody signed in, permanently, because after `deleteUser()` every rule is `isOwner` and the owner is gone. ✅ `createAccountPurge()` in `js/firebase-backend.js` walks every subcollection, `shared` and `reactions` first (the revocation order), empties the ten whole-list documents that rules forbid deleting, then **RE-READS and refuses to delete the auth user if anything survived**. 🚨 **`wholesale` was deliberately not the fix** — the guard exists so nobody sprinkles it, and the flows allowed to use it snapshot to the cloud first, which for an account about to stop existing is one more unreachable billable document. Proved on the emulator (218 assertions) and against the double. ⚠️ **Still never run against real Firestore — and since 2026-09-17 it is the LAST network path of any size in that state.** `tools/live-check.mjs` (§0.16) is the shape it would be proved in, on a throwaway account; 🛑 **it deletes accounts, so it is not something to bolt onto a spare half hour, and nobody has asked.** ~~ |
 | **27-old** | 🚨 **the original entry, kept for the reasoning** | ⚠️ **Found while reading that code for the read-pattern work, not by using the app, and it is Tim's call rather than a quiet fix.** `FirebaseBackend.deleteAccount()` clears five collections with `this.write(name, [])` and **passes no `wholesale` flag**, so for `sessions` the mass-delete guard (2026-08-28, *"make it extremely difficult to erase data from people's accounts"*) refuses the write outright. The throw is caught and logged, `deleteUser()` then runs, and **every session document stays at `users/{uid}/sessions/*` for an account that can never sign in again** — unreachable under the rules, but present, billable, and not what somebody pressing *Delete everything permanently* was promised. ⚠️ **`guestSessions` is not even in the list.** 🛑 **The fix is one word (`{ wholesale: true }`) plus that collection, and it is deliberately not made here**: the guard exists precisely so nobody sprinkles that flag around, and the two flows already allowed to use it snapshot to the cloud first — which is meaningless for an account being deleted, so the right shape needs a decision rather than a keystroke |
 | **25b** | 🆕 **the demo has no TIME-based strength set** | ⚠️ Left over from 25. The generator writes every set as `{weight, reps}`, so there is no plank, L-sit or dead hang anywhere in the demo year — a shape the app supports and the demo cannot show. Small; nobody has asked |
 | **25** | ✅ ~~the demo cannot show a trained-but-unrankable muscle~~ **FIXED 2026-09-04** | Cable Crunch (Core ranks) and Neck Curl (Neck hatches) — one of each, because the two states cannot sit on one muscle now Core is rankable. Tim authorised the re-baseline it forced. ⚠️ **Still open, and smaller**: the generator writes every set as `{weight, reps}`, so the demo has no TIME-based strength set anywhere — no plank, no L-sit, no dead hang. ~~ ⚠️ **A REVERTED FIX, not an oversight, and the reasoning is why it is listed.** The generated year holds exactly one ab exercise (a Plank, in a Full Body workout the demo never runs), so the demo's Core is permanently "nothing recorded" and **the hatch shipped 2026-09-04 is unreachable there** — it cannot be screenshotted, audited or shown to anybody. Adding a Cable Crunch to Lower A fixes it and **re-rolls the whole seeded year**: every later `random()` draw shifts, which moves the goal-progress assertions and invalidates the golden observation table in `data-layer.test.mjs` that exists to catch regressions in `buildObservations()`. 🛑 **Re-baselining a regression pin is Tim's call, not a side effect of a colour fix** — so it was backed out. ⚠️ **A Plank cannot be the answer**: the demo's set builder only ever writes `{weight, reps}`, so it would be a fixture in a shape the app never produces — the `sets: []` fault again. **Two ways out: accept the re-roll, or give the generator a time-only path** |

@@ -2362,3 +2362,46 @@ friends lists still go back to that person; only their profile jumps home.
 
 One thing I fixed in my own notes while doing it: the docs claimed the Data tab has six segments
 including Calendar. That's been wrong since the calendar moved to Profile on the 10th.
+
+## 2026-09-17 — the two things that were only ever "reviewed", run for real
+
+**You asked what was worth doing that I didn't need instructions for.** I gave you three: prove the
+sharing and sync code against the real database, the accessibility work, and pointing the automated
+screen audit at a friend's pages. You picked the first and said to leave accessibility alone for a
+while.
+
+**Here's what that was about.** Everything the app does over the network has been checked against a
+fake database or a local simulator. Both are honest tests of what they test, and neither one is the
+real Google server. Two pieces of the app have therefore only ever been read rather than run, and
+both of them fail *quietly* if they're wrong:
+
+- **What your app publishes for friends to see.** Last session added your gender, age and friends
+  list to that. The database has a rule listing exactly which fields it will accept, and if that rule
+  hadn't updated properly, every publish would be rejected *silently* — nobody's page would ever
+  update again and nothing anywhere would say so.
+- **How the app loads your training when you open it.** That was rewritten a while back to only
+  fetch what changed, which is what keeps the running cost near zero. Nothing had ever measured it
+  against a real server.
+
+**Both work.** 39 checks, no failures, run as two throwaway accounts that I deleted afterwards. Two
+numbers worth having:
+
+**Opening the app when nothing has changed now costs zero.** Not "cheap" — zero records fetched. And
+when something has changed it fetches only that: two records out of four, in the test. That's the
+whole cost saving, measured rather than estimated.
+
+**Your published profile is accepted, and the wrong things are refused.** Gender, age and friends
+list all land correctly. I also deliberately tried four things that *should* fail — an extra field,
+body weight in the public copy, an oversized friends list, an old-format publish — and the database
+refused all four. That last part matters more than the first: anyone can show you a write that
+succeeded, but the refusals are what prove the new rules are actually live.
+
+I also checked it from the other side with a second account: it can read a public profile, can read a
+friends-only one while it's on the list, and stops being able to the moment it's taken off.
+
+**One thing I kept rather than threw away.** There was a note in the docs saying this same check had
+been done back in August with a script that was then deleted — so I had to rebuild the whole
+technique from one sentence. This one lives in the project now and can be re-run any time the
+database rules change.
+
+**Nothing in the app itself changed** — no screens, no behaviour. This was verification.
