@@ -1,0 +1,76 @@
+# Science-Based Pull Workout, Day 2 (Back, Biceps, Rear Delts)
+
+**Source:** Jeff Nippard, "The Most Effective Science-Based PULL Workout (Back, Biceps, Rear Delts) | Science Applied Ep 5" ([watch](https://www.youtube.com/watch?v=9B-5irFdB3c)) · 2018-07-19 · 12 min
+**Topic:** Programming
+
+## Bottom line
+- Second pull session of the week: most recent literature shows hitting each body part at least twice weekly is optimal, but frequencies above 2x are not better when volume is equated.
+- This session is the mind-muscle-connection and eccentric-emphasis counterpart to the strength-focused first pull day.
+- Eccentric strength is 20-50% greater than concentric strength (Schoenfeld, 2011 NSCA report), so several lifts use 3-4 second negatives or partner-applied manual resistance.
+- Pre-exhaustion is used backwards from how most people do it: fatigue the *secondary* movers first (reverse-grip and hammer curls) so the biceps stay fresh for the supinated curl.
+- The prescribed volume is aimed at intermediates; advanced lifters can add 1-2 sets or exercises, beginners should cut 1-2 sets.
+
+## The routine
+
+**Warm-up:** 2 light sets of lat pulldowns, 15-20 reps. These do not count as working sets — just blood flow and getting the lats firing.
+
+| # | Exercise | Sets x Reps | Key notes |
+|---|---|---|---|
+| 1 | Eccentric-accentuated lat pulldown | 3 x 8-10 | 3-4 sec negative, standard-speed concentric |
+| 2 | Chest-supported T-bar row with band | 3 x 10-12 | Band alters resistance curve toward traps |
+| 3 | Machine single-arm row | 2 x 12-15 | Start with the weaker side |
+| 4 | Kneeling / half-kneeling cable pullover | 3 x 15-20 | Longest rope available, or two ropes |
+| 5 | Snatch-grip shrug | 3 x 12-15 | Grip ~2x shoulder width |
+| 6 | Reverse pec deck superset | 2 positions, 12 reps then to failure | Mechanical drop set |
+| 7 | Enhanced eccentric EZ bar curl | 3 x 10-12 | Partner pushes down on the negative |
+| 8 | Dumbbell curl tri-set | 2 rounds of 12 / 10 / 8 | Reverse grip, hammer, supinated |
+
+## Lat pulldown, eccentric-accentuated [00:31]
+Research tends to show no significant difference in lat activation between the pulldown and the pull-up, so Jeff uses both: pull-ups on the strength-focused first pull day, pulldowns here where the focus is mindful activation at slightly higher reps.
+
+Per a 2011 NSCA report by Dr. Brad Schoenfeld, a significant body of research shows eccentric exercise elicits greater lean muscle gains than concentric or isometric contractions, and eccentric strength runs 20-50% above concentric strength. Hence the 3-4 second lowering phase on every rep.
+
+**The cue:** on the concentric, draw the elbows down and in. On the negative, actively engage the lats *as they stretch*. Visualise the eccentric as a failed concentric — you're too weak to complete the pull and are resisting the whole way up. Don't just lower the weight slowly; contract the lats as hard as possible while they lengthen. Mind-muscle connection is accumulating empirical support as a hypertrophy strategy, especially for simpler movements where you're isolating a specific body part.
+
+## Chest-supported T-bar row with band [02:32]
+Rows are the bread and butter of back training, hitting both the mid-back traps and the lats. Chest support means you don't accumulate the lower-back fatigue of a free-standing row — sensible for fatigue management, since your lower back is already getting worked by squats and other lower-body compounds.
+
+**Why the band.** The lats cannot hyperextend the shoulder (they can't drive the arm behind the torso), so the traps must perform the scapular retraction at the top of the row. The T-bar row has an unusual resistance curve: the hardest point is the mid-range, and past that the movement gets *easier*, because the machine travels in a pendulum arc while gravity acts straight down. Adding a band loads the top portion where hyperextension happens, forcing the traps to work harder there. Research also supports combining elastic and free-weight resistance for strength development over free weights alone — though long-term effects aren't clear, this is at minimum a novel loading pattern.
+
+## Machine single-arm row [04:37]
+Adds back volume while contracting each lat individually, which helps correct left-right imbalances. Start with the weaker or smaller side (usually but not always the non-dominant side). Stretch the lat fully at the top of each rep, then drive the elbow down.
+
+## Kneeling cable pullover [05:08]
+The back finisher, modified for maximum range of motion — use the longest rope available, or two ropes with one in each hand. Despite being an isolation exercise it takes the lats through roughly 180 degrees. Pull the rope all the way back and hyperextend the shoulder at the bottom if you can, which brings the traps in too.
+
+**Jeff's variation:** start at the bottom with about a 65-degree forward lean, then come more upright as you complete the movement. This stretches the lats more at the bottom and improves the strength curve at the top. Some triceps involvement is normal — the long head also contributes to shoulder extension.
+
+## Snatch-grip shrug [06:10]
+The upper traps perform two actions: scapular elevation (a standard shrug) and upward scapular rotation (as in a lateral raise). A grip at roughly twice shoulder width hits both to a greater degree. Related research from Pisar-Ian and colleagues (name garbled in the auto-captions — treat as uncertain) found a dumbbell shrug performed at 30 degrees of abduction with a wider grip activated the upper trap fibres more than a traditional shrug.
+
+## Reverse pec deck superset [06:41]
+A mechanical drop set in two positions:
+
+1. **Rear-delt dominant reverse fly, 12 reps.** Keep the shoulder blades *protracted* — upper back slightly rounded forward, the opposite of squeezing the blades together. Sit back as far as you can on the pad with a slight forward lean into it. Drive the handles straight *out*, not straight back, which stops the traps taking over. Maintain the mind-muscle connection with the rear delts throughout.
+2. **After a few seconds' rest, reverse the cues.** Now squeeze the shoulder blades together, pull both out and back on the concentric, protract on the eccentric, and sit up straighter with arms parallel to the floor. This brings the traps in to extend the set, letting the rear delts do more total work than they could in isolation.
+
+## Biceps [07:42]
+**Enhanced eccentric EZ bar curl, 3x10-12.** Pick a weight slightly lighter than usual, complete the concentric yourself, and have a partner push down on the centre of the bar during the negative. Training solo, simply double your normal eccentric duration. The literature associates enhanced eccentrics with increased work capacity and muscle activation — though in the study cited, muscle mass increases were similar in both groups, possibly because it only ran ten weeks.
+
+**Dumbbell curl tri-set, 2 rounds.** 12 reps reverse-grip curl, straight into 10 reps hammer curl, straight into 8 reps supinated dumbbell curl. Rest 1-2 minutes, repeat once.
+
+**The pre-exhaustion logic.** Most people pre-exhaust wrong: they fatigue the target muscle with an isolation movement before a compound, expecting more activation. The literature suggests the opposite happens — fatiguing the target first means secondary movers take over and the target becomes *less* active. (Example: leg extensions before leg presses make the quads less active on the press, not more.) So here the *other* elbow flexors — brachioradialis, brachialis, the forearm supinators — get fatigued first by reverse-grip and hammer curls, leaving the biceps comparatively fresh for the supinated curl.
+
+**Cues.** On the reverse-grip and hammer curls, grip the dumbbell as hard as you can to further involve and fatigue the forearm musculature. On the supinated curl, think about touching your pinky to the outside of your delt (helps the biceps mind-muscle connection for some people), and curl the weight out in front of you in an arc rather than straight up — in concept this increases the moment arm and the tension on the biceps.
+
+## Practical application
+- Split your two weekly pull sessions by emphasis: heavy/strength movements one day, controlled-tempo and isolation work the other.
+- No partner for enhanced eccentrics? Double your usual eccentric duration instead.
+- Adjust volume by level: beginners cut 1-2 sets, advanced lifters add 1-2 sets or an extra exercise.
+- Apply pre-exhaustion to synergists, not to the target muscle.
+
+## Caveats & unknowns
+- The long-term benefit of combining band and free-weight resistance is not established.
+- Enhanced eccentrics improved activation and work capacity but did not out-perform the control for muscle mass in a ten-week study.
+- The pre-exhaustion rationale for the biceps tri-set is described as theoretical ("in theory", "in concept") rather than directly tested.
+- The Pisar-Ian shrug citation is a likely caption mangling; verify before relying on it.
