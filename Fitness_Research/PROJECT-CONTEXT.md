@@ -31,13 +31,91 @@ near the bottom of this file for what that probe found and which sources are off
    position against the mainstream on caffeine cycling, protein in a deficit, rest-interval
    floors, the effective-reps model, warm-ups and row selection, and the notes mark each clash
    explicitly rather than smoothing it.
-3. **House of Hypertrophy** — transcripts already fetched (169/172). Needs a new extractor:
-   135 of 169 descriptions carry reference links directly, and 58 link out to per-video
-   reference pages on houseofhypertrophy.com. Both venues need merging.
-4. **Barbell Medicine + integration** — ~206 free articles with inline PubMed links; skip the
-   audio entirely. Then the cross-source layer.
+3. **House of Hypertrophy** — IN PROGRESS. See "Picking this up" below.
+4. **Barbell Medicine + integration** — NOT STARTED. ~206 free articles with inline PubMed
+   links; skip the audio entirely. Then the cross-source layer.
 
 Squat University is a later pass, at Tim's request.
+
+---
+
+# PICKING THIS UP IN A NEW CHAT — read this section first
+
+## Done and pushed
+
+- **Jeff Nippard** — 279 notes, summary layer, index. Complete.
+- **ISSN position stands** — 27 notes, summary, index, 5,192-reference bibliography. Complete.
+- **Menno Henselmans** — 151 notes, summary, index, 535-reference bibliography. Complete.
+
+## House of Hypertrophy — partly done
+
+**The data layer is finished and committed:**
+
+- 169 transcripts and descriptions in `transcripts/hoh/` (gitignored, rebuild with
+  `tools/fetch_channel.py "https://www.youtube.com/@Houseofhypertrophy/videos" transcripts/hoh`).
+  Three videos were unreachable after two passes and are listed in
+  `transcripts/hoh/failures.json`.
+- `sources/hoh/refs.json` — **1,488 references extracted, 945 unique**, from 137 of 169
+  descriptions. 25 videos have topic-labelled reference groups in the `groups` field; those
+  are his own claim-to-source mapping and the notes should preserve them.
+- `sources/hoh/citations.json` — **784 of 945 resolved (83%)**.
+- `sources/hoh/assignments.tsv` — the video-id to filename mapping for all **169 notes**.
+  Nothing was excluded; every video on this channel is research content.
+- `sources/hoh/batch_tables.md` — the 20 agent batches, already written out.
+
+**What is left, in order:**
+
+1. **Batch 19 was never written.** The agent failed to launch on the 20-agent concurrency cap.
+   Its 12 videos are listed under `### BATCH 19` in `sources/hoh/batch_tables.md`. Check which
+   files in that list are missing from `House of Hypertrophy videos/` and write those.
+2. **Verify all 169 notes exist** against `sources/hoh/assignments.tsv` before moving on.
+3. **Build the bibliography:**
+   `python tools/build_channel_bibliography.py sources/hoh "House of Hypertrophy videos" "House of Hypertrophy"`
+4. **Build the folder README** — adapt the Menno one; there is no reusable script, it was
+   written ad hoc in the scratchpad.
+5. **Write `SUMMARY.md`** for the folder, from the agents' reports.
+6. Update the top-level `README.md` row and this file.
+
+**The agent brief that produced the existing notes** is worth reusing — it is reproduced in
+`sources/hoh/BRIEF.md`.
+
+## What is distinctive about this source
+
+It is **the most densely cited channel in the library** — 945 unique references across 169
+videos, one video citing 48 papers. Almost every video is hypertrophy mechanisms or a single
+training variable in depth.
+
+Two things the notes must handle honestly:
+
+- **His longest, best videos have no reference list at all.** The 73-study biceps guide, the
+  63-study triceps guide and the 87-study mechanisms video cite on screen only, and their
+  descriptions carry nothing. The rule given to agents: say plainly that no list is
+  retrievable, list studies named aloud flagged as unverified, invent nothing.
+- **The creator is self-taught with no formal credentials** — he says so himself. He is
+  unusually careful in practice (presents the study that contradicts him, states sample sizes
+  and training status), and the notes should say where that shows.
+
+## Then chunk 4: Barbell Medicine
+
+Not started. ~206 free articles at barbellmedicine.com with inline numbered PubMed links,
+plus per-episode Google Docs of citations for the podcast — **skip the audio entirely and
+ingest the articles.** This is the source that best fills the injury and rehab gap, from two
+practising physicians. It needs a new fetcher: sitemap to HTML to main-content extraction.
+Their terms allow reading and summarising, not republishing.
+
+After that, the cross-source layer: a top-level summary reconciling the five sources where
+they disagree. There is a lot of material for it already — the per-source summaries each carry
+an explicit section on where that source departs from the others.
+
+## Loose ends
+
+- `weightlifting.md` at the repo root is empty and untracked. Never asked about; left alone.
+- The Nippard "Known problems in this library" list at the bottom of
+  `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its
+  claim, misleading filenames, one study rendered three ways.
+- `tools/extract_refs_desc.py` has had its host allowlist widened twice after agents found
+  missed links (Elsevier resolver URLs especially). If a new source turns up links it misses,
+  widen it again rather than accepting the loss.
 
 ## What Tim asked for, in his own framing
 
