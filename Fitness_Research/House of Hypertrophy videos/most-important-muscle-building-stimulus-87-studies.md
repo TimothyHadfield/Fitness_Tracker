@@ -1,0 +1,97 @@
+# What Actually Stimulates Muscle Growth: Tension, Metabolic Stress and Damage
+
+**Source:** House of Hypertrophy, "The Most IMPORTANT Muscle Building Stimulus (87 Studies)" ([watch](https://www.youtube.com/watch?v=pNOb7jockSg)) · 2022-12-11 · 40 min
+**Topic:** Mechanisms
+
+## Bottom line
+- **Mechanical tension is the only stimulus left standing.** The other two members of the classic triad — metabolic stress and muscle damage — have no strong evidence behind any of their proposed mechanisms, and no evidence that more of either produces more growth.
+- The strongest case for tension is **not** the classic animal work (tenotomy, immobilisation at length, weighted chicken wings) — he explicitly says those don't isolate tension. It is a set of recent studies that **blocked active force production while leaving the electrical signal intact** and found growth signalling failed to occur.
+- Tension is **not the same as load**. His working definition: recruit as many fibres as possible, have them produce high individual forces, **for a decent duration**, **within a single time window**. That definition is what makes light loads to failure and heavy loads equivalent, and it is what rules out 1RM work (duration too short) and 50-rep sets (central fatigue blocks fast-twitch recruitment).
+- He dismantles the damage case using **Brad Schoenfeld's own 2012 review** as the strongest statement of it, and the metabolic stress case using **Schoenfeld's own 2013 review** — four pathways and five pathways respectively, each rebutted in turn.
+- He stops short of the strong claim. His stated position is that tension is the **primary** stimulus and that it being the *sole* stimulus is "not completely crazy" to speculate — but he explicitly refuses to rule out that low levels of damage and metabolic stress contribute up to some low threshold that all training crosses anyway.
+
+## The question, and what would count as an answer
+
+The framing that makes this video worth the 40 minutes is that he sets an evidential bar first and then applies it to all three candidates: a stimulus qualifies if (a) there is a plausible mechanism, (b) protocols that raise it produce more growth, and (c) the mechanism can be isolated from the others. Tension clears all three imperfectly but clears them. Metabolic stress and damage fail (b) and (c) repeatedly.
+
+He is honest about the weakness of the historical evidence for his own conclusion. Four types of animal study from the 1970s–90s are usually cited for tension: cutting the gastrocnemius tendon so the soleus is overloaded (soleus hypertrophies); immobilising a limb with the muscle stretched versus shortened (far less atrophy when stretched, implicating **passive** tension); hanging weights from chicken wings; and stretching chicken muscle with a spring-loaded bar. He then says plainly that **none of these prove tension per se** — the electrical signalling, metabolite accumulation and damage that accompany tension are all confounded with it. That is exactly the move that makes this channel credible: the evidence he grew up on gets discarded first.
+
+What replaces it is four newer mechanistic studies. A 2019 Danish study **inhibited active force generation while still allowing electrical input** to the fibres: activation of the key growth-signalling protein complex did not happen. Only when active force was permitted did it occur. The same group equated peak tension between eccentric contractions (active + passive tension) and pure passive stretch (passive only) and found **equal** activation of the complex — evidence that it is *total* tension, not its active or passive origin, that matters. A 2008 US study held electrical input constant and changed muscle length so the muscle could generate higher active force; signalling rose. A 2001 Canadian study found a **linear** relationship between peak tension and activation of a hypertrophy-signalling protein.
+
+This is the decisive block, and it is worth naming what kind of evidence it is: **all four are signalling studies, not growth studies.** He backs them with the human-level observation that protocols presumed to involve higher tension produce more long-term hypertrophy and protocols presumed to equate tension produce equal hypertrophy — but "presumed" is doing real work there, since tension isn't directly measurable in a training human. The argument is mechanism plus consistency, not a direct experiment.
+
+## Why the burn and the pump don't build muscle
+
+Metabolic stress is the accumulation of metabolites (lactate, reactive oxygen species) from energy production in the fibre. It is intuitively appealing because it maps onto the two sensations lifters treat as evidence of a good session: the burn and the pump.
+
+The two 1995 studies that started this line found concentric-only training produced similar quadriceps growth to eccentric-only (concentric generates much more metabolic stress), and that **continuous** isometric holds beat **intermittent** ones (continuous generates measurably more metabolic stress). He points out — and credits the original authors with noting it themselves — that neither isolates the variable: concentric work still generates high mechanical tension, and the continuous isometric condition would have generated more tension too.
+
+Blood flow restriction is the strongest modern argument for metabolic stress, and he handles it carefully. He accepts the finding: **BFR with light loads is as effective as heavy-load training** for hypertrophy — neither useless nor superior. But he rejects the inference, citing a 2017 US review: the belief that BFR must work through metabolites rests on equating tension with load. Taking light loads to failure **does** produce high overall mechanical tension; the metabolic stress is plausibly a **byproduct of the effort needed to reach failure**, not the cause.
+
+He then takes on the strongest counter-evidence to his own position, which is the part of the video most worth reading. **Three studies found BFR produces preferential slow-twitch fibre growth** — hard to explain via tension, since tension should preferentially grow fast-twitch fibres. His rebuttal is that all three trained at frequencies that would leave central fatigue present: one trained seven consecutive days, one five days a week, and the third had untrained subjects going to failure three times a week for six weeks. Central fatigue reduces your ability to recruit fast-twitch fibres — so the result may reflect **suppressed fast-twitch growth**, not enhanced slow-twitch growth. He adds that BFR taken near failure in unaccustomed people does produce substantial damage, contradicting the old assumption that it doesn't. Supporting his reading: a **2021 Australian study in well-trained subjects**, lower-body BFR three times a week for nine weeks, found **no** preferential slow-twitch growth.
+
+Schoenfeld's 2013 review lists five paths from metabolic stress to growth. He answers all five: (1) metabolic stress causes more fibre recruitment — **this concedes the point, since it makes tension the actual mechanism**; (2) acute anabolic hormone spikes (GH, IGF-1, testosterone) — several studies now find acute elevations don't predict long-term hypertrophy, and the rise may simply track energy expenditure; (3) myokines (interleukin-6 up, myostatin down) — evidence inconsistent; (4) reactive oxygen species — contrary evidence exists; (5) cell swelling activating osmoreceptors — contrary evidence exists.
+
+Three outcome-level observations close the case. **400 m running and sprint cycling produce lactate and metabolite rises comparable to weight training and build almost no muscle.** A **2021 Brazilian study** cuffed one condition's leg *during rest intervals* between leg extension sets, producing greater lactate elevations; after eight weeks quadriceps growth was **the same**. And two studies applied blood flow restriction for 3–5 minutes *after* normal sets to failure, trapping metabolites in the muscle: growth was **not** enhanced in either, and one found it **reduced** growth in female subjects. Metabolic stress is therefore not additive.
+
+## Why soreness and micro-tears don't build muscle
+
+He starts by separating two things people conflate: it is not even settled that muscle damage is what causes DOMS. Several candidate mechanisms exist, and the damage–soreness link needs more research before soreness can be used as a proxy for anything.
+
+The micro-tear model — you tear the muscle, your body repairs it bigger — traces to 1990s observations that eccentric-only training causes both large damage and notable hypertrophy. He notes this model is carried by two videos with **40 million combined views**, then gives the current position: **more studies than not find similar overall hypertrophy between eccentric-only and concentric-only training**, and eccentric work involves very high mechanical tension anyway (contraction and stretch simultaneously, so active and passive forces both high). Damage is a plausible byproduct.
+
+Schoenfeld's 2012 damage review supplies four paths, each answered: (1) inflammation — conflicting evidence, and the relevant events can occur without damage; (2) satellite cells donating myonuclei to raise the myonuclear domain ceiling — **training that causes no damage still activates satellite cells**, aerobic training activates them, and damage-driven activation may serve repair of fibre and connective tissue rather than adding myonuclei; (3) IGF-1 potentiation — not all studies find it, and acute hormone spikes don't predict growth anyway; (4) post-damage fibre swelling activating osmoreceptors — same contrary evidence as the pump argument.
+
+The outcome data is stronger here than anywhere else in the video. A **2011 US study, 14 untrained men**: one group ramped up for three weeks before an eight-week eccentric cycle ergometer programme (20 min, three times a week), the other went in cold. The pre-trained group experienced **little damage or soreness throughout**; the naive group experienced much more. **Quadriceps hypertrophy was comparable.** A **2016 Brazilian study** found that the myofibrillar protein synthesis rise after a first session in untrained people **did not correlate with eventual hypertrophy** — it was directed at repairing damage. Only after several weeks, once the repeated-bout adaptations reduced damage, did the MPS response start correlating with growth. That study reframes soreness as a tax on the growth response rather than a signal of it.
+
+Excessive damage is actively counterproductive: a **1999 US study** of eccentric biceps curls found swelling persisting seven days, after which muscle volume fell to roughly **10% below baseline** and stayed smaller for weeks — plausibly destruction of subpopulations of fibres. Marathon running causes large damage and some data show it **decreases** fibre size. And damage isn't additive: higher reps likely cause more damage but are similarly effective to lower reps; short rest likely causes more damage but is **sub-optimal** for hypertrophy in large-muscle-mass exercises.
+
+Finally, the antioxidant argument — vitamin C and E supplementation sometimes reduces damage and soreness and sometimes reduces long-term growth, which some read as proof damage matters. He gives the alternative: antioxidants may blunt the **capillary adaptations** that support long-term growth, and in any case not all studies find reductions in either damage or growth. This is the most careful passage in the video and the one that most clearly separates "consistent with" from "evidence for".
+
+## What mechanical tension actually is — and what it changes in the gym
+
+His five-level definition is the practically useful part, because levels four and five are what most people miss:
+
+1. Muscle tension stimulates hypertrophy.
+2. Fibre-generated tension is detected by mechanosensors in and around the fibre and converted into a signalling cascade.
+3. Active force comes from myosin heads pulling actin; passive force comes from titin stretching (and the extracellular matrix). Candidate mechanosensors include costamere-related complexes, filamin at the Z-disc, titin itself, myonuclei, and stretch-activated ion channels — with the possibility that **different sensors detect active versus passive force**.
+4. Tension must last a **decent duration**. This is why 1RM training builds little or no muscle despite maximal recruitment and force.
+5. It must all occur **within one time window**. His illustration: one 30-second maximal isometric bench hold beats thirty 1-second maximal holds spread across a day, despite identical total tension-time.
+
+From that, the training implications follow without needing new studies. Henneman's size principle means heavy loads recruit fast-twitch fibres immediately, while **light loads recruit them only as fatigue accumulates near failure** — so the final few reps before failure look similar under both, which is why light and heavy loads produce similar hypertrophy when taken to or near failure, and why **proximity to failure matters more than load**. Very light loads (very high reps) are still sub-optimal because within-session central fatigue impairs fast-twitch recruitment; very heavy loads are sub-optimal per set because tension duration is too brief.
+
+The stretch-position argument is his most speculative, and he says so. Exercises training a muscle at long lengths involve high active **and** passive force; if different mechanosensors read each, the two may be additive. He goes further: calcium influx permits actin–myosin interaction, and calcium may also **stiffen titin**, so passive force with active tension present exceeds passive force alone. That would explain why static stretching (passive only) is a poor growth stimulus while stretch-position training is a strong one — though he notes a German study where **one hour of daily calf stretching did produce significant gastrocnemius growth**. He states explicitly that this is "100% not a confirmed definitive fact".
+
+## Where he stops, and what he leaves open
+
+He offers competing models rather than declaring victory. Tension may literally be the sole stimulus, with damage and metabolic stress as byproducts. Or both may contribute at **very low levels with no further benefit beyond**, which would explain why more of them never helps — every training style clears the threshold. He also can't rule out unexamined stimuli: **hypoxia** is his example, where some studies find more growth training in hypoxic versus normoxic conditions and a number of others find none, leaving the link unclear.
+
+## Caveats & flags
+- **The core evidence for tension is signalling, not growth.** The four decisive studies measure activation of protein complexes over hours, not muscle size over months. The human-level support depends on tension being "presumed" equated or elevated, which is an inference, not a measurement.
+- **The BFR fibre-type rebuttal is a hypothesis, not a test.** Central fatigue explains all three inconvenient studies neatly, but he doesn't have a study that manipulates fatigue and shows the fibre-type effect disappearing — the 2021 Australian null result is supportive but differs in training status, frequency and duration all at once.
+- **The titin-stiffening account of stretch-position training is mechanism reasoning with no outcome test**, which he flags himself.
+- Sample sizes are given only where he has them (14 men in the 2011 study); most of the mechanistic work is animal or cell-level and he says so each time.
+- Note for the library: the damage and metabolic-stress cases he demolishes are both taken from **Schoenfeld's own reviews**, which is the fairest possible framing. Schoenfeld himself has remained more agnostic than this video in later interviews, so treat "tension is the sole driver" as this channel's reading rather than a settled consensus position.
+
+## References
+
+This video cites its sources on screen only. The description carries no reference list — it points to a general references page on the creator's website — so **no list is retrievable from the description**. The following are the studies named aloud in the video, described as he described them. **All are unverified**: no author, journal or identifier could be confirmed, and none should be cited from this note.
+
+- *(unverified)* 1970s–1990s animal work linking tension to hypertrophy — four types: gastrocnemius tenotomy overloading the soleus; limb immobilisation in stretched versus shortened positions; weights attached to chicken wings; spring-loaded bar stretching of chicken muscle.
+- *(unverified)* 2019 Danish study — inhibiting active force generation while preserving electrical input abolished activation of a key growth-signalling protein complex; same group equated peak tension between eccentric contractions and pure passive stretch and found equal activation.
+- *(unverified)* 2008 US study — muscle positioned at a length allowing higher active force showed greater signalling at constant electrical input.
+- *(unverified)* 2001 Canadian study — linear relationship between peak tension and activation of a hypertrophy-signalling protein.
+- *(unverified)* Two 1995 papers from one research team — concentric-only versus eccentric-only quadriceps hypertrophy; continuous versus intermittent isometric holds.
+- *(unverified)* 2017 US review — mechanical tension is not equivalent to load; light loads to failure generate high tension.
+- *(unverified)* Three studies reporting preferential slow-twitch fibre growth with blood flow restriction training (seven consecutive days; five days per week; untrained subjects to failure three times weekly for six weeks).
+- *(unverified)* 2021 Australian study — well-trained subjects, lower-body BFR three times weekly for nine weeks, no preferential slow-twitch growth.
+- *(unverified)* Brad Schoenfeld 2013 review — five potential pathways from metabolic stress to hypertrophy.
+- *(unverified)* Brad Schoenfeld 2012 review — four potential pathways from muscle damage to hypertrophy.
+- *(unverified)* 2021 Brazilian study — cuffed versus passive rest intervals during leg extension training, eight weeks, similar quadriceps growth despite greater lactate.
+- *(unverified)* Two studies applying post-set blood flow restriction for 3–5 minutes — no enhancement of hypertrophy; one found reduced growth in women.
+- *(unverified)* 2011 US study, 14 untrained men — pre-trained (ramp-up) versus naive groups on an eight-week eccentric cycle ergometer programme; comparable quadriceps hypertrophy despite very different damage and soreness.
+- *(unverified)* 2016 Brazilian study — myofibrillar protein synthesis after a first session did not correlate with hypertrophy; correlation appeared only after weeks of training reduced damage.
+- *(unverified)* 1999 US study — eccentric biceps curls; muscle volume fell ~10% below baseline after swelling subsided and remained smaller for weeks.
+- *(unverified)* Studies on antioxidant (vitamin C and E) supplementation and its effects on damage, soreness and long-term hypertrophy — results mixed in both directions.
+- *(unverified)* Recent German study — one hour of daily calf stretching produced significant gastrocnemius growth.
+- *(unverified)* Studies comparing training in hypoxic versus normoxic environments — some find greater hypertrophy in hypoxia, a number find no difference.

@@ -12,37 +12,37 @@
 - **Practical position: err on the side of more volume.** The ceiling is what you can recover from, not a number from a meta-regression.
 
 ## No per-session cap is offered here
-This video makes **no per-session ceiling recommendation at all** — no number of any kind. Its argument runs entirely on *weekly* volume, concluding that lifters who want maximum growth "should be pushing their volume up to their limits", with recovery as the only stated constraint. That is a rejection of the junk-volume framing rather than a refinement of it. (He does give a per-session figure elsewhere — around 11 sets per muscle, 3.5 for strength — in his "Top 6 bodybuilding mistakes" video three months later. The two are compatible if this video is read as being about weekly totals spread across sessions, but he never says so.)
+This video makes **no per-session ceiling recommendation at all** — no number of any kind. Its argument runs entirely on *weekly* volume, concluding that lifters who want maximum growth "should be pushing their volume up to their limits", with recovery as the only stated constraint: a rejection of the junk-volume framing rather than a refinement of it. (He does give a per-session figure — around 11 sets per muscle, 3.5 for strength — in his "Top 6 bodybuilding mistakes" video three months later. The two are compatible if this one is read as being about weekly totals spread across sessions, but he never says so.)
 
 ## The edema argument, and why he thinks it fails
-[01:05] The "it's just water" hypothesis is dangerous if true: exercise science measures hypertrophy by ultrasound or MRI **48–72 hours** after the last workout, and if swelling hasn't subsided by then, a large slice of the literature is confounded — not only the volume studies.
+[01:05] The "it's just water" hypothesis is dangerous if true: exercise science measures hypertrophy by ultrasound or MRI **48–72 hours** after the last workout, and if swelling hasn't subsided by then, a large slice of the literature is confounded.
 
-[02:14] His first counter is the **repeated bout effect**. Studies showing edema persisting past 72 hours are overwhelmingly in untrained subjects doing an unfamiliar workout. The protection is strong and durable: repeat a workout months later with no training in between and you still get substantially less soreness and damage. In an 8-week study, participants have habituated many times over.
+[02:14] His first counter is the **repeated bout effect**. Studies showing edema persisting past 72 hours are overwhelmingly in untrained subjects doing an unfamiliar workout. The protection is strong and durable: repeat a workout months later with no training in between and you still get substantially less soreness and damage.
 
 [02:53] The trained-subject data he cites:
 - **8 sets × ~10 reps** of leg extensions, dumbbell bench and barbell bench — ultrasound and MRI back to baseline **within 24 hours** ([Gordon 2017](https://doi.org/10.1519/jsc.0000000000002219); [Ferreira 2017](https://doi.org/10.1519/jsc.0000000000001453)). Replicated in middle-aged adults.
-- **8–10 sets** of barbell bench **to failure** — slightly longer, but no significant difference from baseline by 72 hours, most gone within 24; pausing in the bottom position made no difference; triceps were already back at 24 hours ([Ferreira 2017](https://pubmed.ncbi.nlm.nih.gov/28029681/); [Trindade 2023](https://doi.org/10.3390/sports12010006)).
+- **8–10 sets** of barbell bench **to failure** — slightly longer, but no significant difference from baseline by 72 hours, most gone within 24; pausing in the bottom position made no difference ([Ferreira 2017](https://pubmed.ncbi.nlm.nih.gov/28029681/); [Trindade 2023](https://doi.org/10.3390/sports12010006)).
 - **8 sets of squats** close to failure — thickness not significantly elevated at 24 hours, cross-sectional area not significant by 48. A parallel group at **90% 1RM** instead of 70% had neither elevated at 24 hours ([Bartolomei 2017](https://doi.org/10.1007/s00421-017-3598-9)).
 
-That last finding drives one of his more combative claims: heavy low-rep training does *not* cause more muscle damage or longer recovery. He concedes it may be true for connective tissue, but says muscle heals faster from heavy work than moderate-rep work.
+That last finding drives one of his more combative claims: heavy low-rep training does *not* cause more muscle damage or longer recovery. He concedes it may be true for connective tissue, but says muscle heals faster from heavy work.
 
-[06:07] The strongest evidence is a study that measured the confound directly. [Refalo 2024](https://doi.org/10.1080/02640414.2024.2321021) raised volume 20% over the final four weeks (5–9 sets per muscle at the last session), measured muscle size 3 days after, then re-measured 2–3 days later. If the first measurement had been inflated by swelling it should have fallen. It didn't.
+[06:07] The strongest evidence measured the confound directly. [Refalo 2024](https://doi.org/10.1080/02640414.2024.2321021) raised volume 20% over the final four weeks (5–9 sets per muscle at the last session), measured muscle size 3 days after, then re-measured 2–3 days later. If the first measurement had been inflated by swelling it should have fallen. It didn't.
 
-He adds two structural arguments. On **statistical power**: if the swelling studies are underpowered to detect edema, the same applies to the hypertrophy studies — you can't have significant growth and non-significant swelling and then attribute the growth to swelling. And the **volume–hypertrophy relationship strengthens the longer a study runs**. Since muscle damage *decreases* over a programme, an edema artefact should shrink with time, not grow.
+Two structural arguments follow. On **statistical power**: if the swelling studies are underpowered, so are the hypertrophy studies — you can't have significant growth and non-significant swelling and then attribute the growth to swelling. And the **volume–hypertrophy relationship strengthens the longer a study runs**, whereas an edema artefact should shrink, since muscle damage *decreases* over a programme.
 
 **Flag:** Refalo's check involved 5–9 sets per muscle in a session — nowhere near the 30-to-40-sets-per-week territory the argument is defending. He also concedes there is "no direct evidence" that higher volumes increase edema while calling it "very likely" — a convenient asymmetry, since he then needs edema to be irrelevant.
 
 ## Why strength doesn't track size in short studies
 [09:44] His answer is that it does, and the studies can't see it.
 
-Greg Nuckols re-analysed the meta-analysis **within** studies rather than across them — the right comparison for how size and strength relate in the same person — and the relationship came out much stronger, strengthening further over long timeframes. His illustration: rank powerlifters by DEXA fat-free mass and you get almost exactly their competition ranking, in the population supposedly training purely for strength.
+Greg Nuckols re-analysed the meta-analysis **within** studies rather than across them — the right comparison for how size and strength relate in the same person — and the relationship came out much stronger, strengthening further over long timeframes. His illustration: rank powerlifters by DEXA fat-free mass and you get almost exactly their competition ranking.
 
 Over eight weeks, a linear size-strength relationship would need a 10% size gain to produce 10% more strength, and nobody gains that in eight weeks — yet 20% strength gains are routine. So early gains are **neural**. His analogy is a race car: a bigger engine (muscle) or a better driver (nervous system). Study design compounds it — quad volume trained via squats *and* leg extensions, but strength measured as squat 1RM.
 
-**Flag:** the Nuckols re-analysis is explicitly described as unofficial and unpublished, and it carries meaningful weight here.
+**Flag:** the Nuckols re-analysis is explicitly unofficial and unpublished, and carries meaningful weight here.
 
 ## Practical implications
-If the high-volume gains were edema, the strength literature would be the honest guide and ~10 sets per week the answer. He concludes it isn't — so both goals point toward higher volume, with recovery capacity as the real limit rather than any published number.
+If the high-volume gains were edema, the strength literature would be the honest guide and ~10 sets per week the answer. He concludes it isn't — so both goals point toward higher volume, limited by recovery capacity rather than any published number.
 
 ## References
 

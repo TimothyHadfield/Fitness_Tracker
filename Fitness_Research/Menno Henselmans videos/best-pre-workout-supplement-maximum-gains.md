@@ -15,10 +15,10 @@
 
 | Compound | Dose given in video | Verdict | Evidence quality |
 |---|---|---|---|
-| Anhydrous caffeine | Not specified; no dose-response found | **Use it.** Real acute strength and strength-endurance benefit | Numerous studies and meta-analyses; but long-term trials null |
+| Anhydrous caffeine | Not specified; no dose-response | **Use it.** Real acute strength and strength-endurance benefit | Numerous studies and meta-analyses; long-term trials null |
 | Caffeine via coffee | Not specified | Worse than the same dose anhydrous | Two studies for, one against (blinding artefact); one decaf-plus-caffeine study |
 | Multi-ingredient pre-workouts | Not specified | **Skip.** Equal to or worse than caffeine alone | Several small acute trials, mixed but never favourable |
-| Creatine | Not specified; post-workout timing | **Take it** — but not alongside caffeine, and not pre-workout | Strong for creatine itself; interaction evidence thin |
+| Creatine | Post-workout | **Take it** — but not alongside caffeine, and not pre-workout | Strong for creatine itself; interaction evidence thin |
 | Energy drinks | Not specified | Placebo delivery vehicle. Non-caffeine ingredients do nothing | Consistent double-blind nulls, incl. decaffeinated versions |
 | Beta-alanine | Not specified | **Near zero for lifters.** "A maybe" for strength-endurance athletes | 2022 meta-analysis null; industry-funded studies more favourable |
 | L-citrulline | 2 g/day in the only long-term study — "low end of effective" | ~1 extra rep across multiple sets; no long-term effect | One underdosed trial; broader nitric-oxide literature null |

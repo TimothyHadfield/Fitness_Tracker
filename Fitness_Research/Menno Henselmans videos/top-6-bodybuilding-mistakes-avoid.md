@@ -14,9 +14,9 @@
 ## 1. Body part splits
 [00:20] His diagnostic is **work capacity**: if by set six for chest you can only manage half the reps you'd have managed fresh, that set would have accumulated more mechanical tension somewhere else in the week.
 
-He anchors this in muscle protein synthesis research, where returns diminish sharply past ~10 sets per muscle group and are increasingly offset by rises in protein breakdown — "annihilating, not stimulating" ([Damas 2019](https://pubmed.ncbi.nlm.nih.gov/31268828/); [Ogasawara 2017](https://pubmed.ncbi.nlm.nih.gov/28729395/)). He is careful to say he doesn't believe in a **true** plateau in growth, only a bad stimulus-to-fatigue ratio.
+He anchors this in muscle protein synthesis research, where returns diminish sharply past ~10 sets per muscle group and are increasingly offset by rises in protein breakdown — "annihilating, not stimulating" ([Damas 2019](https://pubmed.ncbi.nlm.nih.gov/31268828/); [Ogasawara 2017](https://pubmed.ncbi.nlm.nih.gov/28729395/)). He is careful to say he doesn't believe in a **true** plateau, only a bad stimulus-to-fatigue ratio.
 
-On frequency: volume-matched studies usually show no difference, because volume is king. But where a difference exists it is "virtually always" for higher frequency, and there is **no evidence favouring body part splits**. Real life favours frequency even more than the studies do, he argues, since equating tonnage stops the high-frequency groups exploiting the extra freshness that is the whole point.
+On frequency: volume-matched studies usually show no difference, because volume is king. But where a difference exists it is "virtually always" for higher frequency, and there is **no evidence favouring body part splits**. Real life favours frequency even more, he argues, since equating tonnage stops the high-frequency groups exploiting the extra freshness that is the whole point.
 
 **Note for the library:** ~11 sets per session is roughly double the six-set ceiling recorded here from Krieger via Nippard, and he explicitly denies a hard plateau. It also sits alongside his September 2025 junk-volume video, which argues weekly volume should be pushed toward 30–40+ sets with no research-derived ceiling at all.
 
@@ -26,27 +26,27 @@ On frequency: volume-matched studies usually show no difference, because volume 
 His three mechanisms, drawn from his own book rather than the cited literature:
 1. **Forbidden-fruit effect** — labelling a food a "cheat" glorifies it and triggers dichotomous dietary restraint, the all-or-nothing mindset.
 2. **Comfort-food conditioning** — associating a food with happiness makes it something you self-medicate with when low.
-3. **Taste-preference drift** — preferences adapt to what you eat, so a weekly hyperpalatable meal makes everything else taste worse. Indulging a craving strengthens it: pancake day on Sunday turns the rest of the week into thinking-about-pancake-day.
+3. **Taste-preference drift** — preferences adapt to what you eat, so a weekly hyperpalatable meal makes everything else taste worse. Indulging a craving strengthens it: pancake day on Sunday turns the rest of the week into thinking about pancake day.
 
-**Refeeds** get the same verdict: no advantage over consistent dieting.
+**Refeeds** get the same verdict.
 
 ## 3. Excessive cardio
-[06:08] Large cardio volumes alongside lifting produce the interference effect, reducing hypertrophy, strength and power, via the AMPK-versus-mTOR signalling conflict. Walking to the gym won't kill your gains; the hours of cardio traditional in bodybuilding prep will. Order of operations for getting lean: **cut intake first**, add cardio only once further reduction becomes unsustainable or compromises nutrient quality, and schedule it away from lifting.
+[06:08] Large cardio volumes alongside lifting produce the interference effect, reducing hypertrophy, strength and power, via the AMPK-versus-mTOR signalling conflict. Walking to the gym won't kill your gains; the hours traditional in bodybuilding prep will. Order of operations for getting lean: **cut intake first**, add cardio only once further reduction becomes unsustainable, and schedule it away from lifting.
 
 ## 4. Partial range of motion
-[07:42] The shortest section, and he declines to cite anything — "the internet has been exploding" with lengthened-bias research. Partials feel good and let you lift more weight; neither is productive for maximum hypertrophy. Train full ROM into longer muscle lengths.
+[07:42] The shortest section, and he declines to cite anything — "the internet has been exploding" with lengthened-bias research. Partials feel good and let you lift more weight; neither is productive for hypertrophy. Train full ROM into longer muscle lengths.
 
 ## 5. Diet quality
-[08:33] Multiple studies find most bodybuilders deficient in several micronutrients — and those comparisons use *sedentary* reference standards, while bodybuilders carry more mass and train hard. Deficiencies in zinc, magnesium, iron and calcium have been linked to worse gym performance and endurance, irritability, higher appetite, and in some cases reduced strength and hypertrophy.
+[08:33] Multiple studies find most bodybuilders deficient in several micronutrients — and those comparisons use *sedentary* reference standards. Deficiencies in zinc, magnesium, iron and calcium have been linked to worse gym performance and endurance, irritability, higher appetite, and in some cases reduced strength and hypertrophy.
 
-His named culprit is **white rice**, miscast as a health food. On the NRF9.3 nutrient-density index it scores in the low 20s — over ten times below vegetables and clearly below potatoes. Its one virtue is digestibility and low FODMAP content, which potatoes match while scoring dramatically higher on the satiety index.
+His named culprit is **white rice**, miscast as a health food. On the NRF9.3 nutrient-density index it scores in the low 20s — over ten times below vegetables and clearly below potatoes. Its one virtue is digestibility and low FODMAP content, which potatoes match while scoring far higher on the satiety index.
 
-**Flag:** the deficiency studies he lists run 1989–2018, are small, and mostly sample competitors pre-contest — not a year-round diet. The white rice case rests on two indices, neither referenced, and the leap from "deficiencies have been associated with" to reduced hypertrophy outruns the evidence.
+**Flag:** the deficiency studies he lists run 1989–2018, are small, and mostly sample competitors pre-contest — not a year-round diet. The white rice case rests on two unreferenced indices, and the leap from "deficiencies have been associated with" to reduced hypertrophy outruns the evidence.
 
 ## 6. Volume counting
-[10:16] "Legs" and "back" are not body parts. For the back he wants traps, lats, rear delts and erector spinae counted separately, and ideally heads within a muscle — short head of biceps, long head of triceps, and front/lateral/rear delts, which can have opposing functions.
+[10:16] "Legs" and "back" are not body parts. For the back he wants traps, lats, rear delts and erectors counted separately, and ideally heads within a muscle — short head of biceps, long head of triceps, and front/lateral/rear delts, which can have opposing functions.
 
-Then **fractional volume counting**: every exercise trains every muscle to some degree, so count partial credit. Dumbbell rows train the biceps about half as well as dumbbell curls, so four sets of rows count as roughly two biceps sets. He cites a recent meta-analysis finding fractional counting predicts hypertrophy significantly better than counting everything equally or counting only direct work.
+Then **fractional volume counting**: every exercise trains every muscle to some degree, so count partial credit. Dumbbell rows train the biceps about half as well as dumbbell curls, so four sets of rows count as roughly two biceps sets. He cites a recent meta-analysis finding fractional counting predicts hypertrophy significantly better than the alternatives.
 
 ## Why bodybuilders succeed anyway
 [12:21] Bodybuilders get the *big* things right; the six items above are optimisation details, where science beats anecdote. Above all of it sit **drugs** (required at IFBB Pro level for essentially everyone), **genetics** (sometimes more decisive than drugs, including the genes governing anabolic response to steroids), and **work ethic**.

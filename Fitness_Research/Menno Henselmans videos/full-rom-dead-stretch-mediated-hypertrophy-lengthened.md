@@ -12,7 +12,7 @@
 - **Active tension is roughly as important as passive tension**, and stretch has diminishing returns. He explicitly rejects going all-in on the stretch.
 
 ## The mechanism
-[01:31] The length–tension relationship: most muscles produce peak active force near anatomical position. Shorten from there and the actin-myosin filaments bunch up, reaching active insufficiency where cross-bridges can't form. Lengthen too far and you reach passive insufficiency, where filaments barely overlap.
+[01:31] The length–tension relationship: most muscles produce peak active force near anatomical position. Shorten from there and the actin-myosin filaments bunch up, reaching active insufficiency where cross-bridges can't form. Lengthen too far and filaments barely overlap.
 
 [03:05] But active force isn't the whole picture. **Passive tension** behaves like a stretched elastic band — the more lengthened the muscle, the more of it there is. So while shortening collapses both active and passive force production, lengthening can leave you *slightly stronger*.
 
@@ -23,22 +23,20 @@
 ## Where this changes exercise selection
 [06:07] **Seated vs lying leg curl.** The hamstrings are biarticular, so sitting stretches them at the hip and puts the whole curl at longer lengths. The extra growth showed up specifically in the **biarticular heads** — not the short head of biceps femoris, which isn't stretched at the hip. That specificity is the strongest evidence in the video. If the machine won't let your legs straighten fully, lean forward to lengthen the hamstrings.
 
-[07:39] **Overhead triceps extensions vs pushdowns.** The same group found overhead extensions grew the long head significantly more — and the other heads too. His explanation: a pushdown has almost **no tension in the lengthened position**, since with the cable in line with the forearm at the top, resistance is effectively zero. General rule: **put the sticking point mid-range or near the stretch, not in full contraction.**
+[07:39] **Overhead triceps extensions vs pushdowns.** The same group found overhead extensions grew the long head significantly more — and the other heads too. His explanation: a pushdown has almost **no tension in the lengthened position**, since with the cable in line with the forearm at the top, resistance is near zero. General rule: **put the sticking point mid-range or near the stretch, not in full contraction.**
 
 ## The lengthened-partials case, stated narrowly
-[08:40] For some exercises, stretch-mediated hypertrophy matters enough that short-range partials beat full ROM. He is careful about scope: **this has only been found in untrained individuals so far**, and applies to exercises bad at loading the muscle when lengthened — leg extensions and calf raises. On a leg extension the top is by far the hardest position and the bottom barely loads the quad, so you can drop the top half and — crucially — **use more weight for the same reps**, overloading the stretch harder.
+[08:40] For some exercises, stretch-mediated hypertrophy matters enough that short-range partials beat full ROM. He is careful about scope: **this has only been found in untrained individuals so far**, and applies to exercises bad at loading the muscle when lengthened — leg extensions and calf raises. On a leg extension the top is the hardest position and the bottom barely loads the quad, so you can drop the top half and — crucially — **use more weight for the same reps**.
 
-Against that he sets progression tracking: if you can't define your range you can't measure improvement, and so can't tell whether your programme works. His compromise for clients is **full ROM on the first set (or all but the last), lengthened partials for the rest**.
+Against that he sets progression tracking: if you can't define your range you can't measure improvement, so you can't tell whether your programme works. His compromise is **full ROM on the first set (or all but the last), lengthened partials for the rest**.
 
 ## Where he pumps the brakes
-[11:12] The half of the video the title buries. He calls stretch-mediated hypertrophy "truly a revolution of the last years of exercise science" and then argues **active tension is probably just as important**:
+[11:12] The half the title buries. He calls stretch-mediated hypertrophy "truly a revolution of the last years of exercise science" and then argues **active tension is probably just as important**:
 
 - His own team's study found **hip thrusts and squats equally effective for the glutes**, despite squats lengthening the glutes far more. His explanation: the glutes are strongest in anatomical position, the hip thrust's sticking point, so the resistance curve matches the strength curve.
-- A hamstring study that **equated total torque** found equal growth at long versus short lengths — implying the long-length group produced less active force, and that the two forms of tension trade off roughly evenly.
-- **Preacher curls slightly beat incline dumbbell curls**, even though the incline curl gives a far greater stretch — because with a dumbbell and gravity pulling straight down there's no tension at all in that stretched position. Length without tension does nothing.
+- A hamstring study that **equated total torque** found equal growth at long versus short lengths — implying the two forms of tension trade off roughly evenly.
+- **Preacher curls slightly beat incline dumbbell curls**, even though the incline curl gives a far greater stretch — because with a dumbbell there's no tension at all in that stretched position. Length without tension does nothing.
 - **Barbell preacher curls** (hammering the bottom) and **cable preacher curls** (even resistance) were equally effective — so loading the stretch harder has a ceiling too.
-
-Summary: you need length *under tension*, and even then there's a limit to what further stretch emphasis buys.
 
 ## Caveats and where he stops short
 - Every study is described verbally with no citations anywhere, several as "we have a study showing" without design detail.
