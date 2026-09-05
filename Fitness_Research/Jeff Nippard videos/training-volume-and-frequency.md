@@ -63,3 +63,7 @@ Recreational lifters can sit near MEV; elite/competitive lifters may want to fli
 - Whether MEV-level training over a career equals MRV-level training is debated among experts.
 - The exact per-session set ceiling where sets become "wasted" is unknown.
 - Volume is often called the main driver of hypertrophy; he personally rates progressive overload as the primary driver, with the two closely linked.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

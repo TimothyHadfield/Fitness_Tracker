@@ -50,3 +50,7 @@ Rack the bar just below deadlift lockout height, walk it out like a squat, feet 
 - The plate-under-toes trick is explicitly unsupported by research he's aware of — it's his subjective feel plus a hypothesis about regional activation.
 - Correct end range is individual, depending on arm length and mobility; the knee-to-mid-shin guidance is a default, not a fixed standard.
 - The RDL vs stiff-leg deadlift distinction is his own definition in an ongoing semantic debate.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

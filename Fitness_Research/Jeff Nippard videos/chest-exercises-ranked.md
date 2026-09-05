@@ -65,3 +65,10 @@
 - The stretch-over-contraction premise driving the dumbbell fly and press-around calls is "recent evidence," and he hedges by keeping short-length work in the program until more data exists.
 - Shoulder pain is individual: bench press, dips and flared-elbow pressing may drop to D or F tier for anyone with pre-existing shoulder issues. Start light and build tolerance.
 - Machine quality varies a lot; the S tier ranking assumes you have a good chest press machine available.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- <https://www.mdpi.com/2076-3417/12/21/11138>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7449336/>

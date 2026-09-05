@@ -70,3 +70,21 @@ The glutes can also be thought of as upper, middle and lower regions.
 - The sumo-vs-conventional glute medius advantage is inferred from the wider stance and foot flare, not measured.
 - The Smith lunge vs walking lunge ranking is explicitly personal preference.
 - Squats are a poor choice if you want glute growth without quad growth.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Timestamps**
+
+- ResearchGate — <https://www.researchgate.net/publication/378797420>
+- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+- Contreras B et al. 2015. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyographic Activity in the Back Squat and Barbell Hip Thrust Exercises. *J Appl Biomech*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26214739/) doi:[10.1123/jab.2014-0301](https://doi.org/10.1123/jab.2014-0301)
+- <https://journals.lww.com/nsca-jscr/fulltext/2018/03000/gluteus_maximus_and_hamstring_activation_during.2.aspx>
+- <https://journals.lww.com/nsca-jscr/fulltext/2019/10000/comparison_between_back_squat,_romanian_deadlift,.1.aspx>
+
+- <https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1279170/full>
+
+- Kubo K et al. 2019. Effects of squat training with different depths on lower limb muscle volumes. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31230110/) doi:[10.1007/s00421-019-04181-y](https://doi.org/10.1007/s00421-019-04181-y)
+
+- <https://journals.lww.com/acsm-msse/fulltext/2002/04000/an_electromyographic_analysis_of_sumo_and.19.aspx>

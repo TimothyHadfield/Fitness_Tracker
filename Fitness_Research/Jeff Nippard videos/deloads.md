@@ -56,3 +56,19 @@ Frame it as a **technique week**, not a step backwards — some coaches literall
 - The reactive approach has real merit and he concedes the reasoning; his objection is practical (poor interoception of joint/tendon stress), not evidential.
 - The "2–3 weeks before detraining" figure describes size and strength retention, not joint recovery or motivation.
 - Deloads are framed as one of the best plateau-breaking tools *once you're intermediate* — they solve a fatigue problem, not a diligence or programming problem.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Fitness Fatigue Model**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1167606/posts/3868306>
+
+**Size and Strength Loss After 2-3 Weeks Off**
+
+- ResearchGate — <https://www.researchgate.net/publication/259390281>
+
+**Tendon Innervation**
+
+- Ackermann PW et al. 2016. Tendon Innervation. *Adv Exp Med Biol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27535247/) doi:[10.1007/978-3-319-33943-6_4](https://doi.org/10.1007/978-3-319-33943-6_4)

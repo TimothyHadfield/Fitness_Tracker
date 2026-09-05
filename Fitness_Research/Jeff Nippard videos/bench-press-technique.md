@@ -56,3 +56,11 @@ Set up powerlifting-style even for hypertrophy: scapulae retracted and depressed
 - The grip-width / muscle-emphasis findings are tendencies; he still recommends personal experimentation over a single "best" width.
 - Sticking point location varies with training age and individual leverages.
 - Bench numbers are heavily determined by anthropometry, so cross-lifter comparisons are not meaningful.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- ResearchGate — <https://www.researchgate.net/publication/232096734_The_Affect_of_Grip_Width_on_Bench_Press_Performance_and_Risk_of_Injury>

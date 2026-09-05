@@ -67,3 +67,7 @@ A minimum-viable exercise menu: squat + Romanian deadlift (or conventional/sumo 
 - Direct hamstring curl work is recommended but the short head is small, so he doesn't call it required.
 - Machine vs free weight is presented as complementary, not a ranking; the choice can come down to what a beginner will actually do.
 - Grip and exercise micro-variations are deliberately deferred as advanced material.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

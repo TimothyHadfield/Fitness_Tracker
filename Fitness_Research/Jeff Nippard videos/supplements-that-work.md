@@ -75,3 +75,33 @@ Daily stack for a trained lifter:
 - Nitrate for the pump lacks sufficient research; the 500–1,000 mg figure is a starting point, not an established dose.
 - Ashwagandha would have been Nippard's #6 — shown to reduce stress and anxiety and improve mood — but it didn't make the top five.
 - This is a 2017 video; supplement evidence has moved on since.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SCIENTIFIC REFERENCES**
+
+- Aragon AA & Schoenfeld BJ 2013. Nutrient timing revisited: is there a post-exercise anabolic window?. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23360586) doi:[10.1186/1550-2783-10-5](https://doi.org/10.1186/1550-2783-10-5)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3761774/>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404559/>
+- Kerksick CM et al. 2006. The effects of protein and amino acid supplementation on performance and training adaptations during ten weeks of resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16937979)
+- Zhu K et al. 2011. The effects of a two-year randomized, controlled trial of whey protein supplementation on bone structure, IGF-1, and urinary calcium excretion in older postmenopausal women. *J Bone Miner Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21590739) doi:[10.1002/jbmr.429](https://doi.org/10.1002/jbmr.429)
+- Chitapanarux T et al. 2009. Open-labeled pilot study of cysteine-rich whey protein isolate supplementation for nonalcoholic steatohepatitis patients. *J Gastroenterol Hepatol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19638084) doi:[10.1111/j.1440-1746.2009.05865.x](https://doi.org/10.1111/j.1440-1746.2009.05865.x)
+- Poortmans JR & Dellalieux O 2000. Do regular high protein diets have potential health risks on kidney function in athletes?. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10722779) doi:[10.1123/ijsnem.10.1.28](https://doi.org/10.1123/ijsnem.10.1.28)
+- Kanda A et al. 2016. Effects of Whey, Caseinate, or Milk Protein Ingestion on Muscle Protein Synthesis after Exercise. *Nutrients*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27271661) doi:[10.3390/nu8060339](https://doi.org/10.3390/nu8060339)
+- Cook C et al. 2012. Acute caffeine ingestion's increase of voluntarily chosen resistance-training load after limited sleep. *Int J Sport Nutr Exerc Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22349085) doi:[10.1123/ijsnem.22.3.157](https://doi.org/10.1123/ijsnem.22.3.157)
+- Jang HS et al. 2012. L-theanine partially counteracts caffeine-induced sleep disturbances in rats. *Pharmacol Biochem Behav*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22285321) doi:[10.1016/j.pbb.2012.01.011](https://doi.org/10.1016/j.pbb.2012.01.011)
+- Greenhaff PL et al. 1994. Effect of oral creatine supplementation on skeletal muscle phosphocreatine resynthesis. *Am J Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8203511) doi:[10.1152/ajpendo.1994.266.5.E725](https://doi.org/10.1152/ajpendo.1994.266.5.E725)
+- Kreider RB et al. 2003. Long-term creatine supplementation does not significantly affect clinical markers of health in athletes. *Mol Cell Biochem*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12701816)
+- Bizzarini E & De Angelis L 2004. Is the use of oral creatine supplementation safe?. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15758854)
+- <http://onlinelibrary.wiley.com/doi/10.1002/j.1552-4604.1967.tb00034.x/abstract>
+- Pérez-Guisado J & Jakeman PM 2010. Citrulline malate enhances athletic anaerobic performance and relieves muscle soreness. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20386132) doi:[10.1519/JSC.0b013e3181cb28e0](https://doi.org/10.1519/JSC.0b013e3181cb28e0)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2129155/>
+- Kleiner SM et al. 1994. Nutritional status of nationally ranked elite bodybuilders. *Int J Sport Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8167655) doi:[10.1123/ijsn.4.1.54](https://doi.org/10.1123/ijsn.4.1.54)
+- Kleiner SM et al. 1990. Metabolic profiles, diet, and health practices of championship male and female bodybuilders. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/2365938)
+
+**HELPFUL RESOURCES & FURTHER READING**
+
+- Examine.com — <https://examine.com/supplements/>
+- Examine.com — <https://examine.com/supplements/ashwagandha/>

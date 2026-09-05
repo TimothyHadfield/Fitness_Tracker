@@ -58,3 +58,7 @@ If you get equal hypertrophy from 3 reps and 10 reps but lower injury risk from 
 - Whether metabolic stress genuinely signals hypertrophy is described as controversial.
 - He mentions newer research hinting that more than 20 sets per week may suit advanced trainees, but treats that as speculative.
 - Heavy low-rep training carries real injury and dropout risk — the effect isn't just theoretical.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

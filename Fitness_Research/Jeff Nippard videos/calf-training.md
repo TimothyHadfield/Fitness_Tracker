@@ -58,3 +58,26 @@ Nippard's ordering: master technique first (pause every rep, mind-muscle connect
 - EMG-to-hypertrophy inference is contested within the research community — treat activation rankings as a first approximation.
 - Fibre-type-to-rep-range matching is unresolved; the high-rep soleus case is theoretical, not proven.
 - Foot-position findings conflict across four studies (2011 vs three 2017 papers).
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Kadi F et al. 2000. The expression of androgen receptors in human neck and limb muscles: effects of training and self-administration of androgenic-anabolic steroids. *Histochem Cell Biol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/10664066) doi:[10.1007/s004180050003](https://doi.org/10.1007/s004180050003)
+- Dahmane R et al. 2006. Adaptive potential of human biceps femoris muscle demonstrated by histochemical, immunohistochemical and mechanomyographical methods. *Med Biol Eng Comput*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17024467) doi:[10.1007/s11517-006-0114-5](https://doi.org/10.1007/s11517-006-0114-5)
+- Fukunaga T et al. 1992. Physiological cross-sectional area of human leg muscles based on magnetic resonance imaging. *J Orthop Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1403308) doi:[10.1002/jor.1100100623](https://doi.org/10.1002/jor.1100100623)
+- Fry AC 2004. The role of resistance exercise intensity on muscle fibre adaptations. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15335243) doi:[10.2165/00007256-200434100-00004](https://doi.org/10.2165/00007256-200434100-00004)
+- Hébert-Losier K et al. 2012. Influence of knee flexion angle and age on triceps surae muscle activity during heel raises. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22190157) doi:[10.1519/JSC.0b013e31824435cf](https://doi.org/10.1519/JSC.0b013e31824435cf)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/pdf/fphys-08-00985.pdf>
+- Miyamoto N & Oda S 2003. Mechanomyographic and electromyographic responses of the triceps surae during maximal voluntary contractions. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12932419) doi:[10.1016/s1050-6411(03)00058-0](https://doi.org/10.1016/s1050-6411(03)00058-0)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5380866/>
+- ResearchGate — <https://www.researchgate.net/publication/320537097_Does_feet_position_alter_triceps_surae_EMG_record_during_heel-raise_exercises_in_leg_press_machine>
+- Akuzawa H et al. 2017. The influence of foot position on lower leg muscle activity during a heel raise exercise measured with fine-wire and surface EMG. *Phys Ther Sport*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28950148) doi:[10.1016/j.ptsp.2017.08.077](https://doi.org/10.1016/j.ptsp.2017.08.077)
+- Riemann BL et al. 2011. Medial and lateral gastrocnemius activation differences during heel-raise exercise with three different foot positions. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20581696) doi:[10.1519/JSC.0b013e3181cc22b8](https://doi.org/10.1519/JSC.0b013e3181cc22b8)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3404827/>
+- <https://link.springer.com/article/10.1007%2Fs00421-012-2339-3>
+- Wernbom M et al. 2007. The influence of frequency, intensity, volume and mode of strength training on whole muscle cross-sectional area in humans. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17326698) doi:[10.2165/00007256-200737030-00004](https://doi.org/10.2165/00007256-200737030-00004)
+
+**Helpful Resources and Attribution Credits**
+
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/blog/changing-foot-position-on-calf-raises/>

@@ -52,3 +52,11 @@ Injury is really the only reason not to squat. In order of preference: machine o
 - The high-bar/low-bar difference is real but small, and the quad/hip split is a tendency rather than a hard division; comfort and lower-back tolerance should drive the choice.
 - Achievable depth depends on individual skeleton and mobility, so stance width has to be individualised.
 - Mild butt wink is left explicitly unresolved — treat it as a concern only when severe or symptomatic.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Aspe RR & Swinton PA 2014. Electromyographic and kinetic comparison of the back squat and overhead squat. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24662228) doi:[10.1519/JSC.0000000000000462](https://doi.org/10.1519/JSC.0000000000000462)

@@ -58,3 +58,47 @@
 - The capsaicin effect appeared only in subjects with BMI over 25, and the 20 kcal estimate is a generous extrapolation from meta-analytic data to a real meal.
 - Nippard flags reverse dieting as needing its own deeper treatment; his position at time of filming is provisional.
 - [12:18] Most importantly: **metabolic rate is far less predictive of long-term weight-loss success than people assume.** Fast metabolisms fail and slow ones succeed. The factors more reliably associated with lasting weight loss are being physically active, weighing yourself regularly, weight training, and making lifestyle changes.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Variability in Daily Energy Expenditure**
+
+- Pontzer H et al. 2021. Daily energy expenditure through the human life course. *Science*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34385400/) doi:[10.1126/science.abe5017](https://doi.org/10.1126/science.abe5017)
+
+**Green Tea**
+
+- Rondanelli M et al. 2021. Effect of Acute and Chronic Dietary Supplementation with Green Tea Catechins on Resting Metabolic Rate, Energy Expenditure and Respiratory Quotient: A Systematic Review. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33671139/) doi:[10.3390/nu13020644](https://doi.org/10.3390/nu13020644)
+- Boschmann M & Thielecke F 2007. The effects of epigallocatechin-3-gallate on thermogenesis and fat oxidation in obese men: a pilot study. *J Am Coll Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17906192/) doi:[10.1080/07315724.2007.10719627](https://doi.org/10.1080/07315724.2007.10719627)
+- Dulloo AG et al. 1999. Efficacy of a green tea extract rich in catechin polyphenols and caffeine in increasing 24-h energy expenditure and fat oxidation in humans. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10584049/) doi:[10.1093/ajcn/70.6.1040](https://doi.org/10.1093/ajcn/70.6.1040)
+- Gregersen NT et al. 2009. Effect of moderate intakes of different tea catechins and caffeine on acute measures of energy metabolism under sedentary conditions. *Br J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19445822/) doi:[10.1017/S0007114509371779](https://doi.org/10.1017/S0007114509371779)
+- Thielecke F et al. 2010. Epigallocatechin-3-gallate and postprandial fat oxidation in overweight/obese male volunteers: a pilot study. *Eur J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/20372175/) doi:[10.1038/ejcn.2010.47](https://doi.org/10.1038/ejcn.2010.47)
+- Janssens PL et al. 2015. Long-term green tea extract supplementation does not affect fat absorption, resting energy expenditure, and body composition in adults. *J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25740906/) doi:[10.3945/jn.114.207829](https://doi.org/10.3945/jn.114.207829)
+- Mielgo-Ayuso J et al. 2014. Effects of dietary supplementation with epigallocatechin-3-gallate on weight loss, energy homeostasis, cardiometabolic risk factors and liver function in obese women: randomised, double-blind, placebo-controlled clinical trial. *Br J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24299662/) doi:[10.1017/S0007114513003784](https://doi.org/10.1017/S0007114513003784)
+
+**Spicy Foods**
+
+- Zsiborás C et al. 2018. Capsaicin and capsiate could be appropriate agents for treatment of obesity: A meta-analysis of human studies. *Crit Rev Food Sci Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28001433/) doi:[10.1080/10408398.2016.1262324](https://doi.org/10.1080/10408398.2016.1262324)
+
+**Sauna**
+
+- Tei C et al. 1995. Acute hemodynamic improvement by thermal vasodilation in congestive heart failure. *Circulation*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/7743620/) doi:[10.1161/01.cir.91.10.2582](https://doi.org/10.1161/01.cir.91.10.2582)
+
+**Ice Baths**
+
+- Srámek P et al. 2000. Human physiological responses to immersion into water of different temperatures. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/10751106/) doi:[10.1007/s004210050065](https://doi.org/10.1007/s004210050065)
+
+**Meal Frequency**
+
+- Munsters MJ & Saris WH 2012. Effects of meal frequency on metabolic profiles and substrate partitioning in lean healthy males. *PLoS One*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22719910/) doi:[10.1371/journal.pone.0038632](https://doi.org/10.1371/journal.pone.0038632)
+- Schoenfeld BJ et al. 2015. Effects of meal frequency on weight loss and body composition: a meta-analysis. *Nutr Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26024494/) doi:[10.1093/nutrit/nuu017](https://doi.org/10.1093/nutrit/nuu017)
+
+**Weighted Vest**
+
+- Jansson JO et al. 2018. Body weight homeostat that regulates fat mass independently of leptin in rats and mice. *Proc Natl Acad Sci U S A*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29279372/) doi:[10.1073/pnas.1715687114](https://doi.org/10.1073/pnas.1715687114)
+- Weightology (paywalled) — <https://weightology.net/the-use-of-weighted-apparel-during-contest-prep/>
+
+**Energy Expenditure and Weight Loss Success**
+
+- Rimbach R et al. 2022. Total energy expenditure is repeatable in adults but not associated with short-term changes in body composition. *Nat Commun*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35013190/) doi:[10.1038/s41467-021-27246-z](https://doi.org/10.1038/s41467-021-27246-z)

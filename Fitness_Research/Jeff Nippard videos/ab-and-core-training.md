@@ -66,3 +66,12 @@ Hold this version for the same **20-40 seconds x 3 sets**. Once you top that out
 - The endurance-over-strength theory for preventing low back pain is presented as researcher theorising, not settled fact.
 - Plank hypertrophy is conditional on genuinely progressing the difficulty — without that it's a stability exercise, not a growth one.
 - Ab wheel rollouts are advanced; don't chase ROM at the cost of a neutral spine.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Youdas JW et al. 2008. An electromyographic analysis of the Ab-Slide exercise, abdominal crunch, supine double leg thrust, and side bridge in healthy young adults: implications for rehabilitation professionals. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18978615) doi:[10.1519/JSC.0b013e31818745bf](https://doi.org/10.1519/JSC.0b013e31818745bf)
+- Schoenfeld BJ et al. 2014. An electromyographic comparison of a modified version of the plank with a long lever and posterior tilt versus the traditional plank exercise. *Sports Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25325773) doi:[10.1080/14763141.2014.942355](https://doi.org/10.1080/14763141.2014.942355)

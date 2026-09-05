@@ -64,3 +64,9 @@ No F-tier triceps exercises in this list.
 - Rope vs bar likely doesn't matter much long-term if you push hard and track progress.
 - Dips and machine dips are personal downgrades: plenty of people do them with no shoulder issue and their ranking would rise.
 - Katana extensions were held back for setup/learning-curve reasons, not effectiveness.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Maeo S et al. 2023. Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35819335/) doi:[10.1080/17461391.2022.2100279](https://doi.org/10.1080/17461391.2022.2100279)

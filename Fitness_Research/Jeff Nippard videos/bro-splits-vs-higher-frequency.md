@@ -59,3 +59,14 @@ The single change he made after re-examining the research: add **3–4 sets of w
 - It's untested whether lower-frequency split routines allow enough extra volume per muscle to offset the frequency disadvantage — the meta-analysis authors say so themselves.
 - In untrained populations, higher frequency shows no benefit and may even be slightly worse.
 - He is openly stating a personal bias toward lower frequency and trying to correct for it; this is an update to an earlier pro-bro-split video, not a neutral review.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- ResearchGate — <https://www.researchgate.net/publication/232186690_Comparison_of_1_Day_and_3_Days_Per_Week_of_Equal-Volume_Resistance_Training_in_Experienced_Subjects>
+- <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2918506/>
+- Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)
+- Wernbom M et al. 2007. The influence of frequency, intensity, volume and mode of strength training on whole muscle cross-sectional area in humans. *Sports Med*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/17326698) doi:[10.2165/00007256-200737030-00004](https://doi.org/10.2165/00007256-200737030-00004)

@@ -61,3 +61,35 @@ If you are in that group, be more cautious, or consider stacking with finasterid
 - The post-workout timing advantage is one small, unreplicated study; treat it as noise.
 - The 20-30% non-responder figure is a "best estimate", not a precise number.
 - Creatine and hair loss has no direct study. The DHT finding is a single two-week study in one population; any concern applies mainly to men already predisposed to balding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Pre vs Post Workout Creatine**
+
+- Antonio J & Ciccone V 2013. The effects of pre versus post workout supplementation of creatine monohydrate on body composition and strength. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23919405) doi:[10.1186/1550-2783-10-36](https://doi.org/10.1186/1550-2783-10-36)
+
+**Creatine and Hair Loss**
+
+- Bang HJ et al. 2004. Comparative studies on level of androgens in hair and plasma with premature male-pattern baldness. *J Dermatol Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14757277) doi:[10.1016/j.jdermsci.2003.11.005](https://doi.org/10.1016/j.jdermsci.2003.11.005)
+- van der Merwe J et al. 2009. Three weeks of creatine monohydrate supplementation affects dihydrotestosterone to testosterone ratio in college-aged rugby players. *Clin J Sport Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19741313) doi:[10.1097/JSM.0b013e3181b8b52f](https://doi.org/10.1097/JSM.0b013e3181b8b52f)
+- Hawkins VN et al. 2008. Effect of exercise on serum sex hormones in men: a 12-month randomized clinical trial. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18202581) doi:[10.1249/mss.0b013e31815bbba9](https://doi.org/10.1249/mss.0b013e31815bbba9)
+
+**Creatine and Caffeine**
+
+- Vandenberghe K et al. 1996. Caffeine counteracts the ergogenic action of muscle creatine loading. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8929583) doi:[10.1152/jappl.1996.80.2.452](https://doi.org/10.1152/jappl.1996.80.2.452)
+- Lee CL et al. 2011. Effect of caffeine ingestion after creatine supplementation on intermittent high-intensity sprint performance. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21207054) doi:[10.1007/s00421-010-1792-0](https://doi.org/10.1007/s00421-010-1792-0)
+- Doherty M et al. 2002. Caffeine is ergogenic after supplementation of oral creatine monohydrate. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12439084) doi:[10.1097/00005768-200211000-00015](https://doi.org/10.1097/00005768-200211000-00015)
+- ResearchGate — <https://www.researchgate.net/publication/224860282_Effect_of_creatine_plus_caffeine_supplements_on_time_to_exhaustion_during_an_incremental_maximum_exercise>
+
+**Creatine Safety and Efficacy**
+
+- Jäger R et al. 2011. Analysis of the efficacy, safety, and regulatory status of novel forms of creatine. *Amino Acids*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21424716) doi:[10.1007/s00726-011-0874-6](https://doi.org/10.1007/s00726-011-0874-6)
+- Kreider RB 2003. Effects of creatine supplementation on performance and training adaptations. *Mol Cell Biochem*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12701815)
+- Kreider RB et al. 2017. International Society of Sports Nutrition position stand: safety and efficacy of creatine supplementation in exercise, sport, and medicine. *J Int Soc Sports Nutr*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28615996) doi:[10.1186/s12970-017-0173-z](https://doi.org/10.1186/s12970-017-0173-z)
+- ResearchGate — <https://www.researchgate.net/publication/10798700_Long-term_creatine_supplementation_does_not_significantly_affect_clinical_markers_of_health_in_athletes?enrichId=rgreq-a2b6b341580ea43312f0caa816691ac9-XXX&enrichSource=Y292ZXJQYWdlOzEwNzk4NzAwO0FTOjEwMTAzMDk2MDMwNDEzOUAxNDAxMDk5MDY2OTI4&el=1_x_3&_esc=publicationCoverPdf>
+- Rawson ES & Volek JS 2003. Effects of creatine supplementation and resistance training on muscle strength and weightlifting performance. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/14636102) doi:[10.1519/1533-4287(2003)017<0822:eocsar>2.0.co;2](https://doi.org/10.1519/1533-4287(2003)017<0822:eocsar>2.0.co;2)
+- Volek JS et al. 1997. Creatine supplementation enhances muscular performance during high-intensity resistance exercise. *J Am Diet Assoc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9216554) doi:[10.1016/S0002-8223(97)00189-2](https://doi.org/10.1016/S0002-8223(97)00189-2)
+
+- Syrotuik DG & Bell GJ 2004. Acute creatine monohydrate supplementation: a descriptive physiological profile of responders vs. nonresponders. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/15320650) doi:[10.1519/12392.1](https://doi.org/10.1519/12392.1)

@@ -69,3 +69,39 @@ Per the International Society of Sports Nutrition position stand, there is "no c
 - Meal-frequency effects are inferred, not proven; 2 or 6 meals still work.
 - Pre-sleep protein has supportive acute MPS data but the longitudinal trials were null (in the context of already-high protein intake).
 - Safety statements apply to healthy individuals.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Daily Protein Intake**
+
+- Phillips SM et al. 2016. Protein "requirements" beyond the RDA: implications for optimizing health. *Appl Physiol Nutr Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26960445/) doi:[10.1139/apnm-2015-0550](https://doi.org/10.1139/apnm-2015-0550)
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+- Hector AJ & Phillips SM 2018. Protein Recommendations for Weight Loss in Elite Athletes: A Focus on Body Composition and Performance. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29182451/) doi:[10.1123/ijsnem.2017-0273](https://doi.org/10.1123/ijsnem.2017-0273)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5828430/>
+
+- Moore DR et al. 2009. Ingested protein dose response of muscle and albumin protein synthesis after resistance exercise in young men. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19056590/) doi:[10.3945/ajcn.2008.26401](https://doi.org/10.3945/ajcn.2008.26401)
+- Witard OC et al. 2014. Myofibrillar muscle protein synthesis rates subsequent to a meal in response to increasing doses of whey protein at rest and after resistance exercise. *Am J Clin Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24257722/) doi:[10.3945/ajcn.112.055517](https://doi.org/10.3945/ajcn.112.055517)
+- Macnaughton LS et al. 2016. The response of muscle protein synthesis following whole-body resistance exercise is greater following 40 g than 20 g of ingested whey protein. *Physiol Rep*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/27511985/) doi:[10.14814/phy2.12893](https://doi.org/10.14814/phy2.12893)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4675798/>
+
+**Protein Quality**
+
+- Phillips SM 2017. Current Concepts and Unresolved Questions in Dietary Protein Requirements and Supplements in Adults. *Front Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28534027/) doi:[10.3389/fnut.2017.00013](https://doi.org/10.3389/fnut.2017.00013)
+- Mathai JK et al. 2017. Values for digestible indispensable amino acid scores (DIAAS) for some dairy and plant proteins may better describe protein quality than values calculated using the concept for protein digestibility-corrected amino acid scores (PDCAAS). *Br J Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28382889/) doi:[10.1017/S0007114517000125](https://doi.org/10.1017/S0007114517000125)
+
+**Peri-Workout Protein**
+
+- Schoenfeld BJ & Aragon AA 2018. Is There a Postworkout Anabolic Window of Opportunity for Nutrient Consumption? Clearing up Controversies. *J Orthop Sports Phys Ther*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30702982/) doi:[10.2519/jospt.2018.0615](https://doi.org/10.2519/jospt.2018.0615)
+
+**Pre-Sleep Protein**
+
+- <https://www.mdpi.com/2072-6643/8/12/763>
+- Joy JM et al. 2018. Daytime and nighttime casein supplements similarly increase muscle size and strength in response to resistance training earlier in the day: a preliminary investigation. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29764464/) doi:[10.1186/s12970-018-0228-9](https://doi.org/10.1186/s12970-018-0228-9)
+- Antonio J et al. 2017. Casein Protein Supplementation in Trained Men and Women: Morning versus Evening. *Int J Exerc Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28515842/) doi:[10.70252/QWHA8703](https://doi.org/10.70252/QWHA8703)
+
+**Protein Safety**
+
+- <https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8>

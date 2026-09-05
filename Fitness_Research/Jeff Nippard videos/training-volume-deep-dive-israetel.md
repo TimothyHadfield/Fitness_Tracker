@@ -107,3 +107,11 @@ The mountain analogy: base camp, summit, descend, rest, climb the next mountain.
 - Nippard and Israetel **disagree** on failure and effort for novices: Nippard thinks many general-public lifters need permission to push harder; Israetel thinks the more common failure mode is beginners training too close to failure with unstable technique.
 - Superset and drop-set accounting is left to individual experimentation — no clean rule.
 - Consistency of measurement matters more than the absolute number. The cooked-vs-raw food-weighing analogy: pick a method, stay consistent, and use direction of change rather than hitting a magic number.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**TIMESTAMPS**
+
+- Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29112055) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)

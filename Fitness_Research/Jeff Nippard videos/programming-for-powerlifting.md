@@ -76,3 +76,11 @@ Add assistance movements — rows, vertical presses, hip thrusts, rear delt flye
 - DUP is a preference, not a requirement: Jeff is explicit that beginners could progress fine on a fixed set/rep structure, and he uses DUP partly for adherence and boredom reasons.
 - Daily max training works but is aimed at advanced and enhanced lifters, not natural beginners.
 - The 6-month cutoff for "beginner" is a rough marker; the workout-to-workout progression test is the better one.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Prestes J et al. 2009. Comparison between linear and daily undulating periodized resistance training to increase strength. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19910831) doi:[10.1519/JSC.0b013e3181c03548](https://doi.org/10.1519/JSC.0b013e3181c03548)
+- Zourdos MC et al. 2016. Modified Daily Undulating Periodization Model Produces Greater Performance Than a Traditional Configuration in Powerlifters. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26332783) doi:[10.1519/JSC.0000000000001165](https://doi.org/10.1519/JSC.0000000000001165)
+- Schoenfeld BJ et al. 2014. Effects of different volume-equated resistance training loading strategies on muscular adaptations in well-trained men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24714538) doi:[10.1519/JSC.0000000000000480](https://doi.org/10.1519/JSC.0000000000000480)

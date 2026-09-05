@@ -70,3 +70,12 @@ A clear win for the longer rest period.
 - Optimal rest depends on the exercise and the effort level of the set; individual discretion is expected.
 - The 2017 meta-analysis established only that >1 minute beats <1 minute, not an exact optimum.
 - He notes some newer literature suggesting more than 20 sets per week may work for some body parts, but calls that speculative.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Schoenfeld BJ et al. 2016. Longer Interset Rest Periods Enhance Muscle Strength and Hypertrophy in Resistance-Trained Men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26605807) doi:[10.1519/JSC.0000000000001272](https://doi.org/10.1519/JSC.0000000000001272)
+- Grgic J et al. 2017. The effects of short versus long inter-set rest intervals in resistance training on measures of muscle hypertrophy: A systematic review. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28641044) doi:[10.1080/17461391.2017.1340524](https://doi.org/10.1080/17461391.2017.1340524)

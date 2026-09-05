@@ -69,3 +69,18 @@ So timing matters, but it matters more for some people:
 - Fasted training is not disqualifying — individual response varies and some people simply perform better on an empty stomach.
 - The 4–5 hour figure is Nippard's midpoint between the 3–4 h and 5–6 h ranges given in the Aragon/Schoenfeld paper, not a directly measured number.
 - Post-workout carb urgency is largely theoretical for typical lifters; it matters more for full-body or twice-daily training.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Nutrient Timing Revisited Review**
+
+- ResearchGate — <https://www.researchgate.net/publication/235381974>
+
+**Additional Resources on Nutrient Timing**
+
+- Schoenfeld BJ et al. 2013. The effect of protein timing on muscle strength and hypertrophy: a meta-analysis. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24299050/) doi:[10.1186/1550-2783-10-53](https://doi.org/10.1186/1550-2783-10-53)
+- Kerksick CM et al. 2017. International society of sports nutrition position stand: nutrient timing. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28919842/) doi:[10.1186/s12970-017-0189-4](https://doi.org/10.1186/s12970-017-0189-4)
+- Stokes T et al. 2018. Recent Perspectives Regarding the Role of Dietary Protein for the Promotion of Muscle Hypertrophy with Resistance Exercise Training. *Nutrients*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29414855/) doi:[10.3390/nu10020180](https://doi.org/10.3390/nu10020180)
+- Knuiman P et al. 2015. Glycogen availability and skeletal muscle adaptations with endurance and resistance exercise. *Nutr Metab (Lond)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26697098/) doi:[10.1186/s12986-015-0055-9](https://doi.org/10.1186/s12986-015-0055-9)

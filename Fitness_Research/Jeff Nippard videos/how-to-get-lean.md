@@ -72,3 +72,14 @@ Every one has a flaw: caffeine habituation with consistent use; quality-control 
 - Getting truly shredded is not a sustainable or health-oriented goal for most people, and the first attempt is likely to cost some muscle.
 - Trexler recommends no fat-loss supplement as causal — the evidence isn't there, and the well-studied options are replaceable with cheaper methods.
 - Processed-food TEF differences are real but small enough that they're handled by adjusting macros, not by avoiding foods on principle.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- ResearchGate — <https://www.researchgate.net/profile/Eric_Helms>
+- de Ridder DT et al. 2012. Taking stock of self-control: a meta-analysis of how trait self-control relates to a wide range of behaviors. *Pers Soc Psychol Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21878607/) doi:[10.1177/1088868311418749](https://doi.org/10.1177/1088868311418749)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4672063/>
+- ResearchGate — <https://www.researchgate.net/profile/Eric_Trexler>

@@ -62,3 +62,22 @@ Jeff explicitly warns against black-and-white thinking here: men should still in
 - The muscle-growth-potential literature genuinely conflicts (no difference at 6 months in one study, ~2× in another). The 50-100% range reflects that uncertainty.
 - The mechanisms behind women's lower fatigability are not fully worked out.
 - All recommendations here are averages and tendencies; individual variation can override them, and the differences are described throughout as minor variations on a sound baseline program.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SCIENTIFIC REFERENCES**
+
+- <https://link.springer.com/article/10.1007%2FBF00235103>
+- <http://www.tandfonline.com/doi/abs/10.1080/00140138708969760>
+- Roth SM et al. 2001. Muscle size responses to strength training in young and older men and women. *J Am Geriatr Soc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11890579) doi:[10.1046/j.1532-5415.2001.4911233.x](https://doi.org/10.1046/j.1532-5415.2001.4911233.x)
+- Ivey FM et al. 2000. Effects of age, gender, and myostatin genotype on the hypertrophic response to heavy resistance strength training. *J Gerontol A Biol Sci Med Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/11078093) doi:[10.1093/gerona/55.11.m641](https://doi.org/10.1093/gerona/55.11.m641)
+- <http://journals.lww.com/acsm-essr/Abstract/2014/10000/Influence_of_Sex_and_Estrogen_on_Musculotendinous.7.aspx>
+- <https://link.springer.com/article/10.1007/s40279-013-0081-6>
+- Judge LW & Burke JR 2010. The effect of recovery time on strength performance following a high-intensity bench press workout in males and females. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20625191) doi:[10.1123/ijspp.5.2.184](https://doi.org/10.1123/ijspp.5.2.184)
+- Hunter SK 2014. Sex differences in human fatigability: mechanisms and insight to physiological responses. *Acta Physiol (Oxf)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24433272) doi:[10.1111/apha.12234](https://doi.org/10.1111/apha.12234)
+- Staron RS et al. 1994. Skeletal muscle adaptations during early phase of heavy-resistance training in men and women. *J Appl Physiol (1985)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8005869) doi:[10.1152/jappl.1994.76.3.1247](https://doi.org/10.1152/jappl.1994.76.3.1247)
+- Cureton KJ et al. 1988. Muscle hypertrophy in men and women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/3173042) doi:[10.1249/00005768-198808000-00003](https://doi.org/10.1249/00005768-198808000-00003)
+- O'Hagan FT et al. 1995. Response to resistance training in young women and men. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7558529) doi:[10.1055/s-2007-973012](https://doi.org/10.1055/s-2007-973012)
+- Schoenfeld BJ et al. 2017. Dose-response relationship between weekly resistance training volume and increases in muscle mass: A systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27433992) doi:[10.1080/02640414.2016.1210197](https://doi.org/10.1080/02640414.2016.1210197)

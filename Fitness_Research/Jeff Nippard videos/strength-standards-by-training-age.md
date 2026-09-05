@@ -56,3 +56,7 @@ His own coaching experience, competitive powerlifting meet data, and existing sc
 Strength is heavily genetic and leverages matter — short arms and a deep ribcage favour the bench but hurt the deadlift; short femurs favour the squat. Leverage disadvantages are surmountable with programming and technique changes (Layne Norton set a squat world record with unusually long femurs), but they change how hard you have to work. Tendon resilience, neural drive and starting muscle mass vary too.
 
 Elite is not available to everyone, and he's explicit that reaching it may demand a level of sacrifice many lifters reasonably won't want to make. Freak requires genetics outright. His realistic framing: with time, good programming and dedication, a lot of natural lifters can hit elite on one or two of the three lifts — not necessarily all three.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -62,3 +62,17 @@ All four extend the knee. Only the rectus femoris also performs **hip flexion**.
 - The rectus femoris concern about squats is real anatomically but studies still show solid growth; one hips-fixed exercise resolves it.
 - Front squats and sissy squats are personal-comfort downgrades — if the position suits you, rate them higher.
 - Leg extensions don't cause knee problems, but ease off if you already have knee pain.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Grob K et al. 2016. A newly discovered muscle: The tensor of the vastus intermedius. *Clin Anat*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/26732825/) doi:[10.1002/ca.22680](https://doi.org/10.1002/ca.22680)
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9737272/>
+
+- Glassbrook DJ et al. 2019. The High-Bar and Low-Bar Back-Squats: A Biomechanical Analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28195975/) doi:[10.1519/JSC.0000000000001836](https://doi.org/10.1519/JSC.0000000000001836)
+
+- Haugen ME et al. 2023. Effect of free-weight vs. machine-based strength training on maximal strength, hypertrophy and jump performance - a systematic review and meta-analysis. *BMC Sports Sci Med Rehabil*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37582807/) doi:[10.1186/s13102-023-00713-4](https://doi.org/10.1186/s13102-023-00713-4)
+
+- Zabaleta-Korta A et al. 2021. The role of exercise selection in regional Muscle Hypertrophy: A randomized controlled trial. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34743671/) doi:[10.1080/02640414.2021.1929736](https://doi.org/10.1080/02640414.2021.1929736)

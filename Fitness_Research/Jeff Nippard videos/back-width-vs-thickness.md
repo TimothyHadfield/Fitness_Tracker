@@ -51,3 +51,14 @@ The common belief that wide grips only build width and narrow grips only build t
 - EMG reports averages, so it can't tell you what maximises *your* lat activation.
 - Row grip-width recommendations are **biomechanical reasoning only** — no EMG data has addressed grip width in the row.
 - Nippard explicitly warns against black-and-white thinking: comfort, full range of motion, mind-muscle connection and progressive overload matter more than any of these tweaks, which are for emphasising weak areas.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Signorile JF et al. 2002. A comparative electromyographical investigation of muscle utilization patterns using various hand positions during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12423182)
+- Lusk SJ et al. 2010. Grip width and forearm orientation effects on muscle activity during the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20543740) doi:[10.1519/JSC.0b013e3181ddb0ab](https://doi.org/10.1519/JSC.0b013e3181ddb0ab)
+- Andersen V et al. 2014. Effects of grip width on muscle strength and activation in the lat pull-down. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24662157) doi:[10.1097/JSC.0000000000000232](https://doi.org/10.1097/JSC.0000000000000232)
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>

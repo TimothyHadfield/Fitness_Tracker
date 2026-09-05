@@ -71,3 +71,29 @@ On one-set-to-failure minimalism: in his meta-analysis, **14 of 15 studies favou
 - The agonist-antagonist superset finding is unpublished and unreplicated, as is the single-joint-vs-multi-joint biceps result.
 - Impingement risk on internally rotated raises is based on biomechanical modelling, not hard outcome data — individual anatomy varies, and anyone with existing shoulder pain should skip it.
 - Overtraining in his study was unlikely because total systemic work was modest; a full bodybuilding routine at those per-muscle volumes would be a very different stress.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Dropsets paper**
+
+- ResearchGate — <https://www.researchgate.net/profile/Brad_Schoenfeld/publication/322133680_Can_Drop_Set_Training_Enhance_Muscle_Growth/links/5a48ec34458515f6b0581437/Can-Drop-Set-Training-Enhance-Muscle-Growth.pdf>
+
+**The intensity technique paper**
+
+- ResearchGate — <https://www.researchgate.net/publication/232131783_The_Use_of_Specialized_Training_Techniques_to_Maximize_Muscle_Hypertrophy>
+
+**Fonseca study showing benefit to exercise variation**
+
+- Fonseca RM et al. 2014. Changes in exercises are more effective than in loading schemes to improve muscle strength. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24832974) doi:[10.1519/JSC.0000000000000539](https://doi.org/10.1519/JSC.0000000000000539)
+
+- Brentano MA et al. 2017. Muscle Damage and Muscle Activity Induced by Strength Training Super-Sets in Physically Active Men. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27243916) doi:[10.1519/JSC.0000000000001511](https://doi.org/10.1519/JSC.0000000000001511)
+
+**Fisher and Steele paper**
+
+- ResearchGate — <https://www.researchgate.net/publication/328502454_Evidence_for_an_Upper_Threshold_for_Resistance_Training_Volume_in_Trained_Women>
+
+**Brad's Volume Study**
+
+- Schoenfeld BJ et al. 2019. Resistance Training Volume Enhances Muscle Hypertrophy but Not Strength in Trained Men. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30153194) doi:[10.1249/MSS.0000000000001764](https://doi.org/10.1249/MSS.0000000000001764)

@@ -111,3 +111,7 @@ Trommelen's caution on interpreting magnitude: a 50% higher MPS does not mean 50
 - Whether your 20th set of legs in a session is worthless or as valuable as your first is genuinely unknown — performance is wrecked, but the muscle only senses fatigue.
 - Trommelen explicitly declines to comment on EMG validity (not his field); his lab colleagues are sceptical of the EMG-to-MPS step.
 - Much of the fitness debate, he argues, is really about **perspective**: minimalists want the 20% of effort that gives 80% of results; competitive athletes want everything. Neither position is wrong — the error is claiming a marginal variable "doesn't matter" when the data are merely underpowered.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

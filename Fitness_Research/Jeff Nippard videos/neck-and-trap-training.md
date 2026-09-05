@@ -66,3 +66,24 @@ Supporting evidence: **Ackland et al. 2010** moment-arm analysis found the **SCM
 - Overhead shrug theory is not backed by the 2016 EMG finding.
 - Beggs' mixed-grip finding may not generalise beyond the small area under the electrode.
 - Neck training data overall is thin — Nippard explicitly notes there isn't much of it.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SCIENTIFIC REFERENCES**
+
+- Taylor MK et al. 2006. Cervical resistance training: effects on isometric and dynamic strength. *Aviat Space Environ Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/17086765)
+- ResearchGate — <https://www.researchgate.net/publication/273714919_Comparative_electromyographical_investigation_of_the_biceps_brachii_latissimus_dorsi_and_trapezius_muscles_during_five_pull_exercises>
+- ResearchGate — <https://www.researchgate.net/publication/254692133_COMPARISON_OF_MUSCLE_ACTIVATION_AND_KINEMATICS_DURING_THE_DEADLIFT_USING_A_DOUBLE-PRONATED_AND_OVERHANDUNDERHAND_GRIP>
+- McAllister MJ et al. 2013. Effect of grip width on electromyographic activity during the upright row. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22362088) doi:[10.1519/JSC.0b013e31824f23ad](https://doi.org/10.1519/JSC.0b013e31824f23ad)
+- Jakobsen MD et al. 2012. Evaluation of muscle activity during a standardized shoulder resistance training bout in novice individuals. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/22067242) doi:[10.1519/JSC.0b013e31823f29d9](https://doi.org/10.1519/JSC.0b013e31823f29d9)
+- Pollock ML et al. 1993. Frequency and volume of resistance training: effect on cervical extension strength. *Arch Phys Med Rehabil*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/8215860) doi:[10.1016/0003-9993(93)90065-i](https://doi.org/10.1016/0003-9993(93)90065-i)
+- Pizzari T et al. 2014. Modifying a shrug exercise can facilitate the upward rotator muscles of the scapula. *Clin Biomech (Bristol)*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24342452) doi:[10.1016/j.clinbiomech.2013.11.011](https://doi.org/10.1016/j.clinbiomech.2013.11.011)
+- Ackland DC et al. 2011. Moment arms of the human neck muscles in flexion, bending and rotation. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21074159) doi:[10.1016/j.jbiomech.2010.09.036](https://doi.org/10.1016/j.jbiomech.2010.09.036)
+- Sundstrup E et al. 2012. Muscle activation strategies during strength training with heavy loading vs. repetitions to failure. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21986694) doi:[10.1519/JSC.0b013e318239c38e](https://doi.org/10.1519/JSC.0b013e318239c38e)
+- Leggett SH et al. 1991. Quantitative assessment and training of isometric cervical extension strength. *Am J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/1781507) doi:[10.1177/036354659101900618](https://doi.org/10.1177/036354659101900618)
+- Conley MS et al. 1997. Specificity of resistance training responses in neck muscle size and strength. *Eur J Appl Physiol Occup Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/9189733) doi:[10.1007/s004210050186](https://doi.org/10.1007/s004210050186)
+- Ekstrom RA et al. 2003. Surface electromyographic analysis of exercises for the trapezius and serratus anterior muscles. *J Orthop Sports Phys Ther*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12774999) doi:[10.2519/jospt.2003.33.5.247](https://doi.org/10.2519/jospt.2003.33.5.247)
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/articles/upright_row_implications_for_preventing_subacromial_impingement.pdf>
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC449729/>

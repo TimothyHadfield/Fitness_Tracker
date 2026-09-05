@@ -70,3 +70,29 @@ Nippard raises the reverse possibility too: the spectacular Byrne results may pa
 - Diet breaks roughly double the calendar length of a diet, which rules them out when prepping for a fixed-date event like a show or photoshoot — hence coaches now demanding more lead time up front.
 - Classic cheat days are still not recommended: too easy to wipe out the weekly deficit.
 - Nippard credits Eric Helms' lecture in the April issue of the MASS Research Review as the main source he drew on.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Comparing Weight Loss Rates**
+
+- Garthe I et al. 2011. Effect of two different weight-loss rates on body composition and strength and power-related performance in elite athletes. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21558571/) doi:[10.1123/ijsnem.21.2.97](https://doi.org/10.1123/ijsnem.21.2.97)
+
+**Overfeeding Effects on Metabolism**
+
+- Dirlewanger M et al. 2000. Effects of short-term carbohydrate or fat overfeeding on energy expenditure and plasma leptin concentrations in healthy female subjects. *Int J Obes Relat Metab Disord*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11126336/) doi:[10.1038/sj.ijo.0801395](https://doi.org/10.1038/sj.ijo.0801395)
+
+**Refeeding Effects on Glycogen**
+
+- ResearchGate — <https://www.researchgate.net/publication/11267836>
+
+**First Bodybuilding Refeed Study**
+
+- Campbell BI et al. 2020. Intermittent Energy Restriction Attenuates the Loss of Fat Free Mass in Resistance Trained Individuals. A Randomized Controlled Trial. *J Funct Morphol Kinesiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33467235/) doi:[10.3390/jfmk5010019](https://doi.org/10.3390/jfmk5010019)
+
+**Diet Break Research**
+
+- Wing RR & Jeffery RW 2003. Prescribed "breaks" as a means to disrupt weight control efforts. *Obes Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12582226/) doi:[10.1038/oby.2003.43](https://doi.org/10.1038/oby.2003.43)
+- Byrne NM et al. 2018. Intermittent energy restriction improves weight loss efficiency in obese men: the MATADOR study. *Int J Obes (Lond)*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28925405/) doi:[10.1038/ijo.2017.206](https://doi.org/10.1038/ijo.2017.206)
+- Peos JJ et al. 2021. Continuous versus Intermittent Dieting for Fat Loss and Fat-Free Mass Retention in Resistance-trained Adults: The ICECAP Trial. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33587549/) doi:[10.1249/MSS.0000000000002636](https://doi.org/10.1249/MSS.0000000000002636)

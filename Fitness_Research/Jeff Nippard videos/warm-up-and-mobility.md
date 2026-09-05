@@ -62,3 +62,15 @@ Every session: 5-10 min cardio to a light sweat, then the dynamic sequence for t
 - Foam rolling is described as overhyped — worth doing for soreness and range of motion, but optional.
 - Static stretching's performance penalty appears limited to intense holds over ~30 seconds per muscle.
 - Nippard acknowledges some people will find this total time investment excessive, and offers the shortcuts above.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**2. Checking out what my sponsors have to offer**
+
+- Junior RM et al. 2017. Effect of the flexibility training performed immediately before resistance training on muscle hypertrophy, maximum strength and flexibility. *Eur J Appl Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28251401) doi:[10.1007/s00421-016-3527-3](https://doi.org/10.1007/s00421-016-3527-3)
+- McCrary JM et al. 2015. A systematic review of the effects of upper body warm-up on performance and injury. *Br J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25694615) doi:[10.1136/bjsports-2014-094228](https://doi.org/10.1136/bjsports-2014-094228)
+- McGowan CJ et al. 2015. Warm-Up Strategies for Sport and Exercise: Mechanisms and Applications. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26400696) doi:[10.1007/s40279-015-0376-x](https://doi.org/10.1007/s40279-015-0376-x)
+- Yamaguchi T & Ishii K 2005. Effects of static stretching for 30 seconds and dynamic stretching on leg extension power. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16095425) doi:[10.1519/15044.1](https://doi.org/10.1519/15044.1)
+- Fradkin AJ et al. 2010. Effects of warming-up on physical performance: a systematic review with meta-analysis. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19996770) doi:[10.1519/JSC.0b013e3181c643a0](https://doi.org/10.1519/JSC.0b013e3181c643a0)

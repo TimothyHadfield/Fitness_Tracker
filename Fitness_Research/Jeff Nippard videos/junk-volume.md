@@ -48,3 +48,24 @@ The bigger problem is the cost side: ultra-high-rep work creates a huge recovery
 - Krieger's volume graph has **wide variance** — the six-set figure is an average trend line. Some people won't hit junk until 10-12 sets or more. Use it as a starting point and adjust from your own progress and recovery.
 - The six-set figure assumes you're training **close to but not at true failure on every set**. If you take everything to absolute failure, your volume ceiling is lower.
 - The per-body-part numbers (10-12 for back/glutes/quads) are Nippard's speculation from coaching experience, not a study finding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**James Krieger Meta-analysis**
+
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/#Schoenfeld>
+
+**Training Frequency Study**
+
+- Hamarsland H et al. 2021. Equal-Volume Strength Training With Different Training Frequencies Induces Similar Muscle Hypertrophy and Strength Improvement in Trained Participants. *Front Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35069251/) doi:[10.3389/fphys.2021.789403](https://doi.org/10.3389/fphys.2021.789403)
+
+**Easy Sets Study**
+
+- Barbosa-Netto S et al. 2021. Self-Selected Resistance Exercise Load: Implications for Research and Prescription. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29112055/) doi:[10.1519/JSC.0000000000002287](https://doi.org/10.1519/JSC.0000000000002287)
+
+**High Rep Sets Study**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/647954/posts/2104249>
+- Lasevicius T et al. 2018. Effects of different intensities of resistance training with equated volume load on muscle strength and hypertrophy. *Eur J Sport Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29564973/) doi:[10.1080/17461391.2018.1450898](https://doi.org/10.1080/17461391.2018.1450898)

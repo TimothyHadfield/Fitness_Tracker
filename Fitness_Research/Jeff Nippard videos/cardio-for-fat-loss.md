@@ -64,3 +64,49 @@ A review by **Escalante and Barakat** on competitive physique athletes acknowled
 - The 3-4 day/week hypertrophy drop-off is a weak correlation and a trend to note, not a hard limit.
 - Fasted cardio in very lean physique competitors is genuinely unstudied — the question stays open.
 - Interference severity depends on the duration and intensity of the endurance work, so blanket rules are approximations.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Cardiorespiratory Fitness & All-Cause Mortality Meta-Analysis**
+
+- Kodama S et al. 2009. Cardiorespiratory fitness as a quantitative predictor of all-cause mortality and cardiovascular events in healthy men and women: a meta-analysis. *JAMA*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19454641/) doi:[10.1001/jama.2009.681](https://doi.org/10.1001/jama.2009.681)
+
+**Physical Activity & Weight Maintenance**
+
+- Thomas JG et al. 2014. Weight-loss maintenance for 10 years in the National Weight Control Registry. *Am J Prev Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24355667/) doi:[10.1016/j.amepre.2013.08.019](https://doi.org/10.1016/j.amepre.2013.08.019)
+
+**Cardio isn’t as Effective for Fat Loss as You’d Expect**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2148202210/posts/2150070964>
+- <https://journals.lww.com/acsm-msse/Abstract/9000/Effect_of_Aerobic_Exercise_induced_Weight_Loss_on.96038.aspx>
+
+**Interference Effect**
+
+- Fyfe JJ et al. 2014. Interference between concurrent resistance and endurance exercise: molecular bases and the role of individual training variables. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/24728927/) doi:[10.1007/s40279-014-0162-1](https://doi.org/10.1007/s40279-014-0162-1)
+
+**Warming Up & Performance**
+
+- Fradkin AJ et al. 2010. Effects of warming-up on physical performance: a systematic review with meta-analysis. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/19996770/) doi:[10.1519/JSC.0b013e3181c643a0](https://doi.org/10.1519/JSC.0b013e3181c643a0)
+
+**Proximity of Cardio to Weight Training**
+
+- Murlasits Z et al. 2018. The physiological effects of concurrent strength and endurance training sequence: A systematic review and meta-analysis. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28783467/) doi:[10.1080/02640414.2017.1364405](https://doi.org/10.1080/02640414.2017.1364405)
+- Petré H et al. 2021. Development of Maximal Dynamic Strength During Concurrent Resistance and Endurance Training in Untrained, Moderately Trained, and Trained Individuals: A Systematic Review and Meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/33751469/) doi:[10.1007/s40279-021-01426-9](https://doi.org/10.1007/s40279-021-01426-9)
+
+**Cardio Intensity**
+
+- LaForgia J et al. 2006. Effects of exercise intensity and duration on the excess post-exercise oxygen consumption. *J Sports Sci*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17101527/) doi:[10.1080/02640410600552064](https://doi.org/10.1080/02640410600552064)
+- Keating SE et al. 2017. A systematic review and meta-analysis of interval training versus moderate-intensity continuous training on body adiposity. *Obes Rev*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28513103/) doi:[10.1111/obr.12536](https://doi.org/10.1111/obr.12536)
+
+**Volume of Cardio**
+
+- Wilson JM et al. 2012. Concurrent training: a meta-analysis examining interference of aerobic and resistance exercises. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22002517/) doi:[10.1519/JSC.0b013e31823a3e2d](https://doi.org/10.1519/JSC.0b013e31823a3e2d)
+
+**Fasted Cardio**
+
+- Paoli A et al. 2011. Exercising fasting or fed to enhance fat loss? Influence of food intake on respiratory ratio and excess postexercise oxygen consumption after a bout of endurance training. *Int J Sport Nutr Exerc Metab*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/21411835/) doi:[10.1123/ijsnem.21.1.48](https://doi.org/10.1123/ijsnem.21.1.48)
+- <https://www.mdpi.com/2411-5142/2/4/43>
+- ResearchGate — <https://www.researchgate.net/publication/341494761>
+- Schoenfeld BJ et al. 2014. Body composition changes associated with fasted versus non-fasted aerobic exercise. *J Int Soc Sports Nutr*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25429252/) doi:[10.1186/s12970-014-0054-7](https://doi.org/10.1186/s12970-014-0054-7)

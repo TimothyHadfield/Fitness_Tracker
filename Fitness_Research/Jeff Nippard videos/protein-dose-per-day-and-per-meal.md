@@ -113,3 +113,7 @@ Related evidence for fast delivery: **whey drunk as a bolus is more anabolic tha
 - The distribution study used only fast whey — conclusions may not survive a switch to slow protein, a different total dose, or a different time window.
 - Only one study has tested lean-body-mass-based protein needs.
 - The whole conversation repeatedly returns to *perspective*: total protein gets you ~80% of the result. Whether the remaining marginal gains are worth the effort depends on whether you are a recreational lifter or competing.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

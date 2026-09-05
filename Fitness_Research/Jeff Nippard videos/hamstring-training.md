@@ -60,3 +60,32 @@ Execution notes:
 - Most of the evidence cited here is EMG activation data, not long-term hypertrophy outcomes.
 - He explicitly declines to rank knee-flexion variations against each other beyond the slide-leg finding.
 - This is a 2017 video; the fiber-type claim rests on "new data with improved methodology" that isn't named.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Hamstrings EMG Activation in Various Exercises**
+
+- Ebben WP 2009. Hamstring activation during lower body resistance training exercises. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19417230) doi:[10.1123/ijspp.4.1.84](https://doi.org/10.1123/ijspp.4.1.84)
+- Ebben WP et al. 2009. Muscle activation during lower body resistance training. *Int J Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18975260) doi:[10.1055/s-2008-1038785](https://doi.org/10.1055/s-2008-1038785)
+- ResearchGate — <https://www.researchgate.net/publication/228071052_Kettlebell_swing_targets_semitendinosus_and_supine_leg_curl_targets_biceps_femoris_An_EMG_study_with_rehabilitation_implications>
+
+**SLDL vs Conventional DL**
+
+- ResearchGate — <https://www.researchgate.net/publication/266388707_Electromyographic_activity_of_the_lower_body_muscles_during_the_deadlift_and_stiff-legged_deadlift>
+
+- Yamashita N 1988. EMG activities in mono- and bi-articular thigh muscles in combined hip and knee extension. *Eur J Appl Physiol Occup Physiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/3220066) doi:[10.1007/BF00417262](https://doi.org/10.1007/BF00417262)
+- Contreras B et al. 2016. A Comparison of Gluteus Maximus, Biceps Femoris, and Vastus Lateralis Electromyography Amplitude in the Parallel, Full, and Front Squat Variations in Resistance-Trained Females. *J Appl Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26252837) doi:[10.1123/jab.2015-0113](https://doi.org/10.1123/jab.2015-0113)
+
+**Foot Positioning**
+
+- Lynn SK & Costigan PA 2009. Changes in the medial-lateral hamstring activation ratio with foot rotation during lower limb exercise. *J Electromyogr Kinesiol*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/18331800) doi:[10.1016/j.jelekin.2008.01.007](https://doi.org/10.1016/j.jelekin.2008.01.007)
+
+**Regional Differences**
+
+- Schoenfeld BJ et al. 2015. Regional differences in muscle activation during hamstrings exercise. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24978835) doi:[10.1519/JSC.0000000000000598](https://doi.org/10.1519/JSC.0000000000000598)
+
+**Fiber Type**
+
+- <http://onlinelibrary.wiley.com/doi/10.1111/sms.12786/full>

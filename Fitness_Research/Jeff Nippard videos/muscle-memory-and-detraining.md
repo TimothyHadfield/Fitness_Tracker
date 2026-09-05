@@ -53,3 +53,11 @@ The periodic group's muscle size fluctuated up and down, but **after 24 weeks bo
 - The foundational myonuclear-retention study was performed on **mice**, not humans.
 - The human epigenetics study confirms persistence over **seven weeks only**; anything longer is informed speculation.
 - The "up to years" claim about how long epigenetic modifications last is explicitly framed as a possibility, not a finding.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- <https://www.nature.com/articles/s41598-018-20287-3>

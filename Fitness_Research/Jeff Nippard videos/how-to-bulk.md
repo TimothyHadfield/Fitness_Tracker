@@ -101,3 +101,23 @@ What he added on this bulk:
 - Composition of gained weight varies with training age and genetics — anywhere from all lean to roughly half fat.
 - Ashwagandha lacks sufficient safety data for a broad recommendation despite him personally taking it.
 - Jeff was the subject of a McMaster University case study during this bulk and could not report the muscle-gain figures at the time of recording.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Rozenek R et al. 2002. Effects of high-calorie supplements on body composition and muscular strength following resistance training. *J Sports Med Phys Fitness*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/12094125/)
+
+- ResearchGate — <https://www.researchgate.net/publication/339573950>
+
+- Morton RW et al. 2018. A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. *Br J Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/28698222/) doi:[10.1136/bjsports-2017-097608](https://doi.org/10.1136/bjsports-2017-097608)
+
+- Poole R et al. 2017. Coffee consumption and health: umbrella review of meta-analyses of multiple health outcomes. *BMJ*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29167102/) doi:[10.1136/bmj.j5024](https://doi.org/10.1136/bmj.j5024)
+
+- Khan SU et al. 2021. Effect of omega-3 fatty acids on cardiovascular outcomes: A systematic review and meta-analysis. *EClinicalMedicine*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/34505026/) doi:[10.1016/j.eclinm.2021.100997](https://doi.org/10.1016/j.eclinm.2021.100997)
+- Kavyani Z et al. 2022. Efficacy of the omega-3 fatty acids supplementation on inflammatory biomarkers: An umbrella meta-analysis. *Int Immunopharmacol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/35914448/) doi:[10.1016/j.intimp.2022.109104](https://doi.org/10.1016/j.intimp.2022.109104)
+- Su KP et al. 2018. Association of Use of Omega-3 Polyunsaturated Fatty Acids With Changes in Severity of Anxiety Symptoms: A Systematic Review and Meta-analysis. *JAMA Netw Open*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/30646157/) doi:[10.1001/jamanetworkopen.2018.2327](https://doi.org/10.1001/jamanetworkopen.2018.2327)
+
+- <https://academic.oup.com/sleep/article/45/4/zsab276/6432454>
+
+- Examine.com — <https://examine.com/supplements/ashwagandha/?show_conditions=true>

@@ -66,3 +66,11 @@ The grip exercises above are largely **isometric**, so add movements that take t
 - Nippard is explicit that **direct forearm training isn't required for everyone**, given the indirect load from pulling work.
 - The top-half-partial recommendation is an inference from torque-angle data, not a direct hypertrophy finding.
 - Wrist-position tweaks on the reverse curl are framed as individual preference ("some trainees find..."), not established.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Murray WM et al. 1995. Variation of muscle moment arms with elbow and forearm position. *J Biomech*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/7775488) doi:[10.1016/0021-9290(94)00114-j](https://doi.org/10.1016/0021-9290(94)00114-j)

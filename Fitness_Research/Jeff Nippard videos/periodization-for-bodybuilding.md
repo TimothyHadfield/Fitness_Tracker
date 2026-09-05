@@ -74,3 +74,17 @@ This is how advanced lifters keep moving stubborn body parts once general progre
 - Reverse linear generally loses to linear in direct comparisons; it is a tool for specific goals, not a default.
 - Undulating beats linear in most but not all strength studies.
 - Beginners respond to nearly anything, so most of this matters more as training age increases.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- ResearchGate — <https://www.researchgate.net/publication/232142415_Periodization_Effects_of_Manipulating_Volume_and_Intensity_Part_2>
+
+- ResearchGate — <https://www.researchgate.net/publication/230756715_Periodization_paradigms_in_the_21st_century_Evidence-led_or_tradition-driven>
+
+- Prestes J et al. 2009. Comparison of linear and reverse linear periodization effects on maximal strength and body composition. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/19057409) doi:[10.1519/JSC.0b013e3181874bf3](https://doi.org/10.1519/JSC.0b013e3181874bf3)
+
+- Hoffman JR et al. 2009. Comparison between different off-season resistance training programs in Division III American college football players. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/19130636) doi:[10.1519/jsc.0b013e3181876a78](https://doi.org/10.1519/jsc.0b013e3181876a78)
+
+- Fonseca RM et al. 2014. Changes in exercises are more effective than in loading schemes to improve muscle strength. *J Strength Cond Res*. [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/24832974) doi:[10.1519/JSC.0000000000000539](https://doi.org/10.1519/JSC.0000000000000539)

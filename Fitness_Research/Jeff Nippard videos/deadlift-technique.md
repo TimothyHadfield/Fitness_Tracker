@@ -64,3 +64,7 @@ Shins half an inch behind the bar, feet straight and slightly inside shoulder wi
 - The sumo-for-shorter-lifters / conventional-for-taller-lifters pattern is his coaching observation of an average, not a rule — he explicitly says the only way to know is to train both.
 - Equipment (belt, flat shoes, straps, high socks) is performance aid, not a requirement.
 - Note: at [02:05] the transcript's stated rep ranges appear garbled (both are described as size); the clear intent from the rest of the video is heavier/lower reps for strength and 5-10 for hypertrophy.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

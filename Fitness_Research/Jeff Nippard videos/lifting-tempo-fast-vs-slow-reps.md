@@ -50,3 +50,11 @@ An **X** in the concentric slot means "move as explosively as possible."
 - Eccentric-overload tempos are, by his own admission, ahead of the evidence — the conceptual case is stronger than the data.
 - Whether metabolic stress is a genuine hypertrophy driver is unsettled in the field.
 - Tempo sits near the bottom of the priority list; gains from manipulating it are small relative to volume, load and effort. Its main value is making training more interesting and more specific.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Scientific References**
+
+- Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25601394) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)

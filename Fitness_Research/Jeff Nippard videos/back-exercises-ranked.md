@@ -64,3 +64,7 @@
 - The one-arm dumbbell row's bad online reputation is acknowledged and dismissed on the basis of an absence of concern from other professionals, not on positive evidence.
 - The dumbbell pullover ranking rests on the premise that the stretched position is the most anabolic part of the range — stated as "most likely," not settled.
 - The T-bar and inverted row placements hinge on equipment: a landmine attachment or a good loading method would improve both.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

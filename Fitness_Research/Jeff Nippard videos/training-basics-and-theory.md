@@ -74,3 +74,7 @@ Without overload you won't optimise growth — this is the core flaw in "muscle 
 - Whether 9-10 hours of sleep improves body composition, strength or hypertrophy (as opposed to sprint performance) "remains to be seen".
 - The threshold for "close enough to failure" isn't clearly defined in the literature — ~3 reps in reserve is his estimate.
 - Optimal ≠ practical: he repeatedly favours the adherable program over the theoretically best one.
+
+## References
+
+Nippard listed no citations in this video's description. The studies named in the note above are as he spoke them on camera and have not been resolved to papers.

@@ -52,3 +52,16 @@ Eric Helms, in his own words in the video, framed it as volume spread: doing leg
 - Volume-equated studies can't test the main proposed advantage (more total quality volume), so the strongest argument for high frequency is currently theoretical/practical rather than directly demonstrated.
 - Beginners show no clear benefit from training a muscle more than once a week.
 - He explicitly declines to call this the best split in all contexts — it's what suits him at the time, partly for motivation.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Schoenfeld BJ et al. 2016. Effects of Resistance Training Frequency on Measures of Muscle Hypertrophy: A Systematic Review and Meta-Analysis. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/27102172) doi:[10.1007/s40279-016-0543-8](https://doi.org/10.1007/s40279-016-0543-8)
+- Damas F et al. 2015. A review of resistance training-induced changes in skeletal muscle protein synthesis and their contribution to hypertrophy. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25739559) doi:[10.1007/s40279-015-0320-0](https://doi.org/10.1007/s40279-015-0320-0)
+- Mitchell CJ et al. 2014. Acute post-exercise myofibrillar protein synthesis is not correlated with resistance training-induced muscle hypertrophy in young men. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24586775) doi:[10.1371/journal.pone.0089431](https://doi.org/10.1371/journal.pone.0089431)
+- Colquhoun RJ et al. 2018. Training Volume, Not Frequency, Indicative of Maximal Strength Adaptations to Resistance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29324578) doi:[10.1519/JSC.0000000000002414](https://doi.org/10.1519/JSC.0000000000002414)
+- Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
+- McHugh MP 2003. Recent advances in the understanding of the repeated bout effect: the protective effect against muscle damage from a single bout of eccentric exercise. *Scand J Med Sci Sports*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12641640) doi:[10.1034/j.1600-0838.2003.02477.x](https://doi.org/10.1034/j.1600-0838.2003.02477.x)

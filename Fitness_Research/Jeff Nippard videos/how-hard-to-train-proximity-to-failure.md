@@ -81,3 +81,36 @@ How far from failure you can be and still maximise growth is, in Nippard's words
 - Rep-speed reading breaks down for deliberately slow or mind-muscle-focused tempos.
 - Individual differences in how much reps slow before failure are large; some lifters hit the wall abruptly with little warning.
 - Cost of failure varies hugely by exercise: lateral raises vs. deadlifts are not comparable.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Failure Definition**
+
+- ResearchGate — <https://www.researchgate.net/publication/312032590>
+
+**Rep Speed**
+
+- ResearchGate — <https://www.researchgate.net/publication/334751432>
+- ResearchGate — <https://www.researchgate.net/publication/327645692>
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/1458811/posts/4920139>
+
+**Review Article Supporting Training to Failure**
+
+- ResearchGate — <https://www.researchgate.net/publication/259390281>
+
+**Training Volume Meta-Analyses**
+
+- ResearchGate — <https://www.researchgate.net/publication/305455324>
+- Weightology (paywalled) — <https://weightology.net/the-members-area/evidence-based-guides/set-volume-for-muscle-size-the-ultimate-evidence-based-bible/>
+
+**Non-Failure vs Failure Training**
+
+- <https://www.sciencedirect.com/science/article/pii/S2095254621000077>
+- ResearchGate — <https://www.researchgate.net/publication/343885215>
+
+**RPE and RIR**
+
+- MASS Research Review (paywalled) — <https://www.massmember.com/products/mass-subscription/categories/2286003/posts/7716572>
+- Schoenfeld's blog — <http://www.lookgreatnaked.com/blog/do-you-need-to-train-to-failure-insights-from-our-new-meta-analysis/>

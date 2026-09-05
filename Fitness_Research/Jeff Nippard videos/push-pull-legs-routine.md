@@ -103,3 +103,13 @@ Mid-back volume looks low because this week is nested in a program where full-bo
 - Machine substitutions reduce stabiliser demand, which he notes is not purely a benefit — those stabilisers still need training.
 - The mid-back volume is intentionally low for this specific program context, not a general recommendation.
 - Loads shown are his own (385 lb squat, 275 lb bench); use the percentages, not the numbers.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7969179/>
+- McMahon G et al. 2014. Muscular adaptations and insulin-like growth factor-1 responses to resistance training are stretch-mediated. *Muscle Nerve*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23625461/) doi:[10.1002/mus.23884](https://doi.org/10.1002/mus.23884)
+- Schoenfeld BJ et al. 2015. Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. *Sports Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25601394/) doi:[10.1007/s40279-015-0304-0](https://doi.org/10.1007/s40279-015-0304-0)

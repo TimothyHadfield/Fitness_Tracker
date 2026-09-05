@@ -51,3 +51,18 @@ Caveats Jeff attaches: the partial group may simply have been getting closer to 
 - The pro-partial skull crusher result may be confounded by proximity to failure rather than tension profile.
 - Anecdotal evidence from enhanced pro bodybuilders isn't dismissed outright — Jeff is open to partials suiting that population — but it's outweighed by controlled research here.
 - Optimal depth is individual and mobility-dependent; the "hardest part of the lift" heuristic is drawn from a MASS review argument rather than a direct study.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**Sources**
+
+- Goto M et al. 2019. Partial Range of Motion Exercise Is Effective for Facilitating Muscle Hypertrophy and Function Through Sustained Intramuscular Hypoxia in Young Trained Men. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31034463/) doi:[10.1519/JSC.0000000000002051](https://doi.org/10.1519/JSC.0000000000002051)
+- Pinto RS et al. 2012. Effect of range of motion on muscle strength and thickness. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/22027847/) doi:[10.1519/JSC.0b013e31823a3b15](https://doi.org/10.1519/JSC.0b013e31823a3b15)
+- Bloomquist K et al. 2013. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23604798/) doi:[10.1007/s00421-013-2642-7](https://doi.org/10.1007/s00421-013-2642-7)
+- McMahon GE et al. 2014. Impact of range of motion during ecologically valid resistance training protocols on muscle size, subcutaneous fat, and strength. *J Strength Cond Res*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/23629583/) doi:[10.1519/JSC.0b013e318297143a](https://doi.org/10.1519/JSC.0b013e318297143a)
+- Valamatos MJ et al. 2018. Influence of full range of motion vs. equalized partial range of motion training on muscle architecture and mechanical properties. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/29982844/) doi:[10.1007/s00421-018-3932-x](https://doi.org/10.1007/s00421-018-3932-x)
+- Kubo K et al. 2019. Effects of squat training with different depths on lower limb muscle volumes. *Eur J Appl Physiol*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/31230110/) doi:[10.1007/s00421-019-04181-y](https://doi.org/10.1007/s00421-019-04181-y)
+
+- Schoenfeld BJ & Grgic J 2020. Effects of range of motion on muscle development during resistance training interventions: A systematic review. *SAGE Open Med*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/32030125/) doi:[10.1177/2050312120901559](https://doi.org/10.1177/2050312120901559)

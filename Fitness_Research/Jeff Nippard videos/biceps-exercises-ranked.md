@@ -68,3 +68,13 @@ Standard 21s = 7 bottom-half, 7 top-half, 7 full. He argues that puts the most a
 - The 90° face-away variation is a personal experiment of about one month; he deliberately under-rated it.
 - Cheat curls are not recommended for beginners.
 - Lying dumbbell curls may aggravate existing shoulder problems.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+- Goto K et al. 2005. The impact of metabolic stress on hormonal responses and muscular adaptations. *Med Sci Sports Exerc*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/15947720/)
+
+- Zabaleta-Korta A et al. 2023. Regional Hypertrophy: The Effect of Exercises at Long and Short Muscle Lengths in Recreationally Trained Women. *J Hum Kinet*. [PubMed](https://pubmed.ncbi.nlm.nih.gov/37559762/) doi:[10.5114/jhk/163561](https://doi.org/10.5114/jhk/163561)
+
+- ResearchGate — <https://www.researchgate.net/publication/384216033_Lengthened_Partial_Repetitions_Elicit_Similar_Muscular_Adaptations_as_a_Full_Range_of_Motion_During_Resistance_Training_in_Trained_Individuals>

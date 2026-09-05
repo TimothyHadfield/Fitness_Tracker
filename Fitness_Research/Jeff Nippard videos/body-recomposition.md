@@ -76,3 +76,16 @@ Peri-workout nutrition (nutrient timing around the session) is another optimisat
 - Fastest possible muscle and strength gain still favours a larger surplus — recomp trades speed for leanness.
 - The sleep study's subjects were not resistance training, so the fat-vs-lean split would likely be less extreme in lifters.
 - The lean-body-mass protein model requires knowing your body fat percentage, which is itself an estimate.
+
+## References
+
+Sources as listed by Nippard in the video description.
+
+**SOURCES**
+
+- Garthe I et al. 2013. Effect of nutritional intervention on body composition and performance in elite athletes. *Eur J Sport Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23679146) doi:[10.1080/17461391.2011.643923](https://doi.org/10.1080/17461391.2011.643923)
+- Bruusgaard JC et al. 2010. Myonuclei acquired by overload exercise precede hypertrophy and are not lost on detraining. *Proc Natl Acad Sci U S A*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/20713720) doi:[10.1073/pnas.0913935107](https://doi.org/10.1073/pnas.0913935107)
+- Wang X et al. 2018. Influence of sleep restriction on weight loss outcomes associated with caloric restriction. *Sleep*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29438540) doi:[10.1093/sleep/zsy027](https://doi.org/10.1093/sleep/zsy027)
+- Jäger R et al. 2011. Analysis of the efficacy, safety, and regulatory status of novel forms of creatine. *Amino Acids*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/21424716) doi:[10.1007/s00726-011-0874-6](https://doi.org/10.1007/s00726-011-0874-6)
+- Burke LM 2008. Caffeine and sports performance. *Appl Physiol Nutr Metab*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/19088794) doi:[10.1139/H08-130](https://doi.org/10.1139/H08-130)
+- Kurobe K et al. 2017. Combined effect of coffee ingestion and repeated bouts of low-intensity exercise on fat oxidation. *Clin Physiol Funct Imaging*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/26189608) doi:[10.1111/cpf.12279](https://doi.org/10.1111/cpf.12279)
