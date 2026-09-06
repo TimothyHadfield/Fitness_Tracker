@@ -11,9 +11,9 @@
 - The label number is softer than it looks. Standard assays miss resistant starch and inulin unless extra steps are run; ripening, cooking, growing conditions and cultivar all shift real fiber content.
 
 ## Why the old framework fails
-Fiber is defined here as diverse, mostly complex carbohydrates that **resist digestion in the small intestine** and arrive largely intact in the colon. Structurally, fibers are joined by **beta-bonds**, which human enzymes cannot cleave, unlike the alpha-bonds in starch. Chain length and branching then determine viscosity and fermentation rate.
+Fiber is defined here as diverse, mostly complex carbohydrates that **resist digestion in the small intestine** and arrive largely intact in the colon. Fibers are joined by **beta-bonds**, which human enzymes cannot cleave, unlike the alpha-bonds in starch; chain length and branching then determine viscosity and fermentation rate.
 
-The specific complaint against solubility is empirical: some soluble fibers help with stool formation and regularity, many do not, and at higher doses several cause bloating instead. The proliferation of isolated and purified fibers added to processed foods makes the label category still less informative.
+The complaint against solubility is empirical: some soluble fibers help with regularity, many do not, and at higher doses several cause bloating instead. The proliferation of purified fibers added to processed foods makes the label category still less informative.
 
 ## The three functional classes and where to get them
 - **Highly viscous** — psyllium husk, oats, barley, okra, eggplant, mushrooms, seaweed, Brussels sprouts. Best for LDL and post-meal glucose; also slows gastric emptying and increases satiety.
@@ -21,18 +21,16 @@ The specific complaint against solubility is empirical: some soluble fibers help
 - **Slowly fermentable** — resistant starch from green bananas and plantains, legumes, and potatoes or rice **cooked and then cooled** (retrograded starch); plus arabinoxylans in wheat bran, rye and corn. These are the ones that reach the distal colon.
 
 ## Why the number on the package is approximate
-Four sources of drift, each with a concrete example:
+Four sources of drift:
 - **Assay gaps** — "total dietary fiber" methods need separate steps to detect resistant starch and inulin; skip them and those fibers go uncounted. Studies also fail to report whether "apple fiber" included peel and seeds.
 - **Ripening** converts fiber to sugar. A banana loses most of its fiber going from green to overripe; pectin in apples and grapes degrades on the tree.
-- **Cooking** destroys short-chain fructans. **Raw dried onion carries ~18 g FOS per 100 g; cooked onion about 3 g.** The article turns this into a practical lever — if raw onion or garlic causes bloating, cooking it cuts the fermentable load.
-- **Growing conditions and cultivar** — wet barley harvest years give lower beta-glucan than dry ones; Honeycrisp apples carry more fiber than Fuji; waxy versus hulless barley genotypes differ in viscosity. The article is careful to call these differences small and not worth managing.
+- **Cooking** destroys short-chain fructans. **Raw dried onion carries ~18 g FOS per 100 g; cooked onion about 3 g.** The article turns this into a lever — if raw onion or garlic bloats you, cooking cuts the fermentable load.
+- **Growing conditions and cultivar** — wet barley harvest years give lower beta-glucan than dry; Honeycrisp apples carry more fiber than Fuji. The article calls these differences small and not worth managing.
 
 ## Practical rules they give
-The **10:1 carbohydrate-to-fiber rule** for grocery shopping: aim for at least 1 g fiber per 10 g total carbohydrate. Excellent is 5–7 g carb per 1 g fiber (lentils, berries); good is 10:1 (oats, whole wheat pasta); sub-optimal is 20:1 or worse (brown rice, granola bars, wheat bread).
+The **10:1 carbohydrate-to-fiber rule** for grocery shopping: at least 1 g fiber per 10 g total carbohydrate. Excellent is 5–7:1 (lentils, berries); good is 10:1 (oats, whole wheat pasta); sub-optimal is 20:1 or worse (brown rice, granola bars, wheat bread).
 
-On supplements and fortified foods, they are sceptical without being absolutist: the epidemiology linking fiber to health outcomes is built on **intrinsic fiber from whole foods**, and isolated added fibers should not be assumed to deliver the same effects. Fiber bars claiming 30–50% of the daily value get the "too good to be true" treatment. Better processed options are ones that keep the food matrix — legume pastas, dry-roasted lentils and chickpeas, high-fiber cereals. Resistant starch supplements (raw potato starch, green banana flour): start low, treat bloating as feedback.
-
-**Clinical caveat, stated by them:** IBD, IBS and other conditions may require modified guidance, and they route those readers to a dietitian.
+On supplements and fortified foods they are sceptical without being absolutist: the epidemiology linking fiber to health outcomes is built on **intrinsic fiber from whole foods**, and isolated added fibers should not be assumed to deliver the same effects. Fiber bars claiming 30–50% of the daily value get the "too good to be true" treatment. Better processed options keep the food matrix — legume pastas, dry-roasted lentils and chickpeas, high-fiber cereals. For resistant starch supplements, start low and treat bloating as feedback. They note that IBD, IBS and similar conditions may require modified guidance, and route those readers to a dietitian.
 
 ## Where the article is doing recommendation rather than evidence
 The distal-colon argument — that fast-fermenting fiber leaves the descending colon "starved" and that you should therefore deliberately include slow fermenters — is mechanistically reasonable and is presented as established. It rests on fermentation kinetics rather than on outcome trials showing that people eating only fast-fermenting fiber have worse distal colon health. Similarly, the butyrate-and-colorectal-cancer link is hedged correctly in the source ("may reduce the risk") and should stay hedged. The 30–40 g/day target is above the US guideline floor and is presented as the practical recommendation, which is what it is.

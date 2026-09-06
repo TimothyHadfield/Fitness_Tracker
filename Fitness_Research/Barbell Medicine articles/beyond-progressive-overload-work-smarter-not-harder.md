@@ -13,33 +13,33 @@
 
 ## The stimulus-stress distinction, which is the whole argument
 
-The paper doing real work here is **Impellizzeri 2019** (ref 3), the sports-science framing of *external load* (what you prescribe — weight, reps, sets, distance) versus *internal load* (what the body does about it — heart rate, RPE, fatigue, soreness, motivation). Barbell Medicine's contribution is to apply that split to the overload concept and observe that the standard definitions collapse the two.
+The paper doing real work is **Impellizzeri 2019** (ref 3), the sports-science framing of *external load* (what you prescribe) versus *internal load* (what the body does about it). Barbell Medicine apply that split to the overload concept and observe that the standard definitions collapse the two.
 
-Once separated, the logic follows cleanly. Fitness improving means a given external load produces less internal stress. To keep the stress in the productive band you raise the load. **The load increase is a consequence of adaptation, not its cause** — which is exactly DeLorme's original rule, recovered from the history (ref 1, Todd 2012): Sergeant Easley increased weight only after he had "mastered the weight for the 7 sets of 10." The article's framing is that seventy years of coaching drifted away from that and toward load-chasing.
+Once separated, the logic follows. Improving fitness means a given external load produces less internal stress; to keep stress in the productive band you raise the load. **The load increase is a consequence of adaptation, not its cause** — exactly DeLorme's original rule, recovered from the history (ref 1, Todd 2012): Easley increased weight only after "mastering the weight for the 7 sets of 10."
 
-This is a **conceptual argument, not an empirical finding.** No study in the reference list tests "maintain stress" against "increase stress." It is a better-organised way to think about the same practice, offered as such.
+This is a **conceptual argument, not an empirical finding.** No study in the reference list tests "maintain stress" against "increase stress."
 
 ## The evidence, and how well it fits
 
-Mapping is **verified**, so the numbers sit where they appear. Three checks worth recording:
+Mapping is **verified**, so the numbers sit where they appear. Three checks:
 
-**Ref 5 (Lambrianides 2022), the 4.3-week figure.** The article introduces it as "a comprehensive review of 40 resistance-training studies." The cited paper is titled *Impact of Different Mechanical and Metabolic Stimuli on the Temporal Dynamics of Muscle Strength Adaptation* and reads as an original investigation in JSCR, not a review. The marker itself sits only on the "1 to 12 weeks" range sentence. The claim is plausible and the range is the useful part — but **verify the source before repeating "review of 40 studies" as a fact.**
+**Ref 5 (Lambrianides 2022), the 4.3-week figure.** The article introduces it as "a comprehensive review of 40 resistance-training studies." The cited paper is titled *Impact of Different Mechanical and Metabolic Stimuli on the Temporal Dynamics of Muscle Strength Adaptation* and reads as an original JSCR investigation, not a review; the marker sits only on the "1 to 12 weeks" sentence. **Verify before repeating "review of 40 studies" as fact.**
 
-**Ref 6 (Schoenfeld 2017), the ~70% 1RM floor.** This is the same low-versus-high-load meta-analysis that grounds the wide-rep-range argument elsewhere in this library. It is used correctly and the two uses are complementary, not contradictory: that meta found **hypertrophy** similar across a wide load range but **strength** favouring heavier loads. Barbell Medicine cite the strength half; the House of Hypertrophy material cites the hypertrophy half. Worth holding both.
+**Ref 6 (Schoenfeld 2017), the ~70% 1RM floor.** The same low-versus-high-load meta-analysis that grounds the wide-rep-range argument elsewhere in this library. The two uses are complementary, not contradictory: **hypertrophy** was similar across a wide load range, **strength** favoured heavier loads. Barbell Medicine cite the strength half; the House of Hypertrophy material cites the hypertrophy half.
 
-**Ref 7 (Androulakis-Korakakis 2018), the 85% floor for singles.** This is a **pilot study** in a small group of competitive powerlifters comparing reduced-volume "daily max" training to higher-volume periodised training. It is thin support for a general intensity threshold, and the article does not signal that.
+**Ref 7 (Androulakis-Korakakis 2018), the 85% floor for singles.** A **pilot study** in a small group of powerlifters. Thin support for a general threshold, and the article does not signal that.
 
-**Ref 8 (Plotkin 2022), double progression.** Plotkin compared **load progression against repetition progression** and found similar muscular adaptations — that is, you can progress without adding load. The article cites it under a section advocating *double* progression (advance reps to the top of a range at target RPE, then add load and reset). Plotkin supports the premise that reps are a legitimate progression variable; it did not test the double-progression scheme itself. **A near-miss rather than a wrong attribution.**
+**Ref 8 (Plotkin 2022), double progression.** Plotkin compared **load progression against repetition progression** and found similar adaptations. The article cites it under a section advocating *double* progression. Plotkin supports the premise that reps are a legitimate progression variable; it did not test the double-progression scheme. **A near-miss rather than a wrong attribution.**
 
 ## Advice versus evidence
 
-Most of the practical content is uncited and correctly presented as coaching. The three load-progression strategies are described as "coach-tested." The plateau definitions — 2–3 weeks for an untrained lifter, 5–6 weeks for a highly trained one — are called "an arbitrary line" in the article's own words. The 5% MCID is their in-house rule. None of this is dressed as research, which is the right handling.
+Most of the practical content is uncited and correctly presented as coaching. The three load strategies are "coach-tested." The plateau definitions — 2–3 weeks untrained, 5–6 weeks highly trained — are called "an arbitrary line" by the article itself. The 5% MCID is an in-house rule. None of it is dressed as research.
 
-The plateau algorithm is the most transferable piece: **if the programme was working and stopped, add volume** (more sets via more frequency or more exercises per pattern, holding intensity and proximity to failure constant). **If it never worked, check sleep and nutrition first** — poor inputs mean deload, adequate inputs mean reformulate (exercise swaps, RPE targets, rep-range focus). That is a decision tree, not a prescription, and it is more useful than either.
+The plateau algorithm is the transferable piece: **if the programme was working and stopped, add volume** (more sets via frequency or more exercises per pattern, holding intensity and proximity to failure constant). **If it never worked, check sleep and nutrition first** — poor inputs mean deload, adequate inputs mean reformulate.
 
-**Flagged overreach:** stating flat intensity thresholds (~70% and 85% of 1RM) as though they are established floors, when one rests on a pilot study and the other on a meta-analysis whose own point is that a wide range of loads works. The article's own next paragraph half-concedes this — "there is a relatively wide range of viable training intensities" — so the numbers are softer than they look.
+**Flagged overreach:** stating flat intensity thresholds (~70% and 85% of 1RM) as established floors, when one rests on a pilot study and the other on a meta-analysis whose own point is that a wide range of loads works. The next paragraph half-concedes it — "a relatively wide range of viable training intensities."
 
-**Commercial note.** The article links to the Barbell Medicine **Program Quiz** and, in the plateau section, to their paid **Low Fatigue Template**. The plateau advice is exactly what the template is sold to solve. The reasoning is separable from the product, but the placement is deliberate.
+**Commercial note.** Links to the Barbell Medicine **Program Quiz** and, in the plateau section, their paid **Low Fatigue Template** — which is sold to solve exactly the problem that section describes.
 
 ## References
 

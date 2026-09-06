@@ -13,13 +13,11 @@
 
 ## The autoregulation argument
 
-Campitelli's framing is unusually plain about what autoregulation is *for*. It is not a sophistication; it is a way of hitting an intended stimulus when your capacity on the day is unknown — which is exactly the situation after a layoff, when the number you remember is no longer the number you can do.
+Autoregulation is presented as a way of hitting an intended stimulus when your capacity on the day is unknown — exactly the situation after a layoff, when the number you remember is no longer the number you can do. Two worked scenarios: warm-ups feel unexpectedly heavy, so you abandon the plan and pick something "mildly annoying"; or your conservative opener is trivially easy, so you add weight. He is explicit that the second case counts too — people who only ever use it to cut loads are using half of it.
 
-Two worked scenarios are given. First: you plan to return to what you lifted three months ago, the warm-ups feel unexpectedly heavy, so you abandon the plan and pick something "mildly annoying" instead. Second: your conservative opener turns out to be far too light, so you add weight. He is explicit that the second case is autoregulation too — the concept is symmetric, and people who only ever use it to cut loads are using half of it.
+The bias for the first couple of sessions is **undershooting**, and the stated reason is soreness management rather than tissue protection. Unaccustomed activity produces DOMS; enough DOMS and you skip sessions. The follow-up instruction matters more than the first: **if you are unusually sore, still go back on schedule**, and moderate substantially within the session — different exercises, less load, less volume — rather than skipping it.
 
-The bias he recommends for the first couple of sessions is **undershooting**, and the stated reason is soreness management rather than tissue protection. Unaccustomed activity produces DOMS; enough DOMS and you skip sessions. He also gives the follow-up instruction that matters more than the first: **if you are unusually sore, still go back on schedule**, and moderate substantially within the session — different exercises, less load, less volume — rather than skipping it. Building the habit outranks the content of any single session.
-
-The claim that "easy can be more effective than difficult" is presented as paradoxical and then resolved through fatigue management: appropriate doses leave manageable fatigue, which permits more successful subsequent sessions and higher motivation. This is a reasonable account and it is consistent with fatigue-management arguments elsewhere in this library, but **no study is offered for it here**.
+"Easy can be more effective than difficult" is resolved through fatigue management: appropriate doses leave manageable fatigue, permitting more successful subsequent sessions and higher motivation. Consistent with fatigue arguments elsewhere in this library, but **no study is offered for it here**.
 
 ## The RPE definition they use
 
@@ -39,9 +37,7 @@ The loading progression is the whole design:
 - **Week 2** — RPE 6, 7, 8, with one repeat set at RPE 8 on most exercises. Conditioning: 2× 25 min.
 - **Week 3** — RPE 6, 7, 8, with **two** repeat sets at RPE 8 on the main lifts and one on the accessories. Conditioning: 2× 30 min.
 
-So the intensity ceiling rises once, in week 2, and then holds; everything after that is added volume at the ceiling. Nothing goes above RPE 8 in three weeks, and he gives the reason directly — there is no convincing case for grinding near-maximal efforts this early.
-
-He also notes the program is one example, open to substitution, and that sticking to familiar movements has benefits after a layoff — while adding that this is a decent moment to learn variants, provided new movements get the same conservative loading treatment.
+The intensity ceiling rises once, in week 2, and then holds; everything after is added volume at that ceiling. Nothing exceeds RPE 8 in three weeks, and he gives the reason directly — there is no convincing case for grinding near-maximal efforts this early. Familiar movements are preferred after a layoff, though he says it is a reasonable moment to learn variants if they get the same conservative loading.
 
 ## Evidence versus recommendation, and what they sell
 

@@ -21,7 +21,7 @@ That distinction matters for reading the evidence, because the two ergogenic fin
 
 **Lifting performance.** Two studies, both weak. The powerlifter survey is cross-sectional and self-reported — it tells you what competitors do (stiff 60–99 cm wraps for bench; flexible 60–99 cm or 100 cm+ for squat) and nothing about whether it works. The 1RM comparison is n=18 and null. The correct conclusion is not "wraps don't work" but "**no adequately powered study has found a performance effect**", and the article states the null cleanly without overclaiming a proof of absence.
 
-**Stability.** This is where the article is at its most careful. Subjective stability ratings favour wraps consistently, and a randomised trial found two different external supports improved wrist joint position sense equally. Then they add the caveat themselves: both "stability" and "position sense" are murky constructs with questionable measurement reliability, so the defensible statement is that **some people feel more stable in a wrap**. That is honest about a soft outcome.
+**Stability.** The article is at its most careful here. Subjective stability ratings favour wraps consistently, and a randomised trial found two external supports improved wrist joint position sense equally. They then add the caveat themselves: both constructs are murky and unreliably measured, so the defensible statement is that **some people feel more stable in a wrap**.
 
 ## The injury reasoning, which is the clinical part
 The chain here is explicitly inferential and the article does not hide the joins:
