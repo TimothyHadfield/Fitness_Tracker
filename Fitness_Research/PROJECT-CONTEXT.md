@@ -1,560 +1,412 @@
 # Project context — read this first
 
-A handoff note for a fresh chat. Explains what this folder is, what Tim asked for, where
-things stand, and — most usefully — **how to do the same thing for another YouTuber
-without repeating the mistakes I made.**
+A handoff note for a fresh chat. What this folder is, where it stands, what is left, and the
+lessons worth carrying into any further work.
+
+**The build is finished.** Five sources, 781 notes, **6,139 unique PubMed-indexed papers** across
+the per-source bibliographies, a cross-source adjudication layer and a retraction audit. Nothing
+is half-done. If you have been dropped in here with no instructions, read this file and then stop
+— there is no work in progress to resume.
 
 ---
-
-## What this is
-
-`Fitness_Research/` is a knowledge library. The goal is to summarise and organise research
-on weightlifting (and eventually other fitness topics) into files that are actually
-readable and traceable back to real papers.
-
-The first source is Jeff Nippard, chosen because he acts as a library himself — he
-summarises the research well and, crucially, **lists his sources in his video
-descriptions**. That last fact is the single most important thing in this whole project.
-
-It is now a **multi-source** library. [README.md](README.md) is the top-level index.
-Sources were chosen by measurement, not reputation — eighteen candidate channels were probed
-for catalogue size, length, captions and whether descriptions carry resolvable reference
-links, with Nippard as a control to prove the detector worked. See "Choosing a new source"
-near the bottom of this file for what that probe found and which sources are off-limits.
-
-### The four-chunk build (Tim asked for this to be resumable across chats)
-
-1. **Foundations + ISSN** — DONE. Folder structure, generalised tooling, the two YouTube
-   caption fetches, and the ISSN position stands complete end to end.
-2. **Menno Henselmans** — DONE. 151 notes, 186,000 words, 535 resolved papers. Eight videos
-   excluded as personal or off-topic. The value of this source is disagreement: he takes a
-   position against the mainstream on caffeine cycling, protein in a deficit, rest-interval
-   floors, the effective-reps model, warm-ups and row selection, and the notes mark each clash
-   explicitly rather than smoothing it.
-3. **House of Hypertrophy** — DONE. 169 notes covering every video on the channel, a 12,700-word
-   summary, an index and a 745-paper bibliography. Nothing was excluded; this is the only source
-   here with no personal content to filter out. Its value is density — 1,557 reference citations,
-   977 unique — and the fact that he retires his own positions on camera when the evidence moves.
-4. **Barbell Medicine + integration** — DONE. 155 notes from 206 fetched articles, a 12,800-word
-   summary, an index and a 2,171-paper bibliography. 51 articles excluded, 43 of them one templated
-   SEO cluster. The integration layer is [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md), which adjudicates
-   all five sources where they disagree.
-
-**All four chunks are complete.** Two further pieces were built on top:
-[RETRACTION-AUDIT.md](RETRACTION-AUDIT.md), which checks every PubMed ID the library cites, and the
-cross-source layer above. See "What is left" near the bottom of this file.
-
-Squat University is a later pass, at Tim's request.
-
----
-
-# PICKING THIS UP IN A NEW CHAT — read this section first
 
 ## Before you commit anything — this folder shares a git repo with Tim's app
 
 `Fitness_Research/` is nested inside `Fitness_Tracker/`, and **one git repo covers both.** The
 parent folder is a live web app Tim actively works on, often in a second Claude session at the
-same time. As of this writing it had uncommitted changes in `js/`, `css/`, `sw.js` and `tests/`,
-including two untracked new files (`js/plates.js`, `js/set-targets.js`) — none of it this
-project's work.
+same time, so the working tree will usually contain app changes that are not yours.
 
-**So never `git add -A` or `git commit -a`. Stage only `Fitness_Research/` paths explicitly.**
+**Never `git add -A` or `git commit -a`. Stage only `Fitness_Research/` paths explicitly.**
 Sweeping the app's half-finished files into a research commit is the easy mistake here.
+
+Two refinements learned the hard way:
+
+- **`git add Fitness_Research/` is not precise enough.** It sweeps up
+  `Fitness_Research/weightlifting.md`, an empty untracked file Tim has never asked about. Name
+  paths more precisely, or check `git status --short` before committing.
+- **Sub-agents sometimes commit and push on their own** even when not asked. They have staged
+  correctly so far, but do not rely on it. After any run where agents might have committed:
+  `git diff --name-only <base>..HEAD | grep -v Fitness_Research/` should come back empty.
 
 If you hit an `index.lock` error, the other session is mid-commit. Wait and retry; don't delete
 the lock file.
 
-## Done and pushed
+---
 
-- **Jeff Nippard** — 279 notes, summary layer, index. Complete.
-- **ISSN position stands** — 27 notes, summary, index, 5,192-reference bibliography. Complete.
-- **Menno Henselmans** — 151 notes, summary, index, 535-reference bibliography. Complete.
-- **House of Hypertrophy** — 169 notes, summary, index, 745-paper bibliography. Complete.
-- **Barbell Medicine** — 155 notes, summary, index, 2,171-paper bibliography. Complete.
-- **WHAT-TO-BELIEVE.md** — the cross-source adjudication layer over all five sources. Complete.
-- **RETRACTION-AUDIT.md** — every PubMed ID checked. Three retracted, all now flagged. Complete.
+## What is in here
 
-**There is no next chunk.** The four-chunk build is finished. What remains is listed under
-"What is left" near the bottom of this file; everything between here and there is a record of how
-the passes went, kept because the lessons generalise.
+[README.md](README.md) is the top-level index. Start a reader at
+[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md).
 
-## House of Hypertrophy — how it finished, and what that cost
+| Source | Notes | Bibliography | What it is |
+| --- | --- | --- | --- |
+| `Jeff Nippard videos/` | 279 | 2,075 refs | The broadest: training, nutrition, technique, myths. Groups his citations under his own topic headings, which is the best claim-to-source mapping any video source gives. |
+| `ISSN position stands/` | 27 | 5,192 refs | Formal expert-body consensus documents. Cheapest and highest-quality corpus in the library. |
+| `Menno Henselmans videos/` | 151 | 535 refs | A coach who argues against the consensus more often than he agrees with it. The value is the disagreement. |
+| `House of Hypertrophy videos/` | 169 | 745 refs | The most densely cited channel. Hypertrophy mechanisms and single variables in depth. |
+| `Barbell Medicine articles/` | 155 | 2,171 refs | Practising physicians and physiotherapists. The only clinical source, and the only one covering injury, pain and medicine. |
 
-It took three attempts. The first two lost every note: a network outage killed twenty agents
-mid-run, and a second attempt died when the session was interrupted and the process exited while
-eight agents were still working. Both times **nothing partial survived**, because an agent's work
-exists only once it writes its file.
+Every source folder has the same shape: `SUMMARY.md` (read this first), `README.md` (index of
+every note, generated), `RESEARCH-CITATIONS.md` (bibliography, generated), and the notes.
 
-The third attempt worked, and the only thing that changed was the batch size. Fifty notes went to
-**eleven agents of three to five notes each** instead of eight agents of six-plus, and the first
-files landed in about three minutes. Twenty-four notes were on disk and committed before the
-slowest agent had finished reading its brief. **Commit as batches land, not at the end** — that
-is the whole lesson, and it is cheap.
+Three files sit above the sources:
 
-Two agents pushed their own commits mid-run without being asked. They staged correctly, but do
-not rely on that: check `git diff --name-only <base>..HEAD | grep -v Fitness_Research/` after any
-run where agents might have committed.
+- **[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the arbiter. Where two sources disagree it says
+  which is right, why they differ, and how confident that deserves to be. Opens with 20 verdicts
+  in one table. This is the thing that makes it a library rather than five folders.
+- **[RETRACTION-AUDIT.md](RETRACTION-AUDIT.md)** — every PubMed ID the library cites, checked.
+  6,139 of 6,139 returned a record; three are retracted and all three are now flagged in place.
+- **[README.md](README.md)** — the index.
 
-### What the finishing pass turned up
+Working material lives in `sources/<slug>/`: the agent brief, the assignment table, the extracted
+references, the resolved citations, and the hand-written intro and summary parts. **Keep these.**
+A summary can be reassembled from `summary-parts/` without re-running the agents.
 
-**The reference extractor was silently dropping citations, and it took reading the agents'
-reports to notice.** Three separate bugs, worth 69 references — about 4% of the corpus:
+`transcripts/` is gitignored — fetched captions and articles, rebuildable.
 
-- The **host allowlist** missed ECSS congress abstracts, J-Stage, university thesis repositories,
-  and published papers rehosted as PDFs on private domains. Fixed by widening the allowlist and
-  by treating any `.pdf` reached from *inside* a reference block as a citation.
-- **Shorteners were blocked as promo links.** All ten `bit.ly` links in these descriptions turned
-  out to be real papers — five PubMed, a Springer article, two ResearchGate. They are resolved
-  once, offline, into `sources/hoh/shortlinks.json` and expanded via `--expand` before filtering.
-  Do this for any new source: follow the redirects before deciding.
-- **The heading regex demanded a colon**, and he types `References;` with a semicolon in two
-  descriptions. That alone cost 17 citations from two videos that looked like they had none.
-- Three more descriptions drop their reference list under the timestamps with **no heading at
-  all**. A line carrying both an author name and a scientific URL is now promoted on its own,
-  which is a safe signal — music credits and affiliate links never name an author.
-
-**The general lesson: a video that reports zero references is a bug report, not a fact.** Check
-its description by hand before believing it. The agents caught all three of these because they
-were told to read the description directly rather than trust `refs.json`.
-
-`tools/resolve_refs.py` now reuses citations it has already looked up. A full pass is thousands
-of throttled NCBI and Crossref calls; finding a handful of new links should not cost one. Pass
-`--fresh` to override.
-
-### New tooling from this pass
-
-- **`tools/build_channel_readme.py`** — generalised. Reads each note's own `**Topic:**` line and
-  partitions on it, rather than guessing from title keywords the way the Menno version had to.
-  Takes a hand-written intro file as its third argument; the prose is judgement, the index is not.
-  Reports anything missing, untopiced, or using a topic outside the vocabulary.
-- **`sources/hoh/README-intro.md`**, **`summary-front.md`**, **`summary-back.md`** — the
-  hand-written parts, kept in `sources/` so a rebuild does not lose them.
-- **`sources/hoh/summary-parts/`** — seven domain syntheses written by seven agents, then
-  assembled. Worth keeping: they are the working material, and if `SUMMARY.md` needs rebuilding
-  you do not want to re-run the agents.
-
-### How the summary was built
-
-Seven agents, one per domain, each reading only its own notes and writing to its own file in
-`sources/hoh/summary-parts/`. Then assembled by hand with front and back matter. That split
-matters — an agent asked to summarise 169 notes produces mush; an agent asked to summarise 26
-notes on one subject produces something with numbers in it.
-
-Two checks were worth running afterwards, and both found something:
-
-```
-# every link resolves, and every note is cited at least once
-python -c "... links = re.findall(r'\]\(([^)\s]+)\)', summary) ..."
-```
-
-Zero broken links out of 192, but **three notes were never cited** by any agent and had to be
-folded in by hand. Run the coverage check; a note nobody mentions is a note nobody read.
-
-## What is distinctive about this source
-
-It is **the most densely cited channel in the library** — 1,557 reference citations and 977
-unique links across 169 videos, one video citing 48 papers. Almost every video is hypertrophy
-mechanisms or a single training variable in depth.
-
-Two things the notes must handle honestly:
-
-- **His longest, best videos have no reference list at all** — 26 of the 169, including the
-  73-study biceps guide, the 63-study triceps guide, the 36-study lats guide and the 87-study
-  mechanisms video that is the intellectual centre of the channel. They cite on screen only and
-  their descriptions carry nothing. The rule given to agents: say plainly that no list is
-  retrievable, list studies named aloud flagged as unverified, invent nothing. It held.
-- **The creator is self-taught with no formal credentials** — he says so himself. He is
-  unusually careful in practice (presents the study that contradicts him, states sample sizes
-  and training status), and the notes should say where that shows.
-
-## Barbell Medicine — how chunk 4 went
-
-206 articles fetched with a new `tools/fetch_articles.py` (sitemap → HTML → main-content →
-markdown), 155 written up, 51 excluded. robots.txt permits it; their terms allow summarising, not
-republishing, and nothing here reproduces their text.
-
-**A written source is much better than a video one, and the reason is the inline `[n]` marker.**
-It sits on the sentence, so a claim links to its paper exactly instead of by inference. 76 articles
-carry a verified mapping covering 1,804 markers. Reach for written sources first.
-
-### The three things this pass taught that generalise
-
-**A verified mapping proves the numbering is consistent, not that the right paper was cited.**
-This is the big one. Once the mapping made claim-level checking possible, the agents found: a
-hypertrophy claim citing a ketogenic-diet review, a biceps claim citing a study of the horse, a
-bone-density claim on a two-person case study, printed PMIDs resolving to a fruit-juice titration
-paper and to polyolefin nanofibers, and reference lists whose printed author and title do not match
-the paper their own link resolves to. **Where an article prints both a number and a link, the link
-has been right and the number wrong, every time.** Build that into the next brief from the start.
-
-**Distinguish "the numbering is broken" from "there is no numbering."** An agent corrected the
-brief on this and was right. `mapping: "numbered"` with `verified: false` means drift;
-`"inline-links"` or `"lumped"` with zero markers means the article never numbered anything;
-`"none"` means it cites nothing at all. Saying the wrong one is an error in the note.
-
-**Parentheses in URLs.** The URL regex excluded `)` to avoid swallowing markdown link closers,
-which silently truncated every Lancet and Elsevier DOI —
-`10.1016/S0140-6736(18)30480-X` became `.../S0140-6736(18)` and then failed to resolve for no
-visible reason. Now kept and trimmed only where unbalanced. 51 URLs recovered here; check any new
-corpus for it.
-
-### Agent orchestration at this scale
-
-**The concurrency cap is 20** (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). Launching 31 batches at
-once fails silently for the excess — the tool returns an error per over-cap agent and says not to
-retry. Feed batches in as slots free.
-
-**Mop-up agents that compute their own worklist are the right ending.** Give them the
-"what is missing" command, tell them to re-run it before every note and never overwrite, and point
-different agents at different ends of the list. Collisions still happen — several notes were
-written twice and one was overwritten — but every collision here replaced a complete note with
-another complete note, so the cost was wasted work rather than lost work.
-
-**Do not put a note in a numbered batch and also in the mop-up pool.** That is how
-`beginner-prescription.md` got written twice.
+---
 
 ## What is left
 
-The four-chunk build is done. In rough order of value:
+In rough order of value. None of it is urgent and none of it blocks anything.
 
 1. **Squat University**, which Tim asked for as a later pass. Best subject-matter fit for injury
    and rehab, and it would give the clinical material the second opinion it currently lacks —
-   right now Barbell Medicine is unopposed in this library, which the cross-source layer flags as
-   its weakest structural point. Caveat from the original probe: its citation discipline decayed
+   Barbell Medicine is unopposed in this library, which the cross-source layer flags as its
+   weakest structural point. Caveat from the original probe: its citation discipline decayed
    sharply after about 2019.
 2. **Retrofit the House of Hypertrophy notes' reference sections.** They were written against a
-   `refs.json` missing 69 citations, found and fixed afterwards. The bibliography and index use
-   the corrected data; ~35 notes still omit a link their video gave. Mostly congress abstracts and
-   unindexed PDFs. Cheap agent pass.
-3. **Fix the defects the cross-source layer found.** Listed at the bottom of
-   [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md): one study written up with two different sample sizes,
-   one paper dated two different years, one study read three incompatible ways across three
-   sources.
+   `refs.json` that was missing 69 citations, found and fixed afterwards. The bibliography and
+   index use the corrected data; roughly 35 notes still omit a link their video actually gave.
+   Mostly congress abstracts and unindexed PDFs that would enter as bare links anyway. Cheap
+   agent pass.
+3. **Fix the defects the cross-source layer found**, listed at the bottom of
+   [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md): the Wolf lengthened-partials trial written up with
+   two different sample sizes, Maeo's triceps study dated two different years, and Chaves 2020
+   read three incompatible ways by three sources.
 4. **The Nippard "Known problems in this library" list** at the bottom of
-   `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its claim,
-   misleading filenames, one study rendered three ways.
+   `Jeff Nippard videos/SUMMARY.md` — a citation that doesn't support its claim (Farina 2010 in
+   the cable kickback note), several misleading filenames, one study rendered with three different
+   effect sizes, and caption-garbled researcher names still marked uncertain.
 5. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
-   clean result is not permanent. The command is in
-   [RETRACTION-AUDIT.md](RETRACTION-AUDIT.md).
+   clean result is not permanent. Command is in [RETRACTION-AUDIT.md](RETRACTION-AUDIT.md).
+6. **19 Nippard videos have no usable English captions** and were never written up. Listed at the
+   bottom of this file. Injury recovery and posture are the two worth chasing elsewhere.
 
-## Loose ends
+---
 
-- `Fitness_Research/weightlifting.md` is empty and untracked. Never asked about; left alone. It
-  was accidentally staged once during this pass and removed again with `git rm --cached` — a
-  `git add Fitness_Research/` sweeps it up, so name paths more precisely than that.
-- **The House of Hypertrophy notes were written against a `refs.json` that was missing 69
-  citations**, found and fixed afterwards. The bibliography and index are built from the corrected
-  data, but the individual notes' `## References` sections were not retrofitted, so ~35 notes omit
-  a link their video actually gave. Mostly congress abstracts and unindexed PDFs that would go in
-  as bare links anyway. Worth a cheap agent pass if anyone wants it airtight.
-- **`SUMMARY.md` for House of Hypertrophy records six internal contradictions** where his position
-  changed across years — rest intervals, calf training, lengthened partials, EMG, the rep-range
-  floor, and the set-count/rest-interval hypothesis he retired on camera. These are features, not
-  errors, but a reader hitting two notes out of order will see him arguing both sides.
-- The Nippard "Known problems in this library" list at the bottom of
-  `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its
-  claim, misleading filenames, one study rendered three ways.
-- **A cross-source correction was applied this session and may need more.** Two sources
-  independently reported that the **Barbalho volume papers were retracted for implausible
-  data**. Those papers are one of the three legs of the volume-ceiling dispute the library
-  records, and the Nippard videos predate the retraction and do not mention it. The Nippard
-  summaries now carry the correction inline. Watch for the same pattern elsewhere: the older
-  a source is, the more likely it rests on work that has since been withdrawn.
-- `tools/extract_refs_desc.py` has had its host allowlist widened twice after agents found
-  missed links (Elsevier resolver URLs especially). If a new source turns up links it misses,
-  widen it again rather than accepting the loss.
+## The pipeline as it actually is
+
+Everything in `tools/`. Paths are relative; run from `Fitness_Research/`.
+
+**Fetch** — one of:
+- `fetch_channel.py <channel-url> <outdir>` — YouTube. Catalogue and fetch in one resumable pass,
+  saving the **description alongside every transcript** (one yt-dlp call gets both). Re-run with
+  `--delay 6` to sweep up failures.
+- `fetch_articles.py <sitemap-or-index-url> <outdir>` — HTML articles. Resumable, polite delay,
+  extracts main content to markdown and **preserves inline reference markers**. Has `--refresh`.
+- `fetch_issn.py` — PMC full text, plus `fetch_issn_disclosures.py` for the funding statements,
+  which live in `<back>` and are easy to miss.
+
+**Extract references** — one of:
+- `extract_refs_desc.py <descdir> <out.json> [--expand shortlinks.json]` — video descriptions.
+- `extract_refs_article.py <articledir> <out.json>` — inline `[n]` markers against a numbered
+  list, **recording each marker with the sentence it sat on**, and verifying the numbering.
+
+**Resolve** — `resolve_refs.py <refs.json> <citations.json>`. PubMed IDs, PMC IDs, DOIs and
+ResearchGate slugs. Reuses anything already resolved; pass `--fresh` to force a full pass.
+
+**Assign** — `make_assignments.py` / `make_assignments_article.py` produce the
+`slug → filename → length → refcount → title` table. Never let agents pick their own filenames.
+
+**Build** — after the notes are written:
+- `build_channel_bibliography.py <sourcedir> <notesdir> <title>`
+- `build_channel_readme.py <sourcedir> <notesdir> <intro.md> [topic-set]` — partitions on each
+  note's own `**Topic:**` line, so the index cannot drift from the notes. Topic vocabularies live
+  in the script; add a new one for a source whose domains differ.
+
+**Audit** — `check_retractions.py <out.json> <paths...>` and `screen_reference_mismatch.py`.
+
+Older scripts (`fetch_transcript.py`, `extract_refs.py`, `resolve_pmids.py`,
+`resolve_pmc_and_doi.py`, `build_references.py`, `build_menno_readme.py`) are the first-generation
+versions kept for reference. Prefer the generalised ones above.
+
+---
+
+## Lessons
+
+### Working with agents at scale
+
+- **An agent's work exists only once it writes its file.** Two House of Hypertrophy runs were lost
+  wholesale — one to a network outage, one to the session exiting during an interrupt — because
+  dozens of agents were mid-task. Nothing partial survives.
+- **Small batches, and commit as they land.** The run that worked used 3–5 notes per agent instead
+  of 6+. First files landed in about three minutes; 24 notes were committed before the slowest
+  agent finished reading its brief. This is the whole lesson and it is cheap.
+- **The concurrency cap is 20** (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). Over-cap launches fail
+  immediately with an error per agent and an instruction not to retry. Feed batches in as slots
+  free.
+- **End with mop-up agents that compute their own worklist.** Give them the "what is missing"
+  command, tell them to re-run it before every note and never overwrite, and point different
+  agents at different ends of the list. Collisions still happen, but they replace a complete note
+  with another complete note — wasted work, not lost work.
+- **Never put a note in a numbered batch and also in the mop-up pool.** That is how
+  `beginner-prescription.md` got written twice.
+- **Give an explicit input → output filename mapping.** Agents choosing filenames produces
+  collisions and inconsistency.
+- **The instruction that mattered most: "under-linking is much better than a wrong attribution."**
+  Agents honoured it and left claims unlinked rather than guessing between two plausible papers.
+- **Tell them to skip a bad transcript and say so** rather than produce something.
+- **Read the agent reports.** Every significant bug in the extraction pipeline was found because
+  an agent said "this video reports zero references but its description clearly has some." Agents
+  also caught the mismatched reference lists, the horse-anatomy citation, and a "Big Three
+  Roundtable" that is about three guest lifters rather than squat/bench/deadlift.
+- **Build summaries domain by domain, then assemble.** An agent asked to summarise 169 notes
+  produces mush; one asked to summarise 26 notes on a single subject produces something with
+  numbers in it. Keep the parts; assemble with hand-written front and back matter.
+- **Run a coverage check on any assembled summary** — every link resolves, and every note is cited
+  at least once. Both HoH and Barbell Medicine had notes no agent mentioned, folded in by hand
+  afterwards. A note nobody mentions is a note nobody read.
+
+### Getting the citations right
+
+This is where nearly all the real bugs were, and they are all silent.
+
+- **A source that reports zero references is a bug report, not a fact.** Check the raw description
+  or article by hand before believing it.
+- **Host allowlists under-count.** Widened repeatedly for Elsevier resolver URLs, ECSS congress
+  abstracts, J-Stage, university thesis repositories, and papers rehosted as PDFs on private
+  domains. Widen it again rather than accepting the loss.
+- **Shorteners hide real papers.** All ten `bit.ly` links in the HoH descriptions were genuine
+  citations. Resolve them once, offline, into a `shortlinks.json` and expand before filtering.
+- **Punctuation matters more than it should.** A heading regex demanding a colon missed
+  `References;` with a semicolon and cost 17 citations. A URL regex excluding `)` truncated every
+  Lancet and Elsevier DOI — `10.1016/S0140-6736(18)30480-X` became `.../S0140-6736(18)` and then
+  failed to resolve for no visible reason. Parens are now kept and trimmed only where unbalanced.
+- **Some sources cite without any heading at all**, dropping the list under the timestamps. A line
+  carrying both an author name and a scientific URL is a safe promotion signal — music credits and
+  affiliate links never name an author.
+- **Verify marker-to-reference mappings per document.** In the 2023 ISSN energy-drinks stand the
+  offset drifts by up to three, so `[135]` is not reference 135. A max-marker-versus-count check
+  catches it in seconds.
+- **A verified mapping proves the numbering is consistent, not that the right paper was cited.**
+  This is the single most important thing the Barbell Medicine pass taught. Claim-level checking
+  found a hypertrophy claim citing a ketogenic-diet review, a biceps claim citing a study of the
+  horse, a bone-density claim on a two-person case study, and printed PMIDs resolving to a
+  fruit-juice titration paper and to polyolefin nanofibers.
+- **Where a source prints both a number and an inline link, the link has been right and the number
+  wrong, every time.** Prefer the link and flag the discrepancy.
+- **Distinguish "the numbering is broken" from "there is no numbering."** `numbered` +
+  `verified: false` means drift; `inline-links` or `lumped` with zero markers means the source
+  never numbered anything; `none` means it cites nothing. Saying the wrong one is an error in the
+  note.
+
+### Resolving citations
+
+- **PubMed** — NCBI esummary, batches of 150, no API key needed at this volume. NCBI answers 429
+  readily; back off and retry rather than assuming a missing record.
+- **PMC IDs** — NCBI ID converter → PMID → esummary.
+- **DOIs** — Crossref. Free, no key. Include a mailto in the User-Agent.
+- **ResearchGate returns 403 to everything.** Its URLs carry the paper title in the slug, so search
+  PubMed by title and *verify* the returned title matches. The Wayback CDX index has the slug for
+  bare RG IDs.
+- **Title matching needs a high floor.** At 0.80 similarity, formulaic titles mis-match — a
+  resistance-training review resolved to a balance-training review by the same authors. Typed
+  citations now need the title verbatim, or ≥0.93 plus first-author corroboration.
+- **Some journals aren't indexed anywhere machine-readable** (LWW, most strength-and-conditioning
+  titles). Accept the bare link; it is worth more than a guess.
+
+### Bad data — check for it, it is there
+
+- **Creators paste the wrong reference list.** Three of 279 Nippard videos. Flag in place rather
+  than deleting; the reader needs to know the sources don't support the claims.
+- **A malformed URL can resolve to a real but wrong paper.** `ncbi.nlm.nih.gov/pubmed/20` became a
+  genuine 1975 platelet-aggregation paper filed as a training citation. Scan for implausibly low
+  PMIDs; `resolve_refs.py` now refuses anything below 1000.
+- **Spoken years drift from published years** — usually epub-vs-print. Keep the creator's wording
+  and put the real year in the link beside it.
+- **Reference lists can be internally corrupt** — printed author and title not matching the paper
+  the adjacent PubMed ID resolves to. Found across several Barbell Medicine articles.
+- **Retractions arrive years later.** The Barbalho volume trials were load-bearing in three
+  sources before anyone noticed. Run `check_retractions.py` on any new corpus.
+- **Screening for mismatches is harder than it looks.** The first screen used a regex that choked
+  on "et al." and silently covered 38 of 279 notes. The second flagged "Timestamps" while missing
+  every genuine case. The third worked — vocabulary overlap between reference titles and note body
+  — and validated itself by ranking both known-bad notes worst of 168. **Always sanity-check a
+  screen against known positives before trusting it.**
+
+### Source types, cheapest first
+
+**Journal sources (PMC) are far cheaper and better than anything else.** One call returns full
+text and a structured `<ref-list>` with each reference's own PMID and DOI — no caption fetch, no
+extraction, no resolver step. The ISSN corpus yielded 5,192 references at 94% resolvable,
+essentially free. Gotchas: ElementTree only supports `//` at the start of an XPath, so
+`.//back//ack` silently matches nothing; older BMC-era XML concatenates reference fields without
+separators, so build citations from `<element-citation>` sub-elements; and PubMed will not
+phrase-match some organisation names, so query loosely and filter titles afterwards.
+
+**Written articles are the next best thing, because of the inline `[n]` marker.** It sits on the
+sentence, so a claim links to its paper exactly rather than by inference. Reach for a written
+source before another YouTube channel.
+
+**YouTube is the most expensive and least reliable.**
+- Rate limiting is the main constraint. Fetch sequentially with a delay (1.5s fine, 6s when
+  recovering). Parallel yt-dlp streams trip HTTP 429 immediately.
+- The listing and download endpoints rate-limit separately: `--list-subs` can report English
+  captions exist while the download 429s. Don't conclude "no captions" from a failed download.
+- Recovery takes multiple passes with escalating backoff (1.5s → 6s → 20s → 60s). About 30
+  transcripts that looked permanently lost came back this way.
+- Expect the job to die partway; make it resumable and pipeline it — fetch in the background while
+  agents write from whatever has landed.
+- **Captions fail in three distinct ways:** no English track at all (unrecoverable);
+  corrupt or auto-translated, which returns fluent-looking word salad an agent will happily
+  hallucinate a note from; and **mangled researcher names**, which is the biggest accuracy risk.
+  Real examples: "Bradshaw infilled" → Schoenfeld, "Boston" → Bhasin, "glass broke et al" →
+  Glassbrook, "Judas et al" → Youdas, "javascitel" → Yavuz, "me Gian" → Wewege, "the ray of paper"
+  → Rhea. **Take every name from the reference list, never from the audio.**
+
+### Reading a consensus document critically
+
+The ISSN pass turned up a pattern that generalises to any expert body: **the numbered position
+statement is frequently firmer than the evidence review directly above it.** Several stands
+describe a literature as "equivocal" or "largely null" and then assert a benefit in the headline.
+When they disagree, trust the body.
+
+So every ISSN note carries two mandatory sections — `Strength of the evidence` and
+`Disclosures and funding`. That found real problems: a citation pointing to a paper on seasonal
+reproduction in vertebrates, an unremoved peer-reviewer comment in a published table, a stand
+citing a paper titled "does not alter…" as evidence that it does, and a disclosure statement
+declaring no conflicts sitting directly above a conflict-of-interest section listing share
+ownership in the product category.
+
+**Self-citation is the bigger and less visible problem**, because it is not a declarable conflict.
+Check whether a document's authors wrote the studies it rests on.
+
+### Notes, not transcripts
+
+Write summaries in your own words. Better for the reader, and it avoids reproducing the creator's
+script wholesale. Video: 350–900 words, up to 2,500 for long interviews. Articles: scale to the
+source, up to 2,800 for a 15,000-word piece. Long-form panels deserve a "where they disagreed"
+section — in a panel the disagreement *is* the content.
+
+### Windows/PowerShell gotchas
+
+- Multi-line commit messages via here-strings word-split unpredictably. Build the message in a
+  `$msg` variable with backtick-n newlines, or use `printf` from the Bash tool.
+- Files written by PowerShell may carry a BOM that breaks Python string matching. Read with
+  `utf-8-sig` everywhere.
+- `Get-Content` displays UTF-8 as mojibake. The file is usually fine — verify with the Read tool
+  before "fixing" anything.
+- Set `sys.stdout.reconfigure(encoding='utf-8', errors='replace')` in any Python that prints note
+  titles, or cp1252 will crash it.
+- Foreground sleeps over ~5 min are blocked. Use `run_in_background`.
+- **Don't read subagent output files** — they are full JSONL transcripts and will flood context.
+
+---
+
+## What is distinctive about each source
+
+**Jeff Nippard** — the broadest, and the only one that groups its citations under the creator's own
+topic headings, which is a far better claim-to-source map than anything inferable from a
+transcript. 279 notes from 298 videos selected out of 486. Its known problems are listed at the
+bottom of its own `SUMMARY.md` and are still unfixed.
+
+**ISSN position stands** — formal consensus documents, and the corpus that proves journal sources
+are worth reaching for first. Read them against themselves: the headline is often firmer than the
+review above it.
+
+**Menno Henselmans** — here *because* he disagrees. Caffeine cycling, protein in a deficit,
+rest-interval floors, the effective-reps model, warm-ups, row selection. The notes mark each clash
+rather than smoothing it. His characteristic failure is contrarianism as a stance — absolute claims
+with no source.
+
+**House of Hypertrophy** — the most densely cited channel, 1,557 citations across 169 videos, one
+video citing 48 papers. Two things the notes handle explicitly: **26 videos have no retrievable
+reference list at all**, including his longest and most confident work (the 73-study biceps guide,
+the 63-study triceps guide, the 87-study mechanisms video that is the channel's intellectual
+centre) — they cite on screen only. And the creator is **self-taught with no formal credentials**,
+which he says himself; he is unusually careful in practice, and the notes say where that shows.
+His `SUMMARY.md` records six positions he changed across years, which are features rather than
+errors, but a reader hitting two notes out of order will see him arguing both sides.
+
+**Barbell Medicine** — the only clinical source. The thing to know is that it is **two different
+publications under one masthead**: the bylined clinician essays are the most careful evidence
+appraisal in the library, while the unbylined "best X exercises" listicles are SEO content with
+duplicated references and real errors. Checking the byline is the single most useful filter.
+Across all 40 of its exercise articles, three claims are backed by measured growth.
+
+---
 
 ## What Tim asked for, in his own framing
 
 - Start from YouTube videos. He assumed I couldn't read them; I can, via captions.
-- Cover the channel **comprehensively**, not selectively. "I don't really care if you add
-  100 more videos to the file."
+- Cover a source **comprehensively**, not selectively. "I don't really care if you add 100 more
+  videos to the file."
 - **Objective/research content only.** Exercise rankings, technique, "science explained",
-  myth-busts, interviews. Skip personal content — vlogs, travel, physique updates,
-  competition prep, parodies, "I did this ___" challenges.
+  myth-busts, interviews. Skip personal content — vlogs, travel, physique updates, competition
+  prep, parodies, "I did this ___" challenges.
 - Strip the filler. No intros, sponsor reads, program plugs, subscribe asks, teases.
-- **Real citations matter.** "The actual research citings are genuinely important... when
-  we state something, there's a link to the paper. If you aren't able to find the source,
-  don't remove the information, just cite the parts that you can for now."
-- One file per video, in a folder named for the creator.
+- **Real citations matter.** "The actual research citings are genuinely important... when we state
+  something, there's a link to the paper. If you aren't able to find the source, don't remove the
+  information, just cite the parts that you can for now."
+- One file per video or article, in a folder named for the source.
 - Deploy as many sub-agents as possible to go faster.
 
 ## How Tim likes to work (from stored memory)
 
 - **Commit and push finished work automatically.** Never ask first.
 - **Talk plainly.** Short, direct replies. No decision codes, no long reports.
-- **Don't ask what to do next.** Questions only about work already assigned; between jobs,
-  report and stop.
+- **Don't ask what to do next.** Questions only about work already assigned; between jobs, report
+  and stop.
 - **Sub-agents are pre-authorised.** No need to ask permission per use.
 - "Catch up with progress.md" means read-only — report and stop, don't start building.
 
 He often runs **two sessions at once** — this research folder in one, the Fitness Tracker app in
-the other. In the VSCode extension that is Command Palette → "Claude Code: Open in New Tab", or
-a second VSCode window (`Ctrl+Shift+N`, and `"window.openFoldersInNewWindow": "on"` stops a new
-folder replacing the current window). Note `Ctrl+Shift+Esc`, which the docs give as the
-new-tab shortcut, is Task Manager on Windows and never reaches VSCode. This is why the git
-staging rule above matters.
+the other. In the VSCode extension that is Command Palette → "Claude Code: Open in New Tab", or a
+second VSCode window (`Ctrl+Shift+N`, and `"window.openFoldersInNewWindow": "on"` stops a new
+folder replacing the current window). Note `Ctrl+Shift+Esc`, which the docs give as the new-tab
+shortcut, is Task Manager on Windows and never reaches VSCode. This is why the git staging rule at
+the top matters.
 
 ---
 
-## Where things stand
+## If you add another source
 
-**Done:**
-- 279 notes in `Jeff Nippard videos/`, covering 298 videos selected from the channel's 486
-- 2,075 resolved reference citations; 726 inline citations linking specific claims to specific papers
-- 647 PubMed IDs + 132 PMC/DOI records resolved to full citations with DOIs
-- `RESEARCH-CITATIONS.md` — master bibliography
-- Reference-mismatch audit complete (see "Bad data" below)
-- **The summary layer.** `SUMMARY.md` is a ~5,000-word top-level synthesis you read end to
-  end. Under it sit six domain summaries — `SUMMARY-programming.md`,
-  `SUMMARY-exercise-selection.md`, `SUMMARY-technique.md`, `SUMMARY-nutrition.md`,
-  `SUMMARY-supplements-and-physiology.md`, `SUMMARY-myths-and-evidence.md` — each
-  synthesising every note in its domain, ~59,000 words in total. `README.md` is a rebuilt
-  index of all 279 notes in six domains and 51 subsections. Every internal link is
-  verified; the partition was checked programmatically so no note is missing or
-  double-filed.
-
-**Not done — the remaining work:**
-- **Fix the problems the summary pass surfaced.** They're listed in the "Known problems in
-  this library" section at the bottom of `SUMMARY.md`: a citation that doesn't support its
-  claim (Farina 2010 in the cable kickback note), several misleading filenames, one study
-  rendered with three different effect sizes across notes, and a set of caption-garbled
-  researcher names still marked uncertain.
-- 19 videos have no usable English captions and were never written. They're listed at the
-  bottom of this file.
-
----
-
-## The pipeline
-
-Scripts are in `tools/`. They contain absolute paths from the original session — **fix the
-paths before reuse.** Run order:
-
-1. **`fetch_transcript.py <url> <outdir>`** — pulls captions via yt-dlp, strips the
-   rolling-caption duplicates, writes markdown with title/channel/date/URL header and
-   `[mm:ss]` markers every ~30s. This is the only script already generalised.
-2. **`make_slugs.py`** — turns video titles into stable, deduplicated note filenames.
-3. **`extract_refs.py`** — pulls the reference block out of each video description,
-   preserving the creator's own topic headings. **This grouping is the highest-value
-   artifact in the pipeline** — it is the creator's own claim-to-source mapping.
-4. **`resolve_pmids.py`** — PubMed IDs → full citations via NCBI esummary.
-5. **`resolve_pmc_and_doi.py`** — PMC IDs → PMID via NCBI ID converter; embedded DOIs →
-   Crossref. Recovers references that are otherwise bare URLs.
-6. **`build_references.py`** — writes a `## References` section into every note and
-   rebuilds the master bibliography.
-7. **`screen_reference_mismatch.py`** — flags notes whose reference titles don't match
-   their own subject. Run this; it catches real errors.
-
-Then two agent passes: one to write the notes from transcripts, one to add inline
-citations and fix caption-garbled researcher names.
+1. **Measure, don't assume.** The probe that selected the current five checked catalogue size,
+   median length, caption availability and reference links in a sample, with Nippard as a control
+   (6/6, mean 14 links, which proved the detector worked).
+2. **A description scan under-counts.** Three strong sources keep their grouped reference lists
+   somewhere else entirely — House of Hypertrophy on per-video pages on his own site, Barbell
+   Medicine in per-episode Google Docs, Andy Galpin in a "Scientific Articles" block on
+   performpodcast.com. **Check the creator's website before rejecting them.**
+3. **Check the licence, and respect robots.txt.** Some excellent sources are off-limits and you
+   should not spend time on them: **Stronger By Science** forbids automated collection in its terms
+   and blocks AI crawlers by name; **MASS** is subscriber-licensed; **Examine** is
+   personal-use-only; **Chris Beardsley** is paywalled. Read and link to these, do not ingest them.
+   Renaissance Periodization grants an unnamed Creative Commons licence — permissive but ambiguous,
+   worth confirming.
+4. **Classify the catalogue by hand.** It is judgement work and a bad inclusion list wastes an
+   enormous amount of downstream agent time. Barbell Medicine's 206 articles were really two
+   corpora: 155 substantial pieces and 51 to exclude, 43 of which were one templated SEO cluster
+   repeating the same sentences across dozens of pages.
+5. Prefer scripted 8–26 minute videos, or written articles. Conversational podcasts at a
+   50-minute-plus median cost several times as much per note for less extractable content.
+6. Then run the pipeline above, and **add the new source to
+   [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — a source that is not adjudicated against the
+   others is a folder, not a library.
 
 ---
 
-## Lessons — read this part
-
-### YouTube rate limiting is the main constraint
-
-- **Fetch sequentially with a delay** (1.5s is fine; 6s when recovering). Parallel yt-dlp
-  streams trip HTTP 429 immediately.
-- The **listing endpoint and the download endpoint rate-limit separately.** `--list-subs`
-  can report English captions exist while the actual subtitle download 429s. Don't
-  conclude "no captions" from a failed download.
-- Recovery takes **multiple passes with escalating backoff** (1.5s → 6s → 20s → 60s).
-  I recovered ~30 transcripts this way that first appeared permanently lost.
-- Expect the fetch job to die partway. Make it resumable — skip files already on disk.
-- **Pipeline it.** Don't wait for all transcripts before writing notes. Fetch sequentially
-  in the background while agents write notes in parallel from whatever has landed. The
-  fetch is the bottleneck; keep the agents saturated.
-
-### Captions are unreliable in three distinct ways
-
-1. **No English track at all** — genuinely unrecoverable. ~13 videos here.
-2. **Corrupt/auto-translated** — returns fluent-looking word salad. One video returned
-   what looked like machine-translated Korean fragments. **An agent will happily
-   hallucinate a note from this**, so instruct agents explicitly to skip and report
-   rather than invent.
-3. **Mangled researcher names** — pervasive and the biggest accuracy risk. Real examples:
-   "Bradshaw infilled" → Schoenfeld, "Boston" → Bhasin, "glass broke et al" → Glassbrook,
-   "Judas et al" → Youdas, "javascitel" → Yavuz, "me Gian" → Wewege, "the ray of paper"
-   → Rhea. **Tell agents to flag uncertain names, never guess.** Then fix them in the
-   citation pass, where the creator's own reference list confirms the real paper.
-
-### The video description is the gold mine
-
-Nippard groups his citations under his own topic headings ("Rep Speed:", "Creatine and
-Hair Loss:"). That grouping is a far better claim-to-source mapping than anything you can
-infer from a transcript. Fetch descriptions with `yt-dlp --write-description`. Check
-whether your target creator does this before committing to the approach — if they don't,
-the citation half of this project isn't possible.
-
-### Resolving citations
-
-- **PubMed** — NCBI esummary, batches of 150, no API key needed at this volume.
-- **PMC IDs** — NCBI ID converter → PMID → esummary.
-- **DOIs** — Crossref. Free, no key. Include a mailto in the User-Agent.
-- **ResearchGate returns 403 to everything.** Two workarounds that worked: many RG URLs
-  carry the paper title in the slug (search PubMed by title, and *verify* the returned
-  title matches — I required 0.80 similarity); for bare RG IDs, the **Wayback CDX index**
-  has the slug. An agent with WebSearch resolved all 13 bare IDs this way.
-- Some journals (LWW, most strength-and-conditioning titles) aren't indexed anywhere
-  machine-readable. Accept the bare link.
-
-### Bad data — check for it, it's there
-
-- **The creator pastes the wrong reference list.** Three of 279 here: creatine papers on a
-  muscle-imbalance video, sexual-health papers on a training-when-sick video, a malformed
-  link on a progression video. Flag these in place rather than deleting — the reader needs
-  to know the sources don't support the claims.
-- **A malformed URL can resolve to a real but wrong paper.** His description contained
-  `ncbi.nlm.nih.gov/pubmed/20`, and my resolver dutifully turned PubMed record 20 into a
-  genuine 1975 platelet-aggregation paper filed as a training citation. **Scan for
-  implausibly low PMIDs after resolving.** This was my error, not his.
-- **Spoken years drift from published years** — a "2015 study" that's 2016, a "2007
-  review" that's 2017. Usually epub-vs-print. Keep the creator's wording and put the real
-  year in the link beside it, so both are visible.
-- **Screening for mismatches is harder than it looks.** My first screen used a regex that
-  choked on "et al." and silently covered only 38 of 279 notes. My second screened
-  reference *headings* and flagged "Timestamps" while missing every genuine case. The
-  third worked — vocabulary overlap between reference titles and note body — and validated
-  itself by ranking both known-bad notes as the worst two of 168. **Always sanity-check a
-  screen against known positives before trusting it.**
-
-### Working with agents at this scale
-
-- **An agent's work exists only once it writes its file.** Two runs of the House of Hypertrophy
-  notes have now been lost wholesale — one to a network outage, one to the session exiting
-  during an interrupt — because dozens of agents were all still mid-task. Nothing partial
-  survives. If a run is long and the session might not be left alone, prefer more, smaller
-  batches so results land incrementally, and check what is on disk before assuming anything
-  was accomplished.
-- Batches of **5-6 notes per agent** worked well. ~10 agents concurrently.
-- Give an explicit `transcript file -> output filename` mapping. Don't let agents choose
-  filenames; you'll get collisions and inconsistency.
-- The instruction that mattered most: **"under-linking is much better than a wrong
-  attribution."** Agents genuinely honoured it and left claims unlinked rather than
-  guessing between two plausible papers.
-- Tell them to **skip a bad transcript and say so** rather than produce something.
-- Agents catch real problems if you let them. Mine found the mismatched reference lists,
-  spotted that the "Big Three Roundtable" is about three guest lifters rather than
-  squat/bench/deadlift, and noticed that a Kamal Patel interview titled as a supplement
-  discussion never actually gets to supplements.
-- Long-form panels and interviews deserve a **"where they disagreed" section** and a
-  bigger word budget. In a panel the disagreement *is* the content; flattening four
-  experts into one consensus voice throws away the value.
-
-### Notes, not transcripts
-
-Write summaries in your own words, not lightly-edited transcripts. Better for the reader,
-and it avoids reproducing the creator's script wholesale. Target 400-900 words; allow
-1,800-2,500 for long interviews.
-
-### Windows/PowerShell gotchas
-
-- Multi-line commit messages via here-strings word-split unpredictably. Build the message
-  in a `$msg` variable with backtick-n newlines instead.
-- Files written by PowerShell may carry a BOM that breaks Python string matching. Read
-  with `utf-8-sig`.
-- `Get-Content` displays UTF-8 as mojibake. The file is usually fine — verify with the
-  Read tool before "fixing" anything.
-- Foreground sleeps over ~5 min are blocked. Use `run_in_background`.
-- Don't read subagent output files; they're full JSONL transcripts and will flood context.
-
----
-
-## Videos with no usable captions (19)
+## Nippard videos with no usable captions (19)
 
 Not fetch failures — YouTube has no English caption track, or the track is corrupt.
 
-How To Recover From Any Injury · You Can't Fix Your Posture · My Unfiltered Opinion on
-Steroids · How To Prevent Muscle Loss When Dieting · Can You Build Muscle In a Calorie
-Deficit / Lose Fat In a Surplus · How to Use Bench Press for Growth · What Does RPE 10
-Really Look Like · The 5 Worst Diet Mistakes · The Fastest Way To Blow Up Your Upper Chest
-· Do Squats And Deadlifts Really Build Abs · THE NATTY CURSE · How To Get Under 8% Bodyfat
-Naturally · 3 Supplements You Aren't Taking · Is Viagra Better Than Steroids · The Science
-Behind Intuitive Eating · How To Set Your Diet Up After A Training Break · Of Leptin and
-Refeeds · WHAT IS MASS? · Effective Reps
+How To Recover From Any Injury · You Can't Fix Your Posture · My Unfiltered Opinion on Steroids ·
+How To Prevent Muscle Loss When Dieting · Can You Build Muscle In a Calorie Deficit / Lose Fat In
+a Surplus · How to Use Bench Press for Growth · What Does RPE 10 Really Look Like · The 5 Worst
+Diet Mistakes · The Fastest Way To Blow Up Your Upper Chest · Do Squats And Deadlifts Really Build
+Abs · THE NATTY CURSE · How To Get Under 8% Bodyfat Naturally · 3 Supplements You Aren't Taking ·
+Is Viagra Better Than Steroids · The Science Behind Intuitive Eating · How To Set Your Diet Up
+After A Training Break · Of Leptin and Refeeds · WHAT IS MASS? · Effective Reps
 
-Injury recovery and posture are the ones actually worth chasing elsewhere — prehab is the
-thinnest area in the library.
-
----
-
-## Lessons from the non-video pipeline (ISSN)
-
-Journal sources are **much cheaper than YouTube and much higher quality**, and the difference
-is bigger than expected. Worth reaching for before another creator.
-
-- **PMC hands back everything in one call.** Full text and a structured `<ref-list>` with each
-  reference's own PMID and DOI. No caption fetch, no reference extraction, no resolver step.
-  The ISSN corpus yielded **5,192 unique references at 94% resolvable** — two and a half times
-  the Nippard bibliography — essentially for free.
-- **The inline `[n]` markers survive into the text**, and they index the reference list. That
-  gives a claim-to-paper link that is exact rather than inferred, which is far better than
-  anything a video description can support. **But verify the mapping per document** — in the
-  2023 energy drinks stand the offset drifts by up to three, so `[135]` is not reference 135.
-  A max-marker-versus-reference-count check catches this in seconds; run it before trusting.
-- **Competing-interest and funding statements live in `<back>`, not `<body>`.** Easy to miss,
-  and for supplement stands it is exactly the material you need. `tools/fetch_issn_disclosures.py`
-  pulls it separately.
-- **ElementTree only supports `//` at the start of an XPath.** `.//back//ack` silently matches
-  nothing. Walk the children instead.
-- **Older BMC-era XML concatenates reference fields without separators.** Build citations from
-  the `<element-citation>` sub-elements rather than flattening, or you get
-  "MetzlJDSmallELCreatine use among young athletesPediatrics2001".
-- **PubMed will not phrase-match some organisation names.** `"International Society of Sports
-  Nutrition"[Title]` returns zero; the unquoted terms return 34. Query loosely, filter titles
-  afterwards.
-- **NCBI answers 429 readily.** Back off and retry; don't assume a failure is a missing record.
-
-## Reading a consensus document critically
-
-The ISSN pass turned up a pattern that generalises to any expert body, and it changed how the
-notes are written: **the numbered position statement is frequently firmer than the evidence
-review directly above it.** Several stands describe a literature as "equivocal" or "largely
-null" and then assert a benefit in the headline. When they disagree, trust the body.
-
-So every note in that folder carries two mandatory sections — `Strength of the evidence` and
-`Disclosures and funding` — and the agents were told explicitly that under-linking beats a
-wrong attribution and that they should say plainly when a document overreaches. They found
-real problems: a citation pointing to a paper on seasonal reproduction in vertebrates, an
-unremoved peer-reviewer comment in a published table, a stand citing a paper titled "does not
-alter…" as evidence that it does, and a disclosure statement declaring no conflicts sitting
-directly above a conflict-of-interest section listing share ownership in the product category.
-
-Self-citation is the bigger and less visible problem, because it is not a declarable conflict.
-Check whether a document's authors wrote the studies it rests on.
-
-## If you're starting another creator
-
-1. `tools/fetch_channel.py <channel-url> <outdir>` does the catalogue and the fetch in one
-   resumable pass, and saves the **description alongside every transcript** — one yt-dlp call
-   gets both, since the info.json carries the description. Re-run it with `--delay 6` to sweep
-   up the failures; that recovered 29 of 33 on the last run.
-2. **Check descriptions for a reference list before anything else.** If they don't cite
-   sources, this becomes a much smaller project — notes only, no citation layer.
-3. Classify the catalogue by hand. It's judgement work and worth doing carefully; a bad
-   inclusion list wastes an enormous amount of downstream agent time.
-4. Then run the pipeline above.
-
-Put each creator in their own folder, mirroring `Jeff Nippard videos/`.
-
-## Choosing a new source
-
-Measure, don't assume. The probe that selected the current sources checked catalogue size,
-median length, caption availability and reference links in a sample of descriptions, with
-Nippard as a control (he scored 6/6 with a mean of 14 links, which proved the detector).
-
-Two findings worth carrying forward:
-
-- **A description scan under-counts.** Three strong sources keep Nippard-grade grouped
-  reference lists somewhere else entirely — House of Hypertrophy on per-video pages on his own
-  site, Barbell Medicine in per-episode Google Docs, Andy Galpin in a "Scientific Articles"
-  block on performpodcast.com. Check the creator's website before rejecting them.
-- **Some excellent sources are off-limits and you should not spend time on them.** Stronger By
-  Science forbids automated collection in its terms and blocks AI crawlers by name in
-  robots.txt; MASS is subscriber-licensed; Examine is personal-use-only; Chris Beardsley is
-  paywalled. Read and link to these, but do not ingest them. Renaissance Periodization's terms
-  grant an unnamed Creative Commons licence — permissive but ambiguous, worth confirming.
-
-Prefer scripted 8–26 minute videos. Conversational podcasts at a 50-minute-plus median cost
-several times as much per note for less extractable content.
+Injury recovery and posture were the two worth chasing elsewhere. Barbell Medicine now covers both.

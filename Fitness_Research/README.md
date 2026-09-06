@@ -6,6 +6,8 @@ are readable end to end and traceable back to real papers.
 Every claim in here should be followable to a source. Where a source states something the
 evidence does not carry, the note says so rather than repeating it.
 
+**781 notes across five sources, 6,139 unique PubMed-indexed papers.** Complete.
+
 ## Start here
 
 **[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the sources reconciled. Where two of them
@@ -26,7 +28,8 @@ retractions. Three found in 6,139, two of them load-bearing.
 | [Barbell Medicine articles](Barbell%20Medicine%20articles/) | 155 articles of physician-authored strength medicine: rehab, pain science, lab interpretation, clinical questions | 155 | Complete |
 
 Squat University is a candidate for a later pass — the best subject-matter fit for injury
-and rehab, with the caveat that its citation discipline decayed sharply after about 2019.
+and rehab, with the caveat that its citation discipline decayed sharply after about 2019. It
+would also give the clinical material a second opinion, which it currently lacks.
 
 ## Why these sources
 
@@ -59,3 +62,9 @@ text. Where a source is open access, its licence is recorded in the note; where 
 not, we summarise in our own words and link out.
 
 None of this is medical advice.
+
+---
+
+If you are picking this project up to work on it rather than to read it, start with
+[PROJECT-CONTEXT.md](PROJECT-CONTEXT.md) — it carries the git rules, the pipeline, what is left,
+and the lessons from building it.
