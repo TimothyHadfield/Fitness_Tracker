@@ -149,6 +149,45 @@ help-lines and is NOT from this change**: it measures byte-identically on `#/wor
 `#/system/<id>`, which is the control, and it predates today on the second. Recorded, not fixed —
 nobody asked, and it is visual.
 
+### D. 🔒 A REVIEW OF THE DIFF, AND THE CORRECTION THAT WAS ITSELF WRONG
+
+A read-only agent reviewed the four changed files after the first commit. **It found no correctness
+bug and no dead code** — every deleted symbol has zero remaining references, and it re-ran the render
+suite ten times. What it did find was **four claims in the new comments that the code does not
+support**, and this project treats a false comment as a defect:
+
+- `currentSystem()`'s header said `setCurrentSystem()` was *"the only thing in this store that writes
+  the field"*. `deleteSystem()` was writing it directly through `saveSettings` thirty-five lines
+  later, so the sentence was false the day it was written. **Fixed by routing `deleteSystem()`
+  through `setCurrentSystem(null)`** rather than by softening the claim — which also makes that
+  function's `null` branch reachable, and a branch nothing can reach is a branch nothing tests.
+- The `rateOwnSystems()` tombstone said the tab now shows the full rating *"rather than the four-cell
+  badge"*. It shows **both**: `ownSystemRating()` renders a `ratingBadge` inside `.own-rating`. What
+  was actually lost is a badge on the programmes you are *not* running.
+- The same paragraph named `ExploreDetailView` as a `ratingBadge` caller. That screen renders no
+  rating at all; the two real callers are `ownSystemRating()` and the Explore **list**.
+- `systemSwitcher()`'s `always` note claimed a "Programmes" door on Record would point away from what
+  that screen is for. With two or more programmes Record's heading **is** a button onto the same
+  sheet, carrying the same two doors. The asymmetry is only about the one-system case.
+
+🚨 **AND THE FIRST CORRECTION OF THE THIRD ITEM INTRODUCED A FIFTH FALSE CLAIM** — it said the detail
+screen *"renders the full `presetRating()` block"*, and **no such function exists anywhere in this
+repo**. It was one keystroke from being committed as the fix. **That is now §0.19**, because the
+failure is structural rather than careless: comments here carry function names and cross-references,
+so a wrong one reads as authoritative and correcting it feels like recall. **Grep for what you are
+about to assert, not only for what you are removing.**
+
+⚠️ **THE REVIEW WAS ALSO WRONG ABOUT SOMETHING, WHICH IS THE OTHER HALF OF §0.19.** It reported that
+the pinned switcher has no visual separation from the list it labels. `.pane-top` carries `padding:
+11px var(--pad) 9px` and `.pane-top + .pane-scroll` adds 2px, and the screenshot shows the gap. Not
+changed. **An agent's finding is a hypothesis with a file and line number attached**, and the two
+halves of that report needed the same checking.
+
+🔒 **AND ONE FACT ABOUT THIS REPOSITORY CAME OUT OF PUSHING** — the research agent commits and pushes
+**from this same checkout**, so six of its commits landed between this session's two pushes and the
+local `HEAD` moved with nothing here touching git. **§0.20**, and the practical consequence is that
+staging by name is not merely tidy, it is the only thing keeping the two agents' commits apart.
+
 ---
 
 ## 2026-09-18 — TWO QUESTIONS OFF A LEG DAY, AND THE TWO FEATURES THEY CAME WITH

@@ -4,12 +4,15 @@
 > DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
 > here** — the environment traps, the working agreement, the architecture, the binding design rules
 > and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
-> **461 KB together as of 2026-09-19** (160 + 184 + 118), and none of it is optional. ⚠️ Each file has
+> **468 KB together as of 2026-09-19** (160 + 189 + 119), and none of it is optional. ⚠️ Each file has
 > a byte budget with a test behind it — see §0.3.
 > 🚩 **THIS FILE LIVES AT ITS CEILING AND HAS FOR THREE SESSIONS RUNNING.** 2026-09-19 tripped the
-> budget test writing its own summary and folded 2026-09-10 through -15 into one pointer to land back
-> under 160. **Assume you will have to collapse something before you can add anything**, and 🛑 **the
-> fix is never to raise the number**: the failure message names what to move and where.
+> budget test **twice** — folding 2026-09-10 through -15 into one pointer, then moving the
+> code-organisation assessment into the handbook's §4 where it belonged anyway. **Assume you will
+> have to collapse something before you can add anything**, and 🛑 **the fix is never to raise the
+> number**: the failure message names what to move and where. ⚠️ **The best collapses are the ones
+> that put a durable rule somewhere it is actually looked for** — three of the last four have been
+> moves into `docs/handbook.md` rather than deletions.
 >
 > 🚨 **EVERY `§N` REFERENCE IN THIS PROJECT MEANS `docs/handbook.md` — EXCEPT `§3`, WHICH IS
 > `docs/state.md`.** `§4` the architecture, `§6` the locked decisions, `§9` the known gaps, `§0.10`
@@ -19,7 +22,7 @@
 >
 > **`docs/history.md` is the dated log** — every session's full write-up, newest first. You do not
 > read it; the recent ones are summarised below and you go there for the detail, searching by date.
-> ⚠️ **It is larger than one read** (640 KB): grep it for the date, then read that range.
+> ⚠️ **It is larger than one read** (681 KB): grep it for the date, then read that range.
 >
 > `chat.md` is the human-readable log and answers "what did we say about X"; it starts at
 > **2026-08-29**, with everything from 2026-08-14 to 08-26 in `docs/chat-archive.md`.
@@ -42,17 +45,24 @@ Explore; **Record shows only its workouts**. 🔒 **Both drawn by the same `syst
 🚨 **IT DERIVES WHEN NOTHING HAS BEEN CHOSEN, and that is the load-bearing decision** — every account
 on disk has no pointer, and demanding a pick would be a wall in front of their own programme (D8/D9).
 It reads one out of the training instead, and **never writes what it derived**.
-🔄 **THIS DELETED THE FOLDING SYSTEMS OF 2026-09-16, eight days old** — `systemGroup()`, both
+🔄 **THIS DELETED THE FOLDING SYSTEMS OF 2026-09-16 — three sessions old** — `systemGroup()`, both
 memories, four CSS rules and `rateOwnSystems()`. With one programme on screen a fold memory is a
-variable nothing reads (the `markFriendTrail()` lesson, one week on).
+variable nothing reads (the `markFriendTrail()` lesson, three sessions on). ⚠️ **He was told.**
 🛑 **Adding or creating a programme does NOT make it current**; `#/system/<id>` has a button.
 ✅ **19 suites green, 5,303 assertions** (from 5,187), `render` **1,579**. Mutation-checked with the
-mutation printed. Driven in Chrome at 390×844.
+mutation printed. Driven in Chrome at 390×844. 🚨 **FIVE OF THE NEW ASSERTIONS ARE THE EMPTY ACCOUNT,
+whose empty states had NEVER been tested** — found by grepping for their own sentences and getting
+nothing; the guard is load-bearing and without it the Workouts tab throws on a new account.
 🛑 **AND A LIVE LINK TO PRE-BUILT SYSTEMS WAS ASSESSED AND REFUSED** — it would stop you editing a
 copied programme, strand recorded sessions on workouts a deploy renamed, and **rewrite prescribed
 weights under you with no notification**. The recommendation (version + origin stamps + a reviewable
-"the original changed") is written up and **not started**. Full write-up: `docs/history.md`,
-2026-09-19.
+"the original changed") is written up and **not started** — Open work 36.
+🔒 **A REVIEW AGENT THEN FOUND FOUR FALSE CLAIMS IN THE NEW COMMENTS AND ALL FOUR WERE REAL** (second
+commit). 🚨 **AND THE FIRST CORRECTION INTRODUCED A FIFTH — it named a `presetRating()` that does not
+exist.** That is now `docs/handbook.md` §0.19: **grep for what you are about to ASSERT, not only for
+what you are removing.** ⚠️ **The same review was WRONG about a layout claim** in the same list, which
+a screenshot settled — an agent's finding is a hypothesis with a line number attached.
+Full write-up: `docs/history.md`, 2026-09-19.
 
 **2026-09-18, the session before it** — **two questions off a leg day and the two features they came
 with**, scoped by Tim marking the first two *"(Don't build, just answer)"*. 🆕 **A planned set can
@@ -115,8 +125,11 @@ Open work 29 closed on 2026-09-11; **30's plan was approved and its Phases 0–3
 closed on 2026-09-17**, along with 26's; **33 and 34 are 2026-09-18 and are finished; 35 is
 2026-09-19 and is finished.** Every other item is either Tim's, pinned, or parked.
 
-🆕 **WHERE 2026-09-19 STOPPED.** Two questions answered, one design built whole. **Nothing left
-half-done and no agent was run.**
+🆕 **WHERE 2026-09-19 STOPPED.** Two questions answered, one design built whole, then a review pass
+over its own diff. **Two commits, both pushed. Nothing left half-done.**
+🚩 **TWO CONSEQUENCES OF THE CURRENT SYSTEM THAT ARE NOT BUGS, THAT HE WAS TOLD, AND THAT ARE NOT
+DECIDED** — benchmark workouts kept in a separate programme, and there being no way to look at a
+programme without switching to it. **Row 8 of the table above** carries both and the three answers.
 🚩 **ONE THING HE WAS TOLD AND HAS NOT ANSWERED**, and it is deliberately not on the seven-item table
 because it is a recommendation rather than a decision he owes: **updating an added programme from its
 original** (Open work 36). A live link was refused for three reasons; the buildable shape — a preset
@@ -250,57 +263,30 @@ running-costs section below, which is 2026-09-06's other half and **stays here**
   weight; custom exercises can set a level again **if the person names the closest library exercise**.
   🛑 **The bar-height work was NOT built and §9's own diagnosis was why** — `docs/research.md` §15.
 
-## ⚠️ 2026-09-04 — WHY THE NOTES ARE IN FIVE FILES — COLLAPSED TO A POINTER, 2026-09-16
+## ⚠️ 2026-09-04 — WHY THE NOTES ARE IN FIVE FILES — COLLAPSED FURTHER, 2026-09-19
 
-⚠️ **The full account is `docs/history.md`, 2026-09-04, and the RULE it produced is `docs/handbook.md`
-§0.3, where a test enforces it.** This file had reached **626 KB** and could no longer be opened in
-one read — so the one instruction the whole workflow rests on (*"read this entire file before doing
-anything"*) had been quietly impossible for some time, and nothing said so. The dated log was 52 % of
-it and is pure history; that was the cut.
-
-🚨 **THE RULE, AND IT IS THE ONLY PART YOU NEED: A SESSION'S FULL WRITE-UP GOES AT THE TOP OF
-`docs/history.md`, AND ONLY ITS ONE-LINE SUMMARY COMES HERE.** This file then grows by about two
-kilobytes a session instead of forty. **Every file you are told to read whole has a byte budget with
-a test behind it**, set well under the 256 KB read limit so it fails while there is still room to
-act. 🛑 **When one trips the fix is NEVER to raise the number** — the failure message names what to
-move and where, and the routine is to fold the oldest day summaries into pointers like this one.
-⚠️ **The two archives have no budget on purpose** and the test says so, so nobody "fixes" them.
-⚠️ **Current sizes are in the header of this file**; the ones that used to be listed here went stale
-within days, which is its own argument for not writing a number down twice.
+⚠️ **The rule this day produced is `docs/handbook.md` §0.3, where a test enforces it, and the header
+of this file states it too — so the paragraph that used to restate it here was the third copy.** Full
+account: `docs/history.md`, 2026-09-04. The short version: this file had reached **626 KB** and could
+no longer be opened in one read, so *"read this entire file before doing anything"* had been quietly
+impossible for some time and nothing said so. **A session's full write-up goes at the top of
+`docs/history.md` and only its summary comes here.**
 
 🚨 **AND ONE SAFETY FACT THAT IS NOT ABOUT DOCUMENTS: THIS SITE IS SERVED BY GITHUB PAGES, SO
-ANYTHING TRACKED HERE IS PUBLISHED.** Three files had been committed by accident (a `.tmp` and two
-~200 KB working screenshots of the app's own screens); `.gitignore` now refuses `*.tmp` and any
-`.png` at the repo root, with the reason written above each rule so nobody deletes the rule instead
-of the file. ⚠️ **They were screenshots of THIS app, checked before deleting** — somebody else's UI
-would have been a different kind of problem (`docs/social-plan.md` §12.12).
+ANYTHING TRACKED HERE IS PUBLISHED.** Three files were committed by accident (a `.tmp` and two ~200 KB
+working screenshots of the app's own screens); `.gitignore` now refuses `*.tmp` and any `.png` at the
+repo root, with the reason above each rule so nobody deletes the rule instead of the file.
+⚠️ **They were screenshots of THIS app, checked before deleting** — somebody else's UI would have
+been a different kind of problem (`docs/social-plan.md` §12.12).
 
-### 🛑 WHAT WAS LOOKED AT AND DELIBERATELY LEFT ALONE — do not re-open these without a reason
+### 🛑 WHAT WAS LOOKED AT AND DELIBERATELY LEFT ALONE — MOVED TO `docs/handbook.md` §4, 2026-09-19
 
-Tim asked whether the code organisation could be improved too. **It was assessed and the answer was
-no**, and the reasoning is here so the question does not get re-derived every time somebody notices
-a 4,000-line file:
-
-- **`js/store.js` (3,970 lines) STAYS ONE FILE.** Its last ~1,040 lines are a clean seam — the
-  derived-data layer, `seriesForExercise()` through `activityByDate()` — and they use only five
-  things from the head. **But `social.publish()` calls `buildStrengthShare()`, which lives in that
-  tail**, so extracting it makes `store.js` and the new module import each other. That works in ES
-  modules through hoisting, and "works through hoisting" is not a thing to introduce into the most
-  load-bearing file in an app with **no build step** to catch a mistake. ⚠️ **And the line count
-  overstates it: 1,522 of those lines are comment**, which is this project's own style and the
-  reason its rules survive a chat reset. The same goes for `views-session.js` (41 % comment) and
-  `muscle-evidence.js` (67 %).
-- **`tests/render.test.mjs` (5,611 lines) AND `tests/data-layer.test.mjs` STAY ONE FILE EACH.** Both
-  are flat scripts over **one jsdom and one progressively-seeded store**, so a block halfway down
-  runs against everything the blocks above it wrote. Splitting them would silently change what each
-  assertion is asserting against — **the count would still say 911 and it would be measuring
-  something else**, which is precisely the failure mode this project keeps writing down.
-- **`css/app.css` (4,263 lines) STAYS ONE FILE.** There is no build step, so splitting means either
-  extra render-blocking `<link>`s or `@import`, which serialises the fetches. A single stylesheet is
-  the right answer for this app and the MOTION section already owns the one thing that must not be
-  scattered (Rule 7).
-- **No dead modules.** Every file in `js/` is imported by something — checked against `sw.js`, the
-  views and the tests. Nothing to delete.
+⚠️ **It was durable architectural reasoning sitting in a dated section, which is the thing §0.3 says
+not to do** — the same cut that moved §0.14, §0.17 and §0.18 into the handbook on 2026-09-17. Tim
+asked whether the code organisation could be improved; **it was assessed and the answer was no**, and
+the four reasons (why `store.js`, the two big suites and `app.css` each stay one file, and that there
+are no dead modules) are now under **"Why the big files stay big"** in the handbook's §4, where
+somebody noticing a 4,000-line file will actually be looking.
 
 ## 🚨 2026-09-04 — TIM WAS INTERVIEWED ABOUT WHAT THIS PROJECT IS FOR, AND FOUR RULES FLIPPED
 
@@ -351,10 +337,10 @@ from what the emulator answers. `tools/live-check.mjs` (§0.16) published both d
 live project and had four negative controls refused on the wire, so the deploy provably landed.
 💷 **It also measured the read pattern: an unchanged sync bills ZERO document reads.**
 
-## 🛑 THE SEVEN THINGS WAITING ON TIM — the seventh added 2026-09-18
+## 🛑 THE EIGHT THINGS WAITING ON TIM — the eighth added 2026-09-19
 
 **What is waiting is his, not yours** — read the standing rule at the top of this file before picking
-any of it up, and note that **three of these seven put words on a screen**, which is the category he
+any of it up, and note that **three of these eight put words on a screen**, which is the category he
 has reserved for himself.
 
 | | what | what it needs |
@@ -366,6 +352,7 @@ has reserved for himself.
 | 5 | 🚩 **Goals prints `+N %` from the frozen `gainPct`**, which can now disagree with a re-frozen target on the same screen ("Steady +2 %" over a 220 → 244 lb goal). Pinned as current behaviour so a change is deliberate | **his word** — two defensible answers |
 | 6 | 🚩 **An ordinary lifter flaps MORE than one on a level boundary** — the suite prints 0.75 against 0.19, the opposite of what the comment and the plan both claim, and nothing in `provenance()` measures the ordinary number | **an answer, not a fix** — recorded on the constant |
 | 7 | 🆕 **A SET WITH A PRESCRIBED WEIGHT IS `prefilled`, so accepting the weight AND the reps untouched drops it at save** (2026-09-18). Deliberate — the number is the app's, not last time's, and `finish()` refusing it is what stands between a prescription and a workout nobody did. ⚠️ But a target is *meant* to be obeyed, so it is far easier to hit than the derived opening weight this rule was written for. It does not touch the untargeted path, so **item 15 is still open and still separate** | **his word** — leave it, warn on the screen, or count "moved on from" as done |
+| 8 | 🆕 **BENCHMARK WORKOUTS KEPT IN A SEPARATE PROGRAMME NO LONGER APPEAR ON RECORD** (2026-09-19). The weightlifting picker is scoped to the current system, so a "Testing" programme has to be switched to before its days are reachable. ⚠️ **`#/benchmark` is not a substitute** — it records one lift's best, not a workout. 🚩 **The second half of the same trade**: tapping a row in the switcher makes that programme current immediately and writes it to `settings`, so it syncs; **there is no "look without switching"**. Both follow from what he asked for, and both are cheap to undo | **his word** — leave it, surface benchmark workouts from every programme on Record, or give the switcher a read-only peek |
 
 ⚠️ **AND THE ONE THING THAT MOVED USER-VISIBLE NUMBERS ON 2026-09-15**: the ratio pass and the
 precision blend moved every muscle on the map by **−2.3 % to +2.8 %**, with every confidence
@@ -402,7 +389,7 @@ lands still leaves the work; look in its scratchpad before believing the handove
 the other agent rules under **Standing instructions**.
 
 ⚠️ **Its two live flags did not go with it** — the muscle panel's freshness note and the Data tab's
-*"Estimates above 15 reps are unreliable."* are rows 3 and 4 of **THE SEVEN THINGS WAITING ON TIM**
+*"Estimates above 15 reps are unreliable."* are rows 3 and 4 of **THE EIGHT THINGS WAITING ON TIM**
 above, which is where a thing waiting on Tim belongs.
 
 🚩 **FOUR THINGS FLAGGED FOR TIM AND STILL UNCHANGED** — three from 2026-09-12: fill-on-open meets
@@ -588,6 +575,12 @@ for whether a day may be collapsed:
   show changes there that are nothing to do with you. **That is the normal state**, it is not
   half-built work, and "the working tree is clean" in these notes has always meant *outside* that
   folder. Do not offer to commit them, do not ask about them, do not count them as loose ends.
+  🆕 **AND IT COMMITS AND PUSHES FROM THIS SAME CHECKOUT, SO YOUR `HEAD` MOVES WHILE YOU WORK —
+  2026-09-19, when six of its commits landed between two of mine.** It is not on a branch and not in
+  a worktree. So `git log -1` is not necessarily yours, a push can report a base you never saw, and a
+  diff "since the session started" can hold somebody else's work. **Staging by name is enough**;
+  verify with `git show --name-only --format="" <sha> | grep -c Fitness_Research` — it must print 0.
+  Full note: `docs/handbook.md` §0.20.
 - 🛑 **"CATCH UP WITH PROGRESS.MD" IS AN INSTRUCTION TO READ, NOT TO BUILD — Tim, 2026-09-11.**
   *"When I tell you to catch up with progress.md, you should not start working on anything until I
   tell you. It's okay to tell me what you think next steps are, but don't start working until I tell
@@ -858,23 +851,12 @@ for**, not the parallelism itself.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-0a. ~~**⚠️ FIRST, BEFORE ANY CODE: IS TIM ACTUALLY ABLE TO USE THE APP, AND IS HE ON THE CURRENT
-   BUILD?**~~ ✅ **BOTH ANSWERED YES, 2026-08-24.** Tim: *"I'm not locked out, I think I just had the
-   wrong URL. I can see the year view now."* **The list below is unblocked.**
-
-   - **Not locked out**, and he puts it down to the wrong URL rather than to the app. ⚠️ **The
-     "installed app stuck on the auth handler" diagnosis is therefore neither confirmed nor
-     refuted** — it was never checked against what he actually had open. The ninth pass's fix keeps
-     its own justification, which never depended on this report: `getRedirectResult()` was being
-     called on every boot in a configuration where a redirect can never legitimately have started.
-   - **He is on a current build** — the years view is on his screen, which is the same feature he
-     reported missing on the 22nd. ⚠️ **What moved him onto it is unknown**: the resume update check
-     (sixth pass) has still never been seen to fire in the field, only in `tests/sw-update.test.mjs`.
-     Do not upgrade it to verified on the strength of this.
-
-   ⚠️ **The rule those two items existed to teach outlives them: do not read "X is broken" as X
-   being broken.** Check the live site first — `curl` the deployed file, or drive a clean browser
-   profile at the live URL. That is what settled the years-view report in one command.
+0a. ~~**IS TIM ABLE TO USE THE APP, AND IS HE ON THE CURRENT BUILD?**~~ ✅ **BOTH YES, 2026-08-24** —
+   *"I'm not locked out, I think I just had the wrong URL."* ⚠️ **The resume update check has still
+   never been seen to fire in the field**, only in `tests/sw-update.test.mjs`; do not upgrade it to
+   verified. 🔒 **The rule those items existed to teach is `docs/handbook.md` §0.13: do not read "X is
+   broken" as X being broken** — check the live site first. It settled the years-view report in one
+   command, and it settled 2026-09-19's *"the % feature didn't deploy"* the same way.
 
 0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
    live thread. **Five passes ran on the 21st and four more on the 22nd** — nine dated sections

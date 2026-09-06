@@ -351,6 +351,40 @@
     anything else.** The general form is §0.16's `localStorage` trap and §0.14's mutation check: a
     measurement that never reached the thing it was measuring reports the same green as a pass.
 
+19. **🚨 CORRECTING A FALSE COMMENT FROM MEMORY PRODUCES ANOTHER FALSE COMMENT — 2026-09-19.**
+    A review found that a new tombstone comment named `ExploreDetailView` as a caller of
+    `ratingBadge()`. It is not one. The correction written for it — *"that screen renders the full
+    `presetRating()` block"* — named a function **that does not exist anywhere in this repo**, and it
+    was one keystroke from being committed as the fix.
+
+    ⚠️ **The failure is specific to this codebase's style and is worth naming.** Comments here carry
+    reasoning, cross-references and function names, so a wrong one reads as authoritative, and
+    correcting it feels like recall rather than research. **Grep before writing the corrected
+    sentence, and grep for what you are about to ASSERT rather than only for what you are removing.**
+    `grep -n "ratingBadge(" js/` takes two seconds and answers it exactly.
+
+    🔒 **The same scepticism applies to the review that found it.** That report was right about the
+    comment and **wrong** about a layout claim in the same list — it said a pinned control had no
+    separation from the list below it, when `.pane-top` carries 9px of bottom padding plus a 2px gap,
+    and a screenshot showed the space. **Check a report's claims the way you would check your own**;
+    an agent's finding is a hypothesis with a file and line number attached.
+
+20. **⚠️ THE OTHER AGENT COMMITS INTO THIS SAME CHECKOUT, SO `HEAD` MOVES WHILE YOU WORK —
+    2026-09-19.** The `Fitness_Research/` rule under **Standing instructions** in `progress.md`
+    already says never to `git add -A` and never to run a tree-changing git command. This is the half
+    it did not say: that agent is not on a branch or in a worktree, it is **in this working copy**,
+    and it commits and pushes from here. Between one push and the next, six of its commits landed on
+    `main` under Tim's name and the local `HEAD` advanced with nothing in this session touching git.
+
+    **What follows, none of which is a problem if you expect it:** a `git push` reporting
+    `abc1234..def5678` may name a base you never saw; `git log -1` is not necessarily your own
+    commit; and any diff taken "since the session started" can contain somebody else's work.
+    🛑 **Staging by name is what keeps a commit clean, and it is sufficient** — verify afterwards with
+    `git show --name-only --format="" <sha> | grep -c Fitness_Research`, which must print 0.
+    🛑 **Never `pull --rebase`, `reset` or `checkout` to tidy the divergence**: their *uncommitted*
+    work is in this same tree, and those commands would destroy it (the 2026-09-08 stash incident,
+    with a second writer who is not in this chat).
+
 ---
 
 ## 1. Working agreement
@@ -976,6 +1010,39 @@ Fitness_Tracker/
 - **Pure-maths modules are the pattern that works.** `e1rm.js`, `strength-standards.js` and
   `units.js` have no DOM or store dependency, so they are fully testable headlessly. They have
   caught real bugs that way, and `docs/strength-estimate-plan.md` follows the same shape.
+
+### 🛑 Why the big files stay big — do not re-open these without a reason
+
+**Moved here from `progress.md` on 2026-09-19**, because it is architectural reasoning and was
+sitting in a dated summary — the same cut that brought §0.14, §0.17 and §0.18 across. Tim asked on
+2026-09-04 whether the code organisation could be improved. **It was assessed and the answer was no**,
+and the reasoning is here so the question is not re-derived every time somebody opens a 4,000-line
+file:
+
+- **`js/store.js` (~4,000 lines) STAYS ONE FILE.** Its last ~1,040 lines are a clean seam — the
+  derived-data layer, `seriesForExercise()` through `activityByDate()` — and they use only five
+  things from the head. **But `social.publish()` calls `buildStrengthShare()`, which lives in that
+  tail**, so extracting it makes `store.js` and the new module import each other. That works in ES
+  modules through hoisting, and *"works through hoisting"* is not a thing to introduce into the most
+  load-bearing file in an app with **no build step** to catch a mistake. ⚠️ **And the line count
+  overstates it: ~1,500 of those lines are comment**, which is this project's own style and the
+  reason its rules survive a chat reset. The same goes for `views-session.js` (41 % comment) and
+  `muscle-evidence.js` (67 %).
+- **`tests/render.test.mjs` AND `tests/data-layer.test.mjs` STAY ONE FILE EACH.** Both are flat
+  scripts over **one jsdom and one progressively-seeded store**, so a block halfway down runs against
+  everything the blocks above it wrote. Splitting them would silently change what each assertion is
+  asserting against — **the count would still be a big number and it would be measuring something
+  else**, which is precisely the failure mode this project keeps writing down. ⚠️ **2026-09-19 is a
+  worked example**: a test block there had to build its own second system and tear it down again,
+  because anything it left behind would change what every later block reads.
+- **`css/app.css` (~4,300 lines) STAYS ONE FILE.** There is no build step, so splitting means either
+  extra render-blocking `<link>`s or `@import`, which serialises the fetches. A single stylesheet is
+  the right answer for this app, and the MOTION section already owns the one thing that must not be
+  scattered (Rule 7).
+- **No dead modules.** Every file in `js/` is imported by something — checked against `sw.js`, the
+  views and the tests. ⚠️ **That is a claim with a date on it**, not a standing guarantee: it was
+  true when checked, and the way it stays true is deleting a mechanism the moment nothing reads it
+  (2026-09-16's `markFriendTrail()`, 2026-09-19's `systemGroup()` and `rateOwnSystems()`).
 
 ### Data model
 
