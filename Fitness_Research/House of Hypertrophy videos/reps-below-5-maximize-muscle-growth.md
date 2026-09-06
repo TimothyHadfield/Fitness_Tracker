@@ -10,7 +10,7 @@
 - Practical read: reps of 2–4 clearly *can* build meaningful muscle, but you will likely need more sets and longer rest intervals to get there. If hypertrophy is the goal, keep most work in the **5–35 rep zone**. If strength is the priority and size is a bonus, 2–4 reps is fine — 1RM gains favoured the low-rep groups in most of these studies.
 
 ## The one study that says no
-**Schoenfeld et al.** split 19 men with at least a year of training into a heavy (2–4RM) or moderate (8–12RM) group. Both did **3 sets, 2 minutes of rest, 3× per week for 8 weeks**, across bench, overhead press, lat pulldown, cable row, back squat, leg press and leg extension. Sets and rest were matched — this is the clean comparison.
+**Schoenfeld et al.** split 19 men with at least a year of training into a heavy (2–4RM) or moderate (8–12RM) group. Both did **3 sets, 2 minutes of rest, 3× per week for 8 weeks** across seven exercises. Sets and rest were matched — this is the clean comparison.
 
 Vastus lateralis thickness increases were significantly greater in the moderate group. Elbow flexor thickness also favoured moderate. Triceps thickness was similar. Verdict: 2–4 reps underperformed 8–12.
 
@@ -31,11 +31,9 @@ He takes apart the volume-load justification directly. The researchers equated v
 **Chestnut & Docherty** — 19 untrained men, 10 weeks, 3× per week. 4RM group: 4 reps at 85% 1RM to failure, 3 min rest, **6 sets per core exercise** and 2 per supplemental exercise. 10RM group: 10 reps at 70% 1RM, 2 min rest, **3 sets per core** and 1 per supplemental. Upper-arm cross-sectional area (middle and lower regions) increased similarly. Twice the sets and 50% more rest in the low-rep condition.
 
 ## What this actually licenses
-Sets of 2–4 reps do build significant muscle — most of these studies confirm it. What is unclear is whether they do so *as efficiently* as moderate reps at matched sets and matched rest, because only two studies tested that and they contradict.
+Sets of 2–4 reps do build significant muscle. What is unclear is whether they do so *as efficiently* as moderate reps at matched sets and matched rest, because only two studies tested that and they contradict. His practical position is well-calibrated: for size, err toward 5–35 reps; for strength with size alongside, 2–4 reps works, provided you accept the extra sets and longer rests those studies used.
 
-His practical position is well-calibrated: if you want size, err toward 5–35 reps; if you want strength with size alongside, 2–4 reps works, provided you accept the extra sets and longer rests those studies used.
-
-**Flagged:** he is unusually rigorous here — he keeps a running tally on screen, names the confound in every study that supports his own convenient conclusion, and finishes by pointing out that the only two uncontaminated studies disagree. That is the opposite of cherry-picking. The one soft spot is that his teardown of volume-load equating leans on conclusions established in his other videos rather than re-evidenced here.
+**Flagged:** he is unusually rigorous here — he keeps a running tally on screen, names the confound in every study supporting the convenient conclusion, and finishes by pointing out that the only two uncontaminated studies disagree. The one soft spot is that his teardown of volume-load equating leans on conclusions established in his other videos rather than re-evidenced here.
 
 ## References
 

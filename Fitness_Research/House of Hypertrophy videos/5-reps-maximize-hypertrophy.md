@@ -26,25 +26,25 @@ Two things make it hard to wave away.
 [04:38] **Proximity to failure also favoured the losing condition.** At 60% 1RM most people can manage roughly 20 reps, so stopping at 10 left the high volume leg around **10 reps in reserve** — a long way from failure. The high load leg, at 82.5–95% for 5 reps, was plausibly training at **0–3 RIR**. The leg that trained far easier and did fewer sets grew more.
 
 ## Limitations he raises himself
-[05:40] A second scan taken **10 days** after the last session (rather than 3 days) showed the high volume leg's CSA drifting down — readable as detraining — while the high load leg's drifted *up*. Neither change was statistically significant, and he can't explain the second one beyond speculating about delayed supercompensation. He says plainly it doesn't change the interpretation, since the three-day comparison still favoured high volume, but he reports it anyway.
+[05:40] A second scan taken **10 days** after the last session showed the high volume leg's CSA drifting down — readable as detraining — while the high load leg's drifted *up*. Neither change was statistically significant, and he can't explain the second beyond speculating about delayed supercompensation. He says it doesn't change the interpretation, since the three-day comparison still favoured high volume, but reports it anyway.
 
 [07:12] **n = 15**, small even by resistance-training standards. **Six weeks**, short for detecting hypertrophy in trained lifters.
 
 ## How it fits the wider rep-range literature
 [08:13] He splits the possible explanations in two.
 
-**Maybe progressing sets is itself special.** He can't test this — no other study compares progressing set count over weeks against a fixed weekly set count. He leaves it as an open question rather than building on it.
+**Maybe progressing sets is itself special.** He can't test this — no other study compares progressing set count over weeks against a fixed weekly set count. He leaves it open rather than building on it.
 
-**Maybe 5 reps is simply suboptimal.** He tabulates every study he knows of comparing ~5 reps to higher reps, all with reps to or near failure. Most report **no difference** — which on the surface defends low reps. But [09:13] most of them are **confounded in favour of the low-rep group**: those subjects did **more sets per exercise**, used **longer inter-set rest**, or both. Longer rest between sets of compound lifts appears to improve hypertrophy, so those studies stacked the deck for 5 reps and still only reached a tie.
+**Maybe 5 reps is simply suboptimal.** He tabulates every study he knows of comparing ~5 reps to higher reps, all with reps to or near failure. Most report **no difference**. But [09:13] most are **confounded in favour of the low-rep group**: those subjects did **more sets per exercise**, used **longer inter-set rest**, or both. Longer rest between sets of compound lifts appears to improve hypertrophy, so those studies stacked the deck for 5 reps and still only reached a tie.
 
 [10:17] The exception is **Weiss et al. (2000)**, which equated set numbers *and* rest intervals and found **3–5 reps as effective as 13–15 and 23–25 reps**. One clean study, pointing the other way from Vann.
 
 ## Practical read
-[10:47] He refuses to convert this into a rule. If your main goal is hypertrophy and sets of 5 have been producing fine growth, there is no strong reason to change. If growth has been subpar on 5s, or you want to err toward the better-evidenced option, drop into **8–35 reps**, where a good body of work shows loads from ~30% to ~80% 1RM produce similar growth when sets are taken to or near failure.
+[10:47] He refuses to convert this into a rule. If sets of 5 have been producing fine growth, there is no strong reason to change. If growth has been subpar on 5s, or you want to err toward the better-evidenced option, drop into **8–35 reps**, where a good body of work shows loads from ~30% to ~80% 1RM produce similar growth when sets are taken to or near failure.
 
-**Where he is rigorous:** he flags the confounder direction in the studies that support his old position, not just the new one; he reports the peculiar 10-day scan that helps neither side; and he names the single clean study that contradicts the video's thesis.
+**Where he is rigorous:** he flags the confounder direction in the studies supporting his old position, not just the new one; reports the peculiar 10-day scan that helps neither side; and names the single clean study contradicting the video's thesis.
 
-**Where the claim runs ahead of the evidence:** the headline rests on **one 6-week, n=15 study whose two conditions differed in load, rep count, set progression and proximity to failure simultaneously**. Any of those could be doing the work. He acknowledges this, and correspondingly downgrades to "less certain" rather than "5 reps don't work" — but the video title invites a firmer conclusion than the data carry.
+**Where the claim runs ahead of the evidence:** the headline rests on **one 6-week, n=15 study whose conditions differed in load, rep count, set progression and proximity to failure simultaneously**. Any of those could be doing the work. He acknowledges this and downgrades to "less certain" rather than "5 reps don't work" — but the title invites a firmer conclusion than the data carry.
 
 ## References
 

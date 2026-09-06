@@ -5,10 +5,9 @@
 
 ## Bottom line
 - Across two meta-analyses and at least six individual trials, **lifting weights does not chronically raise resting total, free or bioavailable testosterone** — in untrained men aged 18–75, in men over 60, in trained men, or in older men whose levels are already below the normal range.
-- This is a claim about *resting* concentrations. It is a different question from the acute post-workout spike, which he covered separately, and a different question again from exogenous testosterone, which clearly does enhance hypertrophy.
+- This is a claim about *resting* concentrations — a different question from the acute post-workout spike, which he covered separately, and different again from exogenous testosterone, which clearly does enhance hypertrophy.
 - Two studies dissent. Izquierdo found resting total testosterone rose in a **non-failure** group (6×3 with a 6RM load) but not the matched failure group; Kraemer found resting **free** testosterone rose in young men but not older men. Neither has been replicated, and a comparably designed study (Petrella) found nothing.
 - The honest boundary he draws: the data cannot show that training *never* raises testosterone. Nearly all of it used full-body splits, loads below 80% 1RM, and lasted **12 weeks or less**.
-- The practical implication he does not spell out but which follows: training programmes sold on "boosting testosterone" have no resting-hormone effect to sell.
 
 ## The baseline biology
 Roughly 70% of total testosterone is tightly bound to sex hormone binding globulin and cannot act on tissue; 20–30% is weakly bound to albumin and can; 1–2% is free and can. Bioavailable testosterone means albumin-bound plus free. Which fraction a study measured matters, and he sorts the evidence by it rather than treating "testosterone" as one number — as he also sorts by training status, age, and baseline level.
@@ -16,10 +15,10 @@ Roughly 70% of total testosterone is tightly bound to sex hormone binding globul
 ## Untrained men, young and old
 Potter's 2021 meta-analysis pooled nine randomised controlled trials in previously untrained men aged 18–75, all with average total testosterone inside the normal range (roughly 270–1,070 ng/dL). Most protocols were 2–3 full-body sessions per week, compound-dominant (leg press, bench press, lat pulldown), about 6–12 weekly sets per muscle, reps to or near failure at 50–80% 1RM. No significant effect on resting total testosterone.
 
-Hayes and Elliott's 2018 meta-analysis pooled 17 randomised and non-randomised trials in previously untrained men aged 60+, most within normal ranges, with near-identical protocols. No significant effect on resting free, bioavailable or total testosterone.
+Hayes and Elliott's 2018 meta-analysis pooled 17 trials in previously untrained men aged 60+, most within normal ranges, with near-identical protocols. No significant effect on resting free, bioavailable or total testosterone.
 
 ## Men who already have low testosterone
-Three comparable randomised trials from Denmark recruited men aged 60–78 with **low bioavailable testosterone — averaging around 129 ng/dL** — and waist circumference above 94 cm. They were designed to test testosterone gel, but each contained a group that resistance trained on placebo gel: 2–3 sessions per week for 10 weeks, leg press, knee extension, leg curl, chest press, lat pulldown, back extension and crunches, 2–3 sets at 6–10RM loads. In all three, the training-plus-placebo group saw **no increase in bioavailable testosterone**. This is the demographic where a training effect would be most expected, and it is absent.
+Three comparable randomised trials from Denmark recruited men aged 60–78 with **low bioavailable testosterone — averaging around 129 ng/dL** — and waist circumference above 94 cm. They were designed to test testosterone gel, but each contained a group that resistance trained on placebo gel: 2–3 sessions per week for 10 weeks, leg press, knee extension, leg curl, chest press, lat pulldown, back extension and crunches, 2–3 sets at 6–10RM. In all three, that group saw **no increase in bioavailable testosterone**. This is the demographic where a training effect would be most expected, and it is absent.
 
 ## Trained men
 - **Schwanbeck:** 15 men, ~2.5 years training, free-weight vs machine-only programmes, 3–4 sets of 4–10 reps per exercise. No change in resting free testosterone in either group.
@@ -33,9 +32,9 @@ Three comparable randomised trials from Denmark recruited men aged 60–78 with 
 **Kraemer.** 8 young men (mean 30) and 9 older men (mean 62), a range of exercises with loads varying across three weekly sessions, 10 weeks. Resting total testosterone unchanged in both; resting **free** testosterone rose in the young men only. Petrella's comparably designed study — 13 young (20–35) and 13 older (60–75) men, leg extension, leg press and squat, 3×8–12, three times weekly for 16 weeks — found no increase in resting total or free testosterone in either age group. Exercise selection differed, so he does not claim the conflict is resolved.
 
 ## The limits he puts on his own conclusion
-Full-body splits dominate the evidence; bro splits are untested. Loads above 80% 1RM and varied proximities to failure are barely explored. And almost everything ran 12 weeks or less. He raises one long-term observation — elite Finnish weightlifters followed for two years showed elevated resting total testosterone — and then dismantles it himself on two grounds: they were Olympic lifters, which is not what a hypertrophy or general strength trainee does, and despite the researchers' statement that no anabolic steroids were used, these were national champions and record holders, which he says makes him sceptical.
+Full-body splits dominate the evidence; bro splits are untested. Loads above 80% 1RM and varied proximities to failure are barely explored. And almost everything ran 12 weeks or less. He raises one long-term observation — elite Finnish weightlifters followed for two years showed elevated resting total testosterone — then dismantles it himself: they were Olympic lifters, which is not what a hypertrophy or general strength trainee does, and despite the researchers' statement that no anabolic steroids were used, these were national champions and record holders, which he says makes him sceptical.
 
-**Flagged:** nothing here outruns its evidence. If anything he under-weights the possibility that a null result across small samples reflects power rather than absence of effect — but he does present both dissenting studies in full rather than burying them, which is the harder thing to do when they cut against your title.
+**Flagged:** nothing here outruns its evidence. If anything he under-weights the possibility that null results across small samples reflect statistical power rather than absence of effect — but he presents both dissenting studies in full rather than burying them, which is the harder thing to do when they cut against your title.
 
 ## References
 

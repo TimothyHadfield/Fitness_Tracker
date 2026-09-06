@@ -12,9 +12,9 @@
 - Aside worth flagging: the same analysis found **strength gains essentially maximised at ~2 sets per muscle group per session**.
 
 ## What the new data actually shows
-The analysis covered working sets taken to or near failure, not warm-ups; the studies averaged about **10 reps per set** with most sets to failure. Plotting sets per muscle group per session against hypertrophy gives a curve that keeps climbing to 20+ sets. The shape matters more than the endpoint: the curve is concave, so the marginal return per set shrinks steadily.
+The analysis covered working sets taken to or near failure, not warm-ups; studies averaged about **10 reps per set** with most sets to failure. Plotting sets per muscle group per session against hypertrophy gives a curve that keeps climbing to 20+ sets. The shape matters more than the endpoint: it is concave, so marginal return per set shrinks steadily.
 
-Moderator analyses held the relationship in **untrained and trained** subgroups and across **shorter and longer inter-set rest**. He calls out the rest finding specifically because he has previously argued on this channel that set number and rest interval might interact — and says the current evidence does not support that interaction. That is him retiring one of his own prior positions, which is worth noting.
+Moderator analyses held the relationship in **untrained and trained** subgroups and across **shorter and longer inter-set rest**. He calls out the rest finding specifically because he has previously argued on this channel that set number and rest interval might interact — and says the current evidence does not support that. That is him retiring one of his own prior positions.
 
 ## Why the session, week, and frequency data cohere
 He cross-checks the new per-session analysis against two companion analyses in the same preprint family. **Weekly sets** also show more growth with more sets, with no low plateau. **Frequency**, with weekly volume held constant, shows **no meaningful effect** — spreading 12 weekly biceps sets across one, two or three days gave similar growth, with once-weekly numerically lower but inside typical error.
