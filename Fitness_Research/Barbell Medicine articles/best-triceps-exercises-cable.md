@@ -42,6 +42,16 @@ Three of the six are functionally the same exercise at different shoulder angles
 
 **Overreach flag — osteoarthritis.** The healthy-aging section says starting to exercise earlier in life produces "a complete stop of the disease's progression" in osteoarthritis. Nothing in the reference list supports arrest of structural disease progression. [Turner 2020](https://doi.org/10.1177/1941738119887183) is a systematic review of resistance training *dosing on pain and physical function* in knee OA — symptom and function outcomes, not disease modification.
 
+## Progressive loading, not progressive overload
+
+One position here is worth recording because it is a house doctrine that recurs across Barbell Medicine's writing and is stated more clearly in this article than in most. They reject the term "progressive overload" as a misnomer and prefer **progressive loading**.
+
+The distinction: people read "progressive overload" as meaning the training must get *harder* over a career. Barbell Medicine's claim is that it should stay the same level of hard indefinitely — the weight on the bar and the reps completed rise as fitness improves, but **relative difficulty holds roughly constant**. An RPE 8 at 40 is an RPE 8 at 20; the load underneath it is not.
+
+This is offered as a definitional correction rather than an empirical finding, and no citation is attached to it. It is also the conceptual justification for the RPE-based prescriptions running through the article — if the target is a constant relative effort rather than an escalating absolute one, then autoregulated loading is the only way to prescribe it. Whether or not the terminology sticks, the practical implication is sound and it is the opposite of the "add 5 lb every week forever" model most novice programmes carry.
+
+The volume guidance in the same section is presented as experience: **6–12 sets of direct triceps work per week for those newer to training, 15–20 or more for the experienced**, with recovery of triceps strength between workouts "usually taking a couple of days" ([Ferreira 2017](https://doi.org/10.1002/mus.25541) measured pectoralis and triceps recovery after bench press). The article adds the useful qualifier that **complete strength recovery is not required to train the muscle again**, provided weekly dose matches the individual. That is a defensible coaching position and it is not what the cited recovery study measures.
+
 ## The last third of the article is filler
 
 Roughly 1,500 words go to generic benefits of hypertrophy training: healthy aging, endurance, physique, disease prevention, weight management, and an extended detour through EPOC. Two things are worth extracting.

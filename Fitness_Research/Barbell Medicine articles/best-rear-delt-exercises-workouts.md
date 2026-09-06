@@ -26,6 +26,16 @@ Half the list is back training that happens to involve the rear delts. That is d
 
 The one grip-position finding that is genuinely about the posterior shoulder is [Schoenfeld 2013](https://doi.org/10.1519/jsc.0b013e318281e1e9): during horizontal abduction, a **neutral grip** produced noticeably higher posterior deltoid and infraspinatus EMG than the alternative. The article passes this on as a "Pro Tip" for the reverse pec deck. It is an acute activation finding presented as a technique instruction, which is exactly the inferential move the article warned against four sections earlier.
 
+## The two EMG studies the ranking actually rests on
+
+Both are worth stating precisely, because they are the entire empirical basis for putting the reverse pec deck at the top.
+
+**[Botton 2013](https://doi.org/10.5604/17342260.1055261)** compared EMG across the three deltoid portions during several upper-body exercises. Anterior deltoid activity was similar across Smith machine shoulder press, bench press and pec deck, but significantly higher in the Smith press. Middle deltoid was similar across lateral raise, reverse pec deck and seated row. **Posterior deltoid was similar across reverse pec deck, incline lat pulldown and seated row, but significantly higher in the reverse pec deck.** This reference did not resolve in the citation record — it was published in *Medicina Sportiva*, a low-visibility journal.
+
+**[Campos 2020](https://doi.org/10.2478/hukin-2020-0033)**, in resistance-trained individuals, compared multi- and single-joint shoulder exercises and found **posterior deltoid activity high in the reverse pec deck (single-joint) relative to the seated row and inclined lat pulldown (multi-joint)**, middle deltoid highest in reverse pec deck and seated row, and anterior deltoid relatively low throughout.
+
+Two acute EMG studies, agreeing with each other, on one machine. That is the strongest evidence available for a rear delt exercise ranking, and it is not evidence about growth. The article's own framing — make sure the exercise loads the muscle, and stop there — is the appropriate response to it, and is what the reader should take away rather than the ordering of the list.
+
 ## The lat pulldown grip-width literature contradicts itself, and the article says so
 
 This is the best-handled passage in the piece. Three studies are laid out honestly:
