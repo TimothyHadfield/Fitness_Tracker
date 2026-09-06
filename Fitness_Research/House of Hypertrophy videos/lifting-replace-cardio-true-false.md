@@ -18,19 +18,14 @@ Androulakis-Korakakis (2018) took **16 well-trained powerlifters and strongmen**
 
 After **8 weeks**: leg extension strength gains were similar between groups, so neither protocol interfered with strength. Both groups raised VO2max — but **the cycling group raised it more**.
 
-His explanation for why: most lifting **doesn't involve constant effort**. The eccentric is easier than the concentric, and there are pauses between reps. Cycling demands fairly continuous exertion. This is mechanism, not measured, but it is plausible.
+His explanation: most lifting **doesn't involve constant effort**. The eccentric is easier than the concentric, and there are pauses between reps, whereas cycling demands continuous exertion. Mechanism, not measured, but plausible.
 
-A practical caveat he adds: squats and deadlifts are complex movements. These subjects were powerlifters and strongmen, so it was fine for them. **Less trained people wanting to try HIIT lifting should use machine or dumbbell variations**, and may need higher rep numbers to compensate for the lower muscle mass involved.
+A practical caveat he adds: squats and deadlifts are complex, and these subjects were powerlifters and strongmen. **Less trained people should use machine or dumbbell variations**, with higher rep numbers to compensate for the lower muscle mass involved.
 
 ## What cardiovascular adaptations lifting does produce
-Not always consistently found, but resistance training can increase:
+Not always consistently found, but resistance training can increase **capillary density** (the vessels delivering oxygen, nutrients and hormones to cells) and **mitochondrial density** — both hallmark endurance adaptations. **Eccentric cardiac hypertrophy**, prominent in endurance athletes and beneficial to cardiac capacity, is also not uncommon in bodybuilders.
 
-- **Capillary density** — the tiny vessels delivering oxygen, nutrients and hormones to cells.
-- **Mitochondrial density** — the organelles generating energy.
-
-Both are hallmark endurance adaptations. **Eccentric cardiac hypertrophy**, an adaptation prominent in endurance athletes and beneficial to cardiac capacity, is also seen in bodybuilders.
-
-Not all lifting is equal here. He argues that styles which **prolong set duration and shorten rest** should enhance these adaptations, citing a 2019 study in which training at **30% 1RM** raised the content of several mitochondrial proteins more effectively than **80% 1RM**.
+Not all lifting is equal here. He argues styles that **prolong set duration and shorten rest** should enhance these adaptations, citing a 2019 study in which training at **30% 1RM** raised the content of several mitochondrial proteins more effectively than **80% 1RM**.
 
 **Note the tension he doesn't address:** the Holloway (2018) paper in his own reference list found microvascular adaptations to be **independent of load** in resistance-trained men. The load-dependence claim holds for mitochondrial protein, not obviously for capillarisation, and the video presents it as a general rule.
 
@@ -52,9 +47,9 @@ His answer is no, and the reasoning is careful:
 3. **Long-duration continuous cardio** produces adaptations likely unattainable by lifting or even HIIT — specifically mitochondrial efficiency and respiration, and substantial capillary density increases.
 
 ## Don't fear cardio
-He points back to his earlier videos: the interference effect is **largely overblown** unless you are highly trained and/or running very high resistance training volumes, and updated analyses fail to find that adding cardio impairs muscle and strength gains. Various lines of evidence suggest cardio may even **help** you build muscle in certain cases.
+He points back to earlier videos: the interference effect is **largely overblown** unless you are highly trained and/or running very high resistance training volumes, and updated analyses fail to find that adding cardio impairs muscle and strength gains.
 
-The mortality data is the strongest practical argument for adding it: **21%** reduced all-cause mortality risk for resistance training alone versus **40%** for resistance training plus cardio (Saeidifard 2019, meta-analysis of observational data — association, not causation).
+The mortality data is the strongest practical argument for adding it: **21%** reduced all-cause mortality risk for resistance training alone versus **40%** for resistance training plus cardio (Saeidifard 2019 — meta-analysis of observational data, so association, not causation).
 
 ## The useful inversion
 The closing point is the most actionable thing in the video and is easy to miss: **local endurance adaptations — mitochondrial and capillary — are largely specific to the muscles trained**. If your cardio is cycling or running, your upper body gets none of it. Using resistance training deliberately to build local cardiovascular adaptations in muscles your cardio doesn't reach is a sound idea.

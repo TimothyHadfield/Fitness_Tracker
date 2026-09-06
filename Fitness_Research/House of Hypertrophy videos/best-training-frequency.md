@@ -13,7 +13,7 @@
 ## The study
 [00:30] 24 trained men, average unilateral leg press 1RM of **203 kg**. Two groups, and he only uses one of them.
 
-The first group equated **total tonnage** between the 1x and 3x conditions. That forced the once-weekly condition to do maximum reps per set while the three-times-weekly condition held back well short of failure to keep tonnage matched. He discards this group: proximity to failure is crucial for growth, tonnage relates weakly to growth, and the arrangement does not resemble real training. He points readers to a pinned comment for its details rather than dropping it silently.
+The first group equated **total tonnage** between the 1x and 3x conditions, which forced the once-weekly condition to do maximum reps per set while the three-times-weekly condition held back short of failure to match tonnage. He discards this group: proximity to failure is crucial for growth, tonnage relates weakly to growth, and the arrangement does not resemble real training. He points readers to a pinned comment for its details rather than dropping it silently.
 
 [01:32] The second group is the useful one. **One leg trained once per week** (9 sets of max reps on the unilateral leg press, all in one session); **the other leg trained three times per week** (3 sets per session, three sessions). Weekly sets were identical at nine. Target rep numbers varied by week and load was adjusted per set to hit them.
 

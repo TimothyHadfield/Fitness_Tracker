@@ -4,49 +4,37 @@
 **Topic:** Programming
 
 ## Bottom line
-- A single-leg study found that **6 weeks of cycling before 10 weeks of lifting produced more fibre growth** in the pre-conditioned leg than in the untrained control leg of the same person.
+- A single-leg study found **6 weeks of cycling before 10 weeks of lifting produced more fibre growth** in the pre-conditioned leg than in the untrained leg of the same person.
 - The proposed mechanism is **capillary density**: cycling raised it, and the increase correlated with subsequent slow- and fast-twitch fibre hypertrophy. High-responding legs had more capillaries than low-responding ones.
-- Supporting correlational data links capillarisation to satellite cell activation in young men, and to fibre hypertrophy in older adults.
-- Practical options: run cardio **concurrently**, run a **cardio block before a lifting block**, or **alternate** concurrent and lifting-only phases. Higher reps may deliver some of the same endurance adaptations.
-- This is a **mechanism-forward video**. The direct evidence is one small untrained-subject study; almost everything else is correlational or in vitro.
+- Options: run cardio **concurrently**, run a **cardio block before a lifting block**, or **alternate** concurrent and lifting-only phases.
+- This is a **mechanism-forward video**. The direct evidence is one small untrained-subject study; the rest is correlational or in vitro.
 
 ## The study
-Thomas (2022, Canada) recruited **14 untrained individuals**. One leg cycled **3× weekly for 6 weeks**; the other leg did nothing. Then for **10 weeks both legs trained bilaterally** — squats, leg presses, leg extensions, hamstring curls, calf raises.
+Thomas (2022, Canada) recruited **14 untrained individuals**. One leg cycled **3× weekly for 6 weeks**; the other did nothing. Then **both legs trained bilaterally for 10 weeks** — squats, leg press, leg extension, hamstring curls, calf raises.
 
-At the end, **slow- and fast-twitch fibre growth tended to be superior in the leg that had cycled first**. The pre-conditioning period, which involved no resistance training at all, improved the response to resistance training that followed.
+**Slow- and fast-twitch fibre growth tended to be superior in the leg that had cycled first.** A pre-conditioning period involving no resistance training improved the response to the resistance training that followed. Cycling had significantly raised capillary density, and those increases correlated with the later fibre hypertrophy; comparing high- and low-responding legs, the **high responders had greater capillary density**.
 
-Why? The 6 weeks of cycling significantly increased **capillary density**, and the researchers found a correlation between those increases and the subsequent fibre hypertrophy. Comparing high- and low-responding legs, the **high responders had greater capillary density**.
-
-He lists the limitations himself: subjects were **previously untrained**, average BMI fell in the **overweight range**, and fibre hypertrophy was assessed by **biopsy**, which he has noted elsewhere is far from a clean measurement.
+He lists the limitations himself: subjects were **previously untrained**, average BMI was in the **overweight range**, and fibre hypertrophy came from **biopsies**, which he has elsewhere called far from a clean measurement.
 
 ## Why capillaries might matter
-Capillaries deliver oxygen, nutrients and hormones to muscle fibres. Independent data supports the link:
+Capillaries deliver oxygen, nutrients and hormones to fibres. Supporting data: **Nederveen (2018)** links capillarisation to **satellite cell activation and expansion** in younger people; **Snijders (2017)** in older men and **Moro (2019)** in older adults both found **lower capillary density accompanied lower fibre hypertrophy**.
 
-- **Nederveen (2018)** — in younger individuals, capillarisation is linked to **satellite cell activation and expansion**, events associated with recovery and sustaining long-term growth.
-- **Snijders (2017)**, older men — those with **lower capillary density had lower fast-twitch fibre hypertrophy**.
-- **Moro (2019)**, older adults — same finding.
+Greg Nuckols' framing, which he cites: as fibres grow, everything inside gets further from the supply. To avoid an intracellular energy crisis a fibre must either stop growing or add capillaries.
 
-Greg Nuckols' framing, which he cites: as fibres grow, everything inside them gets **further from the supply on average**. To avoid an intracellular energy crisis, a fibre either stops growing or increases its capillary density to permit further growth.
+Lifting is also more aerobic than it looks — a 200 m sprint still draws **29% of its energy aerobically**. Between-set recovery, later-set performance and between-session recovery all lean on the aerobic system.
 
-There is also more aerobic demand in lifting than people assume. A 200 m sprint — considered strongly anaerobic — still draws **29% of its energy aerobically**. Recovery between sets, performance on later sets, and recovery between sessions all lean on the aerobic system, so more capillaries should help all three.
-
-## Mitochondria
-**Roberts (2018, USA)** found the best hypertrophy responders tended to have **greater mitochondrial volume** than low responders. The researchers' speculation: building the proteins that enlarge muscle is energetically expensive, and mitochondria fund that. In vitro work has also associated mitochondrial volume and function with cell growth.
-
-He is careful here: he is **not** arguing you should maximise endurance adaptations, only that enhancing them somewhat may benefit long-term hypertrophy.
+**Mitochondria** may play a parallel role: Roberts (2018) found the best hypertrophy responders had **greater mitochondrial volume** than low responders, speculating that building muscle protein is energetically expensive. He is careful to say he is not arguing for maximising endurance adaptations — only that enhancing them somewhat may help.
 
 ## What to actually do
-Four options, in descending order of evidential support:
+1. **Train cardio concurrently.** The literature finds no compromised hypertrophy, and **some studies find better** hypertrophy — several with **slow-twitch fibre growth specifically enhanced**, fibres that are typically harder to grow. Excludes the very highly trained or those already running extreme volumes.
+2. **Block it, as in the study.** The objection that weeks off lifting waste your gains is false: Ogasawara (2013) compared 24 weeks continuous against **6 weeks on / 3 weeks off** over the same period, and chest and triceps size and bench strength gains were **similar at the end**. Losses during breaks rebounded quickly.
+3. **Alternate concurrent and lifting-only phases** (Nuckols). Slower gains in the concurrent phase may pay off in the phase after.
+4. **Use higher reps**, which better promote endurance adaptations — explicitly labelled speculation needing more data.
 
-1. **Train cardio concurrently.** The overall literature finds no compromised hypertrophy from concurrent training, and **some studies find better hypertrophy**. Several find **slow-twitch fibre hypertrophy specifically enhanced** — fibres that are typically harder to grow. His caveat: this excludes people who are very highly trained or already running extreme volumes.
-2. **Block it, as in the study.** Cycle for a while, then lift. The obvious objection — that weeks without lifting waste your gains — is false: Ogasawara (2013) compared 24 weeks of continuous training against **6 weeks on / 3 weeks off across the same 24 weeks**, and chest and triceps size and bench strength gains were **similar at the end**. Size and strength dipped during breaks and rebounded quickly on resuming.
-3. **Alternate concurrent and lifting-only phases** (Nuckols' suggestion). If you're highly trained, accepting slower gains during the concurrent phase may pay off in an enhanced lifting-only phase afterwards.
-4. **Use higher reps.** These better promote endurance adaptations, so they might confer the same long-term benefit. He labels this speculation needing more data — correctly.
-
-One practical detail worth keeping: **local endurance adaptations are specific to the muscles used**. Unless your cardio covers upper and lower body, the muscles it misses may be the ones that benefit from higher reps.
+Worth keeping: **local endurance adaptations are specific to the muscles used**. Unless your cardio covers upper and lower body, the muscles it misses are the ones that may benefit from higher reps.
 
 ## Overreach flag
-The chain — cardio → capillaries → hypertrophy — rests on **one 14-person untrained single-leg study** plus correlational and older-adult data, and the video's title states it far more confidently than the evidence supports. To his credit, he states the study's limitations unprompted and repeatedly hedges the practical advice as speculation.
+The chain — cardio → capillaries → hypertrophy — rests on **one 14-person untrained single-leg study** plus correlational and older-adult data, and the title states it far more confidently than that supports. To his credit he volunteers the limitations and hedges the practical advice as speculation.
 
 ## References
 

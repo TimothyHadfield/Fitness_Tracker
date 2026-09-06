@@ -8,12 +8,12 @@
 - The theoretical case — that heavy reps grow fast-twitch fibres and light reps grow slow-twitch — is **not supported when sets go to or near failure**. A meta-analysis of five fibre-type studies found similar growth of both fibre types across roughly 3–10 reps (75–90% 1RM) and 20–40 reps (30–50% 1RM).
 - The one long study points the other way. Kraemer ran **nine months** in untrained women and found greater fat-free mass gains with varied rep ranges — but measured by skinfold calipers, which he correctly discounts.
 - **No study found varied rep ranges inferior.** So his practical verdict is permissive: do it if it makes training less monotonous; do not do it expecting more growth.
-- Two live hypotheses he leaves open and labels as hypotheses: that the effect is duration-dependent (everything else ran ≤12 weeks) and that it may differ in women (everything else was in men).
+- Two hypotheses he leaves open and labels as such: that the effect is duration-dependent (everything else ran ≤12 weeks) and that it may differ in women (everything else was in men).
 
 ## Why the fibre-type argument fails
 The intuition is that slow-twitch fibres, being fatigue-resistant and low-power, should respond to high reps, while fast-twitch fibres, being powerful and fatigable, should respond to low reps. Grgic's meta-analysis of five studies found this is not what happens: slow-twitch growth was similar between high- and low-rep groups, and so was fast-twitch growth. He immediately notes the **95% confidence intervals were wide**, so this is a lean rather than a settlement.
 
-The explanation is the size principle. Heavy loads recruit both fibre populations from the first rep because effort is high immediately. Light loads start low-effort but effort climbs as failure approaches, and recruitment climbs with it, ending in a similar place. Both routes converge on high recruitment, so both stimulate both fibre types.
+The explanation is the size principle. Heavy loads recruit both fibre populations from the first rep because effort is high immediately. Light loads start low-effort, but effort and recruitment climb as failure approaches, ending in a similar place.
 
 ## The molecular argument is unresolved
 The second theoretical case is that different rep ranges impose different mixes of metabolic and mechanical stress and might therefore activate different signalling proteins upstream of muscle protein synthesis. Some studies find low and high reps activate different proteins; others find they do not. He calls this unclear and moves on rather than building on it — the right handling, since even a confirmed signalling difference would be an acute surrogate rather than a growth outcome.
@@ -28,11 +28,11 @@ He then does something unusually careful: rather than stopping at "not significa
 **Fink** assigned each arm of 21 untrained men to a high-load, light-load or mixed condition — unilateral dumbbell curls, 3 sets to failure, three times weekly for eight weeks, 2 min rest. High load: 80% 1RM (about 7 down to 3 reps). Light load: 30% 1RM (about 40 down to 10 reps). Mixed: alternating two-week blocks of each. MRI-measured elbow flexor cross-sectional area increases were similar across all three. This is a within-subject design, which controls for the between-person variation that muddies the Schoenfeld result.
 
 ## The remaining studies, and the nine-month outlier
-Several more studies exist but used body composition or circumference measures, which he flags as less sensitive and less accurate than MRI or ultrasound. Most still found no difference. Two found an advantage for varied rep ranges.
+Several more studies exist but used body composition or circumference measures, which he flags as less sensitive than MRI or ultrasound. Most still found no difference. Two found an advantage for varied rep ranges.
 
-The interesting one is **Kraemer**: 27 untrained women, constant (8–10 reps to failure on everything) versus varied (4–6 reps day one, 8–10 day two, 12–15 day three), three sessions weekly for **nine months**. Fat-free mass gains, by skinfold calipers, were significantly greater in the varied group. He treats the measurement as weak but the duration as genuinely novel, and offers two readings: that women may respond differently, since every other study here used men; or that the effect is time-dependent, since every other study ran 12 weeks or less. He wraps the second in an explicit hypothesis — that using one rep range indefinitely might have some desensitising effect — and labels it as such rather than asserting it.
+The interesting one is **Kraemer**: 27 untrained women, constant (8–10 reps to failure on everything) versus varied (4–6 reps day one, 8–10 day two, 12–15 day three), three sessions weekly for **nine months**. Fat-free mass gains, by skinfold calipers, were significantly greater in the varied group. He treats the measurement as weak but the duration as genuinely novel, and offers two readings: that women may respond differently, since every other study here used men; or that the effect is time-dependent, since every other study ran 12 weeks or less. He wraps the second in an explicit hypothesis — that using one rep range indefinitely might have a desensitising effect — and labels it as such.
 
-**Flagged:** the title's "18 studies" is doing promotional work. Three studies carry the conclusion; the rest are downweighted by his own measurement standard within the first minute of discussing them. Nothing in the argument overreaches, but the headline count does.
+**Flagged:** the title's "18 studies" is doing promotional work. Three studies carry the conclusion; the rest are downweighted by his own measurement standard within a minute of being introduced.
 
 ## References
 

@@ -4,48 +4,42 @@
 **Topic:** Exercise selection
 
 ## Bottom line
-- Bodyweight exercises stimulate hypertrophy **as effectively as free weights or machines**, provided sets are taken to or near failure within roughly **6–35 reps**.
-- The "6–12 rep range is superior" premise the criticism rests on is wrong — reps from 6 to 35 are comparably effective, because they converge on similar **mechanical tension**.
-- **Progressive overload is not the pitfall** people assume: more reps, harder variations, slower tempo or pauses, and added weight are all viable.
-- **Regional hypertrophy is not the pitfall either**, at least for the upper body — bodyweight variations exist at enough different shoulder and incline angles.
-- **The lower body is the real pitfall.** There is no proper bodyweight hip-extension exercise for the hamstrings, and calf raises, hip thrusts and even pistol squats become impossible to overload within 6–35 reps.
+- Bodyweight exercises stimulate hypertrophy **as effectively as free weights or machines**, provided sets go to or near failure within roughly **6–35 reps**.
+- The "6–12 is the hypertrophy range" premise the criticism rests on is wrong — 6 to 35 reps are comparably effective because they converge on similar **mechanical tension**.
+- **Progressive overload is not the pitfall** people assume: more reps, harder variations, slower tempo or pauses, and added weight all work.
+- **Regional hypertrophy is not the pitfall either**, at least upstairs — bodyweight variations exist at enough different shoulder and incline angles.
+- **The lower body is the real pitfall.** There is no proper bodyweight hip-extension exercise for the hamstrings, and calf raises, hip thrusts and eventually pistol squats can't be overloaded within 6–35 reps.
 
 ## Why rep range isn't the objection people think
-Bodyweight work is typically higher-rep, and the widespread belief that 6–12 is the hypertrophy range makes that look damning. It isn't. Multiple papers indicate **6 to 35 reps per set are comparably effective** for growth if taken to or close to failure.
+Multiple papers indicate **6 to 35 reps per set are comparably effective** for growth when taken to or close to failure. The mechanism: **mechanical tension** is the primary stimulus, detected by mechanosensors and converted into a growth signalling cascade. Heavy low-rep sets involve high tension immediately; high-rep sets start low but recruit more fibres and raise per-fibre force contribution as failure approaches, so **total tension ends up similar**.
 
-The mechanism: **mechanical tension** is the primary hypertrophy stimulus, detected by mechanosensors in the fibres and converted into a growth signalling cascade. Heavy low-rep sets involve high tension immediately, rising further near failure. High-rep sets start with low tension, but as you approach failure more fibres are recruited and many increase their force contribution — so **total mechanical tension ends up similar**.
+His sharpest line is the right one: **your body has no sensor for whether the tension came from a barbell, a machine, or your own bodyweight.** He also notes the alternative proposed stimuli — metabolic stress, micro-tears — lack compelling evidence as powerful growth drivers.
 
-His sharpest line, and the correct one: **your body has no sensor for whether the tension came from a barbell, a machine, or your own bodyweight.** Fibres don't refuse to grow because the load was a push-up. He also notes the alternative proposed stimuli — metabolic stress, micro-tears — lack compelling evidence as powerful growth drivers.
+Two direct comparisons:
 
-Two direct comparisons back this up:
-
-- **Kikuchi & Nakazato (2017, Japan):** high-rep bench press vs high-rep push-up training — **chest and triceps growth similar**.
-- **Kotarsky (2018, USA):** progressive push-up training (harder variations, lower reps) vs lower-rep bench press — both groups grew chest; the percentages **numerically favoured push-ups but the difference was not statistically significant**, which he says outright rather than claiming a win.
+- **Kikuchi & Nakazato (2017, Japan):** high-rep bench press vs high-rep push-ups — **chest and triceps growth similar**.
+- **Kotarsky (2018, USA):** progressive push-up training (harder variations, lower reps) vs lower-rep bench press — both grew chest; percentages **numerically favoured push-ups but were not statistically significant**, which he states outright rather than claiming a win.
 
 ## Pitfall 1: progressive overload — not really a problem
-Four routes, all supported:
-
-- **Add reps.** Fine within 6–35; current data indicates progressing via reps is no less effective for growth than progressing via load.
-- **Harder variations.** Manipulate body position or move to single-limb versions so you work against a greater fraction of your bodyweight.
-- **Slow the tempo or add pauses.** A wide range of rep tempos are comparable for inducing growth, so this is a legitimate progression lever.
-- **Add external weight.** Not strictly bodyweight, but weighted calisthenics work well. Tillaar (2019, Norway) found that when **load-equated**, weighted push-ups and bench presses produced **similar chest, triceps and shoulder recruitment**.
+- **Add reps.** Fine within 6–35; current data indicates progressing via reps is no less effective than via load.
+- **Harder variations.** Change body position or move to single-limb versions to work against a greater fraction of bodyweight.
+- **Slow the tempo or add pauses.** A wide range of tempos are comparable for inducing growth.
+- **Add external weight.** Tillaar (2019, Norway) found that when **load-equated**, weighted push-ups and bench presses produced **similar chest, triceps and shoulder recruitment**.
 
 ## Pitfall 2: regional hypertrophy — not really a problem upstairs
-Muscles don't grow evenly across their regions, so training a muscle with a few **biomechanically different** exercises should better optimise overall regional growth. The worry is that calisthenics lacks that variety. For the upper body it doesn't: bodyweight variations exist to train **biceps and triceps at different shoulder angles**, the **chest at different incline angles**, and the **back through biomechanically distinct pulls**.
+Muscles don't grow evenly across regions, so a few **biomechanically different** exercises per muscle should optimise overall development. For the upper body calisthenics has them: biceps and triceps at different **shoulder angles**, chest at different **incline angles**, back through biomechanically distinct pulls.
 
-**Overreach flag:** this section leans on **activation/EMG data rather than growth outcomes**, both here and in the load-equated push-up comparison. Similar recruitment is not the same as similar hypertrophy.
+**Overreach flag:** this section leans on **activation/EMG data rather than growth outcomes**, as does the load-equated push-up comparison. Similar recruitment is not similar hypertrophy.
 
 ## Pitfall 3: the lower body — a genuine limitation
-Two separate problems.
+Two problems. **Hamstring exercise selection:** activation patterns differ between hip-extension and knee-flexion movements, so you want both. The **Nordic curl** covers knee flexion excellently, but there is **no proper bodyweight hip-extension exercise** that meaningfully recruits the hamstrings.
 
-**Exercise selection for the hamstrings.** Activation patterns differ between hip-extension and knee-flexion exercises, so optimising hamstring development wants both. Calisthenics has an excellent knee-flexion option in the **Nordic curl**, but there is **no proper bodyweight hip-extension exercise** that meaningfully recruits the hamstrings. That region is simply uncovered.
+**Overload for everything else:** quads, glutes and calves have adequate options — squat variations, reverse Nordic curls, hip thrust variations, calf raises — but many can't be overloaded long-term. Relative novices already exceed 35 reps on calf raises and hip thrusts. Squats progress as far as pistol squats, after which bodyweight-only overload becomes very difficult.
 
-**Overload for everything else.** Quads, glutes and calves have adequate exercise options — squat variations, reverse Nordic curls, hip thrust variations, standing and seated calf raises — but many of them are **impossible to overload long-term**. Relative novices already exceed 35 reps on calf raise and hip thrust variations. Squats progress usefully as far as pistol squats, but once you can rep those out, further bodyweight-only overload is very difficult.
-
-He is careful about the conclusion: it is reasonable to speculate a person **cannot maximise lower body hypertrophy with calisthenics alone**. That is not the same as saying no lower body growth occurs — which would be false. He also notes you can still train above 35 reps and grow, just perhaps less efficiently.
+His conclusion is appropriately hedged: it is reasonable to speculate a person **cannot maximise lower body hypertrophy with calisthenics alone** — which is not the same as no lower body growth occurring. He also notes training above 35 reps still grows muscle, just perhaps less efficiently.
 
 ## Verdict
-Bodyweight training is likely **extremely effective for long-term upper body hypertrophy** and **most likely not extremely effective for the lower body** — some regions can't be trained at all, and some exercises can't be overloaded within the productive rep range.
+Likely **extremely effective for long-term upper body hypertrophy**; **most likely not** for the lower body, where some regions can't be trained at all and some exercises can't be overloaded within the productive rep range.
 
 ## References
 

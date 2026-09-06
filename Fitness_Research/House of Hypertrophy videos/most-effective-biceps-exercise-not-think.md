@@ -15,12 +15,10 @@
 ## Why the shoulder position matters at all
 All curls involve elbow flexion and supination, so all can build biceps. But the biceps has origins **above the shoulder joint**, and the long head passes directly over it. Putting the shoulder into **extension** therefore stretches the muscle — particularly the long head — in a way that curls done in shoulder flexion (preacher curls) or neutral cannot.
 
-The idea that stretch drives growth isn't new. Animal work from the **1970s** found that stretching muscles at extreme intensity for long durations produced hypertrophy. Arnold's book recommends incline dumbbell curls specifically, alluding to the stretch.
+The idea that stretch drives growth isn't new: animal work from the **1970s** found that stretching muscles at extreme intensity for long durations produced hypertrophy, and Arnold's book recommends incline dumbbell curls specifically, alluding to the stretch.
 
 ## Line 1 — Isometric training at long vs short lengths
-Three studies show isometric training at a **stretched** muscle position produces more hypertrophy than at a **shortened** position.
-
-He immediately supplies the limitation himself: **all three studied the quadriceps**. There is no guarantee the same holds for the biceps. This is characteristic of him and it is why the channel is worth reading.
+Three studies show isometric training at a **stretched** muscle position produces more hypertrophy than at a **shortened** position. He immediately supplies the limitation himself: **all three studied the quadriceps**, so there is no guarantee the same holds for the biceps.
 
 ## Line 2 — Partial range-of-motion studies on the biceps
 **Sato (2021)** and **Pedrosa (2023)** both compared preacher curls trained through the **initial (stretched) partial range** against the **final (shortened) partial range**. You can lift heavier in the final range, and both studies adjusted for that.
@@ -28,26 +26,22 @@ He immediately supplies the limitation himself: **all three studied the quadrice
 - **Sato:** elbow flexor growth across three measured regions **tended** to favour the initial-range group; averaged across regions, the initial range was clearly superior.
 - **Pedrosa:** measured at 50% and 70% of upper arm length. At **50%**, thickness gains were **similar**. At **70%**, gains favoured the initial range. Summed across both, the initial range won.
 
-Both studies found **considerably** more growth at the **70% region** with the stretched partial — the same phenomenon that stretch-biased exercises produce in the quadriceps.
+Both found **considerably** more growth at the **70% region** with the stretched partial — the same phenomenon stretch-biased exercises produce in the quadriceps.
 
-**Pinto (2011)** adds support from a different angle: preacher curls trained through **full ROM** versus a **partial in the middle position**. Elbow flexor growth at around the 60% upper-arm region favoured full ROM — plausibly, he argues, because the full-ROM group reached a greater stretch.
+**Pinto (2011)** adds support from a different angle: preacher curls through **full ROM** versus a **partial in the middle position**. Growth at around the 60% upper-arm region favoured full ROM — plausibly, he argues, because that group reached a greater stretch.
 
-He then states the limitation that actually matters: preacher curls are performed **in shoulder flexion**, so they don't optimally stretch the biceps to begin with. And showing that the stretched half of a preacher curl beats the shortened half **cannot prove** that an even greater stretch (shoulder extension) would be better still. That is a real gap and he names it.
+He then states the limitation that matters: preacher curls are performed **in shoulder flexion**, so they don't optimally stretch the biceps to begin with, and showing that the stretched half of a preacher curl beats the shortened half **cannot prove** an even greater stretch would be better still.
 
 ## Line 3 — The triceps analogy
-The triceps long head crosses the shoulder just as the biceps long head does; **shoulder flexion** stretches it. Overhead extensions train it in that stretched position.
+The triceps long head crosses the shoulder just as the biceps long head does; **shoulder flexion** stretches it, and overhead extensions train it in that stretched position.
 
-**Maeo (2023)** compared overhead extensions to pushdowns and found overhead produced **greater long-head volume increases**. More interestingly, overhead also produced **greater combined medial and lateral head growth** — a result nobody predicted, and which he uses to make the point that there is plenty about hypertrophy we still don't understand.
+**Maeo (2023)** compared overhead extensions to pushdowns and found overhead produced **greater long-head volume increases**. More interestingly, overhead also produced **greater combined medial and lateral head growth** — a result nobody predicted, which he uses to make the point that plenty about hypertrophy remains unknown.
 
 ## The counter-argument
-Some argue the biceps specifically **shouldn't** grow more from stretch, based on research into the **length-tension relationship of biceps sarcomeres**. He doesn't dismiss it so much as decline to weight it heavily: that literature has an array of limitations, and you cannot draw definitive conclusions from one line of evidence when other lines point the other way.
-
-His sharpest rebuttal is empirical rather than theoretical — **the same sarcomere-length reasoning was used to argue the triceps shouldn't respond to stretch**, and the Maeo study found it does.
+Some argue the biceps specifically **shouldn't** grow more from stretch, based on research into the **length-tension relationship of biceps sarcomeres**. He declines to weight it heavily: that literature has an array of limitations, and you cannot draw definitive conclusions from one line of evidence when others point the other way. His sharpest rebuttal is empirical — **the same reasoning was used to argue the triceps shouldn't respond to stretch**, and Maeo found it does.
 
 ## Incline curl vs face-away cable curl
-Both put the shoulder in extension. Some argue the cable version is better because it delivers more consistent force production across the ROM. He is skeptical, and the test is sound: if consistent force production mattered much for hypertrophy, **variable resistance should build more muscle than constant resistance**. It doesn't.
-
-Four studies have compared variable to normal resistance; **all four found similar hypertrophy**. Two involved biceps training:
+Both put the shoulder in extension. Some argue the cable version is better because it delivers more consistent force production across the ROM. His test is sound: if that mattered much for hypertrophy, **variable resistance should build more muscle than constant resistance**. It doesn't — four studies have compared them and **all four found similar hypertrophy**. Two involved biceps training:
 
 - **Staniszewski (2020):** variable vs normal resistance machine preacher curls — similar arm circumference gains.
 - **O'Hagan (1995):** variable vs normal resistance preacher machine curls — similar biceps cross-sectional area gains.

@@ -19,7 +19,7 @@
 
 [03:08] All three fed into the **Gentil et al. (2017) review**, which stated that adding single-joint exercises to a multi-joint program does not seem to increase gains in size or strength.
 
-[03:39] Four further studies by Barbalho and colleagues pointed the same way. He discards them: it has been established that much of this group's work contains **improbable and atypical data** that cannot be trusted, possibly because it is illegitimate. Worth noting for the reader — this decision removes evidence for the position he is arguing against, but it is the correct call on data-integrity grounds and he states his reasoning openly rather than quietly omitting the papers.
+[03:39] Four further studies by Barbalho and colleagues pointed the same way. He discards them: much of this group's work contains **improbable and atypical data** that cannot be trusted. Note that this removes evidence for the position he is arguing against — but it is the correct call on data-integrity grounds, and he states his reasoning openly rather than quietly omitting the papers.
 
 ## Why the null results may not mean what they appear to
 [04:40] Ribeiro et al.'s published comment on the Gentil review supplies the core objection: growth was measured **only in elbow flexors and arms, and only at roughly the midpoint of those muscles**.

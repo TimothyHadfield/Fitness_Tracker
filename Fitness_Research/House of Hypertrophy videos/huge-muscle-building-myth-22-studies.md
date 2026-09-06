@@ -4,8 +4,8 @@
 **Topic:** Mechanisms
 
 ## Bottom line
-- Three background myths go first: humans produce **lactate, not lactic acid** under normal physiological conditions; lactate **does not cause fatigue** (it is a usable fuel for muscle and brain); and lactate **alone does not cause the burn**.
-- On the burn specifically, Pollak's infusion experiment is decisive in design: infusing **lactate, ATP or hydrogen ions individually** to high levels produced no pain. Pain appeared only when **all three were infused together**. The sensation is combinatorial.
+- Three background myths go first: humans produce **lactate, not lactic acid** under normal physiological conditions; lactate **does not cause fatigue** (it is a usable fuel for muscle and brain); lactate **alone does not cause the burn**.
+- Pollak's infusion experiment is decisive in design: infusing **lactate, ATP or hydrogen ions individually** to high levels produced no pain. Pain appeared only when **all three were infused together**.
 - The pro-lactate hypertrophy evidence is **in vitro, animal, or hormonal** — none of it human growth outcomes. The one rat study cited fed lactate *and caffeine*, which confounds it. The associated testosterone spikes are a dead end: acute anabolic hormone rises do not track growth.
 - The strongest disconfirming evidence: **infusing lactate into humans during leg extension training raised blood and muscle lactate but did not raise anabolic signalling above saline**.
 - Multiple dissociations between lactate and growth: **400m sprinting produces comparable muscle lactate to a 5-set lower-body session**; **repeated sprint cycling** matches three sets of dumbbell curls to failure. Neither sprint protocol is a serious hypertrophy stimulus.
@@ -33,11 +33,9 @@ Higher reps to failure and blood flow restriction both generate more metabolite 
 Two post-exercise cuff studies test this directly. Training normally to failure, then applying blood flow restriction for **3–5 minutes** afterwards, should trap metabolites and boost growth if metabolites matter. After eight weeks, neither study found added growth, and one found **reduced** growth in its female subjects.
 
 ## The caveat he insists on
-He explicitly refuses the stronger claim. "More metabolites does not mean more hypertrophy" is not the same as "metabolites play zero role". He offers two live possibilities: a **threshold effect**, where metabolites matter up to a low level that essentially all the reviewed research sits above, or an **extreme-level effect** not reachable in humans — noting that the in vitro work linking lactate to hypertrophy used **continuous high lactate exposure for two to six hours, sometimes days**. Either could be true and more research is needed.
+He explicitly refuses the stronger claim. "More metabolites does not mean more hypertrophy" is not "metabolites play zero role". He offers two live possibilities: a **threshold effect**, where metabolites matter up to a low level that essentially all the reviewed research sits above, or an **extreme-level effect** not reachable in humans — noting the in vitro work used **continuous high lactate exposure for two to six hours, sometimes days**. Practical conclusion: focus on mechanical tension, achieved by taking reps to or close to failure. The burn is a sensation, not a target.
 
-The practical conclusion: focus on mechanical tension, achieved simply by taking reps to or close to failure. The burn is a sensation, not a target.
-
-**Flagged:** the mechanical-tension account he substitutes is itself largely mechanism rather than outcome data — it explains the equivalence of loads rather than being independently demonstrated. That said, his negative claim (metabolites are not a potent driver) rests on genuine growth-outcome studies, which is the right way round. Note also that two references are contradictory on tempo and he keeps both in.
+**Flagged:** the mechanical-tension account he substitutes is itself largely mechanism rather than outcome data — it explains the equivalence of loads rather than being independently demonstrated. His negative claim (metabolites are not a potent driver) does rest on genuine growth-outcome studies, which is the right way round.
 
 ## References
 

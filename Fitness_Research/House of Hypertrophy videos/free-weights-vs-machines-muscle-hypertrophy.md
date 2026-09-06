@@ -13,10 +13,9 @@
 ## The study
 15 men and 21 women averaging **2 years of training experience**, randomised to a free-weight or machine group. Two training days on, one off, repeated for 8 weeks. Day 1 was chest, back and triceps; day 2 legs, shoulders and biceps.
 
-- **Free-weight day 1:** flat barbell bench, incline barbell bench, bent-over barbell row, chin-ups, skull crushers, dumbbell kickbacks. **Day 2:** back squat, straight-leg deadlift, lunge, single-leg calf raise, dumbbell shoulder press, dumbbell lateral raise, EZ-bar curl, preacher curl.
-- **Machine day 1:** Smith bench, Smith incline bench, seated row machine, lat pulldown, triceps pressdown, rope pressdown. **Day 2:** Smith squat, leg extension, seated hamstring curl, calf raise machine, machine shoulder press, machine lateral raise, machine curl, machine preacher curl.
+The programs were matched movement for movement: barbell bench and incline, barbell row, chin-ups, skull crushers and kickbacks against Smith bench and incline, seated row machine, lat pulldown and two pressdowns; back squat, straight-leg deadlift, lunge, calf raise, dumbbell shoulder press, lateral raise and two curls against Smith squat, leg extension, seated hamstring curl and the machine equivalents.
 
-Loading progressed across three blocks, every set **to failure**: weeks 1–3 at 4×8–10 with 1 min rest; weeks 4–6 at 4×6–8 with 90 s; weeks 7–8 at 3×4–5 with 2 min. Load went up whenever subjects could manage it.
+Loading progressed across three blocks, every set **to failure**: weeks 1–3 at 4×8–10 with 1 min rest; weeks 4–6 at 4×6–8 with 90 s; weeks 7–8 at 3×4–5 with 2 min, adding load whenever subjects could manage it.
 
 Measures: ultrasound thickness of quadriceps and biceps; 1RM barbell bench and Smith bench; 6–10RM barbell squat and Smith squat converted to predicted 1RMs.
 
@@ -30,9 +29,9 @@ He reads this against specificity, which predicts each group should win on its o
 ## Why the mechanisms predict a tie
 Mechanical tension is the best-characterised driver of growth, and it has two components.
 
-**Active tension** is force from the contractile units — myosin heads pulling actin toward the M line, shortening the sarcomere, with force transmitted mostly laterally into the extracellular matrix and onto the tendon, where mechanosensors are believed to detect it and start the signalling cascade. Whatever the implement, a set taken close to failure at 30–85% 1RM produces sufficiently high active tension for long enough. So even if free weights recruit more fibres early in a set, that advantage washes out by the end of it.
+**Active tension** is force from the contractile units — myosin heads pulling actin toward the M line, force transmitted mostly laterally into the extracellular matrix and onto the tendon, where mechanosensors are believed to detect it and start the signalling cascade. Whatever the implement, a set taken close to failure at 30–85% 1RM produces sufficiently high active tension for long enough. So even if free weights recruit more fibres early in a set, that washes out by the end of it.
 
-**Passive tension** comes from elastic elements — titin inside the sarcomere and the extracellular matrix — being stretched, and is also thought to be sensed. Titin appears to change function during eccentrics so it produces force through that phase, and essentially all modalities involve an eccentric. Passive tension also arises when a muscle contracts at long lengths: the vastus muscles' sarcomeres appear stretched at long lengths, and that is available from a barbell squat, a Smith squat or a hack squat alike.
+**Passive tension** comes from elastic elements — titin and the extracellular matrix — being stretched, and is also thought to be sensed. Titin appears to change function during eccentrics so it produces force through that phase, and essentially all modalities involve an eccentric. Passive tension also arises at long muscle lengths: the vastus sarcomeres appear stretched there, and that is available from a barbell squat, a Smith squat or a hack squat alike.
 
 ## Flag
 The mechanistic section is reasoning, not evidence — it explains a null result rather than testing anything, and it is doing most of the persuasive work here since the study itself is 8 weeks long, ultrasound-based, and measured just two muscles. He acknowledges the measurement limitation but not that a null in an underpowered 8-week trial is weak grounds for "these are equivalent".
