@@ -127,7 +127,7 @@ reading list for that video rather than proof of any single sentence.
 - Ramírez-Campillo R et al. 2013. Regional fat changes induced by localized muscle endurance resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23222084) doi:[10.1519/JSC.0b013e31827e8681](https://doi.org/10.1519/JSC.0b013e31827e8681)
 - Scotto di Palumbo A et al. 2017. Effect of combined resistance and endurance exercise training on regional fat loss. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28497942) doi:[10.23736/S0022-4707.16.06358-1](https://doi.org/10.23736/S0022-4707.16.06358-1)
 
-- Barbalho M et al. 2019. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30779716) doi:[10.1249/MSS.0000000000001818](https://doi.org/10.1249/MSS.0000000000001818)
+- **⚠ RETRACTED.** Barbalho M et al. 2019. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30779716) doi:[10.1249/MSS.0000000000001818](https://doi.org/10.1249/MSS.0000000000001818)
 - Schoenfeld BJ et al. 2019. How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30558493) doi:[10.1080/02640414.2018.1555906](https://doi.org/10.1080/02640414.2018.1555906)
 
 ## [6-ways-always-stay-track-training-diet](6-ways-always-stay-track-training-diet.md)
@@ -1416,7 +1416,7 @@ reading list for that video rather than proof of any single sentence.
 - Damas F et al. 2015. A review of resistance training-induced changes in skeletal muscle protein synthesis and their contribution to hypertrophy. *Sports Med*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/25739559) doi:[10.1007/s40279-015-0320-0](https://doi.org/10.1007/s40279-015-0320-0)
 - Mitchell CJ et al. 2014. Acute post-exercise myofibrillar protein synthesis is not correlated with resistance training-induced muscle hypertrophy in young men. *PLoS One*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/24586775) doi:[10.1371/journal.pone.0089431](https://doi.org/10.1371/journal.pone.0089431)
 - Colquhoun RJ et al. 2018. Training Volume, Not Frequency, Indicative of Maximal Strength Adaptations to Resistance Training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29324578) doi:[10.1519/JSC.0000000000002414](https://doi.org/10.1519/JSC.0000000000002414)
-- Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
+- **⚠ RETRACTED.** Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
 - McHugh MP 2003. Recent advances in the understanding of the repeated bout effect: the protective effect against muscle damage from a single bout of eccentric exercise. *Scand J Med Sci Sports*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/12641640) doi:[10.1034/j.1600-0838.2003.02477.x](https://doi.org/10.1034/j.1600-0838.2003.02477.x)
 
 ## [high-protein-diets-cause-bone-loss-kidney](high-protein-diets-cause-bone-loss-kidney.md)
@@ -3120,7 +3120,7 @@ reading list for that video rather than proof of any single sentence.
 
 **Scientific References**
 
-- Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
+- **⚠ RETRACTED.** Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
 - Peterson MD et al. 2005. Applications of the dose-response for muscular strength development: a review of meta-analytic efficacy and reliability for designing training prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16287373) doi:[10.1519/R-16874.1](https://doi.org/10.1519/R-16874.1)
 
 ## [world-s-smartest-muscle-building-technique](world-s-smartest-muscle-building-technique.md)

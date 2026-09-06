@@ -3,9 +3,32 @@
 **Source:** Jeff Nippard, "Is Workout Volume Actually Killing Your Gains? (Athlean-X Response)" ([watch](https://www.youtube.com/watch?v=Mja2fDwYA5s)) · 2019-11-30 · 9 min
 **Topic:** Volume & Intensity
 
+> ## ⚠ The study this video is built on has been retracted
+>
+> **Barbalho et al. 2020, "Evidence of a Ceiling Effect for Training Volume in Muscle
+> Hypertrophy and Strength in Trained Men"** ([PMID 31188644](https://pubmed.ncbi.nlm.nih.gov/31188644/))
+> was **retracted** over implausible data — a series of trials from this group showed variance
+> patterns statisticians judged inconsistent with real measurement. The video predates the
+> retraction and Nippard could not have known.
+>
+> This matters more here than in the other notes that cite it, because the retracted paper *is*
+> the subject of the video. Everything below that treats "5 sets beat 20" as a finding needing
+> explanation — the whole per-session-ceiling argument — was reasoning about data that should not
+> be treated as evidence.
+>
+> **What survives.** The dose-response model in "What the evidence said before this study" stands
+> on its own meta-analysis and is unaffected. The per-session ceiling does not: its other support
+> here is rodent protein-synthesis data that Nippard himself flags as an assumption "for the sake
+> of argument." Later and larger work points the other way — a 2024 meta-regression found growth
+> still rising past 20 sets per session and 43 per week with no plateau, covered in
+> [How much, how often, and how hard](../House%20of%20Hypertrophy%20videos/SUMMARY.md).
+>
+> Kept rather than deleted, because the reasoning is instructive and because a reader who
+> encounters this claim elsewhere needs to know where it came from.
+
 ## Bottom line
 - Weekly volume and hypertrophy follow a dose-response curve up to a point, with diminishing returns for most people somewhere around **10-20 hard sets per muscle per week**.
-- A study by Barbalho and colleagues found the *opposite* — 5 sets/week beat 10, 15 and 20, and the 20-set group actually lost pec size — but the design crammed every set into a single weekly session, all taken to failure ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)).
+- **[RETRACTED — see the notice above]** A study by Barbalho and colleagues found the *opposite* — 5 sets/week beat 10, 15 and 20, and the 20-set group actually lost pec size — but the design crammed every set into a single weekly session, all taken to failure ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)).
 - The likely explanation is a **per-session** volume ceiling, possibly around 5 sets per muscle per workout, on top of the weekly one.
 - Volume is only "junk" when effort is too low, or when it's piled into one session and overwhelms recovery.
 - His preferred setup: moderate-to-high weekly volume, spread over 2+ sessions per muscle, at 1-3 reps in reserve with occasional failure.
@@ -16,6 +39,9 @@ A 2017 meta-analysis pooling 34 treatment groups across 15 studies established a
 Jeff Cavaliere's argument, which Nippard partly endorses, is that fixation on volume has let some trainees stop exerting themselves — optimising set counts as a way of avoiding hard effort.
 
 ## The Barbalho study
+
+**This study has since been retracted.** The summary below records what the video argued; it is not evidence.
+
 40 young men with at least 3 years of training experience, split into four groups doing 5, 10, 15 or 20 sets per muscle per week. Same compound exercises for every group; the only variable was set count. Push/pull/legs, but only **three days per week**, so each muscle was hit once weekly (push Monday, pull Thursday, legs Friday) — effectively a bro split. All sets were taken to failure. After six months, the 5-set group grew the most and the 20-set group grew the least, with the 20-set group losing some pec size ([Barbalho 2020](https://www.ncbi.nlm.nih.gov/pubmed/31188644)).
 
 Two things reconcile this with the existing model:
@@ -52,5 +78,5 @@ Sources as listed by Nippard in the video description.
 
 **Scientific References**
 
-- Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
+- **RETRACTED.** Barbalho M et al. 2020. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More?. *Int J Sports Physiol Perform*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/31188644) doi:[10.1123/ijspp.2018-0914](https://doi.org/10.1123/ijspp.2018-0914)
 - Peterson MD et al. 2005. Applications of the dose-response for muscular strength development: a review of meta-analytic efficacy and reliability for designing training prescription. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/16287373) doi:[10.1519/R-16874.1](https://doi.org/10.1519/R-16874.1)

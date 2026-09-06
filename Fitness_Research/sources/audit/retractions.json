@@ -1,0 +1,79 @@
+{
+ "retracted": [
+  {
+   "pmid": "30230402",
+   "citation": "Amini M, Bahmani F, Foroozanfard F, et al. Retracted article: The effects of fish oil omega-3 fatty acid supplementation on mental health parameters and metabolic status of patients with polycystic ovary syndrome: a randomized, double-blind, placebo-controlled trial J Psychosom Obstet Gynaecol 2024 Dec",
+   "pubtype": [
+    "Journal Article",
+    "Randomized Controlled Trial",
+    "Retracted Publication"
+   ],
+   "cited_in": [
+    "ISSN position stands/RESEARCH-CITATIONS.md"
+   ]
+  },
+  {
+   "pmid": "30779716",
+   "citation": "Barbalho M, Coswig VS, Steele J, et al. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women Med Sci Sports Exerc 2019 Mar",
+   "pubtype": [
+    "Journal Article",
+    "Randomized Controlled Trial",
+    "Retracted Publication"
+   ],
+   "cited_in": [
+    "House of Hypertrophy videos/RESEARCH-CITATIONS.md",
+    "House of Hypertrophy videos/comparing-training-splits-muscle-growth-20-studies.md",
+    "Jeff Nippard videos/5-training-mistakes-everyone-makes-when-they.md",
+    "Jeff Nippard videos/RESEARCH-CITATIONS.md",
+    "sources/hoh/citations.json",
+    "sources/hoh/refs.json"
+   ]
+  },
+  {
+   "pmid": "31188644",
+   "citation": "Barbalho M, Coswig VS, Steele J, et al. Evidence of a Ceiling Effect for Training Volume in Muscle Hypertrophy and Strength in Trained Men - Less is More? Int J Sports Physiol Perform 2020 Feb 1",
+   "pubtype": [
+    "Journal Article",
+    "Retracted Publication"
+   ],
+   "cited_in": [
+    "House of Hypertrophy videos/RESEARCH-CITATIONS.md",
+    "House of Hypertrophy videos/comparing-training-splits-muscle-growth-20-studies.md",
+    "Jeff Nippard videos/RESEARCH-CITATIONS.md",
+    "Jeff Nippard videos/high-frequency-full-body-training.md",
+    "Jeff Nippard videos/workout-volume-killing-gains.md",
+    "sources/hoh/citations.json",
+    "sources/hoh/refs.json"
+   ]
+  }
+ ],
+ "concern": [],
+ "erratum": [
+  {
+   "pmid": "28766558",
+   "citation": "Pahlavani N, Entezari MH, Nasiri M, et al. The effect of L-arginine supplementation on body composition and performance in male athletes: a double-blinded randomized clinical trial Eur J Clin Nutr 2017 Aug",
+   "pubtype": [
+    "Published Erratum"
+   ],
+   "cited_in": [
+    "ISSN position stands/RESEARCH-CITATIONS.md"
+   ]
+  },
+  {
+   "pmid": "34583397",
+   "citation": "Wadhi T, Barakat C, Evangelista AL, et al. Correction: Loaded Inter-set Stretching for Muscular Adaptations in Trained Males: Is the Hype Real? Int J Sports Med 2021 Dec",
+   "pubtype": [
+    "Journal Article",
+    "Published Erratum"
+   ],
+   "cited_in": [
+    "House of Hypertrophy videos/RESEARCH-CITATIONS.md",
+    "House of Hypertrophy videos/best-muscle-growth-strength-research-2022.md",
+    "sources/hoh/citations.json",
+    "sources/hoh/refs.json"
+   ]
+  }
+ ],
+ "retraction_notices": [],
+ "not_in_pubmed": []
+}

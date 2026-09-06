@@ -18,7 +18,7 @@ On the low-rep side: a 2015 study compared **25-35 reps per set** against **8-12
 Why he still recommends **6-15 reps** in practice: above 15 reps costs disproportionate recovery for no extra growth; below 6 reps adds injury risk from heavy loading. Dip above or below occasionally, but live in that band.
 
 ## Myth 2: one body part per workout
-The classic Mon-chest / Tue-back / Wed-legs / Thu-shoulders / Fri-arms split assumes a muscle needs a full week to recover. Research suggests there is a **per-session volume threshold** ([Barbalho 2019](https://www.ncbi.nlm.nih.gov/pubmed/30779716)) — 12 chest sets on one day is worse than 6 sets on each of two push days.
+The classic Mon-chest / Tue-back / Wed-legs / Thu-shoulders / Fri-arms split assumes a muscle needs a full week to recover. Research suggests there is a **per-session volume threshold** ([Barbalho 2019](https://www.ncbi.nlm.nih.gov/pubmed/30779716) — **retracted for implausible data since this video; the threshold claim has lost its main support**) — 12 chest sets on one day is worse than 6 sets on each of two push days.
 
 Mechanism: training spikes muscle protein synthesis for roughly 24 hours, then it falls back toward baseline around **48-72 hours** post-workout (figure from Damas and colleagues). In trained lifters the response is shorter still — MPS starts dropping after roughly 10 hours and is near baseline within a day or two, which is a theoretical argument for higher-frequency full-body work in advanced lifters.
 
@@ -60,5 +60,5 @@ Sources as listed by Nippard in the video description.
 - Ramírez-Campillo R et al. 2013. Regional fat changes induced by localized muscle endurance resistance training. *J Strength Cond Res*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/23222084) doi:[10.1519/JSC.0b013e31827e8681](https://doi.org/10.1519/JSC.0b013e31827e8681)
 - Scotto di Palumbo A et al. 2017. Effect of combined resistance and endurance exercise training on regional fat loss. *J Sports Med Phys Fitness*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/28497942) doi:[10.23736/S0022-4707.16.06358-1](https://doi.org/10.23736/S0022-4707.16.06358-1)
 
-- Barbalho M et al. 2019. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30779716) doi:[10.1249/MSS.0000000000001818](https://doi.org/10.1249/MSS.0000000000001818)
+- **RETRACTED.** Barbalho M et al. 2019. Evidence for an Upper Threshold for Resistance Training Volume in Trained Women. *Med Sci Sports Exerc*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30779716) doi:[10.1249/MSS.0000000000001818](https://doi.org/10.1249/MSS.0000000000001818)
 - Schoenfeld BJ et al. 2019. How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency. *J Sports Sci*. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30558493) doi:[10.1080/02640414.2018.1555906](https://doi.org/10.1080/02640414.2018.1555906)
