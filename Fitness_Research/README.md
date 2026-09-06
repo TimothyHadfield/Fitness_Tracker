@@ -23,7 +23,7 @@ retractions. Three found in 6,139, two of them load-bearing.
 | [ISSN position stands](ISSN%20position%20stands/) | The International Society of Sports Nutrition's 26 consensus position stands plus its comprehensive review update | 27 | Complete |
 | [Menno Henselmans videos](Menno%20Henselmans%20videos/) | 151 videos from a coach who argues against the evidence-based consensus more often than he agrees with it | 151 | Complete |
 | [House of Hypertrophy videos](House%20of%20Hypertrophy%20videos/) | 169 videos of mechanism-focused hypertrophy research, more densely cited than any other creator found | 169 | Complete |
-| [Barbell Medicine articles](Barbell%20Medicine%20articles/) | Physician-authored strength medicine: rehab, pain science, clinical questions | - | Planned |
+| [Barbell Medicine articles](Barbell%20Medicine%20articles/) | 155 articles of physician-authored strength medicine: rehab, pain science, lab interpretation, clinical questions | 155 | Complete |
 
 Squat University is a candidate for a later pass — the best subject-matter fit for injury
 and rehab, with the caveat that its citation discipline decayed sharply after about 2019.
