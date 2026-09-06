@@ -41,6 +41,20 @@ Squat University is a later pass, at Tim's request.
 
 # PICKING THIS UP IN A NEW CHAT — read this section first
 
+## Before you commit anything — this folder shares a git repo with Tim's app
+
+`Fitness_Research/` is nested inside `Fitness_Tracker/`, and **one git repo covers both.** The
+parent folder is a live web app Tim actively works on, often in a second Claude session at the
+same time. As of this writing it had uncommitted changes in `js/`, `css/`, `sw.js` and `tests/`,
+including two untracked new files (`js/plates.js`, `js/set-targets.js`) — none of it this
+project's work.
+
+**So never `git add -A` or `git commit -a`. Stage only `Fitness_Research/` paths explicitly.**
+Sweeping the app's half-finished files into a research commit is the easy mistake here.
+
+If you hit an `index.lock` error, the other session is mid-commit. Wait and retry; don't delete
+the lock file.
+
 ## Done and pushed
 
 - **Jeff Nippard** — 279 notes, summary layer, index. Complete.
@@ -67,6 +81,21 @@ Squat University is a later pass, at Tim's request.
 mid-run, so the remaining **50 were never written**. Nothing is corrupt - the agents write
 whole files - so the 119 on disk are complete and usable.
 
+> **This has now failed twice. Read this before relaunching.**
+>
+> A second attempt was made and also died. Eight agents were launched across the 50 notes;
+> minutes later the session was interrupted for an unrelated question and the Claude process
+> exited while they were still working. All eight were killed before writing a single file.
+>
+> **Verified state after that attempt: still exactly 119 notes on disk, `missing.tsv` still
+> lists the correct 50, nothing partial, nothing corrupt, working tree clean apart from the
+> untracked empty `weightlifting.md`.** Nothing needs cleaning up. Just start.
+>
+> The lesson: these agents take a while, and **nothing is saved until an agent writes its
+> file.** If the session is going to be interrupted, the work is lost. So either run the
+> batches when you can leave them alone, or run fewer, smaller batches so each one lands
+> sooner. Do not assume a relaunch is resuming - it is starting over.
+
 **What is left, in order:**
 
 1. **Write the 50 missing notes.** They are listed, ready to use, in
@@ -80,6 +109,40 @@ whole files - so the 119 on disk are complete and usable.
 
    Batch them by length as before - roughly 4 per agent for 25 min+, 8 for 13-24 min, 12 for
    under 13 min - and give every agent `sources/hoh/BRIEF.md`.
+
+   **The split used on the last attempt, ready to reuse.** `missing.tsv` is sorted by length
+   descending, so these are line ranges in that file. All 50 were verified to have both a
+   transcript and a description on disk before launching:
+
+   | Agent | Lines | Videos | Length | Word target each |
+   |-------|-------|--------|--------|------------------|
+   | A | 1-3   | 3 | 19-20 min | 900-1,400 |
+   | B | 4-6   | 3 | 13-18 min | 900-1,400 (600-900 for the 13) |
+   | C | 7-14  | 8 | 12 min | 600-900 |
+   | D | 15-22 | 8 | 11-12 min | 600-900 |
+   | E | 23-30 | 8 | 11 min | 600-900 |
+   | F | 31-38 | 8 | 10 min | 600-900 |
+   | G | 39-45 | 7 | 8-10 min | 350-900 |
+   | H | 46-50 | 5 | 6-8 min | 350-600 |
+
+   Agent H was never launched - the interrupt hit first. Each agent's prompt was: read
+   `sources/hoh/BRIEF.md` in full and follow it exactly, read one existing note to calibrate
+   voice, then the video-id → filename → length table for its batch, plus "do not invent
+   filenames, do not write anywhere else, do not edit any other file", the word target, a
+   reminder to preserve the `groups` field reference groupings from `refs.json`, and "report
+   back under 400 words as the brief specifies."
+
+   Before launching, re-run this check that all 50 still have their inputs:
+
+   ```
+   while IFS=$'\t' read -r id fn len; do [ -f "transcripts/hoh/$id.md" ] || echo "NO TRANSCRIPT: $id"; [ -f "transcripts/hoh/descriptions/$id.txt" ] || echo "no desc: $id"; done < sources/hoh/missing.tsv
+   ```
+
+   And after, to see what actually landed:
+
+   ```
+   while IFS=$'\t' read -r id fn len; do [ -f "House of Hypertrophy videos/$fn" ] || echo "STILL MISSING: $fn"; done < sources/hoh/missing.tsv
+   ```
 2. **Verify all 169 notes exist** against `sources/hoh/assignments.tsv` before moving on.
 3. **Build the bibliography:**
    `python tools/build_channel_bibliography.py sources/hoh "House of Hypertrophy videos" "House of Hypertrophy"`
@@ -158,6 +221,13 @@ an explicit section on where that source departs from the others.
   report and stop.
 - **Sub-agents are pre-authorised.** No need to ask permission per use.
 - "Catch up with progress.md" means read-only — report and stop, don't start building.
+
+He often runs **two sessions at once** — this research folder in one, the Fitness Tracker app in
+the other. In the VSCode extension that is Command Palette → "Claude Code: Open in New Tab", or
+a second VSCode window (`Ctrl+Shift+N`, and `"window.openFoldersInNewWindow": "on"` stops a new
+folder replacing the current window). Note `Ctrl+Shift+Esc`, which the docs give as the
+new-tab shortcut, is Task Manager on Windows and never reaches VSCode. This is why the git
+staging rule above matters.
 
 ---
 
@@ -285,6 +355,12 @@ the citation half of this project isn't possible.
 
 ### Working with agents at this scale
 
+- **An agent's work exists only once it writes its file.** Two runs of the House of Hypertrophy
+  notes have now been lost wholesale — one to a network outage, one to the session exiting
+  during an interrupt — because dozens of agents were all still mid-task. Nothing partial
+  survives. If a run is long and the session might not be left alone, prefer more, smaller
+  batches so results land incrementally, and check what is on disk before assuming anything
+  was accomplished.
 - Batches of **5-6 notes per agent** worked well. ~10 agents concurrently.
 - Give an explicit `transcript file -> output filename` mapping. Don't let agents choose
   filenames; you'll get collisions and inconsistency.
