@@ -273,4 +273,5 @@ def main():
             sys.stderr.write("  %s  (%s)\n" % (u, why))
 
 
-main()
+if __name__ == "__main__":
+    main()

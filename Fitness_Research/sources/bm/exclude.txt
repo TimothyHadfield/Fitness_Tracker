@@ -1,0 +1,83 @@
+# Barbell Medicine articles that get no note, with the reason for each.
+#
+# The rule applied: research content in, filler out. "Filler" here is not a
+# judgement about length - a 556-word article on measuring your waist is kept,
+# and a 1,600-word one is dropped. It is a judgement about whether the article
+# says anything the library does not already have, and whether it is reporting
+# evidence or filling a keyword slot.
+#
+# The big block below is one decision, not forty-three. In March 2023 the site
+# published a cluster of near-identical pages, most of them on a single day,
+# built from one template: "Why This Matters / Where This Goes Wrong /
+# Constraints / Execution / Programming / Progression / Common Issues / Role in
+# a Program / Takeaway", with the exercise name swapped and whole sentences
+# repeated verbatim between files. Across all forty-six pages in that cluster
+# there is not one citation, not one named study, and exactly one number in the
+# body text - "8-12", quoted in order to dismiss it. They are downstream of the
+# cited articles, not sources for them. Three of the forty-six are kept because
+# they are actually different: the two conceptual pages the rest paraphrase, and
+# the one page with real technique content in it.
+#
+# Everything excluded here is still on disk in transcripts/barbellmedicine/, so
+# any of these is one line away from being reinstated.
+
+# --- not research: commerce, events, careers -------------------------------
+vanilla-whey-rx-availability-update-march-2026  # product availability notice
+barbell-medicine-seminar-san-antonio-tx-september-20-21-2025  # event announcement with ticket link
+how-to-become-a-personal-trainer  # career-change advice, no research content
+
+# --- duplicate of an article already covered -------------------------------
+sobrecarga-progresiva  # Spanish translation of progressive-loading; the English article links to it as such, same author and same publication date
+what-is-strength-training  # 2023 SEO primer superseded by strength-training-guide, which is longer, cited and by the same author
+
+# --- fragments and stubs ---------------------------------------------------
+programming-for-the-crossfit-games-athlete-pt-iii  # 390-word deload log; parts I and II are not on the site, nothing to summarise
+strength-training-plateau  # 988-word definitional landing page ending in a lead-magnet download, uncited
+strength-training-programming  # 792-word definitional landing page, uncited, restates strength-training-guide
+
+# --- the March 2023 templated cluster (43) ---------------------------------
+# Kept from this cluster: what-drives-hypertrophy, how-to-choose-exercises-for-hypertrophy,
+# bench-press-for-hypertrophy.
+chest-hypertrophy-guide  # templated SEO page, no citations
+chest-hypertrophy-faq  # templated SEO page, no citations
+chest-hypertrophy-program-example  # templated SEO page, no citations
+chest-workout-routine-hypertrophy  # templated SEO page, no citations
+chest-volume-hypertrophy  # templated SEO page; explicitly declines to give volume figures
+rep-range-chest-hypertrophy  # templated SEO page, no citations
+chest-vs-shoulders-vs-triceps-hypertrophy  # templated SEO page, no citations
+upper-vs-lower-chest-hypertrophy  # templated SEO page; the cited best-upper-chest-exercises covers this
+feel-chest-working-hypertrophy  # templated SEO page, no citations
+chest-not-growing-hypertrophy  # templated SEO page, no citations
+progress-chest-training-hypertrophy  # templated SEO page, no citations
+structure-chest-training-hypertrophy  # templated SEO page, no citations
+how-many-chest-exercises-hypertrophy  # templated SEO page; superseded by the cited how-many-chest-exercises-per-workout
+machine-vs-free-weight-chest-press-hypertrophy  # templated SEO page, no citations
+barbell-bench-press-hypertrophy  # templated SEO page, no citations
+dumbbell-bench-press-hypertrophy  # templated SEO page, no citations
+incline-press-hypertrophy  # templated SEO page, no citations
+decline-press-hypertrophy  # templated SEO page, no citations
+close-grip-bench-press-chest-hypertrophy  # templated SEO page, no citations
+smith-machine-bench-press-hypertrophy  # templated SEO page, no citations
+floor-press-hypertrophy  # templated SEO page, no citations
+machine-chest-press-hypertrophy  # templated SEO page, no citations
+cable-chest-press-hypertrophy  # templated SEO page, no citations
+cable-chest-fly-hypertrophy  # templated SEO page, no citations
+chest-fly-variations-hypertrophy  # templated SEO page, no citations
+pec-deck-machine-fly-hypertrophy  # templated SEO page, no citations
+push-ups-chest-hypertrophy  # templated SEO page, no citations
+dips-chest-hypertrophy  # templated SEO page, no citations
+chest-exercises-hypertrophy  # templated SEO page; the cited best-chest-exercises covers this
+back-exercises-hypertrophy  # templated SEO page, no citations
+back-exercise-order  # templated SEO page, no citations
+back-exercises-per-workout  # templated SEO page, no citations
+rows-hypertrophy  # templated SEO page, no citations
+machine-rows-hypertrophy  # templated SEO page, no citations
+dumbbell-row-hypertrophy  # templated SEO page, no citations
+seated-cable-row-hypertrophy  # templated SEO page, no citations
+chest-supported-row-hypertrophy  # templated SEO page, no citations
+rear-delt-row-hypertrophy  # templated SEO page; the cited best-rear-delt-exercises covers this
+pulldowns-pull-ups-hypertrophy  # templated SEO page, no citations
+pull-ups-hypertrophy  # templated SEO page, no citations
+lat-pulldown-hypertrophy  # templated SEO page, no citations
+straight-arm-pulldown-hypertrophy  # templated SEO page, no citations
+deadlifts-rdls-back-extensions-hypertrophy  # templated SEO page, no citations

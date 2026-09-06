@@ -87,9 +87,10 @@ class ToMarkdown(HTMLParser):
         self.drop = 0          # depth inside a dropped subtree
         self.href = None       # href of the open <a>
         self.atext = []        # text inside the open <a>
-        self.lists = []        # stack of ("ul", n) / ("ol", n)
+        self.lists = []        # stack of ["ul"|"ol", counter]
         self.pre = 0
         self.heading = None
+        self.li_prefix = None  # number owed to the <li> currently open
 
     # -- helpers ----------------------------------------------------------
 
@@ -98,8 +99,15 @@ class ToMarkdown(HTMLParser):
         self.buf = []
         text = re.sub(r"[ \t]+", " ", text).strip()
         text = re.sub(r"\s+([,.;:!?\)])", r"\1", text)
-        if text:
-            self.out.append(prefix + text)
+        if not text:
+            return
+        # A list item's number belongs on its FIRST line. WordPress wraps
+        # reference entries in <p> inside the <li>, and hanging the number off
+        # the closing tag put it on the last paragraph instead - which silently
+        # renumbered every multi-paragraph reference list in the corpus.
+        if not prefix and self.li_prefix:
+            prefix, self.li_prefix = self.li_prefix, None
+        self.out.append(prefix + text)
 
     def _emit(self, s):
         (self.atext if self.href is not None else self.buf).append(s)
@@ -152,11 +160,24 @@ class ToMarkdown(HTMLParser):
             self.heading = "#" * min(int(tag[1]) + 1, 6) + " "
         elif tag in ("ul", "ol"):
             self._flush()
-            self.lists.append([tag, 0])
+            # <ol start="7"> means the visible numbering resumes at 7. This
+            # corpus splits a single reference list across half a dozen <ol>
+            # blocks - a WordPress artefact of editing an old post - and
+            # restarting each of them at 1 makes an inline [n] marker point at
+            # the wrong paper. The start attribute is the site's own numbering
+            # and is the only thing that makes the mapping trustworthy.
+            start = 1
+            if tag == "ol":
+                s = (dict(attrs).get("start") or "").strip()
+                if s.lstrip("-").isdigit():
+                    start = int(s)
+            self.lists.append([tag, start - 1])
         elif tag == "li":
             self._flush()
             if self.lists:
                 self.lists[-1][1] += 1
+                kind, n = self.lists[-1]
+                self.li_prefix = "%d. " % n if kind == "ol" else "- "
         elif tag in ("p", "div", "section", "blockquote", "tr", "dt", "dd"):
             self._flush()
         elif tag == "pre":
@@ -188,10 +209,11 @@ class ToMarkdown(HTMLParser):
             self._flush(self.heading or "## ")
             self.heading = None
         elif tag == "li":
-            kind, n = self.lists[-1] if self.lists else ("ul", 0)
-            self._flush("%d. " % n if kind == "ol" else "- ")
+            self._flush()
+            self.li_prefix = None
         elif tag in ("ul", "ol"):
             self._flush()
+            self.li_prefix = None
             if self.lists:
                 self.lists.pop()
         elif tag == "blockquote":
@@ -455,6 +477,11 @@ def main():
     ap.add_argument("--index-out", default="", help="also write an index json here")
     ap.add_argument("--index-only", action="store_true",
                     help="rebuild the index from disk and exit")
+    ap.add_argument("--refresh", action="store_true",
+                    help="re-fetch and re-convert pages already on disk. Use "
+                         "after changing the HTML-to-markdown conversion; the "
+                         "default resume behaviour would keep the old output "
+                         "forever.")
     a = ap.parse_args()
 
     outdir = Path(a.outdir)
@@ -478,7 +505,7 @@ def main():
     done = skipped = 0
     for i, url in enumerate(urls):
         dest = outdir / (slug_for(url) + ".md")
-        if dest.exists() and url in metas:
+        if dest.exists() and url in metas and not a.refresh:
             skipped += 1
             continue
         time.sleep(a.delay)
