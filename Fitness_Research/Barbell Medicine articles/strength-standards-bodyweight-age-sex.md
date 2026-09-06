@@ -41,7 +41,7 @@ The tier labels get the same treatment: beginner / intermediate / advanced descr
 - **The Vital 5 leg-press cutoffs are "calibrated against" the ACLS mortality data.** ACLS was **men only**, aged 20–82, and its strength measure was not a leg-press relative-strength ratio of the kind the Vital 5 uses. Deriving sex-neutral leg-press thresholds from it is an extrapolation the article does not flag.
 - **"The biggest survival benefit came from moving out of the weakest third, not from moving from strong to elite."** The reported figures are 28% (middle third) and 23% (top third) reductions versus the weakest third. Those two estimates almost certainly have overlapping confidence intervals; treating the ordering as real is a mild overread, though the broader point — that the return is front-loaded — is sound and matches the wider strength-mortality literature.
 - **LIFTMOR-M is described alongside LIFTMOR** (bone density gains of 2.2–4.1% in the lumbar spine over eight months of twice-weekly heavy training), but only the original LIFTMOR trial in postmenopausal women appears in the reference list.
-- **The power section is entirely uncited.** Muscle mass declining ~1%/year, strength 1.5–3%/year, power fastest of all, driven by selective loss of high-threshold motor units serving Type II fibres — all plausible, all standard, none sourced here.
+- **The power section is entirely uncited** — muscle mass declining ~1%/year, strength 1.5–3%/year, power fastest of all via selective loss of high-threshold motor units serving Type II fibres. Plausible and standard, but unsourced here.
 
 ## Where the article is unusually rigorous
 
@@ -51,7 +51,7 @@ The **sex-differences** section is likewise clean: real average differences in a
 
 ## How to use the numbers, per the article
 
-**Do** use standards as a sanity check (two years of consistent training and still in the 5th percentile is a signal to investigate stimulus, technique, life stress, or programme structure), as communication shorthand, and as a longitudinal benchmark on yourself. **Do not** use them as a target, as a substitute for individualised programming, or as evidence of biological capacity. The metric that matters is whether your performance trend is up against your own 4–8 week anchor.
+**Do** use standards as a sanity check (two years of training and still in the 5th percentile is a signal to investigate stimulus, technique, life stress, or programme structure), as shorthand, and as a longitudinal benchmark on yourself. **Do not** use them as a target, a substitute for individualised programming, or evidence of biological capacity. What matters is whether your trend is up against your own 4–8 week anchor.
 
 **Commercial disclosure:** the closing section funnels to Barbell Medicine strength templates, a free plateau action plan in exchange for contact details, and coaching.
 
