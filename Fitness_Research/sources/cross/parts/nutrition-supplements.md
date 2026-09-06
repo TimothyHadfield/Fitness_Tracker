@@ -48,8 +48,12 @@ liability" over head injury — advocacy resting on rodent infarct volumes.
 
 ### Protein: the total, and the deficit
 
-All four sources converge on the same daily number by different routes, which is the strongest
-signal in this domain. The [ISSN 2017 stand](../ISSN%20position%20stands/protein-2017.md) gives
+Four of the five sources converge on the same daily number by different routes, which is the
+strongest signal in this domain. The fifth, Barbell Medicine, gives **four different figures across
+nineteen articles** — 1.3–3.1, 1.6, 1.4–1.6, and 1.6 g/kg of *target* body weight — and
+cross-references none of them; only the 1.6 is traced correctly to Morton. Their spread is a fact
+about publishing, not about protein, and it does not move the band. See
+[what the fifth source changed](#what-the-fifth-source-changed) for the detail. The [ISSN 2017 stand](../ISSN%20position%20stands/protein-2017.md) gives
 **1.4–2.0 g/kg/day as a floor**; Nippard gives 1.6–2.2 bulking; Menno gives **1.8 g/kg** flat, the
 1.6 plateau from the Morton meta-analysis he co-authored plus a standard deviation of insurance
 ([note](../Menno%20Henselmans%20videos/much-protein-really-need.md)); House of Hypertrophy strips

@@ -1,6 +1,6 @@
 # What to believe — the library reconciled
 
-Four sources, roughly 8,000 papers, and they do not always agree. This file is the arbiter.
+Five sources, roughly 10,000 papers, and they do not always agree. This file is the arbiter.
 
 It is **not** another summary. Each source folder already has one, and each of those is written
 from inside that source's point of view. This file does the thing none of them can: where two
@@ -14,6 +14,7 @@ it.
 | [ISSN position stands](ISSN%20position%20stands/SUMMARY.md) | Formal expert-body consensus documents on supplements and nutrition. | 27 |
 | [Menno Henselmans](Menno%20Henselmans%20videos/SUMMARY.md) | A coach who argues against the evidence-based consensus more often than he agrees with it. | 151 |
 | [House of Hypertrophy](House%20of%20Hypertrophy%20videos/SUMMARY.md) | The most densely cited: hypertrophy mechanisms and single training variables in depth. | 169 |
+| [Barbell Medicine](Barbell%20Medicine%20articles/SUMMARY.md) | Practising physicians and physiotherapists. The only clinical source here, and the only one covering injury, pain and medicine. | 155 |
 
 ## How to use this
 
@@ -45,18 +46,22 @@ that is what the verdicts give.
 | Is there a per-session ceiling? | No wall, but steep diminishing returns. Not a rival claim to the weekly one. | Moderate |
 | "5 sets beat 20" | No usable primary evidence remains. Both supporting trials retracted. | High |
 | Must you train to failure? | No. 1–3 RIR matches failure at normal volumes; below ~2 weekly sets, failure wins. | High |
-| Can people judge RIR? | Reasonably when trying to, badly in habitual practice. All sources agree. | High |
+| Can people judge RIR? | Reasonably when trying to, badly in habitual practice. All five agree on the finding; one reaches it through a mis-designed citation. | High |
 | Does frequency matter with sets equated? | No. Nobody credible still claims an independent effect. | High |
 | The equivalent rep band | **6–35**, not 5–35. The trials defending sub-5 reps handed the low-rep group extra sets and longer rest, and it still only tied. | Moderate |
-| Lengthened partials vs full ROM | Equal in trained lifters. Not worse — the nulls are nulls, not reversals. | Moderate |
+| Lengthened partials vs full ROM | Equal in trained lifters. Not worse — the nulls are nulls, not reversals. | Moderate-high |
 | Tempo | No live disagreement. Control the weight; do not deliberately slow it. | High |
-| Which exercise claims are backed by growth data? | Thirteen. Every other ranking in this library is EMG, moment arms or acute measures. | High |
-| Creatine's effect on muscle | Real, small. Both headline figures in this library are inflated in different directions. | Moderate |
-| Daily protein | 1.6–1.8 g/kg. All four sources converge. | High |
+| Which exercise claims are backed by growth data? | Sixteen. Every other ranking in this library is EMG, moment arms or acute measures. | High |
+| Creatine's effect on muscle | Real, small. All three headline figures in this library inflate the same paper, in different units and directions. | Moderate |
+| Daily protein | 1.6–1.8 g/kg. Four of five sources converge; the fifth gives four numbers and cross-references none of them. | High |
 | Protein in a deficit | The upper half of the library's cutting range has no trial behind it. | Moderate |
 | Per-meal protein ceiling | Dead. There is no ceiling. | High |
 | Pre-sleep protein | Confounded by total intake. The ISSN's own stand flags it and recommends it anyway. | High |
 | Caffeine tolerance / cycling | Genuinely unresolved. Both sides outrun the data. | — |
+| Can a lifter actually overtrain? | No controlled resistance-training study has produced overtraining syndrome. What is reachable is functional overreaching, and it follows near-maximal intensity rather than volume. | Moderate-high |
+| Should you use HRV to skip sessions? | No. Both head-to-head trials are null, and HRV lags performance recovery by about 30 hours. | High |
+| How long to rest? | More than 60 seconds; past that the bands overlap. ~2 minutes is a safe default, 3+ defensible on compounds. | Moderate |
+| Injury, pain and clinical questions | Only one source is qualified, so nothing tests it. See the clinical section for what its own citations do and do not carry. | — |
 
 ---
 
@@ -141,7 +146,7 @@ oft-repeated single result, check the journal page or Retraction Watch; and pref
 by several independent groups, since a retraction then takes one leg off an argument rather than
 all of it. And treat a source's silence as uninformative: Nippard did not know.
 
-### The measurement problems all four share
+### The measurement problems all five share
 
 Most disagreements in this library dissolve into one of the following.
 
@@ -627,10 +632,15 @@ measured muscle size, not activation:
 | Straight-leg beats bent-leg calf raises for gastrocnemius | Burke 2024 plus Kinoshita 2023, two independent designs ([note](House%20of%20Hypertrophy%20videos/bigger-calves-ultimate-guide-32-studies.md)) |
 | Curls grow the elbow flexors more than rows | Mannarino, 10 untrained, within-subject — curl arm ~11%, row arm ~5% ([note](House%20of%20Hypertrophy%20videos/compound-exercises-enough-biceps.md)) |
 | The neck needs direct work | Conley 1997: 22 men, 12 wk — compound-only group **zero** neck CSA change, +13% with nine weekly sets ([note](Jeff%20Nippard%20videos/neck-and-trap-training.md)) |
-| Free weights ≈ machines near failure | Schwanbeck 2020 (n=36) and Hernández-Belmonte 2023 (36 trained men) ([note](House%20of%20Hypertrophy%20videos/3-exercises-don-t-build-more-muscle.md)) |
+| Free weights ≈ machines near failure | Schwanbeck 2020 (n=36) and Hernández-Belmonte 2023 (36 trained men) ([note](House%20of%20Hypertrophy%20videos/3-exercises-don-t-build-more-muscle.md)). Hypertrophy is equal; **strength transfer is specific to the mode trained** |
 | Squats ≈ hip thrusts for glute growth at all three regions | 34 untrained subjects ([note](House%20of%20Hypertrophy%20videos/squats-vs-hip-thrusts-glute-growth.md)); Plotkin 2023, cited by Menno |
-| Deeper squats grow more quad; 90° leaves glutes and adductors short | Bloomquist 2013 (MRI), Kubo 2019 |
+| Deeper squats grow more quad; 90° leaves glutes and adductors short | Bloomquist 2013 (MRI), Kubo 2019 — though in Kubo the depth advantage was **adductor and glute**, with quadriceps statistically indistinguishable (4.9 ± 2.6% vs 4.6 ± 3.1%) |
 | Randomly switching exercises does nothing | Baz-Valle: 19 trained men, 8 wk, 80-exercise randomiser vs fixed list — **null**, raw numbers favouring fixed ([note](House%20of%20Hypertrophy%20videos/switch-exercises-every-session-more-muscle-hypertrophy.md)) |
+| Push-ups match the bench press for growth | Kikuchi 2017: **18 men with ≥1 year of training**, 3 sets to failure twice weekly, bench at 40% 1RM vs kneeling push-ups — ~3 mm thickness at pecs and triceps in both, no significant difference; Kotarsky 2018 replicates at 4 weeks ([note](Barbell%20Medicine%20articles/best-chest-exercises-muscle-strength.md)) |
+| Cable and barbell preacher curls grow the biceps equally | Nunes 2020: opposite resistance profiles, hypertrophy equal; the cable was stronger only when tested at long muscle lengths ([note](Barbell%20Medicine%20articles/best-chest-biceps-workout.md)) |
+| Bench angle does not change pec hypertrophy | Chaves 2020: 8 wk, untrained men, flat / incline / both — no meaningful difference. **The weakest entry here**: House of Hypertrophy dismantles the same study on method, and the three sources read it three different ways ([note](Barbell%20Medicine%20articles/bench-press-technique-benefits-muscles-worked.md)) |
+
+That is **sixteen claims** out of everything these five sources assert about exercise choice.
 
 **Everything else in this domain is unmeasured.** That includes: the entire back and lat ranking in
 both video sources — House of Hypertrophy's
@@ -790,8 +800,12 @@ liability" over head injury — advocacy resting on rodent infarct volumes.
 
 ### Protein: the total, and the deficit
 
-All four sources converge on the same daily number by different routes, which is the strongest
-signal in this domain. The [ISSN 2017 stand](ISSN%20position%20stands/protein-2017.md) gives
+Four of the five sources converge on the same daily number by different routes, which is the
+strongest signal in this domain. The fifth, Barbell Medicine, gives **four different figures across
+nineteen articles** — 1.3–3.1, 1.6, 1.4–1.6, and 1.6 g/kg of *target* body weight — and
+cross-references none of them; only the 1.6 is traced correctly to Morton. Their spread is a fact
+about publishing, not about protein, and it does not move the band. See
+[what the fifth source changed](#what-the-fifth-source-changed) for the detail. The [ISSN 2017 stand](ISSN%20position%20stands/protein-2017.md) gives
 **1.4–2.0 g/kg/day as a floor**; Nippard gives 1.6–2.2 bulking; Menno gives **1.8 g/kg** flat, the
 1.6 plateau from the Morton meta-analysis he co-authored plus a standard deviation of insurance
 ([note](Menno%20Henselmans%20videos/much-protein-really-need.md)); House of Hypertrophy strips
@@ -888,6 +902,272 @@ numbered positions track its own review.** Where they diverge, trust the review.
 
 ---
 
+## Injury, pain and the clinical questions
+
+Every other section of this file works the same way: two or more sources make incompatible claims,
+and the job is to say which is right. **This section cannot do that, because there is only one
+source.** Sixty of Barbell Medicine's 155 notes are clinical — injury, rehab, pain science, lab
+interpretation, cardiovascular risk, pregnancy, ageing — and the other four sources are a nutrition
+body and three hypertrophy channels
+([why the source is here](Barbell%20Medicine%20articles/SUMMARY.md)). Nothing in the library
+contradicts this material, and that is not evidence it is right. It is the absence of a test.
+
+So the verdicts below answer three weaker questions instead: does the claim match the paper it
+cites, does the source contradict itself, and is this evidence or a clinician's practice pattern?
+Barbell Medicine make that last one easier than most — several articles raise it themselves — but
+the two kinds of writing arrive in the same voice.
+
+### The asymptomatic-imaging data: the strongest thing in the source
+
+The one place in the clinical material where the evidence carries the conclusion, and the numbers
+are worth having exactly. Knee osteoarthritis on MRI in asymptomatic uninjured adults over 40:
+**up to 43%** (Culvenor 2019, SR+MA,
+[note](Barbell%20Medicine%20articles/osteoarthritis-symptoms-causes-treatment.md)). Meniscus tear
+in **230 knees** of asymptomatic adults, mean age 44, at 3.0 T: **30%** (Horga 2020). Meniscal
+change in asymptomatic collegiate basketball players: **50% preseason rising to 62% postseason**
+(Pappas 2016); about **one third** of ~300 asymptomatic athletes (Beals 2016)
+([note](Barbell%20Medicine%20articles/second-opinion-meniscus-injury.md)). SI joint degeneration
+in pain-free adults: **65.1%, of which 30.5% substantial** (Eno 2015,
+[note](Barbell%20Medicine%20articles/si-joint-movement-cause-hip-low-back.md)). Spondylolysis:
+**3–7% of asymptomatic adolescents, 11.5% of adults**, with Beutler's 45-year follow-up and
+Andrade's systematic review finding no association with back pain
+([note](Barbell%20Medicine%20articles/train-spondylolisthesis-spondylolysis.md)).
+
+Two of those do more than count. **Barreto 2019 scanned both shoulders of 123 people with pain in
+one**, controlling for age, occupation and training history within the same body — the best single
+design in the section
+([note](Barbell%20Medicine%20articles/barbell-medicine-guide-shoulder-pain.md)). **Pappas is
+longitudinal**: the same athletes accumulated findings across a season without developing symptoms.
+A dissociation, not a snapshot.
+
+**Verdict, high confidence — for the weak claim only.** A structural finding is weak evidence that
+it caused your pain. The strong version, that findings never matter, is not what these studies
+show, and Barreto's own result cuts against it: full-thickness supraspinatus tears and glenohumeral
+OA ran **about 10 percentage points more common on the painful side**. The shoulder guide builds
+**6,710 words on that one study, with three inline sources in total**, and never engages its own
+10-point gap. The sciatica guide reaches the identical conclusion across 15 verified references.
+
+### Nearly all the rehab dosing is recommendation, not evidence
+
+The prescriptions are specific and almost entirely uncited. Heavy slow resistance at **3-0-3 tempo,
+RPE 8, 2–3× weekly, held 12–16 weeks** — a 4,701-word guide carrying **four citations**
+([tendinopathy](Barbell%20Medicine%20articles/barbell-medicine-guide-tendinopathy.md)). Pain rules:
+**≤3–4/10** during heavy slow resistance; **≤4/10 during and 24 hours after, two consecutive
+breaches → cut volume** ([elbow](Barbell%20Medicine%20articles/lateral-elbow-pain-lifters.md));
+symptoms rising no more than **2 points out of 10** (meniscus); pain-out-of-10 plus RPE summing to
+**≤10** (spondylolysis). Every one of those numbers is presented without citation.
+
+They are unusually candid about this. [Hip pain part II](Barbell%20Medicine%20articles/training-hip-pain-part-ii.md)
+concedes there is **no research on heavy slow resistance for hip tendinopathy at all**; the
+[rehab mistakes article](Barbell%20Medicine%20articles/biggest-mistakes-re-making-lifting-rehab.md)
+runs **3,639 words with zero citations** and says there is nothing special about its sample
+programmes.
+
+**Verdict: follow the direction, ignore the precision. Moderate confidence on direction, none on
+dose.** Load management rather than rest is mainstream physiotherapy, but the direct evidence across
+all 24 rehab articles is **two papers**: Kerkhoffs 2002 (Cochrane, immobilisation versus functional
+treatment in acute lateral ankle ligament injury) and Maetz 2023 (SR+MA of RCTs, loading versus
+passive modalities in **midportion Achilles tendinopathy only**). Everywhere else — hip, spine,
+shoulder, knee, elbow — the rest-is-worse claim is uncited inference from those two plus detraining
+physiology. Treat 3-0-3 and 4/10 the way you treat "8–12 reps": a place to start, not a finding.
+
+### The absolute statements their own citations do not carry
+
+The recurring error is stating **absence of demonstrated benefit as demonstrated absence** — "no
+evidence that any modality speeds up the healing process"
+([ankle](Barbell%20Medicine%20articles/manage-ankle-sprain.md)), "no physiological justification"
+for passive modalities, "none of these have demonstrated a benefit beyond placebo" — all uncited or
+over-read. [Core stability](Barbell%20Medicine%20articles/core-stability-matter.md) rests
+"absolutely no scientific evidence" on a single narrative critical analysis (Wirth 2017), which is
+also the only source for the same claim in the sciatica articles.
+[Running and knee OA](Barbell%20Medicine%20articles/running-knee-osteoarthritis.md) calls
+recreational running "protective" while its own source found **13.3% OA prevalence in competitive
+runners against 3.5% in recreational** — a dose signal the headline erases. And "all treatments for
+pain are mediated by placebo effects" is asserted twice, once as a section heading, with **no
+citation at all** ([note](Barbell%20Medicine%20articles/placebo-nocebo-effects-pain.md)).
+
+The pattern is consistent enough to be a reading rule: **a well-evidenced negative finding about
+measurement gets restated as a positive claim about reality.** Clinicians cannot reliably detect SI
+motion — true, kappa −0.06 — becomes the SI joint is not a pain source, which the article's own
+Laslett material contradicts. Manual muscle testing cannot detect gluteal weakness — true — becomes
+gluteal weakness is not plausible
+([hip pain I](Barbell%20Medicine%20articles/training-hip-pain-part-i.md)). Discount the absolute
+version and the measurement finding survives; it was the better claim anyway.
+
+### The lab thresholds — the most actionable content in the library, and its defect
+
+Nothing else in this library tells a reader whether to see a doctor, so this is where being wrong
+costs most.
+
+**Creatinine.** The physiology is established: creatinine is a muscle metabolite used as a kidney
+test, so a rise means filtration fell or muscle mass rose and CKD-EPI cannot tell which.
+**1.4–1.5 mg/dL against a 0.7–1.2 reference** is the realistic muscularity case; above
+**1.5 mg/dL (133 µmol/L)** always investigate; **cystatin C** is unaffected by muscle mass and
+settles it; a prior value beats a threshold, so **0.8 → 1.4 warrants evaluation even if muscle was
+gained in between** ([note](Barbell%20Medicine%20articles/abnormal-labs-exercise-part-i-kidney-function.md)).
+The 1.5 line and the compare-to-a-prior sequence are conventional judgement, untested as a pathway.
+This is the cleanest article in the clinical batch and it sells nothing.
+
+**Liver enzymes, and the documented defect.** The timeline is the useful part — transaminases keep
+rising for **48 hours**, peak at **4–7 days**, reach baseline only at **10–12 days** — and albumin
+and INR are unaffected by exercise, so a normal INR effectively excludes acute liver failure. But
+**the article gives three different escalation thresholds: >5× the upper limit of normal in the body
+text, >10× in the FAQ, <3× in the patient scripts**
+([note](Barbell%20Medicine%20articles/elevated-liver-enzymes-after-exercise-means.md)). Its key
+takeaway also claims **100% of resistance trainees show elevation** on the strength of Pettersson
+2008 — **n=15, previously untrained, one session, no control** — and at least five of its reference
+entries print an author and title that do not match the paper their own link resolves to.
+
+**Verdict: use >5× ULN, the most conservative of the three, and never quote the FAQ number** — a
+reader taking >10× could sit on a 7× elevation. *Confidence: high that the mechanism is real and
+commonly missed, since a physician survey found **56%** did not list exercise-induced muscle damage
+in their differential; low on any specific threshold, because the article contradicts itself and no
+trial has tested rest-then-retest against usual care.* The same discipline applies to CK: **>5× ULN
+is sensitive but not specific**, athletes routinely exceed it, and the classic rhabdomyolysis triad
+appears in **fewer than 10% of cases**
+([note](Barbell%20Medicine%20articles/rhabdomyolysis-causes-treatments-return-sport.md)).
+
+### Where the other sources reach these topics
+
+Not Nippard, as you might expect, but **Menno** — the only other source that goes here seriously,
+arriving from outside medicine and landing in the same place. His
+[herniated-disc note](Menno%20Henselmans%20videos/herniating-disc-3-taught-me-5-injury.md) runs on
+the same papers Barbell Medicine use — Zhong 2017 and Benson 2010 on spontaneous resorption,
+Lewis & O'Sullivan 2018 on reframing musculoskeletal care — and adds two they do not carry: Dubé
+2024, finding no clinically meaningful difference between one physiotherapy session and many, and
+Buzasi 2021, finding booster sessions moved only pain catastrophising. **Independent convergence on
+a contested position, from a source with no clinical training and every incentive to be contrarian,
+is the closest thing to corroboration this section has.** He overshoots in the same direction too —
+"MRI scans are contraindicated" overstates "not routinely indicated" — and his
+[injury-management video](Menno%20Henselmans%20videos/7-essential-injury-management-tips-lifters.md)
+rests on one narrative review plus an uncited **70% 1RM** connective-tissue threshold.
+
+**On posture he beats Barbell Medicine on their own ground.** His
+[four posture myths](Menno%20Henselmans%20videos/4-myths-about-improve-posture.md) cites Swain 2020,
+a systematic review *of* systematic reviews finding no established causal link between spinal
+posture and low back pain. Barbell Medicine assert the equivalent — "a specific squat form is not
+correlated with injury or pain" — **with no citation, in an article citing eleven papers elsewhere**
+([squat guide](Barbell%20Medicine%20articles/squat-correctly-technique-benefits-muscles-worked.md)).
+The only place in this section where the qualified source is the worse-sourced one.
+
+Nippard touches the edges and does well where he has a study — his
+[knees-over-toes note](Jeff%20Nippard%20videos/knees-go-over-toes.md) kills the rule with Fry 2003's
+torque numbers (unrestricted 150 Nm knee / 28 Nm hip; restricted 117 / 302) — then attaches uncited
+coaching numbers, **≤60 spinal-flexion reps per workout, 48 hours between sessions**
+([crunches](Jeff%20Nippard%20videos/footnote-crunches-dangerous.md)), exactly as Barbell Medicine
+attach uncited rehab doses. Two sources, one failure mode. House of Hypertrophy and the ISSN corpus
+contribute nothing here.
+
+**What would resolve any of this: a second qualified source.** Until one is ingested, the status of
+every clinical verdict above is *unaudited* — internally consistent, mostly well cited where it can
+be checked, never once tested against a rival reading.
+
+---
+
+## What the fifth source changed
+
+Barbell Medicine arrived after the verdicts above were written. A fifth independent reading is the
+best test this layer gets, so it is worth saying exactly what it moved and what it did not. The
+short answer: **it moved almost nothing, and that is the point.** Two new verdicts, three
+strengthened, one number in a table, and a long list of confirmations.
+
+The full working record is in `sources/cross/parts/bm-revisions.md`.
+
+### What it confirmed
+
+**The rep band, volume, frequency and tempo verdicts are untouched.** They do not contest them.
+
+**The exercise table grows from thirteen claims to sixteen** — push-ups matching the bench press
+(Kikuchi 2017, and unusually a *trained* sample with direct thickness measurement), cable and
+barbell preacher curls growing the biceps equally, and bench angle not changing pec hypertrophy.
+Three of their studies confirm rows that were already there. Kikuchi deserves particular notice:
+trained subjects, direct measurement, a clean null. It belongs higher in the confidence ranking
+than several entries that preceded it.
+
+**The high-protein ceiling verdict is strengthened.** Their top tier — 2.3–3.1 g/kg for lean
+dieters — rests on Helms 2014 alone, which is *the same confound the existing verdict already
+names*: trials comparing higher protein against inadequate protein, never 1.6 against 2.4. A second
+source has now built a high-protein recommendation on that literature without noticing.
+
+**Range of motion is the clearest corroboration in the library.** Their 2022 article concluded that
+long-length partials "may produce similar results compared to full ROM" and advised against using
+them for much of training — **two years before the trained-subject nulls**, and for the right
+reason. Independent convergence from a source with no stake in that debate is real evidence, and it
+lifts the table row to moderate-high. The same fact that makes Nippard's 2023 position look worst
+makes this one look best.
+
+### What it added
+
+**Overtraining now has a verdict, and Barbell Medicine win it.** Grandou 2020 pooled 22 overload
+studies: 10 reported zero performance decline and no reliable biomarker emerged. The failed attempts
+carry the argument — three athletes squatting a true 1RM daily for 30 consecutive days all
+*improved*; nine supervised weeks at ~90 weekly sets to failure produced nobody meeting criteria.
+Only Fry 1994 showed a real drop, recovering in 2–8 weeks, short of what the syndrome requires.
+Nippard cites that same paper as proof overtraining is real. Both also cite Saw 2016, which found
+self-report beat hormones, resting heart rate and HRV — after which Nippard recommends HRV as "the
+more objective marker."
+
+**HRV gets its own verdict: do not use it to skip sessions.** Both head-to-head resistance-training
+trials are null, and in Chen 2011 1RM returned to baseline at ~30 hours while HRV took ~60 — so HRV
+would have pulled an athlete from a session they were ready for. Under 5% of the parameters
+wearables report have been validated.
+
+**Rest periods get a verdict, and nobody wins outright.** Barbell Medicine have the better single
+trial (Schoenfeld 2016, trained men, 8 weeks, 3 minutes beating 1) and the worse literature review —
+their hypertrophy case rests on six mostly-untrained studies and never engages the 2024 network
+meta-analysis in which every band's credible intervals overlap. This is also the clearest case in
+the library of a **recommendation stated before its own evidence**: the numbers appear in the
+article's opening and survive a review that never tests them.
+
+### What it complicated
+
+**Daily protein: the number holds, the "convergence" rhetoric does not.** Four of five sources agree
+on 1.6–1.8 g/kg. The fifth gives four figures across nineteen articles — 1.3–3.1, 1.6, 1.4–1.6, and
+1.6 g/kg of *target* body weight — none citing the others. Only the 1.6 is traced correctly to
+Morton 2018. And the convergence was always thinner than it looked: **Morton 2018 is doing the work
+in every source that gets it right**, which is one meta-analysis wearing four hats.
+
+**Effort: a dissent worth recording, not a revision.** They prescribe RPE 6–8 on compounds even for
+hypertrophy and RPE 8–10 on isolation — below the library's 1–3 RIR floor, and a split nobody else
+uses. No citation supports it in any of the three articles that state it, and their own publisher
+contradicts it twice. The verdict stands. But the underlying logic is coherent as *programming
+preference* rather than efficacy: compounds are expensive per unit of per-muscle stimulus, isolation
+cheap. On Menno's terms — equate total reps by adding sets — RPE 6–8 on compounds is defensible.
+Barbell Medicine never require that.
+
+**RIR accuracy: right answer, wrong citation.** Their dedicated 4,831-word RPE article carries
+exactly one reference — Helms 2017, *Self-Rated* Accuracy — for the claim that trainees become
+accurate within weeks. Self-rating measures confidence. Their own separate article cites Halperin
+correctly (2–5 rep under-prediction) and adds Malleron 2025, which found **no significant
+trained-versus-untrained difference in RIR accuracy**. That is new to the library and cuts against
+the intuition that experience fixes this — strengthening the existing conclusion that calibration
+has to be deliberate and periodic rather than accumulated. The two articles are never reconciled.
+
+**Creatine: a third inflated headline.** They cite Burke 2023 — the right meta-analysis — and report
+it as "a couple of pounds or so in a year," converting a regional thickness result (0.10–0.16 cm,
+pooled effect size 0.11, which the authors called possibly minimal) into a whole-body mass unit the
+paper never measured. They report neither the effect size nor that verdict. They are still the least
+enthusiastic of the three secondary sources, and they sell creatine. The ranking is now four-way:
+**ISSN > House of Hypertrophy > Barbell Medicine > Burke's own reading.** Do not quote "one-third
+faster", and do not quote "a couple of pounds a year" either. What survives: 3–5 g/day of
+monohydrate, performance effect secure, roughly 1–2 lb of actual contractile tissue a year.
+
+### One study, three readings
+
+Chaves 2020 is now read three incompatible ways by three sources. Nippard cites it as confirming
+incline pressing "with longitudinal data". Barbell Medicine cite it as a null showing bench angle
+does not matter. House of Hypertrophy dismantles it on method — pec thickness rising 54–62% across
+eight training sessions, and only 30 of 47 completers appearing in the hypertrophy data.
+
+The verdict on incline work is unchanged and the reason is arithmetic rather than physiology: the
+upper pec starts at ~15 cm² against 25–27 cm², so equal percentage growth looks like less. But
+**Nippard's incline default rests on a study its other two readers treat as showing nothing**, and
+one of them shows why it cannot be trusted in either direction. Filed with the Wolf sample-size
+discrepancy in the defects list below: a study rendered differently across notes is a library
+problem, not a literature problem.
+
+---
+
 ## Defects this reconciliation found in the library itself
 
 Reading four sources against each other surfaces errors that reading any one of them does not.
@@ -902,16 +1182,20 @@ Recorded here rather than quietly corrected, so the correction is auditable.
 - **A minimalist-training figure was superseded by its own authors.** The 64% / 84% numbers held
   elsewhere in the library were corrected to 53% by the paper's authors. The cross-source section
   uses the corrected figure.
+- **One study is read three incompatible ways.** Chaves 2020 is cited by Nippard as confirming
+  incline pressing, by Barbell Medicine as a null, and dismantled on method by House of Hypertrophy.
+- **The same paper is dated two different years.** Maeo's overhead triceps extension study appears
+  as 2022 in one folder and 2023 in another — online 2022, issue 2023. One is enough.
 - **Nippard's "3 to 35 reps" rests on a study he himself describes as mismatched.** The
   Schoenfeld 2014 comparison gave the low-rep group seven sets of three against three sets of ten.
   He reports the mismatch and does not draw the conclusion that it invalidates the equivalence.
 
 ## What this layer does not cover
 
-**Injury, pain and rehabilitation.** It is the thinnest area in the library and the four sources
-above barely touch it — one is a nutrition body, and the three training sources are hypertrophy
-channels. Barbell Medicine, two practising physicians, is being ingested to fill exactly this gap,
-and this file will need a sixth section when it lands.
+**Anything with a second qualified opinion on the clinical questions.** Barbell Medicine filled the
+injury and rehabilitation gap, but it filled it alone — there is nothing in this library to test it
+against, so the clinical section adjudicates it against its own citations instead. That is weaker
+than adjudication and the section says so.
 
 **Anything about individuals.** Every verdict here is about group averages from trials averaging
 around ten weeks. Several sources note real individual variation in response to volume, rep range

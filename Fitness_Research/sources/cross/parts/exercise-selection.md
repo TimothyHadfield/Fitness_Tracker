@@ -39,10 +39,15 @@ measured muscle size, not activation:
 | Straight-leg beats bent-leg calf raises for gastrocnemius | Burke 2024 plus Kinoshita 2023, two independent designs ([note](../House%20of%20Hypertrophy%20videos/bigger-calves-ultimate-guide-32-studies.md)) |
 | Curls grow the elbow flexors more than rows | Mannarino, 10 untrained, within-subject — curl arm ~11%, row arm ~5% ([note](../House%20of%20Hypertrophy%20videos/compound-exercises-enough-biceps.md)) |
 | The neck needs direct work | Conley 1997: 22 men, 12 wk — compound-only group **zero** neck CSA change, +13% with nine weekly sets ([note](../Jeff%20Nippard%20videos/neck-and-trap-training.md)) |
-| Free weights ≈ machines near failure | Schwanbeck 2020 (n=36) and Hernández-Belmonte 2023 (36 trained men) ([note](../House%20of%20Hypertrophy%20videos/3-exercises-don-t-build-more-muscle.md)) |
+| Free weights ≈ machines near failure | Schwanbeck 2020 (n=36) and Hernández-Belmonte 2023 (36 trained men) ([note](../House%20of%20Hypertrophy%20videos/3-exercises-don-t-build-more-muscle.md)). Hypertrophy is equal; **strength transfer is specific to the mode trained** |
 | Squats ≈ hip thrusts for glute growth at all three regions | 34 untrained subjects ([note](../House%20of%20Hypertrophy%20videos/squats-vs-hip-thrusts-glute-growth.md)); Plotkin 2023, cited by Menno |
-| Deeper squats grow more quad; 90° leaves glutes and adductors short | Bloomquist 2013 (MRI), Kubo 2019 |
+| Deeper squats grow more quad; 90° leaves glutes and adductors short | Bloomquist 2013 (MRI), Kubo 2019 — though in Kubo the depth advantage was **adductor and glute**, with quadriceps statistically indistinguishable (4.9 ± 2.6% vs 4.6 ± 3.1%) |
 | Randomly switching exercises does nothing | Baz-Valle: 19 trained men, 8 wk, 80-exercise randomiser vs fixed list — **null**, raw numbers favouring fixed ([note](../House%20of%20Hypertrophy%20videos/switch-exercises-every-session-more-muscle-hypertrophy.md)) |
+| Push-ups match the bench press for growth | Kikuchi 2017: **18 men with ≥1 year of training**, 3 sets to failure twice weekly, bench at 40% 1RM vs kneeling push-ups — ~3 mm thickness at pecs and triceps in both, no significant difference; Kotarsky 2018 replicates at 4 weeks ([note](../Barbell%20Medicine%20articles/best-chest-exercises-muscle-strength.md)) |
+| Cable and barbell preacher curls grow the biceps equally | Nunes 2020: opposite resistance profiles, hypertrophy equal; the cable was stronger only when tested at long muscle lengths ([note](../Barbell%20Medicine%20articles/best-chest-biceps-workout.md)) |
+| Bench angle does not change pec hypertrophy | Chaves 2020: 8 wk, untrained men, flat / incline / both — no meaningful difference. **The weakest entry here**: House of Hypertrophy dismantles the same study on method, and the three sources read it three different ways ([note](../Barbell%20Medicine%20articles/bench-press-technique-benefits-muscles-worked.md)) |
+
+That is **sixteen claims** out of everything these five sources assert about exercise choice.
 
 **Everything else in this domain is unmeasured.** That includes: the entire back and lat ranking in
 both video sources — House of Hypertrophy's

@@ -1,6 +1,6 @@
 # What to believe — the library reconciled
 
-Four sources, roughly 8,000 papers, and they do not always agree. This file is the arbiter.
+Five sources, roughly 10,000 papers, and they do not always agree. This file is the arbiter.
 
 It is **not** another summary. Each source folder already has one, and each of those is written
 from inside that source's point of view. This file does the thing none of them can: where two
@@ -14,6 +14,7 @@ it.
 | [ISSN position stands](../ISSN%20position%20stands/SUMMARY.md) | Formal expert-body consensus documents on supplements and nutrition. | 27 |
 | [Menno Henselmans](../Menno%20Henselmans%20videos/SUMMARY.md) | A coach who argues against the evidence-based consensus more often than he agrees with it. | 151 |
 | [House of Hypertrophy](../House%20of%20Hypertrophy%20videos/SUMMARY.md) | The most densely cited: hypertrophy mechanisms and single training variables in depth. | 169 |
+| [Barbell Medicine](../Barbell%20Medicine%20articles/SUMMARY.md) | Practising physicians and physiotherapists. The only clinical source here, and the only one covering injury, pain and medicine. | 155 |
 
 ## How to use this
 
@@ -45,15 +46,19 @@ that is what the verdicts give.
 | Is there a per-session ceiling? | No wall, but steep diminishing returns. Not a rival claim to the weekly one. | Moderate |
 | "5 sets beat 20" | No usable primary evidence remains. Both supporting trials retracted. | High |
 | Must you train to failure? | No. 1–3 RIR matches failure at normal volumes; below ~2 weekly sets, failure wins. | High |
-| Can people judge RIR? | Reasonably when trying to, badly in habitual practice. All sources agree. | High |
+| Can people judge RIR? | Reasonably when trying to, badly in habitual practice. All five agree on the finding; one reaches it through a mis-designed citation. | High |
 | Does frequency matter with sets equated? | No. Nobody credible still claims an independent effect. | High |
 | The equivalent rep band | **6–35**, not 5–35. The trials defending sub-5 reps handed the low-rep group extra sets and longer rest, and it still only tied. | Moderate |
-| Lengthened partials vs full ROM | Equal in trained lifters. Not worse — the nulls are nulls, not reversals. | Moderate |
+| Lengthened partials vs full ROM | Equal in trained lifters. Not worse — the nulls are nulls, not reversals. | Moderate-high |
 | Tempo | No live disagreement. Control the weight; do not deliberately slow it. | High |
-| Which exercise claims are backed by growth data? | Thirteen. Every other ranking in this library is EMG, moment arms or acute measures. | High |
-| Creatine's effect on muscle | Real, small. Both headline figures in this library are inflated in different directions. | Moderate |
-| Daily protein | 1.6–1.8 g/kg. All four sources converge. | High |
+| Which exercise claims are backed by growth data? | Sixteen. Every other ranking in this library is EMG, moment arms or acute measures. | High |
+| Creatine's effect on muscle | Real, small. All three headline figures in this library inflate the same paper, in different units and directions. | Moderate |
+| Daily protein | 1.6–1.8 g/kg. Four of five sources converge; the fifth gives four numbers and cross-references none of them. | High |
 | Protein in a deficit | The upper half of the library's cutting range has no trial behind it. | Moderate |
 | Per-meal protein ceiling | Dead. There is no ceiling. | High |
 | Pre-sleep protein | Confounded by total intake. The ISSN's own stand flags it and recommends it anyway. | High |
 | Caffeine tolerance / cycling | Genuinely unresolved. Both sides outrun the data. | — |
+| Can a lifter actually overtrain? | No controlled resistance-training study has produced overtraining syndrome. What is reachable is functional overreaching, and it follows near-maximal intensity rather than volume. | Moderate-high |
+| Should you use HRV to skip sessions? | No. Both head-to-head trials are null, and HRV lags performance recovery by about 30 hours. | High |
+| How long to rest? | More than 60 seconds; past that the bands overlap. ~2 minutes is a safe default, 3+ defensible on compounds. | Moderate |
+| Injury, pain and clinical questions | Only one source is qualified, so nothing tests it. See the clinical section for what its own citations do and do not carry. | — |

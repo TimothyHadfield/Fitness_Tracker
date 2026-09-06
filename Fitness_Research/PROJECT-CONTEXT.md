@@ -35,8 +35,14 @@ near the bottom of this file for what that probe found and which sources are off
    summary, an index and a 745-paper bibliography. Nothing was excluded; this is the only source
    here with no personal content to filter out. Its value is density — 1,557 reference citations,
    977 unique — and the fact that he retires his own positions on camera when the evidence moves.
-4. **Barbell Medicine + integration** — NOT STARTED. ~206 free articles with inline PubMed
-   links; skip the audio entirely. Then the cross-source layer.
+4. **Barbell Medicine + integration** — DONE. 155 notes from 206 fetched articles, a 12,800-word
+   summary, an index and a 2,171-paper bibliography. 51 articles excluded, 43 of them one templated
+   SEO cluster. The integration layer is [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md), which adjudicates
+   all five sources where they disagree.
+
+**All four chunks are complete.** Two further pieces were built on top:
+[RETRACTION-AUDIT.md](RETRACTION-AUDIT.md), which checks every PubMed ID the library cites, and the
+cross-source layer above. See "What is left" near the bottom of this file.
 
 Squat University is a later pass, at Tim's request.
 
@@ -64,10 +70,13 @@ the lock file.
 - **ISSN position stands** — 27 notes, summary, index, 5,192-reference bibliography. Complete.
 - **Menno Henselmans** — 151 notes, summary, index, 535-reference bibliography. Complete.
 - **House of Hypertrophy** — 169 notes, summary, index, 745-paper bibliography. Complete.
+- **Barbell Medicine** — 155 notes, summary, index, 2,171-paper bibliography. Complete.
+- **WHAT-TO-BELIEVE.md** — the cross-source adjudication layer over all five sources. Complete.
+- **RETRACTION-AUDIT.md** — every PubMed ID checked. Three retracted, all now flagged. Complete.
 
-**The next chunk is Barbell Medicine.** Skip to "Then chunk 4" below; everything between here
-and there is a record of how the House of Hypertrophy pass finished, kept because the lessons
-generalise.
+**There is no next chunk.** The four-chunk build is finished. What remains is listed under
+"What is left" near the bottom of this file; everything between here and there is a record of how
+the passes went, kept because the lessons generalise.
 
 ## House of Hypertrophy — how it finished, and what that cost
 
@@ -158,17 +167,75 @@ Two things the notes must handle honestly:
   unusually careful in practice (presents the study that contradicts him, states sample sizes
   and training status), and the notes should say where that shows.
 
-## Then chunk 4: Barbell Medicine
+## Barbell Medicine — how chunk 4 went
 
-Not started. ~206 free articles at barbellmedicine.com with inline numbered PubMed links,
-plus per-episode Google Docs of citations for the podcast — **skip the audio entirely and
-ingest the articles.** This is the source that best fills the injury and rehab gap, from two
-practising physicians. It needs a new fetcher: sitemap to HTML to main-content extraction.
-Their terms allow reading and summarising, not republishing.
+206 articles fetched with a new `tools/fetch_articles.py` (sitemap → HTML → main-content →
+markdown), 155 written up, 51 excluded. robots.txt permits it; their terms allow summarising, not
+republishing, and nothing here reproduces their text.
 
-After that, the cross-source layer: a top-level summary reconciling the five sources where
-they disagree. There is a lot of material for it already — the per-source summaries each carry
-an explicit section on where that source departs from the others.
+**A written source is much better than a video one, and the reason is the inline `[n]` marker.**
+It sits on the sentence, so a claim links to its paper exactly instead of by inference. 76 articles
+carry a verified mapping covering 1,804 markers. Reach for written sources first.
+
+### The three things this pass taught that generalise
+
+**A verified mapping proves the numbering is consistent, not that the right paper was cited.**
+This is the big one. Once the mapping made claim-level checking possible, the agents found: a
+hypertrophy claim citing a ketogenic-diet review, a biceps claim citing a study of the horse, a
+bone-density claim on a two-person case study, printed PMIDs resolving to a fruit-juice titration
+paper and to polyolefin nanofibers, and reference lists whose printed author and title do not match
+the paper their own link resolves to. **Where an article prints both a number and a link, the link
+has been right and the number wrong, every time.** Build that into the next brief from the start.
+
+**Distinguish "the numbering is broken" from "there is no numbering."** An agent corrected the
+brief on this and was right. `mapping: "numbered"` with `verified: false` means drift;
+`"inline-links"` or `"lumped"` with zero markers means the article never numbered anything;
+`"none"` means it cites nothing at all. Saying the wrong one is an error in the note.
+
+**Parentheses in URLs.** The URL regex excluded `)` to avoid swallowing markdown link closers,
+which silently truncated every Lancet and Elsevier DOI —
+`10.1016/S0140-6736(18)30480-X` became `.../S0140-6736(18)` and then failed to resolve for no
+visible reason. Now kept and trimmed only where unbalanced. 51 URLs recovered here; check any new
+corpus for it.
+
+### Agent orchestration at this scale
+
+**The concurrency cap is 20** (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). Launching 31 batches at
+once fails silently for the excess — the tool returns an error per over-cap agent and says not to
+retry. Feed batches in as slots free.
+
+**Mop-up agents that compute their own worklist are the right ending.** Give them the
+"what is missing" command, tell them to re-run it before every note and never overwrite, and point
+different agents at different ends of the list. Collisions still happen — several notes were
+written twice and one was overwritten — but every collision here replaced a complete note with
+another complete note, so the cost was wasted work rather than lost work.
+
+**Do not put a note in a numbered batch and also in the mop-up pool.** That is how
+`beginner-prescription.md` got written twice.
+
+## What is left
+
+The four-chunk build is done. In rough order of value:
+
+1. **Squat University**, which Tim asked for as a later pass. Best subject-matter fit for injury
+   and rehab, and it would give the clinical material the second opinion it currently lacks —
+   right now Barbell Medicine is unopposed in this library, which the cross-source layer flags as
+   its weakest structural point. Caveat from the original probe: its citation discipline decayed
+   sharply after about 2019.
+2. **Retrofit the House of Hypertrophy notes' reference sections.** They were written against a
+   `refs.json` missing 69 citations, found and fixed afterwards. The bibliography and index use
+   the corrected data; ~35 notes still omit a link their video gave. Mostly congress abstracts and
+   unindexed PDFs. Cheap agent pass.
+3. **Fix the defects the cross-source layer found.** Listed at the bottom of
+   [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md): one study written up with two different sample sizes,
+   one paper dated two different years, one study read three incompatible ways across three
+   sources.
+4. **The Nippard "Known problems in this library" list** at the bottom of
+   `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its claim,
+   misleading filenames, one study rendered three ways.
+5. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
+   clean result is not permanent. The command is in
+   [RETRACTION-AUDIT.md](RETRACTION-AUDIT.md).
 
 ## Loose ends
 

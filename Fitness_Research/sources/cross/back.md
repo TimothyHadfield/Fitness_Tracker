@@ -14,16 +14,20 @@ Recorded here rather than quietly corrected, so the correction is auditable.
 - **A minimalist-training figure was superseded by its own authors.** The 64% / 84% numbers held
   elsewhere in the library were corrected to 53% by the paper's authors. The cross-source section
   uses the corrected figure.
+- **One study is read three incompatible ways.** Chaves 2020 is cited by Nippard as confirming
+  incline pressing, by Barbell Medicine as a null, and dismantled on method by House of Hypertrophy.
+- **The same paper is dated two different years.** Maeo's overhead triceps extension study appears
+  as 2022 in one folder and 2023 in another — online 2022, issue 2023. One is enough.
 - **Nippard's "3 to 35 reps" rests on a study he himself describes as mismatched.** The
   Schoenfeld 2014 comparison gave the low-rep group seven sets of three against three sets of ten.
   He reports the mismatch and does not draw the conclusion that it invalidates the equivalence.
 
 ## What this layer does not cover
 
-**Injury, pain and rehabilitation.** It is the thinnest area in the library and the four sources
-above barely touch it — one is a nutrition body, and the three training sources are hypertrophy
-channels. Barbell Medicine, two practising physicians, is being ingested to fill exactly this gap,
-and this file will need a sixth section when it lands.
+**Anything with a second qualified opinion on the clinical questions.** Barbell Medicine filled the
+injury and rehabilitation gap, but it filled it alone — there is nothing in this library to test it
+against, so the clinical section adjudicates it against its own citations instead. That is weaker
+than adjudication and the section says so.
 
 **Anything about individuals.** Every verdict here is about group averages from trials averaging
 around ten weeks. Several sources note real individual variation in response to volume, rep range

@@ -79,7 +79,7 @@ oft-repeated single result, check the journal page or Retraction Watch; and pref
 by several independent groups, since a retraction then takes one leg off an argument rather than
 all of it. And treat a source's silence as uninformative: Nippard did not know.
 
-### The measurement problems all four share
+### The measurement problems all five share
 
 Most disagreements in this library dissolve into one of the following.
 
