@@ -36,7 +36,8 @@ the lock file.
 ## What is in here
 
 [README.md](README.md) is the top-level index. Start a reader at
-[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md).
+[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md), and start *yourself* at
+[TOPIC-MAP.md](TOPIC-MAP.md) — it routes a question to the file that answers it.
 
 | Source | Notes | Bibliography | What it is |
 | --- | --- | --- | --- |
@@ -49,7 +50,16 @@ the lock file.
 Every source folder has the same shape: `SUMMARY.md` (read this first), `README.md` (index of
 every note, generated), `RESEARCH-CITATIONS.md` (bibliography, generated), and the notes.
 
-Three files sit above the sources:
+The three largest sources are also split into **domain summaries**, `SUMMARY-<domain>.md`, each
+written from every note in its area and carrying the sample sizes, designs and effect sizes that
+the top-layer `SUMMARY.md` deliberately does not. Nippard has 6, House of Hypertrophy 8, Barbell
+Medicine 6. The pattern to copy if you add a source is `Jeff Nippard videos/SUMMARY-technique.md`.
+ISSN and Menno are short enough not to need the split.
+
+Four files sit above the sources:
+
+- **[TOPIC-MAP.md](TOPIC-MAP.md)** — the router. A question maps to the files that answer it, in
+  order. Also records which notes are filed somewhere a reader would not look.
 
 - **[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the arbiter. Where two sources disagree it says
   which is right, why they differ, and how confident that deserves to be. Opens with 20 verdicts
@@ -84,13 +94,52 @@ In rough order of value. None of it is urgent and none of it blocks anything.
    [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md): the Wolf lengthened-partials trial written up with
    two different sample sizes, Maeo's triceps study dated two different years, and Chaves 2020
    read three incompatible ways by three sources.
-4. **The Nippard "Known problems in this library" list** at the bottom of
+
+   The domain-summary pass located several of these precisely and found more. All are reference
+   hygiene — none changes a conclusion — and all are cheap one-line fixes:
+   - **Wolf** is **n=25** in `finally-here-new-study-muscle-growth-epic.md` and
+     `training-beyond-failure-new-study-epic.md`, but "30 trained lifters" in
+     `full-range-motion-not-optimal-building-muscle.md`.
+   - **Costa 2021** is described four ways across the HoH biceps and triceps notes — 22 detrained
+     men, 22 trained men over nine weeks, 22 people over eight weeks, trained men over eight
+     weeks. The trained/detrained conflict is unflagged and that study is the main variety
+     evidence in both arms.
+   - **Enes 2021** is 28 trained men in one note, 18 in another. **Ahtiainen 2005** carries two
+     different PMIDs across three notes. A **Schoenfeld** repetition-duration meta-analysis is
+     dated 2015 in one note and 2016 in another. The **Schoenfeld 2020 calf trial** is 8 weeks in
+     one note and 10 in another (8 is correct).
+   - **Gentil 2015** is used at face value in a 2022 HoH note and discounted in a 2024 one for its
+     author's statistical anomalies. Both stand; neither mentions the other.
+   - In Barbell Medicine, **Larsen 2021** is resolved in one note and recorded as unresolvable in
+     another.
+
+4. **Fix the Barbell Medicine boilerplate errors as one job, not eight.** Biressi 2007, a
+   developmental biology paper, is attached to the same unsupported training-dose claim in at
+   least four articles, and a near-verbatim "osteoarthritis progression is slowed or completely
+   stopped" sentence appears in at least four. These are reused house text, so they are one fix.
+
+5. **Cross-link the recoverable author names in the 26 unreferenced HoH videos.** Several names
+   currently marked "unverified, from auto-captions" are recoverable from adjacent verified
+   reference lists — MacDougall 1982, Meijer 2015, Haun 2019, Yu 2013, Dankel 2016 and
+   Madarame 2018 were all identified this way. A single agent pass over the seven worst notes
+   would resolve a good fraction of the "do not cite" entries.
+
+6. **Label the species in the HoH mechanisms material.** The 87-study mechanics video — one of the
+   unreferenced ones, and the channel's intellectual centre — never gives a species for its four
+   load-bearing mechanical-tension studies, at least one of which is a rat mTORC1 dose-response
+   experiment. A reader assumes human work. This is the single most consequential gap the
+   domain pass found.
+
+7. **Add the soleus clash to the arbiter.** Nippard prescribes 15–25-rep calf sets on fibre-type
+   grounds; House of Hypertrophy's position rests on a calf trial finding no fibre-type effect.
+   Neither engages the other and [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md) does not yet cover it.
+8. **The Nippard "Known problems in this library" list** at the bottom of
    `Jeff Nippard videos/SUMMARY.md` — a citation that doesn't support its claim (Farina 2010 in
    the cable kickback note), several misleading filenames, one study rendered with three different
    effect sizes, and caption-garbled researcher names still marked uncertain.
-5. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
+9. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
    clean result is not permanent. Command is in [RETRACTION-AUDIT.md](RETRACTION-AUDIT.md).
-6. **19 Nippard videos have no usable English captions** and were never written up. Listed at the
+10. **19 Nippard videos have no usable English captions** and were never written up. Listed at the
    bottom of this file. Injury recovery and posture are the two worth chasing elsewhere.
 
 ---

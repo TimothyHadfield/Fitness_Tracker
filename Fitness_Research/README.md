@@ -10,6 +10,9 @@ evidence does not carry, the note says so rather than repeating it.
 
 ## Start here
 
+**[TOPIC-MAP.md](TOPIC-MAP.md)** — the router. Find your question, and it names the files to open
+and the order to open them in. Start here if you know what you want to know.
+
 **[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the sources reconciled. Where two of them
 disagree, this says which is right, why they differ, and how confident that deserves to be. It
 opens with every verdict in one table.
@@ -46,14 +49,23 @@ absent because nothing they publish can be checked.
 
 ## How to read it
 
-Each source folder has the same shape:
+There are four layers, and you should stop at the shallowest one that answers you.
 
-- **`SUMMARY.md`** — the whole source distilled into one file, organised by the decision
-  you're making rather than by video or paper. Start here.
-- **Domain summaries** — where a source is large enough to need them.
-- **`README.md`** — an index of every note in that folder.
-- **`RESEARCH-CITATIONS.md`** — the master bibliography for that source.
-- **The notes themselves** — one per video or paper.
+1. **[TOPIC-MAP.md](TOPIC-MAP.md)** — routes a question to the right file.
+2. **[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the verdict where sources disagree.
+3. **`<source>/SUMMARY.md`** — that source's framing, its headline positions, where it departs
+   from the others, and where its floor is thin. Short, and it routes onward.
+4. **`<source>/SUMMARY-<domain>.md`** — the study-by-study detail: sample sizes, designs, effect
+   sizes, and what is asserted rather than measured. This is where a real answer usually lives.
+
+Then the notes themselves, one per video or article, when you need a study's own numbers.
+
+The three largest sources are split into domain summaries — Jeff Nippard into 6, House of
+Hypertrophy into 8, Barbell Medicine into 6. The ISSN and Menno Henselmans summaries are short
+enough to read whole.
+
+Each source folder also has **`README.md`**, an index of every note in that folder, and
+**`RESEARCH-CITATIONS.md`**, its master bibliography.
 
 ## What this is not
 

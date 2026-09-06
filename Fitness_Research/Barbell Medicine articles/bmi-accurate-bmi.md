@@ -44,7 +44,7 @@ The three-step workflow — pair BMI with waist, stratify overall risk, let labs
 
 The suggested lab panel (fasting glucose, ideally fasting insulin, lipids with triglycerides and HDL, and the triglyceride-to-HDL ratio as an insulin-resistance marker) is uncited and is the most clearly "we recommend" element in the piece. Fasting insulin and TG:HDL are reasonable clinical practice, not guideline-mandated screening.
 
-**Also worth noting:** the article does not report an effect size for waist circumference's added predictive value over BMI — it asserts waist-to-height "can match or beat BMI as a predictor" without a citation, in a piece that is otherwise scrupulous about the strength of BMI's own outcome record. The companion article on the [body roundness index](should-bri-replace-bmi.md) covers the same ground with 27 references.
+**Also worth noting:** the article does not report an effect size for waist circumference's added predictive value over BMI — it asserts waist-to-height "can match or beat BMI as a predictor" without a citation, in a piece that is otherwise scrupulous about the strength of BMI's own outcome record. The companion article on the [body roundness index](new-number-health-body-roundness-index-replace.md) covers the same ground with 27 references.
 
 ## Commercial note
 The article closes by directing readers to Barbell Medicine's free BMI calculator and then to their paid coaching service. Internal links point to their Vital 5 action plan, waist-measurement guide and sarcopenia article. The calculator is free and the clinical advice is not distorted toward the sale, but the piece is search-optimised content ending in a coaching funnel and should be read as such.
