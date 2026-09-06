@@ -169,7 +169,40 @@ export const PRESET_SYSTEMS = [
           + 'Reported: squat 2–4 near max plus two paused back-off sets, RDL 8–10, lunges 10 per '
           + 'leg, leg curls 10–12, calves 10–12.',
         exercises: [
-          { name: 'Back Squat', sets: 3, notes: 'Work up, then one set of 2–4 at 85–90%. Two paused back-off sets of 5 at 75% of that.' },
+          /* 🚨 THE ONLY PERCENTAGE IN THIS WHOLE SYSTEM THAT `targets` CAN
+           * HONESTLY CARRY — added 2026-09-18, and the reason the others are
+           * absent matters more than the reason this one is here.
+           *
+           * `targets` means "percent of YOUR OWN estimated one-rep max on THIS
+           * lift" (js/set-targets.js), and the top set is the one prescription
+           * in the series stated that way.
+           *
+           * 🚨 IT PLANS 85, THE BOTTOM OF THE STATED 85–90 % RANGE, AND THAT IS
+           * NOT A ROUNDING CONVENIENCE. The first version of this line asked
+           * for 88 — the midpoint — and the test caught what actually reached
+           * the account: `clampTarget()` snaps to the 5 % grid, so 88 became
+           * **90**, the TOP of the range. The app would have been quietly
+           * planning the heaviest end of somebody else's prescription. Erring
+           * light is the direction this whole feature errs in (weights round
+           * down, 100 % is a ceiling), so the bottom of the range it is.
+           *
+           * ⚠️ THE TWO BACK-OFFS ARE DERIVED, NOT REPORTED. The write-up says
+           * 75 % *of that top set*, which is a different quantity from 75 % of a
+           * max — so 0.75 × 85 ≈ 64, and 65 is the nearest step the field
+           * allows. Arithmetic done here rather than something Nippard
+           * published, said on screen for that reason, and the closest this
+           * field can get to what the programme actually asks for.
+           *
+           * 🛑 NOTHING ELSE IN THE SIX WORKOUTS IS ENCODED, because nothing else
+           * is a percentage of a max: the stiff-leg deadlift is a percentage of
+           * the DEADLIFT's top set (another lift entirely), and the lat pulldown
+           * 30 % is a drop-set reduction. Both would be wrong by a wide margin
+           * if forced into this field, and a wrong weight on a bar is the one
+           * failure this feature was built to avoid. */
+          { name: 'Back Squat', sets: 3, targets: [85, 65, 65],
+            notes: 'Work up, then one set of 2–4 at 85–90%. Two paused back-off sets of 5 at 75% of that. '
+              + 'The planned weights take 85% — the bottom of that range — and 65% for the back-offs, '
+              + 'which is 75% of the top set worked out for you rather than a number from the write-up.' },
           { name: 'Romanian Deadlift', sets: 3, notes: '8–10 reps.' },
           { name: 'Walking Lunge', sets: 3, notes: 'Dumbbells, 10 reps per leg.' },
           { name: 'Seated Leg Curl', sets: 3, notes: '10–12 reps.' },

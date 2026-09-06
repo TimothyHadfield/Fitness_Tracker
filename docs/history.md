@@ -125,6 +125,49 @@ prefilled reps, touch nothing, and the set is dropped at save. One nudge on any 
 theirs. **This does not change the untargeted path, so Open work 15 — whether history prefills should
 be guarded too — is still open and still his**; what changed is that it is now much easier to hit.
 
+### C2. 🚨 PUTTING NIPPARD'S PERCENTAGES IN — WHAT COULD AND COULD NOT SHIP
+
+Tim, mid-session: *"I'm following the Jeff Nippard Ultimate Push/Pull/Legs split right now and I now
+he has details on the % of lifts and weights. Could you automatically put these details in the
+workout system so that we can test if our new feature is working?"*
+
+🛑 **THE PAID EBOOK'S TABLE CANNOT SHIP, AND `js/preset-systems.js` ALREADY SAID SO** — its header
+draws the line explicitly: the shipped system is transcribed from the **free YouTube series**, and
+*"what must never ship is the paid one… copying its prescriptions into a public app is
+redistributing something he charges for."* That was written on 2026-08-17 and it decided this without
+needing a new argument. **A percentage table out of the 12-week ebook is exactly what it names.**
+
+✅ **WHAT DID SHIP: the one percentage in the free transcription that this field can honestly carry.**
+Legs 1's Back Squat — *"one set of 2–4 at 85–90 %, two paused back-off sets of 5 at 75 % of that"* —
+is now `targets: [85, 65, 65]`.
+
+🚨 **AND TRYING IT ON A REAL PROGRAMME IS WHAT EXPOSED THE FEATURE'S LIMIT, WHICH IS THE FINDING OF
+THIS PART. Of the four percentages in Nippard's two leg days, `targets` can express ONE:**
+
+| what the programme says | can `targets` carry it? |
+|---|---|
+| Back Squat top set, **85–90 %** | ✅ it is a % of a 1RM |
+| Back Squat back-offs, **75 % of that top set** | ⚠️ derived only — 0.75 × 85 ≈ 64 |
+| Stiff-Leg Deadlift, **50–60 % of the DEADLIFT's top set** | 🛑 a % of **another lift** |
+| Lat Pulldown drop, **about 30 %** | 🛑 a drop-set reduction, not a target |
+
+**`targets` means "percent of your own estimated 1RM on THIS lift", and real programmes mostly
+prescribe relative to a top set or to a different lift.** Nothing but the squat is encoded, because
+forcing either of the others into this field would put a badly wrong weight on a bar. ⚠️ **A second
+limit found the same way**: `targets` is all-or-nothing per exercise, so "prescribe set 1 only" has
+no expression either.
+
+🔒 **AND THE TEST CAUGHT A MISTAKE OF MINE THE SAME MINUTE IT WAS WRITTEN.** The first version asked
+for **88**, the midpoint of 85–90. `clampTarget()` snaps to the 5 % grid, so what actually reached the
+account was **90 — the TOP of somebody else's range**, and the app would have been quietly planning
+the heaviest end of a prescription it did not write. It plans **85** now, the bottom. ⚠️ **The
+assertion only caught it because it printed the stored value**; a bare true/false would have said
+"wrong" without saying what arrived, and the grid is not an obvious suspect.
+
+⚠️ **`addPresetSystem()` NEEDED THE FIELD NAMED TOO** — it rebuilds each exercise field by field
+exactly as `normalizeWorkout()` does, so a prescription on a preset would have been dropped in
+silence on the way into an account. **Second place, same trap**, now asserted.
+
 ### D. 🆕 THE PLATE BREAKDOWN — `js/plates.js`, and the agent corrected the brief
 
 > *"remove the 'steps of ___' label under the weight and replace it with a label that says

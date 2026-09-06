@@ -5030,6 +5030,29 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'an exercise with no targets carries no key at all — absent is the default and stays the '
      + 'default, so nothing downstream has to tell "none" from "empty"');
 
+  /* ---- 🚨 AND IT SURVIVES THE COPY OUT OF A PRESET ---- */
+  /* `addPresetSystem()` rebuilds each exercise field by field, exactly as
+   * normalizeWorkout() does, so this is the SECOND place the field has to be
+   * named — and a prescription dropped here would arrive in somebody's account
+   * as a workout that never had one, in silence. Nippard's Legs 1 is the only
+   * preset carrying targets, and it is the one to assert against because it is
+   * the one a user actually copies. */
+  await st.clearAll();
+  const { presetById: byId } = await import('../js/preset-systems.js');
+  const nipCopy = await st.addPresetSystem(byId('preset-nippard-ppl-2023'));
+  const legs = (await st.getWorkouts(nipCopy.system.id)).find((w) => w.name === 'Legs 1');
+  const squat = legs && legs.exercises.find((e) => e.exerciseId === id('Back Squat'));
+  ok(squat && Array.isArray(squat.targets) && squat.targets.join() === '85,65,65',
+     '🚨 a preset’s prescription reaches the account it is copied into — and it is 85, the BOTTOM of '
+     + 'the stated 85–90 % range. This assertion caught the first version asking for 88: clampTarget() '
+     + 'snaps to the 5 % grid, so 88 arrived as 90, the TOP of somebody else’s range. Erring light is '
+     + `the direction the whole feature errs in (${squat ? JSON.stringify(squat.targets) : 'no squat row'})`);
+  ok(legs.exercises.filter((e) => e.targets).length === 1,
+     '🛑 and it is the ONLY exercise in the workout carrying one — the stiff-leg deadlift’s "50–60 % '
+     + 'of the deadlift top set" is a percentage of ANOTHER LIFT and the pulldown’s 30 % is a drop, '
+     + 'and forcing either into a field that means "percent of your own max on this lift" would put '
+     + 'a badly wrong weight on a bar');
+
   await st.clearAll();
 }
 

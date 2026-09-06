@@ -1090,15 +1090,26 @@ export const store = {
       for (const item of w.exercises || []) {
         const ex = byName.get(item.name);
         if (!ex) { skipped++; continue; }
+        const sets = Number(item.sets) > 0 ? Number(item.sets) : DEFAULT_SETS;
+        const targets = normalizeTargets(item.targets, sets);
         exercises.push({
           exerciseId: ex.id,
-          sets: Number(item.sets) > 0 ? Number(item.sets) : DEFAULT_SETS,
+          sets,
           notes: item.notes || '',
           // A preset that says "supersetted with the next one" has to arrive
           // that way, or copying somebody's programme quietly flattens it —
           // which is the whole complaint docs/vision.md §1.5 was written about.
           ...(isNested(item.setType) ? { setType: item.setType, minis: plannedMinis(item) } : {}),
           ...(item.group == null ? {} : { group: item.group }),
+          /* ⚠️ THE SECOND PLACE `targets` HAS TO BE NAMED, and this loop is the
+           * same trap normalizeWorkout() carries: it rebuilds each exercise
+           * field by field, so a prescription on a preset would be dropped in
+           * silence on the way into somebody's account and the workout would
+           * arrive looking as though it never had one. Reconciled against the
+           * set count here too, because `sets` above can fall back to
+           * DEFAULT_SETS and a list that no longer matches it is exactly what
+           * normalizeTargets() refuses. */
+          ...(targets ? { targets } : {}),
         });
       }
       if (!exercises.length) continue;

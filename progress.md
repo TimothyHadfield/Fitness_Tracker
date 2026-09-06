@@ -46,7 +46,11 @@ field does not).
 shipped pound inventory has **no 35s**. A justification in a brief is a claim, not a premise.
 🚩 **One thing flagged and NOT decided**: a targeted set is `prefilled`, so accepting the weight and
 reps without touching anything drops it at save. Open work 15's question, now much easier to hit.
-Full write-up: `docs/history.md`, 2026-09-18.
+🛑 **AND NIPPARD'S PERCENTAGE TABLE CANNOT SHIP** — `preset-systems.js`'s header already drew that
+line in August (free series yes, paid ebook no). What shipped is the one figure the free
+transcription states as a % of a max. 🚨 **Trying it on a real programme found the feature's limit:
+of four percentages in his two leg days, `targets` expresses ONE** — the rest are % of a top set or
+of ANOTHER lift. Full write-up: `docs/history.md`, 2026-09-18.
 
 **2026-09-17, the session before it** — **the network paths were run against the real project.** Tim was asked
 what was worth doing that needed nothing from him, was given three ranked items, and picked one:
@@ -71,7 +75,9 @@ line**, with a bar chart of days per month once there are more than five months 
 — `profile.gender`, `profile.age` and `connections` now ship in both shared documents, and
 `firestore.rules` had to go out with the client or every publish would have been denied in silence.
 
-✅ **NOTHING IS HALF-BUILT.** Everything below is committed and pushed, the working tree is clean, and
+✅ **NOTHING IS HALF-BUILT.** Everything below is committed and pushed, the working tree is clean
+**outside `Fitness_Research/`** — 🛑 **another agent's folder; stay out, and never `git add -A`**
+(first entry under **Standing instructions**). And
 **all nineteen no-Chrome suites are green**, `render` **1,563** (from 1,534) and `data-layer` up 45.
 ✅ **`rules` is 221**, run on the emulator on 2026-09-16 (§0.9) and **deployed** — and since
 2026-09-17 the deployed copy is verified from the outside as well, by `tools/live-check.mjs`
@@ -608,6 +614,21 @@ for whether a day may be collapsed:
 
 ## Standing instructions that survive a reset
 
+- 🛑 **`Fitness_Research/` IS NOT YOURS. STAY OUT OF IT — Tim, 2026-09-18.** *"I have a seperate
+  research agent that is working inside that folder and is staying inside it. I don't want you to
+  overlap with anything it's doing, so make sure you don't go in it. Just ignore what it's doing
+  inside there."* **Do not read it, edit it, review it, tidy it or report on it.** It has its own
+  agent, that agent stays inside the folder, and the two of you never touch.
+  🚨 **THE PRACTICAL CONSEQUENCE, AND IT IS THE ONE THAT WILL BITE: NEVER `git add -A`, `git add .`
+  OR `git commit -a`.** Stage your own files **by name**, every time. That folder is being written
+  while you work — five of its files changed mid-session on 2026-09-18 — so a sweep commits somebody
+  else's half-finished research under your message, and `git checkout`/`stash`/`reset` on a dirty
+  tree would destroy it outright (the 2026-09-08 stash incident, with a second writer who is not
+  even in this chat).
+  ⚠️ **AND ITS MODIFIED FILES ARE NOT A DIRTY TREE THAT NEEDS CLEANING.** `git status` will routinely
+  show changes there that are nothing to do with you. **That is the normal state**, it is not
+  half-built work, and "the working tree is clean" in these notes has always meant *outside* that
+  folder. Do not offer to commit them, do not ask about them, do not count them as loose ends.
 - 🛑 **"CATCH UP WITH PROGRESS.MD" IS AN INSTRUCTION TO READ, NOT TO BUILD — Tim, 2026-09-11.**
   *"When I tell you to catch up with progress.md, you should not start working on anything until I
   tell you. It's okay to tell me what you think next steps are, but don't start working until I tell
@@ -934,24 +955,13 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    longest name at 360 px. **TODAY ONLY — the saved workout is untouched**, which was Tim's call and
    is what the runner already does with `isBenchmark`, `group` and `setType`.
 
-   ⚠️ **IT SPLITS RATHER THAN REPLACING WHEN WORK HAS BEEN LOGGED**, and that is the half that
-   mattered. If the machine was taken after two sets, two sets were done — **on the original
-   exercise**. So a swap with sets recorded keeps the original, trimmed to what was really done, and
-   inserts the new exercise directly after it. A swap with nothing logged replaces in place, because
-   an empty entry is not a record of anything. **Mutation-checked**: making it always replace flips
-   the two assertions about the kept sets.
-
-   ⚠️ **INSERTED AFTER, NOT APPENDED, and that stopped being cosmetic today** — `muscleStrength()`
-   now reads entry order to score within-session fatigue (0g), so an exercise dropped at the end of
-   the list would be scored as though it came after everything.
-
-   ⚠️ **The kept half LEAVES a superset.** A group's rounds are walked by membership, so letting
-   both halves stay in would put three exercises in a two-exercise round and desynchronise the walker
-   mid-workout. The half you are still doing keeps the group.
-
-   History is re-read for the swapped-in exercise, so it arrives with its own suggestion rather than
-   a column of zeros — cheap, because `getSessions()` is served from the read cache.
-   `openExercisePicker` grew a `closeOnPick` option: adding exercises is repeated, swapping one is not.
+   ⚠️ **COLLAPSED 2026-09-18** (§0.3, the byte budget). `docs/state.md`'s runner row and
+   `docs/handbook.md` §4's key patterns carry the mechanics. The three rules worth not re-deriving:
+   **a swap with sets already logged SPLITS rather than replaces** (the machine was taken after two
+   sets, so two sets were done on the original), it is **inserted after, never appended** (entry
+   order scores within-session fatigue — 0g), and **the half you are still doing keeps the group**,
+   or a two-exercise superset becomes a three-exercise round and the walker desynchronises
+   mid-workout. Mutation-checked: always-replace flips the two assertions about the kept sets.
 
 0e. **⚠️ JOINT WORKOUTS — Tim, 2026-08-24. The biggest idea in his list.** *"one person can record
    both measurements for both people on one phone and account and then the data is saved to each
