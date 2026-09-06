@@ -2462,3 +2462,38 @@ One small surprise from building it: I told the agent doing this job *why* greed
 optimal, and my reason was wrong. It checked instead of taking my word, found that a 35 lb plate
 breaks it (60 a side comes out as 45+10+5 when 35+25 is two plates), and dropped 35s from the list —
 which is also the set every gym actually has.
+
+## 2026-09-18 (same session) — your research folder, and Nippard's percentages
+
+**`Fitness_Research/` is yours and your research agent's.** I've written that into the notes as a
+standing rule: I don't go in it, I don't read it, I don't tidy it, and I ignore whatever changes in
+there. The practical half is the bit that would actually have gone wrong — I now stage my own files
+by name every time instead of committing everything at once, so its half-finished work can never end
+up in one of my commits.
+
+**Nippard's percentages: I could ship one of them, and the app already said why.** The systems file
+has drawn this line since August — what ships is transcribed from his free YouTube series, and his
+paid 12-week ebook's prescriptions can't go into a public repo, because that's redistributing
+something he sells. A percentage table out of the ebook is exactly that.
+
+What did go in is the one figure the free write-ups state as a percentage of a max: Legs 1's back
+squat, planned at 85% for the top set and 65% for the two back-offs. Copy the system fresh to see it
+— percentages arrive on a new copy, not into the one already in your account.
+
+**The more useful thing is what trying it on your actual programme showed.** Of the four percentages
+in his two leg days, the feature I built can express one:
+
+- back squat top set, 85–90% — works, it's a percentage of a max
+- back squat back-offs, 75% *of that top set* — I derived it, it isn't quite the same thing
+- stiff-leg deadlift, 50–60% *of the deadlift's top set* — that's a different lift entirely
+- lat pulldown, about 30% — that's a drop set, not a target
+
+So what I built means "percent of your own max on this lift", and real programmes mostly prescribe
+off a top set or off another lift. I've left the other three alone rather than force them in, because
+each would put a badly wrong weight on the bar. Extending it to "% of today's top set" and "% of
+another lift" is buildable — say the word if you want it.
+
+One thing worth telling you: the test caught me getting the squat wrong a minute after I wrote it. I
+put 88, the middle of 85–90, and percentages snap to a 5% grid, so 90 reached the account — the top
+of his range rather than the middle. It plans 85 now, the bottom. Erring light is the direction the
+whole feature errs in.

@@ -98,14 +98,18 @@ work 30's plan was approved and its Phases 0–3 are BUILT** (2026-09-14); **Ope
 with Open work 26's; **Open work 33 and 34 are 2026-09-18 and are finished.** Every other item on the
 list is either Tim's, pinned, or parked.
 
-🆕 **WHERE 2026-09-18 STOPPED.** Four items off a leg day: **two answered, two built, nothing left
-open.** 🚩 **Expect a report about one thing** — a set carrying a prescribed weight is `prefilled`, so
-accepting the weight AND the reps without touching either drops the set at save. It is the app's
-standing rule for numbers it filled in itself; targets make it much easier to hit, and **he was told
-and has not answered** (Open work 15). 🆕 **Open work 32 came out of the two questions** and is not
-authorised: the app never states its logging conventions — what a rep means on a unilateral lift,
-what a machine number includes — on the screen where you log. **It puts words on screens, which is
-his category.**
+🆕 **WHERE 2026-09-18 STOPPED.** Four items off a leg day (two answered, two built), then the
+research-folder rule, then Nippard's percentages into the preset. **Nothing left half-done.**
+🚩 **TWO THINGS HE WAS TOLD AND HAS NOT ANSWERED.** (1) A set carrying a prescribed weight is
+`prefilled`, so accepting the weight AND the reps without touching either drops it at save — the
+app's standing rule for its own numbers, but targets make it far easier to hit (Open work 15, and row
+7 of the table above). (2) 🚨 **`targets` EXPRESSES ONE OF THE FOUR PERCENTAGES IN HIS OWN
+PROGRAMME** — the rest are a % of a top set, of ANOTHER lift, or a drop. **"% of today's top set" and
+"% of another lift" are both buildable and neither is authorised.**
+🆕 **Open work 32 came out of the two questions**, unauthorised: the app never states its logging
+conventions — what a rep means on a unilateral lift, what a machine number includes — where you log.
+**Words on screens, his category.** ⚠️ **The preset's percentages arrive on a FRESH copy only**, not
+into a system already in an account; he was told.
 
 🆕 **WHERE 2026-09-17 STOPPED.** One job, given and finished: prove the publish and the read pattern
 against the real project. **Nothing was left half-done and no agent was run.** 🛑 **The two items Tim
@@ -1063,12 +1067,9 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    history and one line of it turned out to be wrong** — "decline sits above flat" is true of a
    barbell and false of dumbbells. Kept for the method, not the conclusions.
 
-   **⚠️ Four anchors corrected 2026-08-24; the rest of the table is still unchecked** *(as it stood
-   then)*. Done: `Dumbbell Row` 0.85 → 0.98,
-   `Dumbbell Bench Press` 0.72 → 0.81, `Dumbbell Shoulder Press` 0.88 → 1.01, `Dumbbell Curl`
-   0.88 → 0.94, each derived from published standards at a 180 lb male. Four neighbours were carried
-   across their corrected anchor and are **still reasoned, not measured**: Incline and Decline
-   Dumbbell Bench, Seated Dumbbell Shoulder Press, Arnold Press.
+   ⚠️ **The 2026-08-24 anchor corrections that started it are in `docs/history.md`**, and the whole
+   table was re-derived against Strength Level on 2026-09-15 (Open work 30) — so those figures are
+   superseded and only the method is worth reading.
 
    ⚠️ **THE ERRORS WERE 7, 12, 15 AND 15 % — NOT A CONSTANT.** No blanket factor fixes this table.
    Every remaining reasoned entry has to be derived on its own, by the technique now used four times:
@@ -1094,11 +1095,9 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    horizontal overflow at any width. The 8 px came off the chart, which had 501 and now has 493 —
    a control being reliably hittable is worth more than eight pixels of line.
 
-0j. **⚠️ MUTUAL DISCONNECT IS STILL NOT BUILT.** The sheet was corrected on 2026-08-24 to stop
-   promising it (see that day's fourth-pass section), which is not the same as fixing it. `social.remove()`
-   edits only your own graph, so after disconnecting you can still read their training until they
-   disconnect too. A real mutual disconnect needs something their client can read — a new rules
-   path, not a small fix. `docs/social-plan.md` §2 is the section to read first.
+0j. ~~**MUTUAL DISCONNECT IS STILL NOT BUILT**~~ ✅ **BUILT 2026-08-27** (the closed table above; this
+   paragraph stayed wrong until 2026-09-18). A tombstone at `disconnects/{leaverUid}` — **the id IS
+   the caller's uid** — and eventual, not instant.
 
 0c. **⚠️ THE UX REVIEW'S LIST — judgement rather than bugs, and Tim has claimed the design half.**
    Written up in the fifth pass above. He said he would work on the design himself, *"especially
