@@ -48,13 +48,13 @@ One mechanical note: the transcript's FAQ section is truncated, ending mid-sente
 The four sources the article links, with the claim each was attached to.
 
 **Butyrate and colorectal cancer risk**
-- [PMID 26224132](https://pubmed.ncbi.nlm.nih.gov/26224132/) — linked on the claim that butyrate "may reduce the risk of colorectal cancer."
+- Encarnação JC, Abrantes AM, Pires AS, Botelho MF. Revisit dietary fiber on colorectal cancer: butyrate and its role on prevention and treatment. *Cancer Metastasis Rev* 2015;34:465-78. [PMID 26224132](https://pubmed.ncbi.nlm.nih.gov/26224132/) — linked on the claim that butyrate "may reduce the risk of colorectal cancer." A review, and the hedge belongs to it.
 
 **Fiber–polyphenol synergy**
-- [PMC10189415](https://pmc.ncbi.nlm.nih.gov/articles/PMC10189415/) — linked on the claim that fermentable fibers interact with plant polyphenols, which are then more readily metabolised by gut microbiota.
+- Das T, Chatterjee N, Capanoglu E, Lorenzo JM, Das AK, Dhar P. The synergistic ramification of insoluble dietary fiber and associated non-extractable polyphenols on gut microbial population escorting alleviation of lifestyle diseases. *Food Chem X* 2023;18:100697. [PMID 37206320](https://pubmed.ncbi.nlm.nih.gov/37206320/) — linked on the claim that fermentable fibers interact with plant polyphenols, which are then more readily metabolised by gut microbiota.
 
 **Limits of fiber assays**
-- Analytical methods requiring separate steps to detect resistant starch and inulin. [ScienceDirect S2405457723001079](https://www.sciencedirect.com/science/article/pii/S2405457723001079)
+- Analytical methods requiring separate steps to detect resistant starch and inulin. [ScienceDirect S2405457723001079](https://www.sciencedirect.com/science/article/pii/S2405457723001079) — unresolved in the citation record; no author or journal recoverable.
 
 **Intake target**
 - *Dietary Guidelines for Americans 2020–2025*. [PDF](https://www.dietaryguidelines.gov/sites/default/files/2021-03/Dietary_Guidelines_for_Americans-2020-2025.pdf)

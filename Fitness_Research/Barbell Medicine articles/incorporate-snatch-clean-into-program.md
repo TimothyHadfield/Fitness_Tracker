@@ -19,9 +19,7 @@ Two sampling templates for a lifter training four days plus two GPP days.
 
 *Clean.* Day 1 — power clean worked up to 2 reps at RPE 6–7, then a **10-minute EMOM of 2 reps**. Day 2 — clean, **3 reps at RPE 7 for 4–6 sets**.
 
-The design logic is worth extracting: **low reps, low RPE, many sets**. The pauses and complexes exist to constrain technique and cap the load — a paused snatch at the knee forces the lifter to stay over the bar, and pairing every snatch with an overhead squat buys exposure to the receiving position. They are explicit that this volume will not drive Olympic-lift strength long term; it is a sampling period.
-
-A third template covers the lifter who decides to compete: a four-day microcycle pairing a classical or partial-range Olympic lift with a squat or pull and a press each day.
+The design logic is worth extracting: **low reps, low RPE, many sets**. The pauses and complexes exist to constrain technique and cap the load — a paused snatch at the knee forces the lifter to stay over the bar, and pairing every snatch with an overhead squat buys exposure to the receiving position. They are explicit that this will not drive Olympic-lift strength long term; it is a sampling period. A third template covers the lifter who decides to compete: a four-day microcycle pairing a classical or partial-range Olympic lift with a squat or pull and a press each day.
 
 ## What is evidence and what is coaching
 
@@ -29,7 +27,7 @@ A third template covers the lifter who decides to compete: a four-day microcycle
 
 **The one research citation is used loosely.** Behm 2017 is a systematic review and meta-analysis comparing traditional strength training with power training in youth. It is offered here to support "beginners or youth without an established strength base should skip the Olympic lifts and work on power development later" — a recommendation adjacent to what that paper tested, not the finding itself. The advice is reasonable; the citation is doing less work than its placement implies.
 
-**They sell things, and they flag it.** The beginner recommendation comes with an explicit "here comes the plug" for Barbell Medicine's Beginner Program, and the competing-lifter section points at their Olympic weightlifting template. The self-aware plug is unusual and worth crediting.
+**They sell things, and they flag it.** The beginner recommendation carries an explicit "here comes the plug" for Barbell Medicine's Beginner Program, and the competing-lifter section points at their Olympic weightlifting template.
 
 ## References
 

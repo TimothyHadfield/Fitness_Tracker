@@ -34,7 +34,7 @@ The hydration recommendations are clinical advice rather than trial findings, an
 
 ## Reason 3: the scale is fine, your reading of it is not
 
-The distinction drawn is the right one: scales are accurate and precise, which does not make any single weight informative. A weekly rhythm exists — heavier on Sundays and Mondays, lighter on Fridays [39] — with variation of roughly 1–2% of bodyweight, modified by season and holidays [40–42], including a JAMA Network Open cohort of Australian adults [42]. The practical instruction is a rolling average over **two to four weeks** taken under similar conditions, and to make diet decisions from that trend only.
+The distinction drawn is the right one: scales are accurate and precise, which does not make any single weight informative. A weekly rhythm exists — heavier on Sundays and Mondays, lighter on Fridays [39] — with variation of roughly 1–2% of bodyweight, modified by season and holidays [40–42]. The practical instruction is a rolling average over **two to four weeks** taken under similar conditions, and to make diet decisions from that trend only.
 
 ## What they recommend, and where it sits
 
@@ -45,9 +45,9 @@ The take-home actions: cut **200–300 kcal/day**; eat **1.4–1.6 g/kg protein*
 **Flagged, three things.**
 1. **A clear mis-citation.** Reference [17], inside the block supporting compensatory reductions in energy expenditure, is Labbok 1997, a multicentre study of the **Lactational Amenorrhea Method** as contraception. It has nothing to do with energy expenditure. The surrounding citations are appropriate; this one is an error.
 2. **Reference [27] is cited for a rule it exists to criticise.** Heymsfield 2014 is titled "Weight loss composition is one-fourth fat-free mass: a **critical review and critique** of this widely cited rule." The article uses it to support the 75/25 figure. It does add "though this varies significantly amongst individuals," which is roughly the paper's point, but the citation is doing the opposite of what its source argues.
-3. **The DNP section carries no citations at all** — the history, the uncoupling mechanism, the 1930s use, the annual toxicity cases, and the comparison against GLP-1 agonists are all unreferenced in an article that otherwise cites 41 sources.
+3. **The DNP section carries no citations at all** — the history, the uncoupling mechanism, the annual toxicity cases and the comparison against GLP-1 agonists are unreferenced in an article that otherwise cites 41 sources.
 
-Minor: the satiety claim [3] rests on an RCT in patients with type 2 diabetes, a narrower population than the general statement it supports.
+Minor: the satiety claim [3] rests on an RCT in type 2 diabetes patients, narrower than the general statement it supports.
 
 **Sells:** three free Barbell Medicine calculators (TDEE, calorie, macronutrient) are linked in the recommendations, along with their beginner programme article and four of their own podcast episodes, and the piece closes by directing readers to their support email. Nothing paid is named, but the advice routes the reader into their own tools at every action step.
 

@@ -18,11 +18,11 @@ This article **does** use numbered inline markers, and they **do not** correspon
 
 ## What the two templates actually are
 
-**Olympic Weightlifting Template.** 12 weeks. Four days of full-body strength training plus up to two general physical preparedness sessions carrying conditioning and direct arm, upper back and core work, which can be tacked onto a lifting day or run separately. Equipment: barbells, bumpers, chalk, jerk blocks, squat stands. Aimed at lifters with more than nine months of strength training behind them.
+**Olympic Weightlifting Template.** 12 weeks. Four days of full-body strength training plus up to two general physical preparedness sessions carrying conditioning and direct arm, upper back and core work, run after a lifting session or separately. Aimed at lifters with more than nine months of strength training behind them.
 
-**SuperTotal Template.** 16 weeks in three blocks, six sessions/week (four resistance training, two GPP), for lifters with at least twelve months of experience. Trains the squat, bench and deadlift alongside the snatch and clean & jerk. Exercise selection is described as fully customisable, with volume and intensity adjustable to the trainee. They are clear that this is a blend and that anyone wanting to focus on one discipline should take the specialised template instead.
+**SuperTotal Template.** 16 weeks in three blocks, six sessions/week (four resistance training, two GPP), for lifters with at least twelve months of experience. Trains the squat, bench and deadlift alongside the snatch and clean & jerk, with customisable exercise selection and adjustable volume and intensity. They are clear that anyone wanting to focus on one discipline should take the specialised template instead.
 
-Both prescriptions — the block lengths, the session counts, the experience gating — are **recommendations**, not findings. The article does not claim otherwise, but it also does not mark the line, so it is worth marking here: nothing in the reference list evaluates either template.
+Both prescriptions — block lengths, session counts, experience gating — are **recommendations**, not findings. The article does not claim otherwise, but it does not mark the line either: nothing in the reference list evaluates either template.
 
 ## The training-science content, and where it is careful
 

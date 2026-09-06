@@ -1,28 +1,30 @@
-# Arm Work as Conditioning Filler: High Reps, Low RPE, Superset Against a Clock
+# Arm Work as Cheap Volume: High Reps, Low Fatigue, Supersets, Ten Minutes
 
 **Source:** Barbell Medicine, "How-To Train Arms for GPP" ([read](https://www.barbellmedicine.com/blog/how-to-train-arms-for-gpp/)) · Hassan Mansour · 2020-10-09 · 986 words
 **Topic:** Programming
 
 ## Bottom line
-- This is arm training positioned as **general physical preparedness filler**, not a bodybuilding arm day. The stated purpose is to add volume and stress cheaply, on the assumption that pressing and rowing already load the arms heavily.
-- Their exercise-selection filter is three criteria: **directly targets the muscle**, has a **full range of motion with both concentric and eccentric phases**, and is **not especially fatiguing at high volume**.
-- Prescription: **3–6 sets of 10–20 reps at RPE 7–9**, or a timed AMRAP in which every set is capped at **RPE 6–7** so accumulated fatigue does not cut total volume short.
-- The rationale for keeping RPE high on isolation work is that it does not generate the central or peripheral fatigue that the same effort would on compound lifts. That is an assertion from coaching experience — **the article cites nothing at all**.
-- Their closing position is honest: it is unlikely that a lack of arm work is limiting your athletic development. This is optional work you do if you have the resources.
+- **The framing is fatigue budgeting, not arm growth.** Because a lifter is already doing high volumes of bench, press and rows, direct arm work exists to add a little stress cheaply — not to become a bodybuilding arm day competing for recovery with the competition lifts.
+- **Their three selection criteria** are stated as guidelines, not rules: the exercise should (A) directly target biceps or triceps, (B) have a **relatively large range of motion with both concentric and eccentric phases**, and (C) **not be especially fatiguing at high volumes**.
+- **The prescription is deliberately high-rep:** either **3–6 sets of 10–20 reps at RPE 7–9**, or an AMRAP format. Their reasoning is that this load-rep combination would be crushing on a compound lift but generates little central or peripheral fatigue on isolation work.
+- **The AMRAP rule is the interesting one:** cap *every* set inside the AMRAP at **RPE 6–7**, so that acute muscular fatigue does not become the limiter on total volume accumulated in the window.
+- **Supersets are recommended for time**, biceps paired with triceps back-to-back with little or no rest.
+- **They are honest about the stakes:** "it is unlikely that your athletic development is being held back by a lack of arm work."
 
-## The selection logic
-For the biceps, Mansour keeps it deliberately dull: standard barbell curls, dumbbell curls in any variation, preacher, hammer, cable and machine curls. He notes the biceps brachii is bi-articular — it crosses elbow and shoulder, flexes the elbow, supinates the forearm and contributes a little to shoulder flexion — and that it is worked indirectly in rows and chin-ups, so direct work is additive rather than essential. Variety is justified on two grounds only: breaking monotony, and applying a specific stress for a specific purpose (his example is tempo preacher curls in biceps tendinopathy rehab). Axle curls, grippers and wrist rollers get a mention for strongman competitors, with the caveat that GPP is not the place for highly specific grip work.
+## The worked example
 
-For the triceps he argues that the three heads produce force differently across shoulder positions, so **a mix including overhead work** is needed. His preferred list: cable pressdowns with rope, straight bar or V-bar; lying extensions with an EZ bar or a single dumbbell; overhead extensions; and the JM press.
+A 10-minute arm AMRAP, superset, with real numbers: alternating dumbbell curls 20 lb × 15 per arm at RPE 6, then rope pushdowns 60 lb × 20 at RPE 6, 30 seconds rest; then 25 lb × 15 at RPE 7 and 80 lb × 15 at RPE 7, 30 seconds rest. The lifter stays at the heavier pair for the rest of the ten minutes and accepts that rep counts fall. **The progression rule is implicit and worth naming: find the load in the first two rounds, then hold it and let reps decay.**
 
-**Flag — an anatomical error.** The article says overhead work is needed because "the medial head is preferentially activated at 90 degrees and above of shoulder flexion." The medial head does not cross the shoulder, so shoulder position cannot preferentially load it; the head that is stretched by overhead positions is the **long head**. Separately, the claim as written is an **activation** claim, and no source is given for it — no EMG study, no growth study, just an internal link to another Barbell Medicine article. The recommendation happens to be right for the wrong reason: overhead triceps extension is one of the very few exercise-selection choices anywhere in this library with actual **hypertrophy outcome** data behind it (Maeo 2022, elsewhere in this collection), and that data concerns the long head.
+Exercise menu: barbell and dumbbell curls of any variety, preacher, hammer, cable and machine curls; axle or fat-bar curls, grippers and wrist rollers for strongman-adjacent grip breadth. For triceps, cable pushdowns with rope, bar or V-bar, lying extensions with an EZ bar or a single dumbbell, overhead extensions, and the JM press.
 
-## The AMRAP format
-The worked example is a 10-minute clock, one biceps and one triceps exercise supersetted back to back, 30 seconds rest between rounds, load bumped after the first round and then held while reps decay. All sets sit at RPE 6–7. The design intent is volume accumulation under a time cap rather than proximity to failure — the opposite of how the same rep ranges are usually prescribed for hypertrophy elsewhere in this library, where nearness to failure is the load-equaliser. Worth noting that tension: Barbell Medicine here treats sub-failure high-rep work as productive hypertrophy volume, which the low-load literature only supports when sets approach failure.
+## Two claims worth separating
 
-## Where this sits commercially
-No product is pitched in the article itself. It is one instalment of a GPP how-to series that maps onto the GPP blocks in the training templates Barbell Medicine sells, so the series functions as documentation for a paid product, but nothing is sold on the page.
+**The anatomy is used to justify variety, and the justification is an activation claim.** They say a variety of triceps exercises is needed *including overhead work*, "as the medial head is preferentially activated at 90 degrees and above of shoulder flexion." That is an EMG-style inference — the kind this library's adjudicated position treats as weak evidence for exercise selection, since activation is not growth. The recommendation happens to be one of the few that *is* backed by measured hypertrophy elsewhere in the library (overhead extensions producing more triceps growth than pushdowns), but they do not cite that work, and the head normally implicated in overhead positions is the **long** head, which crosses the shoulder and is stretched there — not the medial head.
+
+**The rehab aside is the source doing what it is good at.** Their example of when variety is genuinely warranted is "preacher curls at tempo for someone rehabbing biceps tendinopathy" — a specific, plausible use of exercise variation as load modification rather than as novelty.
+
+**Everything here is coaching prescription.** No effect sizes, no study designs, no subject counts, no comparison to any alternative. Read the RPE targets and rep ranges as this coach's practice, not as findings. **Nothing is sold in this article.**
 
 ## References
 
-**None.** The article cites no studies and carries no reference list — every claim here is coaching rationale and anatomy stated from authority. Treat the anatomical and fatigue claims accordingly.
+**None.** The article carries no reference list, no numbered citation markers and no links to primary research; its single outbound link goes to another Barbell Medicine article on cable triceps exercises. Nothing here has been attributed to a paper, because the article names none.

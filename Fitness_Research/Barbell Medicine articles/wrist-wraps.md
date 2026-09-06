@@ -12,12 +12,12 @@
 - **Commercial disclosure:** the article carries an **affiliate-tagged Rogue link** and repeated links to SBD, with prices ($42.50–$47.50). No Barbell Medicine product is sold here, but their coaching and templates are pitched at the end.
 
 ## Wraps versus straps, which the article separates properly
-Wrist **wraps** encircle and compress the joint — woven elastic under polyester/cotton, velcro closure, taken on and off between sets. Athletic tape and medical crepe count as a wrap by function. Wrist **straps** loop around the wrist *and* the bar to hold the grip together, which is a different job entirely.
+Wrist **wraps** encircle and compress the joint (woven elastic, velcro, on and off between sets; athletic tape counts by function). Wrist **straps** loop around the wrist *and* the bar to hold the grip together — a different job entirely.
 
-That distinction matters for reading the evidence, because the two ergogenic findings in the reference list are about **straps**, not wraps: straps let lifters move more weight and complete more reps when grip is the limiter (a velocity/grip-security study in the deadlift, and a deadlift-performance trial in women). The article does not smuggle those results across to wraps, which is the right call and worth noticing.
+That distinction matters for reading the evidence, because the two ergogenic findings in the reference list are about **straps**: they let lifters move more weight and complete more reps when grip is the limiter. The article does not smuggle those results across to wraps, which is the right call and worth noticing.
 
 ## What the evidence actually supports
-**Grip strength.** Dynamometry studies find no reliable change with a wrap, whatever the material — including a taping study from 1997 and CrossFit-population testing. The article frames grip through the precision/power distinction and then splits the power grip into a *compression* grip (forearm below the hand: bench, overhead press, squat) and a *tension* grip (forearm above: rows, pulldowns, deadlifts, carries). Useful vocabulary; no claim rests on it.
+**Grip strength.** Dynamometry studies find no reliable change with a wrap, whatever the material — including a taping study from 1997 and CrossFit-population testing. The article's *compression* grip (forearm below the hand: bench, press, squat) versus *tension* grip (forearm above: rows, pulldowns, deadlifts, carries) is useful vocabulary; no claim rests on it.
 
 **Lifting performance.** Two studies, both weak. The powerlifter survey is cross-sectional and self-reported — it tells you what competitors do (stiff 60–99 cm wraps for bench; flexible 60–99 cm or 100 cm+ for squat) and nothing about whether it works. The 1RM comparison is n=18 and null. The correct conclusion is not "wraps don't work" but "**no adequately powered study has found a performance effect**", and the article states the null cleanly without overclaiming a proof of absence.
 
@@ -35,11 +35,9 @@ The chain here is explicitly inferential and the article does not hide the joins
 Step 5 is the clinically valuable claim and it is the one they commit to. It is consistent with their broader position that pain is managed by modifying load and inputs rather than by resting — a wrap here is a way to keep training, not armour.
 
 ## Practical guidance, and where it is opinion
-Everything from here is preference, and the article says so repeatedly. Put wraps on near the end of warm-ups so the working sets feel the same. The author (writing in the first person) used them for years on heavy squats, benches and presses, then stopped after an unrelated shoulder injury and subsequently set squat and bench PRs — an anecdote deployed *against* their necessity, which is at least the honest direction to use one.
+Everything from here is preference, and the article says so repeatedly. Put wraps on near the end of warm-ups so the working sets feel the same. The author used them for years on heavy squats, benches and presses, stopped after an unrelated shoulder injury, and then set squat and bench PRs — an anecdote deployed *against* their necessity, which is at least the honest direction to use one. Competitors should check their federation's approved-equipment list.
 
-Wrapping technique: thumb loop on, centre over the joint, pull down over the top and up underneath to tension, velcro, thumb loop off. Competitors should check their federation's approved-equipment list.
-
-The recommendations are: a medium (60 cm) flexible wrap as the do-it-all; medium or large stiff wraps for competitive powerlifters wanting maximum support; an 18" Rogue wrap for CrossFit/weightlifting; a small flexible wrap for managing pain. The closing line is the article's own verdict — **accessories are a relatively unimportant part of training**; use them if they help you train consistently, ignore them otherwise.
+Their picks: a medium (60 cm) flexible wrap as the do-it-all; medium or large stiff wraps for competitive powerlifters wanting maximum support; an 18" Rogue wrap for CrossFit/weightlifting; a small flexible wrap for managing pain. The closing verdict is the article's own — **accessories are a relatively unimportant part of training**; use them if they help you train consistently, ignore them otherwise.
 
 ## References
 The article uses **bracketed numbered markers against a numbered list, and the marker-to-reference mapping passed its offset check** — so these are grouped by the article's own section headings. Note that the article's list duplicates several entries (items 4/5, and 7/8/9 are the same survey), so 17 numbered references resolve to 13 distinct papers.

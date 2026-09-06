@@ -14,9 +14,7 @@
 ## What creatine does, and why the training caveat is load-bearing
 The mechanism section is conventional and correctly hedged. Supplementation raises total muscle creatine by roughly 20%, enlarging the phosphocreatine pool that regenerates ATP in the first seconds of a hard set. Two secondary mechanisms are offered: cell swelling from intracellular water acting as an anabolic signal, and increased satellite cell activation and myonuclear addition **when combined with resistance training**.
 
-That conditional is the whole argument. The per-set energy advantage buys slightly more work; the cellular responses amplify adaptations *to that work*. Remove the training and there is no work to amplify — which is why the article's repeated line is that in the absence of a training stimulus, no trial has shown creatine meaningfully protects lean mass in someone losing weight.
-
-The honesty here is worth marking: they call the effect sizes "real, but not life-changing", and they flag that the deficit literature specifically is **thinner than the marketing suggests**, because most creatine trials run in weight-stable or weight-gaining trained populations, not in people actively dieting.
+That conditional is the whole argument. The per-set energy advantage buys slightly more work; the cellular responses amplify adaptations *to that work*. Remove the training and there is no work to amplify — hence the article's repeated line that without a training stimulus, no trial has shown creatine meaningfully protects lean mass in someone losing weight. They call the effect sizes "real, but not life-changing", and flag that the deficit literature specifically is **thinner than the marketing suggests**, since most creatine trials run in weight-stable or weight-gaining trained populations rather than in people actively dieting.
 
 ## The three broken links in the GLP-1 creatine pitch
 **Link one — "people on Ozempic lose muscle."** Partly true, badly measured. DXA lean mass is a compartment, not a tissue. The article leans on the SURPASS-3 MRI substudy, which it names in the sentence itself, to argue that much of the apparent lean loss on tirzepatide was intramuscular fat. This is the most substantive evidence claim in the piece and it is a **post-hoc analysis of an open-label phase 3 trial**, not a purpose-built study.
@@ -28,7 +26,7 @@ The honesty here is worth marking: they call the effect sizes "real, but not lif
 This is a clean piece of reasoning and it is the article's main value. It is also, notably, an argument that reduces the case for a supplement they sell.
 
 ## Cognition, and the appropriate uncertainty
-In rested, well-nourished adults, most trials find no benefit or a small task-specific one (a systematic review of RCTs). The effect is more consistent under physiological stress — a 2024 crossover trial using a single large dose reported improved reaction time and working memory after sleep restriction. Their verdict: a possible secondary upside if you already take it, **not** a reason to start, and "TBD pending larger and better-powered trials." That is the right confidence level for a single crossover trial.
+In rested, well-nourished adults, most trials find no benefit or a small task-specific one. The effect is more consistent under physiological stress — a 2024 crossover trial using a single large dose reported improved reaction time and working memory after sleep restriction. Their verdict: a possible secondary upside if you already take it, **not** a reason to start, and "TBD pending larger trials." That is the right confidence level for one crossover study.
 
 ## Where it sits against the library, and what to watch
 The **priority order for protecting body composition on a GLP-1** is: resistance training, then protein, then sleep, then creatine — "a nice-to-have, not a must-have."

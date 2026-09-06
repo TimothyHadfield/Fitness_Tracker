@@ -16,7 +16,7 @@
 
 ## What the numbers are
 
-Resting pressure below 120/80 is normal; 120–129 systolic with diastolic under 80 is "elevated"; 130–139/80–89 is stage 1; above 140/90 is stage 2. Half of US adults are affected. Blood pressure is the leading contributor to premature death worldwide, accounting for 13% of global deaths annually. The dose-response between usual blood pressure and vascular mortality comes from Lewington 2002 — a meta-analysis of individual data on **one million adults across 61 prospective studies**, which is about as strong an observational base as epidemiology produces.
+Resting pressure below 120/80 is normal; 120–129 systolic with diastolic under 80 is "elevated"; 130–139/80–89 is stage 1; above 140/90 is stage 2. Half of US adults are affected, and blood pressure is the leading contributor to premature death worldwide at 13% of global deaths annually. The dose-response between usual blood pressure and vascular mortality comes from Lewington 2002 — individual data on **one million adults across 61 prospective studies**, about as strong an observational base as epidemiology produces.
 
 Most people with high blood pressure have no symptoms, which is the entire argument for screening. Baraki is explicit that blood pressure is "one of the few, regular medical screenings we recommend for all people" — notable from a group otherwise sceptical of routine testing.
 
@@ -34,11 +34,11 @@ The practical upshot is unambiguous: **people who already have hypertension can 
 
 **Physical activity.** The 2018 US Physical Activity Guidelines (Piercy 2018): 150–300 minutes/week moderate aerobic *or* 75–150 vigorous, **plus** strength training of all major muscle groups on two or more days. Fewer than a quarter of US adults meet them.
 
-**Diet.** Reducing sodium while increasing potassium generally improves health and lowers cardiovascular risk (Cook 2014; Neal 2021 — a salt-substitution trial with hard cardiovascular endpoints). USDA targets: under 2,300 mg sodium, 4,700 mg potassium per day. Baraki's honest aside is that milligram targets are useless for telling people what to eat, and the operative advice is to replace highly processed foods with vegetables, fruit, legumes, nuts, whole grains, dairy and lean protein. The DASH diet lowers blood pressure in people with and without hypertension and **independent of whether weight loss occurs** (Filippou 2020, a meta-analysis of RCTs).
+**Diet.** Reducing sodium while increasing potassium lowers cardiovascular risk (Cook 2014; Neal 2021 — a salt-substitution trial with hard cardiovascular endpoints). USDA targets: under 2,300 mg sodium, 4,700 mg potassium per day. Baraki's honest aside is that milligram targets are useless for telling people what to eat, and the operative advice is to replace highly processed foods with vegetables, fruit, legumes, nuts, whole grains, dairy and lean protein. The DASH diet lowers blood pressure in people with and without hypertension and **independent of whether weight loss occurs** (Filippou 2020, a meta-analysis of RCTs).
 
-**Sleep.** Roughly 7–7.5 hours. The specific clinical action is to screen everyone with high blood pressure for obstructive sleep apnoea using the **STOP-BANG** tool and refer for sleep testing if the score warrants — treating apnoea improves blood pressure and often reduces medication needs.
+**Sleep.** Roughly 7–7.5 hours. The specific clinical action is to screen everyone with high blood pressure for obstructive sleep apnoea using the **STOP-BANG** tool — treating apnoea improves blood pressure and often reduces medication needs.
 
-**Genetics.** About **30–50% of the variation** in blood pressure is explained by genes, and people at the genetic end of that distribution frequently cannot reach target with diet and exercise alone. The article is careful, and correct, to frame this as not a failure of effort.
+**Genetics.** About **30–50% of the variation** in blood pressure is explained by genes, and people at that end of the distribution frequently cannot reach target with diet and exercise alone. The article is careful, and correct, to frame this as not a failure of effort.
 
 **Drugs that raise it.** Stimulants, NSAIDs, oral contraceptives, anabolic steroids and EPO, and contaminated supplements.
 
@@ -46,7 +46,7 @@ The practical upshot is unambiguous: **people who already have hypertension can 
 
 Rather than the usual gesture at "talk to your doctor," this gives the actual reasoning. Preferred first-line agents: thiazides (hydrochlorothiazide, chlorthalidone) and mineralocorticoid antagonists (spironolactone); calcium channel blockers (amlodipine, nifedipine); ACE inhibitors and angiotensin receptor blockers. Beta blockers, loop diuretics, alpha blockers, hydralazine, clonidine and nitrates are second-line with specific niches.
 
-The dose-response argument is the payoff. Blood pressure drugs deliver most of their effect at low dose; escalating the dose adds little effect and a lot of side-effect risk. The comparison table (Wang 2025):
+The dose-response argument is the payoff. These drugs deliver most of their effect at low dose; escalating adds little effect and a lot of side-effect risk (Wang 2025):
 
 | Regimen | Systolic reduction |
 |---|---|

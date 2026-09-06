@@ -17,11 +17,11 @@
 
 ## The load-management position, and its restraint
 
-Miles builds a simple envelope: every athlete has a baseline of fitness that must be exceeded to produce adaptation, and a maximum capacity above which the dose exceeds tolerance. Below baseline is a zone of homeostasis where nothing happens; between the two is the supraphysiological range where adaptation occurs. He notes that most youth athletes' resistance-training baseline is effectively zero, so almost any initial stimulus produces adaptation — which is also why the early literature is so easy to over-read.
+Miles builds a simple envelope: every athlete has a baseline of fitness that must be exceeded to produce adaptation, and a maximum capacity above which the dose exceeds tolerance. Below baseline is a zone of homeostasis where nothing happens; between the two is the supraphysiological range where adaptation occurs. Most youth athletes' resistance-training baseline is effectively zero, so almost any initial stimulus produces adaptation — which is also why the early literature is so easy to over-read.
 
 He then invokes the acute-versus-chronic workload framework and, importantly, **declines to endorse it as a predictive tool**. His position: there is enormous inter-individual variability in tolerance to load change, and no metric has shown strong predictive power at the individual level for sports injury. Written in 2020, when acute:chronic workload ratio was at peak popularity in sports science, that is a restrained call and the right one.
 
-He extends the point to terminology. Current paradigms label these injuries "overuse"; a movement exists to rename them "training load error." He notes that many authors still prefer "overuse" precisely because *load* is multifactorial and includes stress from outside the pitch, field or pool — academic load, sleep, home stress. This is the same reasoning Barbell Medicine apply to adults: fatigue is the sum of all stressors, not just training volume, and "stimulus" is the better word than "stress" because the response is the point.
+He extends the point to terminology. Current paradigms label these injuries "overuse"; a movement exists to rename them "training load error." Many authors still prefer "overuse" precisely because *load* is multifactorial and includes stress from outside the pitch — academic load, sleep, home stress. This is the same reasoning Barbell Medicine apply to adults: fatigue is the sum of all stressors, not just training volume.
 
 ## Programming, and what is evidence versus advocacy
 
@@ -41,7 +41,7 @@ This is where the article carries Barbell Medicine's house position into a popul
 
 He is careful with the hedge. **"Technique absolutely *does matter*"**, and a well-designed programme includes movements chosen to build technical proficiency. That is the correct version of this argument — variability is expected and not feared, which is a different and much weaker claim than "form doesn't matter." Readers coming from the industry version of this debate should note the difference.
 
-There is a companion argument about variety: new skill acquisition depends on it, but you can supply it through derivatives of the same lift rather than ten different exercises per session. And an aside that endurance-only participation in adolescence is associated with disadvantageous adaptations including lower bone mineral density — supported here by a link to another Barbell Medicine article rather than to a paper.
+A companion argument about variety: new skill acquisition depends on it, but it can be supplied through derivatives of the same lift rather than ten exercises per session. An aside that endurance-only participation in adolescence is associated with lower bone mineral density is supported by a link to another Barbell Medicine article rather than a paper.
 
 ## Sloppiness worth knowing about
 
