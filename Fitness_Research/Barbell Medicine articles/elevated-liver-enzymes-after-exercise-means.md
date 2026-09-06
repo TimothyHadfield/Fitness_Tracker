@@ -9,11 +9,11 @@
 - **Magnitudes seen in the case:** persistent ALT and AST at **1.5–2× the upper limit of normal**, with mild ALP and GGT elevation, for what looked like 12 years. Every draw had been preceded by a morning workout. One week off normalised the panel.
 - **The discriminators that still matter:** synthetic function (**albumin, INR**) is unaffected by exercise. A normal INR effectively excludes acute liver failure. AST > ALT points away from liver; ALT > AST points toward it.
 - **Their strongest clinical claim is procedural, not diagnostic:** before imaging or specialist referral, repeat the panel after a **full week off training**, and add **CK and LDH** to check concordance with a muscle source.
-- **This is framed as a diagnosis of exclusion, explicitly.** Dr. Baraki's stated caveat is that supplement-induced liver injury, MASLD/NAFLD and alcohol must be excluded first — the framework is meant to make the workup correctly timed, not to shorten it.
+- **This is framed as a diagnosis of exclusion, explicitly.** Dr. Baraki's caveat is that supplement-induced liver injury, MASLD/NAFLD and alcohol must be excluded first — the framework is meant to make the workup correctly timed, not shorter.
 
 ## Why the panel misleads
 
-The article's teaching frame is the three functional categories of a liver panel, and it is the second and third that do the diagnostic work.
+The teaching frame is the three functional categories of a liver panel.
 
 **Hepatocellular (ALT, AST).** These participate in amino acid metabolism and leak when cells are injured. The mechanism in exercise is mechanical: eccentric loading produces micro-tears in the sarcolemma, letting intracellular contents into circulation. The article calls this the *same* mechanism as rhabdomyolysis at a lower, physiological magnitude — fair anatomically, but the resemblance is one of mechanism, not severity.
 
@@ -27,9 +27,9 @@ The article's teaching frame is the three functional categories of a liver panel
 
 Two studies are named in the prose and can be tied tightly.
 
-**Tiller & Stringer (2023)**, a case report plus physician survey in *J Family Medicine and Primary Care*, is the case the article is built on. The reported figure: **56% of physicians surveyed did not list exercise-induced muscle damage in their differential** for this presentation, and **over 60% named primary liver disease** as their diagnosis. That is a survey of clinical reasoning, not an outcomes study, but it is the right sort of evidence for the article's actual thesis, which is about a knowledge gap in primary care.
+**Tiller & Stringer (2023)**, a case report plus physician survey in *J Family Medicine and Primary Care*, is the case the article is built on: **56% of physicians surveyed did not list exercise-induced muscle damage in their differential**, and **over 60% named primary liver disease**. A survey of clinical reasoning, not an outcomes study — but the right sort of evidence for a thesis about a knowledge gap in primary care.
 
-**Pettersson et al. (2008)**, *Br J Clin Pharmacol* — **15 healthy men with no prior weightlifting experience**, one hour of resistance training. All showed significant AST and ALT elevations; the **AST/ALT ratio exceeded 1.0 in every subject**; and all five muscle-damage markers (AST, ALT, LDH, CK, myoglobin) remained elevated for **at least seven days**.
+**Pettersson et al. (2008)**, *Br J Clin Pharmacol* — **15 healthy men with no prior weightlifting experience**, one hour of resistance training. All showed significant AST and ALT elevations; the **AST/ALT ratio exceeded 1.0 in every subject**; all five muscle-damage markers (AST, ALT, LDH, CK, myoglobin) stayed elevated for **at least seven days**.
 
 **Flagged overreach.** The key takeaway states "**100% of people who perform resistance training will show some elevation**." Pettersson is n=15, previously untrained, single session — it cannot support a universal claim about all lifters, least of all trained ones, whom the article itself says respond less. The body text is better calibrated ("the magnitude is lower; the phenomenon is universal"); the takeaway is not. The proposed reasons trained athletes elevate less (reduced muscle protein breakdown, plasma volume expansion diluting enzymes, higher albumin binding calcium and reducing sarcolemmal breakdown) are offered as mechanism without citation.
 
@@ -37,7 +37,7 @@ Two studies are named in the prose and can be tied tightly.
 
 ## What would still warrant investigation
 
-The article's list, which is clinically sound and should be the part a lifter remembers:
+The article's list is clinically sound and is the part a lifter should remember:
 
 - Transaminases **more than 5× ULN**
 - **Elevated bilirubin** — jaundice is never a normal exercise response

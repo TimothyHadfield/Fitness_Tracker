@@ -24,9 +24,9 @@ Most people with high blood pressure have no symptoms, which is the entire argum
 
 This is the section the rest of the library should care about, and it is worth separating what is argued from what is cited.
 
-The physiology is straightforward and uncontested: a Valsalva against a heavy load produces a large, brief intrathoracic and arterial pressure spike. The inferential step — that these spikes do not translate into elevated *resting* pressure, and in fact act as a hormetic stimulus that lowers it — is asserted without a supporting reference in this article. The conclusion is well supported elsewhere (Barbell Medicine has a separate article on resistance training and hypertension), and the general exercise-versus-medication claim here is cited to Naci 2019. But as written, the reassurance a hypertensive lifter most wants rests on the author's clinical judgement rather than a paper on the page.
+The physiology is uncontested: a Valsalva against a heavy load produces a large, brief intrathoracic and arterial pressure spike. The inferential step — that these spikes do not translate into elevated *resting* pressure, and in fact act as a hormetic stimulus that lowers it — is asserted without a supporting reference in this article. The conclusion is well supported elsewhere (Barbell Medicine has a separate article on resistance training and hypertension), but as written, the reassurance a hypertensive lifter most wants rests on the author's clinical judgement rather than a paper on the page.
 
-The practical upshot they draw is unambiguous: **people who already have hypertension can and should still strength train.**
+The practical upshot is unambiguous: **people who already have hypertension can and should still strength train.**
 
 ## The modifiable causes, with the numbers attached
 

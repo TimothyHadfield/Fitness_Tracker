@@ -15,7 +15,7 @@
 
 There are **no numbered citations here** — nothing is broken, there is simply no numbering. The article cites by inline hyperlink, sixteen in total, and the majority are not primary research: WHO, CDC, NIH, NIDDK, SAMHSA, the ACIP immunisation schedule, the USPSTF recommendation list, the STOP-BANG questionnaire, and clinical practice guidelines. Only a handful are papers. Claim-level attribution to individual studies was therefore not available, and the reference list below reflects that — it is largely a list of guidelines. Where I name a source, the article named it in the sentence.
 
-Two housekeeping notes. First, the article has clearly been **revised after its 2020 publication date** — it contains a projection about US obesity "by 2030," references to obesity medications, and reformatted callout boxes — and one sleep link is still a literal unreplaced placeholder (`INSERT_EXISTING_INSOMNIA_LINK_HERE`). Second, several link destinations named in the text (the AACE obesity guideline, smokefree.gov, the AUDIT-C calculator, ePSS) are not in the extracted reference set.
+The article has also clearly been **revised after its 2020 publication date** — a projection about US obesity "by 2030," references to obesity medications, reformatted callout boxes — and one sleep link is still a literal unreplaced placeholder (`INSERT_EXISTING_INSOMNIA_LINK_HERE`).
 
 ## The seven, and what sits under each
 
