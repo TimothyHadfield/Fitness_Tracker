@@ -10,9 +10,9 @@
 - This is a **mechanism-forward video**. The direct evidence is one small untrained-subject study; the rest is correlational or in vitro.
 
 ## The study
-Thomas (2022, Canada) recruited **14 untrained individuals**. One leg cycled **3× weekly for 6 weeks**; the other did nothing. Then **both legs trained bilaterally for 10 weeks** — squats, leg press, leg extension, hamstring curls, calf raises.
+Thomas (2022, Canada) recruited **14 untrained individuals**. One leg cycled **3× weekly for 6 weeks**; the other did nothing. Then **both legs trained bilaterally for 10 weeks** on squats, leg press, leg extension, hamstring curls and calf raises.
 
-**Slow- and fast-twitch fibre growth tended to be superior in the leg that had cycled first.** A pre-conditioning period involving no resistance training improved the response to the resistance training that followed. Cycling had significantly raised capillary density, and those increases correlated with the later fibre hypertrophy; comparing high- and low-responding legs, the **high responders had greater capillary density**.
+**Slow- and fast-twitch fibre growth tended to be superior in the leg that had cycled first** — a pre-conditioning period involving no lifting improved the response to the lifting that followed. Cycling had significantly raised capillary density, those increases correlated with the later fibre hypertrophy, and comparing high- and low-responding legs, the **high responders had greater capillary density**.
 
 He lists the limitations himself: subjects were **previously untrained**, average BMI was in the **overweight range**, and fibre hypertrophy came from **biopsies**, which he has elsewhere called far from a clean measurement.
 
@@ -24,15 +24,15 @@ Greg Nuckols' framing, which he cites: as fibres grow, everything inside gets fu
 **Mitochondria** may play a parallel role: Roberts (2018) found the best hypertrophy responders had **greater mitochondrial volume** than low responders. He is careful to say he is not arguing for maximising endurance adaptations — only that enhancing them somewhat may help.
 
 ## What to actually do
-1. **Train cardio concurrently.** The literature finds no compromised hypertrophy, and **some studies find better** hypertrophy — several with **slow-twitch fibre growth specifically enhanced**, fibres that are typically harder to grow. Excludes the very highly trained or those already running extreme volumes.
-2. **Block it, as in the study.** The objection that weeks off lifting waste your gains is false: Ogasawara (2013) compared 24 weeks continuous against **6 weeks on / 3 weeks off** over the same period, and chest and triceps size and bench strength gains were **similar at the end**. Losses during breaks rebounded quickly.
-3. **Alternate concurrent and lifting-only phases** (Nuckols). Slower gains in the concurrent phase may pay off in the phase after.
-4. **Use higher reps**, which better promote endurance adaptations — explicitly labelled speculation needing more data.
+1. **Train cardio concurrently.** The literature finds no compromised hypertrophy, and **some studies find better** — several with **slow-twitch fibre growth specifically enhanced**, fibres typically harder to grow. Excludes the very highly trained or those on extreme volumes.
+2. **Block it, as in the study.** The objection that weeks off lifting waste your gains is false: Ogasawara (2013) compared 24 weeks continuous against **6 weeks on / 3 weeks off** over the same period, and chest and triceps size and bench strength gains were **similar at the end**; losses during breaks rebounded quickly.
+3. **Alternate concurrent and lifting-only phases** (Nuckols). Slower gains in the concurrent phase may pay off after.
+4. **Use higher reps** — explicitly labelled speculation needing more data.
 
 Worth keeping: **local endurance adaptations are specific to the muscles used**. Unless your cardio covers upper and lower body, the muscles it misses are the ones that may benefit from higher reps.
 
 ## Overreach flag
-The chain — cardio → capillaries → hypertrophy — rests on **one 14-person untrained single-leg study** plus correlational and older-adult data, and the title states it far more confidently than that supports. To his credit he volunteers the limitations and hedges the practical advice as speculation.
+The chain — cardio → capillaries → hypertrophy — rests on **one 14-person untrained single-leg study** plus correlational and older-adult data, and the title states it far more confidently than that supports. To his credit he volunteers the limitations unprompted.
 
 ## References
 

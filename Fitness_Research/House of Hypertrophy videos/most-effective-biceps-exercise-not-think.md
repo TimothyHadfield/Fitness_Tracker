@@ -4,13 +4,13 @@
 **Topic:** Exercise selection
 
 ## Bottom line
-- The hypothesis: curls performed with the **shoulder extended** — incline dumbbell curl, face-away cable curl — may be the single most hypertrophic biceps exercise, because shoulder extension stretches the **long head**, which crosses the shoulder joint.
-- **No study has tested this directly.** The case is built from three indirect lines of evidence: isometrics at long vs short muscle length, partial-ROM biceps studies, and the triceps overhead-extension analogy.
+- The hypothesis: curls with the **shoulder extended** — incline dumbbell curl, face-away cable curl — may be the single most hypertrophic biceps exercise, because shoulder extension stretches the **long head**, which crosses the shoulder joint.
+- **No study has tested this directly.** The case is built from three indirect lines: isometrics at long vs short muscle length, partial-ROM biceps studies, and the triceps overhead-extension analogy.
 - The strongest biceps-specific data: two studies found **preacher curls trained in the stretched half of the ROM beat the shortened half**, with the difference concentrated at the **70% upper-arm region**.
-- The common objection — that biceps sarcomere length-tension data says the biceps shouldn't respond to stretch — is weak, and the identical argument was made about the triceps before a study showed the opposite.
-- **Incline dumbbell curl vs face-away cable curl:** no reason to prefer either. Four variable-resistance studies found no hypertrophy advantage to a more consistent force profile. Pick what you like.
+- The objection that biceps sarcomere length-tension data rules this out is weak — the identical argument was made about the triceps before a study showed the opposite.
+- **Incline vs face-away cable curl:** no reason to prefer either. Pick what you like.
 
-*(This is a clip extracted from his full Ultimate Guide to biceps hypertrophy.)*
+*(A clip from his full Ultimate Guide to biceps hypertrophy.)*
 
 ## Why the shoulder position matters at all
 All curls involve elbow flexion and supination, so all can build biceps. But the biceps has origins **above the shoulder joint**, and the long head passes directly over it. Putting the shoulder into **extension** therefore stretches the muscle — particularly the long head — in a way that curls done in shoulder flexion (preacher curls) or neutral cannot.
