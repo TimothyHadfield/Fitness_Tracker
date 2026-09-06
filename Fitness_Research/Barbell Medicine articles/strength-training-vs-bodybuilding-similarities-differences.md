@@ -13,9 +13,7 @@
 
 ## Size and strength are not the same variable
 
-The article opens on the point most gym content skips. Muscle size correlates strongly with strength when you photograph a population at one moment, and the lifting world has silently upgraded that correlation into a causal law. Their citation, [Reggiani & Schiaffino (2020)](https://doi.org/10.4081/ejtm.2020.9311), is a review arguing exactly that hypertrophy and strength may be partly independent variables. Their position: hypertrophy *likely* raises long-run strength potential, but over short timescales strength changes are dominated by neuromuscular adaptation with little or no size change.
-
-Note what kind of claim each half is. "The correlation is cross-sectional and causation is unresolved" is evidence. "Hypertrophy likely raises long-term strength potential" is their inference, hedged with *likely*, and they say so.
+The article opens on the point most gym content skips. Muscle size correlates strongly with strength when you photograph a population at one moment, and the lifting world has silently upgraded that correlation into a causal law. Their citation, [Reggiani & Schiaffino (2020)](https://doi.org/10.4081/ejtm.2020.9311), is a review arguing that hypertrophy and strength may be partly independent variables. Note what kind of claim each half of their position is: "the correlation is cross-sectional and causation is unresolved" is evidence; "hypertrophy *likely* raises long-run strength potential, but short-term strength change is mostly neuromuscular" is their inference, hedged, and they say so.
 
 ## What separates the two programmes
 
@@ -35,7 +33,7 @@ For hypertrophy they liberalise: 3-20 reps at RPE 6-8 for compounds, 6-20+ reps 
 
 ## Where they agree with themselves
 
-The similarities section is the honest core: both are resistance training across varied ranges of motion and rep ranges at similar proximities to failure; both are volume-dose-dependent; and given adequate food and sleep a good strength programme should add lean mass while a good hypertrophy programme should add strength. Bodybuilding differs by degree — more reps, more isolation, more movement variety, slightly closer to failure. That is a difference of emphasis, not of kind, and the article says so rather than manufacturing a dichotomy.
+The similarities section is the honest core: both load the body across varied ranges of motion and rep ranges at similar proximities to failure; both are volume-dose-dependent; and given adequate food and sleep a good strength programme should add lean mass while a good hypertrophy programme should add strength. Bodybuilding differs by degree — more reps, more isolation, more movement variety, slightly closer to failure. A difference of emphasis, not of kind, and the article says so rather than manufacturing a dichotomy.
 
 ## Flags
 

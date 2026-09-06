@@ -13,7 +13,7 @@
 
 ## What actually differs
 
-The competition lifts are the real dividing line. Weightlifting contests the snatch and the clean & jerk; powerlifting contests the squat, bench press and deadlift. Both give three attempts per lift, count only the best successful attempt into a total, and rank within weight classes. The article's own framing of the technical difference is good: at high bar velocity there is no room to salvage a bad position, whereas a slow deadlift that drifts forward can still be ground out. Technique matters in both; it is less *forgiving* in one.
+The competition lifts are the real dividing line. Both sports give three attempts per lift, count only the best successful attempt into a total, and rank within weight classes. The article's framing of the technical difference is good: at high bar velocity there is no room to salvage a bad position, whereas a slow deadlift that drifts forward can still be ground out. Technique matters in both; it is less *forgiving* in one.
 
 Equipment differences are concrete and worth recording. Weightlifting uses a 25 mm (women's and junior) or 28 mm (men's) bar with droppable rubber bumper plates; powerlifting uses a 29 mm bar with calibrated steel plates that are not dropped. Some powerlifting federations add specialty bars — a stiff ~32 mm squat bar and a whippy 27 mm deadlift bar. The weightlifting bar is thinner, more flexible and has freer-spinning sleeves.
 

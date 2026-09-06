@@ -23,11 +23,9 @@ They also make a general endocrinology point that travels well beyond this topic
 
 **Nakamura 2011** adds cycle regularity as a moderator. Women with normal cycles in the mid-luteal phase had higher resting estradiol and progesterone than women with abnormal cycles and showed significant post-training rises in both; the same women showed no change in the early follicular phase, and **women with abnormal cycles showed no post-training change in either phase**.
 
-The article then does the thing that makes it worth reading: **none of these studies checked whether the hormone changes correlated with strength, hypertrophy or any training outcome**, and measuring circulating hormones during exercise is confounded by plasma volume shifts, clearance and metabolism, and posture. Taken at face value, the findings still license nothing about training.
+The article's own caveat is the decisive one: **none of these studies checked whether the hormone changes correlated with strength, hypertrophy or any training outcome**, and measuring circulating hormones during exercise is confounded by plasma volume shifts, clearance and metabolism, and posture. Taken at face value, the findings still license nothing about training.
 
 ## Chronic depletion vs monthly fluctuation — the core argument
-
-Ovariectomy is not available as a human experiment, so the evidence comes from rodents and from menopause.
 
 **Ovariectomised rats** show impaired insulin sensitivity and, at the muscle level, reduced cross-sectional area, lower protein remodelling and turnover, and slower recovery of muscle mass after enforced inactivity (Kitajima & Ono 2016). Estrogen is proposed to increase actin-myosin cross-bridge number, raising force per fibre, and to protect myosin from oxidative damage (Lowe 2010); replacement restores strength and size to control levels.
 
@@ -35,7 +33,7 @@ Ovariectomy is not available as a human experiment, so the evidence comes from r
 
 **Then the magnitude argument.** Estradiol in menstruating women runs about **32.7–87.2 pg/mL in the follicular phase and 65.4–242.4 pg/mL in the luteal phase** — roughly three times the average of the first five post-menopausal years, which keeps falling thereafter (Anttila 1991). For the cyclic dip to do what menopause does, it would have to be far larger and last far longer.
 
-**And the mechanistic check.** Muscle protein synthesis rates do not differ significantly between cycle phases (Miller 2006), and men and women show similar protein turnover through young and mid-adulthood — implying a wide estrogen range compatible with normal muscle function. This is the part of the article most worth keeping.
+**And the mechanistic check.** Muscle protein synthesis rates do not differ significantly between cycle phases (Miller 2006), and men and women show similar protein turnover through young and mid-adulthood — implying a wide estrogen range compatible with normal muscle function.
 
 ## The performance studies, with their numbers
 
@@ -49,14 +47,12 @@ Ovariectomy is not available as a human experiment, so the evidence comes from r
 
 **The confound the article uses well:** Birch & Reilly 2002 tested maximal isometric lifting strength (deadlift at knee height) in 10 untrained women and found no difference between phases — but a **~13 lb difference between testing at 6 am and 6 pm**. Time of day, itself likely habituation, moved strength more than cycle phase did.
 
-Their honest summary: the barbell-relevant data is limited to proxies — pinch force, grip, isolated knee extension, half squats — and there is no consensus on strength-sport performance or adaptation, largely because the data does not exist.
-
 ## Periodising by phase: four studies, four confounds
 
-- **Reis 1995** — 7 untrained women as their own controls, one leg on menstrual-cycle-triggered training (leg press 3×12, three times weekly in the follicular phase, once weekly in the luteal), the other every third day. Both improved; the MCTT leg more. **No p-values reported.** That leg also carried reduced volume before every test, which is a taper, and within-subject limb comparisons are vulnerable to contralateral crosstalk. One positive: the researchers managed a workable at-home phase-identification method using body temperature and ovulation strips.
+- **Reis 1995** — 7 untrained women as their own controls, one leg on menstrual-cycle-triggered training (leg press 3×12, three times weekly in the follicular phase, once weekly in the luteal), the other every third day. Both improved; the MCTT leg more. **No p-values reported.** That leg also carried reduced volume before every test, which is a taper, and within-subject limb comparisons are vulnerable to contralateral crosstalk.
 - **Sung 2014** — 20 untrained women, one leg high-volume in the follicular phase, the other in the luteal. The follicular-high leg gained more strength and size — but the rate of change was similar in every week except the first two and last two, so **the effect sits in initial exposure and the taper**, not the phase manipulation. Crosstalk again.
 - **Sakamaki-Sunaga 2016** — 14 untrained women, arms trained on opposite schedules, 1RM dumbbell curl at baseline, 4, 8 and 12 weeks. Both arms gained cross-sectional area and strength; **no difference between arms**. The clean negative result, and the one the article's summary line glosses over.
-- **Wikström-Frisén 2017** — 59 resistance-familiar women (32 on oral contraceptives) in three groups over four months: follicular-high (5×/week then 1×/week), luteal-high (the reverse), and a 3×/week control. Groups 1 and 3 improved squat jump, countermovement jump and hamstring peak torque, but **not quadriceps torque**; the luteal-high group did not improve. The confound is decisive: **each group entered post-testing at a different training volume** — five sessions that week, one, and three respectively — so the follicular group tested off a de facto taper and the luteal group off a heavy week.
+- **Wikström-Frisén 2017** — 59 resistance-familiar women (32 on oral contraceptives) in three groups over four months: follicular-high (5×/week then 1×/week), luteal-high (the reverse), and a 3×/week control. Groups 1 and 3 improved squat jump, countermovement jump and hamstring peak torque, but **not quadriceps torque**; the luteal-high group did not improve. The confound is decisive: **each group entered post-testing at a different training volume** (five sessions that week, one, and three), so the follicular group tested off a taper and the luteal group off a heavy week.
 
 Two limits apply to all four: **none measured hormone levels**, and most assumed a 28-day cycle, when cycles run roughly 18–40 days (Fehring 2006) and vary with age and BMI (Bull 2019). Ovulation strips separate follicular from luteal but cannot resolve early/mid/late without daily assays.
 
@@ -66,7 +62,7 @@ The article's own summary — "weak but converging evidence pointing to a benefi
 
 Oral contraceptives are hard to study because formulations differ in hormone type and dose. Most studies show no strength difference between users and non-users, and a meta-analysis (Elliott-Sale 2020) found they **may slightly reduce exercise performance, with very small group-level effects and wide inter-individual variation** — a case for individual management, not a blanket rule. Symptom dulling may itself improve training tolerance (Knowles 2019). Their framing — that managing the conditions contraceptives treat matters more to training than any direct performance effect — is a clinician's framing and a fair one.
 
-Multiple systematic reviews and meta-analyses — McNulty 2020, Thompson 2020, Blagrove 2020, Carmichael 2021 — agree the evidence is **inconclusive**, and McNulty is explicit that most of it is low quality. The forest plot reproduced in the article has a pooled estimate near the line of no effect.
+Multiple systematic reviews and meta-analyses — McNulty 2020, Thompson 2020, Blagrove 2020, Carmichael 2021 — agree the evidence is **inconclusive**, and McNulty is explicit that most of it is low quality.
 
 Their four stated reasons for accepting the null: no reliable or repeatable phase-induced differences; high inter-individual variability in response to phase, contraceptives and training alike (Ahtiainen 2016); other inputs — sleep, nutrition, programming — being more reliable and more modifiable; and the cost of accurate tracking, both financial and in **nocebo risk**.
 
