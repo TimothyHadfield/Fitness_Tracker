@@ -38,10 +38,8 @@ He caveats that he is not an injury expert, then points at Hartmann's extensive 
 
 ## What to actually do
 - For quad, glute and adductor size, squat deep. 60° is not enough for anything; 90° is a quad-only compromise.
-- Train the depth you want to be strong at. If you compete, that settles it.
-- Adding partials alongside full squats is a plausible strength enhancer for already-strong lifters, on one study's evidence.
+- Train the depth you want to be strong at. Adding partials alongside full squats is a plausible strength enhancer for already-strong lifters, on one study's evidence.
 - If jumping and sprinting are the goal and you are a trained athlete, shallow squats may be the better tool — but this rests on Rhea alone.
-- The deep-squats-are-dangerous belief has no support in the review literature he cites.
 
 **Flagged:** the athleticism conclusion is the weakest link — one study in trained subjects, against two in untrained, and he says so outright. The 133% bone mineral density and cartilage thickness figures are cross-sectional observations of weightlifters reported secondhand through a review; they show adaptability, not that deep squatting caused it. He is otherwise careful throughout, consistently naming sample sizes, training status and study count before drawing conclusions.
 
