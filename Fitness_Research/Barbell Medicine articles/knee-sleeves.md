@@ -12,7 +12,7 @@
 
 ## Sleeves versus wraps versus braces
 
-The article's most useful move is taxonomic. It borrows a category scheme from a 2021 orthopaedic review sorting knee bracing into prophylactic, functional, unloader, patellofemoral, rehabilitative, and sleeves [3]. Sleeves sit at the bottom of that hierarchy for structural support — which matters, because gym discourse treats "knee support" as one thing.
+The article's most useful move is taxonomic, borrowing a scheme from a 2021 orthopaedic review sorting knee bracing into prophylactic, functional, unloader, patellofemoral, rehabilitative, and sleeves [3]. Sleeves sit at the bottom for structural support — which matters, because gym discourse treats "knee support" as one thing.
 
 Wraps work mechanically: Lake et al. showed wrapping stores elastic energy during knee flexion and returns it on the ascent [4], which is why wrapped squats go up and why federations cap wrap dimensions (IPF: 2 m by 8 cm). Neoprene sleeves do essentially none of this. Any sleeve benefit therefore has to come from somewhere other than a spring.
 
@@ -20,11 +20,11 @@ Wraps work mechanically: Lake et al. showed wrapping stores elastic energy durin
 
 The stated mechanism is warmth, compression and improved proprioceptive feedback, cited to a neoprene-sleeve fatigue study and a proprioception study in healthy sportsmen [5,6,7]. To their credit, the authors label these "reasonable hypotheses" needing more research, not established mechanism. One citation oddity: ref 7 in that cluster is Wassell's JAMA back-belt trial, which has nothing to do with knee proprioception and reappears in the injury cluster where it does belong. Treat the mechanism as resting on refs 5 and 6.
 
-Note what follows from a warmth/compression/perception account: if the effect runs through how the joint feels, it is partly perceptual by construction. The article never applies the word placebo to its own conclusion — placebo appears only as the *comparator* in the 1RM study — and never says the effects are largely perceptual. Given its own stated mechanism, it probably should.
+If the effect runs through how the joint feels, it is partly perceptual by construction. The article never applies the word placebo to its own conclusion — placebo appears only as the *comparator* in the 1RM study — and given its own stated mechanism, it probably should.
 
 ## Pain and injury: two very different evidence bases
 
-**Injury.** No meaningful data. The authors extrapolate from lifting belts, where prospective and systematic-review evidence shows no injury reduction [7,8,9] — an analogy across two different joints and two different devices, offered as speculation and correctly flagged as such.
+**Injury.** No meaningful data. The authors extrapolate from lifting belts, where prospective and systematic-review evidence shows no injury reduction [7,8,9] — an analogy across two joints and two devices, offered as speculation and flagged as such.
 
 **Pain.** Here the evidence is real, but the population is not lifters. Knee OA patients have quadriceps deficits that track function and pain [10], and sleeves reduced pain and improved perceived stability and exercise participation [11,12,13]. The designs differ sharply and should not be pooled: Bryk 2011 is an **immediate-effect** study in OA (one session, not a training outcome); Cudejko 2018 is a **systematic review with meta-analysis** of soft braces in OA, the strongest item in the reference list; Finestone 1993 is an **RCT**, but in military recruits with overuse **patellofemoral** pain, not osteoarthritis. Bundling that RCT under an osteoarthritis sentence is a population mismatch.
 
@@ -34,7 +34,7 @@ The performance claim rests on acute crossover work, not training studies: ~3% a
 
 **Evidence versus advice.** The evidence supports four things: no structural support, a small and inconsistent acute 1RM effect, pain relief in OA, nothing on injury. The *recommendations* — squat patterns and Olympic lifts yes, deadlifts no because sleeves foul the bar path, 7 mm for powerlifting and 5 mm for dynamic work — are clinical and experiential preference, not tested findings; only "don't size down" has a study behind it [15]. The article is fairly honest about this, and its closing line, that knee sleeves are not necessary, is the right one.
 
-**Commercial note.** The buying section recommends SBD and Rogue 7 mm and 5 mm sleeves through links carrying referral tracking parameters, alongside an anecdote about the author squatting 280 kg in 5 mm sleeves. These are third-party brands, not Barbell Medicine's own line, but the recommendation is monetised and should be weighed as such.
+**Commercial note.** The buying section recommends SBD and Rogue 7 mm and 5 mm sleeves through links carrying referral tracking parameters, alongside an anecdote about the author squatting 280 kg in 5 mm sleeves. Third-party brands, not their own line, but monetised, and worth weighing as such.
 
 ## References
 
