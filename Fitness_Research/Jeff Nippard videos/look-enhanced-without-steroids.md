@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Look Enhanced Without Steroids" ([watch](https://www.youtube.com/watch?v=2qDA86gP_zg)) · 2025-07-13 · 16 min
 **Topic:** PEDs
+**Figures:** 7 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#the-five-features-that-make-people-assume-youre-on-steroids-and-how-to-build-them-naturally)
 
 ## Bottom line
 - Random strangers judging eight natural lifters consistently flagged the same five features: **side delts, biceps, upper pecs, traps, and leanness**.

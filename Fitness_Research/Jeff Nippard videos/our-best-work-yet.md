@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Our Best Work Yet | Is EMG Research Useless? (IMPORTANT Research)" ([watch](https://www.youtube.com/watch?v=zNWkHC6n8BQ)) · 2018-01-12 · 10 min
 **Topic:** Myths & Evidence
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#is-emg-research-useless-how-to-read-muscle-activation-studies)
 
 ## Bottom line
 - A new methodology paper (lead author appears to be Andrew Vigotsky — the auto-captions garble the name badly, so treat the spelling as uncertain) argues EMG data is routinely over-interpreted by the fitness world.

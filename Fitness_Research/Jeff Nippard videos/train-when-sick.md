@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Should You Train When Sick? (A Scientific Perspective)" ([watch](https://www.youtube.com/watch?v=CvPMbiND3Gw)) · 2017-12-21 · 5 min
 **Topic:** Recovery
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#should-you-train-when-sick)
 
 ## Bottom line
 - **Contagious → stay out of public gyms.** Common courtesy, regardless of how you feel.

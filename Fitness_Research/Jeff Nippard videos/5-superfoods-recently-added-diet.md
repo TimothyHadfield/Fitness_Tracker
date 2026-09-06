@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "5 'Superfoods' I Recently Added To My Diet (Science Explained)" ([watch](https://www.youtube.com/watch?v=hMmUc8NpC7k)) · 2019-05-25 · 7 min
 **Topic:** Nutrition
+**Figures:** 3 images stored from 1 of the papers below, 2 more listed — [see FIGURES.md](FIGURES.md#five-superfoods-worth-eating-and-the-science-behind-each)
 
 ## Bottom line
 - "Superfood" is a marketing term with no scientific definition — PubMed barely recognises it. But some foods genuinely are more nutritious than others.

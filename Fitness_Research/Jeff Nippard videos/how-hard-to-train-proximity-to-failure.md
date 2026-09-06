@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Tell If You're Training Hard Enough (Using Science)" ([watch](https://www.youtube.com/watch?v=deDlhPmT2SY)) · 2021-04-26 · 18 min
 **Topic:** Volume & Intensity
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#how-hard-to-train-proximity-to-failure-rpe-and-rep-speed)
 
 ## Bottom line
 - Failure isn't "it feels hard" — it's an **involuntary set endpoint** where you physically can't move the weight (Fischer & Steele definition).

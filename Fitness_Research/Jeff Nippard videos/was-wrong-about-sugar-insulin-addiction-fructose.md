@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Was I Wrong About Sugar?... Insulin? Addiction? Fructose? (My Response)" ([watch](https://www.youtube.com/watch?v=K_n2L0pBpcI)) · 2018-01-18 · 16 min
 **Topic:** Nutrition
+**Figures:** 3 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#sugar-follow-up-insulin-addiction-insulin-sensitivity-and-fructose)
 
 ## Bottom line
 - Insulin is not sugar-specific: all carbohydrate raises it, and **protein is a powerful insulin stimulator too** — one study found a high-protein/low-carb meal produced insulin release similar to (in fact slightly higher than, non-significantly) a high-carb/low-protein meal.

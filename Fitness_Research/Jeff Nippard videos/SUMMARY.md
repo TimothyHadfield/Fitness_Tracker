@@ -15,6 +15,10 @@ area — go there when you want the full argument and the study-by-study detail:
 | [Supplements, recovery and physiology](SUMMARY-supplements-and-physiology.md) | 28 | Doses, hormones, steroids, recovery, genetics |
 | [Myths and evidence](SUMMARY-myths-and-evidence.md) | 14 | How to read a study, and the myth list |
 
+**[FIGURES.md](FIGURES.md)** pairs the notes with the actual figures from the papers behind
+them — 455 charts and diagrams, 392 of them stored locally under an open licence, so a claim can
+be shown as well as stated.
+
 **Read the dates.** The videos run from **2014 to 2026**, and 199 of the 279 are from 2014–2019.
 His positions moved a long way, and in December 2024 he published an outright retrospective
 retracting several of them ([what science-based lifting gets right](lifting-over.md)). Where an

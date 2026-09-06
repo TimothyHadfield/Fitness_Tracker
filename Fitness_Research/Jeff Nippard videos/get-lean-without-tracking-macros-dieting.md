@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Get Lean Without Tracking Macros or 'Dieting' (Science Explained)" ([watch](https://www.youtube.com/watch?v=vuwrIeXdxBk)) · 2019-01-13 · 7 min
 **Topic:** Nutrition
+**Figures:** 5 images stored from 2 of the papers below, 2 more listed — [see FIGURES.md](FIGURES.md#four-behavioural-fat-loss-strategies-that-dont-require-tracking-macros)
 
 ## Bottom line
 - Every diet that works reduces to three pillars: **caloric deficit** (fat loss), **high enough protein** (keep/build muscle), **weight training** (keep/build muscle).

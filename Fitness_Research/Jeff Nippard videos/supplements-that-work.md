@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "TOP 5 SUPPLEMENTS | SCIENCE EXPLAINED (17 STUDIES) | WHEN AND HOW MUCH TO TAKE" ([watch](https://www.youtube.com/watch?v=IR5jW9iNNiw)) · 2017-04-08 · 11 min
 **Topic:** Supplements
+**Figures:** 10 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#the-five-supplements-worth-taking-doses-timing-and-evidence)
 
 ## Bottom line
 - **Whey protein** — as needed to hit **0.7–1.0 g protein per pound of body weight per day**.

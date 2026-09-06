@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Perfect Leg Day (According To Science)" ([watch](https://www.youtube.com/watch?v=8zWDuWKdBZU)) · 2023-08-07 · 7 min
 **Topic:** Programming
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#the-perfect-leg-day-six-movements-for-quads-hamstrings-glutes-and-calves)
 
 ## Bottom line
 - One heavy deadlift top set of 5 at RPE 8-9, then back off to two sets of 8 stiff-legged deadlifts at roughly 50-60% of the top-set load.

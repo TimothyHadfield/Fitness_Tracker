@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How to Fix Muscle Imbalances & Asymmetries: 4 Science-Based Tips" ([watch](https://www.youtube.com/watch?v=zQTmfOsSXN0)) · 2018-12-10 · 16 min
 **Topic:** Programming
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#fixing-muscle-imbalances-and-left-right-asymmetries-4-tips)
 
 ## Bottom line
 - Most imbalances are far less visible than the person thinks, and **muscle shape and insertion points cannot be changed** — only strength and size differences are in your control.

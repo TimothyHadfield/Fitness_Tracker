@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Make Gains At Every Fitness Level (ft. Picture Fit)" ([watch](https://www.youtube.com/watch?v=EbfdMaV7qqM)) · 2022-05-29 · 11 min
 **Topic:** Programming
+**Figures:** 7 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#how-to-keep-making-gains-as-a-beginner-intermediate-and-advanced-lifter)
 
 ## Bottom line
 - Nutrition barely changes with experience: **1.6–2.2 g protein/kg/day**, and calories set by goal — **+10–20% over maintenance** to gain, maintenance for recomposition, **-10–20%** to lose fat.

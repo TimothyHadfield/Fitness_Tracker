@@ -50,6 +50,10 @@ the lock file.
 Every source folder has the same shape: `SUMMARY.md` (read this first), `README.md` (index of
 every note, generated), `RESEARCH-CITATIONS.md` (bibliography, generated), and the notes.
 
+`Jeff Nippard videos/` additionally has **`FIGURES.md`** and **`figures/`** — the figures from the
+open-access papers his notes cite, paired back to the notes, with 392 images stored under a CC
+licence and the rest linked. No other source has them yet; the pipeline is one command per source.
+
 The three largest sources are also split into **domain summaries**, `SUMMARY-<domain>.md`, each
 written from every note in its area and carrying the sample sizes, designs and effect sizes that
 the top-layer `SUMMARY.md` deliberately does not. Nippard has 6, House of Hypertrophy 8, Barbell
@@ -133,13 +137,23 @@ In rough order of value. None of it is urgent and none of it blocks anything.
 7. **Add the soleus clash to the arbiter.** Nippard prescribes 15–25-rep calf sets on fibre-type
    grounds; House of Hypertrophy's position rests on a calf trial finding no fibre-type effect.
    Neither engages the other and [WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md) does not yet cover it.
-8. **The Nippard "Known problems in this library" list** at the bottom of
+8. **Run the figure pipeline over the other four sources.** Only Jeff Nippard has figures so far.
+   One command each — `python tools/fetch_figures.py "<source>"` then `build_figure_index.py
+   "<source>" --annotate-notes` — and each source's `RESEARCH-CITATIONS.md` already has the
+   note-to-PMID mapping the tool needs. Expect roughly the Nippard hit rate: about 30% of cited
+   papers are in PMC, half of those return a figure list, and about 80% of *those* are openly
+   licensed. ISSN is the obvious next one — its 5,192 references are mostly journal articles, so
+   the yield should be far higher than a video source's, and its notes are the ones where a
+   funding or forest plot would carry the most weight. Watch the total size: Nippard alone is
+   35 MB, and this repo is public and served by GitHub Pages.
+
+9. **The Nippard "Known problems in this library" list** at the bottom of
    `Jeff Nippard videos/SUMMARY.md` — a citation that doesn't support its claim (Farina 2010 in
    the cable kickback note), several misleading filenames, one study rendered with three different
    effect sizes, and caption-garbled researcher names still marked uncertain.
-9. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
+10. **Re-run the retraction audit periodically.** Retractions arrive years after publication, so a
    clean result is not permanent. Command is in [RETRACTION-AUDIT.md](RETRACTION-AUDIT.md).
-10. **19 Nippard videos have no usable English captions** and were never written up. Listed at the
+11. **19 Nippard videos have no usable English captions** and were never written up. Listed at the
    bottom of this file. Injury recovery and posture are the two worth chasing elsewhere.
 
 ---
@@ -175,6 +189,26 @@ ResearchGate slugs. Reuses anything already resolved; pass `--fresh` to force a 
   in the script; add a new one for a source whose domains differ.
 
 **Audit** — `check_retractions.py <out.json> <paths...>` and `screen_reference_mismatch.py`.
+
+**Figures** — `fetch_figures.py <sourcedir>` then `build_figure_index.py <sourcedir>
+--annotate-notes`. Walks note → PMID → PMCID → licence → figure list → image files, and pairs the
+result back to the notes in `FIGURES.md`. Both are resumable.
+
+Four things learned building it, all of which cost time:
+
+- **The PMC OA web service is gone.** `pmc/utils/oa/oa.fcgi` returns 404 for everything now, and
+  the direct image path `pmc.ncbi.nlm.nih.gov/articles/PMCxxxx/bin/<file>` is blocked too. The
+  route that works is NCBI `efetch?db=pmc` for the article XML, then **Europe PMC's
+  `supplementaryFiles` endpoint**, which returns every image for an article in one zip.
+- **efetch covers more articles than Europe PMC's `fullTextXML`.** Some free-to-read articles
+  outside the OA subset still return full text with figures from efetch and nothing from Europe
+  PMC. Try efetch first; a probe using only Europe PMC found figures for 1 article in 12, and the
+  real number is closer to 6 in 10.
+- **Match a licence pattern against both spellings.** Europe PMC reports `cc by`; the article's own
+  XML gives a `creativecommons.org/licenses/...` URL. A regex for one silently drops the other,
+  and the failure looks like "this paper just isn't open" rather than like a bug.
+- **PubMed IDs come back as ints from one service and strings from another.** Pairing notes to
+  articles silently produced zero matches until both sides were cast to `str`.
 
 Older scripts (`fetch_transcript.py`, `extract_refs.py`, `resolve_pmids.py`,
 `resolve_pmc_and_doi.py`, `build_references.py`, `build_menno_readme.py`) are the first-generation

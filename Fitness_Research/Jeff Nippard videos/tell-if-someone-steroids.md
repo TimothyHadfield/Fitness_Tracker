@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Tell If Someone Is On Steroids (Using Science)" ([watch](https://www.youtube.com/watch?v=rvtZs_nTqr0)) · 2025-08-07 · 17 min
 **Topic:** PEDs
+**Figures:** 4 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#how-big-can-you-get-naturally-ffmi-the-natty-limit-and-why-25-isnt-a-hard-wall)
 
 ## Bottom line
 - Fat-free mass index (FFMI) = lean mass ÷ height squared. It's the only defensible numeric tool for judging natural status.

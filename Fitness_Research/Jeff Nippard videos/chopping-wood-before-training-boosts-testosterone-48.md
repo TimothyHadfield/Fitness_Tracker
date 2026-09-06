@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Chopping Wood Before Training Boosts Testosterone 48% | Can We Apply This For Gains?" ([watch](https://www.youtube.com/watch?v=ymih3w7dtg0)) · 2019-03-11 · 5 min
 **Topic:** Physiology
+**Figures:** 4 images stored from 1 of the papers below, 3 more listed — [see FIGURES.md](FIGURES.md#acute-testosterone-spikes-dont-build-muscle-the-wood-chopping-study)
 
 ## Bottom line
 - No — don't chop wood before leg day. The study behind the claim isn't transferable, and the underlying premise is wrong anyway.

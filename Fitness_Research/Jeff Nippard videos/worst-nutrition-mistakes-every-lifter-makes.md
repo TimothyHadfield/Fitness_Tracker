@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Worst Nutrition Mistakes Every Lifter Makes" ([watch](https://www.youtube.com/watch?v=l7jIU_73ZaM)) · 2023-03-27 · 11 min
 **Topic:** Nutrition
+**Figures:** 16 images stored from 6 of the papers below — [see FIGURES.md](FIGURES.md#the-four-worst-nutrition-mistakes-lifters-make)
 
 ## Bottom line
 - You cannot force-feed muscle growth. Large surpluses add disproportionately more fat, not more muscle. Use a 10-20% surplus for faster gain with some fat, 5-10% for a leaner bulk, or a slight deficit to prioritize fat loss while still building.

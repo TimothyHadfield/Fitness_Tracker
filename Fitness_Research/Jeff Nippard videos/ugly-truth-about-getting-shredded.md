@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Ugly Truth About Getting Shredded (Science Explained)" ([watch](https://www.youtube.com/watch?v=larBqTjA7-g)) · 2022-08-24 · 10 min
 **Topic:** Physiology
+**Figures:** 7 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#the-real-cost-of-staying-shredded-and-why-to-aim-for-the-bottom-of-your-range)
 
 ## Bottom line
 - Contest-level leanness looks impressive for about one hour a day under good lighting; the other 23 hours you look small and depleted.

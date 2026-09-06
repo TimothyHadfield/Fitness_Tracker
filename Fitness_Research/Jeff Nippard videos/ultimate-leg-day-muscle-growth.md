@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Ultimate Science-Based Leg Day For Muscle Growth (2023)" ([watch](https://www.youtube.com/watch?v=H6mRkx1x77k)) · 2023-02-21 · 11 min
 **Topic:** Programming
+**Figures:** 8 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#ultimate-science-based-leg-day-ppl-series-full-session-breakdown)
 
 ## Bottom line
 - Squat strength is trained minimalistically — **one hard top set of 2-4 reps at 85-90% 1RM, RPE 8-9, once per week** — then two back-off sets for hypertrophy.

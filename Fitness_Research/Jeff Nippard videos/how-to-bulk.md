@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Bulk Like A Pro (Using Science)" ([watch](https://www.youtube.com/watch?v=OqRvmJ2eyBA)) · 2024-12-01 · 13 min
 **Topic:** Nutrition
+**Figures:** 22 images stored from 4 of the papers below — [see FIGURES.md](FIGURES.md#how-to-bulk-properly-rate-of-gain-calories-macros-and-training)
 
 ## Bottom line
 - A proper bulk builds more muscle than maingaining ever will. Dirty bulking works too, but adds far more fat than muscle.

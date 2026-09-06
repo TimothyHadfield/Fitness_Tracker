@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Build Muscle And Lose Fat At The Same Time: Step By Step Explained (Body Recomposition)" ([watch](https://www.youtube.com/watch?v=M4K0s792wAU)) · 2019-11-02 · 10 min
 **Topic:** Nutrition
+**Figures:** 13 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#body-recomposition-building-muscle-and-losing-fat-at-the-same-time)
 
 ## Bottom line
 - Recomposition is possible for **nearly everyone**, not a rare edge case. Fat tissue and muscle tissue are separate systems; you do not need a surplus to build muscle.

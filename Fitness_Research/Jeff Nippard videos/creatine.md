@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Use CREATINE To Build Muscle: Loading, Timing & Hair Loss? (Science Explained)" ([watch](https://www.youtube.com/watch?v=QSPmsqYRL2Y)) · 2018-04-19 · 7 min
 **Topic:** Supplements
+**Figures:** 19 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#creatine-dosing-loading-timing-non-responders-and-the-hair-loss-question)
 
 ## Bottom line
 - Use plain **creatine monohydrate**. Variants (HCl, ethyl ester) lack comparable evidence and cost more ([Jäger 2011](https://www.ncbi.nlm.nih.gov/pubmed/21424716)).

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Get Lean & STAY Lean Forever (Using Science)" ([watch](https://www.youtube.com/watch?v=roHQ3F7d9YQ)) · 2023-01-23 · 14 min
 **Topic:** Nutrition
+**Figures:** 5 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#getting-lean-and-actually-keeping-it-off)
 
 ## Bottom line
 - Most diets fail after the fact, not during. Getting lean for an event and staying lean for life are different goals with different tactics.

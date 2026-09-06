@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "MEN vs WOMEN | Sex Differences in Training | Science Explained (12 Studies)" ([watch](https://www.youtube.com/watch?v=NoUhE8TAGKM)) · 2017-03-15 · 6 min
 **Topic:** Programming
+**Figures:** 6 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#sex-differences-in-training-what-actually-changes-for-women-vs-men)
 
 ## Bottom line
 - The practical differences are **minor tweaks to the same fundamental program**, not different training philosophies.

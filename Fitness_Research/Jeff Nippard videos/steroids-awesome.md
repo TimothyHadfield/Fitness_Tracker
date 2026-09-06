@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Steroids Are Awesome" ([watch](https://www.youtube.com/watch?v=lmClPGvdWTI)) · 2024-06-17 · 16 min
 **Topic:** PEDs
+**Figures:** 11 images stored from 4 of the papers below, 1 more listed — [see FIGURES.md](FIGURES.md#steroids-how-well-they-work-and-everything-else-they-do)
 
 ## Bottom line
 - Steroids work far beyond anything natural. Creatine at 5 g/day for a year adds roughly **2 lb** of extra muscle; a normal bodybuilding steroid dose adds roughly **20 lb** in a year, more depending on genetics and dose.

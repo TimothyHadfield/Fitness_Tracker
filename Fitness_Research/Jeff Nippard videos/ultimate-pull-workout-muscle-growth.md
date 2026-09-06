@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Ultimate PULL Workout For Muscle Growth [Back, Biceps, Rear Delts] (2023)" ([watch](https://www.youtube.com/watch?v=spKGN0XzErU)) · 2023-02-12 · 11 min
 **Topic:** Programming
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#ultimate-pull-workout-for-back-biceps-and-rear-delts)
 
 ## Bottom line
 - Six-exercise pull day: lat pulldown (feeder sets to failure), chest-supported row with rotating grips, bottom-half pullovers supersetted with lat stretches, omni-directional face pulls, heavy EZ-bar curls, bottom-half preacher curls.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Re-Build Muscle After A Training Break" ([watch](https://www.youtube.com/watch?v=LiyDfoUkbdo)) · 2020-05-31 · 11 min
 **Topic:** Programming
+**Figures:** 7 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#how-to-rebuild-muscle-and-strength-after-a-training-layoff)
 
 ## Bottom line
 - Do not resume at your old volume and intensity. Build a 2-4 week "bridge": an intro phase (1-2 weeks) then a transition phase (1-2 weeks), longer bridge for a longer layoff.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Refeeds & Diet Breaks: The Most Misunderstood Fat Loss Tools" ([watch](https://www.youtube.com/watch?v=8HVdLMnr40M)) · 2021-05-21 · 13 min
 **Topic:** Nutrition
+**Figures:** 7 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#refeeds-and-diet-breaks-what-the-evidence-actually-supports)
 
 ## Bottom line
 - Net calorie balance decides whether you lose weight, but **how you distribute the deficit over time changes body composition** — slower diets retain more muscle.

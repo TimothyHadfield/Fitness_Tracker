@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Best & Worst QUAD Exercises (Ranked Using Science)" ([watch](https://www.youtube.com/watch?v=kIXcoivzGf8)) · 2024-07-02 · 12 min
 **Topic:** Exercise Selection
+**Figures:** 9 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#quad-exercises-ranked-sf-squat-patterns-machines-and-the-rectus-femoris-problem)
 
 ## Bottom line
 - Best exercise overall: the **hack squat**. The pendulum squat feels better to him but few gyms have one; if there's no hack squat, use the **high-bar back squat**.

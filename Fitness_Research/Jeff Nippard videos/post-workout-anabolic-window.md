@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Post-Workout Anabolic Window (MYTH BUSTED with Science)" ([watch](https://www.youtube.com/watch?v=tALUxxVxqA8)) · 2018-01-09 · 7 min
 **Topic:** Nutrition
+**Figures:** 10 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#the-post-workout-anabolic-window-how-wide-it-really-is)
 
 ## Bottom line
 - The 30–60 minute window is far too narrow. The realistic window is roughly **4–6 hours around the training session**, not 45 minutes after it.

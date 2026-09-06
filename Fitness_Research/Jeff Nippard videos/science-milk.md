@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Science of MILK (Is It Really Good For You?) | Acne, Cancer, Bodyfat..." ([watch](https://www.youtube.com/watch?v=Rx9lZKSACFc)) · 2018-08-13 · 7 min
 **Topic:** Nutrition
+**Figures:** 35 images stored from 6 of the papers below — [see FIGURES.md](FIGURES.md#the-science-of-milk-mortality-cancer-acne-and-the-anti-dairy-arguments)
 
 ## Bottom line
 - Verdict: the claim that milk is bad for your health is busted. The research shows almost entirely neutral or beneficial effects.

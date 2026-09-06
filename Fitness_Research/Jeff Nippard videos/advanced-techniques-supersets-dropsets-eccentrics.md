@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Advanced Training Techniques: Supersets, Eccentrics, Dropsets, High Volume ft. Dr. Brad Schoenfeld" ([watch](https://www.youtube.com/watch?v=Ri0v5-osLCQ)) · 2019-04-28 · 79 min
 **Topic:** Volume & Intensity
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#advanced-techniques-and-training-volume-with-dr-brad-schoenfeld)
 
 ## Bottom line
 - Schoenfeld's standing recommendation is **10-20 hard sets per muscle per week**, periodised (undulating up and down) rather than held at one fixed number.

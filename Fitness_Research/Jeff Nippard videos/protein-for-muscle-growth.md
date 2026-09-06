@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Smartest Way To Use Protein To Build Muscle (Science Explained)" ([watch](https://www.youtube.com/watch?v=Pok0Jg2JAkE)) · 2022-04-07 · 10 min
 **Topic:** Nutrition
+**Figures:** 13 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#protein-for-muscle-growth-daily-targets-per-meal-doses-quality-and-timing)
 
 ## Bottom line
 - Total daily protein is the dominant variable. Bulking: **1.6-2.2 g/kg (0.7-1.0 g/lb)**. Cutting: **1.8-2.7 g/kg (0.8-1.2 g/lb)**. Recomp: use the bulking numbers, or slightly higher.

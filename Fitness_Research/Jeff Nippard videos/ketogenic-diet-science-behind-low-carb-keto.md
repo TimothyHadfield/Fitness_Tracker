@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "THE KETOGENIC DIET: Science Behind Low Carb Keto for Fat Loss, Muscle & Health" ([watch](https://www.youtube.com/watch?v=qxmVsT_ZeNs)) · 2018-03-27 · 14 min
 **Topic:** Nutrition
+**Figures:** 7 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#the-ketogenic-diet-what-the-science-says-about-fat-loss-muscle-and-health)
 
 ## Bottom line
 - The claim that keto beats a conventional balanced diet for fat loss is busted. Calorie deficit and protein intake drive results, not carb restriction.

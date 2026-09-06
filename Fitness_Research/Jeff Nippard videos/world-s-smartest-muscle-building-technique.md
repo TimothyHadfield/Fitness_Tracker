@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The World's Smartest Muscle Building Technique" ([watch](https://www.youtube.com/watch?v=ftpH4-xFGQI)) · 2023-11-16 · 11 min
 **Topic:** Technique
+**Figures:** 12 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#long-length-partials-the-best-supported-intensity-technique)
 
 ## Bottom line
 - Long-length partials — half reps in the **stretched** portion of a lift — have more evidence behind them than drop sets, forced reps, supersets or cheat reps.

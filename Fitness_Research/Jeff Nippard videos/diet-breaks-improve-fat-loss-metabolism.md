@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Do Diet Breaks Improve Fat Loss & Metabolism? (New Scientific Research)" ([watch](https://www.youtube.com/watch?v=TaaA2fsuXZU)) · 2017-12-04 · 8 min
 **Topic:** Nutrition
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#do-diet-breaks-improve-fat-loss-and-protect-metabolism)
 
 ## Bottom line
 - In a 2017 study by **Byrne and colleagues**, the diet-break group lost **50% more fat** than continuous dieters over a matched total caloric deficit — with **no extra muscle loss**.

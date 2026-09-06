@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How Fast Do You Lose Muscle When You Stop Working Out? (& Ways To Avoid It)" ([watch](https://www.youtube.com/watch?v=P0vHR2mAw2U)) · 2020-05-17 · 10 min
 **Topic:** Physiology
+**Figures:** 10 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#how-fast-you-lose-muscle-when-you-stop-training-and-how-to-avoid-it)
 
 ## Bottom line
 - Up to about 2-3 weeks off with normal daily activity causes little to no measurable muscle loss. Past three weeks, most people start to notice shrinkage.

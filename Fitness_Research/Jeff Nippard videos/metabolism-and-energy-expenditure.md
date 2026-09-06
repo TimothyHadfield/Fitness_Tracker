@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Increase Your Metabolism (Eat More, Lose More)" ([watch](https://www.youtube.com/watch?v=g9QGQJ1ypp0)) · 2023-06-11 · 14 min
 **Topic:** Physiology
+**Figures:** 12 images stored from 4 of the papers below, 3 more listed — [see FIGURES.md](FIGURES.md#can-you-speed-up-your-metabolism-ranking-every-popular-strategy)
 
 ## Bottom line
 - Metabolic rates differ enormously between people: at 80 kg, the range in a 6,000-subject study ran from **~1,400 to ~5,700 kcal/day**.

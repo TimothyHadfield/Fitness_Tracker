@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Best & Worst Chest Exercises To Build Muscle (Ranked!)" ([watch](https://www.youtube.com/watch?v=NsEbXsTwas8)) · 2022-07-03 · 14 min
 **Topic:** Exercise Selection
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#chest-exercises-ranked-top-10-best-and-3-worst)
 
 ## Bottom line
 - **Bench press is #1 (5 stars)** — high tension across the full pec, easy micro-loading, universally available, and uniquely motivating to progress on.

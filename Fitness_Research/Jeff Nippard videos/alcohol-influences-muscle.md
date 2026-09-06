@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How Alcohol Influences Muscle (10 Studies) | Drunk Workout in Vegas" ([watch](https://www.youtube.com/watch?v=2JC9gnTVKxg)) · 2016-10-11 · 11 min
 **Topic:** Nutrition
+**Figures:** 7 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#how-alcohol-influences-muscle-and-fat-gain-10-studies)
 
 ## Bottom line
 - Alcohol calories obey energy balance like any other. **If you fit the drinks inside a calorie deficit, you will not gain fat to any appreciable degree.**

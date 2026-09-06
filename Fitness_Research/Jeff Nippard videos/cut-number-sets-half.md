@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "I Cut The Number Of Sets I Do In Half" ([watch](https://www.youtube.com/watch?v=DzjWEn2BS_k)) · 2025-10-13 · 20 min
 **Topic:** Volume & Intensity
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#100-days-of-low-volume-training-what-halving-your-sets-actually-does)
 
 ## Bottom line
 - He ran ~6.5 sets per muscle per week for 100 days while cutting, with 1–2 sets per exercise taken to failure, and lost 5.5 lb fat against only 1.8 lb lean mass — gaining strength throughout.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How Much Protein Can You Absorb In One Meal? (20g? 30g? 100g?)" ([watch](https://www.youtube.com/watch?v=tJpdPYedWjc)) · 2018-01-30 · 11 min
 **Topic:** Nutrition
+**Figures:** 7 images stored from 2 of the papers below, 2 more listed — [see FIGURES.md](FIGURES.md#how-much-protein-can-you-actually-use-in-one-meal)
 
 ## Bottom line
 - **Absorption** is not the limit — humans absorb virtually all ingested protein, even 300 g. The "20-30 g cap" myth confuses absorption with utilisation for muscle protein synthesis (MPS).

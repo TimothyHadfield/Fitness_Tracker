@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Full Body 5x Per Week: Why High Frequency Training Is So Effective" ([watch](https://www.youtube.com/watch?v=eTxO5ZMxcsc)) · 2020-01-02 · 10 min
 **Topic:** Programming
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#full-body-five-days-a-week-the-case-for-high-frequency-training)
 
 ## Bottom line
 - Weekly volume target for most muscles: **10–20 hard sets**. Per-workout ceiling: roughly **5–10 sets per muscle**, beyond which extra sets risk being junk volume.

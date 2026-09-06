@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "BRO SPLITS: What Does the Science ACTUALLY Say?" ([watch](https://www.youtube.com/watch?v=6PgsKMDUExE)) · 2016-05-04 · 15 min
 **Topic:** Programming
+**Figures:** 5 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#bro-splits-vs-higher-frequency-what-the-frequency-research-actually-supports)
 
 ## Bottom line
 - **Train each muscle roughly twice per week.** Three times is fine if your split allows it, but there is no evidence 3x beats 2x for hypertrophy.

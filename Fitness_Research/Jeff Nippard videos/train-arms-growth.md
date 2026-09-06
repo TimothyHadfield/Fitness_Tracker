@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How to Train ARMS for Growth | Science Explained (10 Studies)" ([watch](https://www.youtube.com/watch?v=x4YNi4nRboU)) · 2017-05-08 · 10 min
 **Topic:** Exercise Selection
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#training-arms-for-growth-biceps-and-triceps-anatomy-exercise-selection-and-volume)
 
 ## Bottom line
 - Compounds (chin-ups, rows, bench) build arms but won't maximise them — you need direct curls and direct triceps isolation.

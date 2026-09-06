@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Bro Science vs Real Science (New Training Controversies) ft. The Glute Guy" ([watch](https://www.youtube.com/watch?v=92pQFyQnJsw)) · 2018-12-16 · 99 min
 **Topic:** Myths & Evidence
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#bro-science-vs-real-science-bret-contreras-on-mind-muscle-emg-failure-and-volume)
 
 ## Bottom line
 - **Mind-muscle connection is real science, not bro science.** Contreras and Schoenfeld published a training study where an internal focus grew the **biceps** significantly better; it made no difference for **quads** on leg extensions ([Schoenfeld 2018](https://www.ncbi.nlm.nih.gov/pubmed/29533715)).

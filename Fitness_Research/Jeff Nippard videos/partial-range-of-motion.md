@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Partial Range Of Motion: Broscience Or Legit?" ([watch](https://www.youtube.com/watch?v=jkaU-mM24_o)) · 2021-01-03 · 10 min
 **Topic:** Technique
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#partial-vs-full-range-of-motion-for-muscle-growth)
 
 ## Bottom line
 - **Full range of motion wins most of the time.** Of the six studies on ROM and hypertrophy, all four lower-body studies favoured full ROM; the upper-body results were mixed.

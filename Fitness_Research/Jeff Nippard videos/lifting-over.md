@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Science-Based Lifting Is Over (My Bad)" ([watch](https://www.youtube.com/watch?v=pi0PQZFFo4A)) · 2024-12-23 · 17 min
 **Topic:** Myths & Evidence
+**Figures:** 20 images stored from 5 of the papers below — [see FIGURES.md](FIGURES.md#what-science-based-lifting-actually-gets-right-and-what-jeff-nippard-retracts)
 
 ## Bottom line
 - Slow negatives do not build more muscle. Three studies show a 1–2 s eccentric matches a 3–4 s one. Control the weight; that's it.

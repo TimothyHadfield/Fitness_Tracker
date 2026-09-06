@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Worst Supplements Everyone Takes For Muscle Growth (Science Explained)" ([watch](https://www.youtube.com/watch?v=unowqBYbWeg)) · 2022-08-03 · 11 min
 **Topic:** Supplements
+**Figures:** 12 images stored from 4 of the papers below, 3 more listed — [see FIGURES.md](FIGURES.md#five-popular-supplements-that-dont-work-for-muscle-growth)
 
 ## Bottom line
 - Five popular supplements with weak or absent evidence: **test boosters, turkesterone, BCAAs, fat burners, and beta-alanine** (the last only in the context of typical hypertrophy training).

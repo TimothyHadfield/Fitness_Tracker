@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Should You EAT BIG To GET BIG? (Responding To Dumb Diet Advice)" ([watch](https://www.youtube.com/watch?v=y3EUG4ivY_M)) · 2019-06-11 · 17 min
 **Topic:** Nutrition
+**Figures:** 5 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#eat-big-to-get-big-and-other-bulking-myths-dismantled)
 
 ## Bottom line
 - More protein is not endlessly better. The literature's plateau sits around 1.6 g/kg (~0.7 g/lb); Jeff prefers ~2 g/kg (~1 g/lb) as an easy, slightly buffered target.

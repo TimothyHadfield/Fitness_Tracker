@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Science Behind Sam Sulek’s Training" ([watch](https://www.youtube.com/watch?v=ml5uvpfXcLU)) · 2024-02-28 · 12 min
 **Topic:** Programming
+**Figures:** 4 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#sam-suleks-training-graded-against-the-evidence)
 
 ## Bottom line
 - Cap a single muscle at roughly **6-8 hard sets per workout**; past that you are into junk volume — split it across two days instead.

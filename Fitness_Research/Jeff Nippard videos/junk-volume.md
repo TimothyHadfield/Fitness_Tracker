@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Junk Volume: Why You Should Avoid It For Max Muscle" ([watch](https://www.youtube.com/watch?v=ekQxEEjYLDI)) · 2022-02-14 · 9 min
 **Topic:** Volume & Intensity
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#junk-volume-the-three-ways-lifters-waste-sets)
 
 ## Bottom line
 - Junk volume = sets that cost time, energy and recovery but add no muscle or strength. Three main types: **too many sets in one session**, **sets that are too easy**, and **ultra-high-rep sets**.

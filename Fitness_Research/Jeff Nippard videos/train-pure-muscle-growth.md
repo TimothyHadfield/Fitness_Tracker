@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Train For Pure Muscle Growth" ([watch](https://www.youtube.com/watch?v=71op1DQ2gyo)) · 2023-10-29 · 14 min
 **Topic:** Programming
+**Figures:** 10 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#five-principles-for-training-purely-for-muscle-growth)
 
 ## Bottom line
 - **Tension is the primary driver of hypertrophy.** Every other principle exists to maximise it.

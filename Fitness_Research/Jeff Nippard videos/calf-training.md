@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Most Scientific Way to Train CALVES (Science Explained)" ([watch](https://www.youtube.com/watch?v=21inrjhoFkQ)) · 2018-02-28 · 12 min
 **Topic:** Exercise Selection
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#calf-training-gastroc-vs-soleus-exercise-choice-and-how-much-volume)
 
 ## Bottom line
 - Run **at least one standing (gastroc) and one seated (soleus) calf raise variation** — the two heads are trained by different knee positions.

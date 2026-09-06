@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How to Increase Testosterone Naturally | Science Explained" ([watch](https://www.youtube.com/watch?v=yoP6NCGb3oM)) · 2017-06-29 · 12 min
 **Topic:** Physiology
+**Figures:** 16 images stored from 4 of the papers below, 2 more listed — [see FIGURES.md](FIGURES.md#how-to-increase-testosterone-naturally)
 
 ## Bottom line
 - Acute post-workout testosterone spikes from heavy compounds are **too small and too brief to drive muscle growth**. Heavy compound training works because of progressive tension overload and large muscle mass involvement — the hormone bump is a side effect.

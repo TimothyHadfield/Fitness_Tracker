@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Everyone Thinks I'm Wrong About Training" ([watch](https://www.youtube.com/watch?v=qxl5mL7gzlg)) · 2024-09-24 · 13 min
 **Topic:** Volume & Intensity
+**Figures:** 4 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#lengthened-partials-vs-full-range-of-motion-in-trained-lifters-jeff-nippards-own-study)
 
 ## Bottom line
 - In the first range-of-motion study ever run on highly experienced lifters (avg 4.9 years training, 30 subjects, 8 weeks), lengthened partials and full ROM produced **statistically identical growth** — 5.9% vs 6.6% for one measure, no significant difference for biceps either.

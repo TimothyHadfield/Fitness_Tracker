@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Is Sugar Making You Fat? (MYTH BUSTED with Science)" ([watch](https://www.youtube.com/watch?v=9JrT84PeTgw)) · 2018-01-15 · 9 min
 **Topic:** Nutrition
+**Figures:** 9 images stored from 2 of the papers below, 7 more listed — [see FIGURES.md](FIGURES.md#sugar-is-not-a-unique-cause-of-obesity-energy-balance-is)
 
 ## Bottom line
 - The sugar-causes-obesity case rests almost entirely on correlational and epidemiological data that does not adjust for total energy intake.

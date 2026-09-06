@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Increasing Testosterone After Competing | Anabolic Window Is Real? (New Research)" ([watch](https://www.youtube.com/watch?v=F8TFfAM5t8Q)) · 2017-06-13 · 5 min
 **Topic:** Nutrition
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#post-contest-recovery-and-peri-workout-protein-timing)
 
 ## Bottom line
 - In trained men cutting, **28 g of whey pre- and post-workout** spared lean mass and drove fat loss; a carb-matched group lost lean body mass instead — despite both groups already eating high protein.

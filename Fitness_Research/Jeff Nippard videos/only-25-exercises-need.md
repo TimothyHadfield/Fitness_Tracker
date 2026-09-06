@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Only 25 Exercises You Ever Need" ([watch](https://www.youtube.com/watch?v=S6rqpxVGKZ4)) · 2026-01-13 · 23 min
 **Topic:** Exercise Selection
+**Figures:** 9 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#the-25-exercises-that-build-a-complete-physique-ranked)
 
 ## Bottom line
 - If you could only pick one exercise, pick a squat — over half of body muscle mass sits in the legs (~55% men, ~58% women on MRI) ([Janssen 2000](https://pubmed.ncbi.nlm.nih.gov/10904038/)), and squat strength carries over to other lifts.

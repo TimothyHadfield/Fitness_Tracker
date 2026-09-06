@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Why You Don't Need 8 Glasses of Water a Day (Does Coffee Count?)" ([watch](https://www.youtube.com/watch?v=d9dq-yQVqCU)) · 2018-07-30 · 6 min
 **Topic:** Nutrition
+**Figures:** 5 images stored from 2 of the papers below, 1 more listed — [see FIGURES.md](FIGURES.md#you-dont-need-8-glasses-of-water-a-day-and-coffee-does-count)
 
 ## Bottom line
 - Verdict: busted. There is no single daily water requirement — needs vary by body size, activity, season, temperature and climate.

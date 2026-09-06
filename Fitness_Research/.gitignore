@@ -6,3 +6,19 @@ sources/*/fulltext/
 # Kept: sources/*/index.json and assignments.tsv. They are small, they record
 # exactly which documents were ingested and under which licence, and they make a
 # rebuild reproducible.
+
+# Figures from the open-access papers the notes cite. The repo root ignores *.jpg
+# and *.png as working images that are not part of the app; these are different —
+# they are library content, and FIGURES.md embeds them by relative path, so the
+# index is broken for anyone who clones without them. Narrowly un-ignored: only
+# under a source's figures/ folder, nowhere else.
+#
+# Everything here carries a Creative Commons or public-domain licence and is
+# stored unmodified, with a per-paper credit line in <source>/figures/README.md.
+# Figures without such a licence are deliberately absent — FIGURES.md links to the
+# publisher's copy instead. Do not relax that rule: this repo is public.
+!**/figures/**/*.jpg
+!**/figures/**/*.jpeg
+!**/figures/**/*.png
+!**/figures/**/*.gif
+!**/figures/**/*.tif

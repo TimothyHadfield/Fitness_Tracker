@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "7 Fitness Myths Completely Busted With Science" ([watch](https://www.youtube.com/watch?v=lcgo8KbeqUg)) · 2018-10-22 · 10 min
 **Topic:** Myths & Evidence
+**Figures:** 11 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#7-more-fitness-myths-busted-myth-busting-season-1-recap-part-2)
 
 ## Bottom line
 - Cryotherapy and cold water immersion actively blunt muscle growth — two Roberts studies showed stunted hypertrophy over 12 weeks versus a simple cooldown.

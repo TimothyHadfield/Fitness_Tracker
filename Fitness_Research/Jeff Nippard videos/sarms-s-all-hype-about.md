@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "SARMS: What's All The Hype About? (Worth Taking? Side Effects? Legal?)" ([watch](https://www.youtube.com/watch?v=t-IWhZgrV1c)) · 2018-05-21 · 6 min
 **Topic:** PEDs
+**Figures:** 2 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#sarms-whats-all-the-hype-about)
 
 ## Bottom line
 - SARMs = selective androgen receptor modulators, marketed as delivering steroid-like muscle gain without steroid-like side effects because they act on similar receptors without being chemically identical.

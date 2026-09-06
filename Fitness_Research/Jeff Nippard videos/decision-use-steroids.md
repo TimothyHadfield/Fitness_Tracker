@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Decision to Use Steroids | Anabolics Science Explained" ([watch](https://www.youtube.com/watch?v=noTb-ShT5UU)) · 2017-07-24 · 10 min
 **Topic:** PEDs
+**Figures:** 5 images stored from 2 of the papers below, 3 more listed — [see FIGURES.md](FIGURES.md#the-health-risks-behind-the-decision-to-use-steroids)
 
 ## Bottom line
 - Nippard's position: use is a personal and legal decision for an informed adult, made without judgement from him. The only ethical problem is competing in drug-tested natural events while using, or being deceptive with fans and followers about use.

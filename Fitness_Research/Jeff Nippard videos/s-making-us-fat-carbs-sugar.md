@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "What's Really Making Us Fat? Carbs? Sugar? (Joe Rogan Response) ft. Stephan Guyenet" ([watch](https://www.youtube.com/watch?v=t30tPISf5cw)) · 2019-03-30 · 72 min
 **Topic:** Nutrition
+**Figures:** 3 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#whats-really-making-us-fat-calories-carbs-and-sugar-with-stephan-guyenet)
 
 ## Bottom line
 - **Energy balance is the main driver of body fatness.** Carbohydrate vs fat ratio makes almost no difference to fat gain or loss when calories are held constant.

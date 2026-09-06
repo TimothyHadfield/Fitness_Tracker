@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Best And Worst Biceps Exercises" ([watch](https://www.youtube.com/watch?v=GNO4OtYoCYk)) · 2024-10-19 · 16 min
 **Topic:** Exercise Selection
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#biceps-exercises-ranked-sf-what-actually-builds-arms)
 
 ## Bottom line
 - Best single biceps exercise: the **face-away (Bayesian) cable curl**. Closest runner-up: the **45° preacher curl**. Both belong in a biceps routine.

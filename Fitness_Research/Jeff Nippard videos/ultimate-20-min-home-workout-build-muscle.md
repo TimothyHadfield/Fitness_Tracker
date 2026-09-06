@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Ultimate 20 Min At-Home Workout To Build Muscle (No Equipment + Free Program!)" ([watch](https://www.youtube.com/watch?v=WLrkT4F7tEc)) · 2020-04-19 · 9 min
 **Topic:** Programming
+**Figures:** 1 image stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#the-deck-of-cards-home-workout-randomised-20-minute-no-equipment-training)
 
 ## Bottom line
 - Deal 20 cards from a shuffled deck: 20 cards ≈ 20 minutes, 30 cards ≈ 30 minutes. Each card is one set. Card number + 10 = reps; face cards = 20 reps; aces = 2 minutes rest.

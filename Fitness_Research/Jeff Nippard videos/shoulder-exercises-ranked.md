@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Best And Worst Shoulder Exercises" ([watch](https://www.youtube.com/watch?v=SgyUoY0IZ7A)) · 2024-09-10 · 13 min
 **Topic:** Exercise Selection
+**Figures:** 8 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#shoulder-exercises-ranked-s-to-f)
 
 ## Bottom line
 - **Best shoulder exercise overall: the cable lateral raise** — set the cable at about hand height and it puts maximum tension on the side delt in the stretched position.

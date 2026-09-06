@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Is BREAKFAST The Most Important Meal Of The Day? (What The Science Says)" ([watch](https://www.youtube.com/watch?v=tDzpOdhAygA)) · 2018-06-11 · 9 min
 **Topic:** Nutrition
+**Figures:** 6 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#is-breakfast-the-most-important-meal-of-the-day)
 
 ## Bottom line
 - Busted. Breakfast eaters and breakfast skippers show no difference in weight change, and no convincing metabolic or health effect of eating breakfast has been documented.

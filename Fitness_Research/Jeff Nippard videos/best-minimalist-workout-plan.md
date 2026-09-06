@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Best Science-Based Minimalist Workout Plan (Under 45 Mins)" ([watch](https://www.youtube.com/watch?v=eMjyvIQbn9M)) · 2022-11-01 · 13 min
 **Topic:** Programming
+**Figures:** 8 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#minimalist-full-body-training-plan-two-sessions-under-45-minutes)
 
 ## Bottom line
 - Two full-body sessions per week, each under 45 minutes, with scaling instructions for 3, 4 or 5 days.

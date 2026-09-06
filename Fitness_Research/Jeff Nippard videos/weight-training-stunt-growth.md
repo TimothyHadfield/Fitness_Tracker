@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Does Weight Training Stunt Your Growth?" ([watch](https://www.youtube.com/watch?v=6HXIw75JFlE)) · 2018-01-22 · 3 min
 **Topic:** Myths & Evidence
+**Figures:** 3 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#weight-training-does-not-stunt-growth-in-kids-and-teens)
 
 ## Bottom line
 - The "lifting stunts growth" idea traces to a 1964 Japanese observation of short-statured child labourers — correlational, and confounded by undernourishment.

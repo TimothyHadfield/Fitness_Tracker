@@ -12,6 +12,12 @@ you need a study's own numbers.
 source's framing and routing) → `<source>/SUMMARY-<domain>.md` (study-by-study detail) → the notes
 themselves.
 
+**Need a graph to show alongside the answer?**
+[Jeff Nippard videos/FIGURES.md](Jeff%20Nippard%20videos/FIGURES.md) pairs 89 of his notes with
+the figures from the papers they cite; 392 are stored locally and render inline. Each note that
+has any carries a `**Figures:**` line under its Topic line. Nothing equivalent exists for the
+other four sources yet.
+
 ---
 
 ## Training

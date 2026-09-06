@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Build Muscle At Home: Science-Based Workouts (No Equipment Needed!)" ([watch](https://www.youtube.com/watch?v=-MRNjTr6xrE)) · 2020-03-15 · 19 min
 **Topic:** Exercise Selection
+**Figures:** 4 in the papers below, none openly licensed — [listed in FIGURES.md](FIGURES.md#building-muscle-at-home-with-no-equipment-principles-and-exercise-menu)
 
 ## Bottom line
 - Four programming rules: 3-5 full body workouts per week; 1-2 exercises per body part; 3-4 sets per exercise; and — the one most people miss — train close to failure.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "What To Eat Before, During & After Training For Max Muscle Growth" ([watch](https://www.youtube.com/watch?v=PM8kiHcAD7Q)) · 2021-10-21 · 13 min
 **Topic:** Nutrition
+**Figures:** 6 images stored from 3 of the papers below — [see FIGURES.md](FIGURES.md#nutrient-timing-around-training-pre-intra-and-post-workout-nutrition)
 
 ## Bottom line
 - The real "anabolic window" is a **4–5 hour bracket** spanning the workout — pre- and post-workout meals shouldn't be separated by more than that.

@@ -67,6 +67,18 @@ enough to read whole.
 Each source folder also has **`README.md`**, an index of every note in that folder, and
 **`RESEARCH-CITATIONS.md`**, its master bibliography.
 
+## Figures
+
+[Jeff Nippard videos/FIGURES.md](Jeff%20Nippard%20videos/FIGURES.md) pairs 89 notes with the
+figures published in the papers they cite — forest plots, dose-response curves and the rest of
+the evidence in its original form. **392 images from 108 openly licensed papers are stored**, so
+they render inline and can go straight into a page; figures from papers without an open licence
+are listed with their captions and a link to the publisher's copy rather than reproduced.
+
+Read [figures/README.md](Jeff%20Nippard%20videos/figures/README.md) before reusing one — every
+stored figure is Creative Commons and needs its credit line, and some forbid commercial use or
+modification. Rebuild or extend with `tools/fetch_figures.py`.
+
 ## What this is not
 
 These are notes, not transcripts, and not reproductions. Nothing here republishes a source's

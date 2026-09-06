@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Most Effective Science-Based PULL Workout (Back, Biceps, Rear Delts) | Science Applied Ep 5" ([watch](https://www.youtube.com/watch?v=9B-5irFdB3c)) · 2018-07-19 · 12 min
 **Topic:** Programming
+**Figures:** 5 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#science-based-pull-workout-day-2-back-biceps-rear-delts)
 
 ## Bottom line
 - Second pull session of the week: most recent literature shows hitting each body part at least twice weekly is optimal, but frequencies above 2x are not better when volume is equated ([Schoenfeld 2016](https://www.ncbi.nlm.nih.gov/pubmed/27102172)).

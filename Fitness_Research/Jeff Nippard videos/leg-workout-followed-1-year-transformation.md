@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Leg Workout I Followed For My 1 Year Transformation" ([watch](https://www.youtube.com/watch?v=hRZ5MM6gmlE)) · 2025-06-09 · 12 min
 **Topic:** Programming
+**Figures:** 8 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#the-leg-workout-behind-nippards-one-year-transformation)
 
 ## Bottom line
 - Order: lying leg curl → pendulum squat → Romanian deadlift → leg extension → hip abduction → straight-leg calf raise.

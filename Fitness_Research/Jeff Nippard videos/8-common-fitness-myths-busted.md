@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "8 Common Fitness Myths Busted (What The Science Says)" ([watch](https://www.youtube.com/watch?v=HOAui_N-HFo)) · 2018-11-05 · 11 min
 **Topic:** Myths & Evidence
+**Figures:** 44 images stored from 9 of the papers below, 1 more listed — [see FIGURES.md](FIGURES.md#8-more-fitness-myths-busted-myth-busting-season-1-recap-part-3)
 
 ## Bottom line
 - Breakfast has no metabolic advantage — eating or skipping is preference, but whichever your first meal is, make it large and high in protein.

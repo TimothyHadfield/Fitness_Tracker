@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Worst Cardio Mistakes Everyone Makes For Fat Loss (Avoid These)" ([watch](https://www.youtube.com/watch?v=crPb62o-z_E)) · 2021-08-19 · 13 min
 **Topic:** Programming
+**Figures:** 6 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#cardio-for-fat-loss-five-mistakes-and-how-much-to-actually-do)
 
 ## Bottom line
 - Cardio is a **supplement to the diet, not the engine of fat loss**. Diet drives the deficit.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Maximize Gains and NOT Overtrain | Overtraining Science Explained" ([watch](https://www.youtube.com/watch?v=NLqq_dJB0iM)) · 2017-09-30 · 7 min
 **Topic:** Recovery
+**Figures:** 2 images stored from 2 of the papers below, 1 more listed — [see FIGURES.md](FIGURES.md#overtraining-vs-overreaching-how-hard-you-can-push-before-progress-stalls)
 
 ## Bottom line
 - True overtraining is real but rare in lifters; most trainees worried about it would gain more by pushing slightly harder.

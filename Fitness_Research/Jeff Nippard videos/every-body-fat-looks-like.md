@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "What Every Body Fat % Actually Looks Like (50% to 5%)" ([watch](https://www.youtube.com/watch?v=5K9QhkPww44)) · 2025-11-09 · 34 min
 **Topic:** Physiology
+**Figures:** 5 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#what-every-body-fat-percentage-actually-looks-like-dexa-verified-50-to-5)
 
 ## Bottom line
 - Healthy target ranges: men 10–20% (ACSM cites 10–22%), women 20–30% (ACSM cites 20–32%). Lean-aesthetic goal for men: 10–15%. Max strength performance: 15–20%.

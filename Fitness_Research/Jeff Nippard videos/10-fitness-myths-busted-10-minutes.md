@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "10 Fitness Myths Busted In 10 Minutes" ([watch](https://www.youtube.com/watch?v=YspLU2ttOlc)) · 2018-10-08 · 10 min
 **Topic:** Myths & Evidence
+**Figures:** 4 images stored from 2 of the papers below, 2 more listed — [see FIGURES.md](FIGURES.md#10-fitness-myths-busted-myth-busting-season-1-recap-part-1)
 
 ## Bottom line
 - High protein does not harm bones or kidneys in healthy people; the osteoporosis scare rests on 1970s-80s methodology.

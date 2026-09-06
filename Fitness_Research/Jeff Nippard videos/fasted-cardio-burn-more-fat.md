@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Does FASTED Cardio Burn More Fat? (What The Science Says)" ([watch](https://www.youtube.com/watch?v=IEbWdoceH-A)) · 2018-02-05 · 7 min
 **Topic:** Myths & Evidence
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#does-fasted-cardio-burn-more-fat)
 
 ## Bottom line
 - Fasted cardio genuinely does burn more fat **during** the session — but you burn correspondingly less fat over the following 24 hours, so it nets out.

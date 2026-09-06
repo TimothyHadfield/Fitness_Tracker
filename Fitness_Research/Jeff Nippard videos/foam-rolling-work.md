@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Does Foam Rolling Work? (Better Recovery and Less Soreness?)" ([watch](https://www.youtube.com/watch?v=9fvaZ_U6o3Y)) · 2018-02-20 · 11 min
 **Topic:** Recovery
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#does-foam-rolling-actually-aid-recovery)
 
 ## Bottom line
 - Foam rolling is self-massage (a form of manual therapy). The recovery claim is *not* busted: several trials show reduced soreness and modestly better range of motion.

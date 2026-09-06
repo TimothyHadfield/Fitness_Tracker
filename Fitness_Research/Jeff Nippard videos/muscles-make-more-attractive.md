@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Do Muscles Really Make You More Attractive?" ([watch](https://www.youtube.com/watch?v=EWC8_vp-bWI)) · 2024-08-04 · 15 min
 **Topic:** Myths & Evidence
+**Figures:** 6 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#do-muscles-make-you-more-attractive-survey-data-and-the-research)
 
 ## Bottom line
 - More muscle and more strength both correlate with more romantic partners, and with a roughly **20% higher likelihood of being in a relationship**. Bench press was the single strongest correlate of dating outcomes in the survey.

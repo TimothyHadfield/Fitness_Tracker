@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Smartest Push Pull Legs Routine (Fully Explained)" ([watch](https://www.youtube.com/watch?v=qVek72z3F1U)) · 2021-06-14 · 19 min
 **Topic:** Programming
+**Figures:** 8 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#the-6-day-pushpulllegs-routine-full-week-exercise-by-exercise)
 
 ## Bottom line
 - Six days: quad-focused legs, chest/tri push, lat-focused pull, posterior-chain legs, delt-focused push, mid-back pull. Each muscle hit twice weekly.

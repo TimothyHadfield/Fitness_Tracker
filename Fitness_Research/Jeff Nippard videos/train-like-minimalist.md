@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Train Like A Minimalist (More Gains In Less Time)" ([watch](https://www.youtube.com/watch?v=xc4OtzAnVMI)) · 2022-10-16 · 13 min
 **Topic:** Programming
+**Figures:** 14 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#minimalist-training-the-least-you-can-do-and-still-grow)
 
 ## Bottom line
 - **1–4 sets per muscle per week returns ~64% of the gains** from 10+ sets. **5–9 sets returns ~84%.** Steep early returns, long flat tail.

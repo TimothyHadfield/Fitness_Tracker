@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "OVERRATED: The Worst Fitness Advice Ever" ([watch](https://www.youtube.com/watch?v=EEOjsbQ5wYE)) · 2023-12-16 · 14 min
 **Topic:** Myths & Evidence
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#19-fitness-topics-rated-overrated-or-underrated-with-dr-mike-israetel)
 
 ## Bottom line
 - Cheat reps, bro splits, natural test boosters, cold showers, NoFap, "locking out is dangerous" and Natty-or-Not content are all **overrated**.

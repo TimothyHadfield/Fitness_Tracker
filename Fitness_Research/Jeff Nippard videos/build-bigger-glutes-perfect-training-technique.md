@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Build Bigger Glutes With Perfect Training Technique ft. Stephanie Buttermore (Glute Kickback)" ([watch](https://www.youtube.com/watch?v=dJa_Nf4zdik)) · 2019-01-22 · 7 min
 **Topic:** Technique
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#cable-glute-kickback-technique-for-isolated-hip-extension)
 
 ## Bottom line
 - The kickback is near-pure hip extension, so it isolates the glutes better than compounds but has a low ceiling for loading.

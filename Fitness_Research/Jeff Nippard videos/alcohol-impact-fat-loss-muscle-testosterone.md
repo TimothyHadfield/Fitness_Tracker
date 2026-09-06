@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How Does ALCOHOL Impact Fat Loss, Muscle & Testosterone? (What The Science Says)" ([watch](https://www.youtube.com/watch?v=Vwn8E4juTts)) · 2018-05-28 · 9 min
 **Topic:** Nutrition
+**Figures:** 14 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#alcohols-effect-on-fat-loss-muscle-growth-and-testosterone)
 
 ## Bottom line
 - Alcohol doesn't break energy balance. In a calorie deficit you will lose fat while drinking; in a surplus you won't. The real question is what it does to *body composition*.

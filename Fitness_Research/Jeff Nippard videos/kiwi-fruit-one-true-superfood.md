@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "KIWI FRUIT: THE ONE TRUE SUPERFOOD | Nutritional Science Explained" ([watch](https://www.youtube.com/watch?v=bMD1he9CMWg)) · 2017-09-09 · 6 min
 **Topic:** Nutrition
+**Figures:** 2 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#kiwi-fruit-and-the-superfood-concept)
 
 ## Bottom line
 - "Superfood" is a marketing term, not a nutritional category — the video is explicitly a joke at the expense of superfood hype, though the nutrition data presented is accurate.

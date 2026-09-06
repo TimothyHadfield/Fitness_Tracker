@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "Is Being Fat A Choice? (My Response)" ([watch](https://www.youtube.com/watch?v=keBZfGAmq2Q)) · 2022-06-14 · 11 min
 **Topic:** Myths & Evidence
+**Figures:** 1 image stored from 1 of the papers below, 3 more listed — [see FIGURES.md](FIGURES.md#is-obesity-a-choice-genetics-environment-and-the-limits-of-willpower)
 
 ## Bottom line
 - Obesity is not a simple choice. Genetics and environment shift how hard it is to avoid a calorie surplus, and those differences are large — hundreds of calories per day between individuals.

@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How to Build Muscle and Lose Fat at the Same Time | Body Recomposition Science Explained" ([watch](https://www.youtube.com/watch?v=wkBtHOBmpb0)) · 2017-09-26 · 6 min
 **Topic:** Programming
+**Figures:** 4 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#body-recomposition-building-muscle-while-losing-fat)
 
 ## Bottom line
 - Recomposition is real and well documented — dozens of studies show it — but meaningful recomp reliably happens in only four groups: beginners, detrained lifters, the overweight/obese, and steroid users.

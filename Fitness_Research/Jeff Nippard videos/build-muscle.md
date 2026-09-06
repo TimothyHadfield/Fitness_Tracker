@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "How To Build Muscle (Explained In 5 Levels)" ([watch](https://www.youtube.com/watch?v=lu_BObG6dj8)) · 2021-07-22 · 21 min
 **Topic:** Physiology
+**Figures:** 11 images stored from 2 of the papers below — [see FIGURES.md](FIGURES.md#how-muscle-growth-works-from-basics-to-molecular-signalling-5-levels)
 
 ## Bottom line
 - Lift weights, eat protein, and progressively overload. **1.6–2.2 g protein/kg/day** (~0.7–1 g/lb), or **1 g per cm of height** if you're very high in body fat.

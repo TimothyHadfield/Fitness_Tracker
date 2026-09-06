@@ -2,6 +2,7 @@
 
 **Source:** Jeff Nippard, "The Most Effective Science-Based PUSH Workout | Part 2 (Science Applied Ep. 4)" ([watch](https://www.youtube.com/watch?v=sCQI1EUE7bo)) · 2018-06-28 · 10 min
 **Topic:** Programming
+**Figures:** 3 images stored from 1 of the papers below — [see FIGURES.md](FIGURES.md#science-based-push-workout-2-shoulder-led-chest-delts-and-triceps)
 
 ## Bottom line
 - This is the *second* push day of a push/pull/legs week, deliberately different from the first: vertical pressing leads instead of horizontal, reps are higher, tempo slower.
