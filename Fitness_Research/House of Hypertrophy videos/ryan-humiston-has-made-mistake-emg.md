@@ -13,7 +13,7 @@
 ## The four failures
 **1. Wrong quantity.** Activation means the force-generating machinery inside fibres is in motion. Electrodes on the skin can't record that; they record the electrical signal that precedes it.
 
-**2. Unreliable even at that.** A 2017 Italian study electrically stimulated the tibialis anterior at constant intensity at three foot angles. Actual excitation was identical by design, but EMG amplitude differed across angles. Recruitment strategy compounds this: a muscle recruiting deep-to-superficial produces a different surface signal than one recruiting superficial-to-deep at the same excitation. (He notes in passing the biceps is estimated to hold roughly **172,000–418,000 fibres**.) So comparing two exercises that train a muscle at even subtly different angles can produce EMG differences that mean nothing.
+**2. Unreliable even at that.** A 2017 Italian study electrically stimulated the tibialis anterior at constant intensity at three foot angles. Excitation was identical by design, but EMG amplitude differed across angles. Recruitment strategy compounds this: a muscle recruiting deep-to-superficial gives a different surface signal than one recruiting superficial-to-deep at the same excitation. (The biceps is estimated to hold roughly **172,000–418,000 fibres**.) So two exercises training a muscle at even subtly different angles can produce EMG differences that mean nothing.
 
 **3. Load confound.** Heavier loading raises EMG whether or not it raises growth. His worked example: Humiston found dips produced higher triceps EMG than close-grip push-ups — plausibly just because dips are heavier. Run it long-term with both to failure and triceps gains would likely be similar, as heavy-vs-light comparisons generally are.
 

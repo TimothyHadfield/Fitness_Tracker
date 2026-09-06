@@ -15,43 +15,43 @@
 [00:00] The method appears to originate from a **2005 French fitness book**. [01:01] **Stragier et al.** recruited **43 previously untrained men** who trained a machine biceps exercise **twice per week for 8 weeks**.
 
 - **Normal group:** **8 sets of 6 reps** at 70% 1RM, **2.5 min rest** between sets.
-- **3/7 group:** the 3/7 sequence at 70% 1RM, performed **twice per session**, with **2.5 min rest between the two bouts**.
+- **3/7 group:** the 3/7 sequence at 70% 1RM, performed **twice per session**, **2.5 min rest between bouts**.
 
-Both groups received assistance if they couldn't complete the prescription, and **increased load by 2.5–5%** after completing it two sessions running.
+Both received assistance if they couldn't complete the prescription, and **increased load 2.5–5%** after completing it two sessions running.
 
 **Results:** greater **1RM increases** and greater **biceps long-head thickness** (averaged across upper, middle and lower regions) for the 3/7 group.
 
 ## Why the strength result proves less than it looks
-[02:02] He immediately discounts the strength finding. The comparison was against 8×6 at 70% 1RM — not against heavy training. He cites **Schoenfeld et al.**, where sets of **2–4 reps at ~90% 1RM** produced greater bench and squat 1RM gains than **8–12 reps at ~75% 1RM**. Against a genuinely heavy protocol he thinks the 3/7 method would very likely lose on strength.
+[02:02] He immediately discounts the strength finding. The comparison was against 8×6 at 70% 1RM, not against heavy training. He cites **Schoenfeld et al.**, where **2–4 reps at ~90% 1RM** produced greater bench and squat 1RM gains than **8–12 reps at ~75% 1RM**. Against a genuinely heavy protocol he thinks 3/7 would very likely lose on strength.
 
 ## Interrogating the control group
-[03:03] The obvious objection is that 8 sets of 6 at 70% 1RM is a strange protocol nobody would use for hypertrophy — which would make the comparison unfair. This was his own first reaction, and he then argues himself out of it.
+[03:03] The obvious objection: 8 sets of 6 at 70% 1RM is a strange protocol nobody would use for hypertrophy, making the comparison unfair. That was his own first reaction, and he argues himself out of it.
 
-[04:04] At 70% 1RM most people can manage about **12 reps to failure**. Stopping at 6 leaves the first set roughly **6 reps in reserve**. But cumulative fatigue moves each successive set closer to failure. Assuming (crudely, and he says so) one rep closer per set, **5 of the 8 sets land within 3 reps of failure**.
+[04:04] At 70% 1RM most people manage about **12 reps to failure**, so stopping at 6 leaves the first set roughly **6 reps in reserve**. Cumulative fatigue moves each successive set closer. Assuming (crudely, and he says so) one rep closer per set, **5 of the 8 sets land within 3 reps of failure**.
 
-[04:35] Since **training to failure is not required for hypertrophy** — several papers show 3–1 RIR matches training to failure — that protocol is hard to call meaningfully suboptimal. He adds that some evidence suggests even **5 reps from failure** may suffice, which would make more of those sets adequate still. Conclusion: the comparison was fair enough that the 3/7 advantage is probably real within this study.
+[04:35] Since **training to failure is not required for hypertrophy** — several papers show 3–1 RIR matches failure — that protocol is hard to call meaningfully suboptimal. He adds that some evidence suggests even **5 reps from failure** may suffice, which would qualify more of those sets still. Conclusion: the comparison was fair enough that the 3/7 advantage is probably real within this study.
 
 ## No mechanism he believes
-[05:38] The authors attributed the advantage to greater **metabolic stress** — accumulation of metabolites such as lactate. He is openly sceptical, on the grounds that the role of metabolic stress in growth is **far from established** and there are numerous cases where more metabolic stress did not yield more hypertrophy. His honest position: **he doesn't know why the 3/7 method would build more muscle.**
+[05:38] The authors attributed the advantage to greater **metabolic stress** — accumulation of metabolites such as lactate. He is openly sceptical: the role of metabolic stress in growth is **far from established**, and there are numerous cases where more metabolic stress did not produce more hypertrophy. His honest position: **he doesn't know why 3/7 would build more muscle.**
 
 ## Limitations
-[06:09] **A single study.** No other research he is aware of has examined the 3/7 method's hypertrophy effects. **Previously untrained subjects**, so transfer to trained lifters is unknown.
+[06:09] **A single study**, with no other research he is aware of on the method's hypertrophy effects, and **previously untrained subjects**, so transfer to trained lifters is unknown.
 
 ## Does rest-pause research help?
 [06:40] The nearest relative is **rest-pause training** — reps to failure, 15–20 s rest, more reps to failure with the same load, repeated. He finds only two studies.
 
-**Enes et al. (2021).** 19 men, ≥2 years training experience, back squat/leg press/leg extension, 2×/week for 8 weeks. Normal group: **4×12 at 70% 1RM, 2 min rest**. Rest-pause group: **10 reps at 75% 1RM, 20 s rest, 6 more reps**, three such sets, 120 s between. Both increased load 5% at week 5. **Lateral thigh thickness gains (at 30%, 50% and 70% of thigh bone length) were statistically similar.** Limitation he raises: the rest-pause group **did not go to failure** and performed only **one extra rep bout per set**.
+**Enes et al. (2021).** 19 men, ≥2 years experience, squat/leg press/leg extension, 2×/week for 8 weeks. Normal: **4×12 at 70% 1RM, 2 min rest**. Rest-pause: **10 reps at 75% 1RM, 20 s rest, 6 more reps**, three such sets. Both raised load 5% at week 5. **Lateral thigh thickness gains statistically similar.** His caveat: the rest-pause group **did not go to failure** and did only **one extra rep bout per set**.
 
-**Prestes et al. (2019).** 18 subjects, ≥1 year experience, a range of exercises, **4×/week for 6 weeks**. Normal group: **3×6 at 80% 1RM, 2–3 min rest**. Rest-pause group: reps to failure at 80% 1RM, 20 s rest, more reps to failure, until reaching **18 total reps**. **Chest and arm thickness similar; quadriceps thickness greater for rest-pause.** But he flags a serious confound: the normal group **applied no progressive overload**. Starting at 3–1 RIR, they got stronger while the load stayed fixed, so their effective proximity to failure drifted further away as the study ran. The rest-pause group, always going to failure, got progressive overload automatically. He says this study should be read with caution.
+**Prestes et al. (2019).** 18 subjects, ≥1 year experience, **4×/week for 6 weeks**. Normal: **3×6 at 80% 1RM, 2–3 min rest**. Rest-pause: reps to failure at 80% 1RM, 20 s rest, more reps to failure, until **18 total reps**. **Chest and arm thickness similar; quadriceps thickness greater for rest-pause.** But he flags a serious confound: the normal group **applied no progressive overload**. Starting at 3–1 RIR, they got stronger while the load stayed fixed, so their proximity to failure drifted further away as the study ran, while the always-to-failure rest-pause group got progressive overload automatically. Read with caution.
 
-Verdict: the rest-pause literature is too thin and too limited to inform the 3/7 question.
+Verdict: the rest-pause literature is too thin to inform the 3/7 question.
 
 ## Practical read
-[10:13] A single study suggests the 3/7 method builds more muscle; a single study cannot make us confident. There is probably no real downside to experimenting with it. [10:44] The concrete benefit is **time**: by his own calculation, excluding warm-ups, the 3/7 group trained about **5–6 minutes per session** against **19–20 minutes** for the normal group — a comparable or better result in roughly a quarter of the time.
+[10:13] A single study suggests 3/7 builds more muscle; a single study cannot make us confident. There is probably no real downside to experimenting with it. [10:44] The concrete benefit is **time**: by his own calculation, excluding warm-ups, the 3/7 group trained about **5–6 minutes per session** against **19–20 minutes** for the control — a comparable or better result in roughly a quarter of the time.
 
-**Where he is rigorous:** he raises the strongest objection to the study (a weak control), then does the RIR arithmetic that defeats his own objection rather than using it to dismiss the finding; he rejects the authors' proposed mechanism rather than repeating it; and he identifies the progressive-overload confound in Prestes that most summaries of that study miss.
+**Where he is rigorous:** he raises the strongest objection to the study (a weak control), then does the RIR arithmetic that defeats his own objection rather than using it to dismiss the finding; rejects the authors' proposed mechanism instead of repeating it; and identifies the progressive-overload confound in Prestes that most summaries miss.
 
-**Where the claim outruns the evidence:** the entire positive case is **n = 43 untrained men, one muscle, one machine exercise, 8 weeks**, and the time-efficiency figure is his own back-of-envelope calculation from the protocol rather than reported session durations.
+**Where the claim outruns the evidence:** the positive case is **n = 43 untrained men, one muscle, one machine exercise, 8 weeks**, and the time-efficiency figure is his own back-of-envelope calculation from the protocol rather than reported session durations.
 
 ## References
 

@@ -46,10 +46,10 @@ Both put the shoulder in extension. Some argue the cable version is better becau
 - **Staniszewski (2020):** variable vs normal resistance machine preacher curls — similar arm circumference gains.
 - **O'Hagan (1995):** variable vs normal resistance preacher machine curls — similar biceps cross-sectional area gains.
 
-Both used preacher curls, so it isn't guaranteed to generalise to curls with the shoulder extended. His conclusion: regardless of resistance profile, taking reps **to or near failure** appears to stimulate the biceps sufficiently. **Choose whichever you prefer.**
+Both used preacher curls, so this isn't guaranteed to generalise. His conclusion: regardless of resistance profile, taking reps **to or near failure** appears to stimulate the biceps sufficiently. **Choose whichever you prefer.**
 
 ## Overreach flag
-The title claim outruns the evidence and he knows it — he frames it explicitly as something the three lines are "sufficient for us to hypothesise", not to conclude. Still, **no study has compared incline or face-away curls against any other curl variation for growth**, so the practical recommendation is extrapolation from quadriceps isometrics, preacher-curl partials, and a triceps study. Worth holding loosely.
+The title claim outruns the evidence and he knows it — he frames it as something the three lines are "sufficient for us to hypothesise", not to conclude. Still, **no study has compared incline or face-away curls against any other curl variation for growth**, so the recommendation is extrapolation from quadriceps isometrics, preacher-curl partials, and a triceps study.
 
 ## References
 

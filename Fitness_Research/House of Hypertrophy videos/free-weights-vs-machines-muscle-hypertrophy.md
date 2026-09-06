@@ -24,7 +24,7 @@ Measures: ultrasound thickness of quadriceps and biceps; 1RM barbell bench and S
 
 **Strength:** barbell bench 1RM improved similarly in both groups. Smith bench 1RM favoured the machine group. Predicted barbell squat 1RM was statistically similar, though percentage-wise clearly larger in the free-weight group. Predicted Smith squat 1RM was similar.
 
-He reads this against specificity, which predicts each group should win on its own equipment. That held for the Smith bench and (numerically) the barbell squat, and did not hold for the barbell bench or Smith squat. His caveat: 8 weeks is short, and over the long run practising the specific lift will still be necessary to maximise it.
+He reads this against specificity, which predicts each group should win on its own equipment. That held for the Smith bench and (numerically) the barbell squat, not for the barbell bench or Smith squat. His caveat: 8 weeks is short, and long term you still have to practise the lift you want to maximise.
 
 ## Why the mechanisms predict a tie
 Mechanical tension is the best-characterised driver of growth, and it has two components.

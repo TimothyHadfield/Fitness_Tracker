@@ -19,11 +19,9 @@ He lists the limitations himself: subjects were **previously untrained**, averag
 ## Why capillaries might matter
 Capillaries deliver oxygen, nutrients and hormones to fibres. Supporting data: **Nederveen (2018)** links capillarisation to **satellite cell activation and expansion** in younger people; **Snijders (2017)** in older men and **Moro (2019)** in older adults both found **lower capillary density accompanied lower fibre hypertrophy**.
 
-Greg Nuckols' framing, which he cites: as fibres grow, everything inside gets further from the supply. To avoid an intracellular energy crisis a fibre must either stop growing or add capillaries.
+Greg Nuckols' framing, which he cites: as fibres grow, everything inside gets further from the supply, so a fibre must either stop growing or add capillaries to avoid an intracellular energy crisis. Lifting is also more aerobic than it looks — a 200 m sprint still draws **29% of its energy aerobically**, and between-set recovery, later-set performance and between-session recovery all lean on that system.
 
-Lifting is also more aerobic than it looks — a 200 m sprint still draws **29% of its energy aerobically**. Between-set recovery, later-set performance and between-session recovery all lean on the aerobic system.
-
-**Mitochondria** may play a parallel role: Roberts (2018) found the best hypertrophy responders had **greater mitochondrial volume** than low responders, speculating that building muscle protein is energetically expensive. He is careful to say he is not arguing for maximising endurance adaptations — only that enhancing them somewhat may help.
+**Mitochondria** may play a parallel role: Roberts (2018) found the best hypertrophy responders had **greater mitochondrial volume** than low responders. He is careful to say he is not arguing for maximising endurance adaptations — only that enhancing them somewhat may help.
 
 ## What to actually do
 1. **Train cardio concurrently.** The literature finds no compromised hypertrophy, and **some studies find better** hypertrophy — several with **slow-twitch fibre growth specifically enhanced**, fibres that are typically harder to grow. Excludes the very highly trained or those already running extreme volumes.
