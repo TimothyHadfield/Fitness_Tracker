@@ -83,11 +83,15 @@ HEADING = re.compile(
 # site's own numbering rather than anything we assigned.
 ENTRY = re.compile(r"(?m)^[ \t]*(\d{1,3})[.)][ \t]+(?=\S)")
 
-URL = re.compile(r"https?://[^\s)>\]\"'*]+")
-DOI_IN_TEXT = re.compile(r"\b(?:doi:\s*|https?://(?:dx\.)?doi\.org/)(10\.\d{4,9}/[^\s\"'<>)*\]]+)", re.I)
+# Parentheses are allowed inside a URL and trimmed back off later only where
+# they do not balance. Excluding ")" outright truncated every Lancet and
+# Elsevier DOI in this corpus - 10.1016/S0140-6736(18)30480-X came out as
+# ".../S0140-6736(18" - which then failed to resolve for no visible reason.
+URL = re.compile(r"https?://[^\s>\]\"'*<]+")
+DOI_IN_TEXT = re.compile(r"\b(?:doi:\s*|https?://(?:dx\.)?doi\.org/)(10\.\d{4,9}/[^\s\"'<>*\]]+)", re.I)
 PMID_IN_TEXT = re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d+)|ncbi\.nlm\.nih\.gov/pubmed/(\d+)")
 
-MD_LINK = re.compile(r"\[([^\]]*)\]\((https?://[^)\s]+)\)")
+MD_LINK = re.compile(r"\[([^\]]*)\]\((https?://(?:[^()\s]|\([^()\s]*\))+)\)")
 
 SCIENTIFIC = re.compile(
     r"pubmed|ncbi\.nlm\.nih\.gov|doi\.org|/pmc/|pmc\.ncbi|researchgate|"
@@ -122,7 +126,15 @@ TRAILING = re.compile(r"[.,;:*]+$")
 
 def clean_url(u):
     u = TRAILING.sub("", u.strip())
-    while u and u[-1] in ")]}\u201d\u2019":
+    while u and u[-1] in "]}\u201d\u2019":
+        u = u[:-1]
+    # Trim a trailing ")" only while it does not close a "(" inside the URL. A
+    # markdown "](url)" closer and a DOI's own "(18)" look identical to a
+    # regex; counting brackets is the only thing that separates them.
+    while u.endswith(")") and u.count("(") < u.count(")"):
+        u = u[:-1]
+    # A "(" left dangling at the end is a truncation, not part of the address.
+    while u.endswith("("):
         u = u[:-1]
     return u
 

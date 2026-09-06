@@ -19,7 +19,7 @@ The clinical payoff is in the red flags, not the exercise selection. Radicular s
 
 ## The imaging case, claim by claim
 
-This section is where the verified marker mapping earns its keep, because the article's chain of reasoning is built one citation at a time.
+The chain of reasoning is built one citation at a time, which is where the verified marker mapping earns its keep.
 
 - The premise that **pain is not a direct readout of tissue damage** is attached to Moseley 2007 and Cohen 2018 [2,3] — both **conceptual/definitional papers**, not empirical studies. This is the article's foundation and its softest support.
 - **"Non-specific back pain" applies to the vast majority of general back pain** without clear radicular involvement → the Lancet Low Back Pain Series (Hartvigsen 2018) [4].
@@ -30,9 +30,7 @@ This section is where the verified marker mapping earns its keep, because the ar
 - **Herniation size does not consistently correlate with radicular symptoms** → Karppinen 2001 [10], cross-sectional MRI in sciatica patients.
 - **You can get symptom relief without the scan improving** → Benson 2010 [11], a 7-year follow-up of massive prolapsed discs managed conservatively.
 
-The conclusion drawn is narrow and, to their credit, hedged: unless surgery is on the table or a red flag is present, scans "may not always be necessary" because they rarely change non-surgical management, cost money, and can create fear.
-
-**One important concession they make:** in true radiculopathy, "there's a good chance there will be something abnormal caught on a scan that explains the loss of nerve function." That is the article refusing to over-apply its own thesis, and it is the right call.
+The conclusion drawn is narrow and, to their credit, hedged: unless surgery is on the table or a red flag is present, scans "may not always be necessary" because they rarely change non-surgical management, cost money, and can create fear. They also concede the limit of their own thesis — in true radiculopathy, "there's a good chance there will be something abnormal caught on a scan that explains the loss of nerve function."
 
 ## The uncited prognosis numbers
 
@@ -62,11 +60,11 @@ The stated design logic: symptom-modification work is the "appetizer and dessert
 
 ## Overreach, and what they sell
 
-**Overreach:** the argument that psychological factors matter is repeatedly asserted more strongly than [5] and [6] can bear — a cross-sectional survey and a commentary support "beliefs are associated with the pain experience", not "our feelings about our pain have a profound effect on how much pain we are in", which is how the article eventually phrases it. Likewise the passage claiming that accumulating training successes "helps us to hurt less and feel safer with movement" is a mechanism story with no citation attached. The imaging argument is much better supported than the psychological one, but they are presented with equal confidence.
+**Overreach:** the psychological argument is asserted more strongly than [5] and [6] can bear — a cross-sectional survey and a commentary support "beliefs are associated with the pain experience", not "our feelings about our pain have a profound effect on how much pain we are in", which is how the article eventually phrases it. The claim that accumulating training successes "helps us to hurt less and feel safer with movement" is a mechanism story with no citation. The imaging argument is far better supported than the psychological one, but both are presented with equal confidence.
 
-**A citation problem worth flagging:** reference [9] as printed is Zhong et al. 2017 (*Pain Physician*, PMID 28072796). The library's automated resolver matched it to a different, later meta-analysis on the same topic (Zou 2024). The article's own text is authoritative; the resolved record is wrong. It is listed below as the article gave it.
+**A citation problem:** reference [9] as printed is Zhong et al. 2017 (*Pain Physician*, PMID 28072796); the library's automated resolver matched it to a different, later meta-analysis (Zou 2024). The article's own text is authoritative and is what is listed below.
 
-**Commercial interest:** the article closes by recommending Barbell Medicine's **low back pain rehab template** (a paid product) and their **pain and rehab consultations/coaching** (a paid service). The clinical advice is mainstream and matches guideline-level recommendations for back pain, so this is not evidence bent to fit a product — but the recommendation does route to their store.
+**Commercial interest:** the article closes by recommending Barbell Medicine's **low back pain rehab template** (paid product) and their **pain and rehab consultations/coaching** (paid service). The clinical advice is mainstream and matches guideline-level recommendations, so this is not evidence bent to fit a product — but the recommendation does route to their store.
 
 ## References
 

@@ -21,6 +21,8 @@ The other two supply the "general health affects local pain" claim: **Hsu & Sheu
 
 **Everything else in 6,710 words is uncited.** "Most cases improve without surgery, injections, or months of inactivity" — no source. The prognosis claims, the screening list, the entire rehab framework, all three case studies: clinical reasoning, not referenced evidence.
 
+This is worth holding against the same authors' sciatica guide, which runs 15 numbered references over a comparable length and builds its imaging argument citation by citation. The shoulder guide makes structurally identical claims — imaging findings are common in the painless, load management beats rest, the label rarely changes the plan — on roughly a twentieth of the evidential base. The claims may well transfer from spine to shoulder; the article does not argue that they do, it assumes it.
+
 ## Screening — when to stop self-managing
 
 The article gives a red-flag list before any rehab advice, which is the correct clinical order. See a professional for: severe pain not improving over a few weeks; significant loss of strength or mobility; pain with numbness, tingling or instability; pain caused by a fall, impact or sudden force; and — the one people miss — **chest pain, shortness of breath, dizziness, or pain radiating down the left arm**, which is a cardiac screen, not a shoulder screen. Everything downstream is explicitly conditional on none of these being present.

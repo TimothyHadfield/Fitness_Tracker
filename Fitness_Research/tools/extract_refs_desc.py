@@ -37,7 +37,11 @@ INLINE = re.compile(
     r"^[^\S\n]*[*_]{0,2}(?:study|studies|reference|ref|source|paper)[*_]{0,2}[^\S\n]*:"
     r"[^\S\n]*(https?://\S+)", re.I | re.M)
 
-URL = re.compile(r"https?://[^\s)>\]\"']+")
+# Parentheses are kept and trimmed back off later only where they do not
+# balance. Excluding ")" outright truncates Lancet and Elsevier DOIs -
+# 10.1016/S0140-6736(18)30480-X becomes ".../S0140-6736(18" - and the loss is
+# invisible, because the shortened URL simply fails to resolve.
+URL = re.compile(r"https?://[^\s>\]\"'<]+")
 
 # "Kraemer et al. - https://..." with no heading anywhere above it. Some
 # descriptions drop the reference list straight under the timestamps and never
@@ -90,7 +94,12 @@ TRAILING_PUNCT = re.compile(r"[.,;:]+$")
 def clean_url(u):
     u = TRAILING_PUNCT.sub("", u.strip())
     # yt-dlp descriptions sometimes wrap; strip a stray closing bracket.
-    while u and u[-1] in ")]}”’":
+    while u and u[-1] in "]}”’":
+        u = u[:-1]
+    # Trim a trailing ")" only while it does not close a "(" inside the URL.
+    while u.endswith(")") and u.count("(") < u.count(")"):
+        u = u[:-1]
+    while u.endswith("("):
         u = u[:-1]
     return u
 

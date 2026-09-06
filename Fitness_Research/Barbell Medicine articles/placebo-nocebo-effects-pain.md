@@ -13,7 +13,7 @@
 
 ## The evidence that placebo effects are real
 
-**Sham surgery.** The article's flagship is FIDELITY [5]: patients with non-traumatic degenerative meniscus tears randomised to a real arthroscopic procedure or to a sham — anaesthetised, scoped, given a scar, told they had been treated. No significant between-group difference in pain or function at 2 years; both groups improved.
+**Sham surgery.** The flagship is FIDELITY [5]: non-traumatic degenerative meniscus tears randomised to a real arthroscopic procedure or a sham — anaesthetised, scoped, given a scar, told they had been treated. No significant between-group difference in pain or function at 2 years; both groups improved.
 
 **One correction the note should carry:** the article repeatedly calls the real arm "meniscus repair surgery". It was **arthroscopic partial meniscectomy** — removal of torn tissue, not repair. Different operation, different rationale, and the distinction matters to anyone reading it against their own knee. The counts given (144 total, 70 vs 74) should be checked against the published trial before being quoted.
 
@@ -49,24 +49,22 @@ Effect size is then grouped into three families [15,21]:
 
 ## The part worth keeping: the ethics checklist
 
-If a treatment has a real physiological benefit, placebo is "the cherry on top". If it has no known benefit beyond placebo, they propose four conditions for pursuing it anyway — this is their recommendation, not a finding, and it is the most portable thing in the article:
+If a treatment has a real physiological benefit, placebo is "the cherry on top". If it has no known benefit beyond placebo, they propose four conditions for pursuing it anyway — recommendation, not finding, and the most portable thing in the article:
 
 1. Financial, time and effort cost is within reason for the person.
 2. No adverse effects.
 3. It is not displacing more effective interventions.
 4. The patient is properly informed of the true effects.
 
-The mirror case: expensive, risky, displacing better care, or **packaged with a harmful narrative** — their worked example is months of paid spinal manipulation instead of progressive exercise, sold with the story that your spine is out of alignment and needs a specialist to fix it. Their argument is that the short-term placebo relief is outweighed by the long-lasting nocebo of being told you are broken. That is a real and specific mechanism claim, and it is uncited.
-
-**And the positive instruction:** build rapport, set realistic positive expectations, avoid negative language not supported by evidence, and stop framing normal movement as dangerous.
+The mirror case is expensive, risky, displacing better care, or **packaged with a harmful narrative** — their example is months of paid spinal manipulation instead of progressive exercise, sold with the story that your spine is out of alignment and needs a specialist. Their argument, uncited, is that the short-term placebo relief is outweighed by the long-lasting nocebo of being told you are broken. The positive instruction: build rapport, set realistic positive expectations, avoid negative language not supported by evidence, and stop framing normal movement as dangerous.
 
 ## Overreach, and what they sell
 
-- **"All treatments for pain are mediated by placebo effects"** is asserted twice, once as a section heading, with no citation. It is the article's thesis and its least defended sentence.
+- **"All treatments for pain are mediated by placebo effects"** is asserted twice, once as a section heading, with no citation. The article's thesis and its least defended sentence.
 - **Kunkel 2025 is generalised from healthy volunteers to patients** without a hedge.
-- The **social learning** finding [8] is garbled: the article ends a paragraph with "These results were if the learning took place in a face-to-face interaction", which appears to be a mangled report of a moderator effect and is not readable as written.
-- **The reference list duplicates itself** — [6] and [20] are the same Ashar 2024 paper, and [18] and [21] are the same Knezevic 2025 review. The marker mapping still verified, so claim-level attribution here is sound, but the numbering is sloppier than the citation density suggests. Two further references [10,13] are **StatPearls chapters** — tertiary teaching material, not research.
-- **Commercial interest:** the article ends with three calls to action pointing at Barbell Medicine coaching and training programmes. There is a self-serving structure to the argument worth naming plainly — it explains why passive treatments people pay other providers for work largely through expectation, and then routes the reader to a paid product of its own. The underlying pain-science position is mainstream, and the article's own checklist would apply to its programmes as readily as to anyone else's; but the reader should see the shape of it.
+- The **social learning** finding [8] is garbled: a paragraph ends "These results were if the learning took place in a face-to-face interaction", apparently a mangled moderator effect, unreadable as written.
+- **The reference list duplicates itself** — [6] and [20] are the same Ashar 2024 paper, [18] and [21] the same Knezevic 2025 review. The mapping still verified, so claim-level attribution is sound, but the numbering is sloppier than the citation density suggests. Two further references [10,13] are **StatPearls chapters** — tertiary teaching material, not research.
+- **Commercial interest:** the article ends with three calls to action pointing at Barbell Medicine coaching and training programmes. The structure is worth naming plainly — it explains why passive treatments people pay *other* providers for work largely through expectation, then routes the reader to a paid product of its own. The underlying position is mainstream and their own checklist would apply to their programmes too, but the reader should see the shape of it.
 
 ## References
 

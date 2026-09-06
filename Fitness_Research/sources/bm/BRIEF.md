@@ -57,10 +57,19 @@ reference 135, and a note built on that would attach real claims to the wrong pa
 - **`verified: true`** — use the `mapping` field freely. This is the good case, and it covers
   most articles.
 - **`verified: false`** — **do not use the numbered mapping.** Treat the reference list as a
-  reading list for the article as a whole, exactly as you would for a YouTube source, and say in
-  the References section that the article's own numbering does not line up with its list so
-  claim-level attribution was not possible. Thirteen articles are in this state, mostly the
-  "best X exercises" batch whose lists genuinely duplicate and skip entries.
+  reading list for the article as a whole, exactly as you would for a YouTube source.
+
+  **But check *why* it failed before you describe it, because there are two different cases and
+  saying the wrong one is an error in the note.** Look at the `mapping` field:
+  - `mapping: "numbered"` with `verified: false` — the article *does* use numbered markers and
+    they do not line up with its list. Thirteen articles are in this state, mostly the "best X
+    exercises" batch whose lists duplicate and skip entries. Say the numbering does not line up.
+  - `mapping: "inline-links"` or `"lumped"`, with zero markers — the article never used numbered
+    citations at all. **Do not say the numbering is broken; there is no numbering.** Say the
+    article cites by inline link or by a bottom list, so claim-level attribution was not
+    available.
+
+  In both cases you may still name a paper where the article names it in the sentence itself.
 
 Never repair a broken mapping by guessing.
 
