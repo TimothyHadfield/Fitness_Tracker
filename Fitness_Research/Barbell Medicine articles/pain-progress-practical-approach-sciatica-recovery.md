@@ -25,8 +25,8 @@ This section is where the verified marker mapping earns its keep, because the ar
 - **"Non-specific back pain" applies to the vast majority of general back pain** without clear radicular involvement → the Lancet Low Back Pain Series (Hartvigsen 2018) [4].
 - **Expectations, feelings and beliefs affect the pain experience and its persistence** → Setchell 2017 [5], a **cross-sectional survey** of patients' own explanations for their back pain. Cross-sectional: it cannot show that beliefs cause persistence.
 - **Pain-related fear drives a cycle of avoidance → disability → more pain** → Bunzli 2017 [6], a clinical commentary on the fear-avoidance model. The article reproduces its figure. This is a *model*, presented as an explanation.
-- **Herniations are common in people with no symptoms** → Brinjikji 2015 [7], a systematic review of imaging in asymptomatic populations. The article does not quote its numbers; the review's headline finding is that disc degeneration prevalence rises from roughly a third of asymptomatic 20-year-olds to nearly all asymptomatic 80-year-olds.
-- **Worse herniations are more likely to resorb** → Chiu 2015 and Zhong 2017 [8,9]. Both report spontaneous regression probability rising with the severity of the herniation — sequestrated discs resorb most often, bulges least. This is the article's most counterintuitive and most defensible claim.
+- **Herniations are common in people with no symptoms** → Brinjikji 2015 [7], a systematic review of imaging in asymptomatic populations; the article quotes none of its numbers.
+- **Worse herniations are more likely to resorb** → Chiu 2015 and Zhong 2017 [8,9]. Both report spontaneous regression probability rising with the severity of the herniation — sequestrated discs resorb most often, bulges least. The article's most counterintuitive and most defensible claim.
 - **Herniation size does not consistently correlate with radicular symptoms** → Karppinen 2001 [10], cross-sectional MRI in sciatica patients.
 - **You can get symptom relief without the scan improving** → Benson 2010 [11], a 7-year follow-up of massive prolapsed discs managed conservatively.
 
@@ -48,19 +48,17 @@ These are broadly consistent with the sciatica prognosis literature, but as writ
 
 **Symptom modification exercises** — unweighted or light, limited range, isolated — are cited to Lehman 2018 [14], itself a **clinical commentary** rather than a trial. Their examples: trunk work (bird dogs, planks, sit-ups, 2–4 × 10–20), nerve glides (10 × 5-second holds), repeated motions (cobra push-ups, Jefferson curls, cat-cow), and general movement (three 20-minute walks a day, stretching, yoga).
 
-Then they undercut the category's usual rationale. Core stability has **no clear definition**, and there is no good evidence that trunk-specific exercise reduces injury risk or improves performance more than other exercise [15] — Wirth 2017, a critical analysis of guidelines, not a trial. Their honest summary of the whole category: mechanisms "are not entirely clear, and some of them may not work in the ways commonly thought", and these exercises are explicitly **"not a necessary component of recovery"**.
-
-**What they say does the work instead**, and this is recommendation not evidence: time, patience, and graded exposure to traditional loaded exercise, introduced early rather than after symptoms resolve.
+Then they undercut the category's usual rationale. Core stability has **no clear definition**, and there is no good evidence that trunk-specific exercise reduces injury risk or improves performance more than other exercise [15] — Wirth 2017, a critical analysis of guidelines, not a trial. Their honest summary: mechanisms "are not entirely clear, and some of them may not work in the ways commonly thought", and these exercises are explicitly **"not a necessary component of recovery"**. What does the work instead — recommendation, not evidence — is time, patience, and graded exposure to loaded exercise introduced early rather than after symptoms resolve.
 
 ## The two programmes
 
 Both are Week 1 templates, both start each session with a symptom-modification movement, both end with a **25-minute walk at talking pace**, and both use ascending RPE sets (e.g. 12 @ RPE 5, 12 @ 6, 12 @ 7) with slow tempos to keep load light.
 
-**Denise, 58, 15 months of low back pain with radiating left leg pain, L4-L5 impingement on MRI, home gym (dumbbells to 50 lb, bands, bench), 3 days/week.** Goblet good morning, goblet squat with 3.1.0 tempo, single-leg RDL, single-leg hip thrust, split squat; upper body is feet-up dumbbell bench and seated press — chosen specifically because **feet-up and seated variations remove the lumbar extension** that bothers people who are sensitive to arching.
+**Denise, 58, 15 months of low back pain with radiating left leg pain, L4-L5 impingement on MRI, home gym (dumbbells to 50 lb, bands, bench), 3 days/week.** Goblet good morning, goblet squat at 3.1.0 tempo, single-leg RDL, single-leg hip thrust, split squat; upper body is feet-up dumbbell bench and seated press — chosen because **feet-up and seated variations remove the lumbar extension** that bothers people sensitive to arching.
 
-**Troy, 21, powerlifter, acute flare after a max deadlift with shooting right-leg pain, told by a doctor "never lift again", 4 days/week.** Box squat variations to cap range of motion, barbell good morning through a tolerable range, RDL instead of floor pulls, belt squat and leg press to train legs without loading the spine, feet-up bench, and a dedicated machine accessory day where he can train close to failure with little risk. **No deadlift from the floor in week 1** — but plenty of hinging.
+**Troy, 21, powerlifter, acute flare after a max deadlift with shooting right-leg pain, told by a doctor "never lift again", 4 days/week.** Box squats to cap range of motion, barbell good morning through a tolerable range, RDL instead of floor pulls, belt squat and leg press to train legs without loading the spine, feet-up bench, and a machine accessory day where he can train close to failure with little risk. **No deadlift from the floor in week 1** — but plenty of hinging.
 
-The design logic they state: symptom-modification work is the "appetizer and dessert", traditional lifting is the meal, from the start. Movements that do not aggravate the back get few or no modifications, because leaving them alone is itself a message that the body is not fragile.
+The stated design logic: symptom-modification work is the "appetizer and dessert", traditional lifting is the meal, from the start. Movements that do not aggravate the back get few or no modifications, because leaving them alone is itself a message that the body is not fragile.
 
 ## Overreach, and what they sell
 

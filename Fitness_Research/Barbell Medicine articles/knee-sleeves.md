@@ -7,8 +7,8 @@
 - **Sleeves and wraps are different tools.** Wraps are woven elastic, wound tight, and genuinely store and return elastic energy across the squat — a measured mechanical effect. Sleeves are a neoprene tube pulled over the joint: no appreciable elastic energy, no structural support.
 - **The performance effect is small and not universal.** Best case is roughly a **3% squat 1RM gain versus a loose placebo sleeve** in trained lifters, plus better subjective comfort and stability. One study found no improvement in mass lifted. None found harm. Sizing down below the manufacturer's recommendation added nothing.
 - **The pain evidence is stronger than the performance evidence, but it is in a different population** — knee osteoarthritis, not healthy lifters. Sleeves there reduced pain and improved perceived stability and participation in exercise.
-- **Injury prevention is speculation, and the article says so.** There is essentially no knee-sleeve injury data; the authors reason by analogy from lifting belts, which have repeatedly failed to prevent injury.
-- The article recommends specific commercial sleeves (SBD, Rogue) through what appear to be referral/affiliate links. Barbell Medicine also sells templates, seminars, coaching and supplements.
+- **Injury prevention is speculation, and the article says so.** No knee-sleeve injury data exists; the authors reason by analogy from lifting belts, which have repeatedly failed to prevent injury.
+- It recommends specific commercial sleeves (SBD, Rogue) through what appear to be referral/affiliate links. Barbell Medicine also sells templates, seminars, coaching and supplements.
 
 ## Sleeves versus wraps versus braces
 
@@ -34,7 +34,7 @@ The performance claim rests on acute crossover work, not training studies: ~3% a
 
 **Evidence versus advice.** The evidence supports four things: no structural support, a small and inconsistent acute 1RM effect, pain relief in OA, nothing on injury. The *recommendations* — squat patterns and Olympic lifts yes, deadlifts no because sleeves foul the bar path, 7 mm for powerlifting and 5 mm for dynamic work — are clinical and experiential preference, not tested findings; only "don't size down" has a study behind it [15]. The article is fairly honest about this, and its closing line, that knee sleeves are not necessary, is the right one.
 
-**Commercial note.** The buying section recommends SBD 7 mm and Momentum and Rogue 7 mm and 5 mm sleeves through links carrying referral tracking parameters, alongside an anecdote about the author squatting 280 kg in 5 mm sleeves. These are third-party brands rather than Barbell Medicine's own line, but the recommendation is monetised and the reader should weigh it as such.
+**Commercial note.** The buying section recommends SBD and Rogue 7 mm and 5 mm sleeves through links carrying referral tracking parameters, alongside an anecdote about the author squatting 280 kg in 5 mm sleeves. These are third-party brands, not Barbell Medicine's own line, but the recommendation is monetised and should be weighed as such.
 
 ## References
 

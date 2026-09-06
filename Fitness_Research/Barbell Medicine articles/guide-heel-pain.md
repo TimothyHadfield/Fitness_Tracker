@@ -4,11 +4,11 @@
 **Topic:** Injury & rehabilitation
 
 ## Bottom line
-- The condition is renamed **plantar heel pain**, not plantar fasciitis. "-itis" asserts an inflammatory mechanism the tissue findings don't support; the neutral label leaves room for load and capacity contributors rather than one inflamed structure.
-- **Diagnosis is clinical** — morning-first-steps pain plus tenderness on palpation. Ultrasound findings such as increased signal or a thickened fascia also occur in people with no pain, and thickness changes with running as normal adaptation, so they can't confirm the diagnosis.
-- The driver is a **recent change in loading** — mileage, standing hours, a shoe swap, a walking holiday — not the absolute amount. Too much, too soon, scaled to the individual.
-- **Most cases resolve within about a year untreated.** That fact should discipline how you read every uncontrolled treatment claim here.
-- Load management and foot/ankle strengthening first; stretching for short-term relief; orthotics as a temporary load modifier; injections, dry needling and passive modalities not recommended; shockwave a low-confidence second-line add-on.
+- Call it **plantar heel pain**, not fasciitis. "-itis" asserts an inflammatory mechanism the tissue findings don't support; the neutral label leaves room for load and capacity contributors rather than one inflamed structure.
+- **Diagnosis is clinical** — morning-first-steps pain plus tenderness on palpation. Ultrasound findings like increased signal or a thickened fascia also occur in people with no pain, and thickness changes with running as normal adaptation, so they can't confirm the diagnosis.
+- The driver is a **recent change in loading** — mileage, standing hours, a shoe swap, a walking holiday — not the absolute amount.
+- **Most cases resolve within about a year untreated**, which should discipline how you read every uncontrolled treatment claim here.
+- Load management and foot/ankle strengthening first; stretching and orthotics for short-term relief only; injections, dry needling and passive modalities not recommended; shockwave a low-confidence add-on.
 
 ## Why "fasciitis" is disputed, and why imaging doesn't settle it
 The reasoning is familiar: the name encodes a mechanism, the mechanism gets treated as established, and treatment follows the name — if it's inflammation, you inject a steroid. The article's position is that the inflammatory framing was never well supported, and "fasciopathy" or plain plantar heel pain fits a multi-contributor condition better.
