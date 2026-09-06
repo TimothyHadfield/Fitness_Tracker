@@ -487,8 +487,8 @@
    "https://www.dietaryguidelines.gov/food-sources-potassium",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7490167/",
    "https://academic.oup.com/jcem/article/110/9/2453/8196671",
-   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21",
-   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(25"
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)01922-X/fulltext",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(25)00991-2/abstract"
   ],
   "references": [
    {
@@ -625,7 +625,13 @@
    "https://academic.oup.com/ajcn/article/112/1/150/5727348",
    "https://www.ncbi.nlm.nih.gov/labs/pmc/articles/PMC6520036/",
    "https://www.cdc.gov/nchs/data/hus/2019/005-508.pdf",
-   "https://www.sciencedirect.com/science/article/pii/S1050173819301343"
+   "https://www.sciencedirect.com/science/article/pii/S1050173819301343",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(18)31942-1/fulltext",
+   "https://pubmed.ncbi.nlm.nih.gov/25633587/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/26791067/)^",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(07)61778-4/fulltext",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(86)90597-0/fulltext",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(17)31075-9/fulltext"
   ],
   "references": [],
   "markers": [
@@ -815,7 +821,7 @@
     "pos": 16545,
     "url": "https://jamanetwork.com/journals/jamacardiology/fullarticle/2695047",
     "section": "3 This study found that people with higher cholesterol live longer than people with low cholesterol, so high cholesterol improves longevity",
-    "claim": "of cholesterol-lowering medications, including those that treated participants to extremely low LDL-cholesterol levels, there has been absolutely zero effect found on the rates of cancer, and no increase in rates of death among groups treated with these medications versus control groups that received placebo treatment. ^CTTC 201931942-1/fulltext)",
+    "claim": "of cholesterol-lowering medications, including those that treated participants to extremely low LDL-cholesterol levels, there has been absolutely zero effect found on the rates of cancer, and no increase in rates of death among groups treated with these medications versus control groups that received placebo treatment. ^CTTC 2019",
     "label": "Sabatine 2018"
    },
    {
@@ -968,7 +974,7 @@
     "pos": 31269,
     "url": "https://jamanetwork.com/journals/jamainternalmedicine/article-abstract/609258",
     "section": "6 This study found that lots of patients who have heart attacks had normal cholesterol levels",
-    "claim": "through the 1980s similarly showed rapidly increasing heart disease risk as blood cholesterol levels increased well into these ranges. ^Martin 198690597-0/fulltext) These findings led to the first official clinical guidelines from the Adult Treatment Panel I, which established a cutoff of 200 mg/dL or less as “desirable blood cholesterol levels”.",
+    "claim": "through the 1980s similarly showed rapidly increasing heart disease risk as blood cholesterol levels increased well into these ranges. ^Martin 1986 These findings led to the first official clinical guidelines from the Adult Treatment Panel I, which established a cutoff of 200 mg/dL or less as “desirable blood cholesterol levels”.",
     "label": "Goodman 1988"
    },
    {
@@ -1076,7 +1082,7 @@
     "pos": 42832,
     "url": "https://pubmed.ncbi.nlm.nih.gov/24448227/",
     "section": "7 If your Coronary Artery Calcium score is zero there’s nothing to worry about",
-    "claim": "he risk of heart disease complications despite causing mild increases in coronary artery calcium. ^CTTC 201931942-1/fulltext) It is thought that these interventions alter plaque composition, and that this calcium may have a “stabilizing” effect on the plaque that makes it less likely to rupture and precipitate a heart attack or other complication.",
+    "claim": "he risk of heart disease complications despite causing mild increases in coronary artery calcium. ^CTTC 2019 It is thought that these interventions alter plaque composition, and that this calcium may have a “stabilizing” effect on the plaque that makes it less likely to rupture and precipitate a heart attack or other complication.",
     "label": "Puri 2014"
    },
    {
@@ -1085,7 +1091,7 @@
     "pos": 42888,
     "url": "https://www.jacc.org/doi/abs/10.1016/j.jacc.2015.01.036",
     "section": "7 If your Coronary Artery Calcium score is zero there’s nothing to worry about",
-    "claim": "ild increases in coronary artery calcium. ^CTTC 201931942-1/fulltext) It is thought that these interventions alter plaque composition, and that this calcium may have a “stabilizing” effect on the plaque that makes it less likely to rupture and precipitate a heart attack or other complication. ^Puri 2014",
+    "claim": "ild increases in coronary artery calcium. ^CTTC 2019 It is thought that these interventions alter plaque composition, and that this calcium may have a “stabilizing” effect on the plaque that makes it less likely to rupture and precipitate a heart attack or other complication. ^Puri 2014",
     "label": "Puri 2015"
    },
    {
@@ -1130,7 +1136,7 @@
     "pos": 48936,
     "url": "https://www.nejm.org/doi/full/10.1056/NEJMc2031173",
     "section": "8 Statins cause lots of problems and you’ll lose all your gains",
-    "claim": "s, including one randomized trial of over 10,000 patients. ^Gupta 201731075-9/fulltext) This finding was investigated further in the 2020 SAMSON trial, where 60 patients who had previously stopped statins due to perceived side effects were given four pill bottles (one statin, two placebo, one empty) and randomized to take them in different orders.",
+    "claim": "s, including one randomized trial of over 10,000 patients. ^Gupta 2017 This finding was investigated further in the 2020 SAMSON trial, where 60 patients who had previously stopped statins due to perceived side effects were given four pill bottles (one statin, two placebo, one empty) and randomized to take them in different orders.",
     "label": "Wood 2020"
    },
    {
@@ -1450,9 +1456,10 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6583050/",
    "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(12",
    "https://www.ahajournals.org/doi/10.1161/JAHA.118.009778",
-   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(04",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(04)17018-9/fulltext",
    "https://www.sciencedirect.com/science/article/pii/S0735109717412320?via%3Dihub",
-   "https://jamanetwork.com/journals/jamacardiology/article-abstract/2786334"
+   "https://jamanetwork.com/journals/jamacardiology/article-abstract/2786334",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(12)60312-2/fulltext"
   ],
   "references": [],
   "markers": [
@@ -1900,9 +1907,9 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5872778/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6628334/",
    "https://www.ncbi.nlm.nih.gov/pubmed/30952204",
-   "https://www.ncbi.nlm.nih.gov/pubmed/24092765",
+   "https://www.ncbi.nlm.nih.gov/pubmed/24092765)This",
    "https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y#article-info",
-   "https://jissn.biomedcentral.com/articles/10.1186/1550-2783-11-19",
+   "https://jissn.biomedcentral.com/articles/10.1186/1550-2783-11-19)[Wu",
    "https://www.ncbi.nlm.nih.gov/pubmed/26797090",
    "https://pubmed.ncbi.nlm.nih.gov/10722779/",
    "https://pubmed.ncbi.nlm.nih.gov/8933120/",
@@ -2246,7 +2253,7 @@
    "https://doi.org/10.1186/s40798-022-00508-w",
    "https://doi.org/10.3390/nu10020180",
    "https://www.ncbi.nlm.nih.gov/books/NBK544346/",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1016/bs.pmbts.2015.07.020",
    "https://doi.org/10.1249/MSS.0000000000000132",
    "http://dx.doi.org/10.3390/nu14040856",
@@ -2445,16 +2452,16 @@
    },
    {
     "n": 15,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      13
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 16,
@@ -3354,7 +3361,7 @@
    "https://doi.org/10.1519/JSC.0000000000002179",
    "text:Burke, Ryan & Hermann, Tom & Piñero, Alec & Mohan, Adam & Augustin, Francesca & Sapuppo, Max & Coleman, Max & Androulakis-Korakakis, Patroklos & Wolf, Milo & Swinton, Paul & Schoenfeld, Brad. (2024). Less time, same gains: Comparison of superset vs traditional set training on muscular adaptations. 10.51224/SRXIV.419.",
    "https://doi.org/10.1016/j.jsams.2022.08.009",
-   "https://doi.org/10.1519/1533-4287(2003"
+   "https://doi.org/10.1519/1533-4287(2003)017"
   ],
   "references": [
    {
@@ -3503,12 +3510,12 @@
     "n": 13,
     "text": "Balabinis CP, Psarakis CH, Moukas M, Vassiliou MP, Behrakis PK. Early phase changes by concurrent endurance and strength training. J Strength Cond Res. 2003 May;17(2):393-401. doi: 10.1519/1533-4287(2003)017<0393:epcbce>2.0.co;2. PMID: 12741884.",
     "urls": [],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      7
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    }
   ],
   "markers": [
@@ -4424,7 +4431,7 @@
   "n_selflinked_markers": 1,
   "n_named_markers": 0,
   "max_marker": 40,
-  "n_prose_links": 2,
+  "n_prose_links": 3,
   "n_unlinked_refs": 2,
   "n_uncited_refs": 0,
   "verified": false,
@@ -4469,6 +4476,7 @@
    "https://doi.org/10.1093/nutrit/nuaa044",
    "https://doi.org/10.1016/j.jacc.2015.07.055",
    "https://link.springer.com/article/10.1007/s40279-018-0872-x",
+   "https://link.springer.com/article/10.1007/s40279-018-0872-x)[Another",
    "https://www.niddk.nih.gov/bwp"
   ],
   "references": [
@@ -5508,7 +5516,7 @@
    "https://doi.org/10.1519/JSC.0000000000004250",
    "https://doi.org/10.1519/JSC.0000000000001249",
    "text:4 Chaves, Suene F N et al. “Effects of Horizontal and Incline Bench Press on Neuromuscular Adaptations in Untrained Young Men.” International journal of exercise science vol. 13,6 859-872. 1 Aug. 2020",
-   "https://pubmed.ncbi.nlm.nih.gov/29368185/#:~:text=Abstract,calpain%20and%20ubiquitin%2Dproteasome%20systems"
+   "https://pubmed.ncbi.nlm.nih.gov/29368185/#:~:text=Abstract,calpain%20and%20ubiquitin%2Dproteasome%20systems."
   ],
   "references": [
    {
@@ -6733,7 +6741,7 @@
    "https://doi.org/10.1123/ijspp.2016-0170",
    "https://doi.org/10.1111/sms.12678",
    "https://doi.org/10.3390/sports7070169",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "text:Solstad, T. E., Andersen, V., Shaw, M., Hoel, M., Vonheim, A., & Saeterbakken, A. (2020). A Comparison of Muscle Activation between Barbell Bench Press and Dumbbell Flyes in Resistance-Trained Males. Journal of Sports Science & Medicine, 19, 645-651.",
    "https://doi.org/10.1080/02640414.2010.543916"
   ],
@@ -6865,16 +6873,16 @@
    },
    {
     "n": 12,
-    "text": "McLester, J. R., Bishop, P. A., Smith, J., Wyers, L., Dale, B., Kozusko, J., Richardson, M., Nevett, M. E., & Lomax, R. (2003). A series of studies–a practical protocol for testing muscular endurance recovery. Journal of strength and conditioning research, 17(2), 259–273. https://doi.org/10.1519/1533-4287(2003)017017)<0259:asospp>2.0.co;2",
+    "text": "McLester, J. R., Bishop, P. A., Smith, J., Wyers, L., Dale, B., Kozusko, J., Richardson, M., Nevett, M. E., & Lomax, R. (2003). A series of studies–a practical protocol for testing muscular endurance recovery. Journal of strength and conditioning research, 17(2), 259–273. https://doi.org/10.1519/1533-4287(2003)017<0259:asospp>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      9
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 13,
@@ -7140,7 +7148,7 @@
     "urls": [
      "https://doi.org/10.1519/jsc.0000000000003290"
     ],
-    "doi": "10.1519/jsc.0000000000003290",
+    "doi": "10.1519/jsc.0000000000003290)",
     "pmid": "",
     "cited_at": [
      3
@@ -7254,7 +7262,8 @@
     "n": 15,
     "text": "Naoto Matsunaga, Yu Okubo, Shunto Isagawa, Jyunpei Niitsuma, Takahiro Otsudo, Yutaka Sawada, Kiyokazu Akasaka, Muscle fatigue in the gluteus maximus changes muscle synergies during single-leg landing, Journal of Bodywork and Movement Therapies, Volume 27, 2021, Pages 493-499, ISSN 1360-8592, https://doi.org/10.1016/j.jbmt.2021.05.013.",
     "urls": [
-     "https://doi.org/10.1016/j.jbmt.2021.05.013"
+     "https://doi.org/10.1016/j.jbmt.2021.05.013",
+     "https://doi.org/10.1016/j.jbmt.2021.05.013."
     ],
     "doi": "10.1016/j.jbmt.2021.05.013",
     "pmid": "",
@@ -8747,7 +8756,7 @@
    "https://doi.org/10.1186/s40798-022-00508-w",
    "https://doi.org/10.3390/nu10020180",
    "https://www.ncbi.nlm.nih.gov/books/NBK544346/",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "http://dx.doi.org/10.3390/nu14040856",
    "https://doi.org/10.1016/bs.pmbts.2015.07.020",
    "https://doi.org/10.1249/MSS.0000000000000132",
@@ -8795,7 +8804,7 @@
     "urls": [
      "https://doi.org/10.1519/jsc.0000000000003290"
     ],
-    "doi": "10.1519/jsc.0000000000003290",
+    "doi": "10.1519/jsc.0000000000003290)",
     "pmid": "",
     "cited_at": [
      2
@@ -9063,7 +9072,7 @@
     "urls": [
      "https://doi.org/10.1519/jsc.0000000000003290"
     ],
-    "doi": "10.1519/jsc.0000000000003290",
+    "doi": "10.1519/jsc.0000000000003290)",
     "pmid": "",
     "cited_at": [
      20
@@ -9122,7 +9131,7 @@
     "urls": [
      "https://doi.org/10.1186/s40798-021-00364-0"
     ],
-    "doi": "10.1186/s40798-021-00364-0",
+    "doi": "10.1186/s40798-021-00364-0)",
     "pmid": "",
     "cited_at": [
      23
@@ -9135,7 +9144,7 @@
     "urls": [
      "https://doi.org/10.1519/JPT.0000000000000059"
     ],
-    "doi": "10.1519/JPT.0000000000000059",
+    "doi": "10.1519/JPT.0000000000000059)",
     "pmid": "",
     "cited_at": [
      23
@@ -9272,16 +9281,16 @@
    },
    {
     "n": 42,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      32
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 43,
@@ -9387,16 +9396,16 @@
    },
    {
     "n": 51,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      39
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 52,
@@ -10968,7 +10977,7 @@
    "https://doi.org/10.1519/jsc.0000000000004148",
    "https://doi.org/10.1519/jsc.0000000000002774",
    "text:Davies, G., Riemann, B. L., & Manske, R. (2015). CURRENT CONCEPTS OF PLYOMETRIC EXERCISE. International Journal of Sports Physical Therapy, 10(6), 760–786.",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017%3C0710:eowots%3E2.0.co;2",
    "https://doi.org/10.1519/jsc.0b013e3181cc2408",
    "https://doi.org/10.1519/jsc.0b013e3181a4e97f",
    "https://doi.org/10.1519/15834.1",
@@ -11069,14 +11078,14 @@
     "n": 6,
     "text": "Koch, A. J., O’Bryant, H. S., Stone, M. E., Sanborn, K., Proulx, C., Hruby, J., Shannonhouse, E., Boros, R., & Stone, M. H. (2003). Effect of Warm-Up on the Standing Broad Jump in Trained and Untrained Men and Women. The Journal of Strength and Conditioning Research, 17(4), 710. https://doi.org/10.1519/1533-4287(2003)017%3C0710:eowots%3E2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017%3C0710:eowots%3E2.0.co;2"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017%3C0710:eowots%3E2.0.co;2",
     "pmid": "",
     "cited_at": [
      5
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017%3C0710:eowots%3E2.0.co;2"
    },
    {
     "n": 7,
@@ -11824,7 +11833,7 @@
    "https://doi.org/10.1136/bjsports-2017-097608",
    "https://doi.org/10.3390/nu10020180",
    "https://www.ncbi.nlm.nih.gov/books/NBK544346/",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1007/s40279-014-0256-9",
    "https://doi.org/10.1016/bs.pmbts.2015.07.020",
    "https://doi.org/10.1249/MSS.0000000000000132",
@@ -11995,17 +12004,17 @@
    },
    {
     "n": 12,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      11,
      30
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 13,
@@ -12089,16 +12098,16 @@
    },
    {
     "n": 19,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      16
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 20,
@@ -12692,7 +12701,7 @@
    "https://doi.org/10.1249/MSS.0000000000000132",
    "https://doi.org/10.1113/jphysiol.2010.204487",
    "https://doi.org/10.1093/nutrit/nuy001",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1136/bjsports-2017-097608",
    "https://doi.org/10.3390/nu10020180",
    "https://doi.org/10.1186/s12970-018-0242-y",
@@ -13015,16 +13024,16 @@
    },
    {
     "n": 25,
-    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017017)<0187:csart>2.0.co;2",
+    "text": "Haff, G. G., Lehmkuhl, M. J., McCoy, L. B., & Stone, M. H. (2003). Carbohydrate supplementation and resistance training. Journal of strength and conditioning research, 17(1), 187–196. https://doi.org/10.1519/1533-4287(2003)017<0187:csart>2.0.co;2",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(2003"
+     "https://doi.org/10.1519/1533-4287(2003)017"
     ],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      19
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 26,
@@ -13602,7 +13611,7 @@
    "https://doi.org/10.1136/bjsm.2010.079376",
    "https://doi.org/10.1007/BF00421333",
    "https://doi.org/10.1007/s40279-021-01587-7",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1136/bjsports-2013-092538",
    "https://doi.org/10.1002/jbmr.3284",
    "https://doi.org/10.3390/sports7100215",
@@ -13972,12 +13981,12 @@
     "n": 37,
     "text": "Balabinis, Christos P et al. “Early phase changes by concurrent endurance and strength training.” Journal of strength and conditioning research vol. 17,2 (2003): 393-401. doi:10.1519/1533-4287(2003)017<0393:epcbce>2.0.co;2",
     "urls": [],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      27
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 38,
@@ -16184,7 +16193,7 @@
    "https://doi.org/10.1519/jsc.0000000000001387",
    "https://doi.org/10.1519/jsc.0b013e31822c71c0",
    "https://doi.org/10.1519/JSC.0000000000004236",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1007/s11556-013-0120-1",
    "https://doi.org/10.3390/ijerph18189477",
    "https://doi.org/10.1001/jamapsychiatry.2018.0572",
@@ -16425,12 +16434,12 @@
     "n": 20,
     "text": "Balabinis CP, Psarakis CH, Moukas M, Vassiliou MP, Behrakis PK. Early phase changes by concurrent endurance and strength training. J Strength Cond Res. 2003 May;17(2):393-401. doi: 10.1519/1533-4287(2003)017<0393:epcbce>2.0.co;2. PMID: 12741884.",
     "urls": [],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      17
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 21,
@@ -16892,9 +16901,9 @@
    "https://doi.org/10.3390/jfmk3020028",
    "https://doi.org/10.23736/s0022-4707.17.06849-9",
    "https://doi.org/10.1519/JSC.0000000000001293",
-   "https://doi.org/10.1016/s0003-6870(98",
-   "https://doi.org/10.1016/0003-6870(94",
-   "https://doi.org/10.1016/0169-8141(92",
+   "https://doi.org/10.1016/s0003-6870(98)00055-6",
+   "https://doi.org/10.1016/0003-6870(94)90053-1",
+   "https://doi.org/10.1016/0169-8141(92)90033-V",
    "https://www.researchgate.net/publication/223553036_Optimal_cylindrical_handle_diameter_for_grip_force_tasks",
    "https://doi.org/10.2466/pms.102.2.291-301",
    "https://doi.org/10.1519/jsc.0000000000003550",
@@ -16921,7 +16930,7 @@
    "https://doi.org/10.1136/bmjopen-2013-002831",
    "https://doi.org/10.1177/1941738119887183",
    "https://doi.org/10.1136/bjsm.2010.079376",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1136/bjsports-2013-092538",
    "https://doi.org/10.1097/MCO.0b013e32833e343b",
    "text:Bahr, R. “Excess postexercise oxygen consumption–magnitude, mechanisms and practical implications.” Acta physiologica Scandinavica. Supplementum vol. 605 (1992): 1-70.",
@@ -17026,40 +17035,40 @@
     "n": 11,
     "text": "Blackwell, J. R., Kornatz, K. W., & Heath, E. M. (1999). Effect of grip span on maximal grip force and fatigue of flexor digitorum superficialis. Applied Ergonomics, 30(5), 401–405. https://doi.org/10.1016/s0003-6870(98)00055-6",
     "urls": [
-     "https://doi.org/10.1016/s0003-6870(98"
+     "https://doi.org/10.1016/s0003-6870(98)00055-6"
     ],
-    "doi": "10.1016/s0003-6870(98",
+    "doi": "10.1016/s0003-6870(98)00055-6",
     "pmid": "",
     "cited_at": [
      6
     ],
-    "key": "https://doi.org/10.1016/s0003-6870(98"
+    "key": "https://doi.org/10.1016/s0003-6870(98)00055-6"
    },
    {
     "n": 12,
     "text": "Böhlemann, J., Kluth, K., Kotzbauer, K., & Strasser, H. (1994). Ergonomic assessment of handle design by means of electromyography and subjective rating. Applied Ergonomics, 25(6), 346–354. https://doi.org/10.1016/0003-6870(94)90053-1",
     "urls": [
-     "https://doi.org/10.1016/0003-6870(94"
+     "https://doi.org/10.1016/0003-6870(94)90053-1"
     ],
-    "doi": "10.1016/0003-6870(94",
+    "doi": "10.1016/0003-6870(94)90053-1",
     "pmid": "",
     "cited_at": [
      7
     ],
-    "key": "https://doi.org/10.1016/0003-6870(94"
+    "key": "https://doi.org/10.1016/0003-6870(94)90053-1"
    },
    {
     "n": 13,
     "text": "Grant, K. A., Habes, D. J., & Steward, L. L. (1992). An analysis of handle designs for reducing manual effort: The influence of grip diameter. International Journal of Industrial Ergonomics, 10(3), 199–206. https://doi.org/10.1016/0169-8141(92)90033-V",
     "urls": [
-     "https://doi.org/10.1016/0169-8141(92"
+     "https://doi.org/10.1016/0169-8141(92)90033-V"
     ],
-    "doi": "10.1016/0169-8141(92",
+    "doi": "10.1016/0169-8141(92)90033-V",
     "pmid": "",
     "cited_at": [
      7
     ],
-    "key": "https://doi.org/10.1016/0169-8141(92"
+    "key": "https://doi.org/10.1016/0169-8141(92)90033-V"
    },
    {
     "n": 14,
@@ -17391,12 +17400,12 @@
     "n": 41,
     "text": "Balabinis, Christos P et al. “Early phase changes by concurrent endurance and strength training.” Journal of strength and conditioning research vol. 17,2 (2003): 393-401. doi:10.1519/1533-4287(2003)017<0393:epcbce>2.0.co;2",
     "urls": [],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [
      25
     ],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 42,
@@ -18394,7 +18403,7 @@
    "https://doi.org/10.1519/SSC.0000000000000553",
    "https://doi.org/10.1097/00005768-200012000-00011",
    "https://doi.org/10.1139/h2012-101",
-   "https://doi.org/10.1016/S0021-9150(03",
+   "https://doi.org/10.1016/S0021-9150(03)00238-7",
    "https://doi.org/10.1519/JSC.0b013e31828a1ffa",
    "text:Loenneke, Jeremy & Pujol, Thomas. (2009). The Use of Occlusion Training to Produce Muscle Hypertrophy. Strength & Conditioning Journal. 31. 77-84. 10.1519/SSC.0b013e3181a5a352.",
    "text:Bagley, James & Rosengarten, Jakob & Galpin, Andrew. (2015). Is Blood Flow Restriction Training Beneficial for Athletes?. Strength and Conditioning. 37. 48-53. 10.1519/SSC.0000000000000132.",
@@ -18741,12 +18750,12 @@
     "n": 30,
     "text": "Eisen A, Fisman EZ, Rubenfire M, Freimark D, McKechnie R, Tenenbaum A, Motro M, Adler Y. Ischemic preconditioning: nearly two decades of research. A comprehensive review. Atherosclerosis. 2004 Feb;172(2):201-10. doi: 10.1016/S0021-9150(03)00238-7. PMID: 15019529.",
     "urls": [],
-    "doi": "10.1016/S0021-9150(03",
+    "doi": "10.1016/S0021-9150(03)00238-7",
     "pmid": "",
     "cited_at": [
      16
     ],
-    "key": "https://doi.org/10.1016/S0021-9150(03"
+    "key": "https://doi.org/10.1016/S0021-9150(03)00238-7"
    },
    {
     "n": 31,
@@ -19153,7 +19162,7 @@
   "n_selflinked_markers": 0,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 30,
+  "n_prose_links": 31,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": false,
@@ -19171,7 +19180,7 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7139782/",
    "https://pubmed.ncbi.nlm.nih.gov/6822050/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3940509/",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7558480/",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7558480/)[Castellani",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4873630/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4365849/",
    "https://pubmed.ncbi.nlm.nih.gov/36298810/",
@@ -19188,6 +19197,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/30663816/",
    "https://www.nature.com/articles/s41430-022-01250-y",
    "https://pubmed.ncbi.nlm.nih.gov/24435468/",
+   "https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y#article-info)[2018",
    "https://jissn.biomedcentral.com/articles/10.1186/s12970-018-0242-y#article-info"
   ],
   "references": [],
@@ -19248,7 +19258,7 @@
    "https://www.ncbi.nlm.nih.gov/pubmed/30730563",
    "https://www.ncbi.nlm.nih.gov/pubmed/28169144",
    "https://www.fda.gov/news-events/public-health-focus/fda-regulation-cannabis-and-cannabis-derived-products-including-cannabidiol-cbd",
-   "https://www.ncbi.nlm.nih.gov/pubmed/24419242",
+   "https://www.ncbi.nlm.nih.gov/pubmed/24419242)[Acharya",
    "https://www.ncbi.nlm.nih.gov/pubmed/28439004",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5877694/",
    "https://www.ncbi.nlm.nih.gov/pubmed?Db=pubmed&Cmd=ShowDetailView&TermToSearch=2937482",
@@ -19266,7 +19276,7 @@
    "https://www.ncbi.nlm.nih.gov/pubmed/24845114",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5425583/",
    "https://www.ncbi.nlm.nih.gov/pubmed/22716148",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5569582/",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5569582/)[Hundal",
    "https://www.ncbi.nlm.nih.gov/pubmed/29086614",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6678684/"
   ],
@@ -19933,7 +19943,7 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6566347/",
    "https://www.ncbi.nlm.nih.gov/pubmed/11085557",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6356409/",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6000875/",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6000875/)[Li",
    "https://www.ncbi.nlm.nih.gov/pubmed/27885357",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4595917/",
    "https://www.ncbi.nlm.nih.gov/pubmed/11579069",
@@ -19942,7 +19952,7 @@
    "https://www.ncbi.nlm.nih.gov/pubmed/22975033",
    "https://www.ncbi.nlm.nih.gov/pubmed/24153020",
    "https://www.ncbi.nlm.nih.gov/pubmed/28702900",
-   "https://www.ncbi.nlm.nih.gov/pubmed/29345167",
+   "https://www.ncbi.nlm.nih.gov/pubmed/29345167)Finally",
    "https://bjsm.bmj.com/content/52/3/167"
   ],
   "references": [
@@ -19988,7 +19998,7 @@
     "urls": [
      "https://doi.org/10.1034/j.1600-0838.2000.010006312.x"
     ],
-    "doi": "10.1034/j.1600-0838.2000.010006312.x",
+    "doi": "10.1034/j.1600-0838.2000.010006312.x)",
     "pmid": "",
     "cited_at": [],
     "key": "https://doi.org/10.1034/j.1600-0838.2000.010006312.x"
@@ -20151,7 +20161,7 @@
    "https://doi.org/10.1097/CORR.0000000000002744",
    "text:Robert, Yola. 2021. “Here’s Why Wellness Brands Are Investing Into Collagen.” Forbes. November 15, 2021. https://www.forbes.com/sites/yolarobert1/2021/11/15/heres-why-wellness-brands-are-investing-into-collagen/.",
    "https://doi.org/10.1111/jocd.12450",
-   "https://doi.org/10.1016/s0190-9622(89",
+   "https://doi.org/10.1016/s0190-9622(89)70330-3",
    "https://doi.org/10.1212/WNL.98.18_supplement.3654",
    "https://doi.org/10.2903/j.efsa.2020.6267",
    "https://doi.org/10.1007/s00726-018-2640-5",
@@ -20180,7 +20190,8 @@
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC3047656/",
    "https://nutritionj.biomedcentral.com/articles/10.1186/s12937-023-00837-w",
    "https://www.tandfonline.com/doi/full/10.1080/09637480802498820",
-   "https://pmc.ncbi.nlm.nih.gov/articles/PMC10180699/"
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC10180699/",
+   "https://journals.sagepub.com/doi/10.1177/0363546515602010)^,^"
   ],
   "references": [
    {
@@ -20261,16 +20272,16 @@
    },
    {
     "n": 7,
-    "text": "Charriere, G., M. Bejot, L. Schnitzler, G. Ville, and D. J. Hartmann. 1989. “Reactions to a Bovine Collagen Implant. Clinical and Immunologic Study in 705 Patients.” Journal of the American Academy of Dermatology 21 (6): 1203–8. https://doi.org/10.1016/s0190-9622(89)70330-370330-3).",
+    "text": "Charriere, G., M. Bejot, L. Schnitzler, G. Ville, and D. J. Hartmann. 1989. “Reactions to a Bovine Collagen Implant. Clinical and Immunologic Study in 705 Patients.” Journal of the American Academy of Dermatology 21 (6): 1203–8. https://doi.org/10.1016/s0190-9622(89)70330-3.",
     "urls": [
-     "https://doi.org/10.1016/s0190-9622(89"
+     "https://doi.org/10.1016/s0190-9622(89)70330-3"
     ],
-    "doi": "10.1016/s0190-9622(89",
+    "doi": "10.1016/s0190-9622(89)70330-3",
     "pmid": "",
     "cited_at": [
      6
     ],
-    "key": "https://doi.org/10.1016/s0190-9622(89"
+    "key": "https://doi.org/10.1016/s0190-9622(89)70330-3"
    },
    {
     "n": 8,
@@ -20659,7 +20670,7 @@
   "n_selflinked_markers": 14,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 13,
+  "n_prose_links": 14,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": true,
@@ -20690,7 +20701,12 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8891239/",
    "https://pubmed.ncbi.nlm.nih.gov/35476184/",
    "https://onlinelibrary.wiley.com/doi/10.1111/sms.70025",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9582631/"
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9582631/",
+   "https://pubmed.ncbi.nlm.nih.gov/35088396/#:~:text=Generally%2C%20skeletal%20muscle%20adaptations%20to,training%20leads%20to%20myofibrillar%20adaptations.)^,[^3",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4523889/)^,[^5",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC1464212/)^",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8053170/)^,[^9",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8891239/)^,[^12"
   ],
   "references": [
    {
@@ -21068,13 +21084,13 @@
    "https://doi.org/10.1136/bjsports-2023-107036",
    "https://www.uptodate.com/contents/acute-mild-traumatic-brain-injury-concussion-in-adults",
    "https://www.uptodate.com/contents/postconcussion-syndrome?search=postconcussion%20syndrome&source=search_result&selectedTitle=1~21&usage_type=default&display_rank=1",
-   "https://doi.org/10.1016/S1474-4422(18",
+   "https://doi.org/10.1016/S1474-4422(18)30415-0",
    "https://www.frontiersin.org/journals/neurology/articles/10.3389/fneur.2022.815056/full",
    "https://doi.org/10.3171/2021.6.PEDS21264",
    "https://doi.org/10.1001/jamapediatrics.2021.2782",
    "https://doi.org/10.1002/14651858.CD013244.pub2",
    "https://pubmed.ncbi.nlm.nih.gov/33184973/?utm_source=chatgpt.com",
-   "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com",
+   "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com))Singh",
    "https://doi.org/10.3390/jcm14030756",
    "text:- Wolf C, Fast K. “Put Me Back In, Coach!” Concussion and Return to Play. Mo Med. 2017 Jan-Feb;114(1):36-39. PMID: 30233098; PMCID: PMC6143567."
   ],
@@ -21146,10 +21162,10 @@
     "n": 7,
     "text": "- GBD 2016 Traumatic Brain Injury and Spinal Cord Injury Collaborators. Global, regional, and national burden of traumatic brain injury and spinal cord injury, 1990-2016: a systematic analysis for the Global Burden of Disease Study 2016. Lancet Neurol. 2019 Jan;18(1):56-87. doi: 10.1016/S1474-4422(18)30415-0. Epub 2018 Nov 26. Erratum in: Lancet Neurol. 2021 Dec;20(12):e7. doi: 10.1016/S1474-4422(21)00383-5. PMID: 30497965; PMCID: PMC6291456.",
     "urls": [],
-    "doi": "10.1016/S1474-4422(18",
+    "doi": "10.1016/S1474-4422(18)30415-0",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1016/S1474-4422(18"
+    "key": "https://doi.org/10.1016/S1474-4422(18)30415-0"
    },
    {
     "n": 8,
@@ -21204,12 +21220,12 @@
     "n": 13,
     "text": "- Patricios JS, Schneider KJ, Dvorák J, et al. Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport–Amsterdam, October 2022. Br J Sports Med. 2023;57(11):695-711. doi:10.1136/bjsports-2023-106898 (bjsm.bmj.com)Singh S, Keller PR, Busija L,",
     "urls": [
-     "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com"
+     "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com))Singh"
     ],
     "doi": "10.1136/bjsports-2023-106898",
     "pmid": "",
     "cited_at": [],
-    "key": "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com"
+    "key": "https://bjsm.bmj.com/content/bjsports/57/11/695.full.pdf?utm_source=chatgpt.com))Singh"
    },
    {
     "n": 14,
@@ -21960,7 +21976,7 @@
   "n_selflinked_markers": 0,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 40,
+  "n_prose_links": 42,
   "n_unlinked_refs": 9,
   "n_uncited_refs": 38,
   "verified": false,
@@ -22009,11 +22025,11 @@
    "https://pubmed.ncbi.nlm.nih.gov/20048509/",
    "https://www.ncbi.nlm.nih.gov/pubmed/24413700",
    "https://www.ncbi.nlm.nih.gov/pubmed/28489490",
-   "https://www.ncbi.nlm.nih.gov/pubmed/28288281",
+   "https://www.ncbi.nlm.nih.gov/pubmed/28288281)[Bell",
    "https://www.ncbi.nlm.nih.gov/pubmed/30135085",
    "https://pubmed.ncbi.nlm.nih.gov/24832974/",
    "https://www.researchgate.net/publication/24252242_The_specificity_of_training_prescription_and_physiological_assessment_A_review",
-   "https://europepmc.org/article/med/15589623",
+   "https://europepmc.org/article/med/15589623)Thus",
    "https://www.ncbi.nlm.nih.gov/pubmed/28574981",
    "https://www.ncbi.nlm.nih.gov/pubmed/31095625",
    "https://link.springer.com/article/10.2165/00007256-200838120-00003",
@@ -22025,14 +22041,15 @@
    "https://www.ncbi.nlm.nih.gov/pubmed/28834797",
    "https://www.ncbi.nlm.nih.gov/pubmed/29985227",
    "https://pdfs.semanticscholar.org/682f/d6555f01728865e3f77fced416d17395fa94.pdf?_ga=2.114241031.1880965447.1585600809-276523270.1585600809",
-   "https://www.ncbi.nlm.nih.gov/pubmed/12394471",
+   "https://www.ncbi.nlm.nih.gov/pubmed/12394471)[Smith",
    "https://www.ncbi.nlm.nih.gov/pubmed/8549576",
+   "https://www.ncbi.nlm.nih.gov/pubmed/12394471)[Bazgir",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5086326/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6303131/",
    "https://www.ncbi.nlm.nih.gov/pubmed/26280652",
    "https://www.ncbi.nlm.nih.gov/pubmed/21409401",
    "https://www.ncbi.nlm.nih.gov/pubmed/9950941",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3740728/#:~:text=Self%2Defficacy%20beliefs%20are%20important,it%20(Bandura%2C%201997",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3740728/#:~:text=Self%2Defficacy%20beliefs%20are%20important,it%20(Bandura%2C%201997).",
    "https://pubmed.ncbi.nlm.nih.gov/25630691/",
    "http://www.pthomegroup.com/sites/default/files/my%20liberary/Biomechanics%20of%20skeletal%20muscle.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/28776271/",
@@ -22041,6 +22058,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/27032805/",
    "https://pubmed.ncbi.nlm.nih.gov/23949789/",
    "https://pubmed.ncbi.nlm.nih.gov/24983847/",
+   "https://pubmed.ncbi.nlm.nih.gov/27032805/)At",
    "https://pubmed.ncbi.nlm.nih.gov/19002072/",
    "https://www.researchgate.net/publication/241485398_The_size_principle_and_a_critical_analysis_of_the_unsubstantiated_heavier-is-better_recommendation_for_resistance_training",
    "https://www.researchgate.net/publication/244936902_The_Correct_Interpretation_of_the_Size_Principle_and_Its_Practical_Application_to_Resistance_Training"
@@ -22425,7 +22443,7 @@
    "https://doi.org/10.1016/j.clinbiomech.2017.05.014",
    "https://doi.org/10.2106/JBJS.N.01101",
    "https://doi.org/10.3174/ajnr.A4173.Systematic",
-   "https://doi.org/10.1016/S0005-7916(01",
+   "https://doi.org/10.1016/S0005-7916(01)00029-5",
    "https://doi.org/10.1186/s12891-017-1831-7",
    "https://doi.org/10.1016/j.math.2016.04.006",
    "https://doi.org/10.1007/s11999-013-3100-x",
@@ -22451,7 +22469,9 @@
    "https://pubmed.ncbi.nlm.nih.gov/23761176/",
    "https://pubmed.ncbi.nlm.nih.gov/28490899/",
    "https://pubmed.ncbi.nlm.nih.gov/23139428/",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3172958/"
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3172958/",
+   "https://bmcmusculoskeletdisord.biomedcentral.com/articles/10.1186/s12891-017-1831-7),[16",
+   "https://pubmed.ncbi.nlm.nih.gov/28490899/),[20"
   ],
   "references": [
    {
@@ -22599,12 +22619,12 @@
     "n": 14,
     "text": "Merckelbach H, Van de Ven V. Another White Christmas: Fantasy proneness and reports of “hallucinatory experiences” in undergraduate students. J Behav Ther Exp Psychiatry. 2001;32(3):137-144. doi:10.1016/S0005-7916(01)00029-5.",
     "urls": [],
-    "doi": "10.1016/S0005-7916(01",
+    "doi": "10.1016/S0005-7916(01)00029-5",
     "pmid": "",
     "cited_at": [
      13
     ],
-    "key": "https://doi.org/10.1016/S0005-7916(01"
+    "key": "https://doi.org/10.1016/S0005-7916(01)00029-5"
    },
    {
     "n": 15,
@@ -23155,7 +23175,7 @@
   "n_selflinked_markers": 80,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 25,
+  "n_prose_links": 37,
   "n_unlinked_refs": 8,
   "n_uncited_refs": 2,
   "verified": true,
@@ -23212,7 +23232,21 @@
    "https://pubmed.ncbi.nlm.nih.gov/22615009/",
    "https://pubmed.ncbi.nlm.nih.gov/32513676/",
    "https://pubmed.ncbi.nlm.nih.gov/38158180/",
-   "https://pubmed.ncbi.nlm.nih.gov/38191239/"
+   "https://pubmed.ncbi.nlm.nih.gov/38191239/",
+   "https://pubmed.ncbi.nlm.nih.gov/31095086/)^,[^4",
+   "https://pubmed.ncbi.nlm.nih.gov/32217980/)^,[^14",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8404763/)^,[^25",
+   "https://pubmed.ncbi.nlm.nih.gov/30337460/)^,[^4",
+   "https://pubmed.ncbi.nlm.nih.gov/30337460/)^,[^2",
+   "https://pubmed.ncbi.nlm.nih.gov/36604155/)^,[^4",
+   "https://pubmed.ncbi.nlm.nih.gov/32217980/)^,[^17",
+   "https://pubmed.ncbi.nlm.nih.gov/32217980/)^,[^12",
+   "https://pubmed.ncbi.nlm.nih.gov/33394898/)^,[^13",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8404763/)^,[^19",
+   "https://pubmed.ncbi.nlm.nih.gov/38912201/)^,[^21",
+   "https://pubmed.ncbi.nlm.nih.gov/36604155/)^Despite",
+   "https://pubmed.ncbi.nlm.nih.gov/32217980/)^,[^24",
+   "https://pubmed.ncbi.nlm.nih.gov/32217980/)^"
   ],
   "references": [
    {
@@ -24589,7 +24623,7 @@
    "https://doi.org/10.1056/NEJMoa2032183",
    "https://doi.org/10.1002/jcsm.12268",
    "https://doi.org/10.1056/NEJMoa2206038",
-   "https://doi.org/10.1016/S2213-8587(22",
+   "https://doi.org/10.1016/S2213-8587(22)00070-5",
    "https://doi.org/10.1093/gerona/61.10.1059",
    "https://doi.org/10.1111/obr.12143",
    "https://doi.org/10.1111/dom.70141",
@@ -24608,7 +24642,7 @@
    "https://doi.org/10.1001/jamanetworkopen.2024.16775",
    "https://doi.org/10.1056/NEJMoa2307563",
    "https://doi.org/10.1056/NEJMoa2403347",
-   "https://doi.org/10.1016/S0140-6736(14",
+   "https://doi.org/10.1016/S0140-6736(14)62000-6",
    "https://doi.org/10.1016/j.clnu.2011.04.001",
    "https://doi.org/10.1016/j.xcrm.2026.102665",
    "https://doi.org/10.1056/NEJMoa2401755",
@@ -24618,23 +24652,23 @@
    "https://doi.org/10.1016/j.molmet.2022.101633",
    "https://doi.org/10.1210/jendso/bvae164",
    "https://doi.org/10.1111/jgs.16372",
-   "https://doi.org/10.1016/S0140-6736(09",
+   "https://doi.org/10.1016/S0140-6736(09)61457-4",
    "https://doi.org/10.1002/oby.20662",
    "https://doi.org/10.1056/NEJMoa0804748",
    "https://doi.org/10.1016/j.jada.2007.07.017",
    "https://doi.org/10.1249/MSS.0000000000001174",
    "https://doi.org/10.1038/s41598-019-46428-w",
    "https://www.nejm.org/doi/10.1056/NEJMoa2032183",
-   "https://onlinelibrary.wiley.com/doi/10.1002/jcsm.12268",
+   "https://onlinelibrary.wiley.com/doi/10.1002/jcsm.12268).^²",
    "https://linkinghub.elsevier.com/retrieve/pii/S2666379126000820",
    "https://pubmed.ncbi.nlm.nih.gov/38847460/",
    "https://www.nature.com/articles/s41591-024-03018-2",
    "https://www.nejm.org/doi/10.1056/NEJMoa2206038",
-   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(22",
+   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(22)00070-5/abstract",
    "https://academic.oup.com/biomedgerontology/article-abstract/61/10/1059/600461?redirectedFrom=fulltext",
    "https://www.nejm.org/doi/abs/10.1056/NEJMoa2502081",
-   "https://pubmed.ncbi.nlm.nih.gov/40609566/",
-   "https://onlinelibrary.wiley.com/doi/10.1111/obr.12143",
+   "https://pubmed.ncbi.nlm.nih.gov/40609566/)showed",
+   "https://onlinelibrary.wiley.com/doi/10.1111/obr.12143)described",
    "https://pubmed.ncbi.nlm.nih.gov/39401279/",
    "https://academic.oup.com/ageing/article/48/1/16/5126243",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12132920/",
@@ -24646,7 +24680,7 @@
    "https://clinicaltrials.gov/study/NCT06282458",
    "https://www.dietaryguidelines.gov/",
    "https://bjsm.bmj.com/content/52/6/376",
-   "https://linkinghub.elsevier.com/retrieve/pii/S0261561411000665",
+   "https://linkinghub.elsevier.com/retrieve/pii/S0261561411000665)t",
    "https://pubmed.ncbi.nlm.nih.gov/38916894/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC3135022/",
    "https://pubmed.ncbi.nlm.nih.gov/24307184/",
@@ -24701,17 +24735,17 @@
    },
    {
     "n": 4,
-    "text": "4. Gastaldelli A, Cusi K, Fernandez Lando L, et al. Effect of tirzepatide versus insulin degludec on liver fat content and abdominal adipose tissue (SURPASS-3 MRI). Lancet Diabetes Endocrinol. 2022;10(6):393-406.https://doi.org/10.1016/S2213-8587(22)00070-500070-5)",
+    "text": "4. Gastaldelli A, Cusi K, Fernandez Lando L, et al. Effect of tirzepatide versus insulin degludec on liver fat content and abdominal adipose tissue (SURPASS-3 MRI). Lancet Diabetes Endocrinol. 2022;10(6):393-406.https://doi.org/10.1016/S2213-8587(22)00070-5",
     "urls": [
-     "https://doi.org/10.1016/S2213-8587(22"
+     "https://doi.org/10.1016/S2213-8587(22)00070-5"
     ],
-    "doi": "10.1016/S2213-8587(22",
+    "doi": "10.1016/S2213-8587(22)00070-5",
     "pmid": "",
     "cited_at": [
      6,
      8
     ],
-    "key": "https://doi.org/10.1016/S2213-8587(22"
+    "key": "https://doi.org/10.1016/S2213-8587(22)00070-5"
    },
    {
     "n": 5,
@@ -24938,16 +24972,16 @@
    },
    {
     "n": 23,
-    "text": "23. Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the PURE study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(14)62000-662000-6)",
+    "text": "23. Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the PURE study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(14)62000-6",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(14"
+     "https://doi.org/10.1016/S0140-6736(14)62000-6"
     ],
-    "doi": "10.1016/S0140-6736(14",
+    "doi": "10.1016/S0140-6736(14)62000-6",
     "pmid": "",
     "cited_at": [
      20
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(14"
+    "key": "https://doi.org/10.1016/S0140-6736(14)62000-6"
    },
    {
     "n": 24,
@@ -25071,12 +25105,12 @@
     "n": 33,
     "text": "33. Diabetes Prevention Program Research Group, Knowler WC, Fowler SE, et al. 10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study. Lancet. 2009;374(9702):1677-1686. doi:10.1016/S0140-6736(09)61457-4",
     "urls": [],
-    "doi": "10.1016/S0140-6736(09",
+    "doi": "10.1016/S0140-6736(09)61457-4",
     "pmid": "",
     "cited_at": [
      37
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(09"
+    "key": "https://doi.org/10.1016/S0140-6736(09)61457-4"
    },
    {
     "n": 34,
@@ -25230,7 +25264,7 @@
     "pos": 9608,
     "url": "",
     "section": "What happens when you use a better measurement tool?",
-    "claim": "The SURPASS-3 MRI substudy00070-5/abstract) went a step further.^"
+    "claim": "The SURPASS-3 MRI substudy went a step further.^"
    },
    {
     "n": [
@@ -25617,7 +25651,7 @@
    "https://bjsm.bmj.com/content/52/16/1040",
    "https://pubmed.ncbi.nlm.nih.gov/13129987/",
    "https://pubmed.ncbi.nlm.nih.gov/16473748/",
-   "https://bmcmusculoskeletdisord.biomedcentral.com/articles/10.1186/s12891-019-2749-z#:~:text=The%20findings%20of%20this%20systematic,(greater%20than%2012%20weeks",
+   "https://bmcmusculoskeletdisord.biomedcentral.com/articles/10.1186/s12891-019-2749-z#:~:text=The%20findings%20of%20this%20systematic,(greater%20than%2012%20weeks).",
    "https://pubmed.ncbi.nlm.nih.gov/28602048/",
    "https://pubmed.ncbi.nlm.nih.gov/34857021/",
    "https://pubmed.ncbi.nlm.nih.gov/33785535/",
@@ -25675,7 +25709,7 @@
     "urls": [
      "https://doi.org/10.1519/JSC.0000000000001323"
     ],
-    "doi": "10.1519/JSC.0000000000001323",
+    "doi": "10.1519/JSC.0000000000001323)",
     "pmid": "",
     "cited_at": [
      1
@@ -25688,7 +25722,7 @@
     "urls": [
      "https://doi.org/10.1519/JSC.0b013e3182577067"
     ],
-    "doi": "10.1519/JSC.0b013e3182577067",
+    "doi": "10.1519/JSC.0b013e3182577067)",
     "pmid": "",
     "cited_at": [
      2
@@ -25701,7 +25735,7 @@
     "urls": [
      "https://doi.org/10.1123/jsr.2016-0197"
     ],
-    "doi": "10.1123/jsr.2016-0197",
+    "doi": "10.1123/jsr.2016-0197)",
     "pmid": "",
     "cited_at": [
      2
@@ -25714,7 +25748,7 @@
     "urls": [
      "https://doi.org/10.1519/JSC.0b013e3182577067"
     ],
-    "doi": "10.1519/JSC.0b013e3182577067",
+    "doi": "10.1519/JSC.0b013e3182577067)",
     "pmid": "",
     "cited_at": [
      2
@@ -25839,7 +25873,7 @@
   "n_selflinked_markers": 54,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 51,
+  "n_prose_links": 54,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": true,
@@ -25894,8 +25928,20 @@
    "https://pubmed.ncbi.nlm.nih.gov/38174375/",
    "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2024.1472702/full",
    "https://onlinelibrary.wiley.com/doi/10.1080/17461391.2019.1572227",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8598208/),[5",
+   "https://pubmed.ncbi.nlm.nih.gov/27928212/),[8",
    "https://pubmed.ncbi.nlm.nih.gov/26177817/",
-   "https://pubmed.ncbi.nlm.nih.gov/8598068/"
+   "https://pubmed.ncbi.nlm.nih.gov/8598068/",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC3576706/),[23",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC3500611/),[32",
+   "https://pubmed.ncbi.nlm.nih.gov/39788807/),[36",
+   "https://pubmed.ncbi.nlm.nih.gov/29022275/),[37",
+   "https://pubmed.ncbi.nlm.nih.gov/36135035/),[39",
+   "https://pubmed.ncbi.nlm.nih.gov/17016118/),[41",
+   "https://pubmed.ncbi.nlm.nih.gov/23438233/),[42",
+   "https://pubmed.ncbi.nlm.nih.gov/24136138/),[43",
+   "https://pubmed.ncbi.nlm.nih.gov/26970332/),[45",
+   "https://pubmed.ncbi.nlm.nih.gov/28755103/),[48"
   ],
   "references": [],
   "markers": [
@@ -26534,7 +26580,7 @@
   "n_selflinked_markers": 13,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 12,
+  "n_prose_links": 13,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": true,
@@ -26542,7 +26588,7 @@
   "refs": [
    "https://doi.org/10.1046/j.1468-2982.2003.00588.x",
    "https://doi.org/10.1177/0333102413485658",
-   "https://doi.org/10.1016/S0140-6736(20",
+   "https://doi.org/10.1016/S0140-6736(20)32160-7",
    "https://doi.org/10.2169/internalmedicine.54.4926",
    "https://doi.org/10.1111/head.12738",
    "https://doi.org/10.1097/01.csmr.0000306516.25172.21",
@@ -26562,6 +26608,8 @@
    "https://pubmed.ncbi.nlm.nih.gov/1774180/",
    "https://pubmed.ncbi.nlm.nih.gov/19211193/",
    "https://thejournalofheadacheandpain.biomedcentral.com/articles/10.1186/s10194-022-01503-y",
+   "https://pubmed.ncbi.nlm.nih.gov/14510926/),[4",
+   "https://pubmed.ncbi.nlm.nih.gov/1774180/),[10",
    "https://health.gov/sites/default/files/2019-09/Physical_Activity_Guidelines_2nd_edition.pdf"
   ],
   "references": [
@@ -26592,12 +26640,12 @@
     "n": 3,
     "text": "Ashina M, Katsarava Z, Do TP, Buse DC, Pozo-Rosich P, Özge A, Krymchantowski AV, Lebedeva ER, Ravishankar K, Yu S, Sacco S, Ashina S, Younis S, Steiner TJ, Lipton RB. Migraine: epidemiology and systems of care. Lancet. 2021 Apr 17;397(10283):1485-1495. doi: 10.1016/S0140-6736(20)32160-7. Epub 2021 Mar 25. PMID: 33773613.",
     "urls": [],
-    "doi": "10.1016/S0140-6736(20",
+    "doi": "10.1016/S0140-6736(20)32160-7",
     "pmid": "",
     "cited_at": [
      2
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(20"
+    "key": "https://doi.org/10.1016/S0140-6736(20)32160-7"
    },
    {
     "n": 4,
@@ -28621,7 +28669,7 @@
    "text:Cohen DA, Farley TA. Eating as an automatic behavior. Prev Chronic Dis. 2008;5(1):A23.",
    "https://doi.org/10.2105/ajph.92.2.246",
    "https://doi.org/10.1509/jm.12.0303",
-   "https://doi.org/10.1016/S0195-6663(03",
+   "https://doi.org/10.1016/S0195-6663(03)00117-X",
    "https://doi.org/10.1002/14651858.CD011045.pub2",
    "https://doi.org/10.1177/0890117116660772",
    "https://doi.org/10.3389/fnut.2020.00014",
@@ -28703,16 +28751,16 @@
    },
    {
     "n": 6,
-    "text": "Rolls BJ, Roe LS, Kral TVE, Meengs JS, Wall DE. Increasing the portion size of a packaged snack increases energy intake in men and women. Appetite. 2004;42(1):63-69. https://doi.org/10.1016/S0195-6663(03)00117-X00117-X)",
+    "text": "Rolls BJ, Roe LS, Kral TVE, Meengs JS, Wall DE. Increasing the portion size of a packaged snack increases energy intake in men and women. Appetite. 2004;42(1):63-69. https://doi.org/10.1016/S0195-6663(03)00117-X",
     "urls": [
-     "https://doi.org/10.1016/S0195-6663(03"
+     "https://doi.org/10.1016/S0195-6663(03)00117-X"
     ],
-    "doi": "10.1016/S0195-6663(03",
+    "doi": "10.1016/S0195-6663(03)00117-X",
     "pmid": "",
     "cited_at": [
      5
     ],
-    "key": "https://doi.org/10.1016/S0195-6663(03"
+    "key": "https://doi.org/10.1016/S0195-6663(03)00117-X"
    },
    {
     "n": 7,
@@ -29728,7 +29776,7 @@
    "https://doi.org/10.1186/s12970-014-0064-5",
    "https://doi.org/10.1186/1475-2891-12-86",
    "https://doi.org/10.1093/ajcn/nqy088",
-   "https://doi.org/10.1016/S0140-6736(18",
+   "https://doi.org/10.1016/S0140-6736(18)31809-9",
    "https://doi.org/10.1113/JP273230",
    "https://doi.org/10.2478/hukin-2019-0071",
    "https://doi.org/10.1016/j.jacc.2015.07.055",
@@ -29989,12 +30037,12 @@
     "n": 22,
     "text": "Reynolds, Andrew et al. “Carbohydrate quality and human health: a series of systematic reviews and meta-analyses.” Lancet (London, England) vol. 393,10170 (2019): 434-445. doi:10.1016/S0140-6736(18)31809-9",
     "urls": [],
-    "doi": "10.1016/S0140-6736(18",
+    "doi": "10.1016/S0140-6736(18)31809-9",
     "pmid": "",
     "cited_at": [
      19
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(18"
+    "key": "https://doi.org/10.1016/S0140-6736(18)31809-9"
    },
    {
     "n": 23,
@@ -30475,7 +30523,7 @@
    "http://www.who.int/healthinfo/global_burden_disease/GlobalHealthRisks_report_full.pdf",
    "https://jamanetwork.com/journals/jama/article-abstract/2712935",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6566056/",
-   "https://www.ncbi.nlm.nih.gov/pubmed/24361242",
+   "https://www.ncbi.nlm.nih.gov/pubmed/24361242)[Ponsonby",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3120195/",
    "https://www.ncbi.nlm.nih.gov/pubmed/27591819",
    "https://www.ncbi.nlm.nih.gov/pubmed/23529287",
@@ -30546,7 +30594,11 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6015912/",
    "https://www.redalyc.org/pdf/3092/309245773040.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/27875635/",
-   "https://odphp.health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines/current-guidelines"
+   "https://odphp.health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines/current-guidelines",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8325614/#:~:text=In%20addition%2C%20during%20the%20first,35%20days%20of%20bed%20rest.",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC5513116/),[11",
+   "https://pubmed.ncbi.nlm.nih.gov/27433992/),[13",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC6794984/),[15"
   ],
   "references": [
    {
@@ -31185,7 +31237,7 @@
    "text:Hemborg B, Moritz U, Löwing H. Intra-abdominal pressure and trunk muscle activity during lifting. IV. The causal factors of the intra-abdominal pressure rise. Scand J Rehabil Med. 1985;17(1):25-38. PMID: 3159082.",
    "https://doi.org/10.1177/2050312120901559",
    "https://doi.org/10.1016/j.jsams.2022.08.009",
-   "https://doi.org/10.1519/1533-4287(2003",
+   "https://doi.org/10.1519/1533-4287(2003)017",
    "https://doi.org/10.1007/s40279-022-01675-2",
    "https://doi.org/10.1161/HYPERTENSIONAHA.111.177071",
    "https://doi.org/10.1136/bjsports-2013-092538",
@@ -31240,10 +31292,10 @@
     "n": 5,
     "text": "Balabinis CP, Psarakis CH, Moukas M, Vassiliou MP, Behrakis PK. Early phase changes by concurrent endurance and strength training. J Strength Cond Res. 2003 May;17(2):393-401. doi: 10.1519/1533-4287(2003)017<0393:epcbce>2.0.co;2. PMID: 12741884.",
     "urls": [],
-    "doi": "10.1519/1533-4287(2003",
+    "doi": "10.1519/1533-4287(2003)017",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1519/1533-4287(2003"
+    "key": "https://doi.org/10.1519/1533-4287(2003)017"
    },
    {
     "n": 6,
@@ -31510,10 +31562,16 @@
    "https://pubmed.ncbi.nlm.nih.gov/28698222/",
    "https://pubmed.ncbi.nlm.nih.gov/24092765/",
    "https://jamanetwork.com/journals/jama/article-abstract/2712935",
+   "https://pubmed.ncbi.nlm.nih.gov/2336074/),[2",
+   "https://pubmed.ncbi.nlm.nih.gov/27804272/).[5",
    "https://pubmed.ncbi.nlm.nih.gov/30418471/",
    "https://onlinelibrary.wiley.com/doi/epdf/10.1111/sms.14075?src=getftr&utm_source=sciencedirect_contenthosting&getft_integrator=sciencedirect_contenthosting",
+   "https://pubmed.ncbi.nlm.nih.gov/20164371/),[14",
+   "https://pubmed.ncbi.nlm.nih.gov/26817506/),[15",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC5161655/),[19",
    "https://pubmed.ncbi.nlm.nih.gov/12618580/",
-   "https://pubmed.ncbi.nlm.nih.gov/39287777/"
+   "https://pubmed.ncbi.nlm.nih.gov/39287777/",
+   "https://pubmed.ncbi.nlm.nih.gov/38934469/),[26"
   ],
   "references": [
    {
@@ -32265,13 +32323,13 @@
    "https://doi.org/10.1038/ijo.2008.11",
    "https://doi.org/10.1038/ijo.2010.5",
    "https://www.cdc.gov/bmi/adult-calculator/bmi-categories.html",
-   "https://doi.org/10.1016/S0140-6736(03",
+   "https://doi.org/10.1016/S0140-6736(03)15268-3",
    "https://doi.org/10.1093/ndt/gfm517",
-   "https://doi.org/10.1016/0021-9681(72",
+   "https://doi.org/10.1016/0021-9681(72)90027-6",
    "https://doi.org/10.1111/sms.13605",
-   "https://doi.org/10.1016/S0140-6736(16",
-   "https://doi.org/10.1016/S0140-6736(09",
-   "https://doi.org/10.1016/S2213-8587(24"
+   "https://doi.org/10.1016/S0140-6736(16)30175-1",
+   "https://doi.org/10.1016/S0140-6736(09)60318-4",
+   "https://doi.org/10.1016/S2213-8587(24)00316-4"
   ],
   "references": [
    {
@@ -32322,15 +32380,15 @@
     "n": 4,
     "text": "WHO Expert Consultation. Appropriate body-mass index for Asian populations and its implications for policy and intervention strategies. Lancet. 2004;363(9403):157-163. https://doi.org/10.1016/S0140-6736(03)15268-3",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(03"
+     "https://doi.org/10.1016/S0140-6736(03)15268-3"
     ],
-    "doi": "10.1016/S0140-6736(03",
+    "doi": "10.1016/S0140-6736(03)15268-3",
     "pmid": "",
     "cited_at": [
      6,
      15
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(03"
+    "key": "https://doi.org/10.1016/S0140-6736(03)15268-3"
    },
    {
     "n": 5,
@@ -32350,14 +32408,14 @@
     "n": 6,
     "text": "Keys A, Fidanza F, Karvonen MJ, Kimura N, Taylor HL. Indices of relative weight and obesity. J Chronic Dis. 1972;25(6):329-343. https://doi.org/10.1016/0021-9681(72)90027-6",
     "urls": [
-     "https://doi.org/10.1016/0021-9681(72"
+     "https://doi.org/10.1016/0021-9681(72)90027-6"
     ],
-    "doi": "10.1016/0021-9681(72",
+    "doi": "10.1016/0021-9681(72)90027-6",
     "pmid": "",
     "cited_at": [
      8
     ],
-    "key": "https://doi.org/10.1016/0021-9681(72"
+    "key": "https://doi.org/10.1016/0021-9681(72)90027-6"
    },
    {
     "n": 7,
@@ -32376,41 +32434,41 @@
     "n": 8,
     "text": "Global BMI Mortality Collaboration. Body-mass index and all-cause mortality: individual-participant-data meta-analysis of 239 prospective studies in four continents. Lancet. 2016;388(10046):776-786. https://doi.org/10.1016/S0140-6736(16)30175-1",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(16"
+     "https://doi.org/10.1016/S0140-6736(16)30175-1"
     ],
-    "doi": "10.1016/S0140-6736(16",
+    "doi": "10.1016/S0140-6736(16)30175-1",
     "pmid": "",
     "cited_at": [
      13
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(16"
+    "key": "https://doi.org/10.1016/S0140-6736(16)30175-1"
    },
    {
     "n": 9,
     "text": "Prospective Studies Collaboration. Body-mass index and cause-specific mortality in 900 000 adults: collaborative analyses of 57 prospective studies. Lancet. 2009;373(9669):1083-1096. https://doi.org/10.1016/S0140-6736(09)60318-4",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(09"
+     "https://doi.org/10.1016/S0140-6736(09)60318-4"
     ],
-    "doi": "10.1016/S0140-6736(09",
+    "doi": "10.1016/S0140-6736(09)60318-4",
     "pmid": "",
     "cited_at": [
      14
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(09"
+    "key": "https://doi.org/10.1016/S0140-6736(09)60318-4"
    },
    {
     "n": 10,
     "text": "Rubino F, Cummings DE, Eckel RH, Cohen RV, Wilding JPH, Brown WA, et al. Definition and diagnostic criteria of clinical obesity. Lancet Diabetes Endocrinol. 2025;13(3):221-262. https://doi.org/10.1016/S2213-8587(24)00316-4",
     "urls": [
-     "https://doi.org/10.1016/S2213-8587(24"
+     "https://doi.org/10.1016/S2213-8587(24)00316-4"
     ],
-    "doi": "10.1016/S2213-8587(24",
+    "doi": "10.1016/S2213-8587(24)00316-4",
     "pmid": "",
     "cited_at": [
      16,
      17
     ],
-    "key": "https://doi.org/10.1016/S2213-8587(24"
+    "key": "https://doi.org/10.1016/S2213-8587(24)00316-4"
    }
   ],
   "markers": [
@@ -32777,7 +32835,7 @@
   "n_selflinked_markers": 38,
   "n_named_markers": 0,
   "max_marker": 31,
-  "n_prose_links": 25,
+  "n_prose_links": 27,
   "n_unlinked_refs": 1,
   "n_uncited_refs": 0,
   "verified": true,
@@ -32804,7 +32862,7 @@
    "https://doi.org/10.1056/NEJMoa1506119",
    "https://doi.org/10.1530/EJE-12-0955",
    "text:Endocrine Society. (2025, July 14). Anti-obesity medications can normalize testosterone levels in men. https://www.endocrine.org/news-and-advocacy/news-room/endo-annual-meeting/endo-2025-press-releases/portillo-canales-press-release",
-   "https://doi.org/10.1016/S0899-9007(96",
+   "https://doi.org/10.1016/S0899-9007(96)80058-X",
    "https://doi.org/10.1055/s-0030-1269854",
    "https://doi.org/10.1177/1557988319835985",
    "https://doi.org/10.1210/jc.2015-1571",
@@ -32815,7 +32873,10 @@
    "https://doi.org/10.1111/j.1365-2265.2012.04432.x",
    "https://doi.org/10.1210/jcem.86.2.7219",
    "https://pubmed.ncbi.nlm.nih.gov/18349465/",
-   "https://pubmed.ncbi.nlm.nih.gov/11158037/"
+   "https://doi.org/10.1016/S0899-9007(96",
+   "https://pubmed.ncbi.nlm.nih.gov/11158037/)followed",
+   "https://doi.org/10.1001/jama.2011.710)^,15",
+   "https://doi.org/10.1016/j.eclinm.2025.102871)^,[^"
   ],
   "references": [
    {
@@ -33119,16 +33180,16 @@
    },
    {
     "n": 22,
-    "text": "Prasad AS, Mantzoros CS, Beck FW, Hess JW, Brewer GJ. Zinc status and serum testosterone levels of healthy adults. Nutrition. 1996;12(5):344-348. https://doi.org/10.1016/S0899-9007(96)80058-X80058-X)",
+    "text": "Prasad AS, Mantzoros CS, Beck FW, Hess JW, Brewer GJ. Zinc status and serum testosterone levels of healthy adults. Nutrition. 1996;12(5):344-348. https://doi.org/10.1016/S0899-9007(96)80058-X",
     "urls": [
-     "https://doi.org/10.1016/S0899-9007(96"
+     "https://doi.org/10.1016/S0899-9007(96)80058-X"
     ],
-    "doi": "10.1016/S0899-9007(96",
+    "doi": "10.1016/S0899-9007(96)80058-X",
     "pmid": "",
     "cited_at": [
      45
     ],
-    "key": "https://doi.org/10.1016/S0899-9007(96"
+    "key": "https://doi.org/10.1016/S0899-9007(96)80058-X"
    },
    {
     "n": 23,
@@ -33708,7 +33769,7 @@
     "pos": 42869,
     "url": "https://doi.org/10.1055/s-0030-1269854",
     "section": "Why testosterone booster supplements are a bad place to spend money",
-    "claim": "Severe zinc deficiency suppresses testosterone, and correction restores it.^2280058-X) Vitamin D supplementation in men with confirmed deficiency produces small effects in some trials and none in others."
+    "claim": "Severe zinc deficiency suppresses testosterone, and correction restores it.^22 Vitamin D supplementation in men with confirmed deficiency produces small effects in some trials and none in others."
    },
    {
     "n": [
@@ -33718,7 +33779,7 @@
     "pos": 43119,
     "url": "https://doi.org/10.1177/1557988319835985",
     "section": "Why testosterone booster supplements are a bad place to spend money",
-    "claim": ".^2280058-X) Vitamin D supplementation in men with confirmed deficiency produces small effects in some trials and none in others.^23 Ashwagandha appears to produce modest testosterone increases in stressed or hormonally suboptimal men, consistent with a cortisol-mediated mechanism, though the clinical significance remains understudied."
+    "claim": ".^22 Vitamin D supplementation in men with confirmed deficiency produces small effects in some trials and none in others.^23 Ashwagandha appears to produce modest testosterone increases in stressed or hormonally suboptimal men, consistent with a cortisol-mediated mechanism, though the clinical significance remains understudied."
    },
    {
     "n": [
@@ -33888,7 +33949,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/38700053/",
    "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2814089",
    "https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.119.044720",
-   "https://pubmed.ncbi.nlm.nih.gov/37821352/",
+   "https://pubmed.ncbi.nlm.nih.gov/37821352/)and",
    "https://pubmed.ncbi.nlm.nih.gov/31216575/",
    "https://www.sciencedirect.com/science/article/pii/S2161831325001383",
    "https://pubmed.ncbi.nlm.nih.gov/1534437/",
@@ -33901,7 +33962,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/27076402/",
    "https://pubmed.ncbi.nlm.nih.gov/33166736/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC10895972/",
-   "https://pmc.ncbi.nlm.nih.gov/articles/PMC11668843/",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC11668843/)(like",
    "https://pubmed.ncbi.nlm.nih.gov/25568952/",
    "https://pubmed.ncbi.nlm.nih.gov/40492183/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4038261/",
@@ -35947,7 +36008,7 @@
   "n_selflinked_markers": 45,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 32,
+  "n_prose_links": 39,
   "n_unlinked_refs": 1,
   "n_uncited_refs": 1,
   "verified": true,
@@ -35972,25 +36033,37 @@
    "https://pubmed.ncbi.nlm.nih.gov/17697935/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC5722782/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC6590962/",
-   "https://pubmed.ncbi.nlm.nih.gov/3744643/",
+   "https://pubmed.ncbi.nlm.nih.gov/3744643/)[",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4789708/",
    "https://pubmed.ncbi.nlm.nih.gov/18703548/",
    "https://pubmed.ncbi.nlm.nih.gov/23852425/",
    "https://pubmed.ncbi.nlm.nih.gov/21273908/",
    "https://pubmed.ncbi.nlm.nih.gov/9662690/",
-   "https://pubmed.ncbi.nlm.nih.gov/38321325/",
+   "https://pubmed.ncbi.nlm.nih.gov/38321325/)[",
    "https://pubmed.ncbi.nlm.nih.gov/15571428/",
    "https://link.springer.com/article/10.1007/s40279-017-0765-4",
    "https://pubmed.ncbi.nlm.nih.gov/18385161/",
    "https://pubmed.ncbi.nlm.nih.gov/11839081/",
    "https://pubmed.ncbi.nlm.nih.gov/34181189/",
+   "https://pubmed.ncbi.nlm.nih.gov/34181189/)[",
    "https://pubmed.ncbi.nlm.nih.gov/31820373/",
    "https://pubmed.ncbi.nlm.nih.gov/27238810/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC7005256/",
    "https://pubmed.ncbi.nlm.nih.gov/29657961/",
    "https://pubmed.ncbi.nlm.nih.gov/36135035/",
    "https://pubmed.ncbi.nlm.nih.gov/17016118/",
-   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4213373/"
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC4213373/",
+   "https://pubmed.ncbi.nlm.nih.gov/23247672/)^,[^2",
+   "https://www.nature.com/articles/138032a0)^",
+   "https://pubmed.ncbi.nlm.nih.gov/3057313/)^,[^6",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC5722782/)^,[^19",
+   "https://pubmed.ncbi.nlm.nih.gov/15571428/)^",
+   "https://link.springer.com/article/10.1007/s40279-017-0765-4)^,[^29",
+   "https://pubmed.ncbi.nlm.nih.gov/34181189/)found",
+   "https://pubmed.ncbi.nlm.nih.gov/34181189/)^,[^32",
+   "https://pubmed.ncbi.nlm.nih.gov/23247672/)^,[^20",
+   "https://pubmed.ncbi.nlm.nih.gov/7808252/)^,[^14",
+   "https://pubmed.ncbi.nlm.nih.gov/36135035/)Similarly"
   ],
   "references": [
    {
@@ -36247,7 +36320,7 @@
     "n": 20,
     "text": "[20] Hackney, Anthony C. “Hypogonadism in Exercising Males: Dysfunction or Adaptive-Regulatory Adjustment?.” Frontiers in endocrinology vol. 11 11. 31 Jan. 2020, doi:10.3389/fendo.2020.00011",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/3744643/",
+     "https://pubmed.ncbi.nlm.nih.gov/3744643/)[",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC7005256/"
     ],
     "doi": "10.3389/fendo.2020.00011",
@@ -36256,7 +36329,7 @@
      28,
      31
     ],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/3744643/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/3744643/)["
    },
    {
     "n": 21,
@@ -36327,7 +36400,7 @@
     "n": 26,
     "text": "[26] Halson, Shona L. “Monitoring training load to understand fatigue in athletes.” Sports medicine (Auckland, N.Z.) vol. 44 Suppl 2,Suppl 2 (2014): S139-47. doi:10.1007/s40279-014-0253-z",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/38321325/",
+     "https://pubmed.ncbi.nlm.nih.gov/38321325/)[",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC4213373/"
     ],
     "doi": "10.1007/s40279-014-0253-z",
@@ -36335,7 +36408,7 @@
     "cited_at": [
      42
     ],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/38321325/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/38321325/)["
    },
    {
     "n": 27,
@@ -36422,7 +36495,7 @@
     "n": 33,
     "text": "[33] Lane AR, Hackney AC. Reproductive Dysfunction from the Stress of Exercise Training is not Gender Specific: The “Exercise-Hypogonadal Male Condition”. J Endocrinol Diabetes. 2014;1(2):4. doi: 10.15226/2374-6890/1/2/00108. Epub 2014 May 30. PMID: 29657961; PMCID: PMC5897104.",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/34181189/",
+     "https://pubmed.ncbi.nlm.nih.gov/34181189/)[",
      "https://pubmed.ncbi.nlm.nih.gov/29657961/"
     ],
     "doi": "10.15226/2374-6890/1/2/00108",
@@ -36430,13 +36503,13 @@
     "cited_at": [
      29
     ],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/)["
    },
    {
     "n": 34,
     "text": "[34] Flatt AA, Hornikel B, Nakamura FY, Esco MR. Effect of Competitive Status and Experience on Heart Rate Variability Profiles in Collegiate Sprint-Swimmers. J Strength Cond Res. 2022 Oct 1;36(10):2898-2904. doi: 10.1519/JSC.0000000000003992. Epub 2021 Feb 26. PMID: 36135035.",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/34181189/",
+     "https://pubmed.ncbi.nlm.nih.gov/34181189/)[",
      "https://pubmed.ncbi.nlm.nih.gov/36135035/"
     ],
     "doi": "10.1519/JSC.0000000000003992",
@@ -36444,13 +36517,13 @@
     "cited_at": [
      37
     ],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/)["
    },
    {
     "n": 35,
     "text": "[35] Baumert M, Brechtel L, Lock J, Hermsdorf M, Wolff R, Baier V, Voss A. Heart rate variability, blood pressure variability, and baroreflex sensitivity in overtrained athletes. Clin J Sport Med. 2006 Sep;16(5):412-7. doi: 10.1097/01.jsm.0000244610.34594.07. PMID: 17016118.",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/34181189/",
+     "https://pubmed.ncbi.nlm.nih.gov/34181189/)[",
      "https://pubmed.ncbi.nlm.nih.gov/17016118/"
     ],
     "doi": "10.1097/01.jsm.0000244610.34594.07",
@@ -36458,7 +36531,7 @@
     "cited_at": [
      38
     ],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/34181189/)["
    }
   ],
   "markers": [
@@ -37753,11 +37826,11 @@
   "verified": false,
   "problems": [],
   "refs": [
-   "https://pubmed.ncbi.nlm.nih.gov/26851290/",
+   "https://pubmed.ncbi.nlm.nih.gov/26851290/)which",
    "https://pubmed.ncbi.nlm.nih.gov/20840568/",
    "https://bjsm.bmj.com/content/54/15/934",
    "https://pubmed.ncbi.nlm.nih.gov/26049792/",
-   "https://pubmed.ncbi.nlm.nih.gov/28713281/"
+   "https://pubmed.ncbi.nlm.nih.gov/28713281/)in"
   ],
   "references": [],
   "markers": []
@@ -38450,16 +38523,16 @@
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/28834797/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4562558/",
-   "https://www.mdpi.com/2075-4663/6/3/86",
-   "https://pubmed.ncbi.nlm.nih.gov/25546444/",
-   "https://pubmed.ncbi.nlm.nih.gov/12423180/",
+   "https://www.mdpi.com/2075-4663/6/3/86)Pairing",
+   "https://pubmed.ncbi.nlm.nih.gov/25546444/)[Rhea",
+   "https://pubmed.ncbi.nlm.nih.gov/12423180/)[Ralston",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5684266/",
-   "https://pubmed.ncbi.nlm.nih.gov/28965198/",
+   "https://pubmed.ncbi.nlm.nih.gov/28965198/)[Dos",
    "https://pubmed.ncbi.nlm.nih.gov/30615007/",
-   "https://journals.physiology.org/doi/full/10.1152/jn.1999.81.4.1718",
+   "https://journals.physiology.org/doi/full/10.1152/jn.1999.81.4.1718)[Nocella",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145945/",
-   "https://www.researchgate.net/profile/Fernando-Blanco-14/publication/307896924_Effects_of_Velocity_Loss_During_Resistance_Training_on_Performance_in_Professional_Soccer_Players/links/5d0b5bd5299bf1f539d1a07f/Effects-of-Velocity-Loss-During-Resistance-Training-on-Performance-in-Professional-Soccer-Players.pdf",
-   "https://pubmed.ncbi.nlm.nih.gov/31373325/",
+   "https://www.researchgate.net/profile/Fernando-Blanco-14/publication/307896924_Effects_of_Velocity_Loss_During_Resistance_Training_on_Performance_in_Professional_Soccer_Players/links/5d0b5bd5299bf1f539d1a07f/Effects-of-Velocity-Loss-During-Resistance-Training-on-Performance-in-Professional-Soccer-Players.pdf)[Pareja-Blanco",
+   "https://pubmed.ncbi.nlm.nih.gov/31373325/)[Helms",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5877330/"
   ],
   "references": [],
@@ -40248,7 +40321,7 @@
   "n_selflinked_markers": 0,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 36,
+  "n_prose_links": 37,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": false,
@@ -40266,19 +40339,20 @@
    "https://pubmed.ncbi.nlm.nih.gov/21068571/",
    "https://bjsm.bmj.com/content/48/4/287",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3658407/",
-   "https://pubmed.ncbi.nlm.nih.gov/28288281/",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5349389/",
+   "https://pubmed.ncbi.nlm.nih.gov/28288281/)sought",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5349389/)examined",
    "https://pubmed.ncbi.nlm.nih.gov/28812031/",
    "https://pubmed.ncbi.nlm.nih.gov/16452269/",
    "https://pubmed.ncbi.nlm.nih.gov/23060653/",
    "https://bjsm.bmj.com/content/48/17/1265",
    "https://pubmed.ncbi.nlm.nih.gov/30135085/",
    "http://journals.sagepub.com/doi/abs/10.1177/0363546517710213",
+   "https://pubmed.ncbi.nlm.nih.gov/28288281/",
    "https://pubmed.ncbi.nlm.nih.gov/29114563/",
    "https://pubmed.ncbi.nlm.nih.gov/29135275/",
    "https://pubmed.ncbi.nlm.nih.gov/21694586/",
    "https://pubmed.ncbi.nlm.nih.gov/25028798/",
-   "https://pubmed.ncbi.nlm.nih.gov/31268994/",
+   "https://pubmed.ncbi.nlm.nih.gov/31268994/)looked",
    "https://www.sciencedirect.com/science/article/pii/S2095254617301308",
    "http://journals.sagepub.com/doi/abs/10.1177/2325967117729147",
    "http://psycnet.apa.org/record/2002-02485-001",
@@ -40793,7 +40867,19 @@
    "https://pubmed.ncbi.nlm.nih.gov/27578103/",
    "https://pubmed.ncbi.nlm.nih.gov/12768237/",
    "https://www.nejm.org/doi/abs/10.1056/NEJM199105163242007",
-   "https://pmc.ncbi.nlm.nih.gov/articles/PMC9154772/"
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC9154772/",
+   "https://pubmed.ncbi.nlm.nih.gov/20298139/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC6026788/)^",
+   "https://onlinelibrary.wiley.com/doi/abs/10.1002/mus.10232)^",
+   "https://pubmed.ncbi.nlm.nih.gov/27922494/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC3387368/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC1175909/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/11847951/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/26687696/)^",
+   "https://jamanetwork.com/journals/jama/fullarticle/2584057)^",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(17)31075-9/fulltext)^,[^16",
+   "https://pubmed.ncbi.nlm.nih.gov/27578103/)^",
+   "https://www.nejm.org/doi/abs/10.1056/NEJM199105163242007)^"
   ],
   "references": [],
   "markers": [
@@ -40965,7 +41051,7 @@
     "pos": 10791,
     "url": "https://www.nejm.org/doi/full/10.1056/NEJMc2031173",
     "section": "Do Statins Cause Rhabdomyolysis?",
-    "claim": "However, when they are unaware if they are taking a statin or placebo, these muscle-related side effects are reported at the exact same frequency. ^1531075-9/fulltext)^,"
+    "claim": "However, when they are unaware if they are taking a statin or placebo, these muscle-related side effects are reported at the exact same frequency. ^15^,"
    },
    {
     "n": [
@@ -41066,7 +41152,7 @@
   "refs": [
    "text:Alentorn-Geli E, Samuelsson K, Musahl V, Green CL, Bhandari M, Karlsson J. The Association of Recreational and Competitive Running With Hip and Knee Osteoarthritis: A Systematic Review and Meta-analysis. J Orthop Sports Phys Ther. 2017 Jun;47(6):373-390.",
    "text:Igarashi Y, Nogami Y. Running to Lower Resting Blood Pressure: A Systematic Review and Meta-analysis. Sports Med. 2020 Mar;50(3):531-541.",
-   "https://doi.org/10.1016/S0140-6736(12",
+   "https://doi.org/10.1016/S0140-6736(12)61031-9",
    "text:Litwic A, Edwards MH, Dennison EM, Cooper C. Epidemiology and burden of osteoarthritis. Br Med Bull. 2013;105:185-99.",
    "text:Lo GH, Musa SM, Driban JB, Kriska AM, McAlindon TE, Souza RB, Petersen NJ, Storti KL, Eaton CB, Hochberg MC, Jackson RD, Kwoh CK, Nevitt MC, Suarez-Almazor ME. Running does not increase symptoms or structural progression in people with knee osteoarthritis: data from the osteoarthritis initiative. Clin Rheumatol. 2018 Sep;37(9):2497-2504.",
    "text:Pedisic Z, Shrestha N, Kovalchik S, et al Is running associated with a lower risk of all-cause, cardiovascular and cancer mortality, and is the more the better? A systematic review and meta-analysis British Journal of Sports Medicine 2020;54:898-905.",
@@ -41096,10 +41182,10 @@
     "n": 3,
     "text": "Lee IM, Shiroma EJ, Lobelo F, et al. Effect of physical inactivity on major non-communicable diseases worldwide: an analysis of burden of disease and life expectancy. Lancet. 2012;380(9838):219-229. doi:10.1016/S0140-6736(12)61031-9",
     "urls": [],
-    "doi": "10.1016/S0140-6736(12",
+    "doi": "10.1016/S0140-6736(12)61031-9",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1016/S0140-6736(12"
+    "key": "https://doi.org/10.1016/S0140-6736(12)61031-9"
    },
    {
     "n": 4,
@@ -41172,7 +41258,7 @@
    "https://doi.org/10.1249/MSS.0b013e3181d6f9e9",
    "https://doi.org/10.1152/japplphysiol.00479.2016",
    "https://pubmed.ncbi.nlm.nih.gov/40289323/",
-   "https://doi.org/10.1016/S0140-6736(14",
+   "https://doi.org/10.1016/S0140-6736(14)62000-6",
    "https://doi.org/10.1093/geronj/45.3.m82",
    "https://doi.org/10.1038/ncomms16015",
    "https://doi.org/10.1371/journal.pone.0160876",
@@ -41186,7 +41272,8 @@
    "https://doi.org/10.3389/fnut.2021.685165",
    "https://doi.org/10.2147/OAJSM.S123529",
    "https://doi.org/10.3390/jcm8040488",
-   "https://pubmed.ncbi.nlm.nih.gov/40318682/"
+   "https://pubmed.ncbi.nlm.nih.gov/40318682/",
+   "https://doi.org/10.3389/fnut.2021.685165).^23"
   ],
   "references": [
    {
@@ -41337,17 +41424,17 @@
    },
    {
     "n": 12,
-    "text": "Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the Prospective Urban Rural Epidemiology (PURE) study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(14)62000-662000-6)",
+    "text": "Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the Prospective Urban Rural Epidemiology (PURE) study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(14)62000-6",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(14"
+     "https://doi.org/10.1016/S0140-6736(14)62000-6"
     ],
-    "doi": "10.1016/S0140-6736(14",
+    "doi": "10.1016/S0140-6736(14)62000-6",
     "pmid": "",
     "cited_at": [
      13,
      16
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(14"
+    "key": "https://doi.org/10.1016/S0140-6736(14)62000-6"
    },
    {
     "n": 13,
@@ -41658,7 +41745,7 @@
     "pos": 11839,
     "url": "",
     "section": "Why Grip Strength is a Limited Screen Tool, Especially For Lifters",
-    "claim": "In the PURE cohort of 139,691 adults across 17 countries62000-6), every 5 kg lower grip strength was associated with a 17% higher risk of cardiovascular death and a 7% higher risk of non-cardiovascular death over a median four-year follow-up."
+    "claim": "In the PURE cohort of 139,691 adults across 17 countries, every 5 kg lower grip strength was associated with a 17% higher risk of cardiovascular death and a 7% higher risk of non-cardiovascular death over a median four-year follow-up."
    },
    {
     "n": [
@@ -41836,7 +41923,7 @@
    "https://doi.org/10.1016/j.pain.2009.08.020",
    "text:[2] Moseley, Lorimer. (2007). Reconceptualising pain according to modern pain science. Physical Therapy Reviews. 12. 169-178. 10.1179/108331907X223010.",
    "https://doi.org/10.1097/PR9.0000000000000634",
-   "https://doi.org/10.1016/S0140-6736(18",
+   "https://doi.org/10.1016/S0140-6736(18)30480-X",
    "https://doi.org/10.1186/s12891-017-1831-7",
    "https://doi.org/10.2519/jospt.2017.7434",
    "https://doi.org/10.3174/ajnr.A4173",
@@ -41888,12 +41975,12 @@
     "n": 4,
     "text": "[4] Hartvigsen J, Hancock MJ, Kongsted A, Louw Q, Ferreira ML, Genevay S, Hoy D, Karppinen J, Pransky G, Sieper J, Smeets RJ, Underwood M; Lancet Low Back Pain Series Working Group. What low back pain is and why we need to pay attention. Lancet. 2018 Jun 9;391(10137):2356-2367. doi: 10.1016/S0140-6736(18)30480-X. Epub 2018 Mar 21. PMID: 29573870.",
     "urls": [],
-    "doi": "10.1016/S0140-6736(18",
+    "doi": "10.1016/S0140-6736(18)30480-X",
     "pmid": "",
     "cited_at": [
      3
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(18"
+    "key": "https://doi.org/10.1016/S0140-6736(18)30480-X"
    },
    {
     "n": 5,
@@ -42216,7 +42303,7 @@
   "n_selflinked_markers": 134,
   "n_named_markers": 134,
   "max_marker": 0,
-  "n_prose_links": 65,
+  "n_prose_links": 76,
   "n_unlinked_refs": 81,
   "n_uncited_refs": 96,
   "verified": true,
@@ -42233,7 +42320,7 @@
    "text:Bermon S, Garnier PY, Hirschberg AL, et al. Serum androgen levels in elite female athletes. J Clin Endocrinol Metab. 2014;99(11):4328-4335",
    "text:Factsheet: Women in Leadership Positions within SportAccord Members. Sport-Accord.com.https://bit.ly/30bJcK3",
    "text:Schultz, Jaime. New Standards, Same Refrain: The IAAF’s Regulations on Hyperandrogenism, The American Journal of Bioethics, 2012.12:7, 32-33.",
-   "https://doi.org/10.1080/15265161.2012.683752",
+   "https://doi.org/10.1080/15265161.2012.683752)[CAS",
    "text:Momaya, A., Fawal, M., & Estes, R. (2015). Performance-Enhancing Substances in Sports: A Review of the Literature. Sports Medicine, 45(4), 517–531.",
    "text:Heymsfield SB, Gonzalez MC, Lu J, Jia G, Zheng J. Skeletal muscle mass and quality: evolution of modern measurement concepts in the context of sarcopenia. Proc Nutr Soc. 2015 Nov; 74(4):355-66.",
    "text:Silventoinen K, Sammalisto S, Perola M, Boomsma DI, Cornes BK, Davis C, Dunkel L, De Lange M, Harris JR, Hjelmborg JV, Luciano M, Martin NG, Mortensen J, Nistico L, Pedersen NL, Skytthe A, Spector TD, Stazi MA, Willemsen G, Kaprio J. Heritability of adult body height: a comparative study of twin cohorts in eight countries. Twin Res. 2003;6(5):399–408.",
@@ -42380,8 +42467,29 @@
    "http://europepmc.org/abstract/med/12165675",
    "https://www.ncbi.nlm.nih.gov/pubmed/29420345",
    "https://www.tandfonline.com/doi/abs/10.1080/15265161.2012.683752",
+   "https://www.who.int/genomics/gender/en/index1.html)[^Adelson",
+   "https://www.ncbi.nlm.nih.gov/pubmed/22146048)^This",
+   "https://www.who.int/healthinfo/global_burden_disease/GlobalHealthRisks_report_full.pdf)^",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1478807/)^,[^",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(05)67843-9/fulltext",
+   "https://www.physiology.org/doi/full/10.1152/jappl.2000.89.1.81?url_ver=Z39.88-2003&amp;rfr_id=ori%3Arid%3Acrossref.org&amp;rfr_dat=cr_pub%3Dpubmed)^However",
+   "https://www.ncbi.nlm.nih.gov/pubmed/25851205)^,[^Gallagher",
+   "https://link.springer.com/article/10.1007/BF00235103)^However",
+   "https://link.springer.com/article/10.1007/BF00235103)^[^Bishop",
+   "https://www.ncbi.nlm.nih.gov/pubmed/3608972)[^Hannah",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4756754/)^",
+   "https://www.ncbi.nlm.nih.gov/pubmed/14624724)^,[^",
+   "https://www.ncbi.nlm.nih.gov/pubmed/15604933)^,[^",
+   "https://www.ncbi.nlm.nih.gov/pubmed/18271028)^­",
+   "https://www.ncbi.nlm.nih.gov/pubmed/30136295)^This",
+   "https://bjsm.bmj.com/content/bjsports/early/2018/07/07/bjsports-2018-099700.full.pdf)To",
+   "https://www.ncbi.nlm.nih.gov/pubmed/19121966)[^T’Sjoen",
    "https://pubmed.ncbi.nlm.nih.gov/33289906/",
-   "https://pubmed.ncbi.nlm.nih.gov/33648944/"
+   "https://pubmed.ncbi.nlm.nih.gov/33648944/",
+   "https://bjsm.bmj.com/content/bjsports/early/2018/07/07/bjsports-2018-099700.full.pdf)Less",
+   "https://www.semanticscholar.org/paper/Race-Times-for-Transgender-Athletes-Harper/1e6abd2c1e03ba88e9ac8da94ea1d69ff3f4878a)^",
+   "https://www.tandfonline.com/doi/abs/10.1080/15265161.2012.683752)^They",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(05)67844-0/fulltext"
   ],
   "references": [
    {
@@ -42492,12 +42600,13 @@
     "n": 12,
     "text": "Court of Arbitration for Sport (July 2015).CAS 2014/A/3759 Dutee Chand v. Athletics Federation of India (AFI) & The International Association of Athletics Federations (IAAF)(PDF).Court of Arbitration for Sport.",
     "urls": [
-     "https://doi.org/10.1080/15265161.2012.683752"
+     "https://doi.org/10.1080/15265161.2012.683752)[CAS",
+     "https://doi.org/10.1080/15265161.2012.683752)[Court"
     ],
-    "doi": "10.1080/15265161.2012.683752",
+    "doi": "10.1080/15265161.2012.683752)[CAS",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1080/15265161.2012.683752"
+    "key": "https://doi.org/10.1080/15265161.2012.683752)[CAS"
    },
    {
     "n": 13,
@@ -43146,7 +43255,7 @@
     "urls": [
      "https://doi.org/10.1080/14681994.2014.902925"
     ],
-    "doi": "10.1080/14681994.2014.902925",
+    "doi": "10.1080/14681994.2014.902925)",
     "pmid": "",
     "cited_at": [],
     "key": "https://doi.org/10.1080/14681994.2014.902925"
@@ -44196,7 +44305,7 @@
     "pos": 60180,
     "url": "https://www.ncbi.nlm.nih.gov/pubmed/29522147",
     "section": "Gooren et al.",
-    "claim": "e prescribed off off-label to treat hormonal acne (ei.ge. acne vulgaris) in adult women. ^Zaenglein 201602614-6/abstract) Additionally, spironolactone is commonly prescribed as an adjunctive treatment for hirsutism (facial hair growth) associated with polycystic ovarian syndrome (PCOS) if initial treatment with oral contraceptives produce suboptimal results.",
+    "claim": "olactone can be prescribed off off-label to treat hormonal acne (ei.ge. acne vulgaris) in adult women. ^Zaenglein 2016 Additionally, spironolactone is commonly prescribed as an adjunctive treatment for hirsutism (facial hair growth) associated with polycystic ovarian syndrome (PCOS) if initial treatment with oral contraceptives produce suboptimal results.",
     "label": "Martin 2018"
    },
    {
@@ -45544,7 +45653,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/28476288/"
     ],
-    "doi": "10.1016/S0140-6736(17",
+    "doi": "10.1016/S0140-6736(17)31075-9",
     "pmid": "28476288",
     "cited_at": [
      12
@@ -45586,7 +45695,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/9346087/"
     ],
-    "doi": "10.1016/s0026-0495(97",
+    "doi": "10.1016/s0026-0495(97)90226-5",
     "pmid": "9346087",
     "cited_at": [
      17
@@ -46657,9 +46766,10 @@
    },
    {
     "n": 9,
-    "text": "9. Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the Prospective Urban Rural Epidemiology (PURE) study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(14)62000-6",
+    "text": "9. Leong DP, Teo KK, Rangarajan S, et al. Prognostic value of grip strength: findings from the Prospective Urban Rural Epidemiology (PURE) study. Lancet. 2015;386(9990):266-273.https://doi.org/10.1016/S0140-6736(1462000-6",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(14"
+     "https://doi.org/10.1016/S0140-6736(14",
+     "https://doi.org/10.1016/S0140-6736(14))62000-6"
     ],
     "doi": "10.1016/S0140-6736(14",
     "pmid": "",
@@ -47001,7 +47111,7 @@
     "urls": [
      "https://doi.org/10.1001/jama.1990.03440220053029"
     ],
-    "doi": "10.1001/jama.1990.03440220053029",
+    "doi": "10.1001/jama.1990.03440220053029)",
     "pmid": "",
     "cited_at": [
      0,
@@ -47029,7 +47139,7 @@
     "urls": [
      "https://doi.org/10.1113/JP272472"
     ],
-    "doi": "10.1113/JP272472",
+    "doi": "10.1113/JP272472)",
     "pmid": "",
     "cited_at": [
      2
@@ -47042,7 +47152,7 @@
     "urls": [
      "https://doi.org/10.2165/00007256-200737020-00004"
     ],
-    "doi": "10.2165/00007256-200737020-00004",
+    "doi": "10.2165/00007256-200737020-00004)",
     "pmid": "",
     "cited_at": [
      3
@@ -47055,7 +47165,7 @@
     "urls": [
      "https://doi.org/10.1007/s11357-021-00328-y"
     ],
-    "doi": "10.1007/s11357-021-00328-y",
+    "doi": "10.1007/s11357-021-00328-y)",
     "pmid": "",
     "cited_at": [
      4
@@ -47068,7 +47178,7 @@
     "urls": [
      "https://doi.org/10.1002/jbmr.3284"
     ],
-    "doi": "10.1002/jbmr.3284",
+    "doi": "10.1002/jbmr.3284)",
     "pmid": "",
     "cited_at": [
      5,
@@ -47084,7 +47194,7 @@
     "urls": [
      "https://doi.org/10.1007/s40279-015-0385-9"
     ],
-    "doi": "10.1007/s40279-015-0385-9",
+    "doi": "10.1007/s40279-015-0385-9)",
     "pmid": "",
     "cited_at": [
      1,
@@ -47099,7 +47209,7 @@
     "urls": [
      "https://doi.org/10.1007/s40279-024-02012-5"
     ],
-    "doi": "10.1007/s40279-024-02012-5",
+    "doi": "10.1007/s40279-024-02012-5)",
     "pmid": "",
     "cited_at": [
      8
@@ -47112,7 +47222,7 @@
     "urls": [
      "https://doi.org/10.1249/01.MSS.0000053727.63505.D4"
     ],
-    "doi": "10.1249/01.MSS.0000053727.63505.D4",
+    "doi": "10.1249/01.MSS.0000053727.63505.D4)",
     "pmid": "",
     "cited_at": [
      6,
@@ -47126,7 +47236,7 @@
     "urls": [
      "https://doi.org/10.7717/peerj.14142"
     ],
-    "doi": "10.7717/peerj.14142",
+    "doi": "10.7717/peerj.14142)",
     "pmid": "",
     "cited_at": [
      10
@@ -47139,7 +47249,7 @@
     "urls": [
      "https://doi.org/10.1136/bjsports-2017-097608"
     ],
-    "doi": "10.1136/bjsports-2017-097608",
+    "doi": "10.1136/bjsports-2017-097608)",
     "pmid": "",
     "cited_at": [
      12
@@ -47152,7 +47262,7 @@
     "urls": [
      "https://doi.org/10.1093/jn/nxy169"
     ],
-    "doi": "10.1093/jn/nxy169",
+    "doi": "10.1093/jn/nxy169)",
     "pmid": "",
     "cited_at": [
      13
@@ -47165,7 +47275,7 @@
     "urls": [
      "https://doi.org/10.1542/peds.2010-0445"
     ],
-    "doi": "10.1542/peds.2010-0445",
+    "doi": "10.1542/peds.2010-0445)",
     "pmid": "",
     "cited_at": [
      17,
@@ -47179,7 +47289,7 @@
     "urls": [
      "https://doi.org/10.1542/peds.2020-1011"
     ],
-    "doi": "10.1542/peds.2020-1011",
+    "doi": "10.1542/peds.2020-1011)",
     "pmid": "",
     "cited_at": [
      18,
@@ -47193,7 +47303,7 @@
     "urls": [
      "https://doi.org/10.1007/s40279-023-01962-6"
     ],
-    "doi": "10.1007/s40279-023-01962-6",
+    "doi": "10.1007/s40279-023-01962-6)",
     "pmid": "",
     "cited_at": [
      1,
@@ -47211,7 +47321,7 @@
     "urls": [
      "https://doi.org/10.1249/MSS.0b013e3181c34465"
     ],
-    "doi": "10.1249/MSS.0b013e3181c34465",
+    "doi": "10.1249/MSS.0b013e3181c34465)",
     "pmid": "",
     "cited_at": [
      21
@@ -47224,7 +47334,7 @@
     "urls": [
      "https://doi.org/10.1186/s12877-022-03326-7"
     ],
-    "doi": "10.1186/s12877-022-03326-7",
+    "doi": "10.1186/s12877-022-03326-7)",
     "pmid": "",
     "cited_at": [
      23
@@ -47237,7 +47347,7 @@
     "urls": [
      "https://doi.org/10.1519/JSC.0000000000003521"
     ],
-    "doi": "10.1519/JSC.0000000000003521",
+    "doi": "10.1519/JSC.0000000000003521)",
     "pmid": "",
     "cited_at": [
      16,
@@ -47251,7 +47361,7 @@
     "urls": [
      "https://doi.org/10.1177/2047487319850718"
     ],
-    "doi": "10.1177/2047487319850718",
+    "doi": "10.1177/2047487319850718)",
     "pmid": "",
     "cited_at": [
      28
@@ -47264,7 +47374,7 @@
     "urls": [
      "https://doi.org/10.1136/bjsports-2021-105061"
     ],
-    "doi": "10.1136/bjsports-2021-105061",
+    "doi": "10.1136/bjsports-2021-105061)",
     "pmid": "",
     "cited_at": [
      29
@@ -47956,7 +48066,7 @@
    "https://doi.org/10.1519/JSC.0000000000001272",
    "https://doi.org/10.1136/bjsports-2017-097608",
    "https://doi.org/10.1093/ajcn/nqy088",
-   "https://jamanetwork.com/journals/jama/article-abstract/2712935",
+   "https://jamanetwork.com/journals/jama/article-abstract/2712935)).This",
    "https://www.ncbi.nlm.nih.gov/pubmed/27591819",
    "https://www.ncbi.nlm.nih.gov/pubmed/29022275",
    "https://www.ncbi.nlm.nih.gov/pubmed/25921473",
@@ -48383,7 +48493,7 @@
   "verified": true,
   "problems": [],
   "refs": [
-   "https://doi.org/10.1016/S0140-6736(18",
+   "https://doi.org/10.1016/S0140-6736(18)32279-7",
    "text:[2] Wallace IJ, Worthington S, Felson DT, Jurmain RD, Wren KT, Maijanen H, Woods RJ, Lieberman DE. Knee osteoarthritis has doubled in prevalence since the mid-20th century. Proc Natl Acad Sci U S A. 2017;114(35):9332–6.",
    "https://doi.org/10.1002/art.1790110205",
    "https://doi.org/10.1038/nrdp.2016.72",
@@ -48428,12 +48538,12 @@
     "n": 1,
     "text": "[1] GBD 2017 Disease and Injury Incidence and Prevalence Collaborators. Global, regional, and national incidence, prevalence, and years lived with disability for 354 diseases and injuries for 195 countries and territories, 1990-2017: a systematic analysis for the Global Burden of Disease Study 2017. Lancet. 2018. Nov 10;392(10159):1789-1858. doi: 10.1016/S0140-6736(18)32279-7.",
     "urls": [],
-    "doi": "10.1016/S0140-6736(18",
+    "doi": "10.1016/S0140-6736(18)32279-7",
     "pmid": "",
     "cited_at": [
      0
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(18"
+    "key": "https://doi.org/10.1016/S0140-6736(18)32279-7"
    },
    {
     "n": 2,
@@ -48626,7 +48736,7 @@
     "urls": [
      "https://doi.org/10.1002/cphy.c110025"
     ],
-    "doi": "10.1002/cphy.c110025",
+    "doi": "10.1002/cphy.c110025)",
     "pmid": "",
     "cited_at": [],
     "key": "https://doi.org/10.1002/cphy.c110025"
@@ -48703,7 +48813,7 @@
     "urls": [
      "https://doi.org/10.1080/09638288.2017.1408710"
     ],
-    "doi": "10.1080/09638288.2017.1408710",
+    "doi": "10.1080/09638288.2017.1408710)",
     "pmid": "",
     "cited_at": [
      12
@@ -48837,7 +48947,7 @@
     "urls": [
      "https://doi.org/10.1002/acr.21692"
     ],
-    "doi": "10.1002/acr.21692",
+    "doi": "10.1002/acr.21692)",
     "pmid": "",
     "cited_at": [
      17
@@ -49098,7 +49208,7 @@
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC9285060/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC10452291/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC6527311/",
-   "https://link.springer.com/article/10.1186/s13395-016-0101-y",
+   "https://link.springer.com/article/10.1186/s13395-016-0101-y)—the",
    "https://pubmed.ncbi.nlm.nih.gov/39476339/",
    "https://pubmed.ncbi.nlm.nih.gov/23828186/",
    "https://pubmed.ncbi.nlm.nih.gov/29800984/",
@@ -49373,7 +49483,7 @@
    "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks/abstract/121",
    "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks/abstract/120",
    "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks/abstract/122",
-   "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks/abstract/119"
+   "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks/abstract/119)Fortunately"
   ],
   "references": [
    {
@@ -49500,7 +49610,8 @@
   "problems": [],
   "refs": [
    "https://www.mdpi.com/1660-4601/20/3/2033",
-   "https://pubmed.ncbi.nlm.nih.gov/29792107/"
+   "https://pubmed.ncbi.nlm.nih.gov/29792107/",
+   "https://www.mdpi.com/1660-4601/20/3/2033),[2"
   ],
   "references": [],
   "markers": [
@@ -49541,7 +49652,7 @@
   "n_selflinked_markers": 0,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 43,
+  "n_prose_links": 44,
   "n_unlinked_refs": 0,
   "n_uncited_refs": 0,
   "verified": false,
@@ -49550,14 +49661,14 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6206851/",
    "https://www.nature.com/articles/s41746-019-0152-7",
    "https://journals.lww.com/acsm-msse/Fulltext/2019/12000/Methodological_Recommendations_for_Menstrual_Cycle.24.aspx",
-   "https://www.ncbi.nlm.nih.gov/books/NBK560575/",
+   "https://www.ncbi.nlm.nih.gov/books/NBK560575/)[Nawaz",
    "https://www.ncbi.nlm.nih.gov/books/NBK482168/",
    "https://pubmed.ncbi.nlm.nih.gov/7658941/",
    "https://doi.org/10.2165/00007256-200232010-00001",
    "https://pubmed.ncbi.nlm.nih.gov/1459750/",
    "https://doi.org/10.1249/mss.0b013e3182019774",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4192010/#:~:text=ER%CE%B1%20is%20present%20mainly%20in,adipose%20tissue%2C%20and%20immune%20system",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3589572/#:~:text=Estrogen%20receptors%20(ER",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4192010/#:~:text=ER%CE%B1%20is%20present%20mainly%20in,adipose%20tissue%2C%20and%20immune%20system.",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3589572/#:~:text=Estrogen%20receptors%20(ER)%20have%20been,mitochondria%20and%20the%20endoplasmic%20reticulum.",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2873087/",
    "https://pubmed.ncbi.nlm.nih.gov/30697162/",
    "https://doi.org/10.1530/joe-15-0476",
@@ -49576,7 +49687,7 @@
    "https://dx.doi.org/10.2478%2Fhukin-2019-0061",
    "https://pubmed.ncbi.nlm.nih.gov/32877968/",
    "https://doi.org/10.1081/cbi-120006083",
-   "https://link.springer.com/content/pdf/10.1007/s40279-017-0741-z.pdf",
+   "https://link.springer.com/content/pdf/10.1007/s40279-017-0741-z.pdf)[Rae",
    "https://link.springer.com/article/10.1007/s00421-015-3109-9",
    "https://www.tandfonline.com/doi/abs/10.1080/10413200008404213",
    "https://doi.org/10.1007/s40279-020-01319-3",
@@ -49587,8 +49698,9 @@
    "https://pubmed.ncbi.nlm.nih.gov/26554551/",
    "https://pubmed.ncbi.nlm.nih.gov/26767377/",
    "https://doi.org/10.1111/j.1552-6909.2006.00051.x",
-   "https://dx.doi.org/10.1038%2Fs41746-019-0152-7",
-   "https://journals.lww.com/nsca-scj/abstract/2020/02000/strength_and_conditioning_for_adolescent_endurance.2.aspx",
+   "https://dx.doi.org/10.1038%2Fs41746-019-0152-7),[Fehring",
+   "https://journals.lww.com/nsca-scj/abstract/2020/02000/strength_and_conditioning_for_adolescent_endurance.2.aspx);[McNulty",
+   "https://doi.org/10.1007/s40279-020-01319-3);[Thompson",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7916245/"
   ],
   "references": [],
@@ -50318,7 +50430,7 @@
   "n_selflinked_markers": 0,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 65,
+  "n_prose_links": 66,
   "n_unlinked_refs": 47,
   "n_uncited_refs": 69,
   "verified": false,
@@ -50337,7 +50449,7 @@
    "https://doi.org/10.1017/s0029665115004334",
    "text:IARC Working Group on the Evaluation of Carcinogenic Risk to Humans. Red Meat and Processed Meat. Lyon (FR): International Agency for Research on Cancer; 2018",
    "text:Monteiro CA, Cannon G, Levy RB et al. NOVA. The star shines bright. [Food classification. Public health] World Nutrition January-March 2016, 7, 1-3, 28-38",
-   "https://doi.org/10.1016/S1470-2045(15",
+   "https://doi.org/10.1016/S1470-2045(15)00444-1",
    "text:NHS. Red meat and the risk of bowel cancer. 2018. https://www.nhs.uk/live-well/eat-well/red-meat-and-the-risk-of-bowel-cancer/",
    "text:World Cancer Research Fund/American Institute for Cancer Research. Diet, Nutrition, Physical Activity and Cancer: a Global Perspective. Continuous Update Project Expert Report 2019.",
    "text:Eckel RH, Jakicic JM, Ard JD, de Jesus JM, Houston Miller N, Hubbard VS, Lee I-M, Lichtenstein AH, Loria CM, Millen BE, Nonas CA, Sacks FM, Smith SC Jr, Svetkey LP, Wadden TA, Yanovski SZ. 2013 AHA/ACC guideline on lifestyle management to reduce cardiovascular risk: a report of the American College of Cardiology/American Heart Association Task Force on Practice Guidelines. Circulation. 2014;129(suppl 2):S76–S99.",
@@ -50363,7 +50475,7 @@
    "text:Catapano AL, Graham I, De Backer G, et al. 2016 ESC/EAS Guidelines for the Management of Dyslipidaemias. Eur Heart J 2016; 37:2999.",
    "text:Baigent C, Blackwell L, Emberson J, et al. Efficacy and safety of more intensive lowering of LDL cholesterol: a meta-analysis of data from 170,000 participants in 26 randomised trials. Lancet. 2010;376:1670-81",
    "text:He Y, Li X, Gasevic D, et al. Statins and Multiple Noncardiovascular Outcomes: Umbrella Review of Meta-analyses of Observational Studies and Randomized Controlled Trials. Ann Intern Med 2018; 169:543.",
-   "https://pubmed.ncbi.nlm.nih.gov/29998297/",
+   "https://pubmed.ncbi.nlm.nih.gov/29998297/)JAMA",
    "text:Cardoso, Rhanderson, et al. “How Low Should We Decrease LDL-Cholesterol in a Cost-Effective Manner?” American College of Cardiology, 16 Feb. 2018, https://www.acc.org/latest-in-cardiology/articles/2018/02/16/09/31/how-low-should-we-decrease-ldl-cholesterol-in-a-cost-effective-manner.",
    "https://doi.org/10.12669/pjms.301.4525",
    "https://doi.org/10.1001/jama.2016.7491",
@@ -50386,7 +50498,7 @@
    "text:Chiavaroli L, Nishi SK, Khan TA, et al. Portfolio dietary pattern and cardiovascular disease: a systematic review and meta-analysis of controlled trials. Prog Cardiovasc Dis. 2018;61:43- 53.",
    "https://doi.org/10.3390/nu6031318",
    "text:National Cancer Institute Applied Research Program [Internet]. Bethesda (MD): National Cancer Institute Applied Research Program [updated 2013 Oct 18; cited 2015 Jan 3]. Available from: http://appliedresearch.cancer.gov/diet/foodsources/satfat/sf.html.",
-   "https://doi.org/10.1016/s0140-6736(18",
+   "https://doi.org/10.1016/s0140-6736(18)31809-9",
    "text:Rao M, Afshin A, Singh G, Mozaffarian D. Do healthier foods and diet patterns cost more than less healthy options? A systematic review and meta-analysis. BMJ Open 2013;3.",
    "text:Babault N., Païzis C., Deley G., Guérin-Deremaux L., Saniez M.-H.,Lefranc-Millot C., Allaert F.A. Pea proteins oral supplementation promotes muscle thickness gains during resistance training: A double-blind, randomized, placebo-controlled clinical trial vs. Whey protein. J. Int. Soc. Sports Nutr. 2015;12:3.",
    "text:Joy J.M., Lowery R.P., Wilson J.M., Purpura M., De Souza E.O., Wilson S.M., Kalman D.S., Dudeck J.E., Jäger R. The effects of 8 weeks of whey or rice protein supplementation on body composition and exercise performance. Nutr. J.2013;12:86",
@@ -50398,7 +50510,7 @@
    "https://www.wcrf.org/wp-content/uploads/2021/01/Recommendations.pdf",
    "https://www.ncbi.nlm.nih.gov/books/NBK507973/",
    "https://www.ncbi.nlm.nih.gov/pubmed/21070685",
-   "https://pubmed.ncbi.nlm.nih.gov/21070685/",
+   "https://pubmed.ncbi.nlm.nih.gov/21070685/)[Micha",
    "https://pubmed.ncbi.nlm.nih.gov/26408285/",
    "https://www.wcrf.org/sites/default/files/Recommendations.pdf",
    "https://www.wcrf.org/diet-activity-and-cancer/global-cancer-update-programme/about-the-global-cancer-update-programme/",
@@ -50425,14 +50537,16 @@
    "https://pubmed.ncbi.nlm.nih.gov/3773199/",
    "https://www.nejm.org/doi/full/10.1056/NEJMoa1600176",
    "https://academic.oup.com/eurheartj/article/37/39/2999/2414995",
+   "https://pubmed.ncbi.nlm.nih.gov/29998297/",
    "https://www.ncbi.nlm.nih.gov/pubmed/21067804",
    "https://pubmed.ncbi.nlm.nih.gov/21067804/",
+   "https://annals.org/aim/article-abstract/2706169/statins-multiple-noncardiovascular-outcomes-umbrella-review-meta-analyses-observational-studies)[2018",
    "https://annals.org/aim/article-abstract/2706169/statins-multiple-noncardiovascular-outcomes-umbrella-review-meta-analyses-observational-studies",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3955571/",
    "https://health.gov/our-work/nutrition-physical-activity/dietary-guidelines/previous-dietary-guidelines/2015/advisory-report",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4593072/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6513571/",
-   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2125600/",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2125600/),[Li",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4593072/figure/F1/",
    "https://nutrition.bmj.com/content/1/1/23.citation-tools",
    "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD011737/abstract",
@@ -50450,10 +50564,10 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3855594/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3966685/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4642426/#b35",
-   "https://jissn.biomedcentral.com/articles/10.1186/s12970-014-0064-5",
-   "https://pubmed.ncbi.nlm.nih.gov/23782948/",
+   "https://jissn.biomedcentral.com/articles/10.1186/s12970-014-0064-5),[Joy",
+   "https://pubmed.ncbi.nlm.nih.gov/23782948/)[Hartman",
    "https://pubmed.ncbi.nlm.nih.gov/17684208/",
-   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(18",
+   "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(18)31809-9/fulltext",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3288044/"
   ],
   "references": [
@@ -50578,10 +50692,10 @@
     "n": 14,
     "text": "International Agency for Research on Cancer. Volume 114: Consumption of red meat and processed meat. IARC Working Group. Lyon; 6–13 October, 2015. IARC Monogr Eval Carcinog Risks Hum (in press). DOI: 10.1016/S1470-2045(15)00444-1",
     "urls": [],
-    "doi": "10.1016/S1470-2045(15",
+    "doi": "10.1016/S1470-2045(15)00444-1",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1016/S1470-2045(15"
+    "key": "https://doi.org/10.1016/S1470-2045(15)00444-1"
    },
    {
     "n": 15,
@@ -50819,12 +50933,12 @@
     "n": 40,
     "text": "U.S. Preventive Services Task Force, Curry SJ, Krist AH, Owens DK, Barry MJ, Caughey AB, Davidson KW, Doubeni CA, Epling JW, Kemper AR, Kubik M, Landefeld S, Mangione CM, Silverstein M, Simon MA, Tseng C, Wong JB. Risk Assessment for Cardiovascular Disease With Nontraditional Risk Factors: US Preventive Services Task Force Recommendation Statement.JAMA. 2018; 320(3): 272-280. PubMed",
     "urls": [
-     "https://pubmed.ncbi.nlm.nih.gov/29998297/"
+     "https://pubmed.ncbi.nlm.nih.gov/29998297/)JAMA"
     ],
     "doi": "",
     "pmid": "29998297",
     "cited_at": [],
-    "key": "https://pubmed.ncbi.nlm.nih.gov/29998297/"
+    "key": "https://pubmed.ncbi.nlm.nih.gov/29998297/)JAMA"
    },
    {
     "n": 41,
@@ -51031,10 +51145,10 @@
     "n": 63,
     "text": "Reynolds, A., Mann, J., Cummings, J., Winter, N., Mete, E., & Te Morenga, L. (2019). Carbohydrate quality and human health: a series of systematic reviews and meta-analyses. The Lancet. doi:10.1016/s0140-6736(18)31809-9",
     "urls": [],
-    "doi": "10.1016/s0140-6736(18",
+    "doi": "10.1016/s0140-6736(18)31809-9",
     "pmid": "",
     "cited_at": [],
-    "key": "https://doi.org/10.1016/s0140-6736(18"
+    "key": "https://doi.org/10.1016/s0140-6736(18)31809-9"
    },
    {
     "n": 64,
@@ -51108,7 +51222,7 @@
   "n_selflinked_markers": 45,
   "n_named_markers": 0,
   "max_marker": 0,
-  "n_prose_links": 30,
+  "n_prose_links": 34,
   "n_unlinked_refs": 12,
   "n_uncited_refs": 0,
   "verified": true,
@@ -51121,7 +51235,7 @@
    "https://doi.org/10.1007/s00134-009-1445-0",
    "https://doi.org/10.1016/j.jss.2005.06.015",
    "text:Hemborg, B et al. “Intra-abdominal pressure and trunk muscle activity during lifting. IV. The causal factors of the intra-abdominal pressure rise.” Scandinavian journal of rehabilitation medicine vol. 17,1 (1985): 25-38.",
-   "https://doi.org/10.1016/s0268-0033(98",
+   "https://doi.org/10.1016/s0268-0033(98)00070-9",
    "text:Harman, E A et al. “Effects of a belt on intra-abdominal pressure during weight lifting.” Medicine and science in sports and exercise vol. 21,2 (1989): 186-90.",
    "https://doi.org/10.1080/00140139008927106",
    "https://doi.org/10.1097/01.brs.0000240670.50834.77",
@@ -51131,7 +51245,7 @@
    "https://doi.org/10.3389/fphys.2017.00985",
    "https://doi.org/10.1097/00005768-200204000-00019",
    "text:Zink, A J et al. “The effects of a weight belt on trunk and leg muscle activity and joint kinematics during the squat exercise.” Journal of strength and conditioning research vol. 15,2 (2001): 235-40.",
-   "https://doi.org/10.1519/1533-4287(1999",
+   "https://doi.org/10.1519/1533-4287(1999)013",
    "https://doi.org/10.2519/jospt.2001.31.6.316",
    "https://doi.org/10.3389/fphys.2018.00022",
    "https://doi.org/10.1097/00002517-199209000-00003",
@@ -51140,7 +51254,7 @@
    "text:Bone, U. S., and Joint Initiative. “The burden of musculoskeletal diseases in the United States (BMUS).” Rosemont, IL: OrgtoPaedic Research Society (2014).",
    "https://doi.org/10.1001/jama.284.21.2727",
    "https://doi.org/10.1136/bmj.39463.418380.BE",
-   "https://doi.org/10.1016/0003-6870(92",
+   "https://doi.org/10.1016/0003-6870(92)90293-5",
    "text:Mitchell, L V et al. “Effectiveness and cost-effectiveness of employer-issued back belts in areas of high risk for back injury.” Journal of occupational medicine.: official publication of the Industrial Medical Association vol. 36,1 (1994): 90-4.",
    "text:“Back Belts – Do They Prevent Injury? (94-127).” Centers for Disease Control and Prevention, 6 June 2014, www.cdc.gov/niosh/docs/94-127/default.html.",
    "text:WHO Scientific Group on the Burden of Musculoskeletal Conditions at the Start of the New Millennium. “The burden of musculoskeletal conditions at the start of the new millennium.” World Health Organization technical report series vol. 919 (2003): i-x, 1-218, back cover.",
@@ -51177,7 +51291,13 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5432558/",
    "https://www.ncbi.nlm.nih.gov/pubmed/27707741",
    "https://www.ncbi.nlm.nih.gov/pubmed/27328853",
-   "https://www.ncbi.nlm.nih.gov/pubmed/29785405"
+   "https://www.ncbi.nlm.nih.gov/pubmed/29785405",
+   "https://pubmed.ncbi.nlm.nih.gov/10619094/),[13",
+   "https://pubmed.ncbi.nlm.nih.gov/10619094/),[14",
+   "https://pubmed.ncbi.nlm.nih.gov/1533266/),[17",
+   "https://pubmed.ncbi.nlm.nih.gov/11710410/),[18",
+   "https://www.thelancet.com/journals/lanrhe/article/PIIS2665-9913(23)00098-X/fulltext",
+   "https://www.ncbi.nlm.nih.gov/pubmed/27707741),[33"
   ],
   "references": [
    {
@@ -51263,7 +51383,7 @@
     "n": 8,
     "text": "Miyamoto, K et al. “Effects of abdominal belts on intra-abdominal pressure, intra-muscular pressure in the erector spinae muscles and myoelectrical activities of trunk muscles.” Clinical biomechanics (Bristol, Avon) vol. 14,2 (1999): 79-87. doi:10.1016/s0268-0033(98)00070-9",
     "urls": [],
-    "doi": "10.1016/s0268-0033(98",
+    "doi": "10.1016/s0268-0033(98)00070-9",
     "pmid": "",
     "cited_at": [
      8,
@@ -51271,7 +51391,7 @@
      16,
      27
     ],
-    "key": "https://doi.org/10.1016/s0268-0033(98"
+    "key": "https://doi.org/10.1016/s0268-0033(98)00070-9"
    },
    {
     "n": 9,
@@ -51383,14 +51503,14 @@
     "n": 18,
     "text": "Bauer, Jeffrey A., et al. “The Use of Lumbar-Supporting Weight Belts While Performing Squats: Erector Spinae Electromyographic Activity.” The Journal of Strength and Conditioning Research, vol. 13, no. 4, 1999, p. 384, https://doi.org/10.1519/1533-4287(1999)013<0384:tuolsw>2.0.co;2.",
     "urls": [
-     "https://doi.org/10.1519/1533-4287(1999"
+     "https://doi.org/10.1519/1533-4287(1999)013"
     ],
-    "doi": "10.1519/1533-4287(1999",
+    "doi": "10.1519/1533-4287(1999)013",
     "pmid": "",
     "cited_at": [
      23
     ],
-    "key": "https://doi.org/10.1519/1533-4287(1999"
+    "key": "https://doi.org/10.1519/1533-4287(1999)013"
    },
    {
     "n": 19,
@@ -51484,12 +51604,12 @@
     "n": 27,
     "text": "Reddell, C R et al. “An evaluation of a weightlifting belt and back injury prevention training class for airline baggage handlers.” Applied ergonomics vol. 23,5 (1992): 319-29. doi:10.1016/0003-6870(92)90293-5",
     "urls": [],
-    "doi": "10.1016/0003-6870(92",
+    "doi": "10.1016/0003-6870(92)90293-5",
     "pmid": "",
     "cited_at": [
      37
     ],
-    "key": "https://doi.org/10.1016/0003-6870(92"
+    "key": "https://doi.org/10.1016/0003-6870(92)90293-5"
    },
    {
     "n": 28,
@@ -51918,7 +52038,7 @@
     "pos": 19929,
     "url": "",
     "section": "Do Belts Reduce Risk of Injury?",
-    "claim": "Globally, low back pain affected over 600 million adults in 2020 and is the leading cause of years lived with disability. [2300098-X/fulltext)] Considering that low back pain in the US is responsible for nearly 265 million workdays lost per year, multiple industries are keen to learn whether belts can help."
+    "claim": "Globally, low back pain affected over 600 million adults in 2020 and is the leading cause of years lived with disability. [23] Considering that low back pain in the US is responsible for nearly 265 million workdays lost per year, multiple industries are keen to learn whether belts can help."
    },
    {
     "n": [
@@ -52166,7 +52286,10 @@
    "https://pubmed.ncbi.nlm.nih.gov/24602677/",
    "https://pubmed.ncbi.nlm.nih.gov/28582642/",
    "https://pubmed.ncbi.nlm.nih.gov/26041855/",
-   "https://www.sciencedirect.com/science/article/abs/pii/S0005791601000295"
+   "https://www.sciencedirect.com/science/article/abs/pii/S0005791601000295",
+   "https://pubmed.ncbi.nlm.nih.gov/33076947/)^",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2582421/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/24602677/)^"
   ],
   "references": [],
   "markers": [
@@ -52373,7 +52496,7 @@
   "verified": false,
   "problems": [],
   "refs": [
-   "https://pubmed.ncbi.nlm.nih.gov/26018970/",
+   "https://pubmed.ncbi.nlm.nih.gov/26018970/),[Kongsgaard",
    "https://pubmed.ncbi.nlm.nih.gov/19793213/",
    "https://pubmed.ncbi.nlm.nih.gov/20154324/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6045696/pdf/bmjsem-2018-000343.pdf",
@@ -52454,7 +52577,7 @@
    "https://www.nejm.org/doi/full/10.1056/NEJM199607043350101",
    "https://www.nejm.org/doi/full/10.1056/NEJMoa2032183",
    "https://www.nejm.org/doi/full/10.1056/NEJMoa2206038",
-   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25",
+   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25)00027-0/fulltext",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12673431/",
    "https://pubmed.ncbi.nlm.nih.gov/41772149/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4142768/",
@@ -52498,14 +52621,14 @@
    },
    {
     "n": 4,
-    "text": "- SURPASS-3 MRI substudy — myosteatosis reduction on tirzepatide00027-0/fulltext)",
+    "text": "- SURPASS-3 MRI substudy — myosteatosis reduction on tirzepatide",
     "urls": [
-     "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25"
+     "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25)00027-0/fulltext"
     ],
     "doi": "",
     "pmid": "",
     "cited_at": [],
-    "key": "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25"
+    "key": "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(25)00027-0/fulltext"
    },
    {
     "n": 5,
@@ -52947,7 +53070,7 @@
    "https://doi.org/10.1016/j.knee.2013.05.001",
    "https://doi.org/10.1001/jama.284.21.2727",
    "https://doi.org/10.1136/bmj.39463.418380.BE",
-   "https://doi.org/10.1016/0003-6870(92",
+   "https://doi.org/10.1016/0003-6870(92)90293-5",
    "https://doi.org/10.1007/s10067-012-2025-1",
    "text:Bryk FF, Jesus JF, Fukuda TY, Moreira EG, Marcondes FB, Santos MG. Immediate effect of the elastic knee sleeve use on individuals with osteoarthritis. Rev Bras Reumatol. 2011 Sep-Oct;51(5):440-6. English, Portuguese. PMID: 21952996.",
    "https://doi.org/10.1016/j.apmr.2017.04.029",
@@ -53054,12 +53177,12 @@
     "n": 9,
     "text": "Reddell, C R et al. “An evaluation of a weightlifting belt and back injury prevention training class for airline baggage handlers.” Applied ergonomics vol. 23,5 (1992): 319-29. doi:10.1016/0003-6870(92)90293-5",
     "urls": [],
-    "doi": "10.1016/0003-6870(92",
+    "doi": "10.1016/0003-6870(92)90293-5",
     "pmid": "",
     "cited_at": [
      5
     ],
-    "key": "https://doi.org/10.1016/0003-6870(92"
+    "key": "https://doi.org/10.1016/0003-6870(92)90293-5"
    },
    {
     "n": 10,
@@ -53392,7 +53515,9 @@
    "https://pubmed.ncbi.nlm.nih.gov/21512399/",
    "https://pubmed.ncbi.nlm.nih.gov/20126965/",
    "https://pubmed.ncbi.nlm.nih.gov/15320650/",
-   "https://link.springer.com/article/10.1007/s40279-015-0337-4"
+   "https://pubmed.ncbi.nlm.nih.gov/26874700/#:~:text=Creatine%20is%20synthesized%20from%20three,supply%20of%20substrate%20amino%20acids.",
+   "https://link.springer.com/article/10.1007/s40279-015-0337-4",
+   "https://jamanetwork.com/journals/jamanetworkopen/article-abstract/2706496)[36"
   ],
   "references": [
    {
@@ -54584,7 +54709,7 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4405637/",
    "https://pubmed.ncbi.nlm.nih.gov/12242452/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3593165/",
-   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(23"
+   "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(23)00039-6/fulltext"
   ],
   "references": [
    {
@@ -54980,7 +55105,7 @@
    "https://doi.org/10.1371/journal.pmed.1004207",
    "https://doi.org/10.1007/s00125-016-3874-y",
    "https://doi.org/10.1172/JCI75276",
-   "https://doi.org/10.1016/S0140-6736(09",
+   "https://doi.org/10.1016/S0140-6736(09)61457-4",
    "https://doi.org/10.1056/NEJMoa0804748",
    "https://doi.org/10.1093/ajcn/74.5.579",
    "https://doi.org/10.1056/NEJMoa2032183",
@@ -55176,16 +55301,16 @@
    },
    {
     "n": 15,
-    "text": "Diabetes Prevention Program Research Group. 10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study. Lancet. 2009;374(9702):1677-1686. https://doi.org/10.1016/S0140-6736(09)61457-461457-4)",
+    "text": "Diabetes Prevention Program Research Group. 10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study. Lancet. 2009;374(9702):1677-1686. https://doi.org/10.1016/S0140-6736(09)61457-4",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(09"
+     "https://doi.org/10.1016/S0140-6736(09)61457-4"
     ],
-    "doi": "10.1016/S0140-6736(09",
+    "doi": "10.1016/S0140-6736(09)61457-4",
     "pmid": "",
     "cited_at": [
      22
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(09"
+    "key": "https://doi.org/10.1016/S0140-6736(09)61457-4"
    },
    {
     "n": 16,
@@ -55582,15 +55707,15 @@
    "https://doi.org/10.1056/NEJMoa1616338",
    "https://doi.org/10.1249/MSS.0000000000001074",
    "https://doi.org/10.1136/bmj-2025-08530",
-   "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26",
-   "https://doi.org/10.1016/S0140-6736(09",
+   "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26)00043-X/fulltext",
+   "https://doi.org/10.1016/S0140-6736(09)61457-4",
    "https://doi.org/10.1002/oby.20662",
    "https://doi.org/10.1056/NEJMoa0804748",
    "https://doi.org/10.1056/NEJMoa2206038",
    "https://doi.org/10.1016/j.jada.2007.07.017",
    "https://doi.org/10.1016/j.cmet.2007.06.004",
    "text:15. Dulloo AG, Jacquet J, Girardier L. Autoregulation of body composition during weight recovery in humans: the Minnesota Experiment revisited. Int J Obes. 1996;20(5):393-405.",
-   "https://doi.org/10.1016/S2213-8587(22",
+   "https://doi.org/10.1016/S2213-8587(22)00070-5",
    "https://doi.org/10.1136/bjsports-2017-097608",
    "https://doi.org/10.3390/nu10040423",
    "text:About the Authors",
@@ -55601,12 +55726,13 @@
    "https://pubmed.ncbi.nlm.nih.gov/38078870/",
    "https://pubmed.ncbi.nlm.nih.gov/33755728/",
    "https://linkinghub.elsevier.com/retrieve/pii/S0140673609614574",
-   "https://onlinelibrary.wiley.com/doi/10.1002/oby.20662",
+   "https://onlinelibrary.wiley.com/doi/10.1002/oby.20662)enrolled",
    "https://www.nejm.org/doi/10.1056/NEJMoa0804748",
    "https://www.nejm.org/doi/10.1056/NEJMoa2206038",
    "https://linkinghub.elsevier.com/retrieve/pii/S155041310700160X",
-   "https://pubmed.ncbi.nlm.nih.gov/8696417/",
+   "https://pubmed.ncbi.nlm.nih.gov/8696417/).^15",
    "https://linkinghub.elsevier.com/retrieve/pii/S2213858722000705",
+   "https://doi.org/10.1136/bjsports-2017-097608)is",
    "https://www.bmj.com/content/392/bmj-2025-085304"
   ],
   "references": [
@@ -55702,29 +55828,29 @@
    },
    {
     "n": 8,
-    "text": "8. Deng M, Tian R, Wu C, et al. Weight regain after discontinuation of weight-loss pharmacotherapy: a systematic review and meta-analysis. Lancet eClinicalMedicine. 2026. https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26)00043-X/fulltext00043-X/fulltext)",
+    "text": "8. Deng M, Tian R, Wu C, et al. Weight regain after discontinuation of weight-loss pharmacotherapy: a systematic review and meta-analysis. Lancet eClinicalMedicine. 2026. https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26)00043-X/fulltext",
     "urls": [
-     "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26"
+     "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26)00043-X/fulltext"
     ],
     "doi": "",
     "pmid": "",
     "cited_at": [
      4
     ],
-    "key": "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26"
+    "key": "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(26)00043-X/fulltext"
    },
    {
     "n": 9,
-    "text": "9. Diabetes Prevention Program Research Group, Knowler WC, Fowler SE, et al. 10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study. Lancet. 2009;374(9702):1677-1686. https://doi.org/10.1016/S0140-6736(09)61457-461457-4)",
+    "text": "9. Diabetes Prevention Program Research Group, Knowler WC, Fowler SE, et al. 10-year follow-up of diabetes incidence and weight loss in the Diabetes Prevention Program Outcomes Study. Lancet. 2009;374(9702):1677-1686. https://doi.org/10.1016/S0140-6736(09)61457-4",
     "urls": [
-     "https://doi.org/10.1016/S0140-6736(09"
+     "https://doi.org/10.1016/S0140-6736(09)61457-4"
     ],
-    "doi": "10.1016/S0140-6736(09",
+    "doi": "10.1016/S0140-6736(09)61457-4",
     "pmid": "",
     "cited_at": [
      5
     ],
-    "key": "https://doi.org/10.1016/S0140-6736(09"
+    "key": "https://doi.org/10.1016/S0140-6736(09)61457-4"
    },
    {
     "n": 10,
@@ -55805,16 +55931,16 @@
    },
    {
     "n": 16,
-    "text": "16. Gastaldelli A, Cusi K, Fernandez Lando L, et al. Effect of tirzepatide versus insulin degludec on liver fat content and abdominal adipose tissue (SURPASS-3 MRI). Lancet Diabetes Endocrinol. 2022;10(6):393-406. https://doi.org/10.1016/S2213-8587(22)00070-500070-5)",
+    "text": "16. Gastaldelli A, Cusi K, Fernandez Lando L, et al. Effect of tirzepatide versus insulin degludec on liver fat content and abdominal adipose tissue (SURPASS-3 MRI). Lancet Diabetes Endocrinol. 2022;10(6):393-406. https://doi.org/10.1016/S2213-8587(22)00070-5",
     "urls": [
-     "https://doi.org/10.1016/S2213-8587(22"
+     "https://doi.org/10.1016/S2213-8587(22)00070-5"
     ],
-    "doi": "10.1016/S2213-8587(22",
+    "doi": "10.1016/S2213-8587(22)00070-5",
     "pmid": "",
     "cited_at": [
      14
     ],
-    "key": "https://doi.org/10.1016/S2213-8587(22"
+    "key": "https://doi.org/10.1016/S2213-8587(22)00070-5"
    },
    {
     "n": 17,
@@ -55940,7 +56066,7 @@
     "pos": 3946,
     "url": "",
     "section": "What about the “4x faster regain” headline?",
-    "claim": "A 2026 systematic review00043-X/fulltext) sparked the headline that weight regain after GLP-1s was roughly four times faster than after lifestyle intervention.^"
+    "claim": "A 2026 systematic review sparked the headline that weight regain after GLP-1s was roughly four times faster than after lifestyle intervention.^"
    },
    {
     "n": [
@@ -56150,7 +56276,32 @@
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC5644907/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/",
    "https://pubmed.ncbi.nlm.nih.gov/32915155/",
-   "https://pubmed.ncbi.nlm.nih.gov/37498598/"
+   "https://pubmed.ncbi.nlm.nih.gov/37498598/",
+   "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4429709/)^,[^2",
+   "https://pubmed.ncbi.nlm.nih.gov/9347414/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/36998025/#:~:text=Results%3A%20Aerobic%20and%20combined%20groups,months%2C%20p%20%3D%200.014).)^,[^4",
+   "https://clinicalnutritionespen.com/article/S2405-4577(15)00152-7/fulltext",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8365736/)^,[^8",
+   "https://www.ncbi.nlm.nih.gov/books/NBK278963/)^If",
+   "https://pubmed.ncbi.nlm.nih.gov/2336074/)^,[^11",
+   "https://pubmed.ncbi.nlm.nih.gov/26193059/)^",
+   "https://www.ncbi.nlm.nih.gov/books/NBK279077/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/28774950/)^,[^17",
+   "https://pubmed.ncbi.nlm.nih.gov/9262927/)^,[^18",
+   "https://journals.physiology.org/doi/abs/10.1152/ajpendo.1992.263.5.E950)^",
+   "https://pubmed.ncbi.nlm.nih.gov/25988763/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/19223984/)^",
+   "https://journals.physiology.org/doi/full/10.1152/ajpregu.00071.2018?url=)^",
+   "https://www.ncbi.nlm.nih.gov/pubmed/1728837)^",
+   "https://pubmed.ncbi.nlm.nih.gov/26817506/)^,[^31",
+   "https://pubmed.ncbi.nlm.nih.gov/16154420/)^,[^33",
+   "https://pubmed.ncbi.nlm.nih.gov/2927308/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC6901416/)^,[^37",
+   "https://pubmed.ncbi.nlm.nih.gov/31977837/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC5644907/)^",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/32915155/)^",
+   "https://pubmed.ncbi.nlm.nih.gov/37498598/)^"
   ],
   "references": [],
   "markers": [
@@ -56202,7 +56353,7 @@
     "pos": 1371,
     "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4180002/",
     "section": "",
-    "claim": "that people will “eat back” only a small proportion of the amount of Calories used during exercise.^3.)^,^400152-7/fulltext) This is one of the ways in which exercise helps prevent weight regain in individuals who have lost weight."
+    "claim": "that people will “eat back” only a small proportion of the amount of Calories used during exercise.^3.)^,^4 This is one of the ways in which exercise helps prevent weight regain in individuals who have lost weight."
    },
    {
     "n": [
@@ -56212,7 +56363,7 @@
     "pos": 1571,
     "url": "https://www.uptodate.com/contents/strength-training-for-health-in-adults-terminology-principles-benefits-and-risks",
     "section": "",
-    "claim": ",months%2C%20p%20%3D%200.014).)^,^400152-7/fulltext) This is one of the ways in which exercise helps prevent weight regain in individuals who have lost weight. ^5 It’s also important to mention that exercise is beneficial to both health and performance regardless of whether someone loses weight or not."
+    "claim": ",months%2C%20p%20%3D%200.014).)^,^4 This is one of the ways in which exercise helps prevent weight regain in individuals who have lost weight. ^5 It’s also important to mention that exercise is beneficial to both health and performance regardless of whether someone loses weight or not."
    },
    {
     "n": [
