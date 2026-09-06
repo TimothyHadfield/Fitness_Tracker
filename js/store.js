@@ -1036,7 +1036,9 @@ export const store = {
    * ⚠️ DERIVING IS NOT CHOOSING, SO THIS NEVER WRITES THE POINTER. A guess saved
    * on read is indistinguishable from a decision a week later, and whichever
    * screen happened to open first would have pinned it. `setCurrentSystem()` is
-   * the only thing in this store that writes the field.
+   * the only thing in this store that writes the field — including
+   * `deleteSystem()`, which clears it through that function rather than reaching
+   * for `saveSettings` itself, so this sentence stays true as written.
    *
    * ⚠️ A DANGLING ID FALLS THROUGH RATHER THAN THROWING. deleteSystem() clears
    * the pointer, so this should not normally happen — but a restored backup and
@@ -1115,9 +1117,15 @@ export const store = {
      * that a pointer at something deleted is a fact which stopped being true.
      * Left in place, the fallback silently owns the answer while a stale id sits
      * in `settings` looking authoritative, and the next person to read the row
-     * has no way to tell a real choice from a dead one. */
+     * has no way to tell a real choice from a dead one.
+     *
+     * ⚠️ THROUGH `setCurrentSystem()`, NOT `saveSettings()` DIRECTLY, and that is
+     * the point rather than a style preference: currentSystem()'s header claims
+     * one writer, and a second one here would make that claim false the day it
+     * was written. It is also what makes the `null` branch of setCurrentSystem
+     * reachable — a branch nothing can reach is a branch nothing tests. */
     const settings = await backend.read('settings').then((r) => r[0] || {});
-    if (settings.currentSystemId === id) await this.saveSettings({ currentSystemId: null });
+    if (settings.currentSystemId === id) await this.setCurrentSystem(null);
   },
 
   /**

@@ -814,11 +814,13 @@ export async function RecordChooserView() {
  * set-type sheet are all this same shape already.
  *
  * ⚠️ SWITCHING WRITES AND THEN RE-RENDERS IN PLACE. `refreshRoute()` rather than
- * `go()`, because both callers are already on the screen that has to change and
- * setting `location.hash` to the hash it already holds fires no `hashchange` —
- * the screen would keep the old programme on it until something else navigated.
+ * `go()`, because every caller is already on the screen that has to change —
+ * `systemSwitcher()` on the Workouts tab and on Record, plus Record's own
+ * empty-state button — and setting `location.hash` to the hash it already holds
+ * fires no `hashchange`, so the screen would keep the old programme on it until
+ * something else navigated.
  */
-async function openSystemSwitcher({ systems, workouts, currentId }) {
+function openSystemSwitcher({ systems, workouts, currentId }) {
   const { close } = openSheet({
     title: 'Your programmes',
     body: el('div', { class: 'list' },
@@ -1062,11 +1064,19 @@ export async function StartPickerView({ tab = false } = {}) {
    * running and look for it, then take the day off it. What changed is that
    * there is now exactly one of them and the heading also switches which.
    *
-   * ⚠️ IT IS A BUTTON HERE ONLY WHEN THERE IS SOMETHING TO SWITCH TO. With one
-   * system it is a plain heading — `always` is false, unlike the Workouts tab,
-   * because Record is not where programmes are managed and a "Programmes" door
-   * on the one screen used mid-gym is a door pointing away from the only thing
-   * this screen is for (D4).
+   * ⚠️ IT IS A BUTTON HERE ONLY WHEN THERE IS SOMETHING TO SWITCH TO. `always`
+   * is false, unlike the Workouts tab, so with a single programme this is a
+   * plain heading rather than a control — a control opening a list of one is a
+   * control lying about having options.
+   *
+   * ⚠️ THE ASYMMETRY WITH THE WORKOUTS TAB IS ABOUT THE ONE-SYSTEM CASE ONLY,
+   * and an earlier version of this comment overstated it. With two or more
+   * programmes Record's heading IS a button and the sheet it opens does carry
+   * New system and Explore, exactly as the tab's does — the sheet is one thing
+   * and it is not rebuilt per screen. What `always` buys is that a person with a
+   * single programme is not handed a management door on the screen they open
+   * mid-gym to start a workout (D4). Once they have two, they have already told
+   * the app they manage programmes.
    */
   const scroll = current && mine.length
     ? [
@@ -1531,10 +1541,15 @@ function ratingBadge(rating) {
 }
 
 /* ~~`rateOwnSystems()`~~ — DELETED 2026-09-19 with the systems list it existed
- * for. It rated every one of the user's own programmes in one pass so each row
- * of the Workouts tab could wear a `ratingBadge`; that tab shows one programme
- * now and `ownSystemRating()` gives it the full rating rather than the four-cell
- * badge, which is strictly more than the row ever carried.
+ * for. It rated every one of the user's own programmes in ONE pass so that every
+ * row of the Workouts tab could wear a `ratingBadge`. That tab shows one
+ * programme now, so the batching has nothing left to batch: `ownSystemRating()`
+ * already rates the one on screen.
+ *
+ * ⚠️ THE BADGE DID NOT GO ANYWHERE — `ownSystemRating()` renders a `ratingBadge`
+ * inside `.own-rating` (see below), so the current programme still shows the same
+ * four cells it showed on its row, with the explanation underneath that a row had
+ * no space for. What was lost is a badge on the programmes you are NOT running.
  *
  * ⚠️ IT IS DELETED RATHER THAN KEPT FOR THE SWITCHER SHEET, and that was the
  * tempting call. A badge per programme would genuinely help somebody choose
@@ -1545,7 +1560,12 @@ function ratingBadge(rating) {
  * must not. Comparing programmes is what Explore is for, and it already rates
  * all nine.
  *
- * `ratingBadge()` survives — Explore and the preset detail screen both use it.
+ * `ratingBadge()` survives, and it has exactly TWO callers: `ownSystemRating()`
+ * below, and `ExploreView` — the Explore LIST. ⚠️ **Not `ExploreDetailView`**,
+ * which renders no rating block at all; the badge you see on a ready-made
+ * programme is on the row in the list, not on the screen behind it. Checked by
+ * grep rather than remembered, because the first draft of this paragraph named
+ * the detail screen and was wrong.
  */
 
 /**
