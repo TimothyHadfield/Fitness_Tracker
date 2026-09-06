@@ -2117,8 +2117,24 @@ ok(!data.querySelector('.rep-target'),
   ok(!/no longer exists/.test(detail.textContent),
      'a system opened straight after migration is found, not "Not found"');
 
-  ok(/New system/.test((await mount(WorkoutsView())).textContent),
-     'a system can be created from the list');
+  /* 🔄 "New system" LEFT THE TAB ON 2026-09-19 and lives in the switcher —
+     Tim: *"at the top you can switch systems or add any new ones to your list."*
+     The tab is one programme's own screen now, so a button for making a second
+     one is not part of what it says. It still has to be REACHABLE, which is what
+     this asserts: the door moved, it did not close. */
+  {
+    const tab = await mount(WorkoutsView());
+    ok(!/New system/.test(tab.textContent),
+       'the Workouts tab is one programme, so it no longer offers to make another one inline');
+    tab.querySelector('.sys-head').click();
+    await settle();
+    const sh = document.querySelector('.sheet');
+    ok(sh && /New system/.test(sh.textContent),
+       'a system can still be created — from the switcher, which is the only door to it now');
+    sh.querySelector('.sheet-close, .btn')?.click?.();
+    document.querySelectorAll('.sheet, .sheet-backdrop').forEach((n) => n.remove());
+    await settle();
+  }
   const blank = await mount(SystemRouteView('new'));
   ok(/Create system/.test(blank.textContent), 'the new-system screen offers to create one');
 
@@ -2205,127 +2221,176 @@ ok(!data.querySelector('.rep-target'),
    * heading is decoration. It is not: it is the label on the thing being
    * looked for, and its absence is worse than its being small.
    */
+  const current = await store.currentSystem();
   const heads = [...start.querySelectorAll('.sys-head')].map((n) => n.textContent);
-  const allSystems = await store.getSystems();
-  const withWorkouts = [];
-  for (const s of allSystems) if ((await store.getWorkouts(s.id)).length) withWorkouts.push(s.name);
-  ok(heads.length === withWorkouts.length && withWorkouts.every((n) => heads.includes(n)),
-     `⚠️ every system with workouts is named on Record (${heads.length} of ${withWorkouts.length})`);
+  ok(heads.length === 1 && heads[0].includes(current.name),
+     `⚠️ Record names the current programme, exactly once (${JSON.stringify(heads)})`);
   ok(!start.querySelector('.section-label.sub'),
      'and the name is a heading rather than the 11.5px grey caption it used to be — it was quieter '
      + 'than the workout names underneath it, so the thing being searched for was the least visible text');
 
-  /* ── 🚨 A SYSTEM OPENS AND CLOSES, ON BOTH SCREENS (2026-09-16) ───────────
+  /* ── 🚨 THE CURRENT SYSTEM (2026-09-19) ───────────────────────────────────
    *
-   * Tim: *"In the workouts section as well as the record section, it shows the
-   * list of systems you have as well as the workouts within each of them. I
-   * want you to be able to click on the system in order to close or open the
-   * display of the workouts within them in both sections."*
+   * Tim: *"make the user pick a 'current system' and then the main display
+   * inside the workouts [tab is] the details inside that system. Then, at the
+   * top you can switch systems or add any new ones to your list … Additionally,
+   * inside the weightlifting category in record, it will show you just the
+   * workouts inside your current system, not the details of the other ones."*
    *
-   * ⚠️ `details.open` IS THE ONLY HONEST READING OF "CLOSED" HERE, and this
-   * project has already written down why: a closed `<details>` still reports a
-   * box for its contents in the audit's Chrome — it hides them with
-   * `content-visibility`, not `display: none` — and jsdom lays nothing out at
-   * all, so a rect proves nothing in either engine. The element's own state is
-   * the one thing both agree on.
+   * ⚠️ THIS REPLACED THE FOLDING SYSTEMS OF 2026-09-16 AND THOSE ASSERTIONS ARE
+   * GONE RATHER THAN RELAXED. `details.sys-group`, the two fold memories and the
+   * "Open this system" row do not exist any more; a test kept limping along
+   * against a deleted mechanism is worse than no test, because it reads as
+   * coverage. What survived is every assertion about what must NOT change —
+   * the word "Start", no chevron on a start row, the programme named at the top
+   * — and those are above, untouched.
    *
-   * ⚠️ AND EVERY FOLD BELOW IS DRIVEN BY A CLICK ON THE SUMMARY, never by
-   * setting `.open`. A test that sets the property itself passes happily over a
-   * summary nobody can actually reach with a finger.
+   * 🚨 THE LOAD-BEARING ONE IS THE NEGATIVE: the OTHER system's workouts must
+   * not be on Record at all. That is the whole of what he asked for, and it is
+   * the assertion that fails if the scoping is dropped.
    */
   {
-    const recGroups = (root) => [...root.querySelectorAll('details.sys-group')];
-    const groups0 = recGroups(start);
+    /* ⚠️ THE SECOND PROGRAMME IS BUILT HERE RATHER THAN ASSUMED FROM THE
+     * FIXTURE, and torn down at the end of the block. Every assertion below
+     * turns on there being a system whose workouts must NOT appear, so a
+     * fixture that happened to hold one system would make the whole block pass
+     * vacuously — and this suite is a flat script over one progressively-seeded
+     * store, so leaving a spare programme behind would change what every later
+     * block is asserting against. */
+    const other = await store.saveSystem({ name: 'Second programme' });
+    await store.saveWorkout({
+      name: 'A day that is not mine', systemId: other.id,
+      exercises: [{ exerciseId: byName('Lat Pulldown').id, sets: 3 }],
+    });
 
-    ok(groups0.length === heads.length,
-       `⚠️ every system on Record is a disclosure, one per heading (${groups0.length} of ${heads.length})`);
-    ok(groups0.every((d) => d.querySelector('summary.sys-head')),
-       '⚠️ and the control IS the heading — the same `.sys-head` the 2026-08-25 note put there, now a '
-       + '<summary>, rather than a second thing beside it to aim at');
-    ok(groups0.every((d) => d.open),
-       '🚨 and every one of them ARRIVES OPEN. Record is one tap from a workout in a gym (D4) and most '
-       + 'people have one system: a fold on arrival adds a tap to the most consequential path in the app '
-       + 'and hands a one-system user a closed door to their own workouts');
-    ok(groups0.every((d) => d.querySelectorAll('.list .row').length > 0),
-       'each group still holds its workout rows');
-    ok(groups0.every((d) => [...d.querySelectorAll('.list .row')].every((r) => /Start/.test(r.textContent))),
-       '⚠️ and every row inside still SAYS Start — wrapping the list in a disclosure did not swallow the '
-       + 'one word that says this begins a session');
+    const allSystems = await store.getSystems();
+    ok(allSystems.length > 1, `two programmes exist (${allSystems.length}), or none of this proves anything`);
 
-    /* Tapping the heading opens and shuts it, and that is the whole request. */
-    const closedId = groups0[0].dataset.sys;
-    groups0[0].querySelector('summary').click();
-    await settle();
-    ok(recGroups(start)[0].open === false,
-       '🚨 tapping a system on Record CLOSES the workouts under it');
-    recGroups(start)[0].querySelector('summary').click();
-    await settle();
-    ok(recGroups(start)[0].open === true, 'and tapping it again opens them back up');
+    const mine = await store.getWorkouts(current.id);
+    const theirs = await store.getWorkouts(other.id);
+    ok(mine.length > 0 && theirs.length > 0,
+       `and both have workouts in them (${mine.length} / ${theirs.length}) — the vacuity guard`);
 
-    /* ⚠️ IT SURVIVES A RE-RENDER, which is the half of this that is not free.
-     * The state lives outside the view; without that, any unrelated repaint
-     * springs every system back open and the person folds the same programme
-     * away over and over. */
-    recGroups(start)[0].querySelector('summary').click();
-    await settle();
-    const start2 = await mount(StartPickerView());
-    const g2 = recGroups(start2).find((d) => d.dataset.sys === closedId);
-    ok(g2 && g2.open === false,
-       '🚨 and the fold SURVIVES A RE-RENDER — the memory is outside the view, or every unrelated repaint '
-       + 'undoes the choice');
+    // Re-mounted: `start` above was built before the second programme existed.
+    const start1 = await mount(StartPickerView());
+    const rows1 = [...start1.querySelectorAll('.list .row')];
+    ok(mine.every((w) => rows1.some((r) => r.textContent.includes(w.name))),
+       `🚨 every workout of the current programme is on Record (${mine.length})`);
+    ok(theirs.every((w) => !rows1.some((r) => r.textContent.includes(w.name))),
+       '🚨 AND NO WORKOUT OF ANY OTHER PROGRAMME IS — *"it will show you just the workouts inside your '
+       + 'current system, not the details of the other ones."* This is the assertion that fails if the '
+       + 'scoping is dropped');
 
-    /* 🚨 AND THE TWO SCREENS DO NOT SHARE ONE MEMORY. Which programmes I have
-     * folded away while browsing my library says nothing about what I want in
-     * front of me mid-gym. `friendCalMode` exists in views-data.js for exactly
-     * this reason, and a mutation check is what proved one shared memory let
-     * one screen contaminate the other. */
-    const wlist = await mount(WorkoutsView());
-    const wGroups = recGroups(wlist);
-    ok(wGroups.length > 0, `the Workouts tab lists its systems as disclosures too (${wGroups.length})`);
-    const twin = wGroups.find((d) => d.dataset.sys === closedId);
-    ok(twin && twin.open,
-       '🚨 and the system folded away on RECORD is still open on the Workouts tab — two memories, not one');
+    /* The heading is the switch. With more than one system it is a real control
+     * and it SAYS so — a bare chevron means "go and look at that" everywhere
+     * else in this app, and this opens a sheet over the screen you are on. */
+    const head = start1.querySelector('.sys-head');
+    ok(head.tagName === 'BUTTON' && /Switch/.test(head.textContent),
+       '⚠️ with two programmes the heading is a button that says Switch, not a chevron a reader has to guess at');
 
-    // Now the same journey in the other direction.
-    twin.querySelector('summary').click();
-    await settle();
-    ok(twin.open === false, 'tapping a system on the Workouts tab closes it as well — one mechanism, both screens');
-    const wlist2 = await mount(WorkoutsView());
-    const twin2 = recGroups(wlist2).find((d) => d.dataset.sys === closedId);
-    ok(twin2 && twin2.open === false, 'and that fold survives a re-render of the Workouts tab');
+    /* ── The Workouts tab is that same programme's own screen ──────────────── */
+    const wtab = await mount(WorkoutsView());
+    ok(!wtab.querySelector('details.sys-group'),
+       '🔒 the fold is GONE from the Workouts tab — deleted, not left standing with nothing reading it');
+    const wHead = wtab.querySelector('.sys-head');
+    ok(wHead && wHead.textContent.includes(current.name),
+       'the tab names the current programme at the top');
+    ok(mine.every((w) => wtab.textContent.includes(w.name)),
+       '🚨 and shows that programme\'s workouts as the screen itself, rather than a row that unfolds');
+    ok(theirs.every((w) => !wtab.textContent.includes(w.name)),
+       'and none of the other programme\'s');
+    ok(/\d+ exercises?/.test(wtab.textContent) && /\d+ sets?/.test(wtab.textContent),
+       '⚠️ each workout keeps the exercise and set counts the system screen gives it — one workout '
+       + 'described one way, wherever it appears');
+    ok(/New workout/.test(wtab.textContent),
+       '🚨 and New workout is ON the tab now. It used to live one tap deeper on #/system/<id>, which is '
+       + 'the screen this tab has become — a door that exists on one of two identical screens is a door '
+       + 'nobody finds from the one they use');
 
-    /* ⚠️ THE ROW STILL SAYS EVERYTHING IT SAID, and the workouts are REAL ROWS
-     * now rather than only names in a subtitle. */
-    const sumText = twin2.querySelector('summary').textContent.replace(/\s+/g, ' ');
-    ok(/Push/.test(sumText) && /Legs/.test(sumText) && /·/.test(sumText),
-       '⚠️ the row still previews its workouts in the subtitle — a collapsed system must not say LESS '
-       + 'than the row said before the fold existed');
-    twin2.querySelector('summary').click();
+    /* 🚨 THE SWITCHER IS THE ONLY DOOR TO NEW AND EXPLORE NOW, so it has to hold
+     * both — *"at the top you can switch systems or add any new ones to your
+     * list."* Losing them would be this change quietly deleting two screens. */
+    wtab.querySelector('.sys-head').click();
     await settle();
-    const kidText = twin2.textContent.replace(/\s+/g, ' ');
-    ok(/\d+ exercises?/.test(kidText) && /\d+ sets?/.test(kidText),
-       '⚠️ and opening it gives each workout the exercise and set counts the system screen gives it — '
-       + 'one workout described one way, wherever it appears');
+    const sheet = document.querySelector('.sheet');
+    ok(Boolean(sheet), 'tapping the programme name opens the switcher');
+    const sheetText = sheet.textContent;
+    ok(allSystems.every((s) => sheetText.includes(s.name)),
+       `🚨 and it lists every programme, not just the current one (${allSystems.length})`);
+    ok(/Current/.test(sheetText),
+       '⚠️ with the current one marked in WORDS — a stripe of colour alone is not a reading');
+    ok(/New system/.test(sheetText) && /Explore/.test(sheetText),
+       '🚨 and it carries New system and Explore, which have no other door since the tab stopped being a list');
 
-    /* 🚨 THE ROUTE THE ROW USED TO BE IS STILL REACHABLE. The summary opens and
-     * closes now, so it cannot also navigate; `#/system/<id>` is where Edit,
-     * Notes, New workout and the full rating live. A feature that quietly
-     * deleted a screen would not be a feature. */
-    const hashBefore = window.location.hash;
-    twin2.querySelector('summary').click();
+    /* Switching really switches, and the screens follow. */
+    const otherRow = [...sheet.querySelectorAll('.row')]
+      .find((r) => r.textContent.includes(other.name));
+    otherRow.click();
     await settle();
-    ok(window.location.hash === hashBefore,
-       '⚠️ tapping the system itself navigates NOWHERE — it opens and closes, which is the whole change');
-    twin2.querySelector('summary').click();
+    const nowCurrent = await store.currentSystem();
+    ok(nowCurrent.id === other.id,
+       `🚨 picking a programme in the sheet makes it current (${nowCurrent.name})`);
+
+    const start3 = await mount(StartPickerView());
+    ok(theirs.every((w) => start3.textContent.includes(w.name)),
+       '🚨 and RECORD follows it — the other programme\'s workouts are the ones on the gym screen now');
+    ok(mine.every((w) => !start3.textContent.includes(w.name)),
+       'and the ones that were there before are not');
+
+    /* ⚠️ IT IS WRITTEN, NOT HELD IN A VARIABLE. The fold it replaced lived in a
+     * module-level Set and died on reload, which was right for a reading
+     * position and would be wrong for this: which programme you are running is a
+     * fact about you, so it goes in `settings` and follows you to another
+     * device. Re-reading the store is what tells the two apart. */
+    const settings = await store.getSettings();
+    ok(settings.currentSystemId === other.id,
+       '🔒 and it is in `settings`, so it syncs — a module variable would forget it on reload and '
+       + 'never reach the phone this account is also open on');
+
+    /* 🚨 `#/system/<id>` SURVIVES, and it is where a non-current programme is
+     * read. A feature that quietly deleted a screen would not be a feature. */
+    window.location.hash = '#/system/' + current.id;
     await settle();
-    const opener = [...twin2.querySelectorAll('.list .row')]
-      .find((r) => /Open this system/.test(r.textContent));
-    ok(Boolean(opener),
-       '🚨 and `#/system/<id>` survives as the last row of the group rather than being dropped with the tap');
-    opener.click();
+    const detail = await mount(SystemRouteView(current.id));
+    ok(detail.textContent.includes(current.name),
+       '#/system/<id> still opens a programme that is not the current one');
+    ok(/Make this my current programme/.test(detail.textContent),
+       '🚨 and offers to make it current — the one thing that screen has which the tab does not need');
+    ok(mine.every((w) => detail.textContent.includes(w.name)),
+       '⚠️ drawn by the same systemBody() as the tab, so the two cannot drift — same workouts, same wording');
+
+    const makeCurrent = [...detail.querySelectorAll('button')]
+      .find((b) => /Make this my current programme/.test(b.textContent));
+    makeCurrent.click();
     await settle();
-    ok(window.location.hash === '#/system/' + closedId,
-       `and it really goes there (${window.location.hash})`);
+    ok((await store.currentSystem()).id === current.id,
+       'and pressing it switches back');
+
+    /* 🛑 ADDING A PROGRAMME DOES NOT SILENTLY BECOME ONE. Somebody copying a
+     * programme out of Explore to look at it has not said they are switching to
+     * it, and moving them off the plan they are running mid-week — changing what
+     * Record offers — is a change under them. */
+    const before = (await store.currentSystem()).id;
+    const made = await store.saveSystem({ name: 'A brand new programme' });
+    ok((await store.currentSystem()).id === before,
+       '🛑 creating a system does NOT make it current — nothing changes what Record offers without being asked');
+    await store.deleteSystem(made.id);
+
+    /* ⚠️ AND A DELETED CURRENT SYSTEM DOES NOT LEAVE A DANGLING POINTER. */
+    const doomed = await store.saveSystem({ name: 'Doomed' });
+    await store.setCurrentSystem(doomed.id);
+    await store.deleteSystem(doomed.id);
+    const after = await store.getSettings();
+    ok(!after.currentSystemId,
+       '🔒 deleting the current system clears the pointer rather than leaving settings naming something gone');
+    ok(Boolean(await store.currentSystem()),
+       '⚠️ and currentSystem() still answers — it derives one rather than handing a screen a null to render');
+
+    /* ── Put the fixture back exactly as it was ───────────────────────────── */
+    await store.deleteSystem(other.id);
+    await store.setCurrentSystem(current.id);
+    ok((await store.getSystems()).length === allSystems.length - 1,
+       'the second programme is torn down, so every later block reads the store it expected');
     window.location.hash = '#/workouts';
     await settle();
   }
@@ -3443,41 +3508,76 @@ ok(!data.querySelector('.rep-target'),
   ok(!emptyScreen.querySelector('.own-rating'),
      'a system with no workouts shows no rating rather than an empty one');
 
-  // ...and the same rating on the Workouts LIST, which is where Tim wanted it.
+  /* 🔄 ...AND THE SAME RATING ON THE WORKOUTS TAB — which is still where Tim
+     wanted it (2026-08-19), reached differently since 2026-09-19. ~~a badge per
+     row on a list of systems~~ The tab is the current programme's own screen
+     now, so it carries that programme's FULL rating rather than the four-cell
+     summary a row could hold. That is strictly more than the badge said, and it
+     is the same `.own-rating` block asserted at the top of this section — which
+     is the point: one rating, one place it is built, two doors into it. */
   const { WorkoutsView } = await import(BASE + 'views-workouts.js');
+  await store.setCurrentSystem(sys.id);
   const list = await WorkoutsView();
   await settle();
   const listText = list.textContent.replace(/\s+/g, ' ');
 
-  ok(list.querySelector('.rating'),
-     'the Workouts list shows the rating beside your own systems');
-  ok(list.querySelectorAll('.rating').length === 1,
-     'one badge — the system with workouts in it, not the empty one');
-  ok(/My Split/.test(listText) && /Nothing here/.test(listText),
-     'while both systems are still listed');
+  ok(list.querySelector('.own-rating'),
+     'the Workouts tab shows the rating for the programme it is showing');
+  ok(/My Split/.test(listText),
+     'which is the current one, named at the top');
+  ok(!/Nothing here/.test(listText),
+     '🚨 and NOT the other one — the tab is one programme, not a list of them');
   const listNums = [...cellText(list, 'growth'), ...cellText(list, 'strength')];
   ok(listNums.length === 2 && listNums.every((t) => Number(t.replace('%', '')) % 5 === 0),
      'growth and strength, banded the same as everywhere else');
-  ok(cellText(list, 'days/wk').length === 1 && cellText(list, 'min').length === 1,
-     'and the cost beside them, so the list says what a programme asks before you open it');
-  ok(/Upper · Lower|Lower · Upper/.test(listText),
-     'and the workout names still show in full — the rating did not clip them away');
+  ok(/Upper/.test(listText) && /Lower/.test(listText),
+     'and its workouts are rows on the screen rather than names in a subtitle');
 
-  /* ⚠️ THE BADGE RIDES ON THE SUMMARY, NOT INSIDE THE FOLD (2026-09-16). It
-     describes the whole programme and it is what Tim asked to see on the list
-     before opening anything — pushed inside the disclosure, a folded system
-     would show none of its four numbers, which is the state most of a long
-     list will be in. */
-  ok(Boolean(list.querySelector('details.sys-group > summary .rating')),
-     'the rating badge sits on the row that opens and closes, not in what it hides');
+  /* 🚨 THE EMPTY PROGRAMME IS STILL REACHABLE, and switching to it does not
+     produce a rating out of nothing. An empty programme is not a bad programme,
+     it is an unfinished one, and a 0 % would be both wrong and discouraging. */
+  await store.setCurrentSystem(empty.id);
+  const emptyTab = await WorkoutsView();
+  await settle();
+  ok(/Nothing here/.test(emptyTab.textContent),
+     'switching to the empty programme shows it');
+  ok(!emptyTab.querySelector('.own-rating'),
+     'and it shows no rating rather than an empty one');
+  ok(/No workouts in this system yet/.test(emptyTab.textContent),
+     'saying so in words, with New workout beside it');
 
-  /* ⚠️ AN EMPTY SYSTEM IS NOT A DISCLOSURE. There is nothing under it to
-     unfold, and a chevron that turns to reveal nothing is a control lying about
-     having something. It stays the plain link it has always been — which is
-     also the only place to add the workouts it is missing. */
-  const emptyRow = [...list.querySelectorAll('.row')].find((r) => /Nothing here/.test(r.textContent));
-  ok(emptyRow && emptyRow.tagName === 'BUTTON' && !emptyRow.closest('details'),
-     'a system with no workouts in it is still a row that goes into the system, not an empty fold');
+  await store.clearAll();
+
+  /* ── 🚨 THE EMPTY ACCOUNT, WHICH NEITHER SCREEN HAD EVER ASSERTED ─────────
+   *
+   * Both empty states were REWRITTEN by the current-system work on 2026-09-19
+   * and neither had a test — found by grepping for their own sentences and
+   * getting nothing. This is the first screen a stranger sees, and the failure
+   * mode is the worst one available: `currentSystem()` returns null on an
+   * account with no systems, so a branch that assumed a system would render a
+   * blank tab to somebody who has just installed the app.
+   *
+   * ⚠️ It runs immediately after `clearAll()` on purpose — an empty store is
+   * the fixture, and it is only honestly empty here.
+   */
+  {
+    const emptyWorkouts = await mount(WorkoutsView());
+    ok(/No systems yet/.test(emptyWorkouts.textContent),
+       '🚨 a brand-new account gets the Workouts tab\'s empty state, not a blank screen');
+    ok(/New system/.test(emptyWorkouts.textContent)
+       && /Explore/.test(emptyWorkouts.textContent),
+       '⚠️ with BOTH doors on it — the switcher that normally holds them needs a current programme '
+       + 'to hang off, so on an empty account they have to be on the screen itself');
+    ok(!emptyWorkouts.querySelector('.sys-head'),
+       'and no programme name above them, because there is no programme');
+
+    const emptyStart = await mount(StartPickerView());
+    ok(/Nothing to run yet/.test(emptyStart.textContent),
+       '🚨 and Record says so rather than rendering an empty list');
+    ok(/Pick a programme/.test(emptyStart.textContent),
+       '⚠️ offering a ready-made one as the primary action — the 2026-08-21 first-run path, which got '
+       + 'install-to-first-logged-set down to five taps by landing exactly here');
+  }
 
   await store.clearAll();
 }

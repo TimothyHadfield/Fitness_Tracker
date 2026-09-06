@@ -17,6 +17,140 @@
 
 ---
 
+## 2026-09-19 — THE WORKOUTS TAB IS ONE PROGRAMME NOW
+
+Three exchanges. The first two were questions and were answered without building anything; the third
+was a design Tim brought, and it is the whole of what shipped.
+
+### A. "The % feature didn't fully deploy" — he was seeing something real, and it was not the deploy
+
+Tim: *"It seemed like our % feature with the Ultamit push pull legs (auto-built) system didn't fully
+deploy. Am I wrong with that or not?"*
+
+**The deploy was fine and that was checked first** (§0.13 — check the live site before reading code).
+`js/set-targets.js`, `js/plates.js` and the squat's `targets: [85, 65, 65]` are all served from Pages.
+What he was seeing was one or both of two things, and neither is a bug:
+
+- 🚨 **HIS COPY OF THE SYSTEM PREDATES THE FEATURE.** `addPresetSystem()` copies; a copy cannot change
+  under you, which is the decision `store.js` has carried since the day presets shipped. The
+  percentages arrive on a **fresh** copy only, and "Add another copy" is the whole workaround.
+- 🚨 **AND EVEN A FRESH COPY HAS EXACTLY ONE PERCENTAGE IN SIX WORKOUTS** — the Back Squat in Legs 1.
+  That is the limit recorded on 2026-09-18 and it is worth restating as a table, because "the feature
+  did not land" and "the feature expresses one of his four numbers" look identical from a phone:
+
+  | where | prescribed | why it is or is not in `targets` |
+  |---|---|---|
+  | Back Squat top set, Legs 1 | 85–90 % of max | ✅ the only one that IS a % of a max |
+  | Back Squat back-offs | 75 % **of that top set** | approximated as 65 % of max — the one fudge |
+  | Stiff-Leg Deadlift, Legs 2 | 50–60 % **of the deadlift** | a different lift entirely |
+  | Lat Pulldown drop, Pull 1 | drop of ~30 % | a drop-set reduction, not a max |
+
+**Three things were offered and none was started**: "% of today's top set", "% of another lift", and a
+way to update an added system from its original.
+
+### B. 🛑 "Could we make a pre-built system NOT a copy, so it updates?" — assessed, and the answer is no
+
+Tim: *"could we change it so the system they have (If it's a pre-built system connected to the cite)
+is not a copy and is able to be changed if the origonal version is changed in any way?"*
+
+**Answered rather than built**, with three concrete reasons a live link is the wrong shape:
+
+1. **You could not edit it.** The first changed set count needs storage again, and people edit
+   ready-made programmes. "Once added it is yours" is most of the value.
+2. **Recorded history would point at nothing.** Sessions reference a `workoutId`; a deploy that
+   renamed or dropped a preset workout would strand sessions already logged. D22's own principle —
+   history does not become untrue because the plan behind it was thrown away.
+3. 🚨 **IT WOULD CHANGE WEIGHTS UNDER YOU, SILENTLY.** Presets carry a *prescription* now (85 % of your
+   max, onto a bar). Deploys are invisible, there is no server and no notification, so a rewrite
+   mid-programme would arrive unannounced. That is precisely the failure `set-targets.js` was gated
+   four ways to avoid.
+
+**What was recommended instead, and NOT started**: keep the copy, give each preset a `version`, stamp
+origin on copied workouts and exercises, and show a reviewable *"the original changed"* notice. The
+stamping is the prerequisite for every version of this — the system row records `presetId` today and
+**the workouts record nothing**, so a copy cannot be matched back to its original after a rename.
+
+### C. 🆕 THE CURRENT SYSTEM — the Workouts tab is one programme, and Record follows it
+
+Tim: *"Instead of having the main workouts be the list of systems you use and details inside each
+one, make the user pick a 'current system' and then the main display inside the worout are the detials
+inside that system. Then, at the top you can switch systems or add any new ones to your list. this
+will make the dispaly of each system a lot better. Additionally, inside the weightlifting category in
+record, it will show you just the workouts inside your current system, not the details of the other
+ones."*
+
+**Built whole.** `settings.currentSystemId`, `store.currentSystem()`, `store.setCurrentSystem()`, a
+switcher sheet, and both screens rebuilt around one programme.
+
+🚨 **THE HARD PART WAS THE ACCOUNTS THAT ALREADY EXIST, AND IT IS WHY `currentSystem()` DERIVES.**
+Every account on disk has no `currentSystemId`. A screen that demanded a pick before it showed
+anything would put a wall in front of everybody's existing programme on the first load after this
+deploys — D8 and D9 in one move, and exactly the shape the 2026-08-21 first-run work removed. So an
+explicit choice wins, and with none the app **reads one out of the training**: the system of the most
+recent recorded session, then the first system that has workouts in it, then the first system. That
+first fallback is the same one `suggestNext()` reaches for, so the tab, Record and the rotation cannot
+disagree about which programme is in play while nobody has said.
+
+⚠️ **DERIVING IS NOT CHOOSING, SO IT NEVER WRITES THE POINTER.** A guess saved on read is
+indistinguishable from a decision a week later, and whichever screen opened first would have pinned
+it. `setCurrentSystem()` is the only writer, and the three things that call it are all a person
+tapping something that says so.
+
+🔄 **IT REPLACED THE FOLDING SYSTEMS OF 2026-09-16, EIGHT DAYS OLD, AND THAT CODE IS DELETED.**
+`systemGroup()`, `closedOnWorkouts`, `closedOnRecord`, four CSS rules and `rateOwnSystems()` are gone.
+The fold existed to answer *"I have several programmes and only run one — stop showing me the other
+four"*, and a current system answers that properly rather than by hiding. With one programme on screen
+there is nothing left to fold, so the two memories would have been variables nothing reads — the
+`markFriendTrail()` lesson from the same file one week earlier.
+
+⚠️ **`rateOwnSystems()` WENT WITH IT, AND KEEPING IT FOR THE SWITCHER WAS THE TEMPTING CALL.** A badge
+per programme would genuinely help somebody choose between two. But it awaits `optimal.js`, the
+exercise map, every session and the declared-days lookup, and the sheet it would sit in opens on the
+Record screen with a phone in one hand in a gym. A sheet that waits on four reads is a tap that hangs
+on the one path D4 says must not. Explore already rates all nine.
+
+🔒 **ONE BODY OF CODE FOR TWO DOORS.** `#/workouts` **is** a system screen now and `#/system/<id>`
+still exists for every other programme, so `systemBody()` builds the plan boxes, the workout rows, New
+workout, the notes and the rating once. This project has the receipts for not doing that:
+`ownCalendar()` was extracted after a friend's calendar turned out to be a second, thinner calendar,
+and `profile-shape.js` a week later.
+
+⚠️ **AND SCOPING THE INPUTS FIXED A CASE THE SUGGESTION USED TO REFUSE.** `suggestNext()` returns null
+when nothing is recorded **and** more than one system exists, because *"guessing which programme
+somebody meant to start is exactly the kind of confident-and-wrong the app is built against"* — its
+own comment, and right while nobody had said. A current system **is** somebody saying. A fresh account
+holding three copied programmes now gets the first workout of the one it is running. Nothing in
+`next-workout.js` changed; it is handed one system instead of all of them.
+
+🛑 **ADDING OR CREATING A PROGRAMME DOES NOT MAKE IT CURRENT.** Somebody copying a programme out of
+Explore to look at it has not said they are switching to it, and moving them off the plan they are
+running mid-week — changing what Record offers — is a change under them. `#/system/<id>` carries a
+**Make this my current programme** button instead. The one exception is the derive above, where
+nothing has been chosen and nothing trained.
+
+⚠️ **THE POSITION TEST CAUGHT THE FIRST VERSION OF THAT BUTTON.** It was put at the top of the pane on
+`#/system/<id>`, which quietly took the spot *"boxes at the top of the workout system"* (2026-09-16)
+was pinned to. It is in `top` — the fixed region above the pane — which is also where the Workouts tab
+puts its switcher, so both screens carry "which programme is this" in the same place and neither
+displaces the plan.
+
+**Where it landed:** 19 suites green, **5,303 assertions** (from 5,187), `render` **1,579** (from
+1,534). ⚠️ **Five of those are the EMPTY ACCOUNT, and neither screen's empty state had ever been
+asserted** — found by grepping for their own sentences and getting nothing. Both were rewritten by
+this change, and mutation-checking the guard proved it matters: with `if (!current)` disabled the
+Workouts tab throws *"Cannot read properties of null"* on a brand-new account, which is the first
+screen a stranger sees. 🔒 **Mutation-checked with the mutation printed first** (§0.14): replacing the scoping filter
+with the unfiltered list fails **exactly** the two negative assertions about another programme's
+workouts and nothing else.
+
+🖥️ **Both screens driven in Chrome at 390×844 in the demo account** — the switcher measures 362×46,
+no document overflow on either. ⚠️ **One pre-existing 3px overflow was found inside `.own-rating`'s
+help-lines and is NOT from this change**: it measures byte-identically on `#/workouts` and
+`#/system/<id>`, which is the control, and it predates today on the second. Recorded, not fixed —
+nobody asked, and it is visual.
+
+---
+
 ## 2026-09-18 — TWO QUESTIONS OFF A LEG DAY, AND THE TWO FEATURES THEY CAME WITH
 
 Tim, after training: *"I just had a leg day and I have some improvements and comments."* Four items,

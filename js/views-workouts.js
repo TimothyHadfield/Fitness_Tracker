@@ -54,7 +54,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
-  personFace, helpDot, parkScreen,
+  personFace, helpDot, parkScreen, refreshRoute,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -767,126 +767,190 @@ export async function RecordChooserView() {
  * A system opens and closes — the one mechanism, used by both screens
  * ================================================================== */
 
-/* Tim, 2026-09-16: *"In the workouts section as well as the record section, it
- * shows the list of systems you have as well as the workouts within each of
- * them. I want you to be able to click on the system in order to close or open
- * the display of the workouts within them in both sections."*
+/* ┌──────────────────────────────────────────────────────────────────────────┐
+ * │ THE CURRENT SYSTEM — 2026-09-19                                          │
+ * └──────────────────────────────────────────────────────────────────────────┘
  *
- * ⚠️ ONE MECHANISM FOR BOTH SCREENS, which is the whole reason this is a helper
- * rather than a `<details>` written out twice fifty lines apart. Two
- * implementations of one disclosure is precisely the drift this project keeps
- * having to write down — "one calendar, four doors" is the same lesson — and
- * the drift is invisible until somebody puts the two screens side by side.
+ * Tim: *"Instead of having the main workouts be the list of systems you use and
+ * details inside each one, make the user pick a 'current system' and then the
+ * main display inside the workouts [tab is] the details inside that system.
+ * Then, at the top you can switch systems or add any new ones to your list …
+ * Additionally, inside the weightlifting category in record, it will show you
+ * just the workouts inside your current system, not the details of the other
+ * ones."*
  *
- * ⚠️ `<details>`/`<summary>`, the disclosure this app already uses: the Research
- * topics (`.rt-topic`) and "Other lifts" on Profile (`.me-other`). It is
- * keyboard-operable, it announces itself as collapsed or expanded to a screen
- * reader, and it keeps working with no script at all. None of that is behaviour
- * we have to write, and none of it is behaviour we can forget to write.
+ * 🚨 THIS REPLACES THE FOLDING SYSTEMS OF 2026-09-16, AND THAT CODE IS DELETED
+ * RATHER THAN LEFT STANDING. `systemGroup()`, `closedOnWorkouts` and
+ * `closedOnRecord` are gone. The fold existed to answer one question — *"I have
+ * several programmes and I only run one of them, stop showing me the other
+ * four"* — and a current system answers it properly rather than by hiding: the
+ * screens now show one programme because the account SAYS which one, instead of
+ * showing all of them and remembering which the reader swiped away. With one
+ * system on screen there is nothing left to fold, so a memory of what is folded
+ * would be a variable nothing reads. That is the `markFriendTrail()` lesson from
+ * 2026-09-16 in the same file, one week later: a mechanism nobody reads reads as
+ * load-bearing to the next person, who then writes around it.
  *
- * ⚠️ NOTHING ANIMATES ITS HEIGHT, deliberately. The Record picker is one tap
- * from a workout in a gym (D4) and the MOTION rules allow exactly one thing to
- * move on that path: a press answering back. The chevron turning IS that press
- * answering back — `--t-fast`, the same 100ms `.me-other-chev` already uses —
- * and the rows appear at once, so no tap ever waits on a transition. A sliding
- * height would also have to be JS-driven on a native `<details>`, which is how
- * a disclosure ends up with a state its own element disagrees with.
+ * ⚠️ WHAT THE FOLD GOT RIGHT AND THIS KEEPS: everything arrives OPEN, because
+ * Record is one tap from a workout in a gym (D4) and no fold, disclosure or
+ * extra tap may sit on that path. The current system's workouts are rows, flat,
+ * the moment the screen paints.
  *
- * ⚠️ A CLOSED `<details>` STILL REPORTS A BOX FOR ITS CONTENTS in the audit's
- * Chrome — it hides them with `content-visibility`, not `display: none`. So
- * anything checking "are the workouts hidden" must read `details.open` (or
- * `checkVisibility()`), never a bounding rect. Recorded because a rect-based
- * check here would pass while the screen was plainly wrong.
- */
-
-/* ⚠️ TWO MEMORIES, NOT ONE, AND THIS PROJECT HAS ALREADY PAID FOR THAT LESSON.
- * `calMode` in views-data.js is shared by its four doors on purpose, because it
- * answers "how I read a calendar" — a preference about a picture, and the same
- * preference wherever the picture is drawn. This is not that question. Which
- * programmes I have folded away while browsing my library says nothing about
- * which I want in front of me mid-gym, and the Record picker is an ACTION
- * screen while the Workouts tab is a destination. `friendCalMode` exists as a
- * separate variable for exactly this reason: a mutation check proved that one
- * shared memory let one screen contaminate the other.
- *
- * ⚠️ AND THEY REMEMBER WHAT IS CLOSED, NEVER WHAT IS OPEN. That single choice
- * is what makes "open" the default without seeding anything: a system nobody
- * has touched is not in the set, a system created ten seconds ago is not in the
- * set, and a fresh install starts with two empty sets. A set of OPEN ids would
- * have to be filled in before the first paint, from data the view has only just
- * finished loading, and would silently fold away every system added afterwards.
- *
- * They survive leaving the screen and coming back, for the same reason
- * `calMode` and `volDays` do: somebody who folded away four of their five
- * programmes did it because they run one of them, and re-opening all five on
- * the next visit would undo that choice every single time. They do not survive
- * a reload, which is the right floor — this is a reading position, not a
- * setting, and nothing is lost by starting a fresh session showing everything.
- */
-const closedOnWorkouts = new Set();
-const closedOnRecord = new Set();
-
-/* 🚨 OPEN IS THE DEFAULT ON BOTH SCREENS, AND IT IS NOT A COIN TOSS.
- *
- * The one-system case decides it. Most people have one programme (the Record
- * picker's own comment says so, and it is why that screen groups rather than
- * nests), and a person with one system who arrives to find it collapsed has
- * been handed a closed door to their own workouts — the app showing them a
- * heading and hiding everything it exists to show.
- *
- * The first-run case says the same thing from the other end: somebody who has
- * just loaded a ready-made programme arrives here to see what is in it, and
- * "install to first logged set in five taps" (2026-08-21) does not survive a
- * sixth tap being added to unfold the list.
- *
- * And Record settles it beyond argument. That screen is an ACTION, not a
- * destination — it is the one screen in this app where the point is to leave it
- * immediately, with a phone in one hand in a gym. Collapsing it by default
- * would add a tap to the most consequential path in the product to save a
- * scroll on a screen most people never scroll.
- *
- * So the fold is something a person CHOOSES, one system at a time, and the two
- * sets above are the record of those choices and nothing else.
+ * ⚠️ AND THE 2026-08-25 LESSON SURVIVES INTACT — *"make the title of the workout
+ * system more clear because that's the first thing that the user will try to
+ * find."* The programme's name is still the most prominent thing above the
+ * workouts on both screens. It is now the switch as well as the label, which is
+ * the one honest place to put it: you arrive knowing which programme you are
+ * running, and the thing you look for first is the thing you would change.
  */
 
 /**
- * A system's workouts, behind a disclosure its own row opens and closes.
+ * Switch which programme is current — and the only door to New and Explore.
  *
- * Everything the row already carried is passed straight through in `summary`
- * and rendered untouched — the rating badge on the Workouts tab, the programme
- * name on Record. This helper adds a chevron and takes nothing away.
+ * ⚠️ IT IS A SHEET RATHER THAN A SEGMENTED CONTROL OR A `<select>`. The list is
+ * unbounded (nine ready-made systems exist and nothing stops somebody copying
+ * all of them), each row wants two lines — name and what is in it — and a
+ * `<select>` can show neither. The exercise picker, the swap sheet and the
+ * set-type sheet are all this same shape already.
  *
- * @param {object}      o
- * @param {Set<string>} o.memory   the screen's own record of what is folded.
- * @param {string}      o.id       the system id — its key in that memory.
- * @param {string}      o.cls      the classes the row wore before it was a
- *                                 summary, so it still looks like itself.
- * @param {Node|Node[]} o.summary  what the row says. Untouched.
- * @param {Node|Node[]} o.body     the workouts inside it.
+ * ⚠️ SWITCHING WRITES AND THEN RE-RENDERS IN PLACE. `refreshRoute()` rather than
+ * `go()`, because both callers are already on the screen that has to change and
+ * setting `location.hash` to the hash it already holds fires no `hashchange` —
+ * the screen would keep the old programme on it until something else navigated.
  */
-function systemGroup({ memory, id, cls, summary, body }) {
-  const node = el('details', { class: 'sys-group', open: !memory.has(id), dataset: { sys: id } },
-    el('summary', { class: cls },
-      summary,
-      // The chevron this app already has, TURNED rather than swapped for a
-      // second glyph. `.me-other` does the same thing, so one rotation means
-      // "this is open" in all three places that disclose anything — and the
-      // rotation is the only difference between "go and look at that" and "this
-      // unfolds here", which is a difference a still picture cannot carry.
-      el('span', { class: 'sys-chev' }, chevron()),
+async function openSystemSwitcher({ systems, workouts, currentId }) {
+  const { close } = openSheet({
+    title: 'Your programmes',
+    body: el('div', { class: 'list' },
+      ...systems.map((sys) => {
+        const mine = workouts.filter((w) => w.systemId === sys.id);
+        const names = mine.map((w) => w.name);
+        const isCurrent = sys.id === currentId;
+        return el('button', {
+          class: 'row' + (isCurrent ? ' is-current' : ''),
+          'aria-current': isCurrent ? 'true' : null,
+          onClick: async () => {
+            close();
+            // ⚠️ Writes even when it is already current. The alternative is a
+            // row that does nothing when tapped, and "the one you are already
+            // on" is exactly the row somebody taps to confirm they are on it.
+            // It also PINS a derived answer, which is the one place turning a
+            // guess into a decision is right: the person just said so.
+            await store.setCurrentSystem(sys.id);
+            refreshRoute();
+          },
+        },
+          el('div', { class: 'row-main' },
+            el('div', { class: 'row-title wrap', text: sys.name },
+              isCurrent ? el('span', { class: 'tag', text: 'Current' }) : null),
+            el('div', { class: 'row-sub wrap', text: names.length
+              // The workout names, the same preview the systems list used to
+              // carry. "3 workouts" says nothing you could not guess; "Push ·
+              // Pull · Legs" is what tells you which programme this is.
+              ? names.slice(0, 4).join(' · ') + (names.length > 4 ? ' · …' : '')
+              : 'No workouts yet' }),
+          ),
+        );
+      }),
+      // Tim asked for both of these to live up here — *"at the top you can
+      // switch systems or add any new ones to your list"* — so this sheet is
+      // the whole of "manage my programmes" and the Workouts tab below it is
+      // the whole of "the programme I am running".
+      el('button', { class: 'row', onClick: () => { close(); go('#/system/new'); } },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'New system' }),
+          el('div', { class: 'row-sub wrap', text: 'Build a programme of your own' })),
+        chevron()),
+      el('button', { class: 'row', onClick: () => { close(); go('#/explore'); } },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'Explore ready-made programmes' }),
+          el('div', { class: 'row-sub wrap', text: 'Nine to browse and copy' })),
+        chevron()),
     ),
-    body,
-  );
-
-  /* ⚠️ THE MEMORY IS WRITTEN FROM `toggle`, NOT FROM A CLICK ON THE SUMMARY.
-   * A `<details>` also opens from the keyboard, from find-in-page, and from a
-   * screen reader's own expand — a click listener would miss all three, and the
-   * memory would then disagree with the screen until the next re-render put the
-   * disagreement on display. `toggle` fires however it moved. */
-  node.addEventListener('toggle', () => {
-    if (node.open) memory.delete(id); else memory.add(id);
   });
-  return node;
+}
+
+/**
+ * The programme's name, at the top of both screens, as the control that changes
+ * it.
+ *
+ * ⚠️ THE WORD "SWITCH" IS THERE RATHER THAN A BARE CHEVRON, and that is the
+ * 2026-08-25 finding applied a second time. A chevron in this app means exactly
+ * one thing — *go and look at that* — which is why the Record rows say "Start"
+ * in words rather than wearing a play triangle. This row does neither of those
+ * things: it opens a sheet over the screen you are on. Naming it is the only way
+ * that is knowable before tapping it.
+ *
+ * ⚠️ WITH ONE SYSTEM IT IS A HEADING AND NOT A BUTTON. There is nothing to
+ * switch to, and a control that opens a list of one is a control lying about
+ * having options — the same call `systemGroup()` made for an empty system, and
+ * the same reason. On the Workouts tab it stays a button even then, because the
+ * sheet is also the only door to New and Explore; on Record it does not, because
+ * Record is not where programmes are managed.
+ */
+function systemSwitcher({ system, systems, workouts, currentId, always = false }) {
+  const many = systems.length > 1;
+  const label = el('div', { class: 'row-main' },
+    el('div', { class: 'row-title wrap', text: system.name }));
+
+  if (!many && !always) return el('div', { class: 'sys-head' }, label);
+
+  return el('button', {
+    class: 'sys-head row',
+    onClick: () => openSystemSwitcher({ systems, workouts, currentId }),
+  },
+    label,
+    el('span', { class: 'row-switch' }, many ? 'Switch' : 'Programmes', chevron()),
+  );
+}
+
+/**
+ * A system's own screen, drawn once for two doors.
+ *
+ * 🚨 ONE BODY OF CODE, because `#/workouts` IS a system screen now and
+ * `#/system/<id>` still exists for every other one. Two copies of "what a
+ * programme looks like" would drift the week after they were written, and this
+ * project has the receipts: `ownCalendar()` was extracted for exactly this after
+ * a friend's calendar turned out to be a second, thinner calendar, and
+ * `profile-shape.js` for the same reason a week later. The plan boxes, the
+ * workout rows, the New workout button, the notes and the rating are all here
+ * and nowhere else.
+ */
+async function systemBody(system, workouts) {
+  return [
+    // ⚠️ THE PLAN GOES ABOVE THE WORKOUTS, AND ONLY WHEN THERE IS ONE — Tim
+    // asked for these boxes "at the top of the workout system", and a plan IS
+    // the shape of the programme: it names every workout in the list underneath
+    // it and puts each one on a day. A system with no plan is untouched.
+    planBoxes(system.schedule, workouts),
+    // The workouts FIRST. They are why anybody opens a programme, and on a
+    // phone "first" is the only position that means anything.
+    el('div', { class: 'section-label', text: workouts.length
+      ? plural(workouts.length, 'workout') : 'Workouts' }),
+    workouts.length
+      ? el('div', { class: 'list' }, workouts.map((w) =>
+          el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+            el('div', { class: 'row-main' },
+              el('div', { class: 'row-title', text: w.name }),
+              el('div', { class: 'row-sub', text:
+                `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+                + (w.isBenchmark ? ' · benchmark' : '') }),
+            ),
+            chevron(),
+          )))
+      : emptyState('No workouts in this system yet',
+          'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+    el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
+      icon('plus'), 'New workout'),
+    // The notes are the author's own words about the programme, so they read
+    // here rather than only inside the form that happens to edit them.
+    system.notes
+      ? el('div', { class: 'preset-notes' },
+          el('div', { class: 'section-label', text: 'Notes' }),
+          el('p', { text: system.notes }))
+      : null,
+    await ownSystemRating(system.id, workouts, system),
+  ];
 }
 
 export async function StartPickerView({ tab = false } = {}) {
@@ -911,14 +975,25 @@ export async function StartPickerView({ tab = false } = {}) {
    * This is a LOOKUP, not advice: the order came out of the user's own system.
    * It never refuses and never scolds, and the caption always says what it read.
    */
-  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
-
-  // GROUPED, not nested. Making someone pick a system and then a workout would
-  // add a tap to the one screen that is used mid-gym, and most people have one
-  // system anyway.
-  const groups = systems
-    .map((sys) => ({ sys, items: workouts.filter((w) => w.systemId === sys.id) }))
-    .filter((g) => g.items.length);
+  /* 🔄 SCOPED TO THE CURRENT SYSTEM SINCE 2026-09-19 — Tim: *"inside the
+   * weightlifting category in record, it will show you just the workouts inside
+   * your current system, not the details of the other ones."*
+   *
+   * ⚠️ AND SCOPING THE INPUTS MADE THE SUGGESTION WORK IN A CASE IT USED TO
+   * REFUSE. suggestNext() returns null when nothing has been recorded yet AND
+   * more than one system exists, because *"guessing which programme somebody
+   * meant to start is exactly the kind of confident-and-wrong the app is built
+   * against"* — its own comment, and it was right while nobody had said. A
+   * current system IS somebody saying. So a fresh account holding three copied
+   * programmes now gets the first workout of the one it is running, where it
+   * used to get nothing at all. Nothing in next-workout.js changed; it is handed
+   * one system instead of all of them.
+   */
+  const current = await store.currentSystem({ systems, workouts, sessions });
+  const mine = current ? workouts.filter((w) => w.systemId === current.id) : [];
+  const next = current
+    ? suggestNext({ systems: [current], workouts: mine, sessions, today: todayISO() })
+    : null;
 
   // ⚠️ A CHEVRON USED TO SIT HERE AND IT WAS TELLING THE TRUTH ABOUT THE WRONG
   // THING. Tim, after his second gym session (2026-08-25): *"it's not clear that
@@ -980,46 +1055,61 @@ export async function StartPickerView({ tab = false } = {}) {
       ]
     : [];
 
-  const scroll = groups.length
+  /* ⚠️ THE PROGRAMME'S NAME IS STILL THE MOST PROMINENT THING ABOVE THE ROWS,
+   * and the 2026-08-25 reasoning that put it there is untouched: *"make the
+   * title of the workout system more clear because that's the first thing that
+   * the user will try to find."* You arrive knowing which programme you are
+   * running and look for it, then take the day off it. What changed is that
+   * there is now exactly one of them and the heading also switches which.
+   *
+   * ⚠️ IT IS A BUTTON HERE ONLY WHEN THERE IS SOMETHING TO SWITCH TO. With one
+   * system it is a plain heading — `always` is false, unlike the Workouts tab,
+   * because Record is not where programmes are managed and a "Programmes" door
+   * on the one screen used mid-gym is a door pointing away from the only thing
+   * this screen is for (D4).
+   */
+  const scroll = current && mine.length
     ? [
         ...suggestion,
         el('div', { class: 'section-label', text: next ? 'Or start any workout' : 'Start a workout' }),
-        // ⚠️ THE HEADING IS THE CONTROL NOW (2026-09-16) — see systemGroup
-        // above. It was a `<div class="sys-head">` with the programme's name in
-        // it and nothing else; it is a `<summary>` with the same class, the
-        // same name and the same type, so everything the 2026-08-25 note
-        // demanded of it still holds. What it gains is `.row`: the app's own
-        // 46px target and its own press-back, both already written, so a
-        // heading that is now tappable is a heading that looks tappable.
-        //
-        // ⚠️ `.row-main` around the name, not a bare text node, so the chevron
-        // is pushed to the far edge of the row rather than sitting against the
-        // last letter. `.row-main` sets no type of its own, so the heading's
-        // 15px/700 still comes down from `.sys-head` — and the summary's
-        // textContent is still exactly the system's name, which is what makes
-        // it a legitimate accessible name for the control.
-        ...groups.map((g) => systemGroup({
-          memory: closedOnRecord,
-          id: g.sys.id,
-          cls: 'sys-head row',
-          summary: el('div', { class: 'row-main', text: g.sys.name }),
-          // Untouched: the same rows, in the same order, each still starting a
-          // session and still carrying its `~N min`.
-          body: el('div', { class: 'list' }, g.items.map(row)),
-        })),
+        systemSwitcher({ system: current, systems, workouts, currentId: current.id }),
+        // Untouched: the same rows, in the same order, each still starting a
+        // session and still carrying its `~N min`.
+        el('div', { class: 'list' }, mine.map(row)),
       ]
-    : [
-        // ⚠️ On an empty account this screen must not be a dead end. The
-        // first-run work (2026-08-21) got install-to-first-logged-set down to
-        // five taps by making a ready-made programme the primary action, and a
-        // brand-new user tapping the biggest button in the app lands HERE — so
-        // it has to offer the same route rather than "build a workout first".
-        emptyState('Nothing to run yet',
-          'Pick a ready-made programme and its first workout is one tap away, or build your own.',
-          el('button', { class: 'btn primary', text: 'Pick a programme', onClick: () => go('#/explore') })),
-        el('button', { class: 'btn block', onClick: () => go('#/system/new') },
-          icon('plus'), 'Build my own instead'),
-      ];
+    : current
+      /* ⚠️ THE CURRENT PROGRAMME IS EMPTY AND ANOTHER ONE MAY NOT BE. Before
+       * scoping, this screen only ever showed nothing when the whole ACCOUNT
+       * held no workouts, so "Nothing to run yet" was always true. It can now be
+       * false in the one way that matters — the workouts are right there behind
+       * the switcher — and an empty state that hides a full programme two taps
+       * away would read as the app having lost it. */
+      ? [
+          emptyState(`${current.name} has no workouts yet`,
+            systems.length > 1
+              ? 'Add the days this programme is made of, or switch to another one.'
+              : 'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+          el('button', { class: 'btn primary block', onClick: () => go('#/workout/new/' + current.id) },
+            icon('plus'), 'New workout'),
+          systems.length > 1
+            ? el('button', {
+                class: 'btn block',
+                onClick: () => openSystemSwitcher({ systems, workouts, currentId: current.id }),
+              }, 'Switch programme')
+            : null,
+        ]
+      : [
+          // ⚠️ On an empty account this screen must not be a dead end. The
+          // first-run work (2026-08-21) got install-to-first-logged-set down to
+          // five taps by making a ready-made programme the primary action, and a
+          // brand-new user tapping the biggest button in the app lands HERE — so
+          // it has to offer the same route rather than "build a workout first".
+          emptyState('Nothing to run yet',
+            'Pick a ready-made programme and its first workout is one tap away, or build your own.',
+            el('button', { class: 'btn primary', text: 'Pick a programme', onClick: () => go('#/explore') })),
+          el('button', { class: 'btn block', onClick: () => go('#/system/new') },
+            icon('plus'), 'Build my own instead'),
+        ];
 
   // A benchmark is a deliberate one-off test rather than a session, so it sits
   // apart from the list rather than in it — and it is pinned, because the list
@@ -1047,123 +1137,52 @@ export async function StartPickerView({ tab = false } = {}) {
 // a Push, a Pull and a Legs day. Tim, 2026-08-17: he wants several side by side,
 // and later to be able to load somebody else's (docs/vision.md §1.3).
 //
-// The top-level tab lists systems now, not workouts. Everything that used to be
-// reachable in one tap still is, because a system with one workout shows that
-// workout's name in its subtitle — ~~and the row goes straight into the
-// system~~: since 2026-09-16 the row UNFOLDS, and every workout in the
-// programme is a row of its own under it, one tap from here. `#/system/<id>` is
-// the last row inside the group. See systemGroup() for why the tap changed.
+// 🔄 THE TAB IS ONE PROGRAMME SINCE 2026-09-19, NOT A LIST OF THEM — Tim:
+// *"make the user pick a 'current system' and then the main display inside the
+// workouts [tab is] the details inside that system."* ~~a list of systems, each
+// unfolding to its workouts~~ It is the current system's own screen, drawn by
+// the same `systemBody()` that `#/system/<id>` uses, with a switcher pinned
+// above it. See the current-system block above for why the fold went with it.
+//
+// ⚠️ THE SWITCHER IS IN `top`, NOT IN `scroll`. It is the label on everything
+// underneath it — which programme all of this belongs to — and a label that
+// scrolls away leaves a screenful of workouts belonging to nothing. It is also
+// how you leave, and the way out of a screen may not require scrolling to find.
 export async function WorkoutsView() {
   const [systems, workouts] = await Promise.all([store.getSystems(), store.getWorkouts()]);
-  // ~~`countIn`~~ — the row needs the workouts themselves now, not a count of
-  // them, so each system filters once and reads both off the one array.
-  const ratings = await rateOwnSystems(systems, workouts);
+  const current = await store.currentSystem({ systems, workouts });
+
+  if (!current) {
+    return screenShell({
+      profile: true,
+      title: 'Workouts',
+      top: [
+        el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
+          icon('plus'), 'New system'),
+        el('button', { class: 'btn block', onClick: () => go('#/explore') },
+          icon('search'), 'Explore ready-made programmes'),
+      ],
+      scroll: emptyState('No systems yet',
+        'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
+        + 'whatever you follow. Build one, or start from a ready-made one.'),
+    });
+  }
+
+  const mine = workouts.filter((w) => w.systemId === current.id);
 
   return screenShell({
     profile: true,
     title: 'Workouts',
-    sub: systems.length ? plural(systems.length, 'system') : null,
+    // ⚠️ The pencil is here as well as on `#/system/<id>`, because this IS that
+    // screen for the current programme and a door that exists on one of two
+    // identical screens is a door somebody cannot find from the one they use.
+    actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + current.id + '/edit'))],
     top: [
-      el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
-        icon('plus'), 'New system'),
-      // Browsing ready-made systems is the low-effort path and belongs beside
-      // the high-effort one, not buried in an empty state where someone who
-      // already has a system would never find it.
-      el('button', { class: 'btn block', onClick: () => go('#/explore') },
-        icon('search'), 'Explore ready-made programmes'),
+      systemSwitcher({
+        system: current, systems, workouts, currentId: current.id, always: true,
+      }),
     ],
-    scroll: systems.length
-      ? el('div', { class: 'list' }, systems.map((sys) => {
-          const mine = workouts.filter((w) => w.systemId === sys.id);
-          const n = mine.length;
-          const names = mine.map((w) => w.name);
-
-          // Unchanged, and it has to be: this is what the row says about
-          // itself, and the rating badge is the four numbers Tim asked to have
-          // on the list rather than only inside the programme.
-          const says = [
-            el('div', { class: 'row-main' },
-              el('div', { class: 'row-title wrap', text: sys.name }),
-              // `.wrap`, for the same reason as the Explore list: the rating
-              // takes width off this line, and the workout names are what tell
-              // you which programme this is. Clipping "Push · Pull · Legs" to
-              // "Push · Pu…" would trade the content for the ornament.
-              el('div', { class: 'row-sub wrap', text: n
-                // The workout names ARE the useful subtitle — "3 workouts" says
-                // nothing you could not guess, "Push · Pull · Legs" tells you
-                // what the programme is.
-                //
-                // ⚠️ IT STAYS ON THE ROW EVEN WHEN THE GROUP IS OPEN, and the
-                // near-duplication with the rows below is deliberate. It is a
-                // PREVIEW — up to four names, then "· …" — while the rows are
-                // the detail, each with its exercise and set counts. Swapping
-                // it for "3 workouts" on open would mean the row's identity
-                // line changes meaning under the finger that just tapped it,
-                // and it would leave a collapsed row saying less than it says
-                // today, which is the one thing this change must not do.
-                ? names.slice(0, 4).join(' · ') + (names.length > 4 ? ' · …' : '')
-                : 'No workouts yet' }),
-            ),
-            ratingBadge(ratings.get(sys.id)),
-          ];
-
-          /* ⚠️ AN EMPTY SYSTEM IS NOT A DISCLOSURE, IT IS STILL A LINK. There is
-           * nothing under it to unfold, and a chevron that turns to reveal
-           * nothing is a control that lies about having something. So a
-           * programme with no workouts in it is exactly the row it has always
-           * been, going exactly where it has always gone — which is also the
-           * only place you can add the workouts it is missing. */
-          if (!n) {
-            return el('button', { class: 'row row-rated', onClick: () => go('#/system/' + sys.id) },
-              says, chevron());
-          }
-
-          /* Tim, 2026-09-16: *"I want you to be able to click on the system in
-           * order to close or open the display of the workouts within them."*
-           *
-           * ⚠️ THE WORKOUTS ARE REAL ROWS HERE NOW. They existed on this screen
-           * only as names in the subtitle, and a disclosure that unfolds to
-           * reveal the line you were already reading would be theatre. They are
-           * the same rows the system screen shows — same wording, same order,
-           * same `#/workout/<id>` — because a workout must not describe itself
-           * two ways in two places.
-           *
-           * 🚨 AND THE WAY INTO THE SYSTEM ITSELF SURVIVES, as the last row in
-           * the group. The summary opens and closes now, so it cannot also
-           * navigate; `#/system/<id>` is where Edit, Notes, New workout and the
-           * full rating live, and the Workouts tab is its front door (the Goals
-           * screen links there too, but nobody finds a programme by going to
-           * Goals). Dropping the route rather than moving it would have been a
-           * feature that quietly deleted a screen. */
-          return systemGroup({
-            memory: closedOnWorkouts,
-            id: sys.id,
-            cls: 'row row-rated',
-            summary: says,
-            body: el('div', { class: 'list' },
-              mine.map((w) => el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
-                el('div', { class: 'row-main' },
-                  el('div', { class: 'row-title', text: w.name }),
-                  el('div', { class: 'row-sub', text:
-                    `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
-                    + (w.isBenchmark ? ' · benchmark' : '') }),
-                ),
-                chevron(),
-              )),
-              el('button', { class: 'row', onClick: () => go('#/system/' + sys.id) },
-                el('div', { class: 'row-main' },
-                  el('div', { class: 'row-title', text: 'Open this system' }),
-                  el('div', { class: 'row-sub wrap', text:
-                    'Add a workout, edit the programme, read how it rates' }),
-                ),
-                chevron(),
-              ),
-            ),
-          });
-        }))
-      : emptyState('No systems yet',
-          'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
-          + 'whatever you follow. Build one, or start from a ready-made one.'),
+    scroll: await systemBody(current, mine),
   });
 }
 
@@ -1511,41 +1530,23 @@ function ratingBadge(rating) {
   );
 }
 
-/**
- * Rate every one of the user's own systems, for the Workouts list.
+/* ~~`rateOwnSystems()`~~ — DELETED 2026-09-19 with the systems list it existed
+ * for. It rated every one of the user's own programmes in one pass so each row
+ * of the Workouts tab could wear a `ratingBadge`; that tab shows one programme
+ * now and `ownSystemRating()` gives it the full rating rather than the four-cell
+ * badge, which is strictly more than the row ever carried.
  *
- * One pass over sessions and one exercise map for the whole list rather than
- * per row — the same reason the Explore list rates its presets once.
+ * ⚠️ IT IS DELETED RATHER THAN KEPT FOR THE SWITCHER SHEET, and that was the
+ * tempting call. A badge per programme would genuinely help somebody choose
+ * between two — but this function awaits `optimal.js`, the exercise map, every
+ * session and the declared-days lookup, and the sheet it would sit in opens on
+ * the Record screen with a phone in one hand in a gym. A sheet that waits on
+ * four reads before it can be shown is a tap that hangs on the one path D4 says
+ * must not. Comparing programmes is what Explore is for, and it already rates
+ * all nine.
  *
- * A system with no workouts gets no entry, so `ratingBadge` renders nothing for
- * it. An empty programme is not a bad programme, it is an unfinished one, and
- * showing it a 0 % would be both wrong and discouraging.
+ * `ratingBadge()` survives — Explore and the preset detail screen both use it.
  */
-async function rateOwnSystems(systems, workouts) {
-  const out = new Map();
-  if (!systems || !systems.length) return out;
-
-  const [{ rateUserSystem }, exMap, sessions, declared] = await Promise.all([
-    import('./optimal.js'), store.getExerciseMap(), store.getSessions(), declaredFor(systems),
-  ]);
-  const today = todayISO();
-
-  for (const sys of systems) {
-    const own = workouts.filter((w) => w.systemId === sys.id);
-    if (!own.length) continue;
-    const ids = new Set(own.map((w) => w.id));
-    const d = declared.get(sys.id) || {};
-    const rating = rateUserSystem(own, exMap, {
-      sessionDates: sessions.filter((s) => ids.has(s.workoutId)).map((s) => s.date),
-      todayISO: today,
-      declaredDaysPerWeek: d.daysPerWeek,
-      cycleDays: d.cycleDays,
-      minutesPerSession: d.minutes,
-    });
-    if (rating && rating.raw.hypertrophy > 0) out.set(sys.id, rating);
-  }
-  return out;
-}
 
 /**
  * What each system says about how often it is meant to be trained.
@@ -2016,51 +2017,49 @@ async function SystemDetailView(id) {
   }
 
   const workouts = await store.getWorkouts(id);
+  const current = await store.currentSystem();
+  const isCurrent = Boolean(current && current.id === id);
 
   return screenShell({
     title: existing.name,
     back: () => go('#/workouts'),
     // The pencil, not a "Settings" or a "…". It names the one thing it does.
     actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + id + '/edit'))],
-    scroll: [
-      // ⚠️ THE PLAN GOES ABOVE THE WORKOUTS, AND ONLY WHEN THERE IS ONE.
-      // The note below says the workouts come first, and it was written when
-      // there was nothing else that could reasonably be above them. Tim asked
-      // for these boxes "at the top of the workout system when you click on it",
-      // and a plan IS the shape of the programme — it names every workout in the
-      // list underneath it and puts each one on a day. A system with no plan is
-      // untouched: planBoxes() returns null and the workouts are still the first
-      // thing in the pane, which is what the position test in
-      // tests/render.test.mjs pins.
-      planBoxes(existing.schedule, workouts),
-      // The workouts FIRST. They are why anybody opens a programme, and on a
-      // phone "first" is the only position that means anything.
-      el('div', { class: 'section-label', text: workouts.length
-        ? plural(workouts.length, 'workout') : 'Workouts' }),
-      workouts.length
-        ? el('div', { class: 'list' }, workouts.map((w) =>
-            el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
-              el('div', { class: 'row-main' },
-                el('div', { class: 'row-title', text: w.name }),
-                el('div', { class: 'row-sub', text:
-                  `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
-                  + (w.isBenchmark ? ' · benchmark' : '') }),
-              ),
-              chevron(),
-            )))
-        : emptyState('No workouts in this system yet',
-            'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
-      el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + id) },
-        icon('plus'), 'New workout'),
-      // The notes are the author's own words about the programme, so they read
-      // here rather than only inside the form that happens to edit them.
-      existing.notes
-        ? el('div', { class: 'preset-notes' },
-            el('div', { class: 'section-label', text: 'Notes' }),
-            el('p', { text: existing.notes }))
-        : null,
-      await ownSystemRating(id, workouts, existing),
-    ],
+    /* 🔄 THIS SCREEN IS THE WORKOUTS TAB FOR ONE PROGRAMME SINCE 2026-09-19, and
+     * the two are drawn by the same `systemBody()` — see its header for why that
+     * is not optional. What lives HERE and not there is this row: the tab always
+     * shows the current programme, so only a programme reached some other way
+     * can be asked to become one.
+     *
+     * ⚠️ IT IS IN `top`, NOT IN THE PANE, AND A TEST IS WHY. *"Show it as boxes
+     * at the top of the workout system"* (2026-09-16) is pinned by an assertion
+     * that the plan is the FIRST thing in `.pane-scroll`, and the first version
+     * of this row put a button above it — quietly taking the position Tim asked
+     * for. `top` is the pinned region above the pane, which is the same slot the
+     * Workouts tab puts its switcher in, so both screens now carry "which
+     * programme is this" in the same place and neither takes the plan's spot.
+     *
+     * 🛑 ADDING OR CREATING A SYSTEM DOES NOT MAKE IT CURRENT, and this button
+     * is why it does not have to. Somebody browsing Explore and copying a
+     * programme to look at it has not said they are switching to it, and
+     * silently moving them off the plan they are running — changing what Record
+     * offers, mid-week — is a change under them of exactly the kind this app
+     * refuses everywhere else. The one exception is in `store.currentSystem()`:
+     * with nothing chosen and nothing trained, the first programme with workouts
+     * in it is derived rather than demanded.
+     */
+    top: isCurrent
+      ? el('div', { class: 'field-help', text:
+          'This is your current programme — it is what the Workouts tab and Record show.' })
+      : el('button', {
+          class: 'btn block',
+          onClick: async () => {
+            await store.setCurrentSystem(id);
+            toast('Now your current programme');
+            refreshRoute();
+          },
+        }, icon('check'), 'Make this my current programme'),
+    scroll: await systemBody(existing, workouts),
   });
 }
 

@@ -1019,6 +1019,74 @@ export const store = {
     return row ? normalizeSystem(row) : null;
   },
 
+  /* ── WHICH PROGRAMME AM I RUNNING ────────────────────────────────────────
+   * 2026-09-19, Tim: *"make the user pick a 'current system' and then the main
+   * display inside the workouts [tab is] the details inside that system … inside
+   * the weightlifting category in record, it will show you just the workouts
+   * inside your current system, not the details of the other ones."*
+   *
+   * 🚨 IT IS DERIVED WHEN IT HAS NOT BEEN CHOSEN, AND THAT IS THE WHOLE
+   * DIFFICULTY OF THE FEATURE. Every account that exists today has no
+   * `currentSystemId`, so a screen that demanded a pick before it showed
+   * anything would put a wall in front of everybody's existing programme on the
+   * first load after this deploys — which is D8 and D9 in one move, and exactly
+   * the shape the first-run work spent 2026-08-21 taking out. An explicit choice
+   * wins; with none, the app READS one out of the training rather than asking.
+   *
+   * ⚠️ DERIVING IS NOT CHOOSING, SO THIS NEVER WRITES THE POINTER. A guess saved
+   * on read is indistinguishable from a decision a week later, and whichever
+   * screen happened to open first would have pinned it. `setCurrentSystem()` is
+   * the only thing in this store that writes the field.
+   *
+   * ⚠️ A DANGLING ID FALLS THROUGH RATHER THAN THROWING. deleteSystem() clears
+   * the pointer, so this should not normally happen — but a restored backup and
+   * a second device that deleted the system are both real, and "a foreign key is
+   * only valid while the rest of that set still exists" is a lesson this project
+   * has already paid for once (dropOrphanGroups).
+   *
+   * `pre` lets a caller that has already loaded these hand them over. Record
+   * reads all three anyway, and re-reading them here would be three collection
+   * reads to answer a question the screen has the answer to in its hand.
+   */
+  async currentSystem(pre = {}) {
+    const systems = pre.systems || await this.getSystems();
+    if (!systems.length) return null;
+
+    const settings = await this.getSettings();
+    const chosen = systems.find((s) => s.id === settings.currentSystemId);
+    if (chosen) return chosen;
+
+    /* No choice on record. The most recent thing actually TRAINED is the best
+     * answer available, and it is the same one suggestNext() reaches for — so
+     * the tab, the Record picker and the rotation cannot disagree about which
+     * programme is in play while nobody has said. */
+    const workouts = pre.workouts || await this.getWorkouts();
+    const sessions = pre.sessions || await this.getSessions();
+    const byId = new Map(workouts.map((w) => [w.id, w]));
+    const ordered = [...sessions]
+      .filter((s) => s && s.date)
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    for (const s of ordered) {
+      const w = byId.get(s.workoutId);
+      const sys = w && systems.find((x) => x.id === w.systemId);
+      if (sys) return sys;
+    }
+
+    /* Nothing trained yet. A programme with workouts in it beats an empty one:
+     * landing somebody on the migrated "My Workouts" holding nothing, while the
+     * Push Pull Legs they just copied sits one tap away behind a switcher, is
+     * the worst of the guesses available here. */
+    return systems.find((s) => workouts.some((w) => w.systemId === s.id)) || systems[0];
+  },
+
+  // The only writer of the pointer. `null` puts the account back on the derived
+  // answer rather than on no programme at all — there is no "no current system"
+  // state to be in while any system exists, and inventing one would give every
+  // screen a blank to render that the data does not have.
+  async setCurrentSystem(id) {
+    return this.saveSettings({ currentSystemId: id || null });
+  },
+
   async saveSystem(sys) {
     const rows = await backend.read('systems');
     const row = { ...normalizeSystem(sys), updatedAt: new Date().toISOString() };
@@ -1041,6 +1109,15 @@ export const store = {
     // on a screen that names what it deletes. The rows really were read first.
     await backend.write('workouts', workouts.filter((w) => w.systemId !== id), { wholesale: true });
     await backend.write('systems', systems.filter((r) => r.id !== id), { wholesale: true });
+
+    /* ⚠️ The current-system pointer goes with it. currentSystem() tolerates a
+     * dangling id and falls back, so this is not a guard against a crash — it is
+     * that a pointer at something deleted is a fact which stopped being true.
+     * Left in place, the fallback silently owns the answer while a stale id sits
+     * in `settings` looking authoritative, and the next person to read the row
+     * has no way to tell a real choice from a dead one. */
+    const settings = await backend.read('settings').then((r) => r[0] || {});
+    if (settings.currentSystemId === id) await this.saveSettings({ currentSystemId: null });
   },
 
   /**

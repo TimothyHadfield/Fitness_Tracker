@@ -1058,6 +1058,21 @@ Person      id, name, createdAt, lastUsedAt
                a quiet failure, and the next caller would not think to guard it.
 
 Settings    id, units, theme, gender, birthYear,  ← birth year, NEVER age
+            currentSystemId,                     ← WHICH PROGRAMME AM I RUNNING
+            ── 2026-09-19. The Workouts tab and Record's weightlifting picker
+               both show this one system and nothing else (docs/state.md).
+               ⚠️ ABSENT ON EVERY ACCOUNT WRITTEN BEFORE THAT DATE, and it stays
+               absent until somebody picks: store.currentSystem() DERIVES an
+               answer rather than demanding one, because a screen that made an
+               existing account choose before it showed anything would be a wall
+               in front of their own programme (D8, D9). Deriving never writes —
+               a guess saved on read is indistinguishable from a decision a week
+               later. setCurrentSystem() is the only writer; deleteSystem()
+               clears it; a dangling id falls through to the derive.
+               ⚠️ It is in SETTINGS rather than a module variable because which
+               programme you are running is a fact about you, so it syncs to the
+               other device this account is open on. The fold it replaced was a
+               reading position and correctly died on reload.
             avatar, avatarSource, avatarCrop{zoom,cx,cy}
             ── the FACE everything paints (256px), the re-editable SOURCE it
                was cut from (768px), and where the circle was. Written together

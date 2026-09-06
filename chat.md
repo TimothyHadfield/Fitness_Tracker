@@ -2497,3 +2497,60 @@ One thing worth telling you: the test caught me getting the squat wrong a minute
 put 88, the middle of 85–90, and percentages snap to a 5% grid, so 90 reached the account — the top
 of his range rather than the middle. It plans 85 now, the bottom. Erring light is the direction the
 whole feature errs in.
+
+---
+
+## 2026-09-19
+
+**You asked whether the % feature had really deployed onto the Ultimate Push Pull Legs system.**
+
+The deploy was fine — I checked the live site before reading any code. What you were seeing was one
+of two things, and probably both.
+
+Your copy of the system predates the feature. Adding a ready-made programme makes a copy, and a copy
+can't change under you, so the percentages only arrive on a fresh one. And even a fresh copy has just
+one percentage in six workouts — the back squat in Legs 1 — which is the limit I hit last time and
+described in that leg-day write-up. So "it didn't fully deploy" and "it expresses one of his four
+numbers" look identical from a phone. They're different things and it's the second one.
+
+**Then you asked whether a pre-built system could stop being a copy and update when the original
+changes.** I looked at it properly and said no, with three reasons:
+
+- you couldn't edit it any more, and editing a ready-made programme is most of the value
+- your recorded sessions point at a workout id, so a deploy that renamed or dropped a preset workout
+  would strand workouts you'd already logged
+- it would change prescribed weights under you with no warning — deploys are silent, there's no
+  server to announce one, and that's the exact failure the % feature was built to avoid
+
+What I'd do instead: keep the copy, give each programme a version, and show you a "the original
+changed — review" notice you can take or ignore. Not started.
+
+**Then you brought the current system idea, and I built it.**
+
+The Workouts tab is one programme now — its plan, its workouts, New workout, its notes and its
+rating — with the programme's name at the top as a switcher that also holds New system and Explore.
+Record's weightlifting screen shows only that programme's workouts. Both screens are drawn by the
+same code as the individual system screen, so they can't drift apart.
+
+Two things worth telling you.
+
+**The folding systems you asked for two sessions ago are gone.** Not broken — replaced. Folding
+existed so you could hide the four programmes you weren't running; picking a current one answers that
+properly instead of hiding things. With one programme on screen there was nothing left to fold, so I
+deleted the code rather than leave it sitting there doing nothing.
+
+**Nothing switches your programme without you saying so.** Copying something out of Explore doesn't
+make it current — you'd be moved off the plan you're running mid-week. The system's own screen has a
+"Make this my current programme" button instead. The one exception is accounts that have never
+picked: rather than making you choose before showing you anything, the app works it out from your
+most recent recorded session, and doesn't save that guess.
+
+One side effect I didn't expect: Record used to refuse to suggest anything on a fresh account with
+more than one programme, because it couldn't know which you meant. Now it can. That case just works.
+
+Nineteen suites green, 5,303 assertions. I drove both screens in a browser at phone size to check the
+layout.
+
+One thing worth mentioning: writing the tests, I found that the empty-account version of both screens
+had never been tested at all — not by this change, ever. It's the first thing a stranger sees. It
+works, but it was one wrong line away from a blank Workouts tab, so there are tests on it now.

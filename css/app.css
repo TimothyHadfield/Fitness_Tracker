@@ -725,14 +725,37 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   margin-bottom: -4px;
 }
 .pane-scroll > .section-label + .sys-head { margin-top: 0; }
-/* ⚠️ The programme heading is a <summary> inside a `.sys-group` since
-   2026-09-16, so the two rules above reach it one level deeper. The first keeps
-   it from floating between two groups directly under the section label; the
-   second drops the -4px that used to pull the list up across the pane's `gap` —
-   inside the <details> there is no gap to pull across, and the summary's own
-   `.row` padding is the space below the heading now. */
-.pane-scroll > .section-label + .sys-group > .sys-head { margin-top: 0; }
-.sys-group > .sys-head { margin-bottom: 0; }
+/* ~~`.sys-group` rules~~ — DELETED 2026-09-19 with the folding systems. The
+   heading is a <button> again rather than a <summary>, so the two rules that
+   reached it one level deeper inside a <details> have nothing left to reach. */
+
+/* ⚠️ THE HEADING IS A CONTROL AGAIN, AND IT SWITCHES RATHER THAN UNFOLDS
+   (2026-09-19). As a `.row` it takes the app's own 46px target and press-back,
+   so `margin-bottom: -4px` would pull the list up into its padding — the row
+   has its own space below it and does not need the pane's gap closed. */
+button.sys-head { margin-bottom: 0; }
+
+/* The word next to the chevron. Everywhere else a chevron alone means "go and
+   look at that"; this one opens a sheet over the screen you are on, which is a
+   different promise and has to be named — the same finding that put "Start" on
+   the Record rows rather than a play triangle. Quiet, because the programme's
+   NAME is what the eye is looking for here (2026-08-25) and the control that
+   changes it must not outweigh it. */
+.row-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.row-switch svg { opacity: 0.75; }
+
+/* The current programme in the switcher sheet. The `.tag` beside the name is
+   what says so in words; this is the same statement in the margin, for a list
+   being scanned rather than read. Colour is not carrying it alone. */
+.row.is-current { box-shadow: inset 2px 0 0 var(--accent); }
 
 /* ⚠️ "Start", not a chevron. Everywhere else in this app a chevron means go and
    look at that; on the Record screen the same row BEGINS A SESSION, and Tim
@@ -3638,27 +3661,13 @@ a.seg {
 .vol-detail-wrap > * { overflow: hidden; min-height: 0; }
 .vol-detail-wrap.is-open { grid-template-rows: minmax(0, 1fr); opacity: 1; }
 
-/* ---- a system opens and closes (2026-09-16) --------------------------- */
-/* Tim: *"In the workouts section as well as the record section... I want you to
-   be able to click on the system in order to close or open the display of the
-   workouts within them in both sections."*
-
-   ⚠️ THE HEIGHT DOES NOT ANIMATE, AND THAT IS THE RULE RATHER THAN AN OMISSION.
-   The Record picker is one tap from a workout in a gym (D4), and Rule 7 allows
-   exactly one thing to move on the logging path: a press answering back. The
-   chevron turning IS that press answering back — the same `--t-fast` turn
-   `.me-other-chev` already uses — and the rows appear at once, so nothing
-   between a tap and a session waits on a transition. A sliding height on a
-   native `<details>` also has to be JS-driven, which is how a disclosure ends
-   up with a state its own element disagrees with.
-
-   The summary itself needs no target rule: it wears `.row` (46px, the app's own
-   press-back) on the Workouts tab and `.sys-head .row` on Record, so the 44px
-   floor is met by a class that was already there. */
-.sys-group > summary { list-style: none; cursor: pointer; }
-.sys-group > summary::-webkit-details-marker { display: none; }
-.sys-chev { flex: none; display: flex; transition: transform var(--t-fast) var(--ease-out); }
-.sys-group[open] > summary .sys-chev { transform: rotate(90deg); }
+/* ~~---- a system opens and closes (2026-09-16) ----~~ DELETED 2026-09-19.
+   The four rules here dressed a `<details class="sys-group">` — list-style off,
+   the webkit marker off, and the chevron turning on `--t-fast`. Both screens
+   show ONE programme now (see `js/views-workouts.js`, the current-system block),
+   so there is no disclosure left to dress and a rule matching nothing is a rule
+   the next person has to work out is dead. `.me-other` and `.rt-topic` are still
+   real disclosures and keep their own. */
 
 /* ---- a bar grows to its number ---------------------------------------- */
 /* Only when the screen is built or its window changes — the number really did
