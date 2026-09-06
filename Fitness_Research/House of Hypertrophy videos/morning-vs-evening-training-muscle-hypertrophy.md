@@ -6,12 +6,12 @@
 ## Bottom line
 - The three studies usually cited for evening superiority are: one **never peer-reviewed or published**, one whose difference was **not statistically significant**, and one 24-week trial that is the sole published study showing a real effect.
 - Grgic and colleagues' 2019 meta-analysis found **no significant difference in hypertrophy** between morning and evening training, and no difference in strength gains once tests were averaged across times of day.
-- The mechanistic arguments — a higher evening testosterone-to-cortisol ratio, and greater evening strength — don't hold. Hormone shifts within a normal range mean little for growth, and the evening strength advantage is an **untrained** phenomenon that disappears when you train consistently at a given time.
-- Beyond 12 weeks there may be something; a single study cannot establish it.
+- The mechanistic arguments — higher evening testosterone-to-cortisol ratio, greater evening strength — don't hold. Hormone shifts within a normal range mean little for growth, and the evening strength advantage is an **untrained** phenomenon that disappears once you train consistently at a given time.
+- Beyond 12 weeks there may be something; one study cannot establish it.
 - Practical position: **train when your schedule allows**. Consistency and adherence dominate.
 
 ## Taking the three studies apart
-**The bodybuilder study** (greater fat-free mass gains training after 6 pm vs before 10 am) was presented at a 2005 conference in Las Vegas and exists only as a blog write-up. It was never peer-reviewed or published, so he refuses to count it. He doesn't speculate about why.
+**The bodybuilder study** (greater fat-free mass gains after 6 pm vs before 10 am) was presented at a 2005 Las Vegas conference and exists only as a blog write-up. Never peer-reviewed or published, so he refuses to count it, and doesn't speculate about why.
 
 **The Sedliak trial** found quadriceps volume up **3.5% (evening) vs 2.7% (morning)** — a 0.8 point gap that was **not statistically significant**, with only **9 morning and 7 evening subjects**. With samples that small, a gap that size is what chance looks like; he offers slightly better muscle-building genetics landing in one group as an equally good explanation.
 
@@ -21,7 +21,7 @@
 This is the strongest part of the video. He uses the *same* trial against itself: Küüsmaa also found leg press 1RM gains were similar whether lifting came before or after cardio in a session — which would imply intra-session order doesn't matter for strength. But a meta-analysis pooling nine other studies found lifting first is better. The point is not about concurrent training; it is that a single study's null or positive result routinely gets overturned when the literature catches up.
 
 ## The rest of the literature
-Three further studies compared morning and evening training for muscle growth measures. All lasted **12 weeks or less** and all found **no statistical difference**. Pooling those with Sedliak and Küüsmaa into the 2019 meta-analysis — which buys statistical power the individual trials lack — produced no significant hypertrophy difference. The same meta-analysis, drawing on seven studies, established that time-of-day-specific training equalises morning and evening strength: your body adapts to when you train.
+Three further studies compared morning and evening training for muscle growth measures. All lasted **12 weeks or less** and all found **no statistical difference**. Pooling those with Sedliak and Küüsmaa into the 2019 meta-analysis — which buys statistical power the individual trials lack — produced no significant hypertrophy difference. The same meta-analysis, drawing on seven studies, established that time-of-day-specific training equalises morning and evening strength — your body adapts to when you train.
 
 ## Flag
 None of the conclusions outrun the evidence here. If anything he under-claims: he refuses to say evening training is *not* better, only that the data don't support saying it is, and keeps the 24-week signal alive as an open question rather than burying it. Note the honest asymmetry — he discounts the non-significant result favouring evenings *and* the significant one, for different and defensible reasons.

@@ -14,9 +14,9 @@
 A 2018 cohort study found higher VO2 max associated with lower mortality risk. Resistance training carries its own benefits, including preserving fast-twitch fibre contractile function, which aerobic training may not do as well. A 2019 meta-analysis found resistance training alone associated with a **21% lower all-cause mortality risk**, and cardio plus resistance training with a **40% lower risk** — associations from observational data, which he does not caveat as clearly as he caveats the training data.
 
 ## Where "cardio kills gains" came from
-Hickson, 1980. A strength group trained the lower body five times weekly; an endurance group did cardio six days weekly; a combined group did both. After 10 weeks the combined group had smaller squat strength gains. He points out the obvious: eleven sessions a week is extreme, and the fact that the combined group's strength *declined* midway through hints at overtraining rather than a clean interference mechanism.
+Hickson, 1980. A strength group trained the lower body five times weekly; an endurance group did cardio six days weekly; a combined group did both. After 10 weeks the combined group had smaller squat strength gains. He points out the obvious: eleven sessions a week is extreme, and the combined group's strength *declining* midway through hints at overtraining rather than a clean interference mechanism.
 
-Wilson's 2012 meta-analysis pooled everything available at the time and did find lower strength and hypertrophy with concurrent training, using more typical frequencies than Hickson's. At face value that confirmed the effect. Two things have changed since.
+Wilson's 2012 meta-analysis pooled everything available at the time and did find lower strength and hypertrophy with concurrent training, at more typical frequencies than Hickson's. At face value that confirmed the effect. Two things have changed since.
 
 ## What changed
 **The mechanism did not survive.** The proposed pathway — cardio triggering intracellular signalling that directly inhibits the anabolic response to lifting — is supported in animal studies but not in humans, where the pathways turn out to be complex and not mutually exclusive.
@@ -33,10 +33,10 @@ He treats this as a reason to distrust the fibre measurement rather than a reaso
 ## Practical arrangement
 - **Separate sessions if possible.** The 2021 meta-analysis isolating trained individuals found same-session cardio lowered strength gains; separate-session cardio did not. Hypertrophy was not assessed in that analysis, and he says he *presumes* the same holds — flagged as a presumption.
 - **If same session, lift first.** Doing cardio first raises the chance that fatigue degrades the effort and therefore the stimulus of the lifting.
-- **Running or cycling both work.** Running produces more muscle damage than cycling, which could matter at high aerobic volumes, but the repeated bout effect reduces damage over time, and at moderate volumes the meta-analyses show no penalty.
+- **Running or cycling both work.** Running produces more muscle damage, which could matter at high aerobic volumes, but the repeated bout effect reduces damage over time and the meta-analyses show no penalty at moderate volumes.
 - Sleep, nutrition and stress reduce whatever interference exists.
 
-**Flagged:** the mortality figures are observational and the 21% vs 40% contrast is presented without the confounding caveat that the training data get. Everywhere else he is careful — bounding the conclusion by the actual training volumes in the studies, distinguishing "not highly trained" from "trained", and refusing to let a fibre-biopsy result overturn whole-muscle outcomes without first explaining why the measurement is weak.
+**Flagged:** the 21% vs 40% mortality contrast is observational and presented without the confounding caveat the training data get. Everywhere else he is careful — bounding the conclusion by the actual training volumes in the studies, distinguishing "not highly trained" from "trained", and refusing to let a fibre-biopsy result overturn whole-muscle outcomes without first explaining why the measurement is weak.
 
 ## References
 

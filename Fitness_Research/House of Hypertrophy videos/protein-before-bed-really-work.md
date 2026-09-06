@@ -4,22 +4,22 @@
 **Topic:** Nutrition
 
 ## Bottom line
-- The 2021 systematic review that people cite for pre-sleep protein **did not control total daily protein intake**. The pre-sleep groups simply ate more protein. That confound is the whole video.
+- The 2021 systematic review people cite for pre-sleep protein **did not control total daily protein intake** — the pre-sleep groups simply ate more protein. That confound is the whole video.
 - Three trials that *did* equate daily protein found **no significant difference** in muscle or strength gains between protein taken before bed and the same protein taken earlier in the day.
 - Those three trials are small (n = 26, 13 and 42), so this is weak evidence of no effect rather than proof of no effect — he says so explicitly.
 - Nothing special about casein: whey and casein differ in the shape of the blood amino acid curve, but **area under the curve is similar** and protein synthesis rates did not differ.
 - Practical position: **don't bother optimising for it**. Total daily intake dominates; any pre-sleep effect will be small.
 
 ## The confounded evidence base
-The 2021 review (Reis and colleagues) concluded that 20–40 g of casein ~30 min before sleep raises overnight protein synthesis, and that in younger men it improves gains over 10–12 weeks of training. He takes the second claim apart. One representative study inside it had untrained men training 3×/week for 12 weeks, one group taking 27.5 g of protein before bed and the other a non-caloric placebo — which left the pre-sleep group at **1.9 g/kg/day versus 1.3 g/kg/day**. Gains favoured the pre-sleep group, but nothing separates "protein before bed" from "more protein". He notes this confound is routinely missed by other videos on the topic.
+The 2021 review (Reis and colleagues) concluded that 20–40 g of casein ~30 min before sleep raises overnight protein synthesis, and that in younger men it improves gains over 10–12 weeks of training. He takes the second claim apart. One study inside it had untrained men training 3×/week for 12 weeks, one group taking 27.5 g of protein before bed and the other a non-caloric placebo — leaving the pre-sleep group at **1.9 g/kg/day versus 1.3 g/kg/day**. Gains favoured the pre-sleep group, but nothing separates "protein before bed" from "more protein". He notes this confound is routinely missed by other videos on the topic.
 
 ## Is casein special?
 Almost every pre-sleep study used casein without comparing it to anything. The marketing logic — slow protein for a slow overnight window — doesn't hold: a flatter amino acid curve can carry the same area under it, and blood amino acid levels don't reliably track protein synthesis anyway. A Dutch trial had subjects cycle 60 minutes in the evening then take 45 g of casein or whey 30 min before bed: whey peaked higher, casein lasted longer, AUC was similar, and **myofibrillar and mitochondrial protein synthesis did not differ** (numerically favouring whey). He declines to read that as whey being better.
 
 ## The three protein-matched trials
-- **26 trained subjects, 54 g casein**, pre-sleep vs morning, 8 weeks: fat-free mass +1.2 kg vs +0.4 kg, **not significant**, and bench press strength gains numerically favoured the morning group. Subjects kept their own programs, so training was uncontrolled.
-- **13 recreationally active subjects, 35 g casein**, pre-sleep vs much earlier in the day, 10 weeks, training controlled: no significant differences, with the muscle measures numerically favouring the **earlier** group.
-- **42 previously untrained subjects**, 6 weeks of leg press, whey + vitamin D before bed vs in the morning (placebo at the other time point) plus a placebo-only control: control gained least; **no significant difference between morning and pre-sleep**. Growth measures leaned pre-sleep, strength measures leaned morning.
+- **26 trained subjects, 54 g casein**, pre-sleep vs morning, 8 weeks: fat-free mass +1.2 kg vs +0.4 kg, **not significant**, and bench strength gains numerically favoured morning. Subjects kept their own programs, so training was uncontrolled.
+- **13 recreationally active subjects, 35 g casein**, pre-sleep vs much earlier, 10 weeks, training controlled: no significant differences, muscle measures numerically favouring the **earlier** group.
+- **42 previously untrained subjects**, 6 weeks of leg press, whey + vitamin D before bed vs morning (placebo at the other time point) plus a placebo-only control: control gained least; **no significant difference between morning and pre-sleep**. Growth measures leaned pre-sleep, strength leaned morning.
 
 He reads the coin-flipping direction of these numerical differences as what small samples look like, which is the right reading.
 

@@ -4,11 +4,11 @@
 **Topic:** Range of motion & tempo
 
 ## Bottom line
-- A 2025 within-subject study — the **first on trained individuals** — found **long-length isometric knee extensions matched full-range dynamic knee extensions** for quadriceps growth over 6 weeks, with some measures leaning toward the isometrics.
-- Across the six head-to-head studies he could find, isometrics hold their own. The one that looks bad (1957) measured **upper-arm circumference**, which is a poor proxy for hypertrophy.
+- A 2025 within-subject study — the **first on trained individuals** — found **long-length isometric knee extensions matched full-range dynamic knee extensions** for quadriceps growth over 6 weeks, some measures leaning toward the isometrics.
+- Across the six head-to-head studies he found, isometrics hold their own. The one that looks bad (1957) measured **upper-arm circumference**, a poor proxy for hypertrophy.
 - Isometrics are **not essential** for maximising growth, and he does not claim they are superior. The claim being refuted is only that they are terrible.
-- The evidence base is **machine-based or immovable-object isometrics**, not planks and wall sits. He is explicit that he cannot extend the finding to those, only guess.
-- You do not need maximum stretch. Most of the supportive studies used **90–100° of knee flexion**, well short of a full stretch, and still produced good growth.
+- The evidence base is **machine-based or immovable-object isometrics**, not planks and wall sits. He is explicit that he cannot extend the finding to those.
+- You do not need maximum stretch: most supportive studies used **90–100° of knee flexion** and still produced good growth.
 
 ## The new study
 [00:48] 23 trained individuals averaging around **4.2 years** of experience, some at **9–10 years**. Within-subject design — each person trained one leg per condition, controlling for genetics, nutrition and lifestyle.
@@ -31,26 +31,26 @@ He closes by noting this is one small study with statistical uncertainty, its fi
 ## The rest of the isometric literature
 [04:40] **Rasch and Morehouse (1957)** compared isometric curls and overhead presses to dynamic versions. Upper-arm **circumference** gains were worse with isometrics — but circumference is a crude hypertrophy measure and he says so.
 
-Five other studies: **four found isometrics produced similar increases in muscle size**; one (Carmichael 2022, hip extension) found regional differences between eccentric-only and isometric-only training rather than a clean win either way. Several used **submaximal held isometrics** rather than all-out max effort — so growth does not require maximal contractions against an immovable object.
+Five other studies: **four found isometrics produced similar increases in muscle size**; one (Carmichael 2022, hip extension) found regional differences between eccentric-only and isometric-only training rather than a clean win. Several used **submaximal held isometrics** — so growth does not require maximal contractions against an immovable object.
 
-[05:37] Indirect support comes from a **2007 review** reporting average rates of growth: quadriceps CSA rose **0.11%/day** with dynamic training and **0.11%/day** with isometrics — identical. Elbow flexors: **0.20%/day** dynamic vs **0.14%/day** isometric. He discounts this appropriately — far fewer data points feed the isometric figures, and it compares rates across different studies, so the head-to-head trials are stronger evidence.
+[05:37] A **2007 review** reporting average growth rates offers indirect support: quadriceps CSA rose **0.11%/day** with dynamic training and **0.11%/day** with isometrics. Elbow flexors: **0.20%/day** vs **0.14%/day**. He discounts this appropriately — far fewer data points feed the isometric figures, and it compares rates across different studies, so the head-to-head trials are stronger.
 
 ## What about planks and wall sits?
-[06:48] Here he draws the line clearly. Nearly all the research used max efforts against immovable objects or submaximal holds on specialised machines. He **cannot** say common bodyweight isometrics are as good — only that his best guess is they are similar and any difference is probably small.
+[06:48] Here he draws the line clearly. Nearly all the research used max efforts against immovable objects or submaximal holds on specialised machines. He **cannot** say common bodyweight isometrics are as good — only that his guess is they are similar and any difference is probably small.
 
-His reasoning is a mechanism analogy: high-rep training to failure works because fibre recruitment and tension climb as the set approaches failure, despite starting low. A long hold may behave the same way. **This is mechanism, not outcome data**, and it is the weakest link in the video.
+His reasoning is an analogy: high-rep training to failure works because fibre recruitment and tension climb as the set approaches failure, despite starting low. A long hold may behave the same way. **This is mechanism, not outcome data**, and it is the weakest link in the video.
 
 ## Practical notes
 [08:02] His verdict: isometrics are **another tool**, not essential and not inferior. If you want to use them:
 
 - **Overcoming isometrics need no equipment** — push or pull against something immovable. Multiple **30-second holds**, or shorter contractions with short rests, repeated.
 - **Non-maximal holds:** hold to or very near failure; that counts as one set.
-- **Muscle length:** long-length isometrics beat short-length ones in the available comparisons, but you do not need maximum stretch — the supportive studies mostly used **90–100° knee flexion**. Short-length isometrics still produce detectable growth, so planks are probably not useless.
+- **Muscle length:** long beats short in the available comparisons, but maximum stretch is not required — the supportive studies mostly used **90–100° knee flexion**. Short-length isometrics still produce detectable growth, so planks are probably not useless.
 - **If you are well trained**, planks and wall sits may be too easy to reach failure in reasonable time. Add load or use a harder variation.
 
-**Where he is rigorous:** he reports the pro-isometric lean and the cautious null reading side by side, discounts the 1957 circumference data and the 2007 cross-study rate comparison on methodological grounds, and refuses to extend machine-based findings to planks.
+**Where he is rigorous:** he reports the pro-isometric lean and the cautious null reading side by side, discounts the 1957 circumference data and the 2007 rate comparison on methodological grounds, and refuses to extend machine-based findings to planks.
 
-**Where the claim outruns the evidence:** the bridge from machine isometrics to planks and wall sits rests entirely on a recruitment-and-tension mechanism argument borrowed from high-rep training, with no outcome data on those exercises.
+**Where the claim outruns the evidence:** the bridge from machine isometrics to planks and wall sits rests entirely on a mechanism argument borrowed from high-rep training, with no outcome data on those exercises.
 
 ## References
 

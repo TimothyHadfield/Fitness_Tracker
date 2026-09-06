@@ -4,11 +4,11 @@
 **Topic:** Exercise selection
 
 ## Bottom line
-- This is a clip lifted from his ~47-minute chest hypertrophy guide, and it is **entirely EMG-based** — no growth outcomes anywhere in it.
-- Pressing obliquely upward gives a better upper-pec-to-mid-pec activity ratio. Incline benching beat flat benching for upper pec activity in **5 of the 7 studies** that compared them, usually at the cost of lower mid/lower pec and higher front delt activity.
+- A clip lifted from his ~47-minute chest hypertrophy guide, and **entirely EMG-based** — no growth outcomes anywhere in it.
+- Pressing obliquely upward gives a better upper-pec-to-mid-pec activity ratio. Incline benching beat flat benching for upper pec activity in **5 of the 7 studies** comparing them, usually at the cost of mid/lower pec and with higher front delt activity.
 - Optimal incline angle is unsettled — one paper says 30°, another 44°, another finds 30° and 45° similar. He puts this down to individual architecture, leverages and setup.
 - Close grips and reverse grips are a second route, because the upper pec has the best leverage for **shoulder flexion**: 4 of 8 grip-width papers favour a closer grip; only 1 of 2 reverse-grip papers favours reverse.
-- Head-to-head comparisons between these variations come out **non-significant**, so his recommendation is genuinely "pick one you like" rather than a ranking.
+- Head-to-head comparisons come out **non-significant**, so his recommendation is genuinely "pick one you like" rather than a ranking.
 
 ## The upward-press family
 Incline barbell bench is the default, but the same upward force vector is available from the Smith machine, dumbbells, a cambered bar, feet-elevated push-ups, and machine presses that push upward. He flags one problem with feet-elevated push-ups: **your head limits depth**, cutting the pec stretch — partly fixable with boxes or handles.
@@ -19,8 +19,8 @@ Well-controlled EMG work finds the upper pec contributes more to shoulder flexio
 The direct comparisons are thin. One paper found a close-grip flat bench produced upper pec activity **not statistically different** from a wide-grip incline, raw numbers leaning toward the close grip. The **same** paper found an incline with a close/reverse grip also non-significantly different from a wide-grip incline, again leaning close/reverse. He points out both results came from that one study.
 
 ## Two he is lukewarm on
-- **Landmine press** — presses upward, so the direction is right, but very close hand spacing reduces pec stretch. He suspects it is worse than the others, while noting it still builds muscle.
-- **Svend press** (close-grip press squeezing a plate) — restricted stretch, and load is capped by how heavy a plate you can hold, so long-term progression is a problem. Do it only if you enjoy it.
+- **Landmine press** — presses upward, so the direction is right, but very close hand spacing reduces pec stretch. He suspects it is worse than the others while noting it still builds muscle.
+- **Svend press** (close-grip press squeezing a plate) — restricted stretch, and load is capped by the plate you can hold, so long-term progression is a problem. Do it only if you enjoy it.
 
 ## What he actually recommends
 Every variation has some evidence for preferentially loading the upper pec, and where they have been compared the differences are non-significant. So: choose what you like, and consider self-experimenting. He cites Greg Nuckols noticing extreme upper-pec soreness from flat reverse benching but never from inclines as an example of individual variation.

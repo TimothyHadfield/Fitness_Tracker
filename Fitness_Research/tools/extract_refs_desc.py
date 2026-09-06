@@ -57,8 +57,20 @@ SCIENTIFIC = re.compile(
     r"nutrition\.org|ajcn|clinicalnutrition|"
     r"europepmc|semanticscholar|osf\.io|preprints\.org|"
     r"cdnsciencepub|ovid\.com|esmed\.org|proquest|karger|"
+    # Journal platforms outside the Anglo-American mainstream, and the congress
+    # abstract books that strength research leans on more than most fields.
+    r"jstage\.jst\.go\.jp|jhk\.termedia\.pl|content\.iospress|journals\.biologists|"
+    r"journal\.iusca\.org|jhse\.ua\.es|journaljammr|ecss\.mobi|ecss2006\.com|"
+    # University repositories - where a thesis or a preprint legitimately lives.
+    r"\.library\.[a-z]+\.edu|library\.usyd|rc\.library|docdroid\.net|"
     # Not journals, but sources creators genuinely cite and a reader can follow.
     r"weightology\.net|strongerbyscience\.com", re.I)
+
+# A published paper rehosted as a PDF on someone's own domain. Common in this
+# corpus and invisible to a host allowlist, so match the shape instead: any PDF
+# reached from inside a reference block is far more likely to be the paper than
+# to be a promo asset.
+PDF_IN_BLOCK = re.compile(r"\.pdf(?:[?#]|$)", re.I)
 
 TRAILING_PUNCT = re.compile(r"[.,;:]+$")
 
@@ -69,6 +81,13 @@ def clean_url(u):
     while u and u[-1] in ")]}”’":
         u = u[:-1]
     return u
+
+
+def keep(u, in_block):
+    """Is this URL a citation? Inside a reference block a bare PDF counts too."""
+    if SELF.search(u):
+        return False
+    return bool(SCIENTIFIC.search(u)) or (in_block and bool(PDF_IN_BLOCK.search(u)))
 
 
 def block_after_heading(text):
@@ -89,7 +108,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("descdir")
     ap.add_argument("out")
+    ap.add_argument("--expand", help="JSON map of shortened URL -> real target. "
+                    "Shorteners are blocked as promo links by default, but a "
+                    "creator who shortens their citations is still citing; "
+                    "resolve them once, offline, and pass the map here.")
     a = ap.parse_args()
+
+    expand = {}
+    if a.expand:
+        expand = json.loads(io.open(a.expand, encoding="utf-8-sig").read())
 
     out = {}
     n_block = n_loose = n_none = 0
@@ -106,9 +133,9 @@ def main():
             # more than anything we could infer from the transcript.
             label = ""
             for line in block.splitlines():
-                urls = [clean_url(u) for u in URL.findall(line)]
-                urls = [u for u in urls
-                        if not SELF.search(u) and SCIENTIFIC.search(u)]
+                urls = [expand.get(clean_url(u), clean_url(u))
+                        for u in URL.findall(line)]
+                urls = [u for u in urls if keep(u, True)]
                 if urls:
                     if not groups or groups[-1]["label"] != label:
                         groups.append({"label": label, "urls": []})
@@ -128,13 +155,17 @@ def main():
 
         for m in INLINE.finditer(text):
             u = clean_url(m.group(1))
-            if not SELF.search(u) and SCIENTIFIC.search(u) and u not in refs:
+            u = expand.get(u, u)
+            if keep(u, True) and u not in refs:
                 refs.append(u)
                 groups.append({"label": "", "urls": [u]})
-        # Anything scientific outside the block, recorded but not promoted.
+        # Anything scientific outside the block, recorded but not promoted. No
+        # PDF latitude here - outside a reference block a PDF is as likely to be
+        # a training template as a paper.
         for u in URL.findall(text):
             u = clean_url(u)
-            if SELF.search(u) or not SCIENTIFIC.search(u):
+            u = expand.get(u, u)
+            if not keep(u, False):
                 continue
             if u not in refs and u not in loose:
                 loose.append(u)

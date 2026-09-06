@@ -13,26 +13,24 @@
 ## The belief-in-your-programme study
 40 athletes trained for 10 weeks. One group was told their programme was individualised to them based on a force-velocity profile; the other was told it was generic and non-optimal. **Both groups did the identical programme.** The individualised-belief group gained more back squat strength and more rectus femoris thickness.
 
-He does not let this stand unqualified. It is a pilot study; sprint and jump performance did not differ between groups despite the training being strength- and power-focused; and the muscle thickness differences were small enough that measurement error and confounders could plausibly account for them. The mechanism is unknown — plausibly more effort and better adherence, plausibly something else.
+He does not let this stand unqualified. It is a pilot study; sprint and jump performance did not differ despite the training being strength- and power-focused; and the thickness differences were small enough that measurement error and confounders could account for them. The mechanism is unknown — plausibly more effort and better adherence, plausibly something else.
 
 ## The two steroid-deception studies
-**Ariel & Saville, 1972** (he dates it 1973 aloud). 15 trained varsity athletes trained normally for 7 weeks. For the following 4 weeks, six of them were given a daily 10 mg "Dianabol" tablet that was in fact a placebo. Strength gains across four exercises during the placebo period were **2 to 10 times larger** than during the preceding 7 weeks — in just over half the time.
+**Ariel & Saville, 1972** (he dates it 1973 aloud). 15 trained varsity athletes trained normally for 7 weeks. For the next 4 weeks, six were given a daily 10 mg "Dianabol" tablet that was in fact a placebo. Strength gains across four exercises during the placebo period were **2 to 10 times larger** than in the preceding 7 weeks — in just over half the time.
 
-**Maganaris, 2000.** The author was a powerlifting coach whose athletes had asked him about steroids. He tested baseline 1RMs in **11 nationally ranked powerlifters**, then retested after giving them two tablets described as immediate-acting anabolic steroids. Every subject hit a personal best, averaging the +9.5 / +12.2 / +10.9 kg figures above. Given more tablets for a week of training, all reported increased vigour and lifted heavier or for more reps than ever before. At the next test session, **some subjects were told the pills had been placebos — their strength fell back to baseline**, while those left undeceived roughly held their gains. That reversal is the strongest part of the whole video: it is a within-study manipulation of belief alone, with performance following.
+**Maganaris, 2000.** The author was a powerlifting coach whose athletes had asked him about steroids. He tested baseline 1RMs in **11 nationally ranked powerlifters**, then retested after giving them two tablets described as immediate-acting anabolic steroids. Every subject hit a personal best, averaging the +9.5 / +12.2 / +10.9 kg figures above. Given more tablets for a week of training, all reported increased vigour and lifted heavier or for more reps than ever. At the next test session, **some subjects were told the pills had been placebos — their strength fell back to baseline**, while those left undeceived roughly held their gains. That reversal is the strongest part of the video: a within-study manipulation of belief alone, with performance following.
 
 ## Preconditioning, and the honest caveat
-He explains a common design: give someone a "supplement", then secretly reduce the load while making it look unchanged. They do more reps than expected, which convinces them the supplement works. Days later, with the real load and the same pill, they outperform what they would have done without the preconditioning. He points to a pinned comment for the study details and confounder controls rather than describing them, which is a gap in verifiability.
-
-He then states plainly that **not every study in this area found a placebo effect**, though most did.
+He explains a common design: give someone a "supplement", then secretly reduce the load while making it look unchanged. They do more reps than expected, which convinces them the supplement works. Days later, with the real load and the same pill, they outperform what they would have managed without the preconditioning. He points to a pinned comment for the study details rather than describing them, which is a gap in verifiability — and states plainly that **not every study in this area found a placebo effect**, though most did.
 
 ## Psyching up
 A recent review examined psyching up and maximal force production, covering three techniques:
 
 - **Preparatory arousal** — screaming, pacing, anything that raises activation.
 - **Motivational self-talk** — "I can lift this weight."
-- **Imagery** — mentally rehearsing the lift in as much detail as possible, and specifically **first-person rather than third-person**, which he says is likely more effective.
+- **Imagery** — mentally rehearsing the lift in detail, and specifically **first-person rather than third-person**, which he says is likely more effective.
 
-Most studies found these increased maximal force. There is not enough evidence to rank them against each other, and preference may decide it. Two examples from the review:
+Most studies found these increased maximal force. There is not enough evidence to rank them, and preference may decide it. Two examples from the review:
 
 **Pierce, 1993.** Trained varsity football players used preparatory arousal — watching aggressive football footage before bench pressing — and achieved greater 1RM.
 
@@ -43,7 +41,7 @@ He immediately bounds it: one study, not definitive; **no research at all on psy
 ## What to take from it
 You cannot easily deceive yourself into thinking you have taken something. What the literature supports instead is that optimism and confidence are worth something measurable, and that persistent negative self-talk — telling yourself you have bad genetics or a hard ceiling — plausibly costs you output. The acute psyching-up techniques are well enough supported to just use.
 
-**Flagged:** the pilot study is the only evidence connecting belief to *hypertrophy*, and he calls out its small effect and confounders himself. He also relays an Arnold Schwarzenegger anecdote about Franco Columbu going from a failed 500 lb squat to eight reps after psyching himself up — presented explicitly as a story, not as evidence. One structural point: the video's app segment sits directly after the steroid-placebo material and suggests expecting your best gains from the app as a way to create a placebo effect for yourself, which is a commercial use of the finding he has just presented.
+**Flagged:** the pilot study is the only evidence connecting belief to *hypertrophy*, and he calls out its small effect and confounders himself. He also relays an Arnold Schwarzenegger anecdote about Franco Columbu going from a failed 500 lb squat to eight reps after psyching himself up — presented explicitly as a story, not evidence. One structural point: the app segment sits directly after the steroid-placebo material and suggests expecting your best gains from the app as a way to create a placebo effect for yourself, which is a commercial use of the finding just presented.
 
 ## References
 

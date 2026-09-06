@@ -4,34 +4,34 @@
 **Topic:** Volume & frequency
 
 ## Bottom line
-- The headline number depends on **inter-set rest**, and most set-volume advice ignores this. Studies using **short rest** find growth still climbing at **30–45 weekly sets**; studies using **longer rest** find no clear benefit past **12–18 weekly sets**.
+- The headline number depends on **inter-set rest**, which most set-volume advice ignores. Studies using **short rest** find growth still climbing at **30–45 weekly sets**; studies using **longer rest** find no clear benefit past **12–18**.
 - His recommendations: **9–12 weekly sets per muscle for beginners**; for trained lifters using longer rest, **no clear benefit beyond 18**, and 12 was enough for quads in one study.
-- The 2017 Schoenfeld meta-analysis (10+ sets > 5–9 > <5) is real but limited — **mostly untrained subjects, and almost nothing above 12 weekly sets**.
-- He criticises the 2022 Baz-Valle meta for **pooling short- and long-rest studies**, which he argues makes its conclusions incoherent.
+- The 2017 Schoenfeld meta-analysis (10+ > 5–9 > <5) is real but limited — **mostly untrained subjects, almost nothing above 12 weekly sets**.
+- He criticises the 2022 Baz-Valle meta for **pooling short- and long-rest studies**.
 - Three within-subject studies show genuine **individual differences**: one found nearly everyone did better on higher sets, one split roughly 32/32/36, one found 13 of 34 better on 18 sets and 3 better on 6.
 
 ## Definitions he sets up front
-[00:00] "Sets" means **weekly sets per muscle**, counting both compound and isolation work — one bench press set counts as one triceps set exactly as a pushdown does. Three squat sets Monday, three leg press Wednesday, three leg extension Friday equals **nine weekly quad sets**. Warm-ups excluded. All sets discussed are **at least within about three reps of failure**.
+[00:00] "Sets" means **weekly sets per muscle**, counting both compound and isolation work — one bench press set counts as one triceps set exactly as a pushdown does. Warm-ups excluded. All sets discussed are **at least within about three reps of failure**.
 
 ## The meta-analytic data
 [00:52] The **2017 Schoenfeld/Ogborn/Krieger meta-analysis** found **9+ weekly sets** beat fewer than 9; split differently, **10+** beat **5–9** and **<5**. He emphasises that lower set counts still produced respectable gains. Two limits: **most subjects were untrained**, and **almost no study exceeded 12 weekly sets** — so it can't answer the question people actually ask.
 
-[01:33] The **2022 Baz-Valle meta** extends to trained individuals. Biceps and quads showed no difference between moderate and higher volumes; **triceps did better on higher volumes**, implying >20 weekly sets there. He then rejects the framing: the review **pooled studies using short and long rest intervals**, which he thinks is inappropriate.
+[01:33] The **2022 Baz-Valle meta** extends to trained individuals. Biceps and quads showed no difference between moderate and higher volumes; **triceps did better on higher volumes**, implying >20 weekly sets there. He then rejects the framing: the review **pooled short- and long-rest studies**, which he thinks is inappropriate.
 
 ### Why rest interval breaks the pooling
 [02:34] Longer rest may make each set more productive, so fewer are needed. Longo illustrates it: on the leg press, **3 sets with 3 min rest** produced better quad growth than **3 sets with 1 min** — but **5 sets with 1 min** matched **3 sets with 3 min**.
 
-[03:04] **Short-rest studies** all find more sets producing more growth **up to 30–45 weekly sets per muscle**, sets divided across **3 days per week**. He shows the numbers both ways — totals counting compounds, and the smaller isolation-only counts. One study used **only compound exercises** for biceps and triceps.
+[03:04] **Short-rest studies** all find more sets producing more growth **up to 30–45 weekly sets per muscle**, divided across **3 days per week**. He shows the numbers both ways — totals counting compounds, and the smaller isolation-only counts. One study used **only compound exercises** for biceps and triceps.
 
-[03:36] **Long-rest studies** find growth optimised in the **12–18 weekly set** range with no clear benefit beyond, sets divided mainly across **2 days per week**. Again he gives isolation-only counts alongside totals.
+[03:36] **Long-rest studies** find growth optimised at **12–18 weekly sets** with no clear benefit beyond, divided mainly across **2 days per week**. Again he gives isolation-only counts alongside totals.
 
 ## Caveats on the high-set findings
-[04:19] **Proximity to failure is hard to verify.** All three short-rest studies state subjects reached momentary failure. He says honestly he **doesn't know whether they did**, and that it likely varied. In practice, getting genuinely close to failure with short rest and high set counts is much harder — especially on lower-body work, where cardiovascular fatigue can mask true muscular failure.
+[04:19] **Proximity to failure is hard to verify.** All three short-rest studies state subjects reached momentary failure. He says honestly he **doesn't know whether they did**. In practice, getting genuinely close to failure with short rest and high set counts is much harder — especially on lower-body work, where cardiovascular fatigue can mask true muscular failure.
 
-[04:37] **Very high volume isn't universally tolerated.** He cites a study running trained subjects at **28 weekly isolation sets** per arm muscle (**46 including compounds**) with short rest. Individual data showed some growing well, a number gaining very little, and **some losing size** — possibly from excessive muscle damage. It had no comparison volumes; he uses it only to show that very high sets plus short rest does not work for everyone.
+[04:37] **Very high volume isn't universally tolerated.** He cites a study running trained subjects at **28 weekly isolation sets** per arm muscle (**46 including compounds**) with short rest. Individual data showed some growing well, a number gaining very little, and **some losing size** — possibly from excessive muscle damage. It had no comparison volumes; he uses it only to show that very high sets plus short rest fails some people.
 
 ## Individual differences
-[07:10] Group averages hide spread. In both the short-rest study favouring more sets and the Heaselgrave study finding biceps growth best at 18 sets, **some subjects in the lowest-set groups grew as much as or more than subjects in the highest-set groups**. He immediately notes this doesn't prove they are low-volume responders — they might have grown even more on higher sets.
+[07:10] Group averages hide spread. In both the short-rest study favouring more sets and the Heaselgrave study finding biceps growth best at 18 sets, **some subjects in the lowest-set groups grew as much as or more than subjects in the highest-set groups**. He notes this doesn't prove they are low-volume responders — they might have grown even more on higher sets.
 
 Three within-subject designs answer it properly:
 
@@ -39,14 +39,14 @@ Three within-subject designs answer it properly:
 - **Damas.** 19 untrained men, **6–9 weekly quad sets** one leg vs **15** the other. Much more mixed: **~32% better on 15, ~32% better on 6–9, ~36% similar**.
 - **Hammarström.** 34 untrained individuals, **6 weekly quad sets** vs **18**. **13 clearly benefited from 18, 3 clearly benefited from 6**, the rest similar.
 
-[08:43] Caveats he supplies: Van Vossel and Damas also **varied training frequency** alongside set count, confounding the two; and **all three used untrained subjects**, though he sees no strong reason the concept wouldn't extend. There is **no established method** for predicting which type you are.
+[08:43] Caveats he supplies: Van Vossel and Damas also **varied training frequency** alongside set count, confounding the two; and **all three used untrained subjects**. There is **no established method** for predicting which type you are.
 
 ## Practical read
-[10:16] Beginners: **9–12 weekly sets per muscle**. Trained lifters using longer rest: **no clear benefit above 18**, and 12 sufficed for quads in one study. These are averages. If they aren't working for you, adjusting sets up or down by preference and perceived response is a legitimate tool. Very high set counts with short rest may keep producing growth, but he questions their long-term sustainability.
+[10:16] Beginners: **9–12 weekly sets per muscle**. Trained lifters using longer rest: **no clear benefit above 18**, and 12 sufficed for quads in one study. These are averages; if they aren't working for you, adjusting sets up or down by perceived response is a legitimate tool. Very high set counts with short rest may keep producing growth, but he questions their long-term sustainability.
 
 **Where he is rigorous:** he separates studies by rest interval rather than pooling them, states his doubt about whether reported failure was actually reached, presents individual-level data including subjects who contradict the group mean, and flags the frequency confound in two of the three within-subject studies.
 
-**Where the claim outruns the evidence:** the individual-differences conclusion rests entirely on **untrained subjects**, and its transfer to trained lifters is asserted rather than shown. The rest-interval split, while well argued, is a **post-hoc regrouping of studies**, not a tested comparison.
+**Where the claim outruns the evidence:** the individual-differences conclusion rests entirely on **untrained subjects**, and its transfer to trained lifters is asserted rather than shown. The rest-interval split, though well argued, is a **post-hoc regrouping of studies**, not a tested comparison.
 
 ## References
 
