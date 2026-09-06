@@ -17,12 +17,10 @@
 - **Normal group:** **8 sets of 6 reps** at 70% 1RM, **2.5 min rest** between sets.
 - **3/7 group:** the 3/7 sequence at 70% 1RM, performed **twice per session**, **2.5 min rest between bouts**.
 
-Both received assistance if they couldn't complete the prescription, and **increased load 2.5–5%** after completing it two sessions running.
-
-**Results:** greater **1RM increases** and greater **biceps long-head thickness** (averaged across upper, middle and lower regions) for the 3/7 group.
+Both received assistance if they couldn't complete the prescription, and **increased load 2.5–5%** after completing it two sessions running. **Results:** greater **1RM increases** and greater **biceps long-head thickness** (averaged across upper, middle and lower regions) for the 3/7 group.
 
 ## Why the strength result proves less than it looks
-[02:02] He immediately discounts the strength finding. The comparison was against 8×6 at 70% 1RM, not against heavy training. He cites **Schoenfeld et al.**, where **2–4 reps at ~90% 1RM** produced greater bench and squat 1RM gains than **8–12 reps at ~75% 1RM**. Against a genuinely heavy protocol he thinks 3/7 would very likely lose on strength.
+[02:02] He immediately discounts it. The comparison was against 8×6 at 70% 1RM, not against heavy training. He cites **Schoenfeld et al.**, where **2–4 reps at ~90% 1RM** produced greater bench and squat 1RM gains than **8–12 reps at ~75% 1RM**. Against a genuinely heavy protocol he thinks 3/7 would very likely lose on strength.
 
 ## Interrogating the control group
 [03:03] The obvious objection: 8 sets of 6 at 70% 1RM is a protocol nobody would use for hypertrophy, making the comparison unfair. That was his own first reaction, and he argues himself out of it.
@@ -46,7 +44,7 @@ Both received assistance if they couldn't complete the prescription, and **incre
 Verdict: the rest-pause literature is too thin to inform the 3/7 question.
 
 ## Practical read
-[10:13] A single study suggests 3/7 builds more muscle; a single study cannot make us confident. There is probably no real downside to experimenting with it. [10:44] The concrete benefit is **time**: by his own calculation, excluding warm-ups, the 3/7 group trained about **5–6 minutes per session** against **19–20 minutes** for the control.
+[10:13] One study suggests 3/7 builds more muscle; one study cannot make us confident. There is probably no downside to experimenting with it. [10:44] The concrete benefit is **time**: by his own calculation, excluding warm-ups, the 3/7 group trained about **5–6 minutes per session** against **19–20 minutes** for the control.
 
 **Where he is rigorous:** he raises the strongest objection to the study (a weak control), then does the RIR arithmetic that defeats his own objection rather than using it to dismiss the finding; rejects the authors' mechanism instead of repeating it; and identifies the progressive-overload confound in Prestes that most summaries miss.
 

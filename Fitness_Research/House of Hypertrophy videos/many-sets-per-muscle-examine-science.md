@@ -31,11 +31,9 @@
 [04:37] **Very high volume isn't universally tolerated.** He cites a study running trained subjects at **28 weekly isolation sets** per arm muscle (**46 including compounds**) with short rest. Individual data showed some growing well, a number gaining very little, and **some losing size** — possibly from excessive muscle damage. It had no comparison volumes; he uses it only to show that very high sets plus short rest fails some people.
 
 ## Individual differences
-[07:10] Group averages hide spread. In both the short-rest study favouring more sets and the Heaselgrave study finding biceps growth best at 18 sets, **some subjects in the lowest-set groups grew as much as or more than subjects in the highest-set groups**. He notes this doesn't prove they are low-volume responders — they might have grown even more on higher sets.
+[07:10] Group averages hide spread. In both the short-rest study favouring more sets and the Heaselgrave study finding biceps growth best at 18 sets, **some subjects in the lowest-set groups grew as much as or more than those in the highest-set groups**. He notes this doesn't prove they are low-volume responders — they might have grown even more on higher sets. Three within-subject designs answer it properly:
 
-Three within-subject designs answer it properly:
-
-- **Van Vossel.** 21 untrained men, **6–8 weekly sets** one side vs **9–12** the other. Average quad, hamstring, biceps and triceps growth favoured 9–12, and **most individuals matched the average**.
+- **Van Vossel.** 21 untrained men, **6–8 weekly sets** one side vs **9–12** the other. Quad, hamstring, biceps and triceps growth favoured 9–12, and **most individuals matched the average**.
 - **Damas.** 19 untrained men, **6–9 weekly quad sets** one leg vs **15** the other. Much more mixed: **~32% better on 15, ~32% better on 6–9, ~36% similar**.
 - **Hammarström.** 34 untrained individuals, **6 weekly quad sets** vs **18**. **13 clearly benefited from 18, 3 clearly benefited from 6**, the rest similar.
 

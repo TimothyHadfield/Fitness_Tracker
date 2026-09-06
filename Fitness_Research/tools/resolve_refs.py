@@ -27,6 +27,7 @@ import argparse
 import difflib
 import io
 import json
+import os
 import re
 import sys
 import time
@@ -173,6 +174,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("refs")
     ap.add_argument("out")
+    ap.add_argument("--fresh", action="store_true",
+                    help="Re-resolve every URL instead of reusing the citations "
+                         "already in <out>.")
     a = ap.parse_args()
 
     data = json.loads(io.open(a.refs, encoding="utf-8").read())
@@ -182,6 +186,25 @@ def main():
             if u not in urls:
                 urls.append(u)
     sys.stderr.write("%d unique URLs\n" % len(urls))
+
+    # Reuse what a previous run already resolved. A full pass here is thousands
+    # of throttled NCBI and Crossref calls, and the usual reason to re-run is
+    # that the extractor found a handful of new links - not that the old answers
+    # went stale. Anything previously unresolved is retried, since that is
+    # normally a 429 rather than a real miss.
+    cached = {}
+    if not a.fresh and os.path.exists(a.out):
+        try:
+            prev = json.loads(io.open(a.out, encoding="utf-8-sig").read())
+            cached = {u: r for u, r in prev.get("citations", {}).items()
+                      if u in set(urls)}
+        except (ValueError, KeyError):
+            cached = {}
+    all_urls = list(urls)
+    if cached:
+        urls = [u for u in urls if u not in cached]
+        sys.stderr.write("  %d already resolved, %d to look up\n"
+                         % (len(cached), len(urls)))
 
     pmids, pmcs, dois, rgs, other = {}, {}, {}, {}, []
     rejected = []
@@ -212,7 +235,7 @@ def main():
                      % (len(pmids), len(pmcs), len(dois), len(rgs), len(other),
                         len(rejected)))
 
-    cites = {}
+    cites = dict(cached)
     got = esummary(sorted(set(pmids.values())))
     for u, p in pmids.items():
         if p in got:
@@ -238,10 +261,12 @@ def main():
             cites[u] = rec
 
     io.open(a.out, "w", encoding="utf-8").write(json.dumps(
-        {"citations": cites, "unresolved": [u for u in urls if u not in cites],
+        {"citations": cites,
+         "unresolved": [u for u in all_urls if u not in cites],
          "rejected": rejected}, indent=1))
     sys.stderr.write("\nresolved %d/%d (%.0f%%)\n"
-                     % (len(cites), len(urls), 100.0 * len(cites) / max(1, len(urls))))
+                     % (len(cites), len(all_urls),
+                        100.0 * len(cites) / max(1, len(all_urls))))
     if rejected:
         sys.stderr.write("rejected as implausible:\n")
         for u, why in rejected:

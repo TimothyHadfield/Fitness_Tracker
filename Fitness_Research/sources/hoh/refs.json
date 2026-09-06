@@ -6,6 +6,7 @@
    "https://www.mdpi.com/2073-4409/9/7/1658/htm",
    "https://www.frontiersin.org/articles/10.3389/fphys.2020.00816/full",
    "https://pubmed.ncbi.nlm.nih.gov/10932036/",
+   "https://www.jstage.jst.go.jp/article/jpfsm/5/1/5_37/_article",
    "https://anatomypubs.onlinelibrary.wiley.com/doi/pdf/10.1002/ar.22484"
   ],
   "loose": [],
@@ -18,6 +19,7 @@
      "https://www.mdpi.com/2073-4409/9/7/1658/htm",
      "https://www.frontiersin.org/articles/10.3389/fphys.2020.00816/full",
      "https://pubmed.ncbi.nlm.nih.gov/10932036/",
+     "https://www.jstage.jst.go.jp/article/jpfsm/5/1/5_37/_article",
      "https://anatomypubs.onlinelibrary.wiley.com/doi/pdf/10.1002/ar.22484"
     ]
    }
@@ -61,6 +63,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/39995432/",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+   "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
    "https://sportrxiv.org/index.php/server/preprint/view/485",
    "https://sportrxiv.org/index.php/server/preprint/view/455",
    "https://sportrxiv.org/index.php/server/preprint/view/464",
@@ -80,6 +83,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
      "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+     "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
      "https://sportrxiv.org/index.php/server/preprint/view/485",
      "https://sportrxiv.org/index.php/server/preprint/view/455"
     ]
@@ -122,9 +126,30 @@
   "has_heading": true
  },
  "19Ts8Nvs6qE": {
-  "refs": [],
+  "refs": [
+   "https://pubmed.ncbi.nlm.nih.gov/24832974/",
+   "https://pubmed.ncbi.nlm.nih.gov/10188748/",
+   "https://pubmed.ncbi.nlm.nih.gov/19130646/",
+   "https://pubmed.ncbi.nlm.nih.gov/31230110/",
+   "https://www.researchgate.net/publication/236253394",
+   "https://link.springer.com/article/10.1007/s00421-013-2700-1",
+   "https://pubmed.ncbi.nlm.nih.gov/30293403/"
+  ],
   "loose": [],
-  "groups": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://pubmed.ncbi.nlm.nih.gov/24832974/",
+     "https://pubmed.ncbi.nlm.nih.gov/10188748/",
+     "https://pubmed.ncbi.nlm.nih.gov/19130646/",
+     "https://pubmed.ncbi.nlm.nih.gov/31230110/",
+     "https://www.researchgate.net/publication/236253394",
+     "https://link.springer.com/article/10.1007/s00421-013-2700-1",
+     "https://pubmed.ncbi.nlm.nih.gov/30293403/"
+    ]
+   }
+  ],
   "has_heading": true
  },
  "1EHrp8-2Kg8": {
@@ -355,6 +380,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/40082069/",
    "https://pubmed.ncbi.nlm.nih.gov/39809454/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11556575/",
+   "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC10407320/",
    "https://pubmed.ncbi.nlm.nih.gov/33440446/",
    "https://sportrxiv.org/index.php/server/preprint/view/486"
@@ -367,6 +393,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/40082069/",
      "https://pubmed.ncbi.nlm.nih.gov/39809454/",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC11556575/",
+     "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC10407320/",
      "https://pubmed.ncbi.nlm.nih.gov/33440446/",
      "https://sportrxiv.org/index.php/server/preprint/view/486"
@@ -399,6 +426,7 @@
  "6DB7DDt_Suo": {
   "refs": [
    "https://sportrxiv.org/index.php/server/preprint/view/659",
+   "https://journal.iusca.org/index.php/Journal/article/view/135",
    "https://pubmed.ncbi.nlm.nih.gov/37523092/",
    "https://pubmed.ncbi.nlm.nih.gov/28474868/",
    "https://pubmed.ncbi.nlm.nih.gov/28532248/",
@@ -411,6 +439,7 @@
     "label": "",
     "urls": [
      "https://sportrxiv.org/index.php/server/preprint/view/659",
+     "https://journal.iusca.org/index.php/Journal/article/view/135",
      "https://pubmed.ncbi.nlm.nih.gov/37523092/",
      "https://pubmed.ncbi.nlm.nih.gov/28474868/",
      "https://pubmed.ncbi.nlm.nih.gov/28532248/",
@@ -425,10 +454,12 @@
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+   "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
    "https://sportrxiv.org/index.php/server/preprint/view/455/959",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9960616/",
    "https://sportrxiv.org/index.php/server/preprint/view/407/853",
-   "https://pubmed.ncbi.nlm.nih.gov/33009197/"
+   "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+   "https://www.ecss2006.com/ASP/CONGRESS/TOOLS/Scientific_Programme/Sessions_Abstract_Read.asp?mySessionID=CP-BM01&myAbstractID=1752"
   ],
   "loose": [],
   "groups": [
@@ -436,7 +467,8 @@
     "label": "3 studies on untrained individuals comparing full ROM to long length partials",
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
-     "https://pubmed.ncbi.nlm.nih.gov/37015016/"
+     "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+     "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf"
     ]
    },
    {
@@ -445,7 +477,8 @@
      "https://sportrxiv.org/index.php/server/preprint/view/455/959",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9960616/",
      "https://sportrxiv.org/index.php/server/preprint/view/407/853",
-     "https://pubmed.ncbi.nlm.nih.gov/33009197/"
+     "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+     "https://www.ecss2006.com/ASP/CONGRESS/TOOLS/Scientific_Programme/Sessions_Abstract_Read.asp?mySessionID=CP-BM01&myAbstractID=1752"
     ]
    }
   ],
@@ -755,6 +788,7 @@
  "_VWQMGdCU54": {
   "refs": [
    "https://www.sciencedirect.com/science/article/pii/S1728869X17301028#bib19",
+   "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/21873902/",
    "https://pubmed.ncbi.nlm.nih.gov/29466268/"
   ],
@@ -764,6 +798,7 @@
     "label": "",
     "urls": [
      "https://www.sciencedirect.com/science/article/pii/S1728869X17301028#bib19",
+     "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
      "https://pubmed.ncbi.nlm.nih.gov/21873902/",
      "https://pubmed.ncbi.nlm.nih.gov/29466268/"
     ]
@@ -857,6 +892,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/32823490/",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+   "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
    "https://sportrxiv.org/index.php/server/preprint/view/485",
    "https://sportrxiv.org/index.php/server/preprint/view/455",
    "https://pubmed.ncbi.nlm.nih.gov/39699974/",
@@ -864,7 +900,8 @@
    "https://link.springer.com/article/10.1007/s42978-024-00299-4",
    "https://pubmed.ncbi.nlm.nih.gov/38857522/",
    "https://pubmed.ncbi.nlm.nih.gov/33009197/",
-   "https://pubmed.ncbi.nlm.nih.gov/35819335/"
+   "https://pubmed.ncbi.nlm.nih.gov/35819335/",
+   "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf"
   ],
   "loose": [],
   "groups": [
@@ -875,6 +912,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/32823490/",
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
      "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+     "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
      "https://sportrxiv.org/index.php/server/preprint/view/485",
      "https://sportrxiv.org/index.php/server/preprint/view/455",
      "https://pubmed.ncbi.nlm.nih.gov/39699974/",
@@ -882,7 +920,8 @@
      "https://link.springer.com/article/10.1007/s42978-024-00299-4",
      "https://pubmed.ncbi.nlm.nih.gov/38857522/",
      "https://pubmed.ncbi.nlm.nih.gov/33009197/",
-     "https://pubmed.ncbi.nlm.nih.gov/35819335/"
+     "https://pubmed.ncbi.nlm.nih.gov/35819335/",
+     "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf"
     ]
    }
   ],
@@ -958,7 +997,8 @@
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9960616/",
    "https://sportrxiv.org/index.php/server/preprint/view/407/853",
-   "https://pubmed.ncbi.nlm.nih.gov/33009197/"
+   "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+   "https://www.ecss2006.com/ASP/CONGRESS/TOOLS/Scientific_Programme/Sessions_Abstract_Read.asp?mySessionID=CP-BM01&myAbstractID=1752"
   ],
   "loose": [],
   "groups": [
@@ -971,7 +1011,8 @@
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9960616/",
      "https://sportrxiv.org/index.php/server/preprint/view/407/853",
-     "https://pubmed.ncbi.nlm.nih.gov/33009197/"
+     "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+     "https://www.ecss2006.com/ASP/CONGRESS/TOOLS/Scientific_Programme/Sessions_Abstract_Read.asp?mySessionID=CP-BM01&myAbstractID=1752"
     ]
    }
   ],
@@ -1274,7 +1315,8 @@
    "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0215267",
    "https://pubmed.ncbi.nlm.nih.gov/11903130/",
    "https://pubmed.ncbi.nlm.nih.gov/35044672/",
-   "https://pubmed.ncbi.nlm.nih.gov/28497285/"
+   "https://pubmed.ncbi.nlm.nih.gov/28497285/",
+   "https://www.jhse.ua.es/article/view/2019-v14-n3-hatfield-system-weekly-undulating-periodised-resistance-training-males-third-mesocyle"
   ],
   "loose": [],
   "groups": [
@@ -1289,7 +1331,8 @@
      "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0215267",
      "https://pubmed.ncbi.nlm.nih.gov/11903130/",
      "https://pubmed.ncbi.nlm.nih.gov/35044672/",
-     "https://pubmed.ncbi.nlm.nih.gov/28497285/"
+     "https://pubmed.ncbi.nlm.nih.gov/28497285/",
+     "https://www.jhse.ua.es/article/view/2019-v14-n3-hatfield-system-weekly-undulating-periodised-resistance-training-males-third-mesocyle"
     ]
    }
   ],
@@ -1614,8 +1657,7 @@
   "has_heading": true
  },
  "Efj3kfWCHNw": {
-  "refs": [],
-  "loose": [
+  "refs": [
    "https://www.mdpi.com/2075-4663/9/9/119/htm",
    "https://pubmed.ncbi.nlm.nih.gov/28474868/",
    "https://pubmed.ncbi.nlm.nih.gov/27433992/",
@@ -1626,8 +1668,24 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4159732/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7430763/"
   ],
-  "groups": [],
-  "has_heading": false
+  "loose": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://www.mdpi.com/2075-4663/9/9/119/htm",
+     "https://pubmed.ncbi.nlm.nih.gov/28474868/",
+     "https://pubmed.ncbi.nlm.nih.gov/27433992/",
+     "https://pubmed.ncbi.nlm.nih.gov/28532248/",
+     "https://pubmed.ncbi.nlm.nih.gov/28130627/",
+     "https://pubmed.ncbi.nlm.nih.gov/34260860/",
+     "https://pubmed.ncbi.nlm.nih.gov/17626289/",
+     "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4159732/",
+     "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7430763/"
+    ]
+   }
+  ],
+  "has_heading": true
  },
  "Em6bweyQCZo": {
   "refs": [
@@ -1690,6 +1748,7 @@
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2774316/",
    "https://pubmed.ncbi.nlm.nih.gov/25844073/",
    "https://pubmed.ncbi.nlm.nih.gov/24074738/",
+   "https://journaljammr.com/index.php/JAMMR/article/view/2270",
    "https://pubmed.ncbi.nlm.nih.gov/29893592/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5571970/",
    "https://pubmed.ncbi.nlm.nih.gov/24570624/"
@@ -1712,6 +1771,7 @@
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2774316/",
      "https://pubmed.ncbi.nlm.nih.gov/25844073/",
      "https://pubmed.ncbi.nlm.nih.gov/24074738/",
+     "https://journaljammr.com/index.php/JAMMR/article/view/2270",
      "https://pubmed.ncbi.nlm.nih.gov/29893592/",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5571970/",
      "https://pubmed.ncbi.nlm.nih.gov/24570624/"
@@ -1831,11 +1891,13 @@
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/35819335/",
    "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+   "https://jhk.termedia.pl/Regional-Hypertrophy-The-Effect-of-Exercises-at-Long-nand-Short-Muscle-Lengths-in,163561,0,2.html",
    "https://pubmed.ncbi.nlm.nih.gov/22027847/",
    "https://www.mdpi.com/2075-4663/11/2/39",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8489980/",
    "https://pubmed.ncbi.nlm.nih.gov/32823490/",
    "https://pubmed.ncbi.nlm.nih.gov/10328159/",
+   "https://www.jstage.jst.go.jp/article/tjem1920/175/4/175_4_285/_pdf",
    "https://pubmed.ncbi.nlm.nih.gov/2600619/",
    "https://pubmed.ncbi.nlm.nih.gov/33440446/",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
@@ -1848,11 +1910,13 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/35819335/",
      "https://pubmed.ncbi.nlm.nih.gov/33009197/",
+     "https://jhk.termedia.pl/Regional-Hypertrophy-The-Effect-of-Exercises-at-Long-nand-Short-Muscle-Lengths-in,163561,0,2.html",
      "https://pubmed.ncbi.nlm.nih.gov/22027847/",
      "https://www.mdpi.com/2075-4663/11/2/39",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8489980/",
      "https://pubmed.ncbi.nlm.nih.gov/32823490/",
      "https://pubmed.ncbi.nlm.nih.gov/10328159/",
+     "https://www.jstage.jst.go.jp/article/tjem1920/175/4/175_4_285/_pdf",
      "https://pubmed.ncbi.nlm.nih.gov/2600619/",
      "https://pubmed.ncbi.nlm.nih.gov/33440446/",
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
@@ -1994,6 +2058,7 @@
  "i2vPxQsHKXU": {
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/23053130/",
+   "https://ses.library.usyd.edu.au/handle/2123/21700",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2644775/"
   ],
   "loose": [],
@@ -2002,6 +2067,7 @@
     "label": "",
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/23053130/",
+     "https://ses.library.usyd.edu.au/handle/2123/21700",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2644775/"
     ]
    }
@@ -2137,11 +2203,18 @@
   "has_heading": false
  },
  "iu2g1PEdQcc": {
-  "refs": [],
-  "loose": [
+  "refs": [
    "https://www.researchgate.net/publication/345309702_Does_Performing_Different_Resistance_Exercises_for_the_Same_Muscle_Group_Induce_Non-homogeneous_Hypertrophy"
   ],
-  "groups": [],
+  "loose": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://www.researchgate.net/publication/345309702_Does_Performing_Different_Resistance_Exercises_for_the_Same_Muscle_Group_Induce_Non-homogeneous_Hypertrophy"
+    ]
+   }
+  ],
   "has_heading": false
  },
  "iUf1GZl6KqY": {
@@ -2287,6 +2360,7 @@
  "jTEZEL_RLw4": {
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/27677913/",
+   "https://www.researchgate.net/publication/311760599",
    "https://pubmed.ncbi.nlm.nih.gov/32149887/"
   ],
   "loose": [],
@@ -2295,6 +2369,7 @@
     "label": "",
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/27677913/",
+     "https://www.researchgate.net/publication/311760599",
      "https://pubmed.ncbi.nlm.nih.gov/32149887/"
     ]
    }
@@ -2549,7 +2624,9 @@
  },
  "L1vVOFtDUWQ": {
   "refs": [
+   "https://www.docdroid.net/Qdy7KuB/analysis-of-the-load-on-the-knee-joint-and-vertebral-column-with-changes-in-squatting-depth-and-weight-load-pdf",
    "https://www.researchgate.net/publication/236253394_Effect_of_range_of_motion_in_heavy_load_squatting_on_muscle_and_tendon_adaptations",
+   "https://highfit.com.br/wp-content/uploads/2019/06/KEITARO-KUBO-2019.pdf",
    "https://journals.lww.com/nsca-jscr/Fulltext/2014/11000/The_Efficacy_of_Incorporating_Partial_Squats_in.2.aspx",
    "https://www.researchgate.net/publication/304607794_Joint-Angle_Specific_Strength_Adaptations_Influence_Improvements_in_Power_in_Highly_Trained_Athletes",
    "https://journals.lww.com/nsca-jscr/Fulltext/2012/12000/Influence_of_Squatting_Depth_on_Jumping.10.aspx"
@@ -2559,7 +2636,9 @@
    {
     "label": "",
     "urls": [
+     "https://www.docdroid.net/Qdy7KuB/analysis-of-the-load-on-the-knee-joint-and-vertebral-column-with-changes-in-squatting-depth-and-weight-load-pdf",
      "https://www.researchgate.net/publication/236253394_Effect_of_range_of_motion_in_heavy_load_squatting_on_muscle_and_tendon_adaptations",
+     "https://highfit.com.br/wp-content/uploads/2019/06/KEITARO-KUBO-2019.pdf",
      "https://journals.lww.com/nsca-jscr/Fulltext/2014/11000/The_Efficacy_of_Incorporating_Partial_Squats_in.2.aspx",
      "https://www.researchgate.net/publication/304607794_Joint-Angle_Specific_Strength_Adaptations_Influence_Improvements_in_Power_in_Highly_Trained_Athletes",
      "https://journals.lww.com/nsca-jscr/Fulltext/2012/12000/Influence_of_Squatting_Depth_on_Jumping.10.aspx"
@@ -2623,6 +2702,7 @@
  "LT-2PJlyUm4": {
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/32460639/",
+   "https://andrewvigotsky.com/static/studies/Vigotsky_2022_Sports_Med_sEMG_hypertrophy.pdf",
    "https://jneuroengrehab.biomedcentral.com/articles/10.1186/s12984-017-0291-5",
    "https://www.ncbi.nlm.nih.gov/labs/pmc/articles/PMC5758546/"
   ],
@@ -2632,6 +2712,7 @@
     "label": "",
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/32460639/",
+     "https://andrewvigotsky.com/static/studies/Vigotsky_2022_Sports_Med_sEMG_hypertrophy.pdf",
      "https://jneuroengrehab.biomedcentral.com/articles/10.1186/s12984-017-0291-5",
      "https://www.ncbi.nlm.nih.gov/labs/pmc/articles/PMC5758546/"
     ]
@@ -2676,6 +2757,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/27669189/",
    "https://pubmed.ncbi.nlm.nih.gov/21225489/",
    "https://pubmed.ncbi.nlm.nih.gov/15903389/",
+   "https://andrewvigotsky.com/static/studies/Vigotsky_2022_Sports_Med_sEMG_hypertrophy.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/12571130/",
    "https://pubmed.ncbi.nlm.nih.gov/16643193/",
    "https://www.researchgate.net/publication/365127382_Greater_gastrocnemius_muscle_hypertrophy_after_partial_range_of_motion_training_carried_out_at_long_muscle_lengths",
@@ -2727,6 +2809,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/27669189/",
      "https://pubmed.ncbi.nlm.nih.gov/21225489/",
      "https://pubmed.ncbi.nlm.nih.gov/15903389/",
+     "https://andrewvigotsky.com/static/studies/Vigotsky_2022_Sports_Med_sEMG_hypertrophy.pdf",
      "https://pubmed.ncbi.nlm.nih.gov/12571130/",
      "https://pubmed.ncbi.nlm.nih.gov/16643193/",
      "https://www.researchgate.net/publication/365127382_Greater_gastrocnemius_muscle_hypertrophy_after_partial_range_of_motion_training_carried_out_at_long_muscle_lengths",
@@ -2923,7 +3006,8 @@
    "https://pubmed.ncbi.nlm.nih.gov/28463902/",
    "https://pubmed.ncbi.nlm.nih.gov/33724646/",
    "https://pubmed.ncbi.nlm.nih.gov/35819335/",
-   "https://pubmed.ncbi.nlm.nih.gov/33917036/"
+   "https://pubmed.ncbi.nlm.nih.gov/33917036/",
+   "https://www.jstage.jst.go.jp/article/jpfsm/5/1/5_37/_article"
   ],
   "loose": [],
   "groups": [
@@ -2939,7 +3023,8 @@
      "https://pubmed.ncbi.nlm.nih.gov/28463902/",
      "https://pubmed.ncbi.nlm.nih.gov/33724646/",
      "https://pubmed.ncbi.nlm.nih.gov/35819335/",
-     "https://pubmed.ncbi.nlm.nih.gov/33917036/"
+     "https://pubmed.ncbi.nlm.nih.gov/33917036/",
+     "https://www.jstage.jst.go.jp/article/jpfsm/5/1/5_37/_article"
     ]
    }
   ],
@@ -2979,12 +3064,20 @@
   "has_heading": true
  },
  "nESKfZLK7W8": {
-  "refs": [],
-  "loose": [
+  "refs": [
    "https://www.researchgate.net/publication/11532629_Position_stand_Progression_models_in_resistance_training_for_healthy_adultsAmerican_College_of_Sports_MedicineMed_Sci_Sports_Exerc20023436438011828249",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6934277/"
   ],
-  "groups": [],
+  "loose": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://www.researchgate.net/publication/11532629_Position_stand_Progression_models_in_resistance_training_for_healthy_adultsAmerican_College_of_Sports_MedicineMed_Sci_Sports_Exerc20023436438011828249",
+     "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6934277/"
+    ]
+   }
+  ],
   "has_heading": false
  },
  "NGiq7cpCiAE": {
@@ -3026,6 +3119,7 @@
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/39809454/",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11556575/",
+   "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf",
    "https://pmc.ncbi.nlm.nih.gov/articles/PMC10407320/"
   ],
   "loose": [],
@@ -3035,6 +3129,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/39809454/",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC11556575/",
+     "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf",
      "https://pmc.ncbi.nlm.nih.gov/articles/PMC10407320/"
     ]
    }
@@ -3066,6 +3161,7 @@
   "refs": [
    "https://journals.lww.com/nsca-jscr/Fulltext/2012/05000/Does_Exercise_Induced_Muscle_Damage_Play_a_Role_in.37.aspx",
    "https://pubmed.ncbi.nlm.nih.gov/18981046/",
+   "https://journals.biologists.com/jeb/article/214/4/674/10714/Muscle-damage-and-muscle-remodeling-no-pain-no",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5023708/",
    "https://journals.physiology.org/doi/full/10.1152/jappl.1999.87.6.2311",
    "https://pubmed.ncbi.nlm.nih.gov/27782911/",
@@ -3082,6 +3178,7 @@
     "urls": [
      "https://journals.lww.com/nsca-jscr/Fulltext/2012/05000/Does_Exercise_Induced_Muscle_Damage_Play_a_Role_in.37.aspx",
      "https://pubmed.ncbi.nlm.nih.gov/18981046/",
+     "https://journals.biologists.com/jeb/article/214/4/674/10714/Muscle-damage-and-muscle-remodeling-no-pain-no",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5023708/",
      "https://journals.physiology.org/doi/full/10.1152/jappl.1999.87.6.2311",
      "https://pubmed.ncbi.nlm.nih.gov/27782911/",
@@ -3109,7 +3206,8 @@
    "https://pubmed.ncbi.nlm.nih.gov/25920341/",
    "https://pubmed.ncbi.nlm.nih.gov/23096062/",
    "https://pubmed.ncbi.nlm.nih.gov/20072068/",
-   "https://pubmed.ncbi.nlm.nih.gov/33312291/"
+   "https://pubmed.ncbi.nlm.nih.gov/33312291/",
+   "https://exercisesforfree.com/pdf/386.pdf"
   ],
   "loose": [],
   "groups": [
@@ -3128,7 +3226,8 @@
      "https://pubmed.ncbi.nlm.nih.gov/25920341/",
      "https://pubmed.ncbi.nlm.nih.gov/23096062/",
      "https://pubmed.ncbi.nlm.nih.gov/20072068/",
-     "https://pubmed.ncbi.nlm.nih.gov/33312291/"
+     "https://pubmed.ncbi.nlm.nih.gov/33312291/",
+     "https://exercisesforfree.com/pdf/386.pdf"
     ]
    }
   ],
@@ -3418,7 +3517,8 @@
    "https://europepmc.org/article/med/28394830",
    "https://www.mdpi.com/2075-4663/5/4/82",
    "https://pubmed.ncbi.nlm.nih.gov/22505136/",
-   "https://pubmed.ncbi.nlm.nih.gov/11404665/"
+   "https://pubmed.ncbi.nlm.nih.gov/11404665/",
+   "https://europepmc.org/article/PMC/PMC1262051"
   ],
   "loose": [],
   "groups": [
@@ -3429,7 +3529,8 @@
      "https://europepmc.org/article/med/28394830",
      "https://www.mdpi.com/2075-4663/5/4/82",
      "https://pubmed.ncbi.nlm.nih.gov/22505136/",
-     "https://pubmed.ncbi.nlm.nih.gov/11404665/"
+     "https://pubmed.ncbi.nlm.nih.gov/11404665/",
+     "https://europepmc.org/article/PMC/PMC1262051"
     ]
    }
   ],
@@ -3515,6 +3616,7 @@
  },
  "rW3qkooaqV8": {
   "refs": [
+   "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
    "https://www.researchgate.net/publication/7873571_Muscular_adaptations_in_response_to_three_different_resistance-training_regimens_Specificity_of_repetition_maximum_training_zones",
    "https://www.ncbi.nlm.nih.gov/books/NBK10874/",
    "https://journals.physiology.org/doi/full/10.1152/japplphysiol.00685.2018",
@@ -3532,7 +3634,9 @@
    {
     "label": "",
     "urls": [
+     "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
      "https://www.researchgate.net/publication/7873571_Muscular_adaptations_in_response_to_three_different_resistance-training_regimens_Specificity_of_repetition_maximum_training_zones",
+     "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
      "https://www.ncbi.nlm.nih.gov/books/NBK10874/",
      "https://journals.physiology.org/doi/full/10.1152/japplphysiol.00685.2018",
      "https://www.ncbi.nlm.nih.gov/pubmed/31294822",
@@ -3563,6 +3667,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/17326698/",
    "https://pubmed.ncbi.nlm.nih.gov/20618358/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/",
+   "https://ses.library.usyd.edu.au/handle/2123/21700",
    "https://pubmed.ncbi.nlm.nih.gov/23053130/",
    "https://pubmed.ncbi.nlm.nih.gov/12627828/",
    "https://pubmed.ncbi.nlm.nih.gov/30335577/",
@@ -3593,6 +3698,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/17326698/",
      "https://pubmed.ncbi.nlm.nih.gov/20618358/",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831787/",
+     "https://ses.library.usyd.edu.au/handle/2123/21700",
      "https://pubmed.ncbi.nlm.nih.gov/23053130/",
      "https://pubmed.ncbi.nlm.nih.gov/12627828/",
      "https://pubmed.ncbi.nlm.nih.gov/30335577/",
@@ -3863,6 +3969,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/30580468/",
    "https://pubmed.ncbi.nlm.nih.gov/13462914/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1192197/",
+   "https://www.jstage.jst.go.jp/article/tjem/186/4/186_4_267/_pdf/-char/en",
    "https://pubmed.ncbi.nlm.nih.gov/19084189/",
    "https://pubmed.ncbi.nlm.nih.gov/29409427/",
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4526813/",
@@ -3870,6 +3977,7 @@
    "https://academic.oup.com/ptj/article/49/7/748/4595867",
    "https://pubmed.ncbi.nlm.nih.gov/7270660/",
    "https://www.mdpi.com/2075-4663/11/3/64",
+   "https://rc.library.uta.edu/uta-ir/handle/10106/26868",
    "https://pubmed.ncbi.nlm.nih.gov/32735428/",
    "https://pubmed.ncbi.nlm.nih.gov/37461495/",
    "https://pubmed.ncbi.nlm.nih.gov/24610245/",
@@ -3909,13 +4017,15 @@
    {
     "label": "Brachoradialis/Biceps EMG data",
     "urls": [
+     "https://www.jstage.jst.go.jp/article/tjem/186/4/186_4_267/_pdf/-char/en",
      "https://pubmed.ncbi.nlm.nih.gov/19084189/",
      "https://pubmed.ncbi.nlm.nih.gov/29409427/",
      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4526813/",
      "https://onlinelibrary.wiley.com/doi/abs/10.1002/jor.1100050408",
      "https://academic.oup.com/ptj/article/49/7/748/4595867",
      "https://pubmed.ncbi.nlm.nih.gov/7270660/",
-     "https://www.mdpi.com/2075-4663/11/3/64"
+     "https://www.mdpi.com/2075-4663/11/3/64",
+     "https://rc.library.uta.edu/uta-ir/handle/10106/26868"
     ]
    },
    {
@@ -4092,6 +4202,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/34260860/",
    "https://pubmed.ncbi.nlm.nih.gov/23604798/",
    "https://pubmed.ncbi.nlm.nih.gov/27928218/",
+   "https://journal.iusca.org/index.php/Journal/article/view/135",
    "https://pubmed.ncbi.nlm.nih.gov/28617715/",
    "https://pubmed.ncbi.nlm.nih.gov/28574981/",
    "https://pubmed.ncbi.nlm.nih.gov/33417154/",
@@ -4106,6 +4217,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/34260860/",
      "https://pubmed.ncbi.nlm.nih.gov/23604798/",
      "https://pubmed.ncbi.nlm.nih.gov/27928218/",
+     "https://journal.iusca.org/index.php/Journal/article/view/135",
      "https://pubmed.ncbi.nlm.nih.gov/28617715/",
      "https://pubmed.ncbi.nlm.nih.gov/28574981/",
      "https://pubmed.ncbi.nlm.nih.gov/33417154/",
@@ -4138,8 +4250,7 @@
   "has_heading": true
  },
  "US_xgPuxvDk": {
-  "refs": [],
-  "loose": [
+  "refs": [
    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/",
    "https://pubmed.ncbi.nlm.nih.gov/35006527/",
    "https://jneuroengrehab.biomedcentral.com/articles/10.1186/s12984-017-0291-5",
@@ -4149,8 +4260,23 @@
    "https://pubmed.ncbi.nlm.nih.gov/36199287/",
    "https://pubmed.ncbi.nlm.nih.gov/28834797/"
   ],
-  "groups": [],
-  "has_heading": false
+  "loose": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5758546/",
+     "https://pubmed.ncbi.nlm.nih.gov/35006527/",
+     "https://jneuroengrehab.biomedcentral.com/articles/10.1186/s12984-017-0291-5",
+     "https://pubmed.ncbi.nlm.nih.gov/6520032/",
+     "https://pubmed.ncbi.nlm.nih.gov/33433148/",
+     "https://pubmed.ncbi.nlm.nih.gov/35694390/",
+     "https://pubmed.ncbi.nlm.nih.gov/36199287/",
+     "https://pubmed.ncbi.nlm.nih.gov/28834797/"
+    ]
+   }
+  ],
+  "has_heading": true
  },
  "uyFCg_0kJuA": {
   "refs": [
@@ -4198,10 +4324,12 @@
    "https://pubmed.ncbi.nlm.nih.gov/18174934/",
    "https://pubmed.ncbi.nlm.nih.gov/12423182/",
    "https://www.biorxiv.org/content/10.1101/2023.06.21.545949v1",
+   "https://content.iospress.com/articles/isokinetics-and-exercise-science/ies654",
    "https://pubmed.ncbi.nlm.nih.gov/20581696/",
    "https://pubmed.ncbi.nlm.nih.gov/32735428/",
    "https://www.researchgate.net/publication/370467186_Addition_of_the_barbell_hip_thrust_is_effective_for_enhancing_gluteus_maximus_hypertrophy_in_young_women",
    "https://www.researchgate.net/publication/263292517_Analysis_of_anterior_middle_and_posterior_deltoid_activation_during_single_and_multijoint_exercises",
+   "https://edisciplinas.usp.br/pluginfile.php/3887013/mod_folder/content/0/emg_deltoide_diferentes_exercicios_silveira_lima_2013.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/33009197/",
    "https://pubmed.ncbi.nlm.nih.gov/35819335/",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
@@ -4257,6 +4385,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/12423182/",
      "https://www.biorxiv.org/content/10.1101/2023.06.21.545949v1",
+     "https://content.iospress.com/articles/isokinetics-and-exercise-science/ies654",
      "https://pubmed.ncbi.nlm.nih.gov/20581696/",
      "https://pubmed.ncbi.nlm.nih.gov/32735428/",
      "https://www.researchgate.net/publication/370467186_Addition_of_the_barbell_hip_thrust_is_effective_for_enhancing_gluteus_maximus_hypertrophy_in_young_women"
@@ -4265,7 +4394,8 @@
    {
     "label": "sEMG research on machine revese flyes vs seated rows",
     "urls": [
-     "https://www.researchgate.net/publication/263292517_Analysis_of_anterior_middle_and_posterior_deltoid_activation_during_single_and_multijoint_exercises"
+     "https://www.researchgate.net/publication/263292517_Analysis_of_anterior_middle_and_posterior_deltoid_activation_during_single_and_multijoint_exercises",
+     "https://edisciplinas.usp.br/pluginfile.php/3887013/mod_folder/content/0/emg_deltoide_diferentes_exercicios_silveira_lima_2013.pdf"
     ]
    },
    {
@@ -4427,15 +4557,26 @@
   "has_heading": false
  },
  "vl1Q3dzW0h0": {
-  "refs": [],
-  "loose": [
+  "refs": [
    "https://sportrxiv.org/index.php/server/preprint/view/302/",
    "https://pubmed.ncbi.nlm.nih.gov/23372143/",
    "https://pubmed.ncbi.nlm.nih.gov/23053130/",
    "https://www.mdpi.com/1422-0067/23/10/5431/htm",
    "https://pubmed.ncbi.nlm.nih.gov/34138821/"
   ],
-  "groups": [],
+  "loose": [],
+  "groups": [
+   {
+    "label": "",
+    "urls": [
+     "https://sportrxiv.org/index.php/server/preprint/view/302/",
+     "https://pubmed.ncbi.nlm.nih.gov/23372143/",
+     "https://pubmed.ncbi.nlm.nih.gov/23053130/",
+     "https://www.mdpi.com/1422-0067/23/10/5431/htm",
+     "https://pubmed.ncbi.nlm.nih.gov/34138821/"
+    ]
+   }
+  ],
   "has_heading": false
  },
  "vS4dvekx_4Q": {
@@ -4494,6 +4635,7 @@
   "refs": [
    "https://pubmed.ncbi.nlm.nih.gov/35006527/",
    "https://pubmed.ncbi.nlm.nih.gov/37461495/",
+   "https://content.iospress.com/articles/isokinetics-and-exercise-science/ies654",
    "https://pubmed.ncbi.nlm.nih.gov/20581696/",
    "https://pubmed.ncbi.nlm.nih.gov/32735428/"
   ],
@@ -4504,6 +4646,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/35006527/",
      "https://pubmed.ncbi.nlm.nih.gov/37461495/",
+     "https://content.iospress.com/articles/isokinetics-and-exercise-science/ies654",
      "https://pubmed.ncbi.nlm.nih.gov/20581696/",
      "https://pubmed.ncbi.nlm.nih.gov/32735428/"
     ]
@@ -4620,6 +4763,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/28902119/",
    "https://pubmed.ncbi.nlm.nih.gov/35255478/",
    "https://pubmed.ncbi.nlm.nih.gov/23287827/",
+   "https://www.redalyc.org/pdf/3092/309245773040.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/33156414/"
   ],
   "loose": [],
@@ -4714,6 +4858,7 @@
      "https://pubmed.ncbi.nlm.nih.gov/28902119/",
      "https://pubmed.ncbi.nlm.nih.gov/35255478/",
      "https://pubmed.ncbi.nlm.nih.gov/23287827/",
+     "https://www.redalyc.org/pdf/3092/309245773040.pdf",
      "https://pubmed.ncbi.nlm.nih.gov/33156414/"
     ]
    }
@@ -4811,6 +4956,7 @@
    "https://sportrxiv.org/index.php/server/preprint/view/611/1314",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+   "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
    "https://sportrxiv.org/index.php/server/preprint/view/485",
    "https://sportrxiv.org/index.php/server/preprint/view/455",
    "https://pubmed.ncbi.nlm.nih.gov/23604798/",
@@ -4830,6 +4976,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
      "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+     "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
      "https://sportrxiv.org/index.php/server/preprint/view/485",
      "https://sportrxiv.org/index.php/server/preprint/view/455"
     ]
@@ -4974,6 +5121,7 @@
   "refs": [
    "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1272106/full",
    "https://link.springer.com/article/10.1007/s42978-024-00299-4",
+   "https://conbramene.com.br/2023/files/anais2023b.pdf",
    "https://pubmed.ncbi.nlm.nih.gov/14599535/",
    "https://pubmed.ncbi.nlm.nih.gov/12173959/",
    "https://pubmed.ncbi.nlm.nih.gov/9007450/",
@@ -5010,7 +5158,8 @@
     "label": "Studies Measuring Growth",
     "urls": [
      "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2023.1272106/full",
-     "https://link.springer.com/article/10.1007/s42978-024-00299-4"
+     "https://link.springer.com/article/10.1007/s42978-024-00299-4",
+     "https://conbramene.com.br/2023/files/anais2023b.pdf"
     ]
    },
    {
@@ -5335,6 +5484,7 @@
    "https://pubmed.ncbi.nlm.nih.gov/25303171/",
    "https://pubmed.ncbi.nlm.nih.gov/33977835/",
    "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+   "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
    "https://sportrxiv.org/index.php/server/preprint/view/485",
    "https://sportrxiv.org/index.php/server/preprint/view/455",
    "https://sportrxiv.org/index.php/server/preprint/view/460",
@@ -5363,6 +5513,7 @@
     "urls": [
      "https://pubmed.ncbi.nlm.nih.gov/33977835/",
      "https://pubmed.ncbi.nlm.nih.gov/37015016/",
+     "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
      "https://sportrxiv.org/index.php/server/preprint/view/485",
      "https://sportrxiv.org/index.php/server/preprint/view/455"
     ]

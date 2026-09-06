@@ -281,6 +281,81 @@
    "pmid": "16339347",
    "doi": "10.1152/japplphysiol.00741.2005"
   },
+  "https://pubmed.ncbi.nlm.nih.gov/24832974/": {
+   "authors": [
+    "Fonseca RM",
+    "Roschel H",
+    "Tricoli V",
+    "de Souza EO",
+    "Wilson JM",
+    "Laurentino GC",
+    "Aihara AY",
+    "de Souza Le\u00e3o AR",
+    "Ugrinowitsch C"
+   ],
+   "title": "Changes in exercises are more effective than in loading schemes to improve muscle strength",
+   "journal": "J Strength Cond Res",
+   "year": "2014",
+   "volume": "28",
+   "pages": "3085-92",
+   "pmid": "24832974",
+   "doi": "10.1519/JSC.0000000000000539"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/10188748/": {
+   "authors": [
+    "McCaw ST",
+    "Melrose DR"
+   ],
+   "title": "Stance width and bar load effects on leg muscle activity during the parallel squat",
+   "journal": "Med Sci Sports Exerc",
+   "year": "1999",
+   "volume": "31",
+   "pages": "428-36",
+   "pmid": "10188748",
+   "doi": "10.1097/00005768-199903000-00012"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/19130646/": {
+   "authors": [
+    "Paoli A",
+    "Marcolin G",
+    "Petrone N"
+   ],
+   "title": "The effect of stance width on the electromyographical activity of eight superficial thigh muscles during back squat with different bar loads",
+   "journal": "J Strength Cond Res",
+   "year": "2009",
+   "volume": "23",
+   "pages": "246-50",
+   "pmid": "19130646",
+   "doi": "10.1519/jsc.0b013e3181876811"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/31230110/": {
+   "authors": [
+    "Kubo K",
+    "Ikebukuro T",
+    "Yata H"
+   ],
+   "title": "Effects of squat training with different depths on lower limb muscle volumes",
+   "journal": "Eur J Appl Physiol",
+   "year": "2019",
+   "volume": "119",
+   "pages": "1933-1942",
+   "pmid": "31230110",
+   "doi": "10.1007/s00421-019-04181-y"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/30293403/": {
+   "authors": [
+    "Alonso-Fernandez D",
+    "Fernandez-Rodriguez R",
+    "Abalo-N\u00fa\u00f1ez R"
+   ],
+   "title": "Changes in rectus femoris architecture induced by the reverse nordic hamstring exercises",
+   "journal": "J Sports Med Phys Fitness",
+   "year": "2019",
+   "volume": "59",
+   "pages": "640-647",
+   "pmid": "30293403",
+   "doi": "10.23736/S0022-4707.18.08873-4"
+  },
   "https://pubmed.ncbi.nlm.nih.gov/37796222/": {
    "authors": [
     "Enes A",
@@ -781,20 +856,6 @@
    "pages": "2133-42",
    "pmid": "23604798",
    "doi": "10.1007/s00421-013-2642-7"
-  },
-  "https://pubmed.ncbi.nlm.nih.gov/31230110/": {
-   "authors": [
-    "Kubo K",
-    "Ikebukuro T",
-    "Yata H"
-   ],
-   "title": "Effects of squat training with different depths on lower limb muscle volumes",
-   "journal": "Eur J Appl Physiol",
-   "year": "2019",
-   "volume": "119",
-   "pages": "1933-1942",
-   "pmid": "31230110",
-   "doi": "10.1007/s00421-019-04181-y"
   },
   "https://pubmed.ncbi.nlm.nih.gov/33009197/": {
    "authors": [
@@ -4185,26 +4246,6 @@
    "pmid": "20711498",
    "doi": "10.1371/journal.pone.0012033"
   },
-  "https://pubmed.ncbi.nlm.nih.gov/24832974/": {
-   "authors": [
-    "Fonseca RM",
-    "Roschel H",
-    "Tricoli V",
-    "de Souza EO",
-    "Wilson JM",
-    "Laurentino GC",
-    "Aihara AY",
-    "de Souza Le\u00e3o AR",
-    "Ugrinowitsch C"
-   ],
-   "title": "Changes in exercises are more effective than in loading schemes to improve muscle strength",
-   "journal": "J Strength Cond Res",
-   "year": "2014",
-   "volume": "28",
-   "pages": "3085-92",
-   "pmid": "24832974",
-   "doi": "10.1519/JSC.0000000000000539"
-  },
   "https://pubmed.ncbi.nlm.nih.gov/29564973/": {
    "authors": [
     "Lasevicius T",
@@ -5466,20 +5507,6 @@
    "pages": "2347-2351",
    "pmid": "32735428",
    "doi": "10.1519/JSC.0000000000003674"
-  },
-  "https://pubmed.ncbi.nlm.nih.gov/30293403/": {
-   "authors": [
-    "Alonso-Fernandez D",
-    "Fernandez-Rodriguez R",
-    "Abalo-N\u00fa\u00f1ez R"
-   ],
-   "title": "Changes in rectus femoris architecture induced by the reverse nordic hamstring exercises",
-   "journal": "J Sports Med Phys Fitness",
-   "year": "2019",
-   "volume": "59",
-   "pages": "640-647",
-   "pmid": "30293403",
-   "doi": "10.23736/S0022-4707.18.08873-4"
   },
   "https://pubmed.ncbi.nlm.nih.gov/23949789/": {
    "authors": [
@@ -13235,6 +13262,25 @@
    "pmid": "38878117",
    "doi": "10.1007/s40279-024-02050-z"
   },
+  "https://www.researchgate.net/publication/350524711_Effects_of_Adding_Inter-Set_Static_Stretching_to_Flywheel_Resistance_Training_on_Flexibility_Muscular_Strength_and_Regional_Hypertrophy_in_Young_Men": {
+   "authors": [
+    "Nakamura M",
+    "Ikezu H",
+    "Sato S",
+    "Yahata K",
+    "Kiyono R",
+    "Yoshida R",
+    "Takeuchi K",
+    "Nunes JP"
+   ],
+   "title": "Effects of Adding Inter-Set Static Stretching to Flywheel Resistance Training on Flexibility, Muscular Strength, and Regional Hypertrophy in Young Men",
+   "journal": "Int J Environ Res Public Health",
+   "year": "2021",
+   "volume": "18",
+   "pages": "",
+   "pmid": "33916599",
+   "doi": "10.3390/ijerph18073770"
+  },
   "https://www.researchgate.net/publication/236253394_Effect_of_range_of_motion_in_heavy_load_squatting_on_muscle_and_tendon_adaptations": {
    "authors": [
     "Bloomquist K",
@@ -13382,6 +13428,59 @@
    "pages": "803-811",
    "pmid": "33440446",
    "doi": "10.1055/a-1308-3674"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/6520032/": {
+   "authors": [
+    "MacDougall JD",
+    "Sale DG",
+    "Alway SE",
+    "Sutton JR"
+   ],
+   "title": "Muscle fiber number in biceps brachii in bodybuilders and control subjects",
+   "journal": "J Appl Physiol Respir Environ Exerc Physiol",
+   "year": "1984",
+   "volume": "57",
+   "pages": "1399-403",
+   "pmid": "6520032",
+   "doi": "10.1152/jappl.1984.57.5.1399"
+  },
+  "https://pubmed.ncbi.nlm.nih.gov/34138821/": {
+   "authors": [
+    "Vann CG",
+    "Haun CT",
+    "Osburn SC",
+    "Romero MA",
+    "Roberson PA",
+    "Mumford PW",
+    "Mobley CB",
+    "Holmes HM",
+    "Fox CD",
+    "Young KC",
+    "Roberts MD"
+   ],
+   "title": "Molecular Differences in Skeletal Muscle After 1 Week of Active vs. Passive Recovery From High-Volume Resistance Training",
+   "journal": "J Strength Cond Res",
+   "year": "2021",
+   "volume": "35",
+   "pages": "2102-2113",
+   "pmid": "34138821",
+   "doi": "10.1519/JSC.0000000000004071"
+  },
+  "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6934277/": {
+   "authors": [
+    "Baz-Valle E",
+    "Schoenfeld BJ",
+    "Torres-Unda J",
+    "Santos-Concejero J",
+    "Balsalobre-Fern\u00e1ndez C"
+   ],
+   "title": "The effects of exercise variation in muscle thickness, maximal strength and motivation in resistance trained men",
+   "journal": "PLoS One",
+   "year": "2019",
+   "volume": "14",
+   "pages": "e0226989",
+   "pmid": "31881066",
+   "doi": "10.1371/journal.pone.0226989"
   }
  },
  "unresolved": [
@@ -13389,12 +13488,15 @@
   "https://www.ncbi.nlm.nih.gov/books/NBK21670/",
   "https://www.mdpi.com/2073-4409/9/7/1658/htm",
   "https://www.frontiersin.org/articles/10.3389/fphys.2020.00816/full",
+  "https://www.jstage.jst.go.jp/article/jpfsm/5/1/5_37/_article",
   "https://journals.lww.com/nsca-jscr/abstract/9000/muscle_hypertrophy_is_affected_by_volume_load.93804.aspx",
   "https://sportrxiv.org/index.php/server/preprint/view/542",
+  "https://www.ecss.mobi/DATA/EDSS/C28/28-3269.pdf",
   "https://sportrxiv.org/index.php/server/preprint/view/485",
   "https://sportrxiv.org/index.php/server/preprint/view/455",
   "https://sportrxiv.org/index.php/server/preprint/view/464",
   "https://www.researchgate.net/publication/362864671_Muscle_Hypertrophy_Response_to_Range_of_Motion_in_Strength_Training_A_Novel_Approach_to_Understanding_the_Findings",
+  "https://www.researchgate.net/publication/236253394",
   "https://www.researchgate.net/publication/395267527_How_slow_should_you_go_A_systematic_review_with_meta-analysis_of_the_effect_of_resistance_training_repetition_tempo_on_muscle_hypertrophy",
   "https://www.strongerbyscience.com/heuristics-effect-sizes/",
   "https://journals.lww.com/nsca-jscr/fulltext/2014/12001/nsca_2014_annual_meeting.1.aspx",
@@ -13403,10 +13505,13 @@
   "https://osf.io/preprints/sportrxiv/sg3wm/",
   "https://www.researchgate.net/publication/343514178_Placing_Greater_Torque_at_Shorter_or_Longer_Muscle_Lengths_Effects_of_Cable_vs_Barbell_Preacher_Curl_Training_on_Muscular_Strength_and_Hypertrophy_in_Young_Adults",
   "https://www.mdpi.com/2411-5142/3/2/28",
+  "https://www.ecss.mobi/DATA/EDSS/C29/29-1752.pdf",
   "https://sportrxiv.org/index.php/server/preprint/view/486",
   "https://sportrxiv.org/index.php/server/preprint/view/659",
+  "https://journal.iusca.org/index.php/Journal/article/view/135",
   "https://sportrxiv.org/index.php/server/preprint/view/455/959",
   "https://sportrxiv.org/index.php/server/preprint/view/407/853",
+  "https://www.ecss2006.com/ASP/CONGRESS/TOOLS/Scientific_Programme/Sessions_Abstract_Read.asp?mySessionID=CP-BM01&myAbstractID=1752",
   "https://www.mdpi.com/2411-5142/7/4/81",
   "https://www.researchgate.net/publication/305676699_Resistance_training_with_slow_speed_of_movement_is_better_for_hypertrophy_and_muscle_strength_gains_than_fast_speed_of_movement",
   "https://www.frontiersin.org/articles/10.3389/fphys.2022.857555/full",
@@ -13417,9 +13522,9 @@
   "https://sportrxiv.org/index.php/server/preprint/view/460",
   "https://sportrxiv.org/index.php/server/preprint/view/537",
   "https://osf.io/7vmxk/overview",
-  "https://www.researchgate.net/publication/350524711_Effects_of_Adding_Inter-Set_Static_Stretching_to_Flywheel_Resistance_Training_on_Flexibility_Muscular_Strength_and_Regional_Hypertrophy_in_Young_Men",
   "https://journals.lww.com/nsca-jscr/fulltext/2008/01000/The_Duration_of_the_Inhibitory_Effects_with_Static.8.aspx",
   "https://www.sciencedirect.com/science/article/pii/S1728869X17301028#bib19",
+  "https://elementssystem.com/wp-content/uploads/2018/04/Schoenfeld-17-altas-bajas.pdf",
   "https://sportrxiv.org/index.php/server/preprint/view/487",
   "https://journals.lww.com/nsca-jscr/abstract/1994/08000/an_electromyographical_comparison_of_the_squat_and.9.aspx",
   "https://www.jssm.org/jssm-20-56.xml%3EFulltext",
@@ -13437,6 +13542,7 @@
   "https://oce.ovid.com/article/00124278-199808000-00009/HTML",
   "https://www.frontiersin.org/articles/10.3389/fphys.2018.01373/full",
   "https://www.mdpi.com/1422-0067/23/10/5431/htm",
+  "https://www.jhse.ua.es/article/view/2019-v14-n3-hatfield-system-weekly-undulating-periodised-resistance-training-males-third-mesocyle",
   "https://www.researchgate.net/publication/365127382_Greater_gastrocnemius_muscle_hypertrophy_after_partial_range_of_motion_training_carried_out_at_long_muscle_lengths",
   "https://www.frontiersin.org/articles/10.3389/fspor.2022.1035190/full",
   "https://journals.lww.com/nsca-jscr/Fulltext/2014/12001/NSCA_2014_Annual_Meeting.1.aspx",
@@ -13447,11 +13553,16 @@
   "https://www.sciencedirect.com/science/article/pii/S1728869X17301028",
   "https://journals.humankinetics.com/view/journals/jab/5/4/article-p390.xml",
   "https://www.sciencedirect.com/science/article/abs/pii/S1050641122000165",
+  "https://www.mdpi.com/2075-4663/9/9/119/htm",
   "https://journals.lww.com/nsca-jscr/Abstract/9000/Does_Varying_Repetition_Tempo_in_a_Single_Joint.94100.aspx",
+  "https://journaljammr.com/index.php/JAMMR/article/view/2270",
   "https://www.biorxiv.org/content/10.1101/2025.04.28.650925v1",
+  "https://jhk.termedia.pl/Regional-Hypertrophy-The-Effect-of-Exercises-at-Long-nand-Short-Muscle-Lengths-in,163561,0,2.html",
   "https://www.mdpi.com/2075-4663/11/2/39",
+  "https://www.jstage.jst.go.jp/article/tjem1920/175/4/175_4_285/_pdf",
   "https://www.frontiersin.org/articles/10.3389/fphys.2021.734509/full",
   "https://sportrxiv.org/index.php/server/preprint/view/564",
+  "https://ses.library.usyd.edu.au/handle/2123/21700",
   "https://www.biorxiv.org/content/10.1101/2023.06.21.545949v1",
   "https://www.researchgate.net/publication/263519615_Muscles_within_muscles_A_Mechanomyographic_analysis_of_muscle_segment_contractile_properties_within_human_gluteus_maximus",
   "https://www.researchgate.net/publication/370467186_Addition_of_the_barbell_hip_thrust_is_effective_for_enhancing_gluteus_maximus_hypertrophy_in_young_women",
@@ -13461,16 +13572,20 @@
   "https://www.researchgate.net/publication/339573950_Magnitude_and_Composition_of_the_Energy_Surplus_for_Maximizing_Muscle_Hypertrophy_Implications_for_Bodybuilding_and_Physique_Athletes",
   "https://journals.lww.com/nsca-jscr/Fulltext/2020/07000/Effects_of_Training_With_Free_Weights_Versus.6.aspx",
   "http://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC1262051&blobtype=pdf",
+  "https://www.researchgate.net/publication/311760599",
   "https://www.mdpi.com/1422-0067/21/11/3974/htm",
   "https://www.frontiersin.org/articles/10.3389/fphys.2020.621226/full",
   "https://www.researchgate.net/publication/288434976_The_effects_of_exercise_order_and_periodized_resistance_training_on_maximum_strength_and_muscle_thickness",
   "https://journals.lww.com/nsca-jscr/fulltext/2017/11000/effects_of_a_modified_german_volume_training.21.aspx",
   "https://www.mdpi.com/2075-4663/6/1/7/htm",
   "https://www.sciencedirect.com/science/article/pii/S2095254621000077#bib0010",
+  "https://www.docdroid.net/Qdy7KuB/analysis-of-the-load-on-the-knee-joint-and-vertebral-column-with-changes-in-squatting-depth-and-weight-load-pdf",
+  "https://highfit.com.br/wp-content/uploads/2019/06/KEITARO-KUBO-2019.pdf",
   "https://journals.lww.com/nsca-jscr/Fulltext/2014/11000/The_Efficacy_of_Incorporating_Partial_Squats_in.2.aspx",
   "https://www.researchgate.net/publication/304607794_Joint-Angle_Specific_Strength_Adaptations_Influence_Improvements_in_Power_in_Highly_Trained_Athletes",
   "https://journals.lww.com/nsca-jscr/Fulltext/2012/12000/Influence_of_Squatting_Depth_on_Jumping.10.aspx",
   "https://journals.lww.com/nsca-jscr/abstract/1995/11000/effects_of_different_weight_training_exercise_rest.2.aspx",
+  "https://andrewvigotsky.com/static/studies/Vigotsky_2022_Sports_Med_sEMG_hypertrophy.pdf",
   "https://www.mdpi.com/1660-4601/17/21/7848",
   "https://www.frontiersin.org/articles/10.3389/fphys.2021.773995/full",
   "https://journals.lww.com/acsm-msse/Fulltext/1999/12000/Adverse_events_associated_with_eccentric_exercise.2.aspx",
@@ -13478,19 +13593,22 @@
   "https://www.frontiersin.org/articles/10.3389/fphys.2018.00834/full",
   "https://journals.lww.com/nsca-jscr/Abstract/1997/08000/The_Effect_of_Weight_Training_Volume_on_Hormonal.3.aspx",
   "https://journals.lww.com/nsca-jscr/Abstract/9000/Volume_Load_Rather_Than_Resting_Interval.94362.aspx",
+  "https://www.researchgate.net/publication/11532629_Position_stand_Progression_models_in_resistance_training_for_healthy_adultsAmerican_College_of_Sports_MedicineMed_Sci_Sports_Exerc20023436438011828249",
   "https://www.researchgate.net/publication/265381797_Effects_of_different_antagonist_protocols_on_repetition_performance_and_muscle_activation",
   "https://www.sciencedirect.com/science/article/abs/pii/S0765159716300442",
   "https://journals.lww.com/nsca-jscr/Fulltext/2012/05000/Does_Exercise_Induced_Muscle_Damage_Play_a_Role_in.37.aspx",
+  "https://journals.biologists.com/jeb/article/214/4/674/10714/Muscle-damage-and-muscle-remodeling-no-pain-no",
   "https://www.sciencedirect.com/science/article/pii/S2095254614000106?via%3Dihub",
+  "https://exercisesforfree.com/pdf/386.pdf",
   "https://sportrxiv.org/index.php/server/preprint/view/484",
   "https://journals.lww.com/nsca-scj/fulltext/2014/06000/the_muscle_pump__potential_mechanisms_and.11.aspx",
-  "https://www.mdpi.com/2075-4663/9/9/119/htm",
   "https://www.researchgate.net/publication/233562428_Subacromial_impingement_syndrome_a_musculoskeletal_condition_or_a_clinical_illusion",
   "https://www.researchgate.net/publication/232210633_The_Upright_Row_Implications_for_Preventing_Subacromial_Impingement",
   "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD005619.pub3/full",
   "https://journals.humankinetics.com/view/journals/tsp/14/3/article-p272.xml",
   "https://europepmc.org/article/med/28394830",
   "https://www.mdpi.com/2075-4663/5/4/82",
+  "https://europepmc.org/article/PMC/PMC1262051",
   "https://www.strongerbyscience.com/barbalho/",
   "https://journals.lww.com/nsca-scj/Abstract/2020/10000/Regional_Hypertrophy,_the_Inhomogeneous_Muscle.11.aspx",
   "https://www.mdpi.com/2411-5142/3/2/28/htm",
@@ -13514,8 +13632,10 @@
   "https://www.nature.com/articles/d41586-019-00857-9",
   "https://www.ncbi.nlm.nih.gov/books/NBK539784/",
   "https://sportrxiv.org/index.php/server/preprint/view/419",
+  "https://www.jstage.jst.go.jp/article/tjem/186/4/186_4_267/_pdf/-char/en",
   "https://academic.oup.com/ptj/article/49/7/748/4595867",
   "https://www.mdpi.com/2075-4663/11/3/64",
+  "https://rc.library.uta.edu/uta-ir/handle/10106/26868",
   "https://www.ncbi.nlm.nih.gov/books/NBK554616/",
   "https://www.ncbi.nlm.nih.gov/books/NBK57268/",
   "https://journals.lww.com/nsca-jscr/Abstract/2010/01001/The_Effects_Of_Rest_Interval_Length_On_Bench_Press.136.aspx",
@@ -13523,20 +13643,25 @@
   "https://journals.lww.com/nsca-jscr/Abstract/2011/03001/The_Effects_of_Resistance_Exercise_Rest_Interval.141.aspx",
   "https://www.researchgate.net/publication/323801357_A_case_for_considering_age_and_sex_when_prescribing_rest_intervals_in_resistance_training",
   "https://journals.lww.com/acsm-essr/fulltext/2019/07000/a_principle_of_neuromechanical_matching_for_motor.5.aspx",
+  "https://content.iospress.com/articles/isokinetics-and-exercise-science/ies654",
+  "https://edisciplinas.usp.br/pluginfile.php/3887013/mod_folder/content/0/emg_deltoide_diferentes_exercicios_silveira_lima_2013.pdf",
   "https://journals.lww.com/nsca-scj/Abstract/2023/04000/Muscle_Hypertrophy_Response_to_Range_of_Motion_in.4.aspx",
   "https://www.frontiersin.org/articles/10.3389/fphys.2017.00297/full",
+  "https://sportrxiv.org/index.php/server/preprint/view/302/",
   "https://journals.lww.com/acsm-msse/Abstract/1972/00420/Anabolic_steroids__the_physiological_effects_of.15.aspx",
   "https://www.researchgate.net/publication/376086631_The_Effects_of_Psyching-Up_on_Maximal_Force_Production_A_Systematic_Review",
   "https://journals.lww.com/nsca-jscr/abstract/1993/11000/effects_of_progressive_relaxation_on_maximal.5.aspx",
   "https://www.researchgate.net/publication/296573295_Effects_of_cognitive_training_strategies_on_muscular_force_and_psychological_skills_in_healthy_striking_combat_sports_practitioners",
   "https://journals.lww.com/jbjsjournal/abstract/2007/06000/brachialis_muscle_anatomy__a_study_in_cadavers.18.aspx",
   "https://www.researchgate.net/publication/271135793_Resistance_Training_Recovery_Considerations_For_Single_Vs_Multi-joint_Movements_And_Upper_Vs_Lower_Body_Muscles",
+  "https://www.redalyc.org/pdf/3092/309245773040.pdf",
   "https://peerj.com/articles/5338/",
   "https://www.mdpi.com/2072-6643/8/6/331/htm",
   "https://www.frontiersin.org/articles/10.3389/fphys.2020.00259/full",
   "https://sportrxiv.org/index.php/server/preprint/view/611/1314",
   "https://www.strongerbyscience.com/research-spotlight-cardio-bigger/",
   "https://www.frontiersin.org/articles/10.3389/fphys.2018.00725/full",
+  "https://conbramene.com.br/2023/files/anais2023b.pdf",
   "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1494323/full",
   "https://journals.humankinetics.com/view/journals/jab/18/1/article-p15.xml",
   "https://journals.lww.com/nsca-scj/fulltext/2020/10000/body_recomposition__can_trained_individuals_build.3.aspx",

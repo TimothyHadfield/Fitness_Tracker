@@ -18,13 +18,13 @@
 
 Both: **3–5 sets per session, 90 s rest, 2×/week for 6 weeks**. Muscle thickness measured at **three regions each** of the anterior and lateral thigh.
 
-[02:32] Changes were **broadly similar**. Some measures leaned isometric — notably the **upper anterior thigh**, where most of the distribution exceeded the region of practical equivalence. He gives both readings: cautiously, "no clear difference"; less cautiously, a lean toward isometrics after only 6 weeks in trained subjects may hint at a small real advantage. Either way, the result does not support isometrics being bad for growth.
+[02:32] Changes were **broadly similar**. Some measures leaned isometric — notably the **upper anterior thigh**, where most of the distribution exceeded the region of practical equivalence. He gives both readings: cautiously, "no clear difference"; less cautiously, a lean toward isometrics after only 6 weeks in trained subjects may hint at a small real advantage. Either way, isometrics are not bad for growth.
 
 ### If isometrics did have an edge, why?
 [03:04] Two candidate explanations, both his own speculation:
 
 1. **Set duration was equated, time at high tension was not.** Max effort for the full 30 s means the isometric leg spent more total time under high tension. Giving the dynamic leg extra sets to equate that might have erased the difference.
-2. **More time at long muscle length**, which may itself favour growth. He links this to his previous range-of-motion video, where lengthened partials came out at least as good as full ROM — adding immediately that this does **not** mean full ROM is bad; it remains very effective and a sensible default.
+2. **More time at long muscle length**, which may itself favour growth. He links this to his previous range-of-motion video, where lengthened partials came out at least as good as full ROM — adding that this does **not** mean full ROM is bad; it remains a sensible default.
 
 He closes by noting this is one small study with statistical uncertainty, its findings specific to its design.
 

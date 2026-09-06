@@ -13,7 +13,7 @@
 ## Part I: acute performance
 [00:32] **Maia et al. (2014, Brazil)** compared leg extensions alone against leg curls performed before leg extensions. The curls first **increased leg extension reps** — and the **shorter the rest between the two exercises, the better**. Going straight into the extensions beat rest intervals of 30 s, 1, 3 and 5 minutes. Sets to failure with a 10RM load.
 
-[01:33] A 2015 Brazilian study compared three sets of bench press then three of seated row against supersetting the two with virtually no rest. **Volume load was higher on both exercises in the superset condition** — and with sets and loads (10RM) matched, that means more reps. The superset session was also shorter. Three further studies point the same way, all using minimal rest.
+[01:33] A 2015 Brazilian study compared three sets of bench press then three of seated row against supersetting the two with virtually no rest. **Volume load was higher on both exercises in the superset condition** — with sets and loads (10RM) matched, that means more reps — and the session was shorter. Three further studies point the same way, all using minimal rest.
 
 [02:35] **Robbins et al. (2010, Australia)** is the informative counter-case. The superset condition paired bench pull with bench press but used **2 minutes of rest between the two exercises** (4 minutes between repeats); the traditional condition did all pulls then all presses with 4 minutes between sets. All reps to failure at a 4RM load. **Volume load did not differ statistically** — no performance gain, but the protocol still finished quicker.
 

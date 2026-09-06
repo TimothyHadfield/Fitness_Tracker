@@ -23,9 +23,14 @@ from pathlib import Path
 
 # Heading forms seen in the wild: "References:", "*Reference*", "Ref:", "**Sources**".
 # The asterisks are the creator's own emphasis markers, not markdown we control.
+# The trailing punctuation is deliberately loose: House of Hypertrophy types
+# "References;" with a semicolon in some descriptions, and insisting on a colon
+# there cost two whole reference lists before anyone noticed. The line still has
+# to be nothing but the heading word, so widening the punctuation cannot make it
+# start matching prose.
 HEADING = re.compile(
     r"^[^\S\n]*[*_]{0,2}(references?|refs?|sources?|studies|citations?|literature|"
-    r"scientific articles?|papers?)[*_]{0,2}[^\S\n]*:?[^\S\n]*$", re.I | re.M)
+    r"scientific articles?|papers?)[*_]{0,2}[^\S\n]*[:;.\-–—]?[^\S\n]*$", re.I | re.M)
 
 # "Study: https://..." on one line - a heading and its single reference together.
 INLINE = re.compile(
@@ -33,6 +38,13 @@ INLINE = re.compile(
     r"[^\S\n]*(https?://\S+)", re.I | re.M)
 
 URL = re.compile(r"https?://[^\s)>\]\"']+")
+
+# "Kraemer et al. - https://..." with no heading anywhere above it. Some
+# descriptions drop the reference list straight under the timestamps and never
+# announce it. A line carrying both "et al" and a scientific URL is a citation
+# in every case seen here, and nothing else in a description looks like that -
+# music credits and affiliate links never name an author.
+AUTHOR_LINE = re.compile(r"\bet\s+al\b", re.I)
 
 # Hosts that are the creator talking about themselves, not citing anyone.
 SELF = re.compile(
@@ -159,6 +171,22 @@ def main():
             if keep(u, True) and u not in refs:
                 refs.append(u)
                 groups.append({"label": "", "urls": [u]})
+        # An unannounced reference list: author-attributed lines anywhere in the
+        # description. Only the ones naming an author are promoted; a bare link
+        # in prose stays loose, because there the creator is gesturing at a
+        # paper rather than citing one.
+        for line in text.splitlines():
+            if not AUTHOR_LINE.search(line):
+                continue
+            for u in URL.findall(line):
+                u = clean_url(u)
+                u = expand.get(u, u)
+                if keep(u, False) and u not in refs:
+                    refs.append(u)
+                    if not groups or groups[-1]["label"] != "":
+                        groups.append({"label": "", "urls": []})
+                    groups[-1]["urls"].append(u)
+
         # Anything scientific outside the block, recorded but not promoted. No
         # PDF latitude here - outside a reference block a PDF is as likely to be
         # a training template as a paper.
