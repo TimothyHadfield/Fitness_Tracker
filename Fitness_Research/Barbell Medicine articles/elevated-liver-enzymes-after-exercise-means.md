@@ -15,11 +15,11 @@
 
 The article's teaching frame is the three functional categories of a liver panel, and it is the second and third that do the diagnostic work.
 
-**Hepatocellular (ALT, AST).** These participate in amino acid metabolism and leak when cells are injured. The mechanism in exercise is mechanical: eccentric loading produces micro-tears in the sarcolemma, letting intracellular contents into circulation. The article is explicit that this is the *same* mechanism as rhabdomyolysis at a lower, physiological magnitude — a comparison that is anatomically fair but rhetorically risky, since rhabdomyolysis is a named emergency and the resemblance is one of mechanism, not of severity.
+**Hepatocellular (ALT, AST).** These participate in amino acid metabolism and leak when cells are injured. The mechanism in exercise is mechanical: eccentric loading produces micro-tears in the sarcolemma, letting intracellular contents into circulation. The article calls this the *same* mechanism as rhabdomyolysis at a lower, physiological magnitude — fair anatomically, but the resemblance is one of mechanism, not severity.
 
-**Cholestatic (ALP, bilirubin).** ALP is also produced by bone, placenta, prostate and intestinal mucosa; the article states the **bone isoform peaks about 20 minutes post-workout** from skeletal stress. GGT is the conventional discriminator: raised ALP *with* raised GGT suggests hepatobiliary origin; raised ALP with normal GGT points to bone. Bilirubin is generally unaffected by acute exercise.
+**Cholestatic (ALP, bilirubin).** ALP is also produced by bone, placenta, prostate and intestinal mucosa; the article states the **bone isoform peaks about 20 minutes post-workout**. GGT is the conventional discriminator: raised ALP *with* raised GGT suggests hepatobiliary origin; raised ALP with normal GGT points to bone. Bilirubin is generally unaffected by acute exercise.
 
-**Synthetic (albumin, INR).** These are the category that separates "leaking muscle" from "failing liver," and the article uses them well. In exercise-induced elevation they stay normal. A rising INR is a criterion for acute liver failure and demands urgent evaluation regardless of training history.
+**Synthetic (albumin, INR).** This is the category that separates "leaking muscle" from "failing liver," and the article uses it well. In exercise-induced elevation both stay normal, and a rising INR is a criterion for acute liver failure demanding urgent evaluation regardless of training history.
 
 **GGT is the honest complication.** The proposal that GGT is absent from skeletal muscle, so isolated ALT/AST elevation with a normal GGT indicates muscle origin, is stated as a hypothesis — and then the article's own case undercuts it, because this patient's GGT was elevated too. Two mechanisms are offered (altered hepatic blood flow during intense exercise; GGT's role in glutathione synthesis during muscle repair), and the correct conclusion is drawn: **a normal GGT supports the exercise explanation, an elevated GGT does not rule it out.** That is careful reasoning and worth keeping.
 
@@ -47,9 +47,7 @@ The article's list, which is clinically sound and should be the part a lifter re
 - **Worsening values on repeat despite a rest period**
 - Known risk factors: metabolic syndrome, alcohol, family history of liver disease
 
-And the differential to exclude first: fatty liver disease (MASLD/NAFLD, the most common cause in the US general population); alcohol (AST/ALT ratio >2 is the classic signal, and intake is consistently under-reported); **supplement-induced liver injury** — oral anabolic-androgenic steroids carry the highest hepatotoxic risk, plus ephedra, synephrine with caffeine, Hydroxycut, Garcinia Cambogia, Herbalife and herbal preparations; hepatitis B/C; drug-induced injury from statins, NSAIDs, antibiotics, anticonvulsants. Then the less common: autoimmune hepatitis, primary biliary cholangitis, hemochromatosis, alpha-1 antitrypsin deficiency, Wilson's disease.
-
-Baraki's practical note is that supplement use must be asked about **repeatedly and specifically**, because patients do not classify protein powders, pre-workouts or herbal teas as medications.
+The differential to exclude first: fatty liver disease (MASLD/NAFLD, the most common cause in the US general population); alcohol (AST/ALT >2 is the classic signal, and intake is consistently under-reported); **supplement-induced liver injury** — oral anabolic-androgenic steroids carry the highest hepatotoxic risk, plus ephedra, synephrine with caffeine, Hydroxycut, Garcinia Cambogia, Herbalife and herbal preparations; hepatitis B/C; drug-induced injury from statins, NSAIDs, antibiotics, anticonvulsants. Then the less common: autoimmune hepatitis, primary biliary cholangitis, hemochromatosis, alpha-1 antitrypsin deficiency, Wilson's disease. Baraki's practical note is that supplement use must be asked about **repeatedly and specifically**, because patients do not classify protein powders, pre-workouts or herbal teas as medications.
 
 ## Recommendation versus evidence
 

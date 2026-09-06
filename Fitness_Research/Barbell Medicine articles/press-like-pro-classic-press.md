@@ -12,17 +12,11 @@
 
 ## What the technique actually is
 
-The article spends its first third on definitions, and the taxonomy is useful because the "Classic Press" only makes sense against it:
+The article spends its first third on definitions, and the taxonomy matters because the "Classic Press" only makes sense against it: the **floating rack** (bar held in the air under the chin, touching neither shoulders nor chest); the **military press** (feet together, straight knees, no dynamic start); **Press 1.0** (wider stance, minimal dynamic start, touch-and-go reps); **Press 2.0** (maximal dynamic start, as taught at Starting Strength seminars, no bottom stretch reflex); and **Press 3.0 / Olympic press** (Press 2.0 with an intentional double layback).
 
-- **Floating rack** — the bar rests in the air under the chin, touching neither shoulders nor chest. Common in lifters with long forearms.
-- **Military press** — feet together, straight knees, no dynamic start. As strict as possible.
-- **Press 1.0** — wider stance than military, minimal dynamic start, touch-and-go reps after the first.
-- **Press 2.0** — maximal dynamic start, as taught at Starting Strength seminars, each rep without a bottom stretch reflex.
-- **Press 3.0 / Olympic press** — Press 2.0 with an intentional double layback.
+The **Classic Press** sits alongside these. The bar comes out of the rack onto the chest with elbows slightly ahead of it; the lifter breathes, braces glutes, low back and abs, deliberately pushes the hips forward into a layback, then stands up fast and drives the bar up and back while cueing "straight up."
 
-The **Classic Press** sits alongside these. The bar comes out of the rack onto the chest with elbows slightly ahead of the bar; the lifter takes a breath, braces glutes, low back and abs, deliberately pushes the hips forward into a layback, then stands up fast and drives the bar up and back while cueing "straight up."
-
-The reasoning behind the low rack position is stated as a hypothesis, in the author's own words: the further down the chest the bar sits, the more chest musculature can contribute to driving it overhead. The provenance is anecdotal and openly so — an unbookmarked article on an old-school lifting blog, a phone call with Mark Rippetoe, and a conversation at The Lab Gym with Derrick Crass, a 1984 and 1988 US Olympian, who described how lifters in the clean-and-press era caught the bar low on the chest with a slight lean-back and bent knees so judges could not red-light them for layback or knee bend. The name is chosen precisely because the technique predates him — he is explicit that he did not invent it and that calling it a "Feigenpress" would be wrong.
+The reasoning behind the low rack position is stated as a hypothesis in the author's own words: the further down the chest the bar sits, the more chest musculature can contribute. The provenance is anecdotal and openly so — an unbookmarked old-school lifting blog, a phone call with Mark Rippetoe, and a conversation with Derrick Crass, a 1984 and 1988 US Olympian, who described lifters in the clean-and-press era catching the bar low on the chest with a slight lean-back and bent knees so judges could not red-light them for layback or knee bend. The name is chosen precisely because the technique predates him — he is explicit that he did not invent it.
 
 **The stated drawback is real and specific:** because the bar can be thrown up and back quickly, balance is easy to lose. Historical lifters countered this with bent knees straightening under the bar. That is not available at a USSF meet, where the bar comes out of a rack, so the lifter has to manage balance consciously.
 
@@ -40,13 +34,9 @@ His summary of the drivers of 1RM progress: **volume, frequency of exposures, an
 
 ## Assistance work, and why he thinks it barely mattered
 
-The honesty here is the article's best feature. He states flatly that none of the variations were life-changing and that he does not believe any of them uniquely improved his press. The proposed value of variations is threefold:
+The honesty here is the article's best feature. He states flatly that none of the variations were life-changing and that he does not believe any uniquely improved his press. The proposed value of variations is threefold. **Fatigue control**: his worked example compares a belted press to a shoulder-height pin press at matched relative intensity and volume (1 @ 8, then 4 @ 9 × 3) — the belted press uses heavier weight and permits the dynamic start, recruiting more muscle mass, so a coach can dial fatigue down with the pin press without dropping the exposure. **Motivation**: a lifter watching a stalled competition lift three or four times a week has historical numbers to feel bad against, where a variation has no training history and early progress on it is a morale gain. **Technique**, mostly through position and bar-path constraints.
 
-1. **Fatigue control** — his worked example compares a belted press to a shoulder-height pin press at matched relative intensity and volume (1 @ 8, then 4 @ 9 × 3). The belted press uses heavier weight and permits the dynamic start, recruiting more muscle mass, so it generates more fatigue. That makes the pin press a way for a coach to dial fatigue down without dropping the exposure.
-2. **Motivation and anxiety** — a lifter watching a stalled competition lift three or four times a week has historical numbers to feel bad against. A variation has no training history, so early progress on it is a morale gain.
-3. **Technique** — mostly through position and bar-path constraints.
-
-His running notes on the variations he used: **shoulder-level pin press** (his favourite; forces strict pressing and bar-path attention, with a controlled eccentric he suspects is useful for upper-limb tolerance); **above-forehead pin press** (functions as overload, may teach the second layback, but stressful on elbows and low back); **press with chains** (disliked — the chains swung too much to work as overload); **seated and Z-press** (better for high-rep work than low-rep strength; he does not rate them for strength development); **2-count paused press** (awkward, but he credits it with helping him press through the sticking point and settle his start position). Incline work he judges to have contributed nothing directly to the press, serving instead as developmental pressing slots that spared his elbows from six weekly presses.
+His running notes: **shoulder-level pin press** (his favourite — forces strict pressing and bar-path attention); **above-forehead pin press** (overload, may teach the second layback, stressful on elbows and low back); **press with chains** (disliked; the chains swung too much to work as overload); **seated and Z-press** (better for high reps than low-rep strength work); **2-count paused press** (awkward, but credited with helping him press through the sticking point). Incline work he judges to have contributed nothing directly, serving as developmental pressing slots that spared his elbows from six weekly presses.
 
 ## For the lifter, for the coach
 

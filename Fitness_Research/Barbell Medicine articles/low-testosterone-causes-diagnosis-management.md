@@ -22,7 +22,7 @@ The article opens on the prescribing epidemic: US testosterone prescriptions ros
 **Suggestive symptoms** (common in deficiency but also in other conditions, so investigate both at once): loss of libido from a previously normal baseline, gynaecomastia, infertility, erectile dysfunction, hot flushes, reduced spontaneous erections, reduced genital sensation or orgasm.
 **Non-specific symptoms** (so common they are usually something else): depressed mood, poor concentration, low bone density, unexplained anaemia, disturbed sleep, muscle loss, fat gain, low energy or motivation.
 
-The worked example is the point of the whole taxonomy: a man with poor sleep and rising body fat but normal libido and erectile function is *highly unlikely* to have testosterone deficiency and needs a broader workup, not a testosterone panel.
+The worked example is the point of the taxonomy: a man with poor sleep and rising body fat but normal libido and erectile function is *highly unlikely* to have testosterone deficiency and needs a broader workup, not a testosterone panel.
 
 ## Causes: primary versus secondary
 
@@ -42,19 +42,17 @@ The diet section is a series of small effects around one large one. **Energy bal
 
 The nutrient-level claims are all hedged: very low fat diets (<25% of calories) lower testosterone modestly relative to 35-40% fat; the saturated-versus-unsaturated evidence is inconsistent, so they default to general cardiovascular advice (saturated fat around 10% of calories); eating more dietary cholesterol has no strong evidence of a large effect. Severe carbohydrate restriction (<5% of energy) lowers testosterone, moderate restriction does not consistently. Protein has no consistent effect in normal ranges; three small short-term studies found intakes above 3.4 g/kg/day lowered it, and they recommend 1.2-2.2 g/kg/day. On soy, they quote a meta-analysis of 41 studies and over 1,000 men finding no effect of soy protein or isoflavones — the paper is not named in the article, so it cannot be identified here.
 
-**Sleep:** testosterone production is described as sleep-dependent rather than truly circadian, requiring at least three hours of initial uninterrupted sleep, peaking at waking and declining through the day, with morning levels independently predicted by total sleep duration. Target 7.5-8 hours.
+**Sleep:** production is described as sleep-dependent rather than truly circadian — at least three hours of initial uninterrupted sleep required, peaking at waking, with morning levels independently predicted by total sleep duration. Target 7.5-8 hours.
 
-**Exercise:** flatly stated to have little direct effect on resting testosterone regardless of modality — weights, sprints or aerobic work. Its value is indirect, through appetite regulation, weight-loss maintenance, sleep, metabolic function and fatty liver. Two further claims are made without support: that exercise improves the effectiveness of testosterone therapy over therapy alone, and that continuing to train preserves the benefits after therapy stops.
+**Exercise:** little direct effect on resting testosterone regardless of modality. Its value is indirect — appetite regulation, weight-loss maintenance, sleep, metabolic function, fatty liver. Two further claims are unsupported: that exercise improves the effectiveness of testosterone therapy over therapy alone, and that continuing to train preserves the benefits after therapy stops.
 
-**Supplements:** dismissed as a category. Most have little or no clinical effect; where an effect exists it is inconsistent and usually smaller than general health improvement; and a large proportion of testosterone-boosting products are mislabelled or contaminated, sometimes with actual anabolic steroids. Worth noting plainly: Barbell Medicine sells supplements, and this advice runs against its commercial interest in this particular category.
+**Supplements:** dismissed as a category — little or no clinical effect, and a large proportion mislabelled or contaminated, sometimes with actual anabolic steroids. Worth noting plainly: Barbell Medicine sells supplements, and this advice runs against its commercial interest in this category.
 
 ## Therapy and its risks
 
-Monitoring guidance is admirably deflationary — **there is no evidence supporting a specific blood-level target**. Aim mid-range (300-800 ng/dL) and titrate to symptoms and side effects, which usually track excessive peak levels.
+Monitoring guidance is admirably deflationary — **no evidence supports a specific blood-level target**. Aim mid-range (300-800 ng/dL) and titrate to symptoms and side effects, which usually track excessive peaks. On cardiovascular risk they say low testosterone correlates with higher risk, and that treating true deficiency appropriately does not increase heart disease risk "and may actually lower it". On prostate cancer, no increased risk with appropriate treatment.
 
-The side effects covered: fertility suppression as above; cardiovascular risk, where they say low testosterone correlates with higher cardiovascular risk and that appropriately treating true deficiency does not increase heart disease risk "and may actually lower it"; and prostate cancer, where they say current evidence shows no increased risk with appropriate treatment.
-
-**Flag:** "may actually lower it" is the one place a conclusion outruns what an unsourced article can carry. The best available trial evidence supports cardiovascular *non-inferiority* of treatment, not benefit, and a correlation between low testosterone and cardiovascular disease is confounded by the metabolic illness the article itself identifies as the main cause of low testosterone. Stated with no citation, this reads more confidently than the field warrants.
+**Flag:** "may actually lower it" is where the article outruns what it can carry. The best trial evidence supports cardiovascular *non-inferiority* of treatment, not benefit, and the low-testosterone/cardiovascular correlation is confounded by the very metabolic illness the article identifies as the main cause of low testosterone. Unsourced, this reads more confidently than the field warrants.
 
 ## References
 

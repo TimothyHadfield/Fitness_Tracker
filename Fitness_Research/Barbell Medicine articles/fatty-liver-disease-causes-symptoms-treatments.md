@@ -14,7 +14,7 @@
 
 **This article uses no numbered citations at all — there is no reference list, and the marker-to-reference check has nothing to check.** It cites by inline prose link, and it does so only three times: the lean-MASLD prevalence figure, the semaglutide trial, and the retatrutide trial. Everything else, including every number in the sections below, is asserted without a source.
 
-That is a real limitation for a 4,175-word clinical article, and it is worth stating plainly: the numbers here are consistent with the hepatology literature as of writing, but the reader cannot check any specific one against a paper. Where the article names a study in the sentence itself — "a 2021 meta-analysis involving behavioural weight-loss programs, medications, and metabolic/bariatric surgery" — the description is given but the paper is not identified. Only the three linked references below can be attributed at all.
+That is a real limitation for a 4,175-word clinical article: the numbers are consistent with the hepatology literature as of writing, but the reader cannot check any specific one against a paper. Where the article names a study in the sentence itself — "a 2021 meta-analysis involving behavioural weight-loss programs, medications, and metabolic/bariatric surgery" — the description is given but the paper is not identified. Only the three linked references below can be attributed at all.
 
 ## The disease, and the reframing
 

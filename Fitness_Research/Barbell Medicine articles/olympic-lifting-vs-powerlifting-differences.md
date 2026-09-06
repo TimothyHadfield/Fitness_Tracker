@@ -6,10 +6,10 @@
 ## Bottom line
 - The sports differ in their contested lifts — snatch and clean & jerk versus squat, bench and deadlift — and in bar and plate specifications, but the article's own evidence says **weightlifting training does not build more strength than ordinary strength training** ([Morris 2022](https://doi.org/10.1007/s40279-021-01627-2)). Strength is specific: each group wins at its own lifts.
 - It also concedes that **the Olympic lifts have no monopoly on power**. Plyometrics and other explosively-performed exercises produce roughly equal improvements in power, sprinting and change of direction. That is an unusually honest thing for an article partly written to sell an Olympic weightlifting template.
-- **Neither sport is a hypertrophy programme.** The reasons given are structural: weight classes penalise mass that doesn't add performance, Olympic weightlifting volume is low, isolation work is rare, and the competition lifts are dominated by concentric work. The last of these is asserted without a citation.
+- **Neither sport is a hypertrophy programme.** The reasons given are structural: weight classes penalise mass that doesn't add performance, weightlifting volume is low, isolation work is rare, and the competition lifts are dominated by concentric work. The last is asserted without a citation.
 - The fibre-type claim — elite weightlifters at ~67% fast-twitch in the legs (Serrano 2019, *PLoS One*) — is a **cross-sectional snapshot of elite athletes**. It cannot separate what training did from who self-selects into the sport, and the article does not say so.
-- **Three of the eight numbered references are the same paper.** The effective reference list is six studies, one textbook chapter among them.
-- **Product content:** roughly a third of the article is a catalogue of Barbell Medicine's paid templates — Olympic Weightlifting, SuperTotal, Strength I, Powerlifting II, Strength III, plus Beginner and General Strength & Conditioning as prerequisites — and their coaching service. Say that plainly: the article's structure is diagnosis-then-purchase.
+- **Three of the eight numbered references are the same paper.** The effective list is six studies, one a textbook chapter.
+- **Product content:** roughly a third of the article is a catalogue of Barbell Medicine's paid templates and coaching. The structure is diagnosis-then-purchase.
 
 ## What actually differs
 
