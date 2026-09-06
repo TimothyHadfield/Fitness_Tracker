@@ -31,7 +31,10 @@ near the bottom of this file for what that probe found and which sources are off
    position against the mainstream on caffeine cycling, protein in a deficit, rest-interval
    floors, the effective-reps model, warm-ups and row selection, and the notes mark each clash
    explicitly rather than smoothing it.
-3. **House of Hypertrophy** — IN PROGRESS. See "Picking this up" below.
+3. **House of Hypertrophy** — DONE. 169 notes covering every video on the channel, a 12,700-word
+   summary, an index and a 745-paper bibliography. Nothing was excluded; this is the only source
+   here with no personal content to filter out. Its value is density — 1,557 reference citations,
+   977 unique — and the fact that he retires his own positions on camera when the evidence moves.
 4. **Barbell Medicine + integration** — NOT STARTED. ~206 free articles with inline PubMed
    links; skip the audio entirely. Then the cross-source layer.
 
@@ -60,112 +63,97 @@ the lock file.
 - **Jeff Nippard** — 279 notes, summary layer, index. Complete.
 - **ISSN position stands** — 27 notes, summary, index, 5,192-reference bibliography. Complete.
 - **Menno Henselmans** — 151 notes, summary, index, 535-reference bibliography. Complete.
+- **House of Hypertrophy** — 169 notes, summary, index, 745-paper bibliography. Complete.
 
-## House of Hypertrophy — partly done
+**The next chunk is Barbell Medicine.** Skip to "Then chunk 4" below; everything between here
+and there is a record of how the House of Hypertrophy pass finished, kept because the lessons
+generalise.
 
-**The data layer is finished and committed:**
+## House of Hypertrophy — how it finished, and what that cost
 
-- 169 transcripts and descriptions in `transcripts/hoh/` (gitignored, rebuild with
-  `tools/fetch_channel.py "https://www.youtube.com/@Houseofhypertrophy/videos" transcripts/hoh`).
-  Three videos were unreachable after two passes and are listed in
-  `transcripts/hoh/failures.json`.
-- `sources/hoh/refs.json` — **1,488 references extracted, 945 unique**, from 137 of 169
-  descriptions. 25 videos have topic-labelled reference groups in the `groups` field; those
-  are his own claim-to-source mapping and the notes should preserve them.
-- `sources/hoh/citations.json` — **784 of 945 resolved (83%)**.
-- `sources/hoh/assignments.tsv` — the video-id to filename mapping for all **169 notes**.
-  Nothing was excluded; every video on this channel is research content.
-- `sources/hoh/batch_tables.md` — the 20 agent batches, already written out.
+It took three attempts. The first two lost every note: a network outage killed twenty agents
+mid-run, and a second attempt died when the session was interrupted and the process exited while
+eight agents were still working. Both times **nothing partial survived**, because an agent's work
+exists only once it writes its file.
 
-**119 of the 169 notes are written.** A network outage killed all twenty note-writing agents
-mid-run, so the remaining **50 were never written**. Nothing is corrupt - the agents write
-whole files - so the 119 on disk are complete and usable.
+The third attempt worked, and the only thing that changed was the batch size. Fifty notes went to
+**eleven agents of three to five notes each** instead of eight agents of six-plus, and the first
+files landed in about three minutes. Twenty-four notes were on disk and committed before the
+slowest agent had finished reading its brief. **Commit as batches land, not at the end** — that
+is the whole lesson, and it is cheap.
 
-> **This has now failed twice. Read this before relaunching.**
->
-> A second attempt was made and also died. Eight agents were launched across the 50 notes;
-> minutes later the session was interrupted for an unrelated question and the Claude process
-> exited while they were still working. All eight were killed before writing a single file.
->
-> **Verified state after that attempt: still exactly 119 notes on disk, `missing.tsv` still
-> lists the correct 50, nothing partial, nothing corrupt, working tree clean apart from the
-> untracked empty `weightlifting.md`.** Nothing needs cleaning up. Just start.
->
-> The lesson: these agents take a while, and **nothing is saved until an agent writes its
-> file.** If the session is going to be interrupted, the work is lost. So either run the
-> batches when you can leave them alone, or run fewer, smaller batches so each one lands
-> sooner. Do not assume a relaunch is resuming - it is starting over.
+Two agents pushed their own commits mid-run without being asked. They staged correctly, but do
+not rely on that: check `git diff --name-only <base>..HEAD | grep -v Fitness_Research/` after any
+run where agents might have committed.
 
-**What is left, in order:**
+### What the finishing pass turned up
 
-1. **Write the 50 missing notes.** They are listed, ready to use, in
-   `sources/hoh/missing.tsv` - three columns: video id, target filename, length in minutes.
-   That file was generated by diffing `assignments.tsv` against what is on disk, so regenerate
-   it the same way if anything changes:
+**The reference extractor was silently dropping citations, and it took reading the agents'
+reports to notice.** Three separate bugs, worth 69 references — about 4% of the corpus:
 
-   ```
-   python -c "import io,os; rows=[l.rstrip().split(chr(9)) for l in io.open('sources/hoh/assignments.tsv',encoding='utf-8') if l.strip()]; print(chr(10).join(chr(9).join(r[:3]) for r in rows if not os.path.exists('House of Hypertrophy videos/'+r[1])))"
-   ```
+- The **host allowlist** missed ECSS congress abstracts, J-Stage, university thesis repositories,
+  and published papers rehosted as PDFs on private domains. Fixed by widening the allowlist and
+  by treating any `.pdf` reached from *inside* a reference block as a citation.
+- **Shorteners were blocked as promo links.** All ten `bit.ly` links in these descriptions turned
+  out to be real papers — five PubMed, a Springer article, two ResearchGate. They are resolved
+  once, offline, into `sources/hoh/shortlinks.json` and expanded via `--expand` before filtering.
+  Do this for any new source: follow the redirects before deciding.
+- **The heading regex demanded a colon**, and he types `References;` with a semicolon in two
+  descriptions. That alone cost 17 citations from two videos that looked like they had none.
+- Three more descriptions drop their reference list under the timestamps with **no heading at
+  all**. A line carrying both an author name and a scientific URL is now promoted on its own,
+  which is a safe signal — music credits and affiliate links never name an author.
 
-   Batch them by length as before - roughly 4 per agent for 25 min+, 8 for 13-24 min, 12 for
-   under 13 min - and give every agent `sources/hoh/BRIEF.md`.
+**The general lesson: a video that reports zero references is a bug report, not a fact.** Check
+its description by hand before believing it. The agents caught all three of these because they
+were told to read the description directly rather than trust `refs.json`.
 
-   **The split used on the last attempt, ready to reuse.** `missing.tsv` is sorted by length
-   descending, so these are line ranges in that file. All 50 were verified to have both a
-   transcript and a description on disk before launching:
+`tools/resolve_refs.py` now reuses citations it has already looked up. A full pass is thousands
+of throttled NCBI and Crossref calls; finding a handful of new links should not cost one. Pass
+`--fresh` to override.
 
-   | Agent | Lines | Videos | Length | Word target each |
-   |-------|-------|--------|--------|------------------|
-   | A | 1-3   | 3 | 19-20 min | 900-1,400 |
-   | B | 4-6   | 3 | 13-18 min | 900-1,400 (600-900 for the 13) |
-   | C | 7-14  | 8 | 12 min | 600-900 |
-   | D | 15-22 | 8 | 11-12 min | 600-900 |
-   | E | 23-30 | 8 | 11 min | 600-900 |
-   | F | 31-38 | 8 | 10 min | 600-900 |
-   | G | 39-45 | 7 | 8-10 min | 350-900 |
-   | H | 46-50 | 5 | 6-8 min | 350-600 |
+### New tooling from this pass
 
-   Agent H was never launched - the interrupt hit first. Each agent's prompt was: read
-   `sources/hoh/BRIEF.md` in full and follow it exactly, read one existing note to calibrate
-   voice, then the video-id → filename → length table for its batch, plus "do not invent
-   filenames, do not write anywhere else, do not edit any other file", the word target, a
-   reminder to preserve the `groups` field reference groupings from `refs.json`, and "report
-   back under 400 words as the brief specifies."
+- **`tools/build_channel_readme.py`** — generalised. Reads each note's own `**Topic:**` line and
+  partitions on it, rather than guessing from title keywords the way the Menno version had to.
+  Takes a hand-written intro file as its third argument; the prose is judgement, the index is not.
+  Reports anything missing, untopiced, or using a topic outside the vocabulary.
+- **`sources/hoh/README-intro.md`**, **`summary-front.md`**, **`summary-back.md`** — the
+  hand-written parts, kept in `sources/` so a rebuild does not lose them.
+- **`sources/hoh/summary-parts/`** — seven domain syntheses written by seven agents, then
+  assembled. Worth keeping: they are the working material, and if `SUMMARY.md` needs rebuilding
+  you do not want to re-run the agents.
 
-   Before launching, re-run this check that all 50 still have their inputs:
+### How the summary was built
 
-   ```
-   while IFS=$'\t' read -r id fn len; do [ -f "transcripts/hoh/$id.md" ] || echo "NO TRANSCRIPT: $id"; [ -f "transcripts/hoh/descriptions/$id.txt" ] || echo "no desc: $id"; done < sources/hoh/missing.tsv
-   ```
+Seven agents, one per domain, each reading only its own notes and writing to its own file in
+`sources/hoh/summary-parts/`. Then assembled by hand with front and back matter. That split
+matters — an agent asked to summarise 169 notes produces mush; an agent asked to summarise 26
+notes on one subject produces something with numbers in it.
 
-   And after, to see what actually landed:
+Two checks were worth running afterwards, and both found something:
 
-   ```
-   while IFS=$'\t' read -r id fn len; do [ -f "House of Hypertrophy videos/$fn" ] || echo "STILL MISSING: $fn"; done < sources/hoh/missing.tsv
-   ```
-2. **Verify all 169 notes exist** against `sources/hoh/assignments.tsv` before moving on.
-3. **Build the bibliography:**
-   `python tools/build_channel_bibliography.py sources/hoh "House of Hypertrophy videos" "House of Hypertrophy"`
-4. **Build the folder README** — adapt the Menno one; there is no reusable script, it was
-   written ad hoc in the scratchpad.
-5. **Write `SUMMARY.md`** for the folder, from the agents' reports.
-6. Update the top-level `README.md` row and this file.
+```
+# every link resolves, and every note is cited at least once
+python -c "... links = re.findall(r'\]\(([^)\s]+)\)', summary) ..."
+```
 
-**The agent brief that produced the existing notes** is worth reusing — it is reproduced in
-`sources/hoh/BRIEF.md`.
+Zero broken links out of 192, but **three notes were never cited** by any agent and had to be
+folded in by hand. Run the coverage check; a note nobody mentions is a note nobody read.
 
 ## What is distinctive about this source
 
-It is **the most densely cited channel in the library** — 945 unique references across 169
-videos, one video citing 48 papers. Almost every video is hypertrophy mechanisms or a single
-training variable in depth.
+It is **the most densely cited channel in the library** — 1,557 reference citations and 977
+unique links across 169 videos, one video citing 48 papers. Almost every video is hypertrophy
+mechanisms or a single training variable in depth.
 
 Two things the notes must handle honestly:
 
-- **His longest, best videos have no reference list at all.** The 73-study biceps guide, the
-  63-study triceps guide and the 87-study mechanisms video cite on screen only, and their
-  descriptions carry nothing. The rule given to agents: say plainly that no list is
-  retrievable, list studies named aloud flagged as unverified, invent nothing.
+- **His longest, best videos have no reference list at all** — 26 of the 169, including the
+  73-study biceps guide, the 63-study triceps guide, the 36-study lats guide and the 87-study
+  mechanisms video that is the intellectual centre of the channel. They cite on screen only and
+  their descriptions carry nothing. The rule given to agents: say plainly that no list is
+  retrievable, list studies named aloud flagged as unverified, invent nothing. It held.
 - **The creator is self-taught with no formal credentials** — he says so himself. He is
   unusually careful in practice (presents the study that contradicts him, states sample sizes
   and training status), and the notes should say where that shows.
@@ -184,7 +172,18 @@ an explicit section on where that source departs from the others.
 
 ## Loose ends
 
-- `weightlifting.md` at the repo root is empty and untracked. Never asked about; left alone.
+- `Fitness_Research/weightlifting.md` is empty and untracked. Never asked about; left alone. It
+  was accidentally staged once during this pass and removed again with `git rm --cached` — a
+  `git add Fitness_Research/` sweeps it up, so name paths more precisely than that.
+- **The House of Hypertrophy notes were written against a `refs.json` that was missing 69
+  citations**, found and fixed afterwards. The bibliography and index are built from the corrected
+  data, but the individual notes' `## References` sections were not retrofitted, so ~35 notes omit
+  a link their video actually gave. Mostly congress abstracts and unindexed PDFs that would go in
+  as bare links anyway. Worth a cheap agent pass if anyone wants it airtight.
+- **`SUMMARY.md` for House of Hypertrophy records six internal contradictions** where his position
+  changed across years — rest intervals, calf training, lengthened partials, EMG, the rep-range
+  floor, and the set-count/rest-interval hypothesis he retired on camera. These are features, not
+  errors, but a reader hitting two notes out of order will see him arguing both sides.
 - The Nippard "Known problems in this library" list at the bottom of
   `Jeff Nippard videos/SUMMARY.md` is still unfixed — a citation that doesn't support its
   claim, misleading filenames, one study rendered three ways.
