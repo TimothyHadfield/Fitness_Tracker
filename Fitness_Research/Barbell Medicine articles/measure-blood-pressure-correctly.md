@@ -33,16 +33,14 @@ Most modern devices ship with a variable-size cuff spanning small to large adult
 ## How often, and what counts as abnormal
 Healthy adults with no hypertension diagnosis: check resting BP **at least once a year** (USPSTF). Anyone under evaluation needs out-of-office readings as well as office ones — the three-day, four-readings-a-day protocol above.
 
-The preferred confirmatory test for **white coat hypertension** (high in clinic, normal outside) and **masked hypertension** (the reverse) is **24-hour ambulatory monitoring**, with a monitor worn continuously and readings taken automatically through the day. Where that is not available, a properly calibrated home machine used carefully is the fallback.
+The preferred confirmatory test for **white coat hypertension** (high in clinic, normal outside) and **masked hypertension** (the reverse) is **24-hour ambulatory monitoring**. Where unavailable, a properly calibrated home machine used carefully is the fallback.
 
-Interpretation is deliberately loose: transiently higher readings during exercise or stress are expected and appropriate, and resting pressures well below 120/80 are often normal in an asymptomatic person. What matters is **the average resting pressure over time**, not any single number.
+Interpretation is deliberately loose: transiently higher readings during exercise or stress are expected, and resting pressures well below 120/80 are often normal in an asymptomatic person. What matters is **the average resting pressure over time**, not any single number.
 
 The urgency rule is the practically useful part: a high reading **without** symptoms can be worked on gradually with a primary-care doctor, and emergency care is rarely needed. Escalate quickly only with chest pain, shortness of breath, vision changes, confusion, or [stroke-like symptoms](https://www.cdc.gov/stroke/signs_symptoms.htm).
 
 ## Evidence versus recommendation
-Only one primary study is cited, and it supports one specific claim: **Bello 2018** established how many home readings are needed for a reliable estimate. The device, cuff-size and positioning instructions come from guideline and society sources (USPSTF, AHA/Target:BP) rather than from studies quoted in the article, and the "under 130/80, ideally under 120" target is a guideline recommendation, cited here as such without a trial reference. Nothing in the article overreaches — it is a procedure article and the procedure is the standard one.
-
-The article links to Barbell Medicine's own [Guide to High Blood Pressure](https://www.barbellmedicine.com/blog/a-basic-guide-to-blood-pressure-part-i/) for management, which is free content, not a product.
+Only one primary study is cited, supporting one claim: **Bello 2018** established how many home readings give a reliable estimate. The device, cuff-size and positioning instructions come from guideline and society sources (USPSTF, AHA/Target:BP), and the "under 130/80, ideally under 120" target is a guideline recommendation cited without a trial reference. Nothing overreaches — it is a procedure article and the procedure is the standard one. The linked Barbell Medicine [Guide to High Blood Pressure](https://www.barbellmedicine.com/blog/a-basic-guide-to-blood-pressure-part-i/) is free content, not a product.
 
 ## References
 This article cites by inline link rather than numbered markers, so claim-level attribution to a numbered list was not available. Named sources, as the article gave them:

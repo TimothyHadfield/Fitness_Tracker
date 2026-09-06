@@ -24,13 +24,13 @@ The gastrocnemius crosses both knee and ankle; the soleus crosses only the ankle
 
 Separately, the article uses the O'Neill bilateral-deficit finding to motivate strengthening as protection against tendinopathy. It is a **cross-sectional comparison**, so "protective" outruns the design; the author does hedge the soleus interpretation as a hypothesis, which is the right level.
 
-**Product mention:** the article routes readers to Barbell Medicine's own training programs (as a GPP-day addition) and to their paid Pain & Rehab division for anyone already dealing with Achilles tendinopathy.
+**Product mention:** readers are routed to Barbell Medicine's own training programs (as a GPP-day addition) and to their paid Pain & Rehab division for anyone already dealing with Achilles tendinopathy.
 
 ## The programme as given
 - **Day 1:** seated barbell calf raise — 2–3 × 8 @ RPE 7–8 (knee flexed, soleus-biased)
 - **Day 2:** single-leg deficit calf raise — 2–3 × 8/side @ RPE 7–8 (knee extended)
 
-The deficit is the one detail worth keeping: it adds stretch at the bottom, which is where the later ROM evidence says the gastrocnemius stimulus lives.
+The deficit is the detail worth keeping: it adds stretch at the bottom, where the later ROM evidence says the gastrocnemius stimulus lives.
 
 ## References
 The article cites by author name in the prose and lists sources at the bottom without numbered markers, so claim-level attribution came from the sentences themselves rather than a verified mapping.
