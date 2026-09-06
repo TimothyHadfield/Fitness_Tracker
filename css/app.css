@@ -962,6 +962,37 @@ button.sys-head { margin-bottom: 0; }
   font-size: 13.5px; line-height: 1.5; color: var(--ink);
 }
 
+/* "The original of this programme changed" — 2026-09-20. Deliberately the same
+   hairline-rule idiom as `.preset-warning` above it and deliberately NOT its
+   colour: the accent, because the original moving on is news rather than a
+   fault, and red here would tell everybody who ever copied a programme that
+   they had broken it (Rule 6). No card, no fill, no icon (Rule 2). */
+.preset-update {
+  border-left: 2px solid var(--accent);
+  padding: 2px 0 2px 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  min-height: 44px;
+}
+.preset-update-main { flex: 1 1 auto; min-width: 0; }
+.preset-update-title { font-size: 14.5px; font-weight: 650; color: var(--ink); line-height: 1.35; }
+.preset-update-sub { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; margin-top: 2px; }
+
+.update-list { display: flex; flex-direction: column; gap: 14px; }
+.update-note { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.update-row { display: flex; flex-direction: column; gap: 3px; }
+.update-what { font-size: 14.5px; line-height: 1.4; color: var(--ink); }
+/* The status is the sentence that makes the list trustworthy, so it is words
+   rather than a dot: a colour alone cannot say "left alone because you changed
+   it" (Rule 5's general form). */
+.update-status { font-size: 12.5px; line-height: 1.35; }
+.update-status.ready { color: var(--accent); }
+.update-status.edited,
+.update-status.manual { color: var(--ink-faint); }
+
 .row-chev { color: var(--ink-faint); flex: none; display: flex; }
 .row-chev svg { width: 17px; height: 17px; display: block; }
 

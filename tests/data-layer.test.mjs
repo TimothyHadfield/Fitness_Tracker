@@ -5349,6 +5349,281 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ================= when the ORIGINAL of a copied programme changes =========
+ *
+ * 2026-09-20. Tim asked on 2026-09-19 whether a ready-made programme could stop
+ * being a copy and follow the original. A live link was refused for three
+ * reasons (docs/history.md 2026-09-19 §B) and this is the shape that was built
+ * instead: the copy stays a copy, and the app can TELL somebody what moved.
+ * ========================================================================= */
+{
+  const { createHash } = await import('node:crypto');
+  const { PRESET_SYSTEMS, presetById } = await import('../js/preset-systems.js');
+  const {
+    presetUpdatePlan, applyPresetPlan, presetVersionOf, copiedVersionOf, describeChange,
+  } = await import('../js/preset-updates.js');
+  const { store: st, normalizeWorkout } = await import('../js/store.js');
+
+  /* ---- the guard that makes a version number mean anything ---- *
+   *
+   * 🚨 THIS IS THE ONE ASSERTION THE WHOLE FEATURE RESTS ON, and it is here
+   * rather than in a comment because a version somebody forgets to bump is
+   * WORSE than no version at all: every copy in the world then believes it is
+   * current, and the notice never fires again for that preset. The hash is of
+   * the preset with `version` and `changes` removed — so changing the content
+   * fails this, and bumping the number alone does not silence it.
+   *
+   * ⚠️ WHEN THIS FAILS, THE FIX IS NOT TO PASTE THE NEW HASH IN. Bump that
+   * preset's `version`, add a `changes` entry saying what moved in words a
+   * lifter would use, and THEN update the hash here. */
+  const PINNED = [
+    ['preset-nippard-ppl-2023', 2, '87c833f1f483'],
+    ['preset-israetel-floating-split', 1, '7ce8ce4e7625'],
+    ['preset-arnold-golden-six', 1, 'c20c0568b820'],
+    ['preset-thurston-6day', 1, '418e3081b80b'],
+    ['preset-bumstead-8day', 1, 'bf445901d3f7'],
+    ['preset-volume-landmarks', 1, '069013667ac0'],
+    ['preset-ppl', 1, 'c0df6f59fb08'],
+    ['preset-upper-lower', 1, '76964db4627b'],
+    ['preset-full-body', 1, '6068a42841bb'],
+  ];
+  const contentHash = (p) => {
+    const { version, changes, ...content } = p;
+    void version; void changes;
+    return createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 12);
+  };
+  ok(PINNED.length === PRESET_SYSTEMS.length,
+     `every ready-made system is pinned here (${PINNED.length}/${PRESET_SYSTEMS.length}) — a new `
+     + 'preset must be added to this table or it ships with no version guard at all');
+  for (const [id, version, hash] of PINNED) {
+    const p = presetById(id);
+    ok(Boolean(p), `"${id}" still exists`);
+    if (!p) continue;
+    ok(presetVersionOf(p) === version,
+       `"${p.name}" is at version ${version}`);
+    ok(contentHash(p) === hash,
+       `🚨 "${p.name}" has the content version ${version} shipped with. If this failed because you `
+       + 'CHANGED it: bump `version`, add a `changes` entry in the author’s voice, then update the '
+       + 'hash in this table — in that order');
+  }
+  for (const p of PRESET_SYSTEMS) {
+    const keys = p.workouts.map((w) => w.key);
+    ok(keys.every(Boolean) && new Set(keys).size === keys.length,
+       `"${p.name}" gives every workout a key, unique within the programme — the stable identity a `
+       + 'copy is matched back by, which a NAME cannot be because names get renamed');
+    for (const c of (p.changes || [])) {
+      ok(Number(c.version) <= presetVersionOf(p),
+         `"${p.name}" has no change note from a version it has not reached`);
+      ok(typeof c.summary === 'string' && c.summary.length > 10,
+         `"${p.name}" version ${c.version} says what changed in words`);
+    }
+  }
+
+  /* ---- the field that is dropped in silence if nobody names it ---- */
+  {
+    const w = normalizeWorkout({ id: 'w', name: 'W', exercises: [
+      { exerciseId: 'x', sets: 3, notes: 'n', origin: { sets: 3, notes: 'n' } },
+    ] });
+    ok(w.exercises[0].origin && w.exercises[0].origin.sets === 3,
+       '🚨 `origin` survives normalizeWorkout() — that function REBUILDS each exercise field by '
+       + 'field, so an unnamed field is lost on every read, and this one losing itself would leave '
+       + 'the update notice deciding every exercise had been edited');
+    ok(!('origin' in normalizeWorkout({ id: 'w', name: 'W', exercises: [{ exerciseId: 'x', sets: 3 }] })
+      .exercises[0]),
+       'and an exercise that never had one does not grow an empty one');
+  }
+
+  /* ---- the stamps land when a programme is copied ---- */
+  await st.clearAll();
+  {
+    const preset = presetById('preset-nippard-ppl-2023');
+    const { system } = await st.addPresetSystem(preset);
+    ok(system.presetVersion === presetVersionOf(preset),
+       'a fresh copy records WHICH version of the original it was taken from');
+    const made = await st.getWorkouts(system.id);
+    ok(made.every((w) => w.presetKey),
+       'every copied workout carries the original workout’s key');
+    ok(made.map((w) => w.presetKey).join(',') === preset.workouts.map((w) => w.key).join(','),
+       'and they are the right keys, in the programme’s own order');
+    ok(made.every((w) => w.exercises.every((e) => e.origin && e.origin.sets === e.sets)),
+       'every copied exercise records what it arrived as');
+    const legs = made.find((w) => w.presetKey === 'legs-1');
+    const squat = legs.exercises.find((e) => e.targets);
+    ok(squat && squat.origin.targets.join('/') === squat.targets.join('/'),
+       '🚨 including the PRESCRIPTION — the field this whole feature exists to avoid rewriting '
+       + 'under somebody without telling them');
+
+    ok(await st.presetUpdateFor(system, made) === null,
+       'and a copy taken from the current version has nothing to report');
+  }
+
+  /* ---- a fixture, so the cases below do not depend on what ships ---- */
+  const byName = new Map([
+    ['Back Squat', { id: 'ex-squat', name: 'Back Squat' }],
+    ['Leg Curl', { id: 'ex-curl', name: 'Leg Curl' }],
+    ['Calf Raise', { id: 'ex-calf', name: 'Calf Raise' }],
+  ]);
+  const V2 = {
+    id: 'fx', version: 2,
+    changes: [{ version: 2, summary: 'The squat now prescribes 85 % of your max.' }],
+    workouts: [
+      { key: 'legs-1', name: 'Legs 1', exercises: [
+        { name: 'Back Squat', sets: 3, targets: [85, 85, 85], notes: 'Heavy.' },
+        { name: 'Leg Curl', sets: 3, notes: 'Ten reps.' },
+        { name: 'Calf Raise', sets: 4, notes: 'Added in v2.' },
+      ] },
+      { key: 'legs-2', name: 'Legs 2', exercises: [
+        { name: 'Leg Curl', sets: 3, notes: 'A whole new workout.' },
+      ] },
+    ],
+  };
+  const copyAtV1 = () => [{
+    id: 'w1', systemId: 's1', presetKey: 'legs-1', name: 'Legs 1', exercises: [
+      { exerciseId: 'ex-squat', sets: 3, notes: 'Heavy.', origin: { sets: 3, notes: 'Heavy.' } },
+      { exerciseId: 'ex-curl', sets: 3, notes: 'Ten reps.', origin: { sets: 3, notes: 'Ten reps.' } },
+    ],
+  }];
+  const SYS1 = { id: 's1', presetId: 'fx', presetVersion: 1 };
+
+  {
+    const workouts = copyAtV1();
+    const plan = presetUpdatePlan({ preset: V2, system: SYS1, workouts, byName });
+    ok(plan && plan.fromVersion === 1 && plan.toVersion === 2,
+       'a copy taken at version 1 is told the original is at version 2');
+    ok(plan.notes.length === 1 && /85 %/.test(plan.notes[0].summary),
+       'and it carries the author’s own sentence about what changed, not just a structural diff');
+    const kinds = plan.changes.map((c) => c.kind).sort().join(',');
+    ok(kinds === 'exercise-added,prescription,workout-added',
+       `it finds the prescription, the new exercise and the new workout (${kinds})`);
+    ok(plan.readyCount === 3, 'and all three are safe to take, because nothing was edited');
+
+    const { workouts: written, creates } = applyPresetPlan({ plan, preset: V2, workouts, byName });
+    const squat = written[0].exercises.find((e) => e.exerciseId === 'ex-squat');
+    ok(squat.targets.join('/') === '85/85/85', 'taking it puts the prescription on the squat');
+    ok(squat.origin.targets.join('/') === '85/85/85',
+       '⚠️ and RESTAMPS its origin — a stamp still describing the old version would report the '
+       + 'same change for ever');
+    ok(written[0].exercises.length === 3 && written[0].exercises[2].exerciseId === 'ex-calf',
+       '🛑 the new exercise is APPENDED, never inserted — entry order is scored by the '
+       + 'within-session fatigue work, so inserting would change what an existing set means');
+    ok(creates.length === 1 && creates[0].presetKey === 'legs-2',
+       'and the workout the original grew is created, carrying its key');
+    ok(creates[0].exercises.every((e) => e.origin),
+       'stamped on the way in, like any other copy');
+  }
+
+  /* ---- 🚨 THE SAFETY PROPERTY: an edit is never overwritten ---- */
+  {
+    const workouts = copyAtV1();
+    workouts[0].exercises[1].sets = 5;               // the user made it five sets
+    const clash = { ...V2, workouts: [{ ...V2.workouts[0], exercises: [
+      { name: 'Back Squat', sets: 3, notes: 'Heavy.' },
+      { name: 'Leg Curl', sets: 4, notes: 'Ten reps.' },   // the original made it four
+    ] }] };
+    const plan = presetUpdatePlan({ preset: clash, system: SYS1, workouts, byName });
+    const row = plan.changes.find((c) => c.exerciseId === 'ex-curl');
+    ok(row && row.kind === 'sets' && row.status === 'edited',
+       'when the original and the user changed the same exercise, it is reported as the USER’S');
+    ok(plan.readyCount === 0, 'and nothing about it is offered as safe to take');
+    const { workouts: written } = applyPresetPlan({ plan, preset: clash, workouts, byName });
+    ok(written.length === 0, 'so applying the update writes nothing at all');
+
+    /* 🚨 THE SAME PROPERTY WHERE IT CAN ACTUALLY FAIL, and the first version of
+     * this assertion could not. It read the INPUT array back — which
+     * applyPresetPlan() copies rather than mutates, so it passed however the
+     * status check was written and proved nothing (§0.14, an assertion weaker
+     * than its own sentence). What matters is the row that gets SAVED, so this
+     * fixture gives the squat a change worth taking, which forces a write, and
+     * then looks at the leg curl inside it. */
+    const both = copyAtV1();
+    both[0].exercises[1].sets = 5;
+    const bothClash = { ...clash, workouts: [{ ...clash.workouts[0], exercises: [
+      { name: 'Back Squat', sets: 3, targets: [85, 85, 85], notes: 'Heavy.' },
+      { name: 'Leg Curl', sets: 4, notes: 'Ten reps.' },
+    ] }] };
+    const bp = presetUpdatePlan({ preset: bothClash, system: SYS1, workouts: both, byName });
+    const out = applyPresetPlan({ plan: bp, preset: bothClash, workouts: both, byName }).workouts;
+    ok(out.length === 1, 'the squat’s new prescription is taken, so a row really is written');
+    const curl = out[0].exercises.find((e) => e.exerciseId === 'ex-curl');
+    ok(curl.sets === 5,
+       '🚨 and in the row that gets SAVED their five sets are still five, next to a change that '
+       + 'was taken — the property the whole design exists to have');
+    ok(curl.origin.sets === 3,
+       '⚠️ with their old origin left in place, so a LATER version of the original can still tell '
+       + 'what they changed');
+    // The vacuity guard: the same fixture WITHOUT the edit does get taken, so
+    // the assertion above is about the edit rather than about the comparison
+    // being broken in some way that refuses everything.
+    const clean = copyAtV1();
+    const p2 = presetUpdatePlan({ preset: clash, system: SYS1, workouts: clean, byName });
+    ok(p2.readyCount === 1 && p2.changes[0].status === 'ready',
+       '⚠️ and an UNEDITED copy of the same exercise is taken — so the refusal above is the edit '
+       + 'being respected, not the comparison refusing everything');
+  }
+
+  /* ---- the weaker path: a copy made before any of this existed ---- */
+  {
+    const workouts = [{
+      id: 'w9', systemId: 's2', name: 'Legs 1', exercises: [
+        { exerciseId: 'ex-squat', sets: 3, notes: 'Heavy.' },
+        { exerciseId: 'ex-curl', sets: 3, notes: 'Ten reps.' },
+      ],
+    }];
+    const old = { id: 's2', presetId: 'fx' };
+    ok(copiedVersionOf(old) === null,
+       'a copy with no stamp reports null rather than 0 — "we do not know", not "version zero"');
+    const plan = presetUpdatePlan({ preset: V2, system: old, workouts, byName });
+    ok(plan && plan.stamped === false, 'it still gets a comparison against the original today');
+    ok(plan.changes.every((c) => c.status === 'manual'),
+       '🛑 but every row is the user’s to do — without a stamp, "the original changed" and "you '
+       + 'changed it" are the same observation');
+    ok(plan.readyCount === 0 && applyPresetPlan({ plan, preset: V2, workouts, byName })
+      .workouts.length === 0,
+       'and nothing can be applied for them');
+    ok(!plan.changes.some((c) => c.kind === 'workout-added'),
+       '⚠️ nor is a missing workout called an addition — they may simply have deleted it, and an '
+       + 'unstamped copy cannot tell');
+    ok(plan.notes.length === 1,
+       'the author’s note still reaches them, which is the half that is honest either way');
+  }
+
+  /* ---- nothing is ever deleted ---- */
+  {
+    const workouts = copyAtV1();
+    const shrunk = { ...V2, version: 3, workouts: [{ ...V2.workouts[0], exercises: [
+      { name: 'Back Squat', sets: 3, notes: 'Heavy.' },
+    ] }] };
+    const plan = presetUpdatePlan({ preset: shrunk, system: SYS1, workouts, byName });
+    const gone = plan.changes.find((c) => c.kind === 'exercise-removed');
+    ok(gone && gone.status === 'manual',
+       '🛑 an exercise the original dropped is REPORTED and never removed — there is no undo in '
+       + 'this app, and losing work is worse than keeping something stale');
+    const { workouts: written } = applyPresetPlan({ plan, preset: shrunk, workouts, byName });
+    ok(!written.length || written[0].exercises.length === 2,
+       'and the leg curl is still there afterwards');
+    ok(/no longer has/.test(describeChange(gone)), 'the sentence says so plainly');
+  }
+
+  /* ---- end to end, through the store ---- */
+  await st.clearAll();
+  {
+    const preset = presetById('preset-ppl');
+    const { system } = await st.addPresetSystem(preset);
+    // Wind the copy back a version, as though it had been taken before a change.
+    await st.saveSystem({ ...system, presetVersion: 0.5 });
+    const rolled = (await st.getSystems()).find((s) => s.id === system.id);
+    ok(copiedVersionOf(rolled) === null,
+       'a nonsense version reads as unstamped rather than as a number to compare');
+
+    await st.saveSystem({ ...system, presetVersion: 1 });
+    const done = await st.applyPresetUpdate(system.id);
+    ok(done.changed === 0 && done.created === 0,
+       'applying an update that does not exist changes nothing and does not throw');
+  }
+  await st.clearAll();
+}
+
+
 /* ================= which workout is next ================= */
 {
   const { suggestNext, describeSuggestion, agoWords, daysBetween } =

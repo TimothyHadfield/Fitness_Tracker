@@ -59,6 +59,7 @@ const SHELL = [
   './js/rep-decrement.js',
   './js/model-version.js',
   './js/preset-systems.js',
+  './js/preset-updates.js',
   './js/next-workout.js',
   './js/set-types.js',
   './js/plates.js',

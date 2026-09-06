@@ -10979,6 +10979,149 @@ ok(!data.querySelector('.rep-target'),
   await store.clearAll();
 }
 
+/* ==================================================================
+ * "THE ORIGINAL CHANGED" — THE NOTICE, THE SHEET, AND THE BUTTON (2026-09-20)
+ *
+ * A ready-made programme is still a COPY, and js/preset-updates.js is the other
+ * answer to Tim's "make it update itself": tell them what moved, and never
+ * touch anything they have edited. That module is pure and has its own unit
+ * tests — what NOTHING covered until this block is the half that only exists in
+ * a DOM: whether the notice appears at all, whether it stays quiet when it
+ * should, and whether the one button on the sheet actually reaches the store.
+ *
+ * 🚨 THE SILENT CASE IS ASSERTED FIRST AND ON PURPOSE. `systemBody()` awaits
+ * this on every visit to Workouts, so a plan that came back non-null for an
+ * up-to-date copy would put a permanent "something changed" banner above every
+ * copied programme in the app — the loudest possible failure, and the one a
+ * test written only around the interesting case would never see.
+ * ================================================================== */
+{
+  const { presetById } = await import(BASE + 'preset-systems.js');
+  const clearSheets = () =>
+    document.querySelectorAll('.sheet, .sheet-backdrop').forEach((n) => n.remove());
+
+  await store.clearAll();
+  clearSheets();
+
+  /* --- 1. a copy taken today says nothing at all --- */
+  const fresh = (await store.addPresetSystem(presetById('preset-nippard-ppl-2023'))).system;
+  await store.setCurrentSystem(fresh.id);
+
+  let tab = await mount(WorkoutsView());
+  ok(!tab.querySelector('.preset-update'),
+     '🚨 a copy taken at the current version shows NO update notice — this is the case every '
+     + 'copied programme in the app is in, and a banner here would be permanent furniture');
+
+  /* --- 2. wind the same copy back to before the squat had a prescription ---
+     Not invented state: this IS Tim's own copy. `targets` shipped 2026-09-18,
+     the Nippard preset went to version 2 to carry it, and every copy taken
+     before that day holds a Back Squat with no percentages on it. Both halves
+     have to be wound back — the value AND the record of what it arrived as —
+     because an exercise whose `origin` still says 85 is one the module would
+     rightly call edited rather than stale. */
+  let legs = (await store.getWorkouts(fresh.id)).find((w) => w.presetKey === 'legs-1');
+  ok(Boolean(legs), 'the copy carries `presetKey`, so the original can find this workout again '
+     + 'even after somebody renames it');
+  const squat = legs.exercises.find((e) => e.targets);
+  delete squat.targets;
+  delete squat.origin.targets;
+  await store.saveWorkout(legs);
+  await store.saveSystem({ ...fresh, presetVersion: 1 });
+
+  tab = await mount(WorkoutsView());
+  const notice = tab.querySelector('.preset-update');
+  ok(Boolean(notice), 'a copy taken at version 1 of a preset now shipping version 2 gets a notice');
+  ok(notice && /changed/.test(notice.textContent),
+     `and it says something changed rather than showing a bare count (${notice && notice.textContent.trim()})`);
+  /* ⚠️ A DIV WITH AN onClick WOULD LOOK IDENTICAL IN A SCREENSHOT AND BE
+     UNREACHABLE BY KEYBOARD OR SCREEN READER, which is the failure this whole
+     file exists to catch — and the accessible name is the visible sentence, so
+     it is asserted as one thing rather than two. */
+  ok(notice && notice.tagName === 'BUTTON',
+     `the notice is a real button, not a tappable div (${notice && notice.tagName})`);
+  ok(notice && (notice.getAttribute('aria-label') || notice.textContent).trim().length > 20,
+     'and carries an accessible name that says what tapping it is for');
+
+  /* ⚠️ EVERY TAP BELOW IS GUARDED, and the guards are not defensiveness for its
+     own sake: an unrendered notice is exactly what this block is here to catch,
+     and a bare `.click()` on null would take the whole run down with it — which
+     turns a report of what failed into a stack trace with no counts at all. */
+  if (notice) notice.click();
+  await settle();
+  let sheet = document.querySelector('.sheet');
+  ok(Boolean(sheet), 'tapping it opens the review sheet');
+  /* 🚨 THE AUTHOR'S OWN SENTENCE IS THE ONE LINE ON THIS SCREEN NOT DERIVED
+     FROM COMPARING TWO STRUCTURES, and it is the one that says WHY. Losing it
+     would leave a screen that can describe a diff and cannot explain it. */
+  ok(sheet && /85\s*%/.test(sheet.textContent),
+     '⚠️ and the sheet carries the change note written by a person — "85 %" — above the diff');
+  const ready = [...(sheet ? sheet.querySelectorAll('.update-status.ready') : [])];
+  ok(ready.length >= 1 && ready.every((r) => /Will be added/.test(r.textContent)),
+     `${ready.length} row(s) marked ready, and each one states what will happen in words rather `
+     + 'than by colour');
+  const take = [...(sheet ? sheet.querySelectorAll('button') : [])]
+    .find((b) => /^Take \d+ change/.test(b.textContent.trim()));
+  ok(Boolean(take), `the footer offers to take them, counted (${take && take.textContent.trim()})`);
+
+  /* --- 3. and pressing it lands in the store ---
+     The wiring assertion. `applyPresetPlan()` is unit-tested and `store` is
+     data-layer-tested; what neither can show is that this button calls that
+     store at all, and a handler wired to nothing would pass both suites. */
+  if (take) take.click();
+  await settle();
+  await settle();
+  legs = (await store.getWorkouts(fresh.id)).find((w) => w.presetKey === 'legs-1');
+  const back = legs.exercises.find((e) => e.exerciseId === squat.exerciseId);
+  ok(back && Array.isArray(back.targets) && back.targets[0] === 85,
+     `the Back Squat now carries the prescription the original gained (${JSON.stringify(back && back.targets)})`);
+
+  clearSheets();
+  tab = await mount(WorkoutsView());
+  ok(!tab.querySelector('.preset-update'),
+     '⚠️ and the notice is gone — the version was stamped forward, so a copy that has been '
+     + 'brought up to date is not asked about the same update for ever');
+
+  /* --- 4. the copy that predates the stamps is offered nothing ---
+     Every copy made before 2026-09-20 is this one, Tim's included: no
+     `presetVersion` on the system and no `origin` on any exercise. The squat
+     goes back to having no percentages for the same reason as above — that is
+     what those copies actually look like — but with nothing recording what the
+     row ARRIVED as, "the original gained 85 %" and "you deleted your targets"
+     are the same picture, and the screen has to say so instead of guessing. */
+  await store.clearAll();
+  clearSheets();
+  const old = (await store.addPresetSystem(presetById('preset-nippard-ppl-2023'))).system;
+  await store.setCurrentSystem(old.id);
+  for (const w of await store.getWorkouts(old.id)) {
+    for (const e of w.exercises) {
+      delete e.origin;
+      if (w.presetKey === 'legs-1') delete e.targets;
+    }
+    await store.saveWorkout(w);
+  }
+  await store.saveSystem({ ...old, presetVersion: null });
+
+  tab = await mount(WorkoutsView());
+  const oldNotice = tab.querySelector('.preset-update');
+  ok(Boolean(oldNotice), 'an unstamped copy still gets told the original looks different');
+  if (oldNotice) oldNotice.click();
+  await settle();
+  sheet = document.querySelector('.sheet');
+  const statuses = [...(sheet ? sheet.querySelectorAll('.update-status') : [])];
+  ok(statuses.length >= 1 && statuses.every((s) => s.classList.contains('manual')),
+     `every one of the ${statuses.length} row(s) is marked manual — with no record of what the `
+     + 'copy arrived as, nothing here can be vouched for');
+  ok(sheet && /may be changes you made yourself/.test(sheet.textContent),
+     '🚨 and the sheet says out loud that the differences may be the user’s own, rather than '
+     + 'presenting somebody’s own edits back to them as news from the author');
+  ok(sheet && ![...sheet.querySelectorAll('button')].some((b) => /Take/.test(b.textContent)),
+     '🛑 and there is no Take button anywhere on it — nothing is ever applied to a copy this app '
+     + 'cannot tell apart from an edited one');
+
+  clearSheets();
+  await store.clearAll();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

@@ -2554,3 +2554,42 @@ layout.
 One thing worth mentioning: writing the tests, I found that the empty-account version of both screens
 had never been tested at all — not by this change, ever. It's the first thing a stranger sees. It
 works, but it was one wrong line away from a blank Workouts tab, so there are tests on it now.
+
+## 2026-09-20 — updating a programme you copied
+
+You asked what the next steps were, I gave you a ranked four, and you said to build whatever I
+thought should be built. So I built the top item — the one that came out of your own question last
+session, about a pre-built system following its original.
+
+**The copy is still a copy.** I'm not walking back the three reasons a live link was wrong: you
+couldn't edit it, your recorded history would point at workouts that no longer exist, and it would
+change a prescribed weight under you without saying so. What's new is that the app can now *tell* you
+the original moved on, and take the part of it that's safe.
+
+**How it knows.** When you add a ready-made programme now, the copy quietly records three things:
+which version of the original you took, which workout of the original each of your workouts is, and
+what every exercise looked like the moment it arrived. That last one is the whole trick. Without it,
+"your copy says 3 sets and the original says 4" could mean the original changed or it could mean you
+changed it, and there's no way to tell those apart — so the only safe thing to do would be nothing.
+
+**What you'll see.** If the original has moved on, a line appears above the programme: *the original
+of this programme changed in 2 places*. Tap it and you get every difference in plain words, each one
+labelled with what will happen to it — will be added, you changed this so it's left alone, or yours
+to do. One button takes the safe ones.
+
+Three things it will never do: delete anything, overwrite something you edited, or slot a new
+exercise into the middle of a workout (that would change what the sets around it mean).
+
+**The part that affects you directly.** Your copy of Nippard's PPL was made before any of this
+existed, so the app has no record of what it looked like when you took it. That means it can show you
+the difference — your Back Squat has no percentage and the original now does — but it can't offer to
+fix it, because it genuinely cannot tell whether that's a change I made or one you made. You'll see
+it listed as yours to do. Adding another copy still gives you one with the percentage in it.
+
+**One thing I did to protect this later.** Every ready-made programme now has a version number, and
+there's a test that fails if I change one of them and forget to bump it. That matters more than it
+sounds: a version I forget to update means every copy of that programme in the world thinks it's
+up to date, and the notice never fires again.
+
+I haven't driven this in a browser yet, and no programme has actually been changed for real since —
+so the first time I edit a preset will be the first time the full path runs outside a test.

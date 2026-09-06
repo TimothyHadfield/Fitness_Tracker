@@ -21,6 +21,7 @@ import {
   WEEK, CYCLE, REST, MIN_CYCLE_DAYS, MAX_CYCLE_DAYS,
   newSchedule, normalizeSchedule, resizeSchedule, slotLabel, slotCount,
 } from './schedule.js';
+import { describeChange } from './preset-updates.js';
 import { contributionsFor } from './muscle-evidence.js';
 import { alternativesFor } from './exercise-families.js';
 import { sessionStats, setsLabel } from './session-stats.js';
@@ -907,6 +908,102 @@ function systemSwitcher({ system, systems, workouts, currentId, always = false }
 }
 
 /**
+ * "The original changed" — the whole of what a copied programme says about the
+ * ready-made one it came from. 2026-09-20, Tim's ask of 2026-09-19.
+ *
+ * 🛑 A LINE, NOT A DIALOGUE, AND NEVER A DEFAULT ACTION. It sits above the
+ * programme, says how many things changed, and does nothing until it is tapped.
+ * The refused design was a live link that rewrote the copy on deploy; a notice
+ * that applied itself on open would be the same thing wearing a sentence.
+ *
+ * ⚠️ IT IS DRAWN WITH THE SAME HAIRLINE IDIOM AS `.preset-warning` AND IN THE
+ * ACCENT RATHER THAN `--danger`. Nothing here is wrong: the original moved on,
+ * which is news rather than a problem, and red would make every user who copied
+ * a programme think they had broken something (Rule 2, Rule 6).
+ */
+function presetUpdateNotice(system, workouts, plan) {
+  if (!plan) return null;
+  const n = plan.changes.length;
+  return el('button', {
+    class: 'preset-update',
+    onClick: () => openPresetUpdate({ system, workouts, plan }),
+  },
+    el('div', { class: 'preset-update-main' },
+      el('div', { class: 'preset-update-title', text: n === 1
+        ? 'The original of this programme changed in 1 place'
+        : `The original of this programme changed in ${n} places` }),
+      el('div', { class: 'preset-update-sub', text: plan.readyCount
+        ? `${plural(plan.readyCount, 'change')} can be taken without touching anything you edited`
+        : 'Review what is different' }),
+    ),
+    chevron(),
+  );
+}
+
+/**
+ * The review. Every change in words, what will happen to it, and one button.
+ *
+ * 🚨 THE THREE STATUSES ARE THE POINT OF THE WHOLE SCREEN and each is stated
+ * rather than implied by an icon: 'ready' will be taken, 'edited' is the user's
+ * own work and is left alone, 'manual' is something this app will not do to
+ * somebody's training on their behalf — every removal, and everything at all on
+ * a copy made before the stamps existed.
+ */
+function openPresetUpdate({ system, workouts, plan }) {
+  const line = (c) => el('div', { class: 'update-row' },
+    el('div', { class: 'update-what', text: describeChange(c) }),
+    el('div', { class: 'update-status ' + c.status, text: {
+      ready: 'Will be added',
+      edited: 'You changed this — left alone',
+      manual: 'Yours to do',
+    }[c.status] }),
+  );
+
+  const { close } = openSheet({
+    title: 'The original changed',
+    body: el('div', { class: 'update-list' },
+      /* The author's own summary first, where there is one. It is the only
+       * sentence here written by a person rather than derived from comparing
+       * two structures, and it is the one that says WHY. */
+      ...plan.notes.map((n) => el('p', { class: 'update-note', text: n.summary })),
+      !plan.stamped
+        ? el('p', { class: 'update-note', text:
+            'You added this programme before the app started recording which version you took, so '
+            + 'these are simply the differences between your copy and the original today. Some of '
+            + 'them may be changes you made yourself, which is why none of them can be applied for '
+            + 'you.' })
+        : null,
+      ...plan.changes.map(line),
+    ),
+    footer: plan.readyCount
+      ? el('button', {
+          class: 'btn primary block',
+          onClick: async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            try {
+              const done = await store.applyPresetUpdate(system.id);
+              close();
+              /* Numbers, not "Updated!". What was skipped is said out loud in
+               * the same breath as what was taken — a count of changes applied
+               * with the left-alone ones silently dropped would be the screen
+               * quietly overstating what it had done. */
+              toast(done.left
+                ? `${plural(done.changed + done.created, 'workout')} updated · `
+                  + `${done.left} left as you had it`
+                : `${plural(done.changed + done.created, 'workout')} updated`);
+              refreshRoute();
+            } catch (err) {
+              btn.disabled = false;
+              toast('That could not be saved. ' + (err && err.message ? err.message : ''));
+            }
+          },
+        }, `Take ${plural(plan.readyCount, 'change')}`)
+      : null,
+  });
+}
+
+/**
  * A system's own screen, drawn once for two doors.
  *
  * 🚨 ONE BODY OF CODE, because `#/workouts` IS a system screen now and
@@ -919,7 +1016,14 @@ function systemSwitcher({ system, systems, workouts, currentId, always = false }
  * and nowhere else.
  */
 async function systemBody(system, workouts) {
+  /* ⚠️ AWAITED HERE RATHER THAN LEFT TO FILL IN LATE, and it is cheap enough to
+   * be: for a system the user typed there is no `presetId` and this returns
+   * before reading anything, and for a copy already at the current version it
+   * compares two integers. A notice that arrives after the screen has painted
+   * would push the programme down under the reader's thumb (Rule 3). */
+  const update = await store.presetUpdateFor(system, workouts).catch(() => null);
   return [
+    presetUpdateNotice(system, workouts, update),
     // ⚠️ THE PLAN GOES ABOVE THE WORKOUTS, AND ONLY WHEN THERE IS ONE — Tim
     // asked for these boxes "at the top of the workout system", and a plan IS
     // the shape of the programme: it names every workout in the list underneath

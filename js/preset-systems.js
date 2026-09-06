@@ -64,10 +64,36 @@
 // talks about transcribing free VIDEOS, which is true of Nippard and false of
 // a sixty-year-old routine from a book or of a method-based system, so anything
 // that is not a video transcription must set its own.
+//
+// ── `version` AND `key`, BOTH ADDED 2026-09-20 ───────────────────────────────
+//
+// `version` is the preset's content revision, and every system starts at 1.
+// Bump it whenever the CONTENT of that preset changes — an exercise swapped, a
+// set count corrected, a workout added or dropped. A test fails if the content
+// changes and the number does not, so the bump is not something anyone has to
+// remember to do out of good will.
+//
+// `key` is a workout's stable identity INSIDE its own programme. It only has to
+// be unique within its preset, never across the file, and it is never shown to
+// the user — it exists so that a copy sitting in somebody's account can still be
+// matched back to the workout it came from AFTER they have renamed it. A name
+// cannot do that job: rename "Push 1" to "Monday" and the link is gone.
 
 export const PRESET_SYSTEMS = [
   {
     id: 'preset-nippard-ppl-2023',
+    /* 🚨 THE ONE PRESET THAT IS NOT AT VERSION 1, and it is not a demonstration
+     * — the content really did change. The Back Squat in Legs 1 gained a
+     * prescription on 2026-09-18 when `targets` shipped, which is why Tim's own
+     * copy of this programme has no percentages in it: a copy is a snapshot and
+     * his was taken before that. `changes` is the author's-voice summary the
+     * update notice reads out; it is the only thing on that screen not derived
+     * from comparing two structures, and it is written for somebody who has not
+     * been told anything about versions. */
+    version: 2,
+    changes: [
+      { version: 2, summary: 'The Back Squat in Legs 1 now prescribes 85 % of your max.' },
+    ],
     name: 'Ultimate Push Pull Legs',
     author: 'Jeff Nippard',
     sourceName: 'The Ultimate Push Pull Legs Series (2023) — YouTube',
@@ -132,7 +158,7 @@ export const PRESET_SYSTEMS = [
       + 'else lighter and further from failure, picked for where it loads the muscle rather than '
       + 'for how much weight moves.',
     workouts: [
-      { name: 'Push 1', notes: 'Chest, shoulders, triceps. One heavy press, then stretch- and '
+      { key: 'push-1', name: 'Push 1', notes: 'Chest, shoulders, triceps. One heavy press, then stretch- and '
           + 'contraction-biased work. Reported reps: bench 3–5, Larsen press 10, Arnold press '
           + '8–10, press-around 12–15, Y-raise 12–15, pressdown 8, cross-body extension 10–12.',
         exercises: [
@@ -153,7 +179,7 @@ export const PRESET_SYSTEMS = [
       // (same treatment as the squat in Legs 1). The drop is the awkward half:
       // the source puts it on the last set only, and `minis` plans one after
       // EVERY set, so this plans one drop more than he does. The note says so.
-      { name: 'Pull 1', notes: 'Back, biceps, rear delts. Six exercises, and three of them '
+      { key: 'pull-1', name: 'Pull 1', notes: 'Back, biceps, rear delts. Six exercises, and three of them '
           + 'change grip or angle set to set rather than adding another exercise. Reported '
           + 'reps: pulldown to failure around 10, rows 10–12, pullover 10–12, face pulls '
           + '12–15, EZ curls 6–8, preacher curls 10–12.',
@@ -165,7 +191,7 @@ export const PRESET_SYSTEMS = [
           { name: 'EZ-Bar Curl', sets: 3, notes: '6–8 reps. The heavy biceps work of the session.' },
           { name: 'Dumbbell Preacher Curl', sets: 2, notes: 'One arm at a time, bottom half of the range only. 10–12 reps.' },
         ] },
-      { name: 'Legs 1', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
+      { key: 'legs-1', name: 'Legs 1', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
           + 'Reported: squat 2–4 near max plus two paused back-off sets, RDL 8–10, lunges 10 per '
           + 'leg, leg curls 10–12, calves 10–12.',
         exercises: [
@@ -212,7 +238,7 @@ export const PRESET_SYSTEMS = [
       // Push 2 is the best-sourced workout of the six: Fitness Volt and BarBend
       // agree exercise for exercise, set for set, including the 8 / 5 / 15
       // undulating scheme on the first lift.
-      { name: 'Push 2', notes: 'Chest, shoulders, triceps again, and almost nothing in common '
+      { key: 'push-2', name: 'Push 2', notes: 'Chest, shoulders, triceps again, and almost nothing in common '
           + 'with Push 1 — the press is close-grip and inclined, the chest work is a fly '
           + 'rather than a press-around, and the triceps lead rather than finish. Reported '
           + 'reps: close-grip incline 8 / 5 / 15, shoulder press 10–12, skull crushers 6–8, '
@@ -226,7 +252,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Plate Front Raise', sets: 2, notes: '15–20 reps, rotating the plate inwards on the way up.' },
           { name: 'Diamond Push-Up', sets: 1, notes: 'One set to failure to finish.' },
         ] },
-      { name: 'Pull 2', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
+      { key: 'pull-2', name: 'Pull 2', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
           + '12–15, pull-ups to failure, Kroc rows 10–12, everything else 10–12.',
         exercises: [
           { name: 'Single-Arm Lat Pulldown', sets: 3, notes: 'Half-kneeling, one arm. 12–15 reps.' },
@@ -242,7 +268,7 @@ export const PRESET_SYSTEMS = [
       // at four sets, so this follows the more detailed one — the same call the
       // Bumstead system made, on the reasoning that a source naming two
       // variations is more likely to have watched than one naming a total.
-      { name: 'Legs 2', notes: 'Where Legs 1 opens on a squat, this opens on a deadlift, so the '
+      { key: 'legs-2', name: 'Legs 2', notes: 'Where Legs 1 opens on a squat, this opens on a deadlift, so the '
           + 'hamstrings and glutes lead and the quads are hit with volume afterwards rather '
           + 'than with load. Reported: deadlift one set of 5, stiff-legs 8, leg press 10–12, '
           + 'glute-ham raises 8–10, leg extensions 8–10, calves 15–20, leg raises 10–20.',
@@ -261,6 +287,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-israetel-floating-split',
+    version: 1,
     name: 'Dr. Mike’s Floating Split',
     author: 'Dr. Mike Israetel',
     sourceName: 'Dr. Mike’s Exact Training Split to Get to 6% Body Fat — Renaissance Periodization',
@@ -311,7 +338,7 @@ export const PRESET_SYSTEMS = [
       + 'mapped to the closest thing in this app’s library and noted on each exercise. Use whatever '
       + 'your gym has — none of it is load-bearing.',
     workouts: [
-      { name: 'Pull 1', notes: 'Neutral-grip pull-ups first, then rows, side delts, biceps and '
+      { key: 'pull-1', name: 'Pull 1', notes: 'Neutral-grip pull-ups first, then rows, side delts, biceps and '
           + 'forearms. Reported: 3–5 weighted sets of 5–15, then the same grip unweighted; rows '
           + 'about 40 total reps; laterals 4–6 sets to around 100 reps; curls one set of 40.',
         exercises: [
@@ -321,7 +348,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Cable Curl', sets: 1, setType: 'myo', minis: 4, notes: '40 reps in one myo-rep set. One source says a lying dumbbell curl instead — either is a long-head biceps curl.' },
           { name: 'Wrist Curl', sets: 1, notes: 'Cable. 50 reps, as a finisher.' },
         ] },
-      { name: 'Legs 1', notes: 'The hinge day. Abs first, then a good morning, leg press and a '
+      { key: 'legs-1', name: 'Legs 1', notes: 'The hinge day. Abs first, then a good morning, leg press and a '
           + 'quad finisher taken to failure. Reported: good mornings 5–15 reps, leg press 10–20.',
         exercises: [
           { name: 'Decline Sit-Up', sets: 1, notes: '30 reps, to open the session.' },
@@ -329,7 +356,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Leg Press', sets: 3, setType: 'myo', minis: 3, notes: '10–20 reps.' },
           { name: 'Sissy Squat', sets: 1, setType: 'myo', minis: 4, notes: 'One giant myo-rep set to failure — about 90 seconds and 30 reps. He uses a CC squat machine; a sissy squat is the closest free version.' },
         ] },
-      { name: 'Push 1', notes: 'Calves first, then a flat press, triceps paired with push-ups, '
+      { key: 'push-1', name: 'Push 1', notes: 'Calves first, then a flat press, triceps paired with push-ups, '
           + 'biceps and a very long lateral-raise set. Reported: presses 5–15, curls 4×12, '
           + 'laterals 50–75 reps in one giant set.',
         exercises: [
@@ -340,7 +367,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Incline Dumbbell Curl', sets: 4, setType: 'myo', minis: 3, notes: '12 reps on the top set.' },
           { name: 'Lateral Raise', sets: 1, setType: 'myo', minis: 5, notes: 'One giant myo-rep set, light, 50–75 total reps.' },
         ] },
-      { name: 'Pull 2', notes: 'Same shape as Pull 1 with the grip changed — overhand rather than '
+      { key: 'pull-2', name: 'Pull 2', notes: 'Same shape as Pull 1 with the grip changed — overhand rather than '
           + 'neutral. Front raises here instead of laterals. Several counts were never reported.',
         exercises: [
           { name: 'Pull-Up', sets: 5, notes: 'Overhand this time. Weighted first, then unweighted for volume.' },
@@ -349,14 +376,14 @@ export const PRESET_SYSTEMS = [
           { name: 'Cable Curl', sets: 1, notes: 'Biceps maintenance rather than a growth block.' },
           { name: 'Wrist Curl', sets: 1, notes: 'Cable.' },
         ] },
-      { name: 'Legs 2', notes: 'Hamstring curls replace the hinge — deliberately, to keep lower-back '
+      { key: 'legs-2', name: 'Legs 2', notes: 'Hamstring curls replace the hinge — deliberately, to keep lower-back '
           + 'fatigue off a body already dieting. Reported: leg curls and belt squats 15–20 reps.',
         exercises: [
           { name: 'Lying Leg Curl', sets: 3, notes: '15–20 reps. Here instead of a hinge so the lower back gets a break.' },
           { name: 'Belt Squat', sets: 3, setType: 'myo', minis: 3, notes: '15–20 reps. Loads the legs without loading the spine.' },
           { name: 'Bulgarian Split Squat', sets: 3, notes: 'He does these with the transformer bar.' },
         ] },
-      { name: 'Push 2', notes: 'The heavier push day. Reported: incline press 10–20, flat bench '
+      { key: 'push-2', name: 'Push 2', notes: 'The heavier push day. Reported: incline press 10–20, flat bench '
           + '5–15, skull crushers 6 sets at 15–20.',
         exercises: [
           { name: 'Incline Machine Press', sets: 3, setType: 'myo', minis: 3, notes: '10–20 reps.' },
@@ -370,6 +397,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-arnold-golden-six',
+    version: 1,
     name: 'The Golden Six',
     author: 'Arnold Schwarzenegger',
     sourceName: 'Arnold’s Golden Six — Fitness Volt',
@@ -405,7 +433,7 @@ export const PRESET_SYSTEMS = [
       + 'original. It asks for shoulder mobility a lot of people do not have. If it hurts, press '
       + 'in front instead — you lose nothing the programme was trying to give you.',
     workouts: [
-      { name: 'Golden Six', notes: 'The whole programme. Squat first, abs last, three times a '
+      { key: 'golden-six', name: 'Golden Six', notes: 'The whole programme. Squat first, abs last, three times a '
           + 'week. Twenty working sets, about an hour.',
         exercises: [
           { name: 'Back Squat', sets: 4, notes: '10 reps. Rest 2–3 minutes — this is the one that costs you.' },
@@ -420,6 +448,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-thurston-6day',
+    version: 1,
     name: 'Mike Thurston’s Six-Day Split',
     author: 'Mike Thurston',
     sourceName: 'Mike Thurston Workout And Diet Routine — Fitness Volt',
@@ -446,7 +475,7 @@ export const PRESET_SYSTEMS = [
       + 'If you can only train four or five days, drop the conditioning day first and then the '
       + 'arm day — the presses and rows already train arms harder than most people expect.',
     workouts: [
-      { name: 'Chest', notes: 'One heavy press, then incline and fly work. Reported reps: bench 6, everything else 10.',
+      { key: 'chest', name: 'Chest', notes: 'One heavy press, then incline and fly work. Reported reps: bench 6, everything else 10.',
         exercises: [
           { name: 'Barbell Bench Press', sets: 3, notes: '6 reps — the heaviest thing in the week for your chest.' },
           { name: 'Incline Dumbbell Bench Press', sets: 3, notes: '10 reps.' },
@@ -454,7 +483,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Cable Crossover', sets: 3, notes: '10 reps.' },
           { name: 'Decline Dumbbell Bench Press', sets: 3, notes: '10 reps.' },
         ] },
-      { name: 'Back', notes: 'Two rows, two pulldowns, and a heavy pull off pins to finish. Reported reps: 8–12.',
+      { key: 'back', name: 'Back', notes: 'Two rows, two pulldowns, and a heavy pull off pins to finish. Reported reps: 8–12.',
         exercises: [
           { name: 'Barbell Row', sets: 3, notes: '10 reps, bent over.' },
           { name: 'Wide-Grip Lat Pulldown', sets: 3, notes: '8–12 reps.' },
@@ -462,7 +491,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Straight-Arm Pulldown', sets: 3, notes: '8–12 reps. Written up as a standing cable pulldown.' },
           { name: 'Rack Pull', sets: 3, notes: '10 reps. Heavy, short range, from about knee height.' },
         ] },
-      { name: 'Shoulders', notes: 'One press and then four raises — two side, two rear. Reported reps: 8–12.',
+      { key: 'shoulders', name: 'Shoulders', notes: 'One press and then four raises — two side, two rear. Reported reps: 8–12.',
         exercises: [
           { name: 'Seated Dumbbell Shoulder Press', sets: 3, notes: '8–12 reps.' },
           { name: 'Lateral Raise', sets: 3, notes: '10 reps, seated.' },
@@ -470,7 +499,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Rear Delt Fly', sets: 3, notes: '10 reps, chest down on an incline bench.' },
           { name: 'Reverse Pec Deck', sets: 3, notes: '10 reps.' },
         ] },
-      { name: 'Legs', notes: 'Hinge first rather than squat. Reported reps: 10–12.',
+      { key: 'legs', name: 'Legs', notes: 'Hinge first rather than squat. Reported reps: 10–12.',
         exercises: [
           { name: 'Romanian Deadlift', sets: 3, notes: '10 reps.' },
           { name: 'Leg Press', sets: 3, notes: '12 reps.' },
@@ -479,7 +508,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Bulgarian Split Squat', sets: 3, notes: '12 reps per leg.' },
           { name: 'Hip Thrust', sets: 3, notes: '12 reps.' },
         ] },
-      { name: 'Arms', notes: 'Triceps first, then biceps. Seven exercises — the longest day here. Reported reps: 8–15.',
+      { key: 'arms', name: 'Arms', notes: 'Triceps first, then biceps. Seven exercises — the longest day here. Reported reps: 8–15.',
         exercises: [
           { name: 'Dumbbell Skull Crusher', sets: 4, notes: '10 reps, flat bench.' },
           { name: 'Triceps Pushdown', sets: 4, notes: '10 reps, cable.' },
@@ -489,7 +518,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Hammer Curl', sets: 4, notes: '10 reps, alternating.' },
           { name: 'EZ-Bar Curl', sets: 4, notes: '10 reps, standing.' },
         ] },
-      { name: 'Conditioning', notes: 'Not lifting. Written up as a HIIT day — rope, bodyweight intervals, '
+      { key: 'conditioning', name: 'Conditioning', notes: 'Not lifting. Written up as a HIIT day — rope, bodyweight intervals, '
           + 'and bike sprints to finish. Drop this first if the week is tight.',
         exercises: [
           { name: 'Jump Rope', sets: 1, notes: '3 minutes. Battle ropes work just as well.' },
@@ -502,6 +531,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-bumstead-8day',
+    version: 1,
     name: 'Chris Bumstead’s 8-Day Split',
     author: 'Chris Bumstead',
     sourceName: 'Chris Bumstead’s Complete Workout & Diet Plan — Generation Iron',
@@ -551,7 +581,7 @@ export const PRESET_SYSTEMS = [
       + 'Run it because you want to see how he trains, not because it is the optimal way for you '
       + 'to train.',
     workouts: [
-      { name: 'Quads & Calves', notes: 'Opens on a drop set and closes on a tri-set. '
+      { key: 'quads-calves', name: 'Quads & Calves', notes: 'Opens on a drop set and closes on a tri-set. '
           + 'Reported: leg extensions 2×20, squats 6–10, then the tri-set 8–15.',
         exercises: [
           { name: 'Leg Extension', sets: 2, setType: 'drop', minis: 1, notes: '20 reps, then drop the weight. Written up as drop sets.' },
@@ -562,7 +592,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Sissy Squat', sets: 3, group: 0, notes: '12–15 reps. Straight into it.' },
           { name: 'Seated Calf Raise', sets: 3, group: 0, notes: '10–12 reps. Last of the tri-set — rest after this.' },
         ] },
-      { name: 'Chest & Triceps', notes: 'Incline-heavy. Reported: presses and flys 8–10, '
+      { key: 'chest-triceps', name: 'Chest & Triceps', notes: 'Incline-heavy. Reported: presses and flys 8–10, '
           + 'machine press 6–10 with a drop, pec deck 15, push-ups to failure.',
         exercises: [
           { name: 'Incline Dumbbell Bench Press', sets: 2, notes: '8–10 reps.' },
@@ -572,7 +602,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Skull Crusher', sets: 2, notes: '8–10 reps with an EZ bar.' },
           { name: 'Push-Up', sets: 2, notes: 'To failure, to finish.' },
         ] },
-      { name: 'Back & Biceps', notes: 'Back thickness — four rows and pulldowns before any arm '
+      { key: 'back-biceps', name: 'Back & Biceps', notes: 'Back thickness — four rows and pulldowns before any arm '
           + 'work. Reported: 8–12 throughout.',
         exercises: [
           { name: 'Reverse-Grip Lat Pulldown', sets: 3, notes: '10–12 reps, close underhand grip.' },
@@ -582,7 +612,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Straight-Arm Pulldown', sets: 2, notes: '10–12 reps. Written up as a cable lat extension.' },
           { name: 'Machine Preacher Curl', sets: 2, notes: '10–12 reps.' },
         ] },
-      { name: 'Shoulders & Chest', notes: 'Three of the five are drop sets, and it ends on a '
+      { key: 'shoulders-chest', name: 'Shoulders & Chest', notes: 'Three of the five are drop sets, and it ends on a '
           + 'superset. Reported: presses 6–10, raises 8–12.',
         exercises: [
           { name: 'Seated Dumbbell Shoulder Press', sets: 2, notes: '6–10 reps.' },
@@ -592,7 +622,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Reverse Pec Deck', sets: 2, group: 0, notes: '10–12 reps. First half of a superset.' },
           { name: 'Pec Deck', sets: 2, group: 0, notes: '10–12 reps, forward this time. Straight into it from the reverse.' },
         ] },
-      { name: 'Hamstrings & Back', notes: 'Three different leg curls — the knee-flexion angle '
+      { key: 'hamstrings-back', name: 'Hamstrings & Back', notes: 'Three different leg curls — the knee-flexion angle '
           + 'changes what the hamstring does. Reported: curls 8–10, deadlifts 4–8.',
         exercises: [
           { name: 'Lying Leg Curl', sets: 2, notes: '8–10 reps.' },
@@ -602,7 +632,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Wide-Grip Lat Pulldown', sets: 3, notes: '8–10 reps. Back width today, not thickness.' },
           { name: 'Straight-Arm Pulldown', sets: 2, notes: '10–12 reps.' },
         ] },
-      { name: 'Arms', notes: 'Triceps and biceps alternating, with three drop sets. Reported: '
+      { key: 'arms', name: 'Arms', notes: 'Triceps and biceps alternating, with three drop sets. Reported: '
           + '8–15 throughout. ⚠️ Shorter write-ups describe this day as tri-sets instead — see '
           + 'the notes above.',
         exercises: [
@@ -618,6 +648,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-volume-landmarks',
+    version: 1,
     name: 'Volume Landmarks Hypertrophy',
     // ⚠️ THE AUTHOR IS US. Read the "three kinds of system" note at the top of
     // this file before changing this. Dr. Israetel's volume landmarks are his,
@@ -668,7 +699,7 @@ export const PRESET_SYSTEMS = [
       + 'and pulldown trains biceps, and those sets count towards the weekly total even though '
       + 'this app cannot yet add them up for you.',
     workouts: [
-      { name: 'Upper A', notes: 'Chest-led. 8–12 reps on the compounds, 12–15 on the cables and '
+      { key: 'upper-a', name: 'Upper A', notes: 'Chest-led. 8–12 reps on the compounds, 12–15 on the cables and '
           + 'machines. Around 20 sets — that is week one, and it is meant to feel manageable.',
         exercises: [
           { name: 'Incline Dumbbell Bench Press', sets: 3, notes: '8–12 reps. Three in reserve in week one.' },
@@ -679,7 +710,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Cable Curl', sets: 3, notes: '10–15 reps.' },
           { name: 'Overhead Cable Extension', sets: 3, notes: '10–15 reps. Overhead is what loads the long head.' },
         ] },
-      { name: 'Lower A', notes: 'Squat-led. Around 18 sets in week one.',
+      { key: 'lower-a', name: 'Lower A', notes: 'Squat-led. Around 18 sets in week one.',
         exercises: [
           { name: 'Back Squat', sets: 3, notes: '6–10 reps.' },
           { name: 'Leg Press', sets: 3, notes: '10–15 reps.' },
@@ -688,7 +719,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Standing Calf Raise', sets: 4, notes: '10–15 reps. Pause at the bottom.' },
           { name: 'Cable Crunch', sets: 3, notes: '10–20 reps.' },
         ] },
-      { name: 'Upper B', notes: 'The same muscles, different exercises and angles. Around 22 sets '
+      { key: 'upper-b', name: 'Upper B', notes: 'The same muscles, different exercises and angles. Around 22 sets '
           + 'in week one — the longer of the two upper days.',
         exercises: [
           { name: 'Barbell Bench Press', sets: 3, notes: '6–10 reps.' },
@@ -700,7 +731,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Incline Dumbbell Curl', sets: 3, notes: '10–15 reps. The incline is the stretch.' },
           { name: 'Rope Pushdown', sets: 3, notes: '10–15 reps.' },
         ] },
-      { name: 'Lower B', notes: 'Hinge-led, and the quad work is machine-based so the second leg '
+      { key: 'lower-b', name: 'Lower B', notes: 'Hinge-led, and the quad work is machine-based so the second leg '
           + 'day does not fight the first. Around 19 sets in week one.',
         exercises: [
           { name: 'Romanian Deadlift', sets: 3, notes: '8–12 reps. Hinge — stop before your back rounds.' },
@@ -715,6 +746,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-ppl',
+    version: 1,
     name: 'Push Pull Legs',
     author: 'Fitness Tracker',
     sourceName: null,
@@ -730,7 +762,7 @@ export const PRESET_SYSTEMS = [
       + 'Take the last set of each exercise to within a rep or two of failure. Every estimate this '
       + 'app makes assumes that, and a set stopped four reps short tells it almost nothing.',
     workouts: [
-      { name: 'Push', notes: 'Chest, shoulders, triceps. Press first, while you are fresh.',
+      { key: 'push', name: 'Push', notes: 'Chest, shoulders, triceps. Press first, while you are fresh.',
         exercises: [
           { name: 'Barbell Bench Press', sets: 4, notes: 'Heaviest thing you do today. Leave 1–2 reps in reserve on the top set.' },
           { name: 'Overhead Press', sets: 3, notes: '' },
@@ -740,7 +772,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Triceps Pushdown', sets: 3, notes: '' },
           { name: 'Overhead Cable Extension', sets: 3, notes: 'The overhead position is what trains the long head.' },
         ] },
-      { name: 'Pull', notes: 'Back and biceps. Row and pull down in the same session — they are not redundant.',
+      { key: 'pull', name: 'Pull', notes: 'Back and biceps. Row and pull down in the same session — they are not redundant.',
         exercises: [
           { name: 'Barbell Row', sets: 4, notes: '' },
           { name: 'Lat Pulldown', sets: 3, notes: '' },
@@ -750,7 +782,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Hammer Curl', sets: 3, notes: '' },
           { name: 'Face Pull', sets: 3, notes: 'Cheap insurance for shoulders that press twice a week.' },
         ] },
-      { name: 'Legs', notes: 'Quads, hamstrings, glutes, calves.',
+      { key: 'legs', name: 'Legs', notes: 'Quads, hamstrings, glutes, calves.',
         exercises: [
           { name: 'Back Squat', sets: 4, notes: '' },
           { name: 'Romanian Deadlift', sets: 3, notes: 'Hinge, do not squat it. Stop when your back would round.' },
@@ -764,6 +796,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-upper-lower',
+    version: 1,
     name: 'Upper / Lower',
     author: 'Fitness Tracker',
     sourceName: null,
@@ -779,7 +812,7 @@ export const PRESET_SYSTEMS = [
       + 'If you miss a day, do the workout you missed rather than skipping to the next one. '
       + 'Two sessions a week per muscle is what this programme is built on.',
     workouts: [
-      { name: 'Upper', notes: 'Everything above the waist. Push and pull alternate so nothing is fresh-only.',
+      { key: 'upper', name: 'Upper', notes: 'Everything above the waist. Push and pull alternate so nothing is fresh-only.',
         exercises: [
           { name: 'Barbell Bench Press', sets: 4, notes: '' },
           { name: 'Barbell Row', sets: 4, notes: '' },
@@ -789,7 +822,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Barbell Curl', sets: 3, notes: '' },
           { name: 'Triceps Pushdown', sets: 3, notes: '' },
         ] },
-      { name: 'Lower', notes: 'Legs, plus the hip hinge that also builds your back.',
+      { key: 'lower', name: 'Lower', notes: 'Legs, plus the hip hinge that also builds your back.',
         exercises: [
           { name: 'Back Squat', sets: 4, notes: '' },
           { name: 'Romanian Deadlift', sets: 3, notes: '' },
@@ -803,6 +836,7 @@ export const PRESET_SYSTEMS = [
 
   {
     id: 'preset-full-body',
+    version: 1,
     name: 'Full Body, 3 Days',
     author: 'Fitness Tracker',
     sourceName: null,
@@ -818,7 +852,7 @@ export const PRESET_SYSTEMS = [
       + 'Add a little weight whenever you hit the top of the rep range on every set. That is the '
       + 'whole progression rule, and at this stage it works for a long time.',
     workouts: [
-      { name: 'Full Body A', notes: 'Squat-led.',
+      { key: 'full-body-a', name: 'Full Body A', notes: 'Squat-led.',
         exercises: [
           { name: 'Back Squat', sets: 3, notes: '' },
           { name: 'Barbell Bench Press', sets: 3, notes: '' },
@@ -827,7 +861,7 @@ export const PRESET_SYSTEMS = [
           { name: 'Barbell Curl', sets: 2, notes: '' },
           { name: 'Standing Calf Raise', sets: 3, notes: '' },
         ] },
-      { name: 'Full Body B', notes: 'Hinge-led. Deadlifts first, while your back is fresh.',
+      { key: 'full-body-b', name: 'Full Body B', notes: 'Hinge-led. Deadlifts first, while your back is fresh.',
         exercises: [
           { name: 'Deadlift', sets: 3, notes: 'Stop the set when the bar speed drops, not when you fail.' },
           { name: 'Overhead Press', sets: 3, notes: '' },

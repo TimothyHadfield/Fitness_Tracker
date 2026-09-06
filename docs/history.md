@@ -17,6 +17,149 @@
 
 ---
 
+## 2026-09-20 — A COPIED PROGRAMME CAN BE TOLD ITS ORIGINAL MOVED ON
+
+One instruction, and it was open-ended: *"okay start building or changing whatever you think should
+be built or changed"*, after a ranked answer to *"what are the next steps"* in which this was the
+recommendation. So the thing built is the one item on that list that was fully specified and
+unstarted — **Open work 36**, which came out of his own question the session before.
+
+Before that, two corrections to how he is written to, both his and both immediate: *"you just sent
+me a message that is way too long"*, then *"by 2-3 paragraphs, i meant a similar number of words…
+Could you make every message very readable with bolds, indents, bullets, charts."* Recorded in the
+session memory rather than here, because it is about the chat and not the project.
+
+### A. WHAT WAS REFUSED ON 2026-09-19, AND WHY THIS IS NOT THAT
+
+Tim asked whether a pre-built system could stop being a copy and follow the original. A **live link
+was refused** for three reasons, and none of them has moved: you could not edit a linked programme;
+recorded sessions reference a `workoutId`, so a deploy that renamed or dropped a preset workout
+would strand logged history (D22); and it would rewrite a prescribed WEIGHT under somebody with no
+notification, which is precisely the failure `set-targets.js` is gated four ways to avoid.
+
+**The copy stays a copy.** What is new is that the app can now say what changed, and take the half
+of it that is safe. The whole design is three refusals, and they are in the header of
+`js/preset-updates.js`:
+
+1. 🛑 **Nothing is ever deleted.** A preset that drops an exercise reports it and stops. There is no
+   undo in this app and losing work is worse than keeping something stale.
+2. 🛑 **Nothing edited is ever overwritten.** A row whose values no longer match what it arrived as
+   is reported as the user's and left alone.
+3. 🛑 **A new exercise is appended, never inserted.** Entry order is scored by the within-session
+   fatigue work (0g), so inserting would change what an existing set means.
+
+### B. 🚨 THE STAMPS, WHICH ARE WHY THIS COULD NOT BE BUILT LAST SESSION
+
+Three fields, and the third is the load-bearing one:
+
+| field | on | what it answers |
+|---|---|---|
+| `system.presetVersion` | the copied system | which version they took |
+| `workout.presetKey` | each copied workout | which workout of the original this is, **after a rename** |
+| `exercise.origin` | each copied exercise | `{ sets, targets, notes }` exactly as it arrived |
+
+⚠️ **`origin` is the entire difference between a notice you can trust and one that overwrites your
+work.** Without it, *"your copy says 3 sets and the original now says 4"* has two explanations that
+look identical — the original changed, or you changed it. Storing what the row ARRIVED as makes
+those distinguishable, and every one of the three refusals above depends on being able to tell them
+apart. It costs a second copy of three fields per exercise, which is the trade and it is worth it.
+
+🚨 **`presetKey` IS A KEY RATHER THAN A NAME, AND THAT IS THE POINT.** `preset-systems.js` had no
+identity for a workout at all — the system row records `presetId` and **the workouts recorded
+nothing** — so a copy could not be matched back to its original after either side was renamed. All
+36 preset workouts now carry one, unique within their own programme, never shown to the user.
+
+⚠️ **AND `origin` HAD TO BE NAMED IN `normalizeWorkout()`** or it would have been dropped in silence
+on every read — the third field this project has lost that way, and the one that would have failed
+most quietly: the notice would still have appeared and would then have decided every exercise had
+been edited, so it would have offered to change nothing and looked like a broken comparison rather
+than a lost field.
+
+### C. THE VERSION, AND THE TEST THAT MAKES IT MEAN ANYTHING
+
+Every preset carries a `version`, and a test pins a **content hash** per preset with the version
+beside it. Changing a preset's content without bumping its number fails, by name, with the fix in
+the failure message and in the right order: bump the version, write a `changes` entry in the
+author's voice, **then** update the hash.
+
+🚨 **A VERSION SOMEBODY FORGETS TO BUMP IS WORSE THAN NO VERSION AT ALL** — every copy in the world
+then believes it is current and the notice never fires again for that preset. That is why this is a
+test rather than a line in the handbook: it is the same class of hand-maintained fact as the `sw.js`
+precache list and the doc budgets, both of which are tests for the same reason.
+
+**Nippard's PPL ships at version 2**, and not as a demonstration: its content really did change on
+2026-09-18 when the Back Squat in Legs 1 gained a prescription. That is exactly why Tim's own copy
+has no percentages in it.
+
+### D. THE WEAKER PATH, WHICH IS THE ONE TIM IS ACTUALLY ON
+
+⚠️ **EVERY COPY MADE BEFORE TODAY IS UNSTAMPED**, his included. There is no `presetVersion` and no
+`origin`, so the app compares the copy against the preset as it ships now and **marks every row
+`manual`**: it can show the differences, it cannot say which of them are the original's and which
+are his own edits, and it applies nothing. The sheet says that in as many words.
+
+🔒 `copiedVersionOf()` returns **null, not 0**, for those copies, and the difference decides the
+whole branch: zero would mean "taken from a very old version", which can be reasoned about; null
+means "we do not know what it looked like", which cannot.
+
+⚠️ **A missing workout on an unstamped copy is deliberately NOT reported as an addition** — they may
+simply have deleted it, and there is no way to tell.
+
+### E. THE SCREEN
+
+A hairline-ruled line above the programme on both `#/workouts` and `#/system/<id>` (one
+`systemBody()`, so it was one place), reading *"The original of this programme changed in N
+places"*. Tapping it opens a sheet listing every change in words with what will happen to it —
+**Will be added · You changed this, left alone · Yours to do** — and one button, *"Take N changes"*,
+which appears only when something is safe to take.
+
+⚠️ **IT IS THE ACCENT, NOT `--danger`.** The original moving on is news rather than a fault, and red
+would tell everybody who ever copied a programme that they had broken it (Rule 6). The status is
+**words rather than a coloured dot**, because no colour can say "left alone because you changed it".
+
+🚨 **THE VERSION IS STAMPED FORWARD EVEN WHEN ROWS WERE LEFT ALONE**, and that is deliberate. The
+alternative — holding the old version until every last change is taken — asks somebody who edited
+one exercise about the same update on every visit for ever, with no way to say they have seen it.
+Their edited rows keep their old `origin`, so a LATER version can still tell what they changed.
+
+### F. 🔒 A WEAK ASSERTION, CAUGHT BY THE MUTATION CHECK IT WAS WRITTEN FOR
+
+Three mutation checks were run with the mutated line printed each time (§0.14). Two behaved. The
+third did not, and it was the most important one: **"their five sets are still five"** — the safety
+property the whole feature exists to have — **passed with the status guard removed.**
+
+It read the INPUT array back, and `applyPresetPlan()` copies rather than mutates, so it could never
+have failed however the guard was written. It now builds a fixture where a change IS taken (so a row
+really is written) and asserts on the row that gets **saved**. With that fixed, removing the guard
+fails it by name.
+
+⚠️ **This is §0.14's third corollary meeting its own example**: an assertion that survives a mutation
+may be weaker than its own sentence. Rule it in, not out.
+
+### G. Tests
+
+**19 suites green, 5,393 assertions** (from 5,303) — `data-layer` **2,282** (from 2,208) and `render`
+**1,595** (from 1,579). The data-layer section covers the version guard and the key uniqueness
+across all nine presets, `origin` surviving `normalizeWorkout()`, the stamps landing on a real copy
+of Nippard's PPL, the three plan cases (stamped, edited, unstamped), the removal that is reported
+and never applied, and the store's own apply path end to end. A **vacuity guard** sits beside the
+safety assertion: the same fixture without the edit IS taken, so the refusal is the edit being
+respected rather than the comparison refusing everything.
+
+🔒 **AND `render` HOLDS THE WIRING**, which is the test this project has twice found missing after
+the fact: the notice really appears on a wound-back copy of Nippard's PPL, the sheet carries the
+author's sentence and one *"Will be added"*, **the button really reaches `store.applyPresetUpdate()`**
+(mutation-checked: stubbing it out fails exactly two assertions and nothing else in 1,595 notices),
+and the unstamped copy shows the notice with **no Take button anywhere in the sheet**.
+
+⚠️ **The brief for that agent was WRONG about one case and it said so rather than weakening the
+assertion.** It asked for an unstamped fixture built only by removing `presetVersion` and `origin` —
+but such a copy is byte-identical to the preset, so the plan is correctly `null` and no notice can
+appear. It stripped the squat's `targets` as well, which is what a real pre-2026-09-18 copy actually
+looks like. **Read the "what I decided NOT to do" section of every agent report.**
+
+---
+
 ## 2026-09-19 — THE WORKOUTS TAB IS ONE PROGRAMME NOW
 
 Three exchanges. The first two were questions and were answered without building anything; the third

@@ -432,7 +432,7 @@ Tim is the **manager**; Claude is the **builder**.
 | `js/exercise-images.js` | Not a doc. **The exercise-picture manifest — GENERATED, never hand-edited.** Read its header before touching pictures: it records why the art is absent (Gym Visual is a paid library), why the manifest is keyed by id rather than name, and why a manifest exists at all (D6 — the service worker can only precache a file it is told about). `img/exercises/README.md` is the how-to |
 | `js/exercise-families.js` | Not a doc. **The swap sheet's alternatives — read its header before adding a member.** A family is a MOVEMENT, not a muscle; one family per exercise, asserted; and ⚠️ **four exercises are deliberately family-less because their lookalike is the opposite movement**. Members are named strings, so a test resolves every one to exactly one exercise |
 | `js/research-topics.js` | Not a doc. **The Research tab's eleven topics — read its header before adding one.** Every claim names a source, every source is defined ONCE, every topic states its own limit, and nothing goes on that screen below "limited evidence". ⚠️ **Anything added here must be added to `docs/research.md` first**, with its grade and its limitations |
-| `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why |
+| `js/preset-systems.js` | Not a doc either, but read its header before adding a system: it records exactly what may and may not be shipped from someone else's programme, and why. 🚨 **Changing the CONTENT of a preset means bumping its `version` and writing a `changes` entry** — a test pins a content hash per preset and fails by name if you do not, and the fix is in that order (bump, write the note, then update the hash). A version somebody forgets to bump is worse than no version at all: every copy in the world then believes it is current |
 | `js/muscle-evidence.js` | Not a doc, but read it before touching ranking: the ratio tables, the fallback rules and the confidence model all live there with their reasoning. ⚠️ **Since 2026-09-15 `sigmaFor()` is the one to read first if you are touching how much a reading counts** — the blend is inverse-variance now, and the three terms a published table cannot see (sourcing, machine gearing, the cross-muscle hop) are added there rather than in the generated data |
 | `js/set-targets.js` | Not a doc. **A planned set as a percentage of a max** (2026-09-18) — pure: no DOM, no store, no clock. 🚨 **Read its header before touching it, because the load-bearing part is what the percentage is OF**: their own best recorded set on THAT lift, through `ownBestSet()`, and never the muscle map's cross-muscle estimate — that path is gated four ways precisely because its number gets walked up to a bar, and a percentage of it is two inferences stacked. It refuses a body-weight or assisted lift outright (their max is body-inclusive and the weight field is not — D30), it rounds DOWN and reports what the rounded number really is, and **100 % is a ceiling that is a refusal rather than an oversight**: the max is an estimate no human has checked against an attempt (Open work 19) |
 | `js/plates.js` | Not a doc. **Which discs make this number** (2026-09-18) — pure, and the label under the weight stepper. ⚠️ **Read its header before adding a plate**: largest-first greedy is minimal only over a CANONICAL inventory, and the obvious argument for it ("each plate divides into the next up") is FALSE here — 25 does not divide 45. A 35 lb plate in the set makes 60 a side three plates where two would do, which is why **the shipped pound set has no 35s** and the kg set must keep its 15. `tests/data-layer.test.mjs` re-runs the exhaustive DP with the 35 case as its negative control. 🛑 **A weight no plates make prints NOTHING** — a near-miss list makes the same visual claim as a right one under a 40px number read mid-set. `plateLoadFor()` in `exercises.js` decides which lifts qualify |
@@ -585,6 +585,10 @@ Fitness_Tracker/
 │   ├── strength-standards.js   percentile ranking — pure maths (D15)
 │   ├── preset-systems.js       ready-made systems to browse and copy. Shaped so a
 │   │                           third-party one can slot in: author/sourceName/sourceUrl
+│   ├── preset-updates.js       what changed in the ORIGINAL since you copied it —
+│   │                           pure. Decides; store.applyPresetUpdate() writes.
+│   │                           Three refusals in its header: never deletes, never
+│   │                           overwrites an edit, appends rather than inserts
 │   ├── next-workout.js         where you are in your own rotation — pure, clock
 │   │                           passed IN. vision §1.2 first half. Builds its own
 │   │                           caption so the sentence cannot drift from the answer
@@ -1048,12 +1052,28 @@ file:
 
 ```
 Exercise    id, name, muscle, equipment, fields[], loadType, isCustom
-System      id, name, notes, createdAt, updatedAt
+System      id, name, notes, createdAt, updatedAt,
+            presetId?, presetVersion?
             ── a programme. Workouts belong to one, and only one.
-Workout     id, name, systemId, isBenchmark, order?,
+            ── `presetVersion` (2026-09-20): which version of a ready-made
+               programme this copy was taken from. ABSENT on every copy made
+               before that date, and absent is NOT version 0 — it means "we do
+               not know what it looked like", which is a different, weaker
+               branch. js/preset-updates.js
+Workout     id, name, systemId, isBenchmark, order?, presetKey?,
             exercises[{ exerciseId, sets, notes, group?, setType?, drops?,
-                        targets? }],
+                        targets?, origin? }],
             createdAt, updatedAt
+            ── `presetKey` (2026-09-20): which workout of the original this is.
+               A KEY rather than a name, so a rename on either side does not
+               orphan the copy. It rides through normalizeWorkout() on the
+               top-level spread — the row spreads, its EXERCISES do not.
+            ── `origin` (2026-09-20): `{sets, targets, notes}` exactly as the
+               exercise ARRIVED when the programme was copied. Never read by a
+               screen. 🚨 It is the only thing that can tell "the original
+               changed" apart from "you changed it", and every refusal in
+               preset-updates.js rests on that distinction. It is also the
+               third field the warning below has caught.
             ── `targets`: one percentage per planned set (2026-09-18), 30–100 in
                steps of 5, ABSENT when the workout prescribes nothing — which is
                the default and what every workout written before that date has.

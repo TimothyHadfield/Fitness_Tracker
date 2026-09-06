@@ -24,6 +24,7 @@ import { setE1rm, shownMax } from './set-e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
 import { normalizeTargets } from './set-targets.js';
 import { normalizeSchedule, pruneSchedule } from './schedule.js';
+import { presetVersionOf, presetUpdatePlan, applyPresetPlan } from './preset-updates.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 
@@ -900,6 +901,15 @@ export function normalizeWorkout(w) {
           sets,
           notes: e.notes || '',
           ...(targets ? { targets } : {}),
+          /* ⚠️ `origin` IS THE THIRD FIELD THIS WARNING HAS CAUGHT, and it is
+           * the one that would have failed most quietly (2026-09-20). It is
+           * what an exercise ARRIVED as when a ready-made programme was copied
+           * — the only thing that can tell "the original changed" apart from
+           * "you changed it" (js/preset-updates.js). Dropped on read, the
+           * update notice would still appear and would then decide every
+           * exercise had been edited, so it would offer to change nothing and
+           * look like a bug in the comparison rather than a lost field. */
+          ...(e.origin ? { origin: e.origin } : {}),
           ...(isNested(e.setType) ? { setType: e.setType, minis: plannedMinis(e) } : {}),
           ...(e.group == null ? {} : { group: e.group }),
         };
@@ -1153,6 +1163,13 @@ export const store = {
       name: preset.name,
       notes: preset.notes || preset.summary || '',
       presetId: preset.id,
+      /* 🆕 WHICH VERSION OF IT THEY TOOK — 2026-09-20, and it is what makes
+       * "the original changed" answerable at all. A copy that knows it came
+       * from version 2 can be told version 3 exists; a copy that does not know
+       * can only be shown a content comparison it cannot vouch for, which is
+       * the weaker path js/preset-updates.js falls back to for every copy made
+       * before today. */
+      presetVersion: presetVersionOf(preset),
       author: preset.author || null,
       sourceName: preset.sourceName || null,
       sourceUrl: preset.sourceUrl || null,
@@ -1195,6 +1212,13 @@ export const store = {
            * DEFAULT_SETS and a list that no longer matches it is exactly what
            * normalizeTargets() refuses. */
           ...(targets ? { targets } : {}),
+          /* 🆕 WHAT IT ARRIVED AS — 2026-09-20. Three fields written twice, on
+           * purpose: `origin` is never read by any screen and exists only so
+           * that a later version of the original can be compared against what
+           * this row was on the day it was copied, rather than against what the
+           * user has since made of it. Without it the two are indistinguishable
+           * and the only safe update is no update. js/preset-updates.js. */
+          origin: { sets, notes: item.notes || '', ...(targets ? { targets } : {}) },
         });
       }
       if (!exercises.length) continue;
@@ -1204,10 +1228,97 @@ export const store = {
       // Conditioning, Legs, Shoulders, and "Upper A, Lower A, Upper B, Lower B"
       // came out with both Lowers first — reversing the two things the notes
       // tell you to alternate. Caught by driving the real Add button.
-      await this.saveWorkout({ name: w.name, systemId: system.id, exercises, order: order++ });
+      /* 🆕 `presetKey` — 2026-09-20. WHICH workout of the original this is, by a
+       * key rather than by its name, so that renaming a workout in a preset
+       * does not orphan every copy of it already in somebody's account. It
+       * rides through normalizeWorkout() on the top-level spread rather than
+       * being named there, which is the difference that function's own header
+       * describes: the workout row spreads, its EXERCISES are rebuilt. */
+      await this.saveWorkout({
+        name: w.name, systemId: system.id, exercises, order: order++,
+        ...(w.key ? { presetKey: w.key } : {}),
+      });
     }
 
     return { system, skipped };
+  },
+
+  /**
+   * Has the ready-made programme this system was copied from changed since?
+   *
+   * Returns null — meaning "nothing to say" — for every system the user typed
+   * themselves, and for every copy already at the current version. That null is
+   * the common case by a long way and it is why this is cheap enough to run on
+   * the Workouts tab: a stamped copy is answered by comparing two integers.
+   *
+   * ⚠️ THE PRESETS ARE IMPORTED LAZILY, as they are everywhere else in this
+   * file's callers — `preset-systems.js` is a large data module and the Workouts
+   * tab should not pay for it on a system that has no `presetId` at all.
+   */
+  async presetUpdateFor(system, workouts) {
+    if (!system || !system.presetId) return null;
+    const { presetById } = await import('./preset-systems.js');
+    const preset = presetById(system.presetId);
+    if (!preset) return null;
+    const rows = workouts || await this.getWorkouts();
+    const exMap = await this.getExerciseMap();
+    const byName = new Map([...exMap.values()].map((e) => [e.name, e]));
+    return presetUpdatePlan({ preset, system, workouts: rows, byName });
+  },
+
+  /**
+   * Take the safe half of an update.
+   *
+   * 🛑 ONLY the rows the plan marked 'ready' — an exercise the user has edited
+   * is left exactly as it is, and nothing is ever deleted. What that means in
+   * practice is that pressing this button can add and can raise, and can never
+   * lose you anything, which is the property that makes it safe to offer at all.
+   *
+   * Returns what was done, so the screen can say it in numbers rather than
+   * claiming success in general terms.
+   */
+  async applyPresetUpdate(systemId) {
+    const [systems, allWorkouts] = await Promise.all([this.getSystems(), this.getWorkouts()]);
+    const system = systems.find((s) => s.id === systemId);
+    if (!system) throw new Error('No such system');
+    const plan = await this.presetUpdateFor(system, allWorkouts);
+    if (!plan) return { changed: 0, created: 0, left: 0 };
+
+    const { presetById } = await import('./preset-systems.js');
+    const preset = presetById(system.presetId);
+    const exMap = await this.getExerciseMap();
+    const byName = new Map([...exMap.values()].map((e) => [e.name, e]));
+    const { workouts, creates } = applyPresetPlan({ plan, preset, workouts: allWorkouts, byName });
+
+    for (const row of workouts) await this.saveWorkout(row);
+
+    /* ⚠️ A NEW WORKOUT GOES ON THE END, and `order` is why it has to be said:
+     * a copied programme carries the position the author gave each workout, and
+     * a row saved without one sorts alphabetically among rows that do not. The
+     * highest order already in the system plus one keeps the programme in the
+     * shape it arrived in. */
+    let order = allWorkouts
+      .filter((w) => w.systemId === system.id)
+      .reduce((max, w) => Math.max(max, Number(w.order) || 0), 0);
+    for (const w of creates) {
+      await this.saveWorkout({ ...w, systemId: system.id, order: ++order });
+    }
+
+    /* 🚨 THE VERSION IS STAMPED FORWARD EVEN THOUGH SOME ROWS WERE LEFT ALONE,
+     * and that is deliberate rather than an oversight. The alternative — hold
+     * the old version until every last change is taken — means somebody who has
+     * edited one exercise is asked about the same update on every visit, for
+     * ever, with no way to say "I have seen this". The user was shown what was
+     * skipped and why at the moment it was skipped; re-asking is nagging, not
+     * honesty. Their edited rows still carry their old `origin`, so a LATER
+     * version can still tell what they changed. */
+    await this.saveSystem({ ...system, presetVersion: plan.toVersion });
+
+    return {
+      changed: workouts.length,
+      created: creates.length,
+      left: plan.changes.filter((c) => c.status !== 'ready').length,
+    };
   },
 
   // Which ready-made systems this account already holds a copy of.
