@@ -1,6 +1,7 @@
 // Shared UI primitives: DOM builder, icons, sheets, toasts, steppers, formatters.
 
-import { FIELD_META } from './exercises.js';
+import { FIELD_META, plateLoadFor } from './exercises.js';
+import { plateLoad, plateLabel, inventoryFor } from './plates.js';
 import { imageFor } from './exercise-images.js';
 import { safeAvatar } from './social.js';
 import * as units from './units.js';
@@ -1086,7 +1087,19 @@ export function relativeDay(iso) {
  * Big targets, tap-and-hold to repeat, direct typing allowed.
  * ------------------------------------------------------------------ */
 
-export function stepper({ field, value, onChange, suffix }) {
+/* 🆕 `exercise` IS OPTIONAL AND IT ONLY EVER FEEDS THE LINE UNDER THE NUMBER —
+ * 2026-09-18. The stepper had no idea what it was stepping, which was right
+ * while the hint said "5 lb steps" and is not right now that the same slot can
+ * hold a plate breakdown: whether one is honest is a fact about the exercise
+ * (`plateLoadFor()`), not about the field. Handing the whole exercise in is the
+ * smallest honest way to ask — the alternative was a pre-computed
+ * `{ bar, points }` at four call sites, which is the same question answered
+ * four times and four places for the answers to drift apart.
+ *
+ * ⚠️ OMITTING IT CHANGES NOTHING. No exercise means no breakdown means the hint
+ * this control has always shown, and NOTHING outside `field === 'weight'` can
+ * reach the new branch at all. */
+export function stepper({ field, value, onChange, suffix, exercise }) {
   const meta = FIELD_META[field];
   // Weight is STORED in pounds and SHOWN in the user's unit, so the stepper
   // works entirely in display units — a nudge is then a clean 2.5 kg rather
@@ -1122,9 +1135,41 @@ export function stepper({ field, value, onChange, suffix }) {
     return trimNum(v);
   }
 
+  /* ---- the line under the number: plates when there are plates ---- */
+  // Resolved ONCE — it is a property of the exercise, and asking per keystroke
+  // would put a Set lookup on the tap-and-hold repeat at 90ms.
+  const loading = isWeight && exercise ? plateLoadFor(exercise) : null;
+
+  // ⚠️ REBUILT ON EVERY CHANGE, not once. The list is a function of the number,
+  // which is the whole feature — the label has to follow the ± buttons. It is a
+  // textContent write and nothing else: Rule 7 forbids motion on the logging
+  // path, and this is the most logging-path thing in the app.
+  //
+  // ⚠️ `outbound(current)` because `current` is in the user's unit and
+  // `plateLoad()` takes POUNDS, like everything else stored here. The inventory
+  // is chosen from the CURRENT unit rather than baked in, so a kg user is
+  // handed 20 kg and 1.25s instead of pounds with converted numbers.
+  const hint = el('div', { class: 'step-unit', text: stepHint(field, meta) });
+  function paintHint() {
+    if (!loading) return;
+    const label = plateLabel(plateLoad(outbound(current), {
+      inventory: inventoryFor(units.units()),
+      bar: loading.bar,
+      points: loading.points,
+    }));
+    // Null is the honest answer for a weight no set of plates makes, and the
+    // fallback is the hint this control has always shown — so a refusal reads
+    // as "nothing to say here" rather than as a gap. plates.js's header has the
+    // argument for why a nearly-right list is not offered instead.
+    hint.textContent = label || stepHint(field, meta);
+    hint.classList.toggle('is-plates', Boolean(label));
+  }
+  paintHint();
+
   function set(v, silent) {
     current = Math.max(meta.min, Math.round(v * 100) / 100);
     input.value = display(current);
+    paintHint();
     if (!silent) onChange(outbound(current));
   }
 
@@ -1163,7 +1208,7 @@ export function stepper({ field, value, onChange, suffix }) {
       suffix ? el('em', { class: 'stepper-suffix', text: suffix }) : null,
     ),
     el('div', { class: 'stepper-controls' }, minus, input, plus),
-    el('div', { class: 'step-unit', text: stepHint(field, meta) }),
+    hint,
   );
 
   return { node, get: () => outbound(current), set: (v) => set(inbound(v), true) };

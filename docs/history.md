@@ -17,6 +17,199 @@
 
 ---
 
+## 2026-09-18 — TWO QUESTIONS OFF A LEG DAY, AND THE TWO FEATURES THEY CAME WITH
+
+Tim, after training: *"I just had a leg day and I have some improvements and comments."* Four items,
+and **he marked the first two "(Don't build, just answer)" and the other two not**, which is the
+whole of how this session was scoped. Both answers turned out to be about the same hole, and both
+builds turned out to be about honesty rather than arithmetic.
+
+Two writers on disjoint files: the percentage system here, the plate label in a sub-agent.
+
+### A. 🚨 IS THE MACHINE'S OWN WEIGHT ACCOUNTED FOR? No — and it should stay that way
+
+> *"I did a leg press calf raise and I put 3 plates each side (270 lbs) and that's what I recorded
+> it as, but the machine says it weights about 118 lbs, so should that be added to the weight or no?"*
+
+**The app has no concept of machine weight anywhere.** It stores exactly the number typed, on every
+path. The answer he was given, and the reasoning, because this will be asked again:
+
+- **Everything self-referential is right either way** — progression, personal bests, the graph,
+  Volume. They compare him to him. What breaks them is *switching* convention halfway, which puts a
+  118 lb step in his own graph that he did not earn.
+- 🚨 **THE ONE PLACE THE ABSOLUTE NUMBER MATTERS IS THE RANKING, AND THAT IS THE ARGUMENT FOR
+  LEAVING IT ALONE.** `muscle-evidence.js` converts a Leg Press Calf Raise at **1.47×** a standing
+  calf raise, and that ratio was derived from Strength Level's page for that exercise — self-reported
+  logs, in which almost nobody adds the sled. Adding 118 lb would make him read stronger than he is
+  **against a population that did not add it**. The number would be more physically true and less
+  comparable, and comparability is the only thing the ranking is for.
+- ⚠️ **This is the same shape as the 45° sled vs seated leg press note** already in
+  `muscle-evidence.js` (falling into the sled's rule would over-rate a seated press by ~57 %): the
+  app's ratios describe a *logging convention*, not a physics.
+
+### B. WALKING LUNGES: ONE REP IS ONE STEP, AND THE COUNT IS PER LEG
+
+> *"1 rep= 1 step or 2 steps (1 each leg)? It's not very clear what that is."*
+
+**The app does not say, and that is the finding.** What it already assumes, consistently, everywhere
+it has had to commit:
+
+- `preset-systems.js` writes *"Dumbbells, 10 reps per leg"* for a walking lunge, *"12 reps per leg"*
+  for a Bulgarian split squat, *"8–10 reps per leg"* for a single-leg press.
+- The `/Lunge/` conversion ratio (0.45) was derived from **Strength Level's dumbbell lunge page**,
+  which counts per leg — and `Barbell Lunge` was split off it on 2026-09-13 for the load convention,
+  never for the rep one.
+- The weight is already `per_side` (two bells) and the screen already says so.
+
+So: **20 steps is 10 reps.** He was told that, and told it is the app's own convention rather than a
+rule of the sport.
+
+🚨 **BOTH QUESTIONS ARE ONE BUG, AND IT IS NOT AN ARITHMETIC BUG: THE APP NEVER STATES ITS LOGGING
+CONVENTIONS ON THE SCREEN WHERE YOU LOG.** `LOAD_HELP` exists and says what a weight means; there is
+nothing anywhere that says what a REP means on a unilateral lift, or what a machine number includes.
+🛑 **Not built** — it puts words on screens, which is Tim's category, and he asked for answers.
+Recorded as **Open work 32**.
+
+### C. 🆕 A PLANNED SET AS A PERCENTAGE OF A MAX — `js/set-targets.js`
+
+> *"when you make a workout, you say how much the suggested weight should be relative to that user's
+> max for each set, and then when that user starts a workout that suggested weight is automatically
+> put into the weight. For each set."*
+
+Built. A `% of max` chip on each exercise in the builder opens a sheet: one percentage for every set,
+or a different one per set, in 5 % steps. The runner puts the weights in the fields before anybody
+types. `targets` on the workout's exercise entry, named in `normalizeWorkout()` — **a field not named
+there is dropped on every read**, which is the trap `group` and `setType` already carry a comment about.
+
+🚨 **THE DESIGN QUESTION WAS "PERCENTAGE OF WHAT", AND THREE ANSWERS WERE REJECTED:**
+
+1. 🛑 **NOT the muscle map's cross-muscle estimate.** `deriveOpening()` can estimate a weight for a
+   lift you have never done, and it is gated four ways (ratio quality ≥ 0.45, confidence ≥ 0.35, the
+   two multiplied, and no fallback rating) precisely because that number gets walked up to a bar. **A
+   percentage of it is two inferences stacked, and a target must not become a back door around those
+   gates.** So a lift with nothing recorded gets no weight and a sentence saying why.
+2. 🛑 **NOT a max the lifter types in.** A stored max goes stale in silence — `safeAge()`'s argument
+   about a birth year, and D20's about a goal's frozen target weight.
+3. ✅ **Their own best recorded set on THAT lift**, through `ownBestSet()` — which already existed and
+   already had the rules: recent beats old (180 days), eight reps or fewer beats a higher-rep set, a
+   benchmark beats a working set. ⚠️ **A second "best set on this lift" walk was nearly written
+   before that one was found**, which would have been two answers to one question, drifting.
+
+🚨 **AND BODY-WEIGHT LIFTS ARE REFUSED OUTRIGHT, WITH A RECORDED SET SITTING RIGHT THERE.**
+`setE1rm()` returns `bodyIncluded: true` for a pull-up or an assisted dip, meaning the max is the
+**whole** load; the weight field holds only what was added or assisting. 75 % of a 250 lb
+body-inclusive max is not 187 lb of added weight — it is not a number at all. **Two quantities, one
+field, which is the mistake D30 was recorded to end.** The screen says so rather than leaving a blank.
+
+⚠️ **IT OVERRIDES THE PROGRESSION SUGGESTION, and the screen has to say so.** Somebody who wrote
+70/80/90 has already decided; an app that quietly did something else would be ignoring the
+instruction it just accepted. But a weight that disagrees with both last time's and the app's own
+proposal, *for a reason you cannot see*, reads as broken — `historyForPerson()`'s line, arriving from
+a new door. So the note names the set it was computed from: **"Plan: 70/80/90 % of your 205 × 5"**.
+A bare "75 %" would invite the exact question this app exists to answer.
+
+⚠️ **ROUNDING GOES DOWN, NEVER UP** — `startingSet()`'s existing rule, and `weightForTarget()` returns
+what the rounded number *actually* is as a percentage, so a screen printing "75 %" over 73.6 % is
+doing it knowingly rather than inventing precision.
+
+🛑 **100 % IS A CEILING AND IT IS A REFUSAL.** Real programmes prescribe 105 % rack pulls; this app
+will not, because the max is an estimate **no human has ever checked against an attempt** (Open work
+19). Prescribing 105 % of a number that may already be 10 % high is the one thing on this screen that
+could hurt somebody. The lifter can type it; the app will not put it there.
+
+🚩 **THE ONE THING FLAGGED TO TIM AND NOT DECIDED HERE.** Every targeted set is marked `prefilled`,
+including on a lift with history — a **stricter** guard than the untargeted path has, because the
+number is the app's rather than last time's, and `finish()` refusing it is what stands between a
+prescription and a workout nobody did. ⚠️ **The cost is real**: accept the prescribed weight AND the
+prefilled reps, touch nothing, and the set is dropped at save. One nudge on any field makes it
+theirs. **This does not change the untargeted path, so Open work 15 — whether history prefills should
+be guarded too — is still open and still his**; what changed is that it is now much easier to hit.
+
+### D. 🆕 THE PLATE BREAKDOWN — `js/plates.js`, and the agent corrected the brief
+
+> *"remove the 'steps of ___' label under the weight and replace it with a label that says
+> '45, 45, 25'… Make this label automatically adjust for the most optimal specific plates."*
+
+Built by a sub-agent on a disjoint file set. 275 lb on a bench press now reads **"bar + 45, 45, 25
+each side"**, and it re-solves on every tap of ±.
+
+🚨 **THE BRIEF TOLD IT WHY GREEDY IS OPTIMAL AND THE REASON WAS FALSE. IT MEASURED, AND THE
+MEASUREMENT CHANGED WHAT SHIPPED.** The brief said "each plate divides into the next up, so greedy is
+optimal here" — which is not true of 45/35/25 and is not why it works. Exhaustive dynamic programming
+over every loadable per-side weight:
+
+| inventory | result |
+|---|---|
+| `45,35,25,10,5,2.5` | **20 weights where greedy is not minimal** — 60 a side is 45+10+5 where 35+25 is two plates |
+| `45,25,10,5,2.5` | greedy minimal everywhere to 500 lb |
+| `25,20,15,10,5,2.5,1.25` | greedy minimal everywhere to 250 kg |
+| `25,20,10,5,2.5,1.25` | **36 failures** — dropping the 15 kg breaks it |
+
+**So the shipped pound inventory has no 35s.** It costs plate *count* and never correctness (2.5
+divides everything, so every reachable weight is still exact), and 45/25/10/5/2.5 is the set every
+gym owns — recommending a plate the gym may not stock is its own small lie. The test re-runs the DP
+with the 35 case as its **negative control**, so a plate added later fails here instead of quietly
+handing out three-plate advice.
+
+🔒 **THE LESSON, AND IT IS ABOUT BRIEFS RATHER THAN PLATES: A JUSTIFICATION IN A BRIEF IS A CLAIM,
+NOT A PREMISE.** The agent was told the answer and the reason; it kept the answer, checked the
+reason, found it false, and found a *different* inventory that makes the answer true. An agent that
+had taken the brief on trust would have shipped 35s and been subtly wrong forever.
+
+Everything else it decided, each of which is a refusal:
+
+- **A weight no plates make shows nothing** and the ordinary "5 lbs steps" hint returns. The argument
+  is the slot rather than the arithmetic: a near-miss list makes the same visual claim as a right one
+  under a 40 px number read mid-set, and the qualifying words are the ones a glance skips.
+  Mutation-checked — 271 lb would otherwise print 270's plates.
+- 🚨 **A T-BAR IS NOT "EACH SIDE".** The brief lumped it with the sleds; a T-bar or landmine takes
+  every disc on one post. `points: 1`, and it reads **"45, 45, 45 on one end"**. The single-sleeve set
+  is consulted **before** the per-side guard, because three of its members are `FORCE_PER_SIDE` and
+  one arm and one sleeve agree rather than clash.
+- 🛑 **A structural guard**: nothing whose `loadType` is `per_side` may be given two loading points.
+  That failure would be wrong by exactly 2× and look entirely plausible on screen.
+- **"bar +" is in the label** because a barbell and a sled produce the same list for different
+  totals, and it makes the sentence checkable standing up.
+- **No specialty-bar table** — EZ 15–25, trap 45–75, safety squat 60–70, Smith counterbalanced and
+  unpublished. Those get nothing rather than a 45 lb guess. Same for calf machines and belt squats,
+  which are sold as stacks as often as plate-loaded, and Hammer Strength iso-lateral arms, where the
+  app cannot know which arm's number was typed.
+- **A kg user gets kg plates off a 20 kg bar**, never the pound answer converted. The inventory
+  carries the unit and the pounds are converted before the greedy runs.
+
+⚠️ **The four call sites it could not reach were wired by hand afterwards** — the runner's set
+steppers, `renderSteppers`, the quick-log builder and the edit-record screen. It correctly reported
+them as the one thing left rather than reaching into files it had been told to stay out of.
+
+### E. Integration
+
+- **Two writers, one shared file, no collision.** Both added a line to `sw.js`'s precache and the two
+  landed in different places. The disjoint-file rule held again.
+- 🔒 **The agent's report was verified rather than believed.** Its mutation check was re-run here: the
+  claimed four failures are four, and the render failure prints the dishonest label the guard
+  prevents. ⚠️ The standing rule is about killed agents; it is worth applying to a healthy one's
+  claims too, and it cost two minutes.
+- **Two of the agent's own first-draft assertions were wrong and it corrected them to match the
+  code** — one of them failing on a **comment** in `plates.js` that quoted `units.units()`, which is
+  §0.14 in miniature. Its source check now strips comments first and says why.
+
+### Outside the work, found and not fixed
+
+⚠️ **`stepHint()` prints `0.1 mi steps` for distance whatever the unit** — `FIELD_META.distance.unit`
+is a hard-coded `'mi'` and there is no display-side distance setting, though `import-file.js` already
+understands km. **A kg user is shown miles.** Pre-existing, same shape as the 2026-09-06 `fmtField()`
+bug, reported by the agent from inside a file it was allowed to touch and left alone because it was
+not the job.
+
+### Tests
+
+**Nineteen no-Chrome suites green.** `render` **1,534 → 1,563**, `data-layer` **+45**, `a11y` **+3**.
+Two mutation checks, both with the mutated line printed before the run so the check itself is
+observable: `Math.floor` → `Math.round` in `weightForTarget()` flips three assertions, and deleting
+`!load.exact` from `plateLabel()` flips four across two suites.
+
+---
+
 ## 2026-09-17 — THE NETWORK PATHS WERE RUN AGAINST THE REAL PROJECT FOR THE FIRST TIME SINCE THEY WERE WRITTEN
 
 Tim, asked what was worth doing that needed no instruction from him, was given three ranked items and

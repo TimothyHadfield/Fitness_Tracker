@@ -7,6 +7,9 @@ import {
   setTypeLabel, plannedMinis, clampMinis,
 } from './set-types.js';
 import {
+  TARGET_STEP, clampTarget, normalizeTargets, targetsApply, summariseTargets,
+} from './set-targets.js';
+import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
   canStandIn, standInFor,
 } from './exercises.js';
@@ -1226,6 +1229,126 @@ export function openSetTypeSheet(item, onChange) {
   openSheet({ title: 'How are these sets done?', body });
 }
 
+/* ------------------------------------------------------------------ *
+ * A percentage of your max, per set — 2026-09-18, Tim's ask
+ *
+ * ⚠️ A LOCAL PERCENT CONTROL RATHER THAN `miniStepper`, and it is not a
+ * duplicate on purpose: that one counts whole things from 1 upwards (sets,
+ * drops, mini-sets) and this one moves in 5 % steps between 30 and 100. Giving
+ * the shared control a `step` option would have put a second meaning in it for
+ * one caller — and `js/set-targets.js` owns the bounds, so both would then have
+ * to agree about numbers only one of them can see.
+ * ------------------------------------------------------------------ */
+function percentRow(label, value, onChange) {
+  let current = clampTarget(value);
+  // ⚠️ `.mini-stepper`, `.mini-btn` and `.mini-value` VERBATIM — this control is
+  // a different arithmetic wearing the shared one's clothes, and reusing the
+  // classes is what keeps it from needing a stylesheet rule of its own.
+  const out = el('span', { class: 'mini-value mono', text: `${current} %` });
+  const nudge = (dir) => {
+    const next = clampTarget(current + dir * TARGET_STEP);
+    if (next === current) return;
+    current = next;
+    out.textContent = `${current} %`;
+    onChange(current);
+    if (navigator.vibrate) navigator.vibrate(6);
+  };
+  return el('div', { class: 'builder-controls' },
+    el('span', { class: 'builder-control-label', text: label }),
+    el('div', { class: 'mini-stepper', role: 'group', 'aria-label': `${label}, percent of your max` },
+      el('button', {
+        type: 'button', class: 'mini-btn', 'aria-label': `Lower ${label}`,
+        onClick: () => nudge(-1),
+      }, icon('minus')),
+      out,
+      el('button', {
+        type: 'button', class: 'mini-btn', 'aria-label': `Raise ${label}`,
+        onClick: () => nudge(1),
+      }, icon('plus')),
+    ),
+  );
+}
+
+/**
+ * Set, change or clear the per-set percentages for one planned exercise.
+ *
+ * 🚨 WHAT STAYS ON THE SCREEN IS WHAT THE NUMBER IS A PERCENTAGE **OF**
+ * (Rule 9). Somebody setting 75 % has to know it is 75 % of their own best
+ * recorded set on this lift and not of some estimate, because that changes what
+ * the number means and whether they trust it. Behind the ? goes why it is that
+ * rather than an estimate, and what happens when there is no max yet.
+ */
+export function openTargetSheet(item, ex, onChange) {
+  const body = el('div', { class: 'list' });
+
+  const draw = () => {
+    const on = Array.isArray(item.targets) && item.targets.length > 0;
+    const rows = [];
+
+    rows.push(el('div', { class: 'help-line' },
+      el('span', { class: 'section-label',
+        text: 'Percent of your best recorded set on this lift' }),
+      helpDot(
+        'It is your own best set on this exercise, converted to a one-rep max — not an '
+        + 'estimate borrowed from your other lifts. That is why a lift you have never done '
+        + 'here gets no weight: the app would be guessing, and this is a number you load a '
+        + 'bar to. The weight is rounded down to the nearest real increment, so it lands at '
+        + 'or just under the percentage rather than over it.',
+        { title: 'Percent of what?' }),
+    ));
+
+    if (!on) {
+      rows.push(el('button', {
+        class: 'row',
+        onClick: () => {
+          item.targets = Array.from({ length: item.sets }, () => 75);
+          draw();
+          onChange();
+        },
+      },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'Set a target for every set' }),
+          el('div', { class: 'row-sub wrap',
+            text: 'Starts every set at 75 %. Change any of them below.' }),
+        ),
+      ));
+    } else {
+      rows.push(percentRow('All sets', item.targets[0], (v) => {
+        item.targets = item.targets.map(() => v);
+        draw();
+        onChange();
+      }));
+
+      // ⚠️ One row per PLANNED set, and the array is reconciled first — the set
+      // count can have changed since the targets were written, and the sheet
+      // must not offer a row for a set that no longer exists.
+      item.targets = normalizeTargets(item.targets, item.sets) || [];
+      item.targets.forEach((v, i) => {
+        rows.push(percentRow(`Set ${i + 1}`, v, (nv) => {
+          item.targets[i] = nv;
+          onChange();
+        }));
+      });
+
+      rows.push(el('button', {
+        class: 'row',
+        onClick: () => { delete item.targets; draw(); onChange(); },
+      },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'No target' }),
+          el('div', { class: 'row-sub wrap',
+            text: 'Back to opening on last time’s numbers.' }),
+        ),
+      ));
+    }
+
+    setChildren(body, ...rows);
+  };
+  draw();
+
+  openSheet({ title: ex ? ex.name : 'Weight for each set', body });
+}
+
 /* ================================================================== *
  * Explore ready-made systems
  * ================================================================== */
@@ -2393,6 +2516,18 @@ export async function WorkoutBuilderView(param) {
               text: setTypeLabel(item),
               onClick: () => openSetTypeSheet(item, renderList),
             }),
+
+            /* The weight prescription, and it is absent rather than disabled on
+             * an exercise it cannot mean anything for — a percentage of a max
+             * needs a weight field to put the answer in. `targetsApply()` owns
+             * that test so this screen and the runner cannot disagree about it. */
+            ex && targetsApply(ex) ? el('button', {
+              type: 'button',
+              class: 'chip set-target' + (item.targets ? ' is-on' : ''),
+              'aria-pressed': String(Boolean(item.targets)),
+              text: summariseTargets(item.targets) || '% of max',
+              onClick: () => openTargetSheet(item, ex, renderList),
+            }) : null,
           ),
 
           el('textarea', {

@@ -362,6 +362,22 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
   // have to answer to both names or it would collapse mid-exit.
   ok(/\.sheet,\s*\n\.sheet-x \{/.test(CSS) && /\.sheet-backdrop,\s*\n\.sheet-backdrop-x \{/.test(CSS),
      'a closing sheet still looks like a sheet — the layout rules carry both names');
+
+  /* 🛑 THE PLATE BREAKDOWN DOES NOT MOVE — 2026-09-18, js/plates.js.
+     It is the most tempting thing in the app to animate: a line of text that
+     re-solves on every tap of ±, so a crossfade or a slide would look designed.
+     Rule 7 bans exactly that — "nothing on the logging path except a press
+     answering back" — and this line changes on the press itself, under a finger
+     that is about to press again. Pinned here because a rule with no test is a
+     rule somebody adds a transition to next year. */
+  const plateRule = CSS.match(/\.step-unit\.is-plates \{[^}]*\}/);
+  ok(Boolean(plateRule), 'the plate label has its own rule');
+  ok(Boolean(plateRule) && !/transition|animation/.test(plateRule[0]),
+     '🛑 and it declares NO motion — it re-solves on every tap of ± and Rule 7 keeps the logging path still');
+  ok(Boolean(plateRule) && /color:\s*var\(--ink-soft\)/.test(plateRule[0]),
+     '⚠️ and it paints on --ink-soft, a token the palette sweep above already clears on every '
+     + 'surface — one step up from the steps hint because an instruction read at arm\'s length is '
+     + 'not a footnote, and never a colour of its own');
 }
 
 /* ================================================================== *

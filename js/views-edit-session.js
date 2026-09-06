@@ -125,6 +125,10 @@ export async function EditSessionView(sessionId) {
           ...fields.map((f) => stepper({
             field: f,
             value: obj[f],
+            // Editing a record shows the same plate list the runner did —
+            // the number is the same number, and only one of the two screens
+            // explaining it would be the drift this label exists to avoid.
+            exercise: ex,
             suffix: f === 'weight' && loadType ? LOAD_LABEL[loadType] : null,
             onChange: (v) => { obj[f] = v; },
           }).node),

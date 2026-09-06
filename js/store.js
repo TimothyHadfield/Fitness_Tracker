@@ -22,6 +22,7 @@ import {
 } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
+import { normalizeTargets } from './set-targets.js';
 import { normalizeSchedule, pruneSchedule } from './schedule.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
@@ -884,13 +885,25 @@ export function normalizeWorkout(w) {
       // read and write. `group`, `setType` and `drops` (set-types.js) have to
       // be listed or supersets and drop sets would survive exactly until the
       // workout was next loaded. Add a field to the exercise shape, add it here.
-      exercises: normalizeGroups(w.exercises.map((e) => ({
-        exerciseId: e.exerciseId,
-        sets: Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS,
-        notes: e.notes || '',
-        ...(isNested(e.setType) ? { setType: e.setType, minis: plannedMinis(e) } : {}),
-        ...(e.group == null ? {} : { group: e.group }),
-      }))),
+      exercises: normalizeGroups(w.exercises.map((e) => {
+        const sets = Number(e.sets) > 0 ? Number(e.sets) : DEFAULT_SETS;
+        /* ⚠️ RECONCILED AGAINST `sets` ON EVERY READ, not just when the builder
+         * writes it. The set count and the percentages are two fields that have
+         * to agree, and the only place they cannot drift apart is here — a
+         * workout edited on an old build, a restored backup, or a copied
+         * programme all arrive through this function. `normalizeTargets` pads
+         * and truncates; it returns null for anything it will not vouch for,
+         * and null is the default every workout in the app already has. */
+        const targets = normalizeTargets(e.targets, sets);
+        return {
+          exerciseId: e.exerciseId,
+          sets,
+          notes: e.notes || '',
+          ...(targets ? { targets } : {}),
+          ...(isNested(e.setType) ? { setType: e.setType, minis: plannedMinis(e) } : {}),
+          ...(e.group == null ? {} : { group: e.group }),
+        };
+      })),
     };
   }
   const ids = Array.isArray(w.exerciseIds) ? w.exerciseIds : [];

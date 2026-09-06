@@ -47,6 +47,195 @@ ok(
   'every weighted exercise has a load type',
 );
 
+/* ---------- the plate breakdown (2026-09-18) ---------- */
+// The label under the weight stepper: which discs make this number. Every
+// assertion here is about a claim printed beside a 40px figure and read with a
+// bar in the other hand, so the standard is "exactly right or absent".
+{
+  const { plateLoad, plateLabel, LB_INVENTORY, KG_INVENTORY, inventoryFor } =
+    await import('../js/plates.js');
+  const { plateLoadFor } = await import('../js/exercises.js');
+
+  const bb = plateLoadFor(byName('Barbell Bench Press'));
+  const label = (lb, inv = LB_INVENTORY, opts = bb) =>
+    plateLabel(plateLoad(lb, { inventory: inv, ...opts }));
+
+  /* ---- Tim's own sentence, 2026-09-18 ---- */
+  ok(label(275) === 'bar + 45, 45, 25 each side',
+     `275 lb is "bar + 45, 45, 25 each side" — Tim's example, back verbatim (${label(275)})`);
+  ok(label(45) === 'bar only', 'an empty 45 lb bar says so rather than listing nothing');
+  ok(label(225) === 'bar + 45, 45 each side', '225 is two 45s a side');
+
+  /* ---- 🚨 IT NEVER ROUNDS TO MAKE THE NUMBER FIT ---- */
+  {
+    const odd = plateLoad(137, { inventory: LB_INVENTORY, ...bb });
+    ok(odd.exact === false && odd.short === 1,
+       `137 lb cannot be built from 45/25/10/5/2.5 and says so — 1 lb short a side (${odd.short})`);
+    ok(plateLabel(odd) === null,
+       '🚨 and the LABEL is null, so the caller prints its ordinary steps hint. A nearly-right '
+       + 'plate list makes the same visual claim as a right one, in the same slot, at a glance');
+    ok(odd.loaded < 137,
+       `⚠️ and what it did manage is UNDER the ask, never over (${odd.loaded}) — greedy only ever `
+       + 'takes a plate that fits, so the failure direction is "not enough on the bar"');
+    const below = plateLoad(35, { inventory: LB_INVENTORY, ...bb });
+    ok(below.belowBar === true && plateLabel(below) === null,
+       'a weight lighter than the empty bar is not a hard weight to build, it is an impossible one');
+    ok(plateLabel(plateLoad(0, { inventory: LB_INVENTORY, ...bb })) === null,
+       'and a stepper sitting at 0 shows no breakdown at all');
+  }
+
+  /* ---- 🚨 A KG USER GETS KG PLATES, NOT CONVERTED POUNDS ---- */
+  // The one thing this feature could get catastrophically wrong: everything is
+  // STORED in pounds, and a kilo gym owns none.
+  {
+    const stored = 100 * LB_PER_KG;                       // 100 kg, on disk as 220.46 lb
+    ok(label(stored, KG_INVENTORY) === 'bar + 25, 15 each side',
+       `100 kg is a 20 kg bar and 25 + 15 a side (${label(stored, KG_INVENTORY)})`);
+    ok(label(stored, LB_INVENTORY) === null,
+       '⚠️ and the IDENTICAL stored number under the pound inventory refuses outright — 220.46 lb '
+       + 'is not a weight pound plates make. The inventory carries the unit; the pounds are '
+       + 'converted before the greedy runs, never a pound answer relabelled afterwards');
+    ok(label(20 * LB_PER_KG, KG_INVENTORY) === 'bar only', 'and the empty bar is 20 kg, not 45 lb');
+    ok(inventoryFor('kg') === KG_INVENTORY && inventoryFor('lbs') === LB_INVENTORY
+       && inventoryFor(undefined) === LB_INVENTORY,
+       'inventoryFor() falls back to pounds, which is what the app stores');
+  }
+
+  /* ---- 🔒 EVERY WEIGHT THE STEPPER CAN REACH IS BUILDABLE, IN BOTH UNITS ---- */
+  // If this ever fails the label silently disappears for a whole class of
+  // weights, which reads as the feature being broken rather than as a refusal.
+  {
+    let missLb = 0, missKg = 0;
+    for (let lb = 50; lb <= 700; lb += 5) {
+      if (!plateLoad(lb, { inventory: LB_INVENTORY, ...bb }).exact) missLb++;
+    }
+    for (let kg = 22.5; kg <= 300; kg += 2.5) {
+      if (!plateLoad(kg * LB_PER_KG, { inventory: KG_INVENTORY, ...bb }).exact) missKg++;
+    }
+    ok(missLb === 0, `every 5 lb step from 50 to 700 lb is loadable exactly (${missLb} misses)`);
+    ok(missKg === 0,
+       `⚠️ and every 2.5 kg step from 22.5 to 300 kg too — this is the float check as much as the `
+       + `arithmetic one, since a round kg weight is an irrational number of pounds (${missKg} misses)`);
+  }
+
+  /* ---- 🚨 GREEDY IS ONLY MINIMAL OVER A CANONICAL SET, SO CHECK IT ---- */
+  /* This is the guard on the inventories themselves, and it exists because the
+   * obvious argument for greedy is FALSE here. "Each plate divides into the next
+   * one up" is not why it works — 25 does not divide 45 — and the plate that
+   * breaks it is the one every gym has: adding a 35 lb makes greedy say
+   * 45 + 10 + 5 for 60 a side where 35 + 25 is two plates. Dropping the 15 kg
+   * breaks the kg set the same way at 40. Exhaustive DP, so a plate added to
+   * plates.js without re-deriving this fails here instead of quietly handing
+   * out three-plate advice. */
+  {
+    const canonical = (plates, maxSide) => {
+      const unit = plates[plates.length - 1];
+      const n = Math.round(maxSide / unit);
+      const p = plates.map((x) => Math.round(x / unit));
+      const dp = new Array(n + 1).fill(Infinity);
+      dp[0] = 0;
+      for (let i = 1; i <= n; i++) {
+        for (const c of p) if (c <= i && dp[i - c] + 1 < dp[i]) dp[i] = dp[i - c] + 1;
+      }
+      let worst = null;
+      for (let i = 1; i <= n; i++) {
+        let rem = i, g = 0;
+        for (const c of p) while (rem >= c) { rem -= c; g++; }
+        if (rem === 0 && g !== dp[i] && !worst) worst = { at: i * unit, greedy: g, best: dp[i] };
+      }
+      return worst;
+    };
+    const badLb = canonical([...LB_INVENTORY.plates], 500);
+    const badKg = canonical([...KG_INVENTORY.plates], 250);
+    ok(badLb === null,
+       `largest-first greedy is MINIMAL over ${LB_INVENTORY.plates.join('/')} up to 500 lb a side`
+       + (badLb ? ` — but ${badLb.at}: greedy ${badLb.greedy} plates vs ${badLb.best}` : ''));
+    ok(badKg === null,
+       `and over ${KG_INVENTORY.plates.join('/')} up to 250 kg a side`
+       + (badKg ? ` — but ${badKg.at}: greedy ${badKg.greedy} plates vs ${badKg.best}` : ''));
+    // 🔒 The negative control: the check above is worthless if it cannot fail.
+    const with35 = canonical([45, 35, 25, 10, 5, 2.5], 500);
+    ok(with35 && with35.at === 60 && with35.greedy === 3 && with35.best === 2,
+       '🔒 and it CAN fail — a 35 lb plate in the set makes 60 a side three plates where two would '
+       + 'do, which is exactly why 35s are not in the shipped inventory');
+  }
+
+  /* ---- which exercises get a breakdown at all ---- */
+  {
+    const shape = (n) => JSON.stringify(plateLoadFor(byName(n)));
+    ok(shape('Barbell Bench Press') === '{"bar":true,"points":2}', 'a barbell is a bar and two sides');
+    ok(shape('Leg Press') === '{"bar":false,"points":2}',
+       'a 45-degree sled is two sides and NO bar — the sled’s own weight is unmarked, so the '
+       + 'number typed is the plates');
+    ok(shape('T-Bar Row') === '{"bar":false,"points":1}',
+       '🚨 a T-bar takes every disc on ONE end — "each side" would be a lie about the machine');
+    ok(shape('Landmine Press') === '{"bar":false,"points":1}',
+       '⚠️ and so does a landmine press, which is FORCE_PER_SIDE — one arm and one sleeve agree '
+       + 'rather than clash, which is why the single-sleeve set is consulted first');
+
+    for (const [n, why] of [
+      ['Lat Pulldown', 'a selectorised stack is a pin, not a pile of discs'],
+      ['Machine Chest Press', 'the library cannot tell a plate-loaded machine from a stack, so Machine alone earns nothing'],
+      ['Hammer Strength Row', 'iso-lateral arms load separately and the app cannot know which number was typed'],
+      ['Dumbbell Bench Press', 'a dumbbell has no sides to load'],
+      ['Cable Fly', 'a cable stack would be an outright lie'],
+      ['EZ-Bar Curl', 'an EZ bar is 15 to 25 lb depending on the make — there is no bar figure to state'],
+      ['Trap Bar Deadlift', 'a trap bar is 45 to 75 lb, unmarked'],
+      ['Safety Bar Squat', 'a safety squat bar is 60 to 70 lb, unmarked'],
+      ['Smith Machine Squat', 'a Smith bar is counterbalanced and nobody publishes the residue'],
+      ['Standing Calf Raise', 'sold as a stack as often as plate-loaded'],
+      ['Belt Squat', 'pin-loaded and plate-loaded models are both common'],
+      ['Svend Press', 'equipment Plate — the plate IS the implement, there is no bar in the room'],
+      ['Pull-Up', 'bodyweight'],
+      ['Plank', 'no weight field at all'],
+    ]) ok(plateLoadFor(byName(n)) === null, `no breakdown for ${n} — ${why}`);
+
+    ok(plateLoadFor(null) === null && plateLoadFor({}) === null,
+       'and nothing at all is refused rather than thrown at');
+  }
+
+  /* ---- 🛑 THE STRUCTURAL GUARD: "per side" and "two sides to load" cannot both hold ---- */
+  // A row that was per_side AND given two loading points would show half the
+  // plates that are on the bar — wrong by exactly a factor of two, and
+  // plausible enough on screen to survive a review.
+  {
+    const contradictions = BUILT_IN_EXERCISES.filter((e) => {
+      const pl = plateLoadFor(e);
+      return pl && pl.points === 2 && e.loadType === 'per_side';
+    });
+    ok(contradictions.length === 0,
+       contradictions.length
+         ? `per-side exercises given two loading points: ${contradictions.map((e) => e.name).join(', ')}`
+         : 'no exercise is both "the number is one side" and "there are two sides to load"');
+    const unweighted = BUILT_IN_EXERCISES.filter((e) => plateLoadFor(e) && !e.fields.includes('weight'));
+    ok(unweighted.length === 0, 'and nothing without a weight field gets a plate list');
+  }
+
+  /* ---- plates.js is pure, and stays pure ---- */
+  {
+    const { readFileSync } = await import('node:fs');
+    const raw = readFileSync(new URL('../js/plates.js', import.meta.url), 'utf8');
+    /* 🚨 COMMENTS STRIPPED FIRST, and the first draft of this block did not do
+     * it and failed — on the sentence "the inventory for a `units.units()`
+     * value", which is a comment SAYING the module does not read the unit. That
+     * is §0.14 in miniature: a source assertion in this codebase is searching a
+     * file whose comments quote everything the code does, so a bare grep is a
+     * coin toss about which copy it finds. */
+    const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    ok(!/document\.|window\.|localStorage|Date\.now|new Date/.test(src),
+       'plates.js touches no DOM, no storage and no clock');
+    const imports = [...src.matchAll(/from '\.\/([\w-]+\.js)'/g)].map((m) => m[1]);
+    ok(imports.length === 1 && imports[0] === 'units.js',
+       `it imports units.js and nothing else (${imports.join(', ') || 'nothing'}) — LB_PER_KG is `
+       + 'borrowed rather than re-typed, because a second copy of 2.2046226218 is a second thing '
+       + 'that can drift');
+    ok(/LB_PER_KG/.test(src) && !/units\(\)|toDisplay|fromDisplay/.test(src),
+       '🚨 and it takes the CONSTANT and never the cached unit — that is module state, and a pure '
+       + 'function whose answer depends on it depends on something invisible to its arguments. '
+       + 'The caller picks the inventory');
+  }
+}
+
 /* ---------- e1RM math (Marzagao 2026) ---------- */
 // 1RM = w * (1 + (r-1)^0.85 / k(w)),  k(w) = max(K_FLOOR, -2.55 + 4.58*ln(w_kg))
 ok(e1rm(100, 1) === 100, 'a single rep is its own 1RM — no extrapolation');
@@ -4725,6 +4914,121 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(!('schedule' in copied),
      '⚠️ a ready-made system carries NO plan rather than a broken one — presets do not describe days '
      + 'of the week, and inventing one would be the app writing somebody’s programme for them');
+
+  await st.clearAll();
+}
+
+/* ================= a planned set as a percentage of a max ================= */
+/* 2026-09-18, Tim: "you say how much the suggested weight should be relative to
+ * that user's max for each set, and then when that user starts a workout that
+ * suggested weight is automatically put into the weight."
+ *
+ * The runner half is in render.test.mjs; this is the arithmetic and the round
+ * trip through the store. */
+{
+  const { store: st } = await import('../js/store.js');
+  const {
+    TARGET_STEP, MIN_TARGET, MAX_TARGET, isTarget, clampTarget,
+    normalizeTargets, targetsApply, weightForTarget, summariseTargets,
+  } = await import('../js/set-targets.js');
+  const id = (n) => byName(n).id;
+
+  /* ---- the bounds, and the one that is a refusal ---- */
+  ok(TARGET_STEP === 5 && MIN_TARGET === 30 && MAX_TARGET === 100,
+     'targets move in 5 % steps between 30 and 100');
+  ok(!isTarget(105) && clampTarget(105) === 100,
+     '🛑 105 % IS REFUSED AND CLAMPED, and it is a decision rather than an oversight — real '
+     + 'programmes do prescribe above a max, and the max here is an ESTIMATE no human has ever '
+     + 'checked against an attempt (Open work 19). Prescribing 105 % of a number that may already '
+     + 'be 10 % high is the one thing on this screen that could hurt somebody');
+  ok(clampTarget(72) === 70 && clampTarget(73) === 75 && clampTarget(1) === 30,
+     'and anything else snaps to the nearest 5 % and into range');
+  ok(clampTarget('abc') === null && clampTarget(undefined) === null,
+     'a value that is not a number is null, never a default — a set quietly given a made-up '
+     + 'percentage is the app inventing a weight');
+
+  /* ---- reconciliation against the planned set count ---- */
+  ok(normalizeTargets(null, 3) === null && normalizeTargets([], 3) === null,
+     'no prescription is null, which is what every workout in the app has today');
+  ok(normalizeTargets([70, 75, 80], 0) === null,
+     'and an exercise with no sets cannot carry one');
+  ok(normalizeTargets([70, 75, 80], 5).join() === '70,75,80,80,80',
+     '⚠️ PADDING REPEATS THE LAST VALUE — a ramp’s last rung is the working weight, and somebody '
+     + 'adding a fourth set to 70/75/80 means another set at 80. Padding with a default would '
+     + 'prescribe a weight nobody chose');
+  ok(normalizeTargets([70, 75, 80], 2).join() === '70,75',
+     'and shrinking drops from the end, the same cut resizeSchedule() makes');
+  ok(normalizeTargets([70, 'x', 80], 3) === null,
+     '🚨 ONE UNUSABLE ROW DROPS THE WHOLE PRESCRIPTION rather than defaulting that set — half a '
+     + 'ramp is not a ramp');
+  ok(normalizeTargets([73], 2).join() === '75,75',
+     'every value is snapped on the way through, so nothing downstream has to re-check the bounds');
+
+  /* ---- what goes in the field ---- */
+  const at75 = weightForTarget(75, 200, 5);
+  ok(at75.weight === 150 && at75.percent === 75 && Math.round(at75.achieved) === 75,
+     '75 % of a 200 lb max is 150 lb');
+  const rounded = weightForTarget(75, 205, 5);
+  ok(rounded.weight === 150,
+     '⚠️ ROUNDING GOES DOWN, NEVER UP — 75 % of 205 is 153.75 and the answer is 150. The smallest '
+     + 'pair of plates in the room is the resolution this number can honestly claim, and rounding '
+     + 'up hands somebody more than the prescription said (the rule startingSet() already follows)');
+  ok(rounded.achieved < 75 && rounded.achieved > 73,
+     'and it reports what the rounded weight REALLY is as a percentage, so a screen printing "75 %" '
+     + 'over it is doing so knowing the difference rather than inventing precision');
+  ok(weightForTarget(75, 0, 5) === null && weightForTarget(75, null, 5) === null,
+     'no max means no answer — the caller says so on screen rather than filling the field');
+  ok(weightForTarget(30, 10, 5) === null,
+     '⚠️ and a target whose nearest real increment below it is ZERO is null rather than one plate — '
+     + 'the stepFor() choice in progression.js: at the bottom of the range there is nothing to be '
+     + 'done about the plates in the room, and saying so beats inventing a jump');
+
+  /* ---- which exercises it can mean anything for ---- */
+  const withWeight = BUILT_IN_EXERCISES.find((e) => e.fields.includes('weight'));
+  const noWeight = BUILT_IN_EXERCISES.find((e) => !e.fields.includes('weight'));
+  ok(targetsApply(withWeight) === true,
+     'a lift with a weight field can carry a percentage');
+  ok(noWeight && targetsApply(noWeight) === false,
+     '⚠️ and one without has nowhere to put the answer — the chip is ABSENT on those rather than '
+     + 'disabled, and views-session.js asks the same function so the two screens cannot disagree');
+
+  ok(summariseTargets([75, 75, 75]) === '75 %'
+     && summariseTargets([70, 75, 80]) === '70/75/80 %'
+     && summariseTargets([50, 60, 70, 80, 90]) === '50–90 %',
+     'the chip label collapses a long ramp so a chip stays a chip');
+  ok(summariseTargets(null) === null,
+     'and says nothing at all when there is nothing prescribed');
+
+  /* ---- the round trip through the store ---- */
+  await st.clearAll();
+  const tSys = await st.saveSystem({ name: 'Percent' });
+  const benchId = id('Barbell Bench Press');
+  const saved = await st.saveWorkout({
+    name: 'Heavy', systemId: tSys.id,
+    exercises: [{ exerciseId: benchId, sets: 3, targets: [70, 80, 90] }],
+  });
+  ok((await st.getWorkout(saved.id)).exercises[0].targets.join() === '70,80,90',
+     '🚨 `targets` SURVIVES A READ — normalizeWorkout() rebuilds each exercise field by field, so a '
+     + 'field not named there is silently dropped on every read and write, exactly as `group` and '
+     + '`setType` would be');
+  ok(JSON.parse(localStorage.getItem('ftrack:v1:workouts'))
+       .find((r) => r.id === saved.id).exercises[0].targets.join() === '70,80,90',
+     'and it is really on disk');
+
+  await st.saveWorkout({ ...saved, exercises: [{ exerciseId: benchId, sets: 5, targets: [70, 80, 90] }] });
+  ok((await st.getWorkout(saved.id)).exercises[0].targets.join() === '70,80,90,90,90',
+     '⚠️ RECONCILED ON READ, not only when the builder writes it — a workout edited on an old '
+     + 'build, a restored backup and a copied programme all arrive through normalizeWorkout(), and '
+     + 'the set count and the percentages are two fields that must never drift apart');
+
+  await st.saveWorkout({ ...saved, exercises: [{ exerciseId: benchId, sets: 3, targets: [70, 'x', 90] }] });
+  ok(!('targets' in (await st.getWorkout(saved.id)).exercises[0]),
+     'and a malformed prescription is dropped on read rather than handed to the runner');
+
+  await st.saveWorkout({ ...saved, exercises: [{ exerciseId: benchId, sets: 3 }] });
+  ok(!('targets' in (await st.getWorkout(saved.id)).exercises[0]),
+     'an exercise with no targets carries no key at all — absent is the default and stays the '
+     + 'default, so nothing downstream has to tell "none" from "empty"');
 
   await st.clearAll();
 }

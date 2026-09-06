@@ -1201,6 +1201,22 @@ select.input {
 .step-value:focus { outline: none; color: var(--accent); }
 .step-unit { font-size: 11px; color: var(--ink-faint); text-align: center; font-weight: 600; }
 
+/* The plate breakdown, when the same slot is holding one (2026-09-18, js/plates.js).
+   ⚠️ --ink-soft rather than --ink-faint, and this is the whole of the styling
+   argument: "5 lb steps" is a footnote about the control, but "bar + 45, 45, 25
+   each side" is an INSTRUCTION being read at arm's length with a bar in the
+   other hand. One step up the ink scale, not a colour of its own.
+   Tabular figures so a two-digit and a three-digit plate do not jitter the list
+   as the number is stepped. It is allowed to wrap — a truncated plate list is a
+   wrong plate list — and `balance` keeps a wrapped one from orphaning "side".
+   🛑 NO MOTION, deliberately: Rule 7 bans it on the logging path, and this line
+   changes on every tap of ±. */
+.step-unit.is-plates {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+
 /* ==========================================================================
    Session runner
    ========================================================================== */

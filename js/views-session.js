@@ -22,6 +22,9 @@ import {
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
 import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exercise-estimate.js';
+import {
+  normalizeTargets, targetsApply, weightForTarget, summariseTargets,
+} from './set-targets.js';
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
 
@@ -388,8 +391,14 @@ export async function SessionView(workoutId) {
    * `forName` is who this is FOR — null for the owner — and it decides whether
    * a derived opening weight may be read at all (see `derivedWeights`).
    */
-  function entriesFor(sessions, bodyWeight, forDate, forName) {
+  function entriesFor(sessions, bodyWeight, forDate, forName, ownRows) {
     const step = units.fromDisplay(units.weightStep());
+    /* The rows a percentage target reads its max from. ⚠️ THIS PERSON'S, like
+     * everything else in here: `sessions` is already scoped to whoever this
+     * copy of the workout is for, and a guest has no benchmarks and no weigh-in
+     * series in this account — which is the true state rather than a degraded
+     * one, and the same shape `ownRowsFor()` builds further down. */
+    const rows = ownRows || { sessions, benchmarks: [], bodyWeights: [] };
     const out = [];
     for (const { item, ex } of planned) {
       const history = historyFor(sessions, { exerciseId: ex.id, workoutId: workout.id });
@@ -435,9 +444,82 @@ export async function SessionView(workoutId) {
        * app had just filled in. */
       if (opening && opening.how) for (const s of sets) s.prefilled = true;
 
+      /* ================================================================
+       * THE PLAN'S OWN PRESCRIPTION — 2026-09-18, Tim's ask.
+       *
+       * 🚨 IT OVERRIDES THE PROGRESSION SUGGESTION, and that is the feature
+       * rather than a collision. `suggestProgression()` answers "what should
+       * you do next, given what you did last time"; a target answers "what
+       * does this programme say this set is". Somebody who wrote 70/80/90 on
+       * a workout has already decided, and an app that quietly did something
+       * else would be ignoring the instruction it just accepted. The screen
+       * says which of the two put the number there — see the note below and
+       * `targetNote` in the pane — because a number that disagrees with last
+       * week's for a reason you cannot see reads as broken.
+       *
+       * ⚠️ ONLY THE WEIGHT. Reps still come from history, the progression
+       * rule, or the 10-rep default. Tim asked for the weight, and a
+       * percentage of a maximum says nothing whatever about a rep count.
+       * ================================================================ */
+      const wanted = targetsApply(ex) ? normalizeTargets(item.targets, item.sets) : null;
+      let targets = null;
+      if (wanted) {
+        const own = ownBestSet(ex, rows, forDate);
+        /* ⚠️ `bodyIncluded` IS A REFUSAL, NOT A MISSING NUMBER, and it is the
+         * one worth reading twice. On a pull-up or an assisted dip the max is
+         * the WHOLE load — body plus anything added — while the weight field
+         * holds only the added or assisting part. 75 % of a 250 lb
+         * body-inclusive max is not 187 lb of added weight; the two are
+         * different quantities, and js/set-targets.js's header has the long
+         * version. */
+        const max = own && !own.bodyIncluded
+          ? (own.perSide ? own.e1rm / 2 : own.e1rm)
+          : null;
+        const applied = max ? wanted.map((p) => weightForTarget(p, max, step)) : null;
+        if (applied && applied.every(Boolean)) {
+          applied.forEach((a, i) => { if (sets[i]) sets[i].weight = a.weight; });
+          /* 🚨 EVERY TARGETED SET IS `prefilled`, INCLUDING ON A LIFT WITH
+           * HISTORY — which is a stricter guard than the untargeted path has.
+           * The reason is that this number is the APP'S, not last time's: a
+           * set carrying a number nobody performed is exactly the 2026-08-28
+           * defect, and `finish()` refusing it is what stands between a
+           * prescription and a workout nobody did being written to disk.
+           *
+           * ⚠️ THE COST IS REAL AND THE SCREEN HAS TO CARRY IT: a lifter who
+           * accepts the prescribed weight AND the prefilled reps without
+           * touching either loses the set at save. One nudge on any field
+           * makes it theirs (see the stepper's onChange). This does NOT
+           * change the untargeted path, so Open work 15 — whether history
+           * prefills should be guarded too — is still open and still Tim's. */
+          for (const s of sets) s.prefilled = true;
+          targets = {
+            percents: wanted,
+            achieved: applied.map((a) => a.achieved),
+            fromWeight: own.weight,
+            fromReps: own.reps,
+            fromDate: own.date,
+            source: own.source,
+            perSide: own.perSide,
+            withheld: null,
+          };
+        } else {
+          /* Looked and would not stand behind a number — the `openingWithheld`
+           * argument, applied to a second door. A field left blank BECAUSE the
+           * app weighed the evidence must read as a decision rather than as
+           * nothing having happened. */
+          targets = {
+            percents: wanted,
+            withheld: own && own.bodyIncluded ? 'bodyweight' : 'no-max',
+          };
+        }
+      }
+
       out.push({
         lastSets,
         suggestion,
+        // The plan's percentages and what became of them — null when the
+        // workout prescribes nothing, which is every workout in the app today.
+        targets,
         exerciseId: ex.id,
         exerciseName: ex.name,
         fields: ex.fields,
@@ -596,6 +678,25 @@ export async function SessionView(workoutId) {
     const latestWeight = await store.latestBodyWeight().catch(() => null);
     const bodyWeight = latestWeight ? latestWeight.weight : null;
 
+    /* The owner's own rows, for a percentage target's max (2026-09-18).
+     *
+     * ⚠️ READ HERE RATHER THAN THROUGH `ownRowsFor()`, which is async and is
+     * defined below this: `entriesFor()` is synchronous and the prescribed
+     * weight has to be in the set from the moment the draft is written, or the
+     * first render shows a blank field that fills itself in a moment later.
+     * A deliberate benchmark is the most considered max there is, so it counts
+     * (the same call `ownBestSet()`'s caption already makes).
+     *
+     * Every failure is an empty list and a quieter screen: no max means no
+     * prescribed weight and a note that says so, which is a state the runner
+     * has to handle anyway. */
+    const ownRows = await Promise.all([
+      store.getBenchmarks().catch(() => []),
+      store.getBodyWeights().catch(() => []),
+    ]).then(([benchmarks, bodyWeights]) => ({
+      sessions, benchmarks: benchmarks || [], bodyWeights: bodyWeights || [],
+    })).catch(() => ({ sessions, benchmarks: [], bodyWeights: [] }));
+
     /* ---- location (Open work 0m) ----
      * A HAND-TYPED label, never GPS — the privacy decision is that nothing
      * more precise than what the owner wrote can exist to leak. Published at
@@ -639,7 +740,7 @@ export async function SessionView(workoutId) {
       state.location = withLoc ? withLoc.location : '';
     }
 
-    state.entries = entriesFor(sessions, bodyWeight, state.date, null);
+    state.entries = entriesFor(sessions, bodyWeight, state.date, null, ownRows);
     // ⚠️ Kept on the DRAFT, not looked up again at render time, and the reason is
     // the same one bodyWeightOn() exists for: this is what the lifter weighed on
     // the day of the session. A weigh-in logged tomorrow must not retroactively
@@ -2180,6 +2281,10 @@ export async function SessionView(workoutId) {
       const s = stepper({
         field: f,
         value: target[f],
+        // Plates under the number where the lift is loaded with them (2026-09-18).
+        // ⚠️ `ex` can be undefined for a row missing from the library, and
+        // `plateLoadFor()` answers null for that — a hint, never a throw.
+        exercise: ex,
         // ⚠️ "of help" read as "Weight of help" in the label, because the suffix
         // sits directly after the field name — the slot exists to say what KIND
         // of weight this is ("total", "per side"), and a prepositional phrase
@@ -2440,6 +2545,35 @@ export async function SessionView(workoutId) {
       entry.hadHistory
         ? el('div', { class: 'prefill-note' }, icon('check', 16),
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
+        : null,
+
+      /* 🚨 WHERE A PRESCRIBED WEIGHT CAME FROM — 2026-09-18.
+       *
+       * This is the line the feature cannot ship without. A target OVERRIDES
+       * the progression suggestion, so the number in the box can disagree with
+       * both last time's and the one the app would otherwise have proposed —
+       * and "no suggestion for a reason you cannot see reads as broken"
+       * (historyForPerson, above) is exactly as true of a suggestion that
+       * changed for a reason you cannot see.
+       *
+       * ⚠️ It names the SET IT WAS COMPUTED FROM, not just the percentage. A
+       * bare "75 %" invites the question this app exists to answer — 75 % of
+       * WHAT — and the honest answer is one recorded set with a date on it,
+       * which is also the thing the lifter can sanity-check at a glance.
+       *
+       * ⚠️ AND THE TWO REFUSALS SAY SO IN WORDS rather than leaving a blank
+       * box under a workout that plainly asked for a number. Same argument as
+       * `openingWithheld` directly below, arriving from a different door. */
+      entry.targets
+        ? el('div', { class: 'session-ex-meta', text: entry.targets.withheld === null
+            ? `Plan: ${summariseTargets(entry.targets.percents)} of your `
+              + `${units.withUnit(entry.targets.fromWeight)} × ${entry.targets.fromReps}`
+              + (entry.targets.source === 'benchmark' ? ' test' : '')
+            : entry.targets.withheld === 'bodyweight'
+              ? `Plan asks for ${summariseTargets(entry.targets.percents)} — a percentage `
+                + 'cannot be worked out for a lift your own body weight is part of.'
+              : `Plan asks for ${summariseTargets(entry.targets.percents)} — nothing recorded `
+                + 'on this lift yet to take a percentage of.' })
         : null,
 
       /* 🚨 THE OTHER HALF OF THAT SENTENCE: WHY THERE IS NO NUMBER (2026-09-06).
@@ -4200,6 +4334,7 @@ export async function ActivityLogView(presetName) {
         stepper({
           field: f,
           value: state.values[f] || 0,
+          exercise: state.exercise,
           onChange: (v) => { state.values[f] = v; },
         }).node),
     );
@@ -4473,6 +4608,7 @@ export async function BenchmarkView() {
       const s = stepper({
         field: f,
         value: 0,
+        exercise: state.exercise,
         suffix: f === 'weight' && state.exercise.loadType ? LOAD_LABEL[state.exercise.loadType] : null,
         onChange: (v) => { state.values[f] = v; renderCaptions(); },
       });

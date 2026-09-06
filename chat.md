@@ -2405,3 +2405,60 @@ technique from one sentence. This one lives in the project now and can be re-run
 database rules change.
 
 **Nothing in the app itself changed** — no screens, no behaviour. This was verification.
+
+## 2026-09-18 — a leg day, two questions, and two things built
+
+**Machine weight: no, and I'd keep logging 270.** The app has no idea machines weigh anything — it
+stores exactly what you type. For progression, personal bests, your graph and volume that's fine,
+because those only ever compare you to you; what would break them is switching convention halfway,
+which would put a 118 lb jump in your own graph that you didn't earn.
+
+The one place the absolute number matters is the muscle map, and that's the argument for leaving it
+alone. Your leg press calf raise gets converted by a ratio the app has at 1.47× a standing calf
+raise, and that ratio came from Strength Level's page for that exercise — people self-reporting what
+they loaded, where almost nobody adds the sled. Add 118 and you'd read stronger than you are against
+a population that didn't. Worth a note on the exercise so you remember which way you chose.
+
+**Walking lunges: one rep is one step, and you count one leg.** So 20 steps is 10 reps. The app
+doesn't say this anywhere, which is the real answer — but it's already the convention everywhere
+else in it: the ready-made programmes say "10 reps per leg" for walking lunges and "12 per leg" for
+Bulgarian split squats, and the lunge conversion came from a page that counts per leg.
+
+Both of your questions are the same gap: the app never says what it means by a rep or by a machine
+number on the screen where you're logging. I've written that down as something to fix, not fixed it —
+it's words on screens, which is yours.
+
+**Weights as a percentage of your max — built.** Each exercise in the builder has a `% of max` chip.
+Set one number for every set or a different one per set (70/80/90), in 5% steps. Start the workout
+and the weights are already in.
+
+Four things worth knowing, because they change what it does:
+
+- The percentage is of **your own best recorded set on that lift**, not the estimate the muscle map
+  makes from your other lifts. A lift you've never done here gets no weight and a line saying why —
+  that estimate is deliberately fenced off everywhere else because it's a number you'd load a bar to,
+  and a percentage of a guess is two guesses.
+- It **rounds down**, never up.
+- It **overrides** the normal suggestion, and says so: *"Plan: 70/80/90% of your 205 × 5"*, naming
+  the set so you can check it.
+- **Refused on pull-ups, dips and anything assisted.** Their max includes your body weight; the field
+  doesn't. Different numbers.
+
+One thing I want your call on: a set with a prescribed weight counts as "not done yet" until you
+touch something. So if the weight and reps are both right and you tap nothing, that set won't save.
+That's the app's existing rule for numbers it filled in itself, but targets make it much easier to
+hit. Leave it, warn on the screen, or count moving on from a set as doing it — your pick.
+
+**The plate label — built.** The line under the weight now reads *"bar + 45, 45, 25 each side"* for
+275, and it re-does itself every time you tap ± . A leg press says the plates with no bar. A T-bar
+says "on one end", because everything goes on one post. Dumbbells, cables and pin-loaded machines
+keep the old label.
+
+Two deliberate refusals in it: a weight no plates can make shows nothing rather than a nearly-right
+list, and specialty bars (EZ, trap, safety squat, Smith) get nothing rather than a guessed bar
+weight — they're unmarked and vary by make.
+
+One small surprise from building it: I told the agent doing this job *why* greedy plate-picking is
+optimal, and my reason was wrong. It checked instead of taking my word, found that a 35 lb plate
+breaks it (60 a side comes out as 45+10+5 when 35+25 is two plates), and dropped 35s from the list —
+which is also the set every gym actually has.

@@ -506,6 +506,117 @@ const FORCE_TOTAL = new Set([
 ]);
 
 /* ------------------------------------------------------------------ *
+ * How the weight is PHYSICALLY LOADED — the plate breakdown
+ * ------------------------------------------------------------------ *
+ *
+ * 🆕 2026-09-18, Tim: *"I want to display the weight that is being used on
+ * certain machines that use plates instead of numbers … a label that says
+ * '45, 45, 25' … which would associate with 275, because 45 (bar) +
+ * 2x(45+45+25) = 275 lbs."*
+ *
+ * ⚠️ THIS IS A THIRD, SEPARATE QUESTION FROM THE TWO SETS ABOVE, and the three
+ * must not be conflated. `loadTypeFor()` asks *what does the number the user
+ * typed MEAN* — one side or the whole load — and it is half of every strength
+ * ratio. This asks *where do the discs physically go*, and it is a display hint
+ * and nothing else: no ratio, no rating and no stored number reads it. A name
+ * moved between the sets below changes a label; a name moved between
+ * FORCE_PER_SIDE and FORCE_TOTAL changes a rating. Keep them apart.
+ *
+ * 🛑 THE LIBRARY CANNOT TELL A PLATE-LOADED MACHINE FROM A SELECTORISED STACK.
+ * Both are `equipment: 'Machine'` and there is no field that separates them, so
+ * these are hand-named sets — which is also the honest shape, because the answer
+ * is a fact about a make of machine rather than about an exercise. A plate list
+ * on a cable stack or a pin-loaded machine would be an outright lie: the number
+ * on the pin is not a pile of discs.
+ *
+ * ⚠️ NAMES ARE IN ONLY WHERE THE LOADING IS NEAR-UNIVERSAL. What is deliberately
+ * ABSENT, so nobody re-derives it and quietly adds it:
+ *
+ *   Seated Leg Press, Standing Calf Raise, Seated Calf Raise, Donkey Calf Raise
+ *     — sold in both plate and selectorised versions, and the commercial-gym
+ *       default for all four is the stack. The 45-degree sled is the one leg
+ *       machine that is plate-loaded everywhere, which is why it is the one in.
+ *   Belt Squat — pin-loaded and plate-loaded models are both common.
+ *   Machine Row, Hammer Strength Row, Machine Chest Press and the rest of the
+ *     iso-lateral family — genuinely plate-loaded, and out anyway, because each
+ *     arm has its OWN horn and the app cannot know whether the user typed one
+ *     horn's plates or both. A breakdown of the wrong number is worse than none.
+ *   Every Smith Machine exercise — the bar is counterbalanced, its effective
+ *     weight runs from about 5 lb to about 45 depending on the make, and no
+ *     manufacturer publishes it. There is no bar figure to state.
+ *   Everything with `equipment: 'Plate'` — Svend Press, Plate Front Raise,
+ *     Russian Twist, Plate Pinch Hold. The plate IS the implement; "45 each
+ *     side" would be an instruction to load a bar that is not in the room.
+ */
+
+// Plate-loaded, no bar in the total, discs on BOTH sides. The number the user
+// types is the plates, because a sled's own weight is unmarked and unknowable —
+// which is the same reason the label never adds a bar here.
+const PLATE_LOADED_MACHINES = new Set([
+  'Leg Press', 'Single-Leg Press', 'Leg Press Calf Raise',
+  'Hack Squat', 'Pendulum Squat',
+]);
+
+// One sleeve, no bar in the total. A landmine or a T-bar post takes every disc
+// on ONE end, so "each side" would be a lie about the machine in front of them.
+//
+// ⚠️ THE BAR IS NOT COUNTED HERE AND THAT IS NOT AN OVERSIGHT. A landmine bar
+// pivots in a socket, so only part of its weight ever reaches the handle, and
+// the fraction depends on the bar's length and the angle it is being held at.
+// The app cannot compute it and a lifter does not log it, so the total is read
+// as plates — which is what everyone types anyway.
+const SINGLE_SLEEVE = new Set([
+  'T-Bar Row', 'Landmine Row', 'Landmine Press', 'Landmine Squat', 'Landmine Twist',
+  'Meadows Row',
+]);
+
+// `equipment: 'Barbell'`, but NOT on a bar anybody can put a number to. An EZ
+// bar is 15–25 lb, a trap bar 45–75, a safety squat bar 60–70, and all three
+// vary by make with nothing stamped on them. Assuming 45 would put the label
+// out by up to 30 lb and hand somebody the wrong plates.
+const UNWEIGHED_BAR = new Set([
+  'EZ-Bar Curl', 'EZ-Bar Skull Crusher', 'EZ-Bar Reverse Curl',
+  'Trap Bar Deadlift', 'Trap Bar Shrug', 'Trap Bar Carry',
+  'Safety Bar Squat',
+]);
+
+/**
+ * Where the discs go for this exercise, or null when a plate list would be a
+ * lie — which is the answer for most of the library, and the caller then leaves
+ * the ordinary "5 lb steps" hint exactly as it was.
+ *
+ *   { bar: true|false, points: 1|2 }
+ *
+ * `bar` is a yes/no rather than a weight on purpose: the only bar this app will
+ * name is the standard one, and it is 45 lb to one user and 20 kg to the next,
+ * so the figure belongs to the plate inventory in `plates.js` and not here.
+ */
+export function plateLoadFor(exercise) {
+  if (!exercise || !exercise.name) return null;
+  if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
+
+  // ⚠️ FIRST, because three of these are FORCE_PER_SIDE and the guard below
+  // would throw them out. A one-armed landmine press IS per side and it IS one
+  // sleeve; the two statements agree rather than clash.
+  if (SINGLE_SLEEVE.has(exercise.name)) return { bar: false, points: 1 };
+
+  /* 🛑 "PER SIDE" AND "TWO SIDES TO LOAD" CANNOT BOTH BE TRUE, and this guard
+   * exists for a row nobody has written yet rather than for one in the library
+   * today. If the typed number is already one side's load, halving it again
+   * would show half the plates that are on the bar — the failure would look
+   * plausible on screen and be wrong by a factor of two. Refusing costs a hint;
+   * guessing costs somebody a set. `exercise.loadType` first because a custom
+   * exercise carries its own and the user chose it. */
+  const load = exercise.loadType || loadTypeFor(exercise.name, exercise.equipment, exercise.fields);
+  if (load === 'per_side') return null;
+
+  if (PLATE_LOADED_MACHINES.has(exercise.name)) return { bar: false, points: 2 };
+  if (exercise.equipment !== 'Barbell') return null;
+  if (UNWEIGHED_BAR.has(exercise.name)) return null;
+  return { bar: true, points: 2 };
+}
+
+/* ------------------------------------------------------------------ *
  * How much of your body weight a bodyweight movement actually carries
  * ------------------------------------------------------------------ *
  *

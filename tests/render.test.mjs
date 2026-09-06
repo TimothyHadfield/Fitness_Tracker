@@ -1943,6 +1943,90 @@ ok(!data.querySelector('.rep-target'),
   await store.saveSettings({ restTarget: 0, restTimer: false });
 }
 
+/* ================= the plate breakdown under the stepper ================= */
+/* 2026-09-18, Tim: *"replace the 'steps of ___' label under the weight with a
+ * label that says '45, 45, 25'."* The arithmetic is pinned in
+ * data-layer.test.mjs; this is the wiring — that the stepper asks at all, that
+ * the answer FOLLOWS the number, and that nothing else about the control moved. */
+{
+  const { stepper } = await import(BASE + 'ui.js');
+  const u = await import(BASE + 'units.js');
+  u.setUnits('lbs');
+  const hintOf = (s) => s.node.querySelector('.step-unit').textContent;
+  const nudge = (s, dir) =>
+    s.node.querySelectorAll('.step-btn')[dir > 0 ? 1 : 0]
+      .dispatchEvent(new window.Event('pointerdown'));
+
+  /* ---- it appears, and it is Tim's own sentence ---- */
+  const bar = stepper({ field: 'weight', value: 275, onChange: () => {}, exercise: byName('Barbell Bench Press') });
+  ok(hintOf(bar) === 'bar + 45, 45, 25 each side',
+     `275 lb on a bench press reads "bar + 45, 45, 25 each side" (${hintOf(bar)})`);
+  ok(bar.node.querySelector('.step-unit').classList.contains('is-plates'),
+     'and it is marked as a plate list, which is what the stylesheet reads to lift it off --ink-faint');
+
+  /* ---- 🚨 IT FOLLOWS THE NUMBER. That is the whole feature ---- */
+  nudge(bar, 1);
+  ok(hintOf(bar) === 'bar + 45, 45, 25, 2.5 each side',
+     `one tap of + moves it to 280 and the list grows a 2.5 (${hintOf(bar)})`);
+  nudge(bar, -1); nudge(bar, -1);
+  ok(hintOf(bar) === 'bar + 45, 45, 10, 10, 2.5 each side',
+     `and stepping down to 270 RE-SOLVES the whole bar rather than taking the last plate off — `
+     + `112.5 a side is 45, 45, 10, 10, 2.5 and has nothing to do with 137.5's list (${hintOf(bar)})`);
+
+  /* ---- 🚨 AND IT REFUSES RATHER THAN ROUNDING ---- */
+  {
+    const typed = bar.node.querySelector('.step-value');
+    typed.value = '271';
+    typed.dispatchEvent(new window.Event('blur', { bubbles: false }));
+    ok(hintOf(bar) === '5 lbs steps',
+       `⚠️ 271 lb is not a weight plates make, so the label falls back to the steps hint rather `
+       + `than printing a nearly-right list under a 40px number (${hintOf(bar)})`);
+    ok(!bar.node.querySelector('.step-unit').classList.contains('is-plates'),
+       'and drops the plate class with it — the fallback is styled as the footnote it is');
+  }
+
+  /* ---- the machines Tim actually asked about ---- */
+  const sled = stepper({ field: 'weight', value: 270, onChange: () => {}, exercise: byName('Leg Press') });
+  ok(hintOf(sled) === '45, 45, 45 each side',
+     `a plate-loaded sled says the plates and NO bar (${hintOf(sled)})`);
+  const tbar = stepper({ field: 'weight', value: 135, onChange: () => {}, exercise: byName('T-Bar Row') });
+  ok(hintOf(tbar) === '45, 45, 45 on one end',
+     `🚨 and a T-bar says "on one end" — it has one sleeve, not two sides (${hintOf(tbar)})`);
+
+  /* ---- and it stays away from everything else ---- */
+  for (const [n, why] of [
+    ['Lat Pulldown', 'a selectorised stack'],
+    ['Dumbbell Bench Press', 'a dumbbell'],
+    ['Cable Fly', 'a cable'],
+    ['EZ-Bar Curl', 'a bar nobody can weigh'],
+  ]) {
+    const s = stepper({ field: 'weight', value: 135, onChange: () => {}, exercise: byName(n) });
+    ok(hintOf(s) === '5 lbs steps', `${n} keeps the steps hint — ${why}`);
+  }
+
+  /* ---- ⚠️ AND OMITTING THE OPTION CHANGES NOTHING ---- */
+  // Four call sites pass a stepper; three fields out of four can never show a
+  // breakdown. This is the assertion that the new branch cannot reach them.
+  ok(hintOf(stepper({ field: 'weight', value: 275, onChange: () => {} })) === '5 lbs steps',
+     'no exercise handed in, no breakdown — the control behaves exactly as it did before');
+  for (const [f, hint] of [['reps', '1 rep steps'], ['time', '10 sec steps'], ['distance', '0.1 mi steps']]) {
+    const s = stepper({ field: f, value: 10, onChange: () => {}, exercise: byName('Barbell Bench Press') });
+    ok(hintOf(s) === hint, `and ${f} is untouched even with an exercise handed in (${hintOf(s)})`);
+  }
+
+  /* ---- 🚨 A KG USER GETS KG PLATES ---- */
+  u.setUnits('kg');
+  const kgBar = stepper({ field: 'weight', value: 100 * 2.2046226218, onChange: () => {}, exercise: byName('Barbell Bench Press') });
+  ok(kgBar.node.querySelector('.step-value').value === '100', '100 kg shows as 100');
+  ok(hintOf(kgBar) === 'bar + 25, 15 each side',
+     `⚠️ and the plates are KILOS off a 20 kg bar — not the pound answer converted, which would `
+     + `read as "put 20.4 kg on each side" (${hintOf(kgBar)})`);
+  nudge(kgBar, 1);
+  ok(hintOf(kgBar) === 'bar + 25, 15, 1.25 each side',
+     `a 2.5 kg step is 1.25 a side, the smallest plate a kilo gym owns (${hintOf(kgBar)})`);
+  u.setUnits('lbs');
+}
+
 /* ================= the stepper in kilograms ================= */
 // The stepper SHOWS the user's unit and HANDS BACK pounds. Getting this
 // backwards would quietly store kilogram numbers as pounds and corrupt every
@@ -8228,6 +8312,78 @@ ok(!data.querySelector('.rep-target'),
      + 'see reads as broken, which is the argument historyForPerson() already makes one screen over');
   ok(/nothing you have recorded|closely enough/i.test(rt),
      'and gives the reason rather than just announcing the absence');
+
+  /* ---- a planned set as a percentage of a max — 2026-09-18, Tim's ask ----
+     `bench` above has 185 × 5 (June) and 205 × 5 (August) on disk, so
+     ownBestSet() seats the recent 205 × 5 and the ramp is a percentage of the
+     maximum that comes out of it. The exact pounds are the Marzagão curve's and
+     are not pinned here — what is pinned is that the ramp RAMPS, that it is
+     rounded to a real increment, and that the screen says what it is a
+     percentage OF. */
+  const { loadDraft: draftOf } = await import(BASE + 'session-draft.js');
+  const pct = await store.saveWorkout({
+    name: 'Heavy bench', systemId: null,
+    exercises: [{ exerciseId: bench.id, sets: 3, targets: [70, 80, 90] }],
+  });
+  const pctRun = await mount(SessionView(pct.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const pt = text(pctRun);
+  const pctSets = draftOf().entries[0].sets;
+
+  ok(pctSets.every((s) => s.weight > 0),
+     '🚨 THE PRESCRIBED WEIGHT IS IN THE FIELD BEFORE ANYBODY TYPES — which is the whole ask: '
+     + '"that suggested weight is automatically put into the weight. For each set"');
+  ok(pctSets[0].weight < pctSets[1].weight && pctSets[1].weight < pctSets[2].weight,
+     'and a 70/80/90 ramp ramps — each set is its own percentage rather than one weight repeated');
+  ok(pctSets.every((s) => s.weight % 5 === 0),
+     '⚠️ every one lands on a real 5 lb increment, because a number you cannot load is not a '
+     + 'prescription');
+  ok(Math.abs((pctSets[0].weight / pctSets[2].weight) - (70 / 90)) < 0.02,
+     'and the three weights really are in the prescribed proportion to one another');
+  ok(pctSets.every((s) => s.prefilled === true),
+     '🚨 AND EVERY TARGETED SET IS `prefilled`, INCLUDING ON A LIFT WITH HISTORY — a stricter '
+     + 'guard than the untargeted path has, because this number is the APP’S and not last '
+     + 'time’s. finish() refusing it is what stands between a prescription and a workout nobody '
+     + 'did being written to disk (the 2026-08-28 defect)');
+  ok(/Plan: 70\/80\/90 %/.test(pt),
+     'the screen says the numbers came from the plan — a weight that disagrees with last time '
+     + 'for a reason you cannot see reads as broken');
+  ok(/205/.test(pt) && /×\s*5/.test(pt),
+     '⚠️ and it names the SET it was computed from, not just the percentage. "75 % of WHAT" is '
+     + 'the question this app exists to answer, and the answer is one recorded set the lifter '
+     + 'can sanity-check at a glance');
+
+  /* ---- the two refusals say so in words ---- */
+  const tgtCurl = byName('Barbell Curl');
+  const tgtNoMax = await store.saveWorkout({
+    name: 'Curl percent', systemId: null,
+    exercises: [{ exerciseId: tgtCurl.id, sets: 2, targets: [80, 80] }],
+  });
+  const tgtNoMaxRun = await mount(SessionView(tgtNoMax.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const tgtNt = text(tgtNoMaxRun);
+  ok(/Plan asks for 80 %/.test(tgtNt) && /nothing recorded/i.test(tgtNt),
+     '🚨 A LIFT WITH NO RECORDED SET GETS NO WEIGHT AND A SENTENCE, not a silent blank. The '
+     + 'percentage is of your own best set on THIS lift — never of the muscle map’s cross-muscle '
+     + 'estimate, which is gated four ways precisely because that number gets walked up to a bar');
+  ok(draftOf().entries[0].sets.every((s) => !(s.weight > 0)),
+     'and the field really is left empty rather than filled from somewhere else');
+
+  const tgtPullUp = byName('Pull-Up');
+  const tgtBw = await store.saveWorkout({
+    name: 'Pull percent', systemId: null,
+    exercises: [{ exerciseId: tgtPullUp.id, sets: 2, targets: [75, 75] }],
+  });
+  await store.saveSession({ workoutId: tgtBw.id, workoutName: 'Pull percent', date: '2026-08-20',
+    entries: [{ exerciseId: tgtPullUp.id, exerciseName: tgtPullUp.name, sets: [{ weight: 25, reps: 5 }] }] });
+  await store.logBodyWeight(180, '2026-08-20');
+  const tgtBwRun = await mount(SessionView(tgtBw.id));
+  for (let i = 0; i < 6; i++) await settle();
+  ok(/Plan asks for 75 %/.test(text(tgtBwRun)) && /own body weight is part of/i.test(text(tgtBwRun)),
+     '🚨 AND A BODY-WEIGHT LIFT IS REFUSED OUTRIGHT, with a recorded set sitting right there. Its '
+     + 'max is the WHOLE load — body plus what was added — while the weight field holds only the '
+     + 'added part, so 75 % of a body-inclusive max is not a number that belongs in it. Two '
+     + 'different quantities, which is the mistake D30 was recorded to end');
 
   await store.clearAll();
 }
