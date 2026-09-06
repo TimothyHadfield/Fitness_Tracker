@@ -3,7 +3,7 @@
 **Source:** Barbell Medicine, "Exercise During Pregnancy: Safety and Training Guide" ([read](https://www.barbellmedicine.com/blog/exercise-during-pregnancy/)) · Nick Occhipinti · 2026-08-03 · 8,459 words
 **Topic:** Health & medicine
 
-> This is a summary of what one article claims and what its cited papers support. It is not medical advice, and nothing here is a substitute for the reader's own obstetric care.
+> A summary of what one article claims and what its citations support. Not medical advice, and no substitute for obstetric care.
 
 ## Bottom line
 - The core safety claim — no increased risk of miscarriage, poor fetal growth, musculoskeletal injury or preterm delivery in **average-risk, uncomplicated** pregnancies — rests on the **ACOG 2020 committee opinion** (guideline consensus over largely observational literature) plus a **2025 BJSM systematic review and meta-analysis** of resistance training pooling **47,619 participants** that found no adverse maternal or fetal effects.
@@ -14,13 +14,13 @@
 
 ## Decision 1: can I keep training at all, and what changes
 
-The population the article is actually about is **women with uncomplicated, average-risk pregnancies**. Almost every safety claim carries that qualifier in the source, and the qualifier does most of the work.
+The population here is **women with uncomplicated, average-risk pregnancies**. Almost every safety claim carries that qualifier in the source, and the qualifier does most of the work.
 
 For that population the position is: previously active women can usually continue their existing programme with little or no modification for much of the pregnancy, and previously inactive women can start. The support is a **guideline consensus stack** — the 2019 Canadian guideline, the ACOG 2020 committee opinion, a 2023 scoping review of pregnancy activity guidelines from **19 countries** (resistance training) and **17** (aerobic), and the US Physical Activity Guidelines. Agreement across countries is expert convergence, not independent replication; these documents draw on an overlapping literature.
 
 The maternal benefit list (less excessive gestational weight gain, less gestational diabetes and hypertension, less preeclampsia, fewer perinatal mood disorders, shorter labour, more vaginal births) is cited to a **2019 umbrella review**, ACOG, and the 2025 meta-analysis. An umbrella review is a review of reviews and the underlying material is heavily observational, so "associated with" is the right reading for most of it. The fetal benefit list (lower preterm birth, less macrosomia, better fetal blood flow and brain development) rests only on ACOG and the 2025 meta-analysis, and the **epigenetics** paragraph — a 2024 review of maternal diet and activity effects on the offspring epigenome — is the section's weakest, though appropriately hedged.
 
-**Modification, not cessation** is the operating principle: sumo instead of conventional deadlift, wider squat stance, dumbbells rather than barbells for cleans, standing core work, incline or seated pressing. All optional and comfort-driven, and **none of it cited** — coaching judgement, which the article does not disguise.
+**Modification, not cessation** is the operating principle: sumo instead of conventional deadlift, wider squat stance, dumbbells rather than barbells for cleans, standing core work, incline or seated pressing. All optional and comfort-driven, and **none of it cited** — coaching judgement, undisguised.
 
 ## Decision 2: how hard, and how heavy
 
@@ -30,17 +30,17 @@ Two intensity numbers sit in this article and they do not match.
 
 **What the article recommends.** Resistance training at **RPE 6–8, roughly 65–85% 1RM, mostly 4–12 reps**, cited to **Schoenfeld et al. 2017, a low- vs high-load meta-analysis in non-pregnant trainees**. The article states that population plainly, to its credit. Two things still need flagging: that meta-analysis compares strength and hypertrophy across loads and does not itself establish an "RPE 6–8" prescription, and the closing summary reprints RPE 6–8 without repeating that guidelines say 4–6 — so a reader who skims gets a number no pregnancy guideline endorses.
 
-Their argument for exceeding the guideline ceiling is honest and worth stating precisely: the moderate cap exists because **higher intensities are under-researched in pregnancy, not because harm has been shown**. The evidence offered for the higher end is ungraded and mixed:
+Their argument for exceeding the ceiling is honest and worth stating precisely: the moderate cap exists because **higher intensities are under-researched in pregnancy, not because harm has been shown**. The evidence offered for the higher end is ungraded and mixed:
 
 - A **retrospective cohort of women who continued CrossFit through pregnancy** (Friedman et al., EJOG 2026) — self-selected, and reported with **no sample size, no comparison group and no outcome numbers**, just "demonstrated safety". The thinnest citation relative to the weight placed on it.
 - **"Evidence from elite athletes"** showing vigorous exercise is safe — **no citation at all**.
-- Studies in which women lifted **at or near 1RM** without noted adverse effects, cited to ACOG, the two acute blood-flow studies, and a 2024 brief overview.
+- Studies in which women lifted **at or near 1RM** with no adverse effects noted, cited to ACOG, the two acute blood-flow studies, and a 2024 brief overview.
 
 For conditioning, METs, heart-rate zones, RPE and the talk test are presented as interchangeable gauges. One misattribution: the claim that the **talk test is "valid and reliable"** is marked to **Scherr 2012, a study of Borg RPE against physiological measures**, not a talk-test validation — the reference list holds a talk-test paper (Persinger 2004), but no marker points to it. The article also **never engages the legacy 140 bpm heart-rate cap**: the old ceiling is absent rather than rebutted.
 
 ## Decision 3: the specific worries
 
-**Valsalva and breath-holding.** The fear is that raised intra-abdominal pressure interrupts fetal blood flow and causes decelerations. The rebuttal is two acute physiological studies. **Meah et al. 2020/2021** compared prenatal resistance exercise with and without a deliberate Valsalva and found no difference in maternal cardiac and haemodynamic response — sample size not reported by the article. **Gould et al. 2021** monitored placental blood flow by 3D Doppler power flow ultrasound in **22 pregnant women at various gestational stages** during near-maximal chest press and found no reduction versus rest; the article elsewhere calls this braced lifting **up to 90% of 10RM**, adding **Moolyk et al. 2024/25** on acute maternal and fetal responses to high-intensity resistance exercise. These are small acute studies with surrogate outcomes. They test the proposed mechanism directly and are the best evidence on this precise question — but "no acute drop in placental flow in 22 women" is narrower than the FAQ's flat "No."
+**Valsalva and breath-holding.** The fear is that raised intra-abdominal pressure interrupts fetal blood flow and causes decelerations. The rebuttal is two acute physiological studies. **Meah et al. 2020/2021** compared prenatal resistance exercise with and without a deliberate Valsalva and found no difference in maternal cardiac and haemodynamic response — sample size not reported by the article. **Gould et al. 2021** monitored placental blood flow by 3D Doppler power flow ultrasound in **22 pregnant women at various gestational stages** during near-maximal chest press and found no reduction versus rest; the article elsewhere calls this braced lifting **up to 90% of 10RM**, adding **Moolyk et al. 2024/25** on acute maternal and fetal responses to high-intensity resistance exercise. These are small acute studies with surrogate outcomes. They test the proposed mechanism directly and are the best evidence on the question — but "no acute drop in placental flow in 22 women" is narrower than the FAQ's flat "No."
 
 **Supine positioning.** Cited to ACOG: after roughly 20 weeks the gravid uterus can compress venous return, and lightheadedness may follow. The handling is good — the article notes the recommendation originated mainly around **sleep** position, that it does not affect everyone, and that the rule is symptom-guided (switch to incline, seated, standing or side-lying) rather than a ban. That framing is clinical reasoning, not a cited finding.
 
@@ -56,7 +56,7 @@ This is where the article fails on its own terms. The setup is correct: **Meah, 
 
 There is likewise **no warning-signs list**: no vaginal bleeding, amniotic fluid leakage, regular painful contractions, chest pain, dyspnoea before exertion, or calf pain and swelling. Those appear in the ACOG opinion it cites throughout. A reader who takes this article as their guide learns everything about why restrictions are overstated and nothing about when to stop.
 
-**Overreach, in one sentence:** the claim that "it is very rare to have a hidden or undiscovered cause of concern" is a broader reassurance than Meah 2020 supports — that review argued specific contraindications lack evidence, not that undetected risk is rare.
+**Overreach, in one sentence:** the claim that "it is very rare to have a hidden or undiscovered cause of concern" is broader reassurance than Meah 2020 supports — that review argued specific contraindications lack evidence, not that undetected risk is rare.
 
 ## Decision 5: coming back postpartum
 
@@ -70,11 +70,11 @@ The rest is guideline synthesis: the "fourth trimester" is the first 12 weeks, t
 
 **Weakest:** the Chiarello 2005 diastasis figures carrying a section alone; the uncited elite-athlete claim; the CrossFit cohort cited with no numbers; the epigenetics paragraph; and the 45-woman treadmill study described in detail with **no reference marker at all**.
 
-**Sold here:** Barbell Medicine Coaching closes the practical summary, **dietitian consultations** are linked from the conditioning-nutrition paragraph, and their heart-rate zone calculator and RPE explainer are linked inline. Nothing in the advice requires buying anything, but the article ends on a sales link.
+**Sold here:** Barbell Medicine Coaching closes the practical summary, **dietitian consultations** are linked from the conditioning-nutrition paragraph, and their heart-rate zone calculator and RPE explainer are linked inline. None of the advice requires buying anything, but the article ends on a sales link.
 
 ## References
 
-Grouped by the article's own section headings, using its verified marker-to-reference mapping.
+Grouped by the article's own section headings, from its verified marker mapping.
 
 **(Introduction) — participation and counselling rates**
 - CDC/NCHS. Births and Natality FastStats. <https://www.cdc.gov/nchs/fastats/births.htm> (unresolved in the citation record)
@@ -110,7 +110,7 @@ Grouped by the article's own section headings, using its verified marker-to-refe
 **Resistance training in pregnancy / Intensity of resistance training** — with Mottola 2019 and ACOG 2020 (above):
 - Hayman M, et al. Public health guidelines for physical activity during pregnancy from around the world: a scoping review. *BJSM* 2023;57:940-947. [doi](https://doi.org/10.1136/bjsports-2022-105777)
 - US Dept of Health and Human Services. Physical Activity Guidelines for Americans, 2nd ed. 2018. <https://odphp.health.gov/sites/default/files/2019-09/Physical_Activity_Guidelines_2nd_edition.pdf>
-- Schoenfeld BJ, et al. Strength and hypertrophy adaptations between low- vs. high-load resistance training: a systematic review and meta-analysis. *J Strength Cond Res* 2017;31:3508-3523. [doi](https://doi.org/10.1519/JSC.0000000000002200) — **non-pregnant trainees**; source of the RPE 6-8 / 65-85% 1RM range.
+- Schoenfeld BJ, et al. Strength and hypertrophy adaptations between low- vs. high-load resistance training. *J Strength Cond Res* 2017;31:3508-3523. [doi](https://doi.org/10.1519/JSC.0000000000002200) — **non-pregnant trainees**; source of the RPE 6-8 / 65-85% 1RM range.
 - Duchette C, et al. Benefits of resistance training during pregnancy for maternal and fetal health: a brief overview. *Int J Womens Health* 2024;16:1137-1147. [doi](https://doi.org/10.2147/IJWH.S462591)
 - Friedman M, et al. Safety of high-intensity functional training (CrossFit) during pregnancy: a retrospective cohort study. *Eur J Obstet Gynecol Reprod Biol* 2026;316:114840. [doi](https://doi.org/10.1016/j.ejogrb.2025.114840)
 
@@ -121,10 +121,10 @@ Grouped by the article's own section headings, using its verified marker-to-refe
 **Other types of exercise / Body position recommendations** — Hayman 2023 (yoga, pilates, water aerobics in world guidelines) and ACOG 2020 (supine positioning and venous return), both above.
 
 **Contraindications — when to consult a physician** — with Mottola 2019, Hayman 2023 and ACOG 2020 (above):
-- Meah VL, Davies GA, Davenport MH. Why can't I exercise during pregnancy? Time to revisit medical 'absolute' and 'relative' contraindications: systematic review of evidence of harm and a call to action. *BJSM* 2020;54:1395-1404. [doi](https://doi.org/10.1136/bjsports-2020-102042)
+- Meah VL, Davies GA, Davenport MH. Why can't I exercise during pregnancy? Time to revisit medical 'absolute' and 'relative' contraindications: systematic review of evidence of harm. *BJSM* 2020;54:1395-1404. [doi](https://doi.org/10.1136/bjsports-2020-102042)
 
 **Postpartum recovery — the fourth trimester** — with ACOG 2020 (above), for resuming as soon as medically safe:
-- Evenson KR, et al. A review of public health guidelines for postpartum physical activity and sedentary behavior from around the world. *J Sport Health Sci* 2024;13:472-483. [doi](https://doi.org/10.1016/j.jshs.2023.12.004)
+- Evenson KR, et al. A review of public health guidelines for postpartum physical activity from around the world. *J Sport Health Sci* 2024;13:472-483. [doi](https://doi.org/10.1016/j.jshs.2023.12.004)
 - Deering RE, et al. Clinical and exercise professional opinion on designing a postpartum return-to-running training programme: an international Delphi study and consensus statement. *BJSM* 2024;58:183-195. [doi](https://doi.org/10.1136/bjsports-2023-107490) — **expert consensus, not data**.
 
 **Listed but attached to no claim in the text**
