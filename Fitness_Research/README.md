@@ -6,6 +6,15 @@ are readable end to end and traceable back to real papers.
 Every claim in here should be followable to a source. Where a source states something the
 evidence does not carry, the note says so rather than repeating it.
 
+## Start here
+
+**[WHAT-TO-BELIEVE.md](WHAT-TO-BELIEVE.md)** — the sources reconciled. Where two of them
+disagree, this says which is right, why they differ, and how confident that deserves to be. It
+opens with every verdict in one table.
+
+**[RETRACTION-AUDIT.md](RETRACTION-AUDIT.md)** — every PubMed ID in the library checked for
+retractions. Three found in 6,139, two of them load-bearing.
+
 ## Sources
 
 | Source | What it is | Notes | Status |

@@ -1,8 +1,7 @@
 ## How much to train, and how hard
 
-Three sources argue about this constantly and the fourth is silent: the ISSN corpus is nutrition and
-never prescribes a set count. Most of the remaining fight turns out to be about which question is
-being answered.
+Three sources argue about this constantly; the fourth is silent, the ISSN corpus being nutrition and
+never prescribing a set count. Most of the fight is about which question is being answered.
 
 ### The volume ceiling: three claims, and only one real disagreement
 
@@ -17,28 +16,28 @@ reports the Pelland meta-regression — 35 studies, 1,000+ subjects — finding 
 ([67 studies](../Menno%20Henselmans%20videos/maximize-muscle-according-67-studies.md)) and also lands
 on **10–20**, minimum effective dose **4**.
 
-So on the recommendation there is **no disagreement at all**. The dispute is entirely about what the
-43-set figure means and who is entitled to override it.
+So on the recommendation there is **no disagreement at all**. The dispute is about what the 43-set
+figure means and who may override it.
 
 Here Menno is the most careful of the three, not the most permissive. He treats 43 as **the point
-where the data ran out**, says an inverted U is "most likely true" despite the analysis finding
-none, and gives the reason: the pooled samples are college-aged subjects without jobs, families or
+where the data ran out**, says an inverted U is "most likely true" despite the analysis finding none,
+and gives his reason: the pooled samples are college-aged subjects without jobs, families or
 disrupted sleep. Elsewhere he is the most aggressive
 ([volume and recovery](../Menno%20Henselmans%20videos/volume-recovery-brutal-truth.md)): five days of
 squats to 40% velocity loss failed to induce overreaching — strength *rose* while perceived recovery
 fell 11% — so the binding constraint he names is psychological, logistical and articular, not
 neuromuscular. Both positions are his; "doubting a ceiling exists" flattens him.
 
-House of Hypertrophy's override is the best-argued objection here, and it is not Menno's: **a fair
-number of pooled studies used incomplete programs**, training one or two muscle groups, so systemic
-fatigue does not resemble a real week. It lands hardest on the headline result — Enes 2024 (31
-trained men, 22 → 42 or 52 weekly quad sets, high volume winning) trained **quads only**
+House of Hypertrophy's override is the best-argued objection here, and it is not Menno's: **many
+pooled studies used incomplete programs**, training one or two muscle groups, so systemic fatigue
+does not resemble a real week. It lands hardest on the headline result — Enes 2024 (31 trained men,
+22 → 42 or 52 weekly quad sets, high volume winning) trained **quads only**
 ([2.2× more muscle](../House%20of%20Hypertrophy%20videos/2-2x-more-muscle-new-study-surprising.md)),
 and the pool averages ~10 weeks.
 
 **Verdict, high confidence:** the dose-response is real and monotonic within the studied range, and
-nothing has demonstrated a weekly ceiling. House of Hypertrophy's calibrated statement is the right
-one — *confident moderate beats low, not confident very high beats moderate*. **Moderate confidence**
+nothing has demonstrated a weekly ceiling. House of Hypertrophy's calibration is the right one —
+*confident moderate beats low, not confident very high beats moderate*. **Moderate confidence**
 that an inverted U exists somewhere: asserted on sample-composition grounds, never shown. What would
 resolve it: a whole-body trial past twelve weeks, in a deficit, at 30+ fractional sets. One counting
 caveat nobody states loudly enough — the meta-regression's best-fitting scheme was **fractional**
@@ -49,7 +48,7 @@ caveat nobody states loudly enough — the meta-regression's best-fitting scheme
 The "less is more" leg of this dispute was largely two Barbalho papers — trained men and untrained
 women, every muscle trained **once weekly** at 5/10/15/20 sets, concluding 5–10 sufficed and 15–20
 were worse. Both are **retracted** for improbable data (Vigotsky; Stronger by Science), and House of
-Hypertrophy states it while *building the argument they would have supported*
+Hypertrophy says so while *building the argument they would have supported*
 ([training splits](../House%20of%20Hypertrophy%20videos/comparing-training-splits-muscle-growth-20-studies.md)).
 
 Exactly what depended on them:
@@ -66,15 +65,15 @@ Exactly what depended on them:
   "counter-study" — "an actual reversal, not a plateau" — in [bro science vs real
   science](../Jeff%20Nippard%20videos/bro-science-vs-real-science.md).
 
-These videos predate the retraction. What survives without Barbalho: three
-long-rest plateau trials (8–10 weeks, n=35–49), two German Volume Training trials in which
+These videos predate the retraction. What survives: three long-rest
+plateau trials (8–10 weeks, n=35–49), two German Volume Training trials in which
 [neither group showed significant ultrasound
 hypertrophy](../House%20of%20Hypertrophy%20videos/german-volume-training-actually-build-muscle-fast.md)
 — detection failure, not a ranking — and Fisher and Steele's 24-week women's trial. **Verdict, high
 confidence: the "5 beats 20" position has no usable primary evidence**, and any claim here sourced to
-Barbalho should be read as withdrawn. The remaining objection to the high-volume literature — that
-its gains are swelling — is also dead, [Alvarez](../House%20of%20Hypertrophy%20videos/many-sets-muscle-growth.md)
-and [Menno](../Menno%20Henselmans%20videos/more-volume-more-muscle-just-swelling.md) both finding it
+Barbalho should be read as withdrawn. The other objection — that high-volume gains are swelling — is
+also dead, [Alvarez](../House%20of%20Hypertrophy%20videos/many-sets-muscle-growth.md) and
+[Menno](../Menno%20Henselmans%20videos/more-volume-more-muscle-just-swelling.md) both finding it
 resolved by 24 h with no volume effect, though on n=13 with no effect sizes.
 
 ### Per session versus per week — the distinction that does the work
@@ -101,12 +100,12 @@ calls it "the plateau." Menno concedes it means "low likelihood of further gains
 **Verdict, moderate confidence:** no per-session wall has been demonstrated, only steep diminishing
 returns, and 6 is a *prior* rather than a finding — a nine-study analysis nobody outside a paywall
 can read, against a 35-study regression. Redistributing past ~10 sets in a session costs nothing if
-the ceiling is fictional. What would resolve it: the per-session analysis rerun **controlled for
-weekly volume**, which Menno correctly notes it was not.
+the ceiling is fictional. What would resolve it: that analysis rerun **controlled for weekly
+volume**, which Menno correctly notes it was not.
 
 ### Failure: a settled question wearing a disagreement's clothes
 
-Everyone agrees failure is not required. The apparent fight is about how far short you may stop.
+Everyone agrees failure is not required; the fight is over how far short you may stop.
 
 House of Hypertrophy: **3–1 RIR matches failure**, the null holding at **6–19 weekly sets**, the best
 test an 18-subject within-subject trial in lifters averaging **7.7 years** with **verified RIR
@@ -137,9 +136,9 @@ failure](../Menno%20Henselmans%20videos/3-tips-estimate-proximity-failure.md) wi
 train nearly as close to failure as they think." The reconciliation is House of Hypertrophy's:
 people judge proximity adequately **when trying to** and badly when merely training, which makes
 occasional failure sets **calibration rather than stimulus** and means an unaudited "3 RIR" silently
-becomes junk volume. Nippard's anchoring set and Menno's velocity-loss test are the same fix.
-**High confidence**, with one residual: in-set estimates at heavier loads are markedly more accurate,
-so anyone training by RIR belongs on the heavier half of the effective load range.
+becomes junk volume. Nippard's anchoring set and Menno's velocity-loss test are the same fix. **High
+confidence**, one residual: in-set estimates at heavier loads are markedly more accurate, so anyone
+training by RIR belongs on the heavier half of the load range.
 
 ### Frequency: nobody is still claiming it, once volume is equated
 
@@ -147,11 +146,11 @@ Nippard holds **2×/week beats 1×** on Schoenfeld 2016 while criticising his ow
 strongest pro-frequency study used three weekly sets per muscle, and the **novelty confound** sits
 inside every trial ([bro splits](../Jeff%20Nippard%20videos/bro-splits-vs-higher-frequency.md)).
 House of Hypertrophy reports Pelland finding **no consistent or large effect** — 1× → 2× compatible
-with nothing, nothing beyond 2×, the "high frequency only wins at recoverable volumes" defence
-failing in both bins — and says he is **"genuinely surprised"**
+with nothing, nothing beyond 2×, the "wins only at recoverable volumes" defence failing in both
+bins — and says he is **"genuinely surprised"**
 ([frequency](../House%20of%20Hypertrophy%20videos/often-should-train-muscle-new-study-epic.md)).
-Menno reads the same analysis as a **91% probability** of a small positive effect, most of
-frequency's value running through the volume it permits. The MPS mechanism is gone either way —
+Menno reads the same analysis as a **91% probability** of a small positive effect, most of it running
+through the volume frequency permits. The MPS mechanism is gone either way —
 [the argument runs on *mixed* protein synthesis, which does not track myofibrillar
 MPS](../House%20of%20Hypertrophy%20videos/high-frequency-training-more-frequent-muscle-protein.md).
 
