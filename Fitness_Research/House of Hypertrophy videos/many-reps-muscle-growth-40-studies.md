@@ -9,7 +9,7 @@
 - **Fibre-type specificity does not hold.** Fast-twitch and slow-twitch growth were similar between high and low loads in the fibre-level meta-analysis, and a soleus-specific trial (a predominantly slow-twitch muscle) found similar growth at 20–30 and 6–10 reps.
 - **The low end is where it breaks.** One-rep sets produce close to zero growth across four studies. Two to four reps produces detectable growth, but on a per-set basis it looks worse than 8–12; the five papers claiming parity gave the low-rep group more sets or longer rest.
 - **The high end is soft, not hard.** 35 is not a cliff — one trial averaged 100 reps on the first set and still matched an 80% 1RM condition — but 20% 1RM (60+ reps) was clearly inferior in the cleanest comparison.
-- **Higher reps cost more fatigue, not less growth.** Recovery is slower after light-load work, and there is even a contralateral strength drop suggesting central fatigue, yet hypertrophy still comes out equal.
+- **Higher reps cost more fatigue, not less growth.** Recovery is slower after light-load work, with even a contralateral strength drop suggesting central fatigue — yet hypertrophy still comes out equal.
 
 ## What the meta-analyses actually establish
 He opens with a survey of 127 competitive bodybuilders in which the majority trained at 7–12 reps, then immediately notes this describes practice, not optimality — a good example of his habit of undercutting his own hook.
@@ -24,7 +24,7 @@ Older Russian work suggested load-specific fibre growth. He flags its limitation
 The mechanism he offers is recruitment: heavy loads recruit high-threshold units immediately; light loads recruit them progressively as fatigue accumulates, so both routes end at high recruitment near failure. He supports this with a study in trained subjects finding similar fast- and slow-twitch activation across four sets of leg extensions at high and low loads. **Flagged:** recruitment at failure is an acute surrogate. The hypertrophy claim rests entirely on the outcome data; the recruitment material is explanation, not evidence, and he does not always keep that boundary explicit.
 
 ## How low can you go
-**One rep does essentially nothing.** Four studies compared 3–4 sets of 8–12 reps against at most five 1RM attempts per session. All four found greater growth with 8–12, and all four found the 1RM condition produced very little to none.
+**One rep does essentially nothing.** Four studies compared 3–4 sets of 8–12 reps against at most five 1RM attempts per session. All four favoured 8–12, and all four found the 1RM condition produced very little to no growth.
 
 **Two to four reps is ambiguous.** A trained-subject study with three sets per exercise found growth tended to favour 8–12 over 2–4. An untrained back-squat study using four sets at 3–5, 13–15 or 23–25 reps found no significant difference between any of them. He then handles the five papers that report parity for 2–4 reps by pointing out that each gave the low-rep condition **more sets and/or longer rest** — an unusually clean piece of methodological criticism, and the reason he treats the parity claim as unproven rather than refuted.
 
@@ -47,7 +47,7 @@ The claim under test is that light loads *must* reach failure while heavy loads 
 
 His practical caveat is the best part of the section: lifters **underestimate how close to failure they are with lighter loads** — probably because high reps hurt more and pain masks true proximity — so with high reps, take at least some sets to failure to recalibrate.
 
-**Individual differences:** two papers suggested some people respond better to one rep range, but a 2024 methodology paper argues those designs cannot actually detect individual response. He accepts the critique, declines to make a recommendation from it, and suggests trying a different rep range only if progress has stalled with everything else dialled in.
+**Individual differences:** two papers suggested some people respond better to one rep range, but a 2024 methodology paper argues those designs cannot detect individual response at all. He accepts the critique and suggests trying a different rep range only if progress has stalled with everything else dialled in.
 
 ## References
 
