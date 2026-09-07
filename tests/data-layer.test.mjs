@@ -5885,6 +5885,49 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        + 'of what it can prove, which is what makes reading a set short honest rather than lossy');
   }
 
+  /* ---- 🚨 THE SAME RULE ONE LEVEL UP, AND THE FIRST FIX MISSED IT ---- *
+   *
+   * Tim reported the rating STILL reading 55×6 after dominance shipped, and he
+   * was right: the fix was in the seat comparison only. Each exercise-day is
+   * collapsed to one set FIRST, by `betterSameDay`, which is the same
+   * `quality × repFactor` with no weight term — so on the day he pulled 85×12
+   * he had opened with 65×8, the 8-rep set won the day on rep count, and the
+   * heavy set was gone before the seat ever saw it.
+   *
+   * 🔒 THE GENERAL FORM, AND IT IS WHY THIS TEST EXISTS: **a rule enforced at
+   * one of two places that make the same comparison is not enforced.** Both
+   * comparisons had to learn it.
+   *
+   * ⚠️ AND THE DEMO YEAR DOES NOT PRODUCE THIS SHAPE, which is exactly how the
+   * half-fix passed every suite while doing nothing on his phone. The golden
+   * table did not move when this was fixed. A fixture is needed or there is no
+   * cover at all. */
+  {
+    const sameDay = (date, sets) => ({
+      workoutId: 'w' + date, workoutName: 'Pull', date,
+      entries: [{ exerciseId: pulldown.id, exerciseName: pulldown.name, sets }],
+    });
+    const built = buildObservations({
+      sessions: [
+        sameDay('2026-08-24', [{ weight: 55, reps: 6 }]),
+        sameDay('2026-09-14', [{ weight: 65, reps: 8 }, { weight: 75, reps: 10 },
+                               { weight: 85, reps: 12 }]),
+      ],
+      benchmarks: [], exMap: exMap2,
+      bodyWeights: [{ date: '2026-08-01', weight: 185 }],
+      today: '2026-09-20', sex: 'male',
+    });
+    const r = rateMuscle(built.byMuscle.get('Back'), 'Back');
+    const seat = r.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.weight === 85,
+       `🚨 TIM'S ACTUAL CASE: an 85×12 logged as the THIRD set of a day that opened with 65×8 still `
+       + `reaches the rating (seated ${seat.weight}×${seat.reps}). Before this it was discarded by `
+       + 'the per-day collapse, one step before the seat, and the rating read the 65×8');
+    ok(seat.reps === 8,
+       '⚠️ read at 8 reps — the rep count of the set it superseded WITHIN the day, which is the '
+       + 'same truncation rule applied at the same place the comparison happens');
+  }
+
   /* ---- 🛑 THE ASYMMETRY, WHICH IS TIM'S OWN CAVEAT ---- */
   {
     const r = rate([sess('2026-09-10', 100, 3), sess('2026-09-14', 60, 10)]);

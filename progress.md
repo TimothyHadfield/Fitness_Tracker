@@ -69,6 +69,17 @@ set could only ever LOSE the seat. Measured: the discarded set implied **131 lb*
 implied **66.7**. 🔄 **A set ≥ in BOTH weight and reps now SUPERSEDES**, re-read at the weaker set's
 rep count (`dominate()` in `muscle-evidence.js`). 🛑 **Heavier but SHORTER does not** — Tim's own
 caveat, and a real trade the credibility comparison still decides. **His case: 70.2 → 114.3 lb.**
+🚨 **IT SHIPPED HALF-FIXED AND TIM CAUGHT THAT TOO** — *"it still says 55x6"*. The rule went into the
+**seat** comparison only, and each exercise-day is collapsed to ONE set BEFORE the seat by
+`betterSameDay`, **the same weight-blind formula**. On the day he pulled 85×12 he had opened with
+**65×8**; the 8-rep set won the day and the heavy set died one step early. The half-fix moved his
+fixture 122 → **96 lb** — worse than before — **and passed every test.** 🔒 **A RULE ENFORCED AT ONE
+OF TWO PLACES THAT MAKE THE SAME COMPARISON IS NOT ENFORCED**; `dominate()` is called twice now.
+🚨 **The demo year never produces this shape**, which is how it passed: the golden table did not move
+when the second half went in, and there was **no cover at all** until a fixture was written for it.
+⚠️ **The check not done was driving it against the reporter's own described case** — he said *"my
+third set"* and the first fixture used one set. ✅ **§0.13 was applied first and was right to be**:
+the deployed file was checked before the code, which ruled out a stale cache.
 🚨 **IT MUST RUN AT THE SEAT STEP AND NOWHERE EARLIER, AND THREE ATTEMPTS PROVED IT.** In
 `buildObservations()` it collapsed genuine repeat sets, folded a progressive year onto a handful of
 dates (**720 observations → 44**, with the estimate barely moving), and **disabled the typo
@@ -868,12 +879,11 @@ for**, not the parallelism itself.
 **The estimator no longer gates everything — Phase 0 is done and Goals progression shipped without
 it.** What it still gates is the Goals *verdict* and the weight/rep half of `docs/vision.md` §1.2.
 
-0a. ~~**IS TIM ABLE TO USE THE APP, AND IS HE ON THE CURRENT BUILD?**~~ ✅ **BOTH YES, 2026-08-24** —
-   *"I'm not locked out, I think I just had the wrong URL."* ⚠️ **The resume update check has still
-   never been seen to fire in the field**, only in `tests/sw-update.test.mjs`; do not upgrade it to
-   verified. 🔒 **The rule those items existed to teach is `docs/handbook.md` §0.13: do not read "X is
-   broken" as X being broken** — check the live site first. It settled the years-view report in one
-   command, and it settled 2026-09-19's *"the % feature didn't deploy"* the same way.
+0a. ~~**IS TIM ABLE TO USE THE APP?**~~ ✅ **YES, 2026-08-24.** ⚠️ **The resume update check has never
+   been seen to fire in the field**, only in `tests/sw-update.test.mjs`. 🔒 **The rule this taught is
+   §0.13: do not read "X is broken" as X being broken** — check the live site first. It settled the
+   years-view report, 2026-09-19's *"the % feature didn't deploy"*, and on 2026-09-20 it correctly
+   ruled a stale cache OUT, which is the other half of its value.
 
 0. **⚠️ THE IPHONE WORK IS OPEN — Tim, 2026-08-21.** The 2026-08-17 deferral is over and this is the
    live thread. **Five passes ran on the 21st and four more on the 22nd** — nine dated sections
@@ -902,10 +912,7 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      was in the app installed to the home screen. A Safari tab has not been retried since the
      2026-08-21 auth fixes, and it is probably where the original Google sign-in report came from.
    - ~~Two layout items nobody has done: Explore's badge, and Goals opening on prose.~~ **BOTH DONE
-     the same day** — the second pass's "last two layout items" section (`docs/history.md`,
-     2026-08-21 second pass) has the measurements
-     (Explore's badge drops to its own line below 700px, giving the summary 338px of 393 instead of
-     200; Goals' two honesty paragraphs moved down beside the screen's other stated limit). This
+     the same day** — `docs/history.md`, 2026-08-21 second pass, has the measurements. This
      bullet survived the second pass as a stale copy and is kept struck through rather than deleted,
      because a line saying "nobody has done this" over work that shipped is exactly the failure this
      file exists to prevent.
@@ -951,11 +958,11 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    written. What is kept here is only what a fresh session must not re-derive:
 
    - 🔒 **FATIGUE DOES NOT ONLY DEPRESS A READING, IT PROMOTES IT** — `evidenceWeight` rewards low
-     reps because a near-max set is better evidence of a maximum, and a spent lifter also does few
-     reps. Tim's fatigued pulldown out-ranked his best row **by 0.005**, entirely on a rep count.
+     reps, and a spent lifter also does few reps. Tim's fatigued pulldown out-ranked his best row
+     **by 0.005**, entirely on a rep count.
    - 🔒 **NO RE-WEIGHTING SCHEME IS WORTH MUCH**: every variant moved his rating by under 5 lb where
-     doing the lift **first** moved it by 60. A fatigued set is **missing** information, not
-     corrupted information, and you cannot re-weight your way to a number nobody recorded.
+     doing the lift **first** moved it by 60. A fatigued set is **missing** information, and you
+     cannot re-weight your way to a number nobody recorded.
    - 🛑 **Tier 3, the load multiplier, must not be built** — it is the only option on the table that
      can make a number BIGGER than what was observed, and the literature reports reps at a fixed
      load rather than 1RM.
@@ -980,11 +987,9 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      says so on the screen above the button that failed, keeps the draft (the only other copy), and
      the same tap works again once the problem clears.
    - **⚠️ (c) THE FIRESTORE CEILING IS ~520 SESSIONS, NOT ~950** — ⚠️ **corrected TWICE on
-     2026-08-24, both times optimistically.** The morning's fix replaced a guess (~300 bytes a
-     session) with a `JSON.stringify` measurement (~1,100, ceiling ~950); the evening's found that
-     **Firestore charges 1.66× the JSON** — a flat 32 bytes per map and 8 per number — so it is
-     ~2,000 bytes a session and about **520 sessions, two and a half years at four a week**. One
-     recorded set is 23 bytes of JSON and 60 to Firestore, and `entries` is 88 % of the collection.
+     2026-08-24, both times optimistically**, because **Firestore charges 1.66× the JSON** (a flat
+     32 bytes per map, 8 per number). ~2,000 bytes a session, **two and a half years at four a
+     week**; `entries` is 88 % of the collection.
      ✅ **Something warns now**: `store.cloudUsage()` sizes every collection document by Firestore's
      own published rules and Settings paints a warning above *Download backup* from **80 %**,
      silent below it and silent on any backend that is not Firestore.
@@ -1026,10 +1031,8 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    illustration, so it is his call** — the cheap options are a larger invisible hit area per path,
    or a list beside the figure.
 
-   ~~Also just under 44: the comparison button (332×38) and the chart's exercise `select`
-   (156×36).~~ ✅ **BOTH AT 44 px, 2026-08-24**, measured before and after at 360 / 375 / 393 with no
-   horizontal overflow at any width. The 8 px came off the chart, which had 501 and now has 493 —
-   a control being reliably hittable is worth more than eight pixels of line.
+   ~~Also just under 44: the comparison button and the chart's exercise `select`.~~ ✅ **BOTH AT
+   44 px, 2026-08-24** — a control being reliably hittable is worth more than eight pixels of line.
 
 0j. ~~**MUTUAL DISCONNECT IS STILL NOT BUILT**~~ ✅ **BUILT 2026-08-27** (the closed table above; this
    paragraph stayed wrong until 2026-09-18). A tombstone at `disconnects/{leaverUid}` — **the id IS
@@ -1073,17 +1076,14 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    ✅ **RAN 2026-08-22 AGAINST THE LIVE PROJECT — it works, and it found two defects.** Two
    throwaway email accounts in two SEPARATE Chrome profiles (different uids, confirmed before
    anything was shared), driven over CDP with real mouse events. Invite → open as somebody else →
-   claim → accept → set a tier → publish → read, all the way through, then both accounts and all
-   eleven of their documents deleted and the project checked back to the exact 7-user / 19-document
-   state it started in. **⚠️ The brief said the project held zero users and zero documents. It did
-   not** — it holds Tim's two real accounts and their training data. Anything that "cleans up to
-   zero" would destroy them. Snapshot the baseline first and diff against it.
+   claim → accept → set a tier → publish → read, all the way through, then both accounts deleted and
+   the project checked back to the state it started in. **⚠️ The brief said the project held zero
+   users. It does not** — it holds Tim's two real accounts and their training data, and anything that
+   "cleans up to zero" would destroy them. **Snapshot the baseline first and diff against it.**
 
-   **Enforcement was checked ON THE WIRE, not in the UI.** At *just that I trained* the published
-   document contains three names and three dates and no number anywhere. Reading the private
-   `collections/sessions`, `benchmarks`, `bodyWeight`, `settings` and `social/graph` of the other
-   account is refused, and so is LISTING `shared/` or `invites/`. The sharpest test: a `shared/mid`
-   document was made to exist, holding every weight and rep, with the viewer left out of its
+   **Enforcement was checked ON THE WIRE, not in the UI.** Reading the other account's private
+   collections is refused, and so is LISTING `shared/` or `invites/`. The sharpest test: a
+   `shared/mid` document was made to exist, holding every weight and rep, with the viewer out of its
    `viewers` list — Firestore refused it. Moving somebody down a tier and disconnecting them both
    cut access to a document that still existed.
 
@@ -1103,9 +1103,8 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      that would let me notice. A real mutual disconnect needs something their client can read, which
      is a new rules path, not a small fix.
 
-   Original note kept: the brief is in `docs/improvement-plan.md` §0, including the trap — use two
-   SEPARATE browser profiles, not two tabs, or you will "prove" a round trip that never crossed
-   accounts.
+   ⚠️ **The trap** (`docs/improvement-plan.md` §0): use two SEPARATE browser profiles, not two tabs,
+   or you will "prove" a round trip that never crossed accounts.
 
 1b. ~~**⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.**~~ **BUILT 2026-08-21 —
    five taps from a cold install to a loggable set, measured, against about a dozen. See the

@@ -2627,3 +2627,30 @@ less confidence, and I'd rather it said so.
 
 **Still not done, and it's the bigger one:** your whole Back number rests on three sets. Using every
 set you've logged, weighted by how believable each is, is the real accuracy work.
+
+## 2026-09-20 (fourth pass) — "it still says 55x6", and you were right again
+
+The fix I shipped was half a fix.
+
+I checked the live site first, and the code really was deployed — which ruled out a stale cache and
+pointed at your data instead. So I rebuilt your case properly, and the detail that mattered was one
+you'd already told me and I hadn't used: **"my third set"**.
+
+The app collapses each exercise-day down to one set *before* the rule I added ever runs — and it
+picks that one set using the same formula, which still ignores weight. On the day you pulled 85×12
+you opened with 65×8. The 8-rep set won the day on rep count, and your heavy set was thrown away one
+step earlier than I was looking. My "fix" moved your fixture from 122 to **96 lbs** — it made it
+worse, and passed every test I had.
+
+The rule now runs in both places. Your case comes out at **122.5 lbs, from 85×8** — your 85×12 read
+back at 8 reps, which is the rep count of the set it beat.
+
+**Two things I'd want you to know:**
+
+The demo data never produces this shape — a heavier set with *more* reps later in the same session —
+which is exactly why the half-fix looked green. There was no test covering your situation until I
+wrote one from your own description. That's on me: you told me it was your third set in the first
+message, and I tested it as a single set.
+
+And the thing that found it both times was you looking at your own screen. The tests agreed with me
+twice while the app was wrong.

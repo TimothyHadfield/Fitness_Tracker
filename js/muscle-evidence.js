@@ -2170,14 +2170,113 @@ export function rateMuscle(observations, muscle = null) {
    * ordering as the seat below, so this cannot depend on walk order either.
    * `betterSameDay` is the seat comparison without the estimate tie-break's
    * precedence: within one day, credibility first, then the bigger showing. */
+  /* ------------------------------------------------------------------ *
+   * 🚨 DOMINANCE — 2026-09-20, and it is Tim's rule.
+   *
+   * > "if the lift is higher in weight AND reps, than it's better, because you
+   * >  can just assume they stopped at the lower weight's reps and then it's a
+   * >  higher weight… If the weight was higher but the reps was lower, that's
+   * >  not necessarily something we could do."
+   *
+   * WHAT HE CAUGHT. His Back was led by a Lat Pulldown of 55×6 while an 85×12
+   * three weeks NEWER contributed nothing. Both comparisons below —
+   * `betterSameDay` and `seatCredit` — are `quality × repFactor(reps)` with
+   * recency and fatigue on top, and **weight appears in neither**. So a longer
+   * set could only ever lose, however much heavier it was.
+   *
+   * THE RULE. Within one exercise, if A is ≥ B in BOTH weight and reps, B is
+   * superseded — replaced by A re-read at B's rep count, which is a heavier set
+   * at the same credibility. Where neither dominates (heavier but shorter, the
+   * ordinary trade) nothing happens and the comparisons decide as before.
+   *
+   * ⚠️ TRUNCATED RATHER THAN TAKEN WHOLE: 85×12 read as 85×6 gives 108 lb where
+   * its full twelve gives 131. Twelve reps at 85 certainly includes six at 85,
+   * with reserve, so the truncated figure understates him — and it arrives at
+   * `repFactor(6)`, the credibility the rival had, so it wins on weight rather
+   * than by spending confidence.
+   *
+   * 🛑 IT IS CALLED IN TWO PLACES AND BOTH ARE REQUIRED. Fixing only the seat
+   * left Tim's own case broken and looked green in every test: on the day he
+   * pulled 85×12 he had opened with 65×8, and the per-day collapse — which uses
+   * the same weight-blind comparison — threw the heavy set away before the seat
+   * ever saw it. **A rule enforced at one of two places that make the same
+   * comparison is not enforced.**
+   *
+   * 🛑 AND IT MAY NOT RUN EARLIER THAN THIS. Three attempts inside
+   * `buildObservations()` ran before the safety machinery and broke all of it:
+   * identical straight sets collapsed, a progressive year folded onto a handful
+   * of dates (the demo's Back fell 720 → 44 observations), and worst, **it
+   * disabled the typo quarantine** — a mistyped 2050×5 dominates every real set,
+   * drags them all up to its weight, and then nothing disagrees with it, so
+   * Chest read Elite at 2282 lb. By this line the day-screen has already
+   * quarantined that set.
+   * ------------------------------------------------------------------ */
+  const dominate = (list) => {
+    if (!Array.isArray(list) || list.length < 2) return list;
+    return list.map((b) => {
+      let dom = null;
+      for (const a of list) {
+        if (a === b) continue;
+        if (a.weight < b.weight || a.reps < b.reps) continue;
+        if (a.weight === b.weight && a.reps === b.reps) continue;
+        if (!dom || a.weight > dom.weight) dom = a;
+      }
+      /* ⚠️ `curveWeight` IS REQUIRED, NOT OPTIONAL, and its absence is a refusal
+       * rather than a fallback. It is the number the curve was fed (per hand on
+       * a dumbbell, total resistance on a pull-up), and guessing it from
+       * `weight` would be a second copy of D30's convention — wrong by 5 % on
+       * every dumbbell lift and wildly wrong on every body-weight one. A friend's
+       * published rows predate this field, so they simply keep today's rule. */
+      if (!dom || !(dom.curveWeight > 0) || !(dom.rawE1rm > 0)) return b;
+      const at = e1rm(dom.curveWeight, b.reps);
+      const was = e1rm(dom.curveWeight, dom.reps);
+      if (!(at > 0) || !(was > 0)) return b;
+      const scale = at / was;
+      return {
+        ...b,
+        weight: dom.weight,
+        curveWeight: dom.curveWeight,
+        rawE1rm: dom.rawE1rm * scale,
+        estimate: dom.estimate * scale,
+        supersededWeight: b.weight,
+      };
+    });
+  };
+
   const betterSameDay = (o, prev) => (o.quality * repFactor(o.reps) - prev.quality * repFactor(prev.reps))
     || (o.estimate - prev.estimate)
     || String(prev.exerciseName || '').localeCompare(String(o.exerciseName || ''));
-  const perDay = new Map();
+  /* 🚨 DOMINANCE APPLIES WITHIN THE DAY TOO, AND MISSING THIS MADE THE FIX
+   * USELESS FOR THE PERSON WHO REPORTED IT — 2026-09-20, second attempt.
+   *
+   * `betterSameDay` above is `quality × repFactor` — the SAME weight-blind
+   * comparison as the seat, one level up. So a day's representative was chosen
+   * with no regard to how much was lifted, and Tim's own case never even
+   * reached the seat: on the day he pulled 85×12 he had opened with 65×8, the
+   * 8-rep set won the day on rep count alone, and the 12-rep set was discarded
+   * here. Fixing only the seat moved his rating from 122 to 96 — it looked
+   * fixed in every test and did nothing on his phone, because his heavy set
+   * died one step earlier.
+   *
+   * ⚠️ THE LESSON IS THE SHAPE OF THE FIRST FIX. A rule enforced at one of two
+   * places that make the same comparison is not enforced. Both are `quality ×
+   * repFactor(...)` with no weight term, and both had to learn the same thing.
+   *
+   * 🔒 WITHIN A DAY IT IS ALSO THE SAFEST PLACE FOR IT: every set in the group
+   * shares one date and one fatigue history, so a superseded reading keeps
+   * every field it had except the weight, and none of the three failure modes
+   * that killed this in `buildObservations()` can arise. */
+  const dayGroups = new Map();
   for (const o of pool) {
     const key = o.exerciseId + '|' + o.date;
-    const prev = perDay.get(key);
-    if (!prev || betterSameDay(o, prev) > 0) perDay.set(key, o);
+    if (!dayGroups.has(key)) dayGroups.set(key, []);
+    dayGroups.get(key).push(o);
+  }
+  const perDay = new Map();
+  for (const [key, group] of dayGroups) {
+    let best = null;
+    for (const o of dominate(group)) if (!best || betterSameDay(o, best) > 0) best = o;
+    if (best) perDay.set(key, best);
   }
 
   const scored = [...perDay.values()].map((o) => ({
@@ -2316,38 +2415,6 @@ export function rateMuscle(observations, muscle = null) {
    * the only thing left to decide is which set speaks. That is the whole of
    * what this rule is for.
    * ------------------------------------------------------------------ */
-  const dominate = (list) => {
-    if (!Array.isArray(list) || list.length < 2) return list;
-    return list.map((b) => {
-      let dom = null;
-      for (const a of list) {
-        if (a === b) continue;
-        if (a.weight < b.weight || a.reps < b.reps) continue;
-        if (a.weight === b.weight && a.reps === b.reps) continue;
-        if (!dom || a.weight > dom.weight) dom = a;
-      }
-      /* ⚠️ `curveWeight` IS REQUIRED, NOT OPTIONAL, and its absence is a refusal
-       * rather than a fallback. It is the number the curve was fed (per hand on
-       * a dumbbell, total resistance on a pull-up), and guessing it from
-       * `weight` would be a second copy of D30's convention — wrong by 5 % on
-       * every dumbbell lift and wildly wrong on every body-weight one. A friend's
-       * published rows predate this field, so they simply keep today's rule. */
-      if (!dom || !(dom.curveWeight > 0) || !(dom.rawE1rm > 0)) return b;
-      const at = e1rm(dom.curveWeight, b.reps);
-      const was = e1rm(dom.curveWeight, dom.reps);
-      if (!(at > 0) || !(was > 0)) return b;
-      const scale = at / was;
-      return {
-        ...b,
-        weight: dom.weight,
-        curveWeight: dom.curveWeight,
-        rawE1rm: dom.rawE1rm * scale,
-        estimate: dom.estimate * scale,
-        supersededWeight: b.weight,
-      };
-    });
-  };
-
   const seatCredit = (o) => o.quality * repFactor(o.reps) * recencyWeight(o.ageDays) * fatigueOf(o);
   const better = (o, prev) => (seatCredit(o) - seatCredit(prev))
     || (o.estimate - prev.estimate)

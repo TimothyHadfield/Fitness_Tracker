@@ -111,9 +111,35 @@ being honest.
 extrapolation. It now asserts the number as well as the label, against `setE1rm(85, 6)` directly.
 **§0.14's third corollary, three times in one day.**
 
-### G. Tests
+### G. 🚨 IT SHIPPED HALF-FIXED, AND TIM CAUGHT THAT TOO
 
-19 suites green, **5,511** assertions. The new block covers Tim's case by name, the asymmetry he
+> *"it still says 55x6"*
+
+He was right again. The rule went into the **seat** comparison only — and each exercise-day is
+collapsed to ONE set **before** the seat, by `betterSameDay`, which is the same
+`quality × repFactor(reps)` with no weight term. On the day he pulled 85×12 he had **opened with
+65×8**; the 8-rep set won the day on rep count alone, and the heavy set was gone one step before the
+rule could see it. Measured: the half-fix moved his fixture from 122 to **96 lb** — it made things
+*worse* and passed every test.
+
+🔒 **THE GENERAL FORM, AND IT IS THE LESSON OF THE WHOLE DAY: A RULE ENFORCED AT ONE OF TWO PLACES
+THAT MAKE THE SAME COMPARISON IS NOT ENFORCED.** `dominate()` is called twice now — once per
+exercise-day and once at the seat — because both comparisons are weight-blind and both had to learn
+it. Within a day it is also the safest possible place: every set shares one date and one fatigue
+history, so a superseded reading keeps every field but the weight.
+
+🚨 **AND THE DEMO YEAR NEVER PRODUCES THIS SHAPE**, which is exactly how the half-fix passed
+everything. The golden table did not move when the second half went in. **There was no cover at all
+until a fixture was written for it** — and the check that would have caught it earlier was the one
+thing not done: driving the change against the reporter's own described case rather than a
+simplification of it. His words were *"my third set"*, and the first fixture used one set.
+
+⚠️ **§0.13 was applied first and was right to be** — the deployed file was checked before the code,
+and it did carry the fix. That ruled out a stale cache and pointed straight at the data shape.
+
+### H. Tests
+
+All suites green, **5,669** assertions. The new block covers Tim's case by name, the asymmetry he
 insisted on (heavier but shorter does NOT supersede), more-reps-at-one-weight and
 more-weight-at-one-rep-count, that adding a better set can only RAISE a rating, and 🛑 **that a
 mistyped 2,050 lb set is still quarantined** — the assertion that pins where this rule may live.
