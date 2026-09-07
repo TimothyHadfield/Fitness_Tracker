@@ -36,6 +36,10 @@ const SHELL = [
   './css/app.css',
   './img/ink-front.webp',
   './img/ink-back.webp',
+  // A figure from an openly licensed paper, shown inside a "?" popover. Cached
+  // with the shell because a popover that explains a number is no use offline
+  // with its evidence missing.
+  './img/figures/fphys-09-00744-g002.jpg',
   './js/app.js',
   './js/body-art.js',
   './js/body-map.js',
@@ -54,6 +58,8 @@ const SHELL = [
   './js/strength-standards.js',
   './js/strength-estimate.js',
   './js/muscle-evidence.js',
+  './js/exercise-evidence.js',
+  './js/template-lint.js',
   './js/ratio-sigma.js',
   './js/set-e1rm.js',
   './js/rep-decrement.js',

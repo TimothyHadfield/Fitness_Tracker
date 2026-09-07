@@ -880,6 +880,64 @@ export function helpDot(body, { label = 'What does this mean?', title = null } =
   return dot;
 }
 
+/**
+ * A ? body that is words, then the chart the claim rests on, then its credit.
+ *
+ * ⚠️ RULE 9 STILL GOVERNS, AND A PICTURE DOES NOT GET AN EXEMPTION. A figure
+ * here may only ever be evidence for WHY a number is what it is. It may not
+ * carry a fact the screen needs — a reader who never taps the ? must lose
+ * nothing, and an image is the easiest thing in this app to fail to load.
+ *
+ * ⚠️ AND ONLY WHERE THE FIGURE IS ACTUALLY ABOUT THE NUMBER. A chart from a
+ * paper that measured something adjacent is worse than no chart: it dresses a
+ * claim in evidence that does not support it. This is not hypothetical — the
+ * first figure picked for optimal.js's load caveat ("training at about 8 reps or
+ * fewer builds clearly more strength") was Schoenfeld et al. 2020, PMC7186566,
+ * openly licensed and squarely on the topic. Reading the paper rather than its
+ * caption killed it: that trial found isometric strength increases *similar*
+ * between heavy and light loads. It would have illustrated the caveat with its
+ * own contradiction. **Read the result, not the caption, before wiring one.**
+ *
+ * 🚨 THE CREDIT IS NOT OPTIONAL AND THIS THROWS RATHER THAN RENDERS WITHOUT ONE.
+ * These are other people's figures, shown under CC BY, and attribution is the
+ * whole condition we are allowed to show them under. A missing credit is a
+ * licence breach, not a cosmetic gap, so it fails loudly at the call site
+ * instead of shipping a stripped figure to a reader.
+ *
+ * @param {string|string[]|Node} text  the explanation — the ? body it would
+ *   have had without a figure, unchanged
+ * @param {object} figure
+ * @param {string} figure.src      app-relative path, e.g. 'img/figures/x.jpg'
+ * @param {string} figure.alt      what the chart shows, for a screen reader
+ * @param {string} figure.credit   authors, title, journal, doi — mandatory
+ * @param {string} [figure.licence] e.g. 'CC BY 4.0'
+ */
+export function figureNote(text, figure) {
+  const f = figure || {};
+  if (!f.src) throw new Error('figureNote: a figure needs a src.');
+  if (!f.credit || !String(f.credit).trim()) {
+    throw new Error(
+      'figureNote: a figure needs a credit. These are somebody else\'s figures and the '
+      + 'attribution is the condition we are allowed to show them under.');
+  }
+
+  const paras = (Array.isArray(text) ? text : [text]).filter(Boolean);
+  const node = el('div', { class: 'help-figure-note' },
+    ...paras.map((t) => (typeof t === 'string' ? el('p', { class: 'help-pop-body', text: t }) : t)),
+    el('figure', { class: 'help-figure-wrap' },
+      // ⚠️ NOT `loading="lazy"`. The popover is measured and clamped to the
+      // screen the moment it opens (see position()), so a picture that arrives
+      // afterwards is a box that was measured without it. showHelp() re-runs the
+      // measurement on load as well, but the image must at least be asked for
+      // straight away.
+      el('img', { class: 'help-figure', src: f.src, alt: f.alt || '', decoding: 'async' }),
+      el('figcaption', { class: 'help-figure-credit', text:
+        String(f.credit).trim() + (f.licence ? ` · ${f.licence}` : '') }),
+    ),
+  );
+  return node;
+}
+
 function showHelp(dot, body, title, label) {
   if (openHelp) openHelp.close();
 
@@ -909,6 +967,17 @@ function showHelp(dot, body, title, label) {
 
   document.body.append(pop);
   position(pop, dot);
+  /* ⚠️ A figure changes the height of the box AFTER it is measured. position()
+     runs against a box whose image has no size yet, so a popover opened above
+     the dot would be placed for a 60px box and then grow down through the
+     screen. Re-measuring on load is the whole fix, and it is a no-op for the
+     40-odd ? bodies that are text. */
+  for (const img of pop.querySelectorAll('img')) {
+    if (img.complete) continue;
+    const remeasure = () => position(pop, dot);
+    img.addEventListener('load', remeasure, { once: true });
+    img.addEventListener('error', remeasure, { once: true });
+  }
   dot.setAttribute('aria-expanded', 'true');
   openHelp = { owner: dot, close };
 

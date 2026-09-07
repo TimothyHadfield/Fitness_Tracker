@@ -2076,6 +2076,22 @@ select.input {
 .help-pop p:last-child { margin-bottom: 0; }
 .help-pop b, .help-pop strong { color: var(--ink); font-weight: 650; }
 
+/* A chart from a paper inside a ? — figureNote() in js/ui.js. Nothing here is a
+   look; it is the four rules that stop a 1,000px journal figure breaking the box
+   it is in. `.help-pop` is max-width: 300px with overflow-x: hidden, so without
+   max-width: 100% the image is silently CLIPPED rather than fitted; max-height
+   keeps a tall figure from filling the 62dvh box on its own, and object-fit
+   stops that squashing it when it does. */
+.help-pop .help-figure-wrap { margin: 7px 0 0; }
+.help-pop .help-figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 34dvh;
+  object-fit: contain;
+}
+.help-pop .help-figure-credit { margin-top: 5px; font-size: 11px; line-height: 1.4; }
+
 /* The arrow, so the box is visibly attached to the ? that opened it rather than
    appearing from nowhere — Rule 7's "a thing that moves says where it came
    from", applied to a thing that appears. */

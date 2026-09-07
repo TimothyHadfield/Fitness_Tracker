@@ -73,7 +73,7 @@ import { INDIRECT_NOTE_SETS } from './volume-map.js';
 import { STRENGTH_CAVEAT } from './optimal.js';
 import {
   el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
-  refreshRoute, helpDot,
+  refreshRoute, helpDot, figureNote,
 } from './ui.js';
 import * as units from './units.js';
 
@@ -809,6 +809,50 @@ function progressionBlock() {
   );
 }
 
+/* Why the "grows with the goal" tags are not a matter of taste — and the one
+ * chart in this app that is somebody else's.
+ *
+ * ⚠️ NOT ONE WORD OF THE ORIGINAL EXPLANATION MOVED OR WENT. The two sentences
+ * below are exactly what this ? has said since 2026-09-13; the figure and the
+ * sentence introducing it are added under them, and the dot still opens on a
+ * complete answer if the image never loads.
+ *
+ * ⚠️ THE FIGURE IS EVIDENCE FOR ONE OF THE FOUR, AND SAYS SO. Ochi et al. is a
+ * volume-matched frequency trial: the same weekly work done once a week or three
+ * times, over eleven weeks. It is a picture of the "sessions" half of the
+ * sentence above it and of nothing else, and the lead-in names what it shows so
+ * that it cannot read as a chart of the app's own numbers.
+ *
+ * 🚨 IT IS NOT THE SOURCE OF THE REQUIREMENT AND MUST NEVER BE CITED AS ONE.
+ * The 2 → 3 sessions this screen asks for comes from the meta-regression in
+ * research.md §6.3 (frequency 1 → 2: 12.72 % → 17.32 % for strength), which is
+ * behind a paywall and has no figure anybody may republish. What is below is an
+ * openly licensed primary study that found the same thing — corroboration a
+ * reader can actually look at, credited to the people who did the work.
+ *
+ * ⚠️ CC BY, AND THAT IS THE ONLY REASON IT IS HERE. Every -NC figure in the
+ * research library was ruled out because this app may one day carry donations or
+ * ads, and every -ND one because a phone crops. The credit line is rendered by
+ * figureNote(), which throws rather than draw a figure without one.
+ */
+const SCALES_WHY = () => figureNote([
+  'Sets, sessions, time and consistency each have a measured dose response, so they scale. '
+  + 'Protein is a bar to clear rather than a dial, and nothing measures how many hours of sleep '
+  + 'a goal needs.',
+  'Sessions are the clearest of the four. Below, the same weekly work split across three '
+  + 'sessions instead of one — 2 sets three times against 6 sets once — after eleven weeks, in '
+  + 'untrained lifters.',
+], {
+  src: 'img/figures/fphys-09-00744-g002.jpg',
+  alt: 'Relative change in maximum voluntary contraction torque from baseline after eleven weeks '
+    + 'of training once a week (T1) or three times a week (T3) at matched weekly volume, and '
+    + 'after six weeks of detraining. The three-times-a-week group gained more.',
+  credit: 'Ochi E, Maruo M, Tsuchiya Y, Ishii N, Miura K, Sasaki K. 2018. Higher Training '
+    + 'Frequency Is Important for Gaining Muscular Strength Under Volume-Matched Training. '
+    + 'Frontiers in Physiology. doi:10.3389/fphys.2018.00744',
+  licence: 'CC BY 4.0',
+});
+
 function requirementsBlock(goal, req) {
   const a = req.ambition;
   // Recomputed rather than trusted: a goal written before gainPct was stored
@@ -842,10 +886,7 @@ function requirementsBlock(goal, req) {
     el('div', { class: 'help-line' },
       el('span', { class: 'field-help', text:
         'The tags say which of these grow with a bigger goal.' }),
-      helpDot('Sets, sessions, time and consistency each have a measured dose response, so they '
-        + 'scale. Protein is a bar to clear rather than a dial, and nothing measures how many '
-        + 'hours of sleep a goal needs.',
-      { label: 'Why only some of these grow with the goal' })),
+      helpDot(SCALES_WHY(), { label: 'Why only some of these grow with the goal' })),
   );
 }
 

@@ -9,6 +9,13 @@ node_modules/
 # Local reference/working images — not part of the app
 *.jpg
 *.jpeg
+
+# …except these, which ARE part of the app. Figures from openly licensed papers,
+# shown inside the "?" popovers by figureNote() in js/ui.js. Every one is CC BY
+# and carries its credit line on screen; -NC and -ND figures are refused because
+# this app may carry donations one day and a phone crops. Without this exception
+# the popover ships a broken image, which is how it was caught.
+!img/figures/*.jpg
 package.json
 package-lock.json
 
