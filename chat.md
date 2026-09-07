@@ -2654,3 +2654,46 @@ message, and I tested it as a single set.
 
 And the thing that found it both times was you looking at your own screen. The tests agreed with me
 twice while the app was wrong.
+
+## 2026-09-20 (fifth pass) — where the 45% came from
+
+Nowhere. That's the answer.
+
+I traced it: the numbers were typed by hand into the code and nothing anywhere justified them. No
+tool produced them, the research file doesn't contain them, and the comment above them cites research
+only for the general shape — that accuracy gets worse above ten reps. Six numbers deciding which of
+your sets speaks for a muscle, none of them measured.
+
+Worse, they were cliffs. Going from ten reps to eleven cost a set 36% of its weight. Nine to ten cost
+nothing at all. One rep could matter more than the previous four combined, at boundaries somebody
+picked.
+
+**You were wrong about one thing, though.** All rep counts shouldn't be equal — the research is
+fairly clear that a 5-rep set predicts a max better than a 12-rep one, across a few studies with real
+sample sizes. The preference was right. The sizes of it were invented.
+
+**And what you asked for next has a name.** "Count almost the same, unless there's already good data
+that agrees" is inverse-variance weighting, and you described it from scratch. The app already does
+exactly that for its conversion ratios. Rep counts were the last input still running on a guess.
+
+**So that's what I built.** The uncertainty of a rep count now comes from measuring how much the
+seven published 1RM formulas *disagree* with each other at that rep count — seven authors, not me.
+It's 0% at one rep (nothing is being converted), 3% at eight, 6% at twelve, 10% at fifteen. Smooth,
+no cliffs.
+
+Then it's combined with the uncertainty already tracked for the exercise itself, and this is where
+your rule appears on its own:
+
+- On a **machine**, where converting to a standard lift is already guesswork, a 12-rep set carries
+  **86%** of an 8-rep set's weight — almost the same, because reps aren't what the doubt is about.
+- On the **key lift**, where the conversion is exact, it carries **57%** — there the rep count *is*
+  the doubt, so the low-rep set genuinely adds precision.
+
+The old ladder said 53% for both, blind to which situation you were in.
+
+I also removed the filter that was throwing high-rep sets out before they could compete at all.
+
+**One thing I didn't build, deliberately.** You argued a 12-rep set is good evidence of a *minimum* —
+you can't do fewer reps than you did. You're right about the mechanism. But adjusting a recorded set
+upward is the exact move this project refused once before, in writing, because it's the only thing
+that can make you stronger on paper than what you actually lifted. That one's your call, not mine.

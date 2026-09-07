@@ -2726,19 +2726,47 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * Two confidences soften (Back 0.8246 → 0.8169, Quads 0.9016 → 0.8510): the
    * seated readings are further apart once the truncated ones join, and less
    * agreement is less confidence. That is the model being honest, not a loss. */
+  /* ── 🔄 RE-BASELINED AGAIN, SAME DAY, FOR σ_rep ──────────────────────────
+   *
+   * Tim: *"I don't know where the 45% trust is coming from… I want higher-rep
+   * counts to count towards the 1RM estimation almost the same as lower-rep
+   * counts, unless there is a good amount of data that agrees with each other."*
+   *
+   * `repFactor()`'s ladder had **no source for any of its numbers** and its
+   * steps were cliffs — eleven reps was worth 36 % less than ten. It is replaced
+   * in the blend by `repSigma()`, the measured disagreement between the seven
+   * published formulas (tools/build-rep-sigma.mjs), added in quadrature with the
+   * conversion doubt inside `readingSigma()`. The low-rep FILTER at the seat is
+   * gone too — it is a weighting now, so a good enough long set can win.
+   *
+   * WHAT MOVED, and every one is small: Core 110.1 → 117.3 (+6.5 %), Quads
+   * 296.6 → 294.7 (−0.6 %), Shoulders 147.1 → 146.1 (−0.7 %), Back 184.4 →
+   * 184.7, Biceps −0.2 %, Calves +0.1 %, Chest −0.1 %, Hamstrings −0.1 %,
+   * Triceps +0.04 %. Glutes, Forearms and Traps are unchanged to four places.
+   *
+   * ⚠️ THEY MOVE IN BOTH DIRECTIONS AND THAT IS CORRECT HERE, unlike the
+   * dominance re-baseline above where every move had to be upward. This one
+   * re-weights rather than re-reads: a long set that was over-discounted gains,
+   * and a muscle whose seat was a long set on a WELL-established ratio loses a
+   * little, because the rep term is now nearly all of its doubt.
+   *
+   * ⚠️ EVERY OBSERVATION AND CONTRIBUTOR COUNT IS UNCHANGED. Same check as
+   * above, same reason: this is a weighting change and it may not cost evidence.
+   * Quads' confidence rises (0.8510 → 0.8793) because the seats it now blends
+   * agree more closely than the ones the filter forced on it. */
   const GOLDEN = [
-    ['Back', 720, 184.4332, 0.8169, 212, 4],
-    ['Biceps', 904, 99.8499, 0.7680, 125, 2],
-    ['Calves', 332, 225.0012, 0.8807, 84, 2],
-    ['Chest', 465, 212.9457, 0.9044, 130, 2],
-    ['Core', 66, 110.0914, 0.2891, 22, 1],
-    ['Forearms', 904, 94.6849, 0.6006, 273, 5],
+    ['Back', 720, 184.7349, 0.8169, 212, 4],
+    ['Biceps', 904, 99.6686, 0.7680, 125, 2],
+    ['Calves', 332, 225.2087, 0.8807, 84, 2],
+    ['Chest', 465, 212.8341, 0.9044, 130, 2],
+    ['Core', 66, 117.2576, 0.2891, 22, 1],
+    ['Forearms', 904, 94.6823, 0.6006, 273, 5],
     ['Glutes', 630, 364.5160, 0.8488, 64, 1],
-    ['Hamstrings', 882, 248.5222, 0.8524, 146, 3],
-    ['Quads', 567, 296.5619, 0.8510, 171, 4],
-    ['Shoulders', 1080, 147.0894, 0.6903, 192, 4],
-    ['Traps', 529, 272.9047, 0.5797, 148, 3],
-    ['Triceps', 1100, 161.4063, 0.5481, 125, 2],
+    ['Hamstrings', 882, 248.3142, 0.8524, 146, 3],
+    ['Quads', 567, 294.6888, 0.8793, 171, 4],
+    ['Shoulders', 1080, 146.0904, 0.6903, 192, 4],
+    ['Traps', 529, 272.8760, 0.5797, 148, 3],
+    ['Triceps', 1100, 161.4694, 0.5481, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -2789,7 +2817,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     };
     const asMan = sexed('male'), asWoman = sexed('female');
     const noSex = rateMuscle(byMuscle.get('Calves') || [], 'Calves').estimate;
-    ok(near(asMan, 228.2721, 0.0001),
+    /* 228.2721 → 228.6592 on 2026-09-20, re-baselined with the golden table
+     * above for σ_rep. +0.17 %: this muscle's seats barely move, which is what
+     * a re-weighting should do to a muscle whose evidence already agreed. */
+    ok(near(asMan, 228.6592, 0.0001),
        `🚨 the app's own path — the demo lifter walked as the man he is (${asMan.toFixed(4)})`);
     ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
        `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
@@ -5979,6 +6010,109 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        `and the rating stays a human number (${typo.estimate.toFixed(1)} lb) rather than the four `
        + 'figures the un-screened set produces');
   }
+}
+
+
+/* ================= σ_rep — the rep count's MEASURED uncertainty ============
+ *
+ * 2026-09-20. Tim: *"I don't know where the 45% trust is coming from… I want
+ * higher-rep counts to count towards the 1RM estimation almost the same as
+ * lower-rep counts, unless there is a good amount of data that agrees with each
+ * other recorded for that 1RM already, so using the low rep count just adds
+ * precision and confidence."*
+ * ========================================================================= */
+{
+  const { repSigma, REP_SIGMA } = await import('../js/rep-sigma.js');
+  const { readingSigma, sigmaFor, repFactor: rf } = await import('../js/muscle-evidence.js');
+
+  /* ---- 🚨 IT IS MEASURED, WHICH THE LADDER IT REPLACED WAS NOT ---- *
+   *
+   * The old `repFactor` asserted 1.00 / 0.95 / 0.85 / 0.70 / 0.45 / 0.25 and
+   * NOTHING sourced any of it — no tool fitted it, docs/research.md does not
+   * contain it, and its own comment cites the research only for the shape. It
+   * was also a staircase: eleven reps was worth 36 % less than ten, and thirteen
+   * 44 % less than twelve, on evidence that says "less accurate" rather than
+   * "worth half". σ now comes from the disagreement between the seven published
+   * formulas in §1.2 (tools/build-rep-sigma.mjs). */
+  ok(repSigma(1) === 0,
+     '🚨 a ONE-rep set has zero conversion uncertainty — nothing is converted, and the formulas\' '
+     + 'raw disagreement at r = 1 is an artefact of how they were fitted rather than doubt');
+  {
+    let monotone = true;
+    for (let r = 2; r <= 15; r++) if (repSigma(r) < repSigma(r - 1)) monotone = false;
+    ok(monotone, '⚠️ and σ rises with every rep — more extrapolation is never less doubt');
+
+    /* ⚠️ MEASURED ON THE WEIGHT, NOT ON σ, and the first version of this
+     * assertion got that wrong. σ itself jumps 37 % from two reps to three —
+     * which sounds alarming and means nothing, because it is 1.6 % rising to
+     * 2.2 %. What the ladder's cliffs actually cost a set was WEIGHT, so that is
+     * what the smoothness claim has to be about. The key lift is the harshest
+     * case, since there σ_rep is nearly the whole of the doubt. */
+    const key = { kind: 'direct', standInName: null, ratio: 1, quality: 1,
+                  exerciseName: 'Barbell Row' };
+    const w = (r) => 1 / Math.pow(readingSigma({ ...key, reps: r }), 2);
+    let worstNew = 0;
+    let worstOld = 0;
+    for (let r = 2; r <= 15; r++) {
+      worstNew = Math.max(worstNew, 1 - w(r) / w(r - 1));
+      if (rf(r - 1) > 0) worstOld = Math.max(worstOld, 1 - rf(r) / rf(r - 1));
+    }
+    ok(worstNew < worstOld / 1.8,
+       `🔒 ONE EXTRA REP NOW COSTS AT MOST ${(100 * worstNew).toFixed(0)} % of a set's weight, `
+       + `against the ladder's ${(100 * worstOld).toFixed(0)} % — and it is spread across every rep `
+       + 'rather than concentrated at two invented boundaries with flats between them');
+  }
+  ok(repSigma(12) > repSigma(8) && repSigma(8) > repSigma(3),
+     'a 12-rep set is genuinely less certain than an 8, and an 8 than a 3 — Reynolds (2006) and '
+     + 'Mayhew (2008) both find the equations degrade above ten, so the PREFERENCE was never wrong');
+  ok(REP_SIGMA.size === 15 && repSigma(99) === REP_SIGMA.get(15),
+     'the table stops at D5\'s ceiling and does not extrapolate past where it was measured');
+
+  /* ---- 🚨 THE BEHAVIOUR HE ASKED FOR, AND IT FALLS OUT OF THE QUADRATURE ---- */
+  {
+    const keyLift = { kind: 'direct', standInName: null, ratio: 1, quality: 1,
+                      exerciseName: 'Barbell Row' };
+    const machine = { kind: 'direct', standInName: null, ratio: 1.1, quality: 0.4,
+                      exerciseName: 'Machine Row' };
+    const w = (o, reps) => 1 / Math.pow(readingSigma({ ...o, reps }), 2);
+    const share = (o) => w(o, 12) / w(o, 8);
+
+    ok(share(machine) > 0.8,
+       `🚨 ON A LIFT WHOSE CONVERSION IS ALREADY DOUBTFUL, a 12-rep set carries `
+       + `${(100 * share(machine)).toFixed(0)} % of an 8-rep set's weight — *"almost the same"*, `
+       + 'because the rep count is not what the doubt is about. The old ladder said 53 %');
+    ok(share(keyLift) < share(machine) - 0.15,
+       `⚠️ AND ON THE KEY LIFT ITSELF it is ${(100 * share(keyLift)).toFixed(0)} % — there the ratio `
+       + 'is exact, so σ_rep is nearly all that is left and the low-rep set really does *"just add '
+       + 'precision"*. One rule, two answers, which a multiplicative ladder could not express');
+    /* ⚠️ ONLY THE MACHINE IS ASSERTED TO DIFFER FROM THE LADDER, and the first
+     * version claimed both did. The key lift lands at ~57 % against the ladder's
+     * 53 %, which is close — and that is the honest result rather than a
+     * failure: where the rep count IS most of the doubt, a measured σ and a
+     * hand-drawn ladder happen to agree. The ladder's fault was never that every
+     * number was wrong; it was that it gave the SAME answer everywhere. */
+    ok(Math.abs(0.45 / 0.85 - share(machine)) > 0.2,
+       '🔒 and on the machine it is nowhere near the ladder\'s 53 %, which applied one discount to '
+       + 'every exercise alike whether the rest of the estimate was solid or a guess');
+  }
+
+  /* ---- the two doubts stay two functions ---- */
+  {
+    const key = { kind: 'direct', standInName: null, ratio: 1, quality: 1, reps: 10,
+                  exerciseName: 'Barbell Row' };
+    ok(readingSigma(key) > sigmaFor(key),
+       '⚠️ `readingSigma` is strictly larger than `sigmaFor` — the rep term is ADDED to the '
+       + 'conversion doubt rather than replacing it');
+    ok(sigmaFor({ ...key, reps: 3 }) === sigmaFor({ ...key, reps: 12 }),
+       '🔒 and `sigmaFor` itself is untouched by reps, so "the key lift carries no CONVERSION '
+       + 'uncertainty" stays true — folding the two together made that sentence false while every '
+       + 'caller still read it as true, and a failing test is what insisted on two functions');
+  }
+
+  /* ---- 🛑 the preference survives where it belongs ---- */
+  ok(rf(3) > rf(12),
+     '🛑 `repFactor` still exists and still prefers low reps — it decides which set SPEAKS for an '
+     + 'exercise, which is a different question from how much its number is worth in the blend');
 }
 
 

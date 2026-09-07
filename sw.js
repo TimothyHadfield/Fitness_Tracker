@@ -61,6 +61,7 @@ const SHELL = [
   './js/exercise-evidence.js',
   './js/template-lint.js',
   './js/ratio-sigma.js',
+  './js/rep-sigma.js',
   './js/set-e1rm.js',
   './js/rep-decrement.js',
   './js/model-version.js',

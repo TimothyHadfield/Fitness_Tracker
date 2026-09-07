@@ -64,6 +64,7 @@ import { bodyWeightFractionFor, standInFor } from './exercises.js';
 import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 import { RATIO_DRIFT } from './ratio-sigma.js';
+import { repSigma } from './rep-sigma.js';
 
 /* ------------------------------------------------------------------ *
  * Load
@@ -1850,7 +1851,35 @@ export function sigmaFor(o) {
     : (Number.isFinite(drift)
       ? Math.sqrt(drift * drift + SIGMA_SOURCE * SIGMA_SOURCE + geared * geared)
       : bridge);
+
   return Math.min(SIGMA_MAX, Math.sqrt(base * base + cross * cross));
+}
+
+/**
+ * The WHOLE uncertainty of one reading: the conversion, and how far the rep
+ * count is being extrapolated. 2026-09-20.
+ *
+ * ⚠️ IT IS A SECOND FUNCTION RATHER THAN A BIGGER `sigmaFor()`, and a failing
+ * test is what insisted. `sigmaFor()` is documented and asserted as the
+ * CONVERSION doubt — "the key lift carries none of it, its ratio is 1.00 by
+ * construction" — and folding the rep term in made that sentence false while
+ * every caller still read it as true. Two doubts, two functions, and the caller
+ * says which it wants.
+ *
+ * 🚨 IN QUADRATURE, WHICH IS THE WHOLE POINT, and it is what delivers Tim's ask
+ * without a special case. Where the conversion is already doubtful σ_ratio
+ * dominates and the rep count barely matters — a 12-rep set on a machine
+ * carries nearly the same weight as an 8-rep one, because neither is what the
+ * doubt is about. Where the lift IS the key lift and the ratio is exact, σ_rep
+ * is almost all that is left and low reps genuinely win: *"using the low rep
+ * count just adds precision"*, his words. The old multiplicative ladder could
+ * express neither half — it applied one discount whether the rest of the
+ * estimate was solid or a guess.
+ */
+export function readingSigma(o) {
+  const conversion = sigmaFor(o);
+  const rep = repSigma(o && o.reps);
+  return Math.min(SIGMA_MAX, Math.sqrt(conversion * conversion + rep * rep));
 }
 
 // How far back a representative may come from before the seat widens. 84 days
@@ -2434,8 +2463,19 @@ export function rateMuscle(observations, muscle = null) {
   for (const b of perExercise.values()) {
     const raw = b.inWindow.length ? b.inWindow : b.all;
     const pool = dominate(raw);
-    const low = pool.filter((o) => o.reps <= LOW_REP_PREFERENCE);
-    const field = low.length ? low : pool;
+    /* 🔄 THE LOW-REP RULE IS A WEIGHTING NOW, NOT A FILTER — 2026-09-20.
+     *
+     * It used to be `pool.filter(reps <= 8)`, and where any such set existed
+     * every longer one was removed from the field **before credibility was even
+     * compared**. That is what let a 55×6 hold a seat against an 85×12: the
+     * heavier set was not outranked, it was never in the running. Tim: *"I want
+     * higher-rep counts to count towards the 1RM estimation almost the same as
+     * lower-rep counts."*
+     *
+     * The preference survives — it is in `seatCredit` via `repFactor`, and in
+     * the blend as a measured σ — but it can now be overcome by a set that is
+     * enough better to deserve it. A filter cannot be overcome by anything. */
+    const field = pool;
     let best = null;
     for (const o of field) if (!best || better(o, best) > 0) best = o;
     if (best) representatives.push(best);
@@ -2534,9 +2574,17 @@ export function rateMuscle(observations, muscle = null) {
    * harness that can arbitrate between the two schemes, and the one this
    * project has cannot (see `sigmaFor()`). **One change, measured, rather than
    * four at once.** */
+  /* 🔄 `repFactor` IS OUT OF THE BLEND WEIGHT SINCE 2026-09-20, because it is
+   * now inside `sigmaFor()` as a measured σ. Leaving it here would charge a
+   * high-rep set for the same doubt twice — once as a multiplier and once as a
+   * variance — which is how a 12-rep set ended up carrying less than half the
+   * weight of a 3-rep one on evidence that says "less accurate", not "half".
+   * Recency, fatigue and the benchmark bonus stay: none of them is a statement
+   * about how far the curve is extrapolating. */
   const estimate = robustAggregate(used.map((u) => {
-    const sigma = sigmaFor(u);
-    return { x: u.estimate, w: (u.evidenceWeight / u.quality) / (sigma * sigma) };
+    const sigma = readingSigma(u);
+    const w = (u.evidenceWeight / u.quality / repFactor(u.reps)) / (sigma * sigma);
+    return { x: u.estimate, w };
   }));
   if (!(estimate > 0)) return null;
 

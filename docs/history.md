@@ -17,6 +17,127 @@
 
 ---
 
+## 2026-09-20 (fourth pass) — 🚨 "WHERE IS THE 45 % COMING FROM?" NOWHERE, IS THE ANSWER
+
+Tim, after being shown why his 85×12 lost to a 55×6:
+
+> *"so I guess my issue is I don't know where the 45% trust is coming from. I feel like we should
+> treat all rep counts with similar confidence levels"*
+
+**He was half right, and the half he was right about was the half nobody had checked.**
+
+### A. THE LADDER HAD NO SOURCE
+
+`repFactor()` asserted **1.00 / 0.95 / 0.85 / 0.70 / 0.45 / 0.25**. Traced: no tool fits it,
+`docs/research.md` does not contain it, `tools/strength-fit.mjs` does not re-derive it, and its own
+comment cites the research **only for the shape** (*"accuracy degrades above ~10 reps"*). Six numbers
+deciding which of a lifter's sets speaks for a muscle, and not one of them sourced.
+
+🚨 **AND THE SHAPE WAS WORSE THAN THE NUMBERS.** They were cliffs with flats between: **ten reps to
+eleven cost a set 36 % of its weight**, twelve to thirteen another 44 %, and nine to ten nothing at
+all. A one-rep difference could be worth more than the previous four combined.
+
+⚠️ **HE WAS WRONG THAT ALL REP COUNTS SHOULD BE EQUAL, and the literature is the reason** — Reynolds
+(2006, n = 70) found a 5RM predicted best at R² 0.993 with accuracy *"degraded substantially at
+higher rep ranges"*, and Mayhew (2008, n = 103) found the equations more accurate below ten. The
+preference was never the problem. **The magnitudes were, and they were invented.**
+
+### B. WHAT HE ASKED FOR NEXT, WHICH IS A REAL STATISTICAL STRUCTURE
+
+> *"I want higher-rep counts to count towards the 1RM estimation almost the same as lower-rep counts,
+> unless there is a good amount of data that agrees with eachother recorded for that 1RM already, so
+> using the low rep count just adds precision and confidence."*
+
+**That is inverse-variance weighting**, described from first principles by somebody who has not been
+shown it — and the app **already does exactly this for conversion ratios** since 2026-09-15
+(`ratio-sigma.js`, weight = 1/σ²). Rep counts were the one input still carrying a guess.
+
+### C. σ_rep, AND WHY IT IS MEASURED RATHER THAN CHOSEN
+
+`tools/build-rep-sigma.mjs` takes the **seven classical formulas** in `docs/research.md` §1.2 — all
+of the form `1RM = w × f(r)` — and measures **how much they disagree** at each rep count. Seven
+independent authors, not this session. 🔒 **The same technique `build-ratio-sigma.mjs` already uses**,
+where σ comes from a published ratio's drift between the novice and advanced rows.
+
+⚠️ **EACH FORMULA IS NORMALISED BY ITS OWN f(1) FIRST**, and that is not cosmetic: a one-rep set needs
+no conversion, so its σ must be zero, and the formulas' raw disagreement at r = 1 (Epley alone is
+3.3 % high there) is an artefact of fitting rather than doubt about a single.
+
+Result — smooth, monotone, and zero where nothing is converted:
+
+| reps | 1 | 6 | 8 | 10 | 12 | 15 |
+|---|---|---|---|---|---|---|
+| σ | 0 % | 2.6 % | 3.1 % | 4.2 % | 5.9 % | 9.6 % |
+
+### D. 🚨 THE QUADRATURE IS WHAT DELIVERS HIS ASK, WITH NO SPECIAL CASE
+
+σ_rep is added **in quadrature** to the conversion doubt. Measured, a 12-rep set against an 8-rep one:
+
+| | 12-rep set's share of an 8-rep set's weight |
+|---|---|
+| **A machine** (conversion already doubtful) | **86 %** — *"almost the same"* |
+| **The key lift** (ratio exact by construction) | **57 %** — low reps *"just add precision"* |
+| The old ladder | **53 %**, on every exercise alike |
+
+**Both halves of his sentence, out of one formula.** Where the conversion is already a guess the rep
+count barely matters; where the lift IS the key lift, σ_rep is nearly all that is left. A
+multiplicative ladder cannot express either, because it applies the same discount whether the rest of
+the estimate is solid or worthless.
+
+⚠️ **THE ONE PLACE THE LADDER WAS RIGHT, and it is worth saying**: on the key lift the measured
+answer is 57 % against its 53 %. Its fault was never that every number was wrong — it was that it
+gave the **same** number everywhere.
+
+### E. 🔒 A FAILING TEST INSISTED ON TWO FUNCTIONS
+
+Folding σ_rep into `sigmaFor()` broke *"THE KEY LIFT CARRIES NO CONVERSION UNCERTAINTY — its ratio is
+1.00 by construction"*. That assertion was still **true about conversion** and now false about the
+function, while every caller went on reading it as the old meaning. **`readingSigma()` is a second
+function rather than a bigger first one**, and the test is why.
+
+⚠️ **`repFactor` SURVIVES, in the seat comparison only.** Which set SPEAKS for an exercise is a
+different question from what its number is WORTH in the blend, and charging the same doubt in both
+places is how a 12-rep set ended up under half the weight of a 3-rep one.
+
+🛑 **AND THE LOW-REP FILTER IS GONE.** `pool.filter(reps <= 8)` removed every longer set *before
+credibility was compared* — the thing that let a 55×6 hold a seat against an 85×12 without ever
+outranking it. A preference can be overcome; a filter cannot.
+
+### F. What moved, and two more of my own assertions caught
+
+Golden re-baselined a second time the same day: **Core +6.5 %, Quads −0.6 %, Shoulders −0.7 %, Back
++0.2 %**, the rest under 0.3 %, Glutes/Forearms/Traps unchanged. ⚠️ **Both directions, correctly** —
+this re-weights rather than re-reads, so a long set that was over-discounted gains and a muscle
+seated on a long set with a well-established ratio loses a little. Every observation and contributor
+count unchanged. Quads' confidence **rose** (0.8510 → 0.8793) because the seats it now blends agree
+more closely than the ones the filter forced on it.
+
+🔒 **TWO ASSERTIONS I WROTE WERE WRONG AND THE SUITE SAID SO.** One claimed σ rises smoothly with no
+step above 25 %; σ jumps **37 %** from two reps to three — which is 1.6 % rising to 2.2 % and means
+nothing. **The cliff claim had to be about WEIGHT, which is what the ladder actually cost a set**:
+one extra rep now costs at most 21 % against the ladder's 44 %. The other claimed neither context
+matched the ladder's 53 %; the key lift lands at 57 %, and that is the honest result rather than a
+failure. **Both were fixed to say what is true rather than what was expected.**
+
+### G. Tests
+
+All suites green, **5,680** assertions. Mutation-checked: zeroing the rep term fails four assertions
+including both golden pins. Also asserted — σ(1) = 0, monotone, the table stopping at D5's ceiling
+rather than extrapolating past where it was measured, `readingSigma` strictly exceeding `sigmaFor`,
+and `sigmaFor` still being untouched by reps so the key-lift sentence stays true.
+
+🚩 **NOT DONE, and it is the bigger one**: the estimate still blends **one set per exercise, top
+three**. Tim's whole Back number rests on three sets. Using every set, each at its own precision, is
+the real accuracy work and is unstarted.
+
+🚩 **AND ONE THING HE RAISED THAT WAS DELIBERATELY NOT BUILT**: he argued a high-rep set's error is
+right-skewed — you cannot do fewer reps than you did, so it is decent evidence of a *minimum*. He is
+mechanically right, but correcting a recorded set upward for assumed reserve is the move the fatigue
+work **refused in writing** as *the only mechanism that can make a number bigger than what was
+observed*. Left as his explicit decision rather than built quietly.
+
+---
+
 ## 2026-09-20 (third pass) — 🚨 HEAVIER AND LONGER IS BETTER, AND THE APP DID NOT KNOW IT
 
 Tim, reading his own Back panel:
