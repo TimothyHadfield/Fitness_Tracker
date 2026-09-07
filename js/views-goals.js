@@ -522,10 +522,13 @@ function progressBlock(goal, p, m, stale) {
     // Where the number came from, every time (Rule 5). An estimate must never
     // look like a measurement, and this one is converted from whatever exercise
     // happened to rate the muscle best.
+    // ⚠️ `performedReps` FIRST (2026-09-21): a set superseded by a heavier,
+    // longer one keeps the superseded rep count for the arithmetic, and naming
+    // that here would print a set nobody did on a line about a real one.
     m
       ? el('div', { class: 'field-help', text:
           `Estimated from ${m.best.exerciseName}, ${units.fmtWeight(m.best.weight)}`
-          + `${m.best.loadType === 'per_side' ? '/side' : ''}×${m.best.reps}`
+          + `${m.best.loadType === 'per_side' ? '/side' : ''}×${m.best.performedReps || m.best.reps}`
           + ` — ${m.band.name.toLowerCase()} confidence, ${m.contributorCount} `
           + `session${m.contributorCount === 1 ? '' : 's'} counted.` })
       : null,
@@ -767,12 +770,22 @@ function movedSince(goal, p, m, stale) {
      * nothing recent if the newest chest set it rests on is from July — the
      * reader can only see that if the date is beside the sentence making the
      * claim, not four blocks away. Rule 5: the number names where it came from,
-     * and here "where" includes when. */
+     * and here "where" includes when.
+     *
+     * ⚠️ `performedDate` FIRST, AND IT MATTERS MOST HERE — 2026-09-21. A row
+     * superseded by a heavier, longer set keeps the superseded set's DATE as
+     * well as its rep count, because the re-read has to meet the rival at the
+     * rival's credibility and recency is part of that. Printing that date names
+     * a day on which nothing of the sort was lifted, which on a line whose only
+     * job is "when" is the worst place in the app to get it wrong. The
+     * arithmetic still uses the older date — deliberately, it is the
+     * conservative direction — and this sentence names the set. */
     m
       ? el('div', { class: 'field-help', text:
           `The "now" end of that was last moved by ${m.best.exerciseName}, `
           + `${units.fmtWeight(m.best.weight)}${m.best.loadType === 'per_side' ? '/side' : ''}`
-          + `×${m.best.reps} on ${fmtDateLong(m.best.date)} — so that is how recent this `
+          + `×${m.best.performedReps || m.best.reps} on `
+          + `${fmtDateLong(m.best.performedDate || m.best.date)} — so that is how recent this `
           + 'comparison actually is.' })
       : null,
   ];

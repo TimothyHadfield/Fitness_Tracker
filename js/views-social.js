@@ -1305,14 +1305,22 @@ function byPercentile(a, b) {
   return (pb - pa) || a.name.localeCompare(b.name);
 }
 
-/** The measured set their published rating was led by — Rule 5's anchor. */
+/** The measured set their published rating was led by — Rule 5's anchor.
+ *
+ * ⚠️ `performedReps` / `performedDate` FIRST, where they exist (2026-09-21).
+ * A set superseded by a heavier, longer one keeps the superseded set's rep
+ * count and date so the arithmetic stays conservative; `performed*` is what was
+ * actually lifted. This line claims a MEASURED set in its own comment, so it
+ * has to print the measured one. */
 function publishedSub(m) {
   const b = m.best;
   if (!b || !(Number(b.weight) > 0)) return 'From the rating their app published';
+  const reps = b.performedReps || b.reps;
+  const date = b.performedDate || b.date;
   return `${b.exerciseName || 'Their training'} ${units.withUnit(b.weight)}`
     + (b.loadType === 'per_side' ? '/side' : '')
-    + (b.reps ? ` × ${b.reps}` : '')
-    + (b.date ? ` · ${fmtDateShort(b.date)}` : '');
+    + (reps ? ` × ${reps}` : '')
+    + (date ? ` · ${fmtDateShort(date)}` : '');
 }
 
 async function theirBestLifts(doc, name, legacy) {

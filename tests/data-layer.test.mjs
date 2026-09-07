@@ -5914,6 +5914,32 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        `🚨 and the NUMBER behind it is the six-rep reading (${seat.rawE1rm.toFixed(1)} lb, not the `
        + `${whole.toFixed(1)} its full twelve reps would give) — the app takes the conservative half `
        + 'of what it can prove, which is what makes reading a set short honest rather than lossy');
+
+    /* ---- 🚨 AND THE SCREEN NAMES THE SET HE ACTUALLY DID — 2026-09-21 ---- *
+     *
+     * Tim, on the panel this whole section exists to fix: *"it still says 85x6
+     * instead of 85x12."* He was right again, and it is a fault the dominance
+     * row created the day it was written. The truncation is correct arithmetic
+     * — the re-read has to meet the rival at the rival's credibility — but the
+     * muscle panel prints `weight × reps, date` under the words *"from"*, as
+     * the real recorded set the estimate was converted from. So it was drawing
+     * **85 × 6 on the day he did 50 × 6**: a set nobody performed, presented as
+     * a measurement, by the one line in the app whose job is Rule 5.
+     *
+     * 🛑 DISPLAY ONLY. `reps` and `date` are unchanged and still drive
+     * `repFactor`, recency and the seat — the two assertions above pin exactly
+     * that, and they must keep passing beside these. */
+    ok(seat.performedReps === 12,
+       `🚨 THE PANEL NAMES THE SET THAT WAS PERFORMED: 85 × ${seat.performedReps}, not the `
+       + `${seat.reps} reps the model read it at. "from Lat Pulldown 85 lbs ×6" describes a set he `
+       + 'never did, on a line that exists to say which real set the number came from');
+    ok(seat.performedDate === '2026-09-14',
+       `⚠️ and its DATE with it (${seat.performedDate}) — printing ${seat.date} would name the day `
+       + 'of the 50 × 6 as the day he pulled 85, which is the same fault one field along');
+    ok(seat.reps === 6 && seat.date === '2026-08-24',
+       '🛑 and the ARITHMETIC still reads the truncation — `reps` and `date` are untouched, so '
+       + '`repFactor`, recency and the seat comparison all behave exactly as they did. This is a '
+       + 'second pair of fields for the screen, not a change to what the model believes');
   }
 
   /* ---- 🚨 THE SAME RULE ONE LEVEL UP, AND THE FIRST FIX MISSED IT ---- *
@@ -5957,6 +5983,50 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(seat.reps === 8,
        '⚠️ read at 8 reps — the rep count of the set it superseded WITHIN the day, which is the '
        + 'same truncation rule applied at the same place the comparison happens');
+    ok(seat.performedReps === 12 && seat.performedDate === '2026-09-14',
+       `⚠️ and the day's winner still names the real set (85 × ${seat.performedReps}) — here the `
+       + 'first `dominate()` pass is the one that rewrote it, and its `dom` was the genuine 85 × 12');
+  }
+
+  /* ---- 🚨 THE CHAIN, WHICH THE FIXTURE ABOVE CANNOT REACH ---- *
+   *
+   * `dominate()` runs twice — once per exercise-day, once at the seat — so a
+   * row arriving at the seat may ALREADY be a superseding row carrying a
+   * truncated `reps`. If the second pass re-stamps `performedReps` from
+   * `dom.reps` instead of carrying `dom.performedReps` through, it names the
+   * FIRST pass's truncation: 85 × 8 rather than 85 × 12. Closer than 85 × 6,
+   * still a set nobody did, and quieter.
+   *
+   * ⚠️ THE ORDER OF THE DAYS IS WHAT MAKES IT VISIBLE, and getting it wrong is
+   * how the first version of this assertion passed with the chain deleted. The
+   * heavy day has to be the OLDER one, so that the row rewritten at the seat —
+   * the short set, read at 85 — wins on recency and rep factor together. With
+   * the heavy day newer it wins the seat itself, was rewritten by the day pass
+   * rather than the seat pass, and the second pass never touches it. */
+  {
+    const sameDay = (date, sets) => ({
+      workoutId: 'w' + date, workoutName: 'Pull', date,
+      entries: [{ exerciseId: pulldown.id, exerciseName: pulldown.name, sets }],
+    });
+    const built = buildObservations({
+      sessions: [
+        sameDay('2026-08-24', [{ weight: 65, reps: 8 }, { weight: 85, reps: 12 }]),
+        sameDay('2026-09-14', [{ weight: 55, reps: 6 }]),
+      ],
+      benchmarks: [], exMap: exMap2,
+      bodyWeights: [{ date: '2026-08-01', weight: 185 }],
+      today: '2026-09-20', sex: 'male',
+    });
+    const r = rateMuscle(built.byMuscle.get('Back'), 'Back');
+    const seat = r.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.weight === 85 && seat.reps === 6,
+       `⚠️ the seat is the SECOND pass's own rewrite (${seat.weight}×${seat.reps}) — the newer `
+       + '55 × 6 superseded by a row that was itself already a rewrite of the 85 × 12');
+    ok(seat.performedReps === 12 && seat.performedDate === '2026-08-24',
+       `🚨 AND IT STILL NAMES 85 × ${seat.performedReps} on ${seat.performedDate}, not the 8 reps `
+       + 'the day pass had truncated it to. `performedReps` is carried through rather than '
+       + 're-stamped, or the second pass quietly overwrites the first pass\'s answer with its own '
+       + 'truncation');
   }
 
   /* ---- 🛑 THE ASYMMETRY, WHICH IS TIM'S OWN CAVEAT ---- */
@@ -5967,6 +6037,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        '🛑 heavier but SHORTER does not supersede — *"If the weight was higher but the reps was '
        + 'lower, that\'s not necessarily something we could do."* Neither set dominates, so the '
        + 'ordinary credibility comparison decides and nothing is rewritten');
+    ok(seat.performedReps === undefined && seat.performedDate === undefined,
+       '⚠️ and an unsuperseded row carries NO performed* fields at all, so the panel falls through '
+       + 'to `reps`/`date` — which is what every row in a normal history is, and what every rating '
+       + 'published before 2026-09-21 is');
   }
 
   /* ---- more reps at the SAME weight, and more weight at the SAME reps ---- */

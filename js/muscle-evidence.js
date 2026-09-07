@@ -2268,6 +2268,24 @@ export function rateMuscle(observations, muscle = null) {
         rawE1rm: dom.rawE1rm * scale,
         estimate: dom.estimate * scale,
         supersededWeight: b.weight,
+        /* 🚨 WHAT WAS ACTUALLY LIFTED, FOR THE SCREEN — 2026-09-21, and it is a
+         * Rule 5 fault this row created the day it was written. The row keeps
+         * `b.reps` and `b.date` on purpose: the truncation IS the conservative
+         * reading, and the seat comparison has to meet the rival at the rival's
+         * credibility. But the muscle panel prints `weight × reps, date` as
+         * *"the set the number came from"*, so it was naming **85 × 6 on a day
+         * he did 50 × 6** — a set nobody performed, presented as a measurement.
+         * Tim: *"it still says 85x6 instead of 85x12."*
+         *
+         * 🛑 DISPLAY ONLY. Nothing here is read by the arithmetic; `reps` and
+         * `date` still drive `repFactor`, recency and the seat, unchanged.
+         *
+         * ⚠️ IT CHAINS RATHER THAN RESTAMPS. `dominate()` runs twice — once per
+         * exercise-day, once at the seat — so `dom` may itself already be a
+         * superseding row, and taking `dom.reps` blindly on the second pass
+         * would name the first pass's truncation instead of the real set. */
+        performedReps: dom.performedReps || dom.reps,
+        performedDate: dom.performedDate || dom.date,
       };
     });
   };

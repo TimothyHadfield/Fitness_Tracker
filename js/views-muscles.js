@@ -1021,13 +1021,25 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
      * ⚠️ IN CREDIBILITY ORDER, WHICH IS THE ORDER THEY ARE WEIGHTED IN, and the
      * first one leads for a reason the reader can now see: `rateMuscle` sorts on
      * `evidenceWeight`, not on which set was heaviest. "and" rather than a
-     * bullet, so the three read as one sentence about one number. */
+     * bullet, so the three read as one sentence about one number. *
+     *
+     * 🚨 AND IT NAMES THE SET THAT WAS PERFORMED, NOT THE ONE THE MODEL READ —
+     * 2026-09-21, Tim: *"it still says 85x6 instead of 85x12."* When a heavier,
+     * longer set supersedes a lighter one (`dominate()` in muscle-evidence.js)
+     * the observation keeps the SUPERSEDED set's rep count and date, because
+     * the truncated reading is the conservative one and has to arrive at the
+     * rival's credibility. That is right for the arithmetic and wrong on a
+     * screen: this line exists to say which real set the number came from, and
+     * it was printing 85 × 6 on a day he pulled 50 × 6. **A set nobody did,
+     * drawn as a measurement, is Rule 5 broken by the line that enforces it.**
+     * `performedReps` / `performedDate` are display-only and absent unless a
+     * set was superseded, so every other row is untouched. */
     el('div', { class: 'muscle-sources' },
       (m.contributors && m.contributors.length ? m.contributors : [m.best]).map((c, i) =>
         el('div', { class: 'muscle-meta', text:
           `${i === 0 ? 'from' : 'and'} ${c.exerciseName} ${units.fmtWeight(c.weight)}`
           + (c.loadType === 'per_side' ? '/side' : '')
-          + `×${c.reps}, ${fmtDateShort(c.date)}` })),
+          + `×${c.performedReps || c.reps}, ${fmtDateShort(c.performedDate || c.date)}` })),
     ),
 
     m.basis === 'fallback'
@@ -1035,9 +1047,16 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
           'Inferred from the big lifts that also work it — a rough placing.' })
       : null,
 
+    /* ⚠️ AND THIS ONE NAMES THE PERFORMED SET TOO (2026-09-21), or it
+     * contradicts the line four rows up on the same screen: that one would read
+     * "from Lat Pulldown 85 lbs ×12" while this read "From a 6-rep set". The
+     * caveat is unchanged in force — `m.confident` is still `reps <= 5` on the
+     * rep count the model READ, which is the conservative test — only the
+     * sentence names the set that was actually done. */
     !m.confident
       ? el('div', { class: 'muscle-warn', text:
-          `From a ${m.best.reps}-rep set. Benchmark heavier for a firmer placing.` })
+          `From a ${m.best.performedReps || m.best.reps}-rep set. `
+          + 'Benchmark heavier for a firmer placing.' })
       : null,
 
     // Softer evidence than a ranking against lifters, and it must never be

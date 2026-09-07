@@ -2697,3 +2697,33 @@ I also removed the filter that was throwing high-rep sets out before they could 
 you can't do fewer reps than you did. You're right about the mechanism. But adjusting a recorded set
 upward is the exact move this project refused once before, in writing, because it's the only thing
 that can make you stronger on paper than what you actually lifted. That one's your call, not mine.
+
+## 2026-09-21 — "85x6 instead of 85x12"
+
+> *"it still says 85x6 instead of 85x12 like we talked about on the muscle group 'from:'"*
+
+**Right again, and it's a mess I made yesterday.**
+
+The number is fine. When a heavier, longer set beats a lighter one, the app deliberately reads it
+*short* — your 85×12 counted as 85×6 — because twelve reps at 85 certainly includes six at 85, so
+the smaller number is the half it can actually prove. That's what makes it fair rather than
+generous, and none of it changed today.
+
+What went wrong is the line underneath. That row ends up carrying the heavy set's **weight** and the
+light set's **reps and date**, and the "from" line just printed all three. So it read *85 lbs×6, 24
+Aug* — the weight from one set, the reps and the day from another. A set you never did, on the one
+line that's supposed to say exactly what you lifted.
+
+It was worse than what you saw, too. On the test data the same line read *"225×1, Aug 15"*.
+
+**Fixed**, and in four more places printing the same splice — the caveat right below it (which had
+started disagreeing with the line above it), two lines on the Goals screen, and a friend's best
+lifts. Your friends' copies carry it now as well, or their screens would show the fake set while
+yours showed the real one.
+
+**One thing worth knowing**, because it's the obvious next question: the line now says 85 × 12, but
+the estimate behind it is still the conservative 85 × 6 reading. So if you work out 85 × 12 by hand
+you'll get a bigger number than the panel shows. That's the rule doing its job. I haven't put
+anything on screen saying so — that's your call.
+
+Everything green, 5,693 checks. Pushed.

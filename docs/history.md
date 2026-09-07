@@ -17,6 +17,121 @@
 
 ---
 
+## 2026-09-21 — 🚨 THE PANEL WAS NAMING A SET NOBODY HAD DONE
+
+One instruction, after a catch-up:
+
+> *"it still says 85x6 instead of 85x12 like we talked about on the muscle group 'from:'"*
+
+**He is right, and it is a fault the fix of 2026-09-20 created on the day it shipped.** The
+arithmetic he reported the day before is correct and unchanged; what is wrong is the sentence
+underneath it.
+
+### A. WHAT WENT WRONG, AND WHY IT LOOKED FINE
+
+`dominate()` supersedes a lighter set with a heavier, longer one and **re-reads it at the weaker
+set's rep count** — 85×12 read as 85×6. That truncation is the whole honesty argument of the rule:
+twelve reps at 85 certainly includes six, so the smaller number is the conservative half of what the
+set proves, and arriving at `repFactor(6)` means it wins the seat **on weight rather than by spending
+confidence**. All of that is right and none of it changed today.
+
+The row it returns is `{...b, weight: dom.weight, …}` — the dominating set's **weight** over the
+superseded set's **reps and date**. Both are read by the seat comparison, deliberately. They are also
+read by the muscle panel, which prints `weight × reps, date` under the word **"from"**:
+
+```
+from Lat Pulldown 85 lbs×6, 24 Aug        ← a set nobody performed
+```
+
+He did **50 × 6** on 24 August and **85 × 12** on 14 September. The line spliced half of each.
+
+🚨 **IT IS RULE 5 BROKEN BY THE LINE THAT ENFORCES RULE 5.** That row exists for one reason: so a
+reader can tell an inference from a measurement. It was printing a fabrication in the slot reserved
+for the measurement — the only place on the panel a reader is entitled to take literally.
+
+⚠️ **AND IT WAS WORSE THAN THE REPORT.** Driven against the render suite's own Chest fixture, the
+pre-fix line read **"225×1, Aug 15"** — a single, on a day he benched something else. The rep count
+and the date come from different sets than the weight does, so the more sets in a history the wilder
+the splice gets. Tim saw the mildest version of it.
+
+### B. THE FIX — TWO DISPLAY FIELDS, AND NOT ONE LINE OF ARITHMETIC
+
+`performedReps` and `performedDate`, stamped by `dominate()` from the dominating set, absent on every
+row that was not superseded. `reps` and `date` are **untouched** and still drive `repFactor`,
+recency, `confident` and both seat comparisons — pinned by an assertion sitting beside the new ones,
+so a later session cannot "tidy" the two pairs into one.
+
+🚨 **IT CHAINS RATHER THAN RE-STAMPS, AND THAT IS THE PART A NAIVE FIXTURE CANNOT SEE.**
+`dominate()` runs **twice** — once per exercise-day, once at the seat — so the row arriving at the
+second pass may already be a rewrite carrying a truncated `reps`. Taking `dom.reps` there names the
+*first* pass's truncation: 85 × 8 instead of 85 × 12. Closer than 85 × 6, still a set nobody did, and
+quieter. `dom.performedReps || dom.reps` is what carries the original through.
+
+🔒 **THE FIRST VERSION OF THAT ASSERTION PASSED WITH THE CHAIN DELETED**, and finding that out is the
+only reason the chain is now covered. On the obvious fixture — the heavy day newest — the day pass
+does the rewriting and the seat pass never touches the winning row, so `dom` is always the genuine
+set and both versions agree. **The heavy day has to be the OLDER one** for the second pass to be the
+one that rewrites. §0.14's other half: an assertion that survives a mutation is telling you about the
+assertion.
+
+### C. FOUR MORE SCREENS WERE PRINTING THE SAME SPLICE
+
+Grepping for the pattern rather than fixing the reported line found the rest, each with a comment
+above it claiming a measured set:
+
+| where | what it said |
+|---|---|
+| `views-muscles.js` — the `from … and …` sources | *"85 lbs×6, 24 Aug"* — Tim's report |
+| `views-muscles.js` — the low-rep caveat | *"From a 6-rep set"*, which now also **contradicted the line four rows above it** |
+| `views-goals.js` — the estimate's source | *"Estimated from Lat Pulldown, 85 lbs×6"* |
+| `views-goals.js` — the recency line | *"last moved by … 85 lbs×6 on 24 August — so that is how recent this comparison actually is"*, the worst of them: a line whose only job is **when** |
+| `views-social.js` — `publishedSub()` | a friend's best lifts, under a comment reading *"The measured set … Rule 5's anchor"* |
+
+⚠️ **AND THE PUBLISH PATH, WHICH IS THE HALF NOBODY COULD CHECK.** A friend's panel draws through the
+same `detail()`, so leaving the two fields out of `projectStrength()`'s whitelist would have shown a
+stranger the fabricated set while the owner's own screen showed the right one. Added to the whitelist
+in `js/social.js`, to the projection in `store.js` and to `best` in `shared-map.js` — **spread, so an
+unsuperseded row carries no key at all** rather than two nulls on every row of every document.
+🛑 **No `firestore.rules` change and no deploy**: `hasOnly` pins the document's top-level keys and
+`strength` is one of them; nothing inside it is enumerated.
+
+### D. WHAT DID NOT MOVE
+
+🔒 **No estimate anywhere changed.** The golden table did not re-baseline, every observation and
+contributor count is identical, and Tim's own case still reads **114.3 lb** off the truncation. This
+is two fields for the screen.
+
+✅ **All twenty-two no-Chrome suites green — 5,693 assertions** (data-layer **2,420**, render
+**1,599**, social **205**), from 5,680. **Every new assertion mutation-checked with the mutation
+printed first** (§0.14): dropping the chain fails exactly the chain assertion; taking `b.reps`
+instead fails three; reverting the view fails two in `render`; dropping the field from the projection
+fails one in `social`.
+
+🔒 **THE RENDER ASSERTION CARRIES A VACUITY GUARD AND NEEDS ONE.** The source line reads *"225×10, Aug
+20"* whether the seat is the genuine 225 × 10 **or** the rewrite of a 150 × 5 that names it — so a
+fixture where nothing was superseded would pass it. What separates the two is `confident`, which is
+`reps <= 5` on the rep count the model read: the truncated row prints no *"From a N-rep set"* caveat
+and the untruncated one does. The block also **tears its own fixture down and asserts that it did**,
+because `render.test.mjs` is one progressively-seeded store.
+
+### E. THE RULE THIS PRODUCED
+
+🔒 **A ROW REWRITTEN FOR THE ARITHMETIC MUST NOT BE READ AS A RECORD OF WHAT HAPPENED.** `dominate()`
+is the first thing in this project that manufactures an observation rather than screening or
+re-weighting one — the winsoriser clips a value, the quarantine withholds a row, fatigue scales a
+weight, and none of them invents a set. The moment one does, **every screen that prints its fields
+verbatim starts lying**, and it does so in the most credible slot on the panel. Recorded as a
+corollary under Rule 5 in the handbook.
+
+⚠️ **The general form, and it is the third time this month**: the day-collapse and the seat make the
+same comparison, so a rule had to be taught to both (2026-09-20); `sigmaFor()` and `readingSigma()`
+answer two different questions, so folding them made a documented sentence false (2026-09-20); and
+here `reps` answers *"what did the model read"* and *"what did he lift"* at once, so one caller was
+always going to get the wrong one. **When one field carries two meanings, the quiet caller is the
+screen.**
+
+---
+
 ## 2026-09-20 (fourth pass) — 🚨 "WHERE IS THE 45 % COMING FROM?" NOWHERE, IS THE ANSWER
 
 Tim, after being shown why his 85×12 lost to a 55×6:

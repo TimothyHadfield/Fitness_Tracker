@@ -101,7 +101,11 @@ const STRENGTH = {
     band: 'Good', basis: 'direct', contributorCount: 9, exerciseCount: 3,
     contributors: [
       { exerciseName: 'Barbell Bench Press', weight: 205, reps: 3, date: '2026-08-10', loadType: 'total', source: 'benchmark' },
-      { exerciseName: 'Incline Dumbbell Bench Press', weight: 70, reps: 8, date: '2026-08-06', loadType: 'per_side', source: 'workout' },
+      // ⚠️ SUPERSEDED, which is what makes the assertion below discriminating: a
+      // heavier, longer set replaced a lighter one and the row carries the
+      // lighter one's reps and date for the arithmetic (`dominate()`). What was
+      // actually lifted is `performed*`, and it is what the panel prints.
+      { exerciseName: 'Incline Dumbbell Bench Press', weight: 70, reps: 8, date: '2026-08-06', loadType: 'per_side', source: 'workout', performedReps: 12, performedDate: '2026-08-19' },
       { exerciseName: 'Cable Fly', weight: 40, reps: 12, date: '2026-08-15', loadType: 'per_side', source: 'workout' },
       { exerciseName: 'Push-Up', weight: 0, reps: 30, date: '2026-08-02', loadType: 'total', source: 'workout' },
     ],
@@ -348,6 +352,22 @@ ok(shared.muscles[0].contributors.length === MAX_SHARED_CONTRIBUTORS,
 ok(shared.muscles[0].contributors[0].exerciseName === 'Barbell Bench Press'
    && shared.muscles[0].contributors[0].weight === 205,
    'each naming a real recorded set');
+/* 🚨 AND "A REAL RECORDED SET" HAS TO SURVIVE THE PROJECTION — 2026-09-21.
+ * Where a heavier, longer set superseded a lighter one the row keeps the
+ * lighter one's `reps`/`date` (the conservative reading the arithmetic runs
+ * on), and the panel prints `performed*` instead. A friend's page draws through
+ * the same `detail()`, so a whitelist that dropped these two would show a
+ * stranger the set nobody did while the owner's own screen showed the right
+ * one — the worse half of the bug, because nobody can check it. */
+ok(shared.muscles[0].contributors[1].performedReps === 12
+   && shared.muscles[0].contributors[1].performedDate === '2026-08-19',
+   '🚨 a superseded row publishes the set that was PERFORMED, not the rep count and date the model '
+   + 'read it at — otherwise a friend\'s panel names a set that never happened');
+ok(!('performedReps' in shared.muscles[0].contributors[0])
+   && !('performedDate' in shared.muscles[0].contributors[0]),
+   '⚠️ and an unsuperseded row carries neither key at all — absent rather than null, because most '
+   + 'rows in most histories are unsuperseded and this document has a size ceiling it stops '
+   + 'publishing at');
 ok(shared.grid['lifters|male|own|own'].Chest[0] === 62,
    'the grid carries a percentile per comparison group');
 ok(shared.grid['everyone|all|any|any'].Chest[0] === 88.1,

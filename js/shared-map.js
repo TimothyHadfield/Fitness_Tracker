@@ -98,6 +98,13 @@ export function ratingsFromShared(strength, compare) {
         ? {
           weight: top.weight, reps: top.reps, date: top.date,
           source: top.source, exerciseName: top.exerciseName, loadType: top.loadType,
+          // Carried for the same reason the contributor rows carry it: the panel
+          // names the set as PERFORMED where a heavier one superseded it, and a
+          // `best` built without these would name a set nobody did (2026-09-21).
+          // Absent, not null, on an unsuperseded row and on every document
+          // published before that date — the panel falls through to reps/date.
+          ...(top.performedReps ? { performedReps: top.performedReps } : null),
+          ...(top.performedDate ? { performedDate: top.performedDate } : null),
         }
         : null,
       percentile,

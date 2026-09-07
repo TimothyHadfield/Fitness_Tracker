@@ -875,6 +875,13 @@ export function projectStrength(strength) {
           date: str(c && c.date, 10),
           loadType: str(c && c.loadType, 16),
           source: str(c && c.source, 16),
+          // The set as PERFORMED where a heavier, longer one superseded this row
+          // (2026-09-21) — `reps`/`date` are what the model read, these are what
+          // was lifted, and the panel prints these. ⚠️ Spread, so an
+          // unsuperseded row carries no key rather than two nulls: most rows are
+          // unsuperseded and this document has a ceiling it stops publishing at.
+          ...(num(c && c.performedReps) ? { performedReps: num(c.performedReps) } : null),
+          ...(str(c && c.performedDate, 10) ? { performedDate: str(c.performedDate, 10) } : null),
         })),
       hint: str(m.hint, 200),
       confident: m.confident === true,

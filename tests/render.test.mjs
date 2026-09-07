@@ -546,6 +546,63 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
   ok(new Set(sources.map((s) => s.replace(/^(from|and) /, '').split(/\s\d/)[0])).size === 3,
      '⚠️ and they are three DIFFERENT exercises — one seat each, which is what makes a corroborated '
      + 'reading different from the same lift counted three times');
+
+  /* ===== 🚨 THE SOURCE LINE NAMES A SET THAT WAS ACTUALLY PERFORMED ===== *
+   *
+   * 2026-09-21, Tim on his own Back panel: *"it still says 85x6 instead of
+   * 85x12."* Where a heavier, longer set supersedes a lighter one, the
+   * observation keeps the SUPERSEDED set's rep count — the truncated reading is
+   * the conservative one and has to meet the rival at the rival's credibility
+   * (`dominate()` in muscle-evidence.js, pinned in data-layer). Right for the
+   * arithmetic; wrong on this line, which says *"from"* and is Rule 5's anchor.
+   * It was drawing a set nobody did.
+   *
+   * ⚠️ THE MODULE HAD THE ANSWER AND THE SCREEN WAS NOT ASKING FOR IT — which
+   * is `freshnessLine()`'s failure exactly, and the reason this assertion is in
+   * the RENDER suite rather than only beside the arithmetic. A field computed
+   * correctly and never read looks identical to a field that is not there.
+   *
+   * 🔒 IT CLEANS UP AFTER ITSELF. This file is one progressively-seeded store,
+   * so a session left behind changes what every block below reads — and the
+   * teardown is asserted rather than assumed, because a delete that silently
+   * did nothing would hand the next block a fixture nobody wrote. */
+  {
+    const bench = byName('Barbell Bench Press');
+    const added = await store.saveSession({
+      workoutName: 'Push', date: '2026-08-20', startedAt: '2026-08-20T10:00:00.000Z',
+      entries: [{ exerciseId: bench.id, exerciseName: bench.name,
+        sets: [{ weight: 225, reps: 10 }] }],
+    });
+    const withHeavy = await openMuscles();
+    const benchLine = [...withHeavy.querySelectorAll('.muscle-sources > *')]
+      .map((n) => n.textContent).find((s) => s.includes('Barbell Bench Press'));
+    const heavyText = withHeavy.querySelector('.muscle-detail').textContent.replace(/\s+/g, ' ');
+    /* 🚨 THE VACUITY GUARD, AND IT IS THE WHOLE REASON THIS BLOCK IS SAFE. The
+     * source line reads the same — "225×10, Aug 20" — whether the seat is the
+     * genuine 225 × 10 row or the rewrite of the 150 × 5 that names it. Only one
+     * thing on the panel separates them: `confident` is `reps <= 5` on the rep
+     * count the MODEL read, so the truncated row (5) prints no "From a N-rep
+     * set" caveat and the untruncated one (10) does. Without this, a fixture in
+     * which nothing was superseded would pass every assertion below. */
+    ok(!/-rep set/.test(heavyText),
+       '⚠️ the seat really IS the superseded row — no "From a N-rep set" caveat, which only a '
+       + 'reading at five reps or fewer suppresses, so the arithmetic is running on the truncation '
+       + 'while the line below names the twelve');
+    ok(Boolean(benchLine) && /225×10/.test(benchLine.replace(/\s+/g, '')),
+       `🚨 the panel names the set he PERFORMED — "${benchLine}" — not the rep count the model `
+       + 'truncated it to. A 225 × 10 that supersedes a lighter set is read at the lighter set\'s '
+       + 'reps for the arithmetic, and printing that reads as a set nobody did');
+    ok(/Aug 20/.test(benchLine),
+       `⚠️ and on the day he did it (${benchLine}) — the superseded row carries the OTHER set's `
+       + 'date too, so the same fault sits one field along');
+
+    await store.deleteSession(added.id);
+    const after = await openMuscles();
+    const restored = [...after.querySelectorAll('.muscle-sources > *')].map((n) => n.textContent);
+    ok(restored.length === sources.length && restored.every((s, i) => s === sources[i]),
+       '🔒 and the block tears its own fixture down — the source lines are byte-identical to before '
+       + 'it ran, so nothing below inherits a session this test invented');
+  }
 }
 
 /* ============ the side-panel layout hook ============ */

@@ -1267,6 +1267,29 @@ estimates with a diagonal hatch, not a fade — texture survives greyscale and c
 General form: **never let an inference look like a measurement.** Anything derived must be visually
 separable from anything recorded, by a cue that is not colour alone.
 
+🚨 **AND THE COROLLARY, 2026-09-21: A ROW REWRITTEN FOR THE ARITHMETIC IS NOT A RECORD OF WHAT
+HAPPENED, AND MUST NOT BE PRINTED AS ONE.** `dominate()` in `js/muscle-evidence.js` supersedes a
+lighter set with a heavier, longer one and re-reads it at the weaker set's rep count — so the
+observation carries the dominating set's **weight** over the superseded set's **reps and date**. That
+is correct for the seat comparison and it is a **fabricated set** on a screen: the muscle panel
+prints `weight × reps, date` under the word *"from"*, and it read **"85 lbs×6, 24 Aug"** for a lifter
+who did 50 × 6 on the 24th and 85 × 12 three weeks later. Tim caught it. Five lines across three
+files were printing the same splice, each under a comment claiming a measured set.
+
+- **`dominate()` is the first thing in this project that MANUFACTURES an observation** rather than
+  screening or re-weighting one. The winsoriser clips a value, the quarantine withholds a row,
+  fatigue scales a weight — none of them invents a set. The moment one does, every screen reading its
+  fields verbatim starts lying, and it does so in the slot a reader is entitled to take literally.
+- **The fix is a second pair of fields, never a change to the first** — `performedReps` /
+  `performedDate`, display-only, absent unless a row was superseded. `reps` and `date` still drive
+  `repFactor`, recency, `confident` and both comparisons, pinned by an assertion sitting beside the
+  new ones so nobody later "tidies" the two pairs into one.
+- ⚠️ **THE GENERAL FORM IS ABOUT FIELDS, NOT ABOUT THIS RULE.** `reps` was answering *"what did the
+  model read"* and *"what did he lift"* at the same time, and the two stopped agreeing the day
+  dominance shipped. **When one field carries two meanings, the caller that gets the wrong one is
+  the screen** — it is the only caller that cannot fail a test by being wrong. Grep every reader of a
+  field before you overwrite it for one of them.
+
 ### Rule 6 — no unearned opinions
 
 Change is coloured good or bad only where bigger is genuinely better. Time was already neutral (a

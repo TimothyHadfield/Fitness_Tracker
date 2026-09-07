@@ -4043,6 +4043,17 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
         date: c.date,
         loadType: c.loadType,
         source: c.source,
+        /* ⚠️ THE SET AS PERFORMED, WHERE A HEAVIER ONE SUPERSEDED THIS ROW —
+         * 2026-09-21. `reps`/`date` are what the model READ (the conservative
+         * truncation); these two are what was actually lifted, and the panel
+         * prints them. A friend's page draws through the same `detail()`, so
+         * leaving them out would show a stranger a set nobody performed on the
+         * one screen whose whole job is showing the working.
+         * ⚠️ SPREAD, SO AN UNSUPERSEDED ROW CARRIES NO KEY AT ALL rather than
+         * two nulls — most rows in most histories are unsuperseded, and this
+         * document has a 1 MB ceiling it stops publishing at (D32). */
+        ...(c.performedReps ? { performedReps: c.performedReps } : null),
+        ...(c.performedDate ? { performedDate: c.performedDate } : null),
       })),
       hint: m.hint || null,
       confident: m.confident === true,
