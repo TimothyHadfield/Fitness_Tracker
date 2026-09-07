@@ -1600,6 +1600,34 @@ four per-person tiers should go with it: yes.
 - 🚨 **AND WHAT IT DELIBERATELY DID NOT WIDEN: writing.** Kudos, comments and handoffs are
   friends-only. Reading is a grant; writing into somebody's subtree is a moderation surface.
 
+🚨 **D33 IS RECORDED ON 2026-09-20, AND THE FIRST THING TO KNOW ABOUT IT IS THAT IT IS NOT D28:**
+*a rep prescription written by the AUTHOR of a programme is read as carrying 1–2 reps in reserve.*
+Tim's call, made explicitly — *"maybe assume when it perscribes reps, it's assuming 1-2 RIR (reps in
+reserve)? this might mean we're providing them with a little bit of a range that is good, but I think
+that could be alright."* `RIR_LOW` and `RIR_HIGH` in `js/set-reps.js`.
+
+- 🛑 **D28 IS UNTOUCHED AND STILL ABSOLUTE.** What D28 refuses is **asking a lifter** how many reps
+  they left in the tank — a self-report the app would then do arithmetic on, and the largest single
+  source of error it deliberately cannot see. **Nothing here asks anybody anything.** This is one
+  fixed assumption about what a coach MEANS by "10 reps", applied in one place, to turn his words
+  into a weight. A session that reads D28 and deletes this has misread both.
+- 🚨 **THE ALTERNATIVE WAS NOT "NO ASSUMPTION", IT WAS A WORSE ONE.** Reading a prescription as taken
+  to FAILURE is equally an assumption about effort, it is invisible, and it errs by making the bar
+  **heavier** — "10 reps" meaning "10 with a couple left" priced as failure-at-10 hands somebody a
+  weight they cannot do for 10. Every assumption in D33 can only take weight off. That direction is
+  the whole justification.
+- ⚠️ **THE RANGE IT PRODUCES IS MOSTLY THE AUTHOR'S, NOT OURS.** Measured at a 275 lb max, the
+  reserve shift alone is **3–5 %** of the weight; a "3–5 reps" prescription spans 220–242 lb because
+  *he* wrote a two-rep range. The app is passing on somebody's own spread rather than adding one.
+- 🛑 **AND IT IS SAID ON THE SCREEN, IN THOSE WORDS** — *"with 1–2 left in the tank"*. An assumption
+  that changes what goes on a bar and is not stated is indistinguishable from a claim about the
+  lifter. Stating it is what lets somebody who disagrees see that they disagree.
+- ⚠️ **THE FIELD GETS THE BOTTOM OF THE RANGE**, not its middle: the lightest weight consistent with
+  the prescription. The lifter adds to it; the app does not start them above what the coach asked.
+- 🛑 **AND IT REFUSES PAST THE CURVE.** A prescription plus the reserve is what the curve is asked
+  about, so "12–15 reps" asks about 13–17 — past D5's fifteen. Those get **the reps and no weight**,
+  with the reason on screen; the reps are the author's own words and need no curve.
+
 ### Standing recommendations
 
 - **R1 — Web app (PWA), not native.** Home-screen install, offline, zero distribution cost.

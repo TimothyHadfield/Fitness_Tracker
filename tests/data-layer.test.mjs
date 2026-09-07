@@ -5377,7 +5377,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * preset's `version`, add a `changes` entry saying what moved in words a
    * lifter would use, and THEN update the hash here. */
   const PINNED = [
-    ['preset-nippard-ppl-2023', 2, '87c833f1f483'],
+    ['preset-nippard-ppl-2023', 3, '0a818ca6788a'],
     ['preset-israetel-floating-split', 1, '7ce8ce4e7625'],
     ['preset-arnold-golden-six', 1, 'c20c0568b820'],
     ['preset-thurston-6day', 1, '418e3081b80b'],
@@ -5621,6 +5621,183 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'applying an update that does not exist changes nothing and does not throw');
   }
   await st.clearAll();
+}
+
+
+/* ================= a planned set as a REP PRESCRIPTION =====================
+ *
+ * 2026-09-20. Tim: *"while the Nippard guidelines don't necessarily suggest the
+ * % weight of max you should be lifting, it does often suggest the number of
+ * reps the user should do, which can be associated as the same thing."* And on
+ * what a prescription means: *"maybe assume when it perscribes reps, it's
+ * assuming 1-2 RIR."* That is D33.
+ * ========================================================================= */
+{
+  const sr = await import('../js/set-reps.js');
+  const { store: st2, normalizeWorkout } = await import('../js/store.js');
+  const { PRESET_SYSTEMS, presetById } = await import('../js/preset-systems.js');
+
+  /* ---- 🚨 THE REGRESSION THAT STARTED AS A REAL BUG ---- *
+   *
+   * The first version of `normalizeRepSpec` ran the number through
+   * `clampReps()`, which folds anything above fifteen down to fifteen because
+   * a set above fifteen reps is not evidence of a maximum (D5). That is the
+   * right rule for a set somebody RECORDED and the wrong one for a number a
+   * coach WROTE: Nippard prescribes 20 reps on the machine lateral raise and
+   * 15–20 on both calf raises, and the app stored and displayed **15**.
+   *
+   * 🛑 PUTTING A NUMBER IN A COACH'S MOUTH THAT HE DID NOT SAY is worse than
+   * anything D5 protects against, and it failed silently in the one direction
+   * nobody would think to check. The D5 gate belongs on the WEIGHT — see the
+   * refusals below — never on the words. */
+  ok(sr.describeRepSpec(20) === '20 reps',
+     '🚨 a prescription of 20 reps reads back as 20 — NOT folded to fifteen by the rep-evidence '
+     + 'ceiling, because a prescription is a quotation and not a set anybody performed');
+  ok(JSON.stringify(sr.normalizeRepSpec([15, 20])) === '[15,20]',
+     'and a 15–20 range keeps both ends');
+  ok(sr.repsAreUsable(20) === false,
+     '⚠️ while STILL refusing to price it — the ceiling moved onto the weight, it did not go away');
+
+  /* ---- the shape ---- */
+  ok(JSON.stringify(sr.normalizeRepSpec(8)) === '[8,8]',
+     'a single number is a range of one, so nothing downstream has to ask which shape it was given');
+  ok(JSON.stringify(sr.normalizeRepSpec([8, 5])) === '[5,8]',
+     '⚠️ an inverted pair is SORTED rather than refused — "8–5 reps" is a transposition with an '
+     + 'obvious intent, and dropping a whole workout\'s plan over it would be the worse answer');
+  ok(sr.normalizeRepSpec(0) === null && sr.normalizeRepSpec('') === null
+     && sr.normalizeRepSpec(null) === null,
+     'nothing that is not a rep count becomes one');
+  ok(JSON.stringify(sr.normalizeReps([[3, 5], 8], 4)) === '[[3,5],[8,8],[8,8],[8,8]]',
+     'padding repeats the LAST prescription, the same rule `targets` follows');
+  ok(sr.normalizeReps([[3, 5], 8], 1).length === 1, 'and truncation drops from the end');
+  ok(sr.normalizeReps([[3, 5], 'nonsense'], 2) === null,
+     '🛑 one unusable row drops the WHOLE prescription — half a plan is not a plan, and a set '
+     + 'quietly given a made-up rep target is the app writing somebody\'s programme for them');
+
+  /* ---- 🚨 the ambiguity `expandRepSpec` exists to resolve ---- */
+  ok(JSON.stringify(sr.expandRepSpec([3, 5], 2)) === '[[3,5],[3,5]]',
+     '🚨 `[3, 5]` is ONE range across every set — read the other way it would be set 1 at 3 reps '
+     + 'and set 2 at 5, which is a different workout and would fail silently');
+  ok(JSON.stringify(sr.expandRepSpec([[8, 8], [5, 5]], 2)) === '[[8,8],[5,5]]',
+     'and a nested list is per-set, which is how Nippard\'s squat and incline press are written');
+  ok(sr.expandRepSpec(null, 3) === null, 'no prescription stays no prescription');
+
+  /* ---- D33: the reserve, and the direction it errs in ---- */
+  {
+    const max = 275, step = 5;
+    const r = sr.weightRangeForReps(10, max, step);
+    const { weightForReps } = await import('../js/e1rm.js');
+    /* ⚠️ ROUNDED THE SAME WAY THE MODULE ROUNDS, and that is the whole
+     * assertion. The first version of this line compared against the RAW
+     * failure weight and passed with the reserve set to zero — because
+     * `weightRangeForReps` rounds DOWN to the nearest plate, so 200 was
+     * "lighter than" 202.7 for reasons that had nothing to do with D33. An
+     * assertion that survives the mutation it was written for is weaker than
+     * its own sentence (§0.14). */
+    const toFailure = Math.floor(weightForReps(max, 10) / step) * step;
+    ok(r.high < toFailure,
+       '🚨 THE WHOLE POINT OF D33: a prescription read as carrying 1–2 in reserve is priced LIGHTER '
+       + `than the same reps taken to failure (${r.high} vs ${toFailure} lb, same rounding). Every `
+       + 'assumption here can only take weight OFF the bar, which is what makes it safe to make');
+    ok(sr.RIR_LOW === 1 && sr.RIR_HIGH === 2,
+       '🔒 and the reserve is 1–2 reps, which is Tim\'s own number and is pinned here because '
+       + 'changing it silently changes every prescribed weight in the app (D33)');
+    ok(JSON.stringify(r.failureReps) === '[11,12]',
+       'so a prescription of 10 asks the curve about 11 and 12 — the prescription plus the reserve, '
+       + 'at both ends');
+    ok(r.weight === r.low,
+       '⚠️ the field gets the BOTTOM of the range — the lightest weight consistent with what the '
+       + 'coach asked. The lifter adds to it; the app does not start them above the prescription');
+    ok(r.low % step === 0 && r.high % step === 0 && r.low <= r.high, 'both ends land on real plates');
+    const fine = sr.weightRangeForReps(10, max, 1);
+    ok(fine.low >= r.low,
+       'and rounding goes DOWN — a coarser step can only lose weight, never gain it');
+  }
+
+  /* ---- what it refuses ---- */
+  ok(sr.weightRangeForReps(8, 0, 5) === null && sr.weightRangeForReps(8, null, 5) === null,
+     '🛑 no max, no weight — the same refusal `targets` makes, and for the same reason: the max is '
+     + 'the lifter\'s OWN best set on that lift, never a cross-muscle estimate');
+  ok(sr.repsAreUsable([12, 15]) === false,
+     '🛑 "12–15 reps" is refused a weight — at 1–2 in reserve that asks the curve about 13–17, past '
+     + 'where D5 says a rep count is evidence of a maximum at all');
+  ok(sr.repsAreUsable([6, 8]) === true && sr.repsAreUsable([3, 5]) === true,
+     '⚠️ and the low-rep prescriptions ARE priced — so the refusal above is the ceiling doing its '
+     + 'job, not the module refusing everything');
+
+  /* ---- the field that is dropped in silence if nobody names it ---- */
+  {
+    const w = normalizeWorkout({ id: 'w', name: 'W', exercises: [
+      { exerciseId: 'x', sets: 3, reps: [[3, 5], [3, 5], [3, 5]] },
+    ] });
+    ok(JSON.stringify(w.exercises[0].reps) === '[[3,5],[3,5],[3,5]]',
+       '🚨 `reps` survives normalizeWorkout() — the fourth field caught by that function\'s own '
+       + 'warning, and for Nippard\'s programme it is very nearly the whole of the plan');
+    const grown = normalizeWorkout({ id: 'w', name: 'W', exercises: [
+      { exerciseId: 'x', sets: 4, reps: [[3, 5]] },
+    ] });
+    ok(grown.exercises[0].reps.length === 4,
+       '⚠️ and it is reconciled against the set count on every READ, not only when the builder '
+       + 'writes it — a restored backup and a copied programme both arrive through here');
+  }
+
+  /* ---- Nippard's programme, which is why this exists ---- */
+  {
+    const nip = presetById('preset-nippard-ppl-2023');
+    let carry = 0, priced = 0, bare = 0;
+    for (const w of nip.workouts) {
+      for (const e of w.exercises) {
+        if (e.reps == null) { bare++; continue; }
+        carry++;
+        const spec = sr.expandRepSpec(e.reps, e.sets);
+        ok(Boolean(spec), `"${w.name} / ${e.name}" has a prescription the module can read`);
+        if (spec && spec.every((s) => sr.repsAreUsable(s))) priced++;
+      }
+    }
+    ok(carry === 39 && bare === 2,
+       `🚨 39 of 41 exercises carry a rep prescription and 2 do not (${carry}/${bare}) — which is `
+       + 'Tim\'s whole point: this programme states reps almost everywhere and a percentage once');
+    ok(priced > 25,
+       `and most of them can be priced (${priced}) — a feature that refused the majority of the `
+       + 'programme it was built for would not be worth the fields it adds');
+    ok(bare === 2 && nip.workouts.some((w) => w.exercises.some(
+      (e) => e.reps == null && /to failure/i.test(e.notes || ''))),
+       '🛑 and the two without one are the "single set to failure" exercises — an effort '
+       + 'instruction is not a rep target and must never be given a number');
+  }
+
+  /* ---- every preset, not just the one that was transcribed ---- */
+  for (const p of PRESET_SYSTEMS) {
+    for (const w of p.workouts) {
+      for (const e of w.exercises) {
+        if (e.reps == null) continue;
+        ok(Boolean(sr.expandRepSpec(e.reps, e.sets)),
+           `"${p.name} / ${w.name} / ${e.name}" has a readable prescription`);
+      }
+    }
+  }
+
+  /* ---- it reaches an account, through the copy ---- */
+  await st2.clearAll();
+  {
+    const { system } = await st2.addPresetSystem(presetById('preset-nippard-ppl-2023'));
+    const made = await st2.getWorkouts(system.id);
+    const push1 = made.find((w) => w.presetKey === 'push-1');
+    const larsen = push1.exercises[1];
+    ok(JSON.stringify(larsen.reps) === '[[10,10],[10,10]]',
+       '🚨 a copied programme brings its rep prescription with it, expanded to one per set — the '
+       + 'second place `reps` has to be named, and the trap `targets` already fell into once');
+    ok(larsen.origin && JSON.stringify(larsen.origin.reps) === JSON.stringify(larsen.reps),
+       '⚠️ and the copy records it as what ARRIVED, so a later version of the original can tell a '
+       + 'changed prescription from an edited one');
+    const legs1 = made.find((w) => w.presetKey === 'legs-1');
+    const squat = legs1.exercises[0];
+    ok(squat.targets && squat.reps,
+       'the Back Squat carries BOTH a percentage and a rep prescription, which is the case the '
+       + 'precedence rule in views-session.js exists for — the percentage is the more specific '
+       + 'claim and wins, and the reps are still the author\'s words');
+  }
+  await st2.clearAll();
 }
 
 

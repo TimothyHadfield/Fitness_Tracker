@@ -65,6 +65,7 @@ const SHELL = [
   './js/plates.js',
   './js/schedule.js',
   './js/set-targets.js',
+  './js/set-reps.js',
   './js/session-stats.js',
   './js/session-draft.js',
   './js/live-session.js',

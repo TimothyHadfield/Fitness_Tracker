@@ -17,6 +17,73 @@
 
 ---
 
+## 2026-09-20 (second pass) — A PLANNED SET AS A REP PRESCRIPTION, AND D33
+
+Tim, reading back the claim that `targets` expressed one of four percentages in his own programme:
+
+> *"while the Nippard guidelines don't necessarily suggest the % weight of max you should be lifting,
+> it does often suggest the number of reps the user should do, which can be associated as the same
+> thing."*
+
+**He was right and the coverage is the argument.** Measured before building anything: of the 41
+exercises in Nippard's PPL, **39 carry a rep prescription** and **one** carries a percentage. Reps are
+how a ready-made programme actually tells you how heavy to go.
+
+### A. 🚨 D33 — THE PRESCRIPTION CARRIES 1–2 REPS IN RESERVE, AND IT IS NOT D28
+
+His call, made explicitly when the conversion was put to him: *"maybe assume when it perscribes reps,
+it's assuming 1-2 RIR (reps in reserve)? this might mean we're providing them with a little bit of a
+range that is good, but I think that could be alright."*
+
+🛑 **D28 IS UNTOUCHED.** What D28 refuses is **asking a lifter** to rate their own effort. Nothing
+here asks anybody anything: this is one fixed assumption about what a coach MEANS by "10 reps",
+applied in one place. The long version is in the handbook's §6 under D33 and in `js/set-reps.js`.
+
+🚨 **THE ALTERNATIVE WAS NOT "NO ASSUMPTION", IT WAS A WORSE ONE.** Reading a prescription as taken
+to failure is equally an assumption, it is invisible, and it errs by making the bar **heavier**.
+Every assumption in D33 can only take weight off. **That direction is the whole justification.**
+
+⚠️ **AND THE RANGE IS MOSTLY THE AUTHOR'S.** Measured at a 275 lb max, the reserve shift alone is
+**3–5 %**; a "3–5 reps" prescription spans 220–242 lb because *he* wrote a two-rep range.
+
+### B. 🔒 THE BUG THE TRANSCRIBING AGENT FOUND IN THE MODULE THAT SENT IT
+
+`normalizeRepSpec()` ran every number through `clampReps()` — correct for a set somebody RECORDED,
+because above fifteen reps a set is not evidence of a maximum (D5). **Wrong for a number a coach
+wrote.** Nippard prescribes **20 reps** on the machine lateral raise and 15–20 on both calf raises,
+and the app stored and displayed **15**.
+
+🚨 **PUTTING A NUMBER IN A COACH'S MOUTH THAT HE DID NOT SAY** is worse than anything D5 protects
+against, and it failed silently in the one direction nobody would check. The gate belongs on the
+**weight**, never on the words: `repsAreUsable()` refuses to price what the curve cannot vouch for,
+and the reps are shown anyway because they needed no curve. Regression-tested, mutation-checked.
+
+⚠️ **The agent found it while transcribing, not while testing** — it noticed its own output looked
+wrong against the notes it was copying from. **Read the "what I decided NOT to do" section.**
+
+### C. THE SECOND WEAK ASSERTION IN TWO PASSES
+
+The test that a prescription is priced **lighter than the same reps to failure** — the whole point of
+D33 — **passed with the reserve set to zero.** It compared against the RAW failure weight while the
+module rounds down to the nearest plate, so 200 was "lighter than" 202.7 for reasons that had nothing
+to do with the reserve. Now compared at the same rounding, and it fails when the constants are
+zeroed. 🔒 **That is twice in one session that §0.14's third corollary has caught a real one.**
+
+### D. What shipped
+
+`js/set-reps.js` (pure) · `reps` named in `normalizeWorkout()` and in `addPresetSystem()` · the
+runner fills **weight AND reps** (unlike `targets`, which fills only weight — the author really did
+say how many reps) · `targets` takes precedence where a workout carries both · the note says *"with
+1–2 left in the tank"* out loud · 39 prescriptions transcribed from the notes already in the file,
+each verified against its source phrase · Nippard's preset to **version 3**.
+
+🛑 **10 of the 39 get reps and NO weight** — "12–15 reps" at 1–2 in reserve asks the curve about
+13–17, past D5. The reps still show; only the weight is withheld, with the reason on screen.
+
+✅ `data-layer` **2,390** (from 2,282). 🚩 **Not driven in Chrome.**
+
+---
+
 ## 2026-09-20 — A COPIED PROGRAMME CAN BE TOLD ITS ORIGINAL MOVED ON
 
 One instruction, and it was open-ended: *"okay start building or changing whatever you think should

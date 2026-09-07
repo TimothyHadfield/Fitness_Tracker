@@ -23,6 +23,7 @@ import {
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
 import { normalizeTargets } from './set-targets.js';
+import { normalizeReps, expandRepSpec } from './set-reps.js';
 import { normalizeSchedule, pruneSchedule } from './schedule.js';
 import { presetVersionOf, presetUpdatePlan, applyPresetPlan } from './preset-updates.js';
 import { recordedSetCount } from './session-stats.js';
@@ -896,11 +897,18 @@ export function normalizeWorkout(w) {
          * and truncates; it returns null for anything it will not vouch for,
          * and null is the default every workout in the app already has. */
         const targets = normalizeTargets(e.targets, sets);
+        /* ⚠️ RECONCILED AGAINST `sets` EXACTLY LIKE `targets`, and by the same
+         * rules (pad by repeating the last, truncate from the end, drop the
+         * whole prescription rather than default a row). Two fields that both
+         * have to agree with the set count, reconciled in the one place every
+         * read passes through. js/set-reps.js */
+        const reps = normalizeReps(e.reps, sets);
         return {
           exerciseId: e.exerciseId,
           sets,
           notes: e.notes || '',
           ...(targets ? { targets } : {}),
+          ...(reps ? { reps } : {}),
           /* ⚠️ `origin` IS THE THIRD FIELD THIS WARNING HAS CAUGHT, and it is
            * the one that would have failed most quietly (2026-09-20). It is
            * what an exercise ARRIVED as when a ready-made programme was copied
@@ -1194,6 +1202,13 @@ export const store = {
         if (!ex) { skipped++; continue; }
         const sets = Number(item.sets) > 0 ? Number(item.sets) : DEFAULT_SETS;
         const targets = normalizeTargets(item.targets, sets);
+        /* ⚠️ THE SECOND PLACE `reps` HAS TO BE NAMED, for the same reason the
+         * line above it exists: this loop rebuilds each exercise field by
+         * field, so a rep prescription on a preset would be dropped in silence
+         * on the way into somebody's account and the programme would arrive
+         * looking as though its author never said how many reps to do — which
+         * is, for Nippard's, almost the whole of what he did say. */
+        const reps = expandRepSpec(item.reps, sets);
         exercises.push({
           exerciseId: ex.id,
           sets,
@@ -1212,13 +1227,18 @@ export const store = {
            * DEFAULT_SETS and a list that no longer matches it is exactly what
            * normalizeTargets() refuses. */
           ...(targets ? { targets } : {}),
+          ...(reps ? { reps } : {}),
           /* 🆕 WHAT IT ARRIVED AS — 2026-09-20. Three fields written twice, on
            * purpose: `origin` is never read by any screen and exists only so
            * that a later version of the original can be compared against what
            * this row was on the day it was copied, rather than against what the
            * user has since made of it. Without it the two are indistinguishable
            * and the only safe update is no update. js/preset-updates.js. */
-          origin: { sets, notes: item.notes || '', ...(targets ? { targets } : {}) },
+          origin: {
+            sets, notes: item.notes || '',
+            ...(targets ? { targets } : {}),
+            ...(reps ? { reps } : {}),
+          },
         });
       }
       if (!exercises.length) continue;

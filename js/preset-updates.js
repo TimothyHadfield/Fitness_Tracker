@@ -63,6 +63,8 @@
  * screen has to say that the differences may be their own — see `status`.
  * ------------------------------------------------------------------ */
 
+import { expandRepSpec, summariseReps } from './set-reps.js';
+
 /** A preset with no `version` is version 1. Nine of them shipped without one. */
 export function presetVersionOf(preset) {
   const v = Number(preset && preset.version);
@@ -99,6 +101,23 @@ function sameTargets(a, b) {
   return x.every((v, i) => Number(v) === Number(y[i]));
 }
 
+/* Rep prescriptions are one `[lo, hi]` pair per set, so this is `sameTargets`
+ * one level deeper. Compared by value rather than by JSON, because the two
+ * sides arrive from different places — one from disk, one from the module —
+ * and `shardDiff()`'s lesson is that a stringify comparison answers a question
+ * about serialisation rather than about content (§4). */
+function sameReps(a, b) {
+  const x = Array.isArray(a) ? a : null;
+  const y = Array.isArray(b) ? b : null;
+  if (!x && !y) return true;
+  if (!x || !y || x.length !== y.length) return false;
+  return x.every((pair, i) => {
+    const other = y[i];
+    if (!Array.isArray(pair) || !Array.isArray(other)) return false;
+    return Number(pair[0]) === Number(other[0]) && Number(pair[1]) === Number(other[1]);
+  });
+}
+
 function sameText(a, b) {
   return String(a == null ? '' : a).trim() === String(b == null ? '' : b).trim();
 }
@@ -113,6 +132,7 @@ function isUntouched(mine, origin) {
   if (!origin) return false;
   return Number(mine.sets) === Number(origin.sets)
     && sameTargets(mine.targets, origin.targets)
+    && sameReps(mine.reps, origin.reps)
     && sameText(mine.notes, origin.notes);
 }
 
@@ -126,11 +146,17 @@ function resolvePresetExercises(pw, byName) {
   for (const item of (pw.exercises || [])) {
     const ex = byName.get(item.name);
     if (!ex) continue;
+    const sets = Number(item.sets) > 0 ? Math.floor(Number(item.sets)) : null;
     out.push({
       exerciseId: ex.id,
       name: item.name,
-      sets: Number(item.sets) > 0 ? Math.floor(Number(item.sets)) : null,
+      sets,
       targets: Array.isArray(item.targets) ? item.targets.slice() : null,
+      // Expanded to one entry per set HERE, so the comparison is against the
+      // shape that was stored rather than against the shape the author wrote —
+      // `reps: 8` on a 3-set exercise is stored as three entries, and comparing
+      // the two forms would report a change on every read.
+      reps: expandRepSpec(item.reps, sets) || null,
       notes: item.notes || '',
     });
   }
@@ -263,6 +289,12 @@ export function presetUpdatePlan({ preset, system, workouts, byName }) {
         const base = stamped && origin ? origin.targets : (m.targets || null);
         if (!sameTargets(theirsNow, base)) add('prescription', m.targets || null, theirsNow);
       }
+      // The rep prescription next: it is what the author actually wrote, and
+      // for a programme like Nippard's it is nearly the whole of the plan.
+      if (t.reps !== null || (origin && origin.reps)) {
+        const base = stamped && origin ? origin.reps : (m.reps || null);
+        if (!sameReps(t.reps, base)) add('reps', m.reps || null, t.reps);
+      }
       if (t.sets != null) {
         const base = stamped && origin ? Number(origin.sets) : Number(m.sets);
         if (Number(t.sets) !== base) add('sets', Number(m.sets), Number(t.sets));
@@ -359,6 +391,9 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
     if (c.kind === 'prescription') {
       if (c.now) ex.targets = c.now.slice();
       else delete ex.targets;
+    } else if (c.kind === 'reps') {
+      if (c.now) ex.reps = c.now.map((p) => p.slice());
+      else delete ex.reps;
     } else if (c.kind === 'sets') {
       ex.sets = c.now;
     } else if (c.kind === 'notes') {
@@ -368,6 +403,7 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
       sets: Number(ex.sets),
       notes: ex.notes || '',
       ...(ex.targets ? { targets: ex.targets.slice() } : {}),
+      ...(ex.reps ? { reps: ex.reps.map((p) => p.slice()) } : {}),
     };
   }
 
@@ -379,17 +415,16 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
 
 /** One copied exercise, carrying the record of what it arrived as. */
 export function stampedExercise(t) {
-  return {
-    exerciseId: t.exerciseId,
+  const body = {
     sets: t.sets == null ? undefined : t.sets,
     notes: t.notes || '',
     ...(t.targets ? { targets: t.targets.slice() } : {}),
-    origin: {
-      sets: t.sets == null ? undefined : t.sets,
-      notes: t.notes || '',
-      ...(t.targets ? { targets: t.targets.slice() } : {}),
-    },
+    ...(t.reps ? { reps: t.reps.map((p) => p.slice()) } : {}),
   };
+  // The row and its record of itself are built from ONE object, so they cannot
+  // drift — the first version listed the fields twice and gaining `reps` meant
+  // remembering to add it in both halves.
+  return { exerciseId: t.exerciseId, ...body, origin: { ...body } };
 }
 
 /** How the notice reads. Kept here so the screen and the tests agree. */
@@ -406,6 +441,10 @@ export function describeChange(c) {
       return c.now
         ? `${c.exerciseName}${where} now prescribes ${c.now.join(' / ')} % of your max`
         : `${c.exerciseName}${where} no longer prescribes a percentage`;
+    case 'reps':
+      return c.now
+        ? `${c.exerciseName}${where} now asks for ${summariseReps(c.now)}`
+        : `${c.exerciseName}${where} no longer names a rep target`;
     case 'sets':
       return `${c.exerciseName}${where} is ${c.now} sets in the original, not ${c.was}`;
     case 'notes':

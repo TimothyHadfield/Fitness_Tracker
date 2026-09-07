@@ -90,9 +90,10 @@ export const PRESET_SYSTEMS = [
      * update notice reads out; it is the only thing on that screen not derived
      * from comparing two structures, and it is written for somebody who has not
      * been told anything about versions. */
-    version: 2,
+    version: 3,
     changes: [
       { version: 2, summary: 'The Back Squat in Legs 1 now prescribes 85 % of your max.' },
+      { version: 3, summary: 'Every exercise he gave a rep count for now carries it — so each set tells you how many reps to hit.' },
     ],
     name: 'Ultimate Push Pull Legs',
     author: 'Jeff Nippard',
@@ -162,16 +163,16 @@ export const PRESET_SYSTEMS = [
           + 'contraction-biased work. Reported reps: bench 3–5, Larsen press 10, Arnold press '
           + '8–10, press-around 12–15, Y-raise 12–15, pressdown 8, cross-body extension 10–12.',
         exercises: [
-          { name: 'Barbell Bench Press', sets: 1, notes: 'One heavy set of 3–5, after working up to it.' },
-          { name: 'Larsen Press', sets: 2, notes: 'Legs off the floor — no leg drive, no arch. 10 reps.' },
-          { name: 'Arnold Press', sets: 3, notes: 'Standing. 8–10 reps.' },
-          { name: 'Cable Press Around', sets: 2, notes: '12–15 reps. Supersetted with a 30-second pec stretch.' },
-          { name: 'Cross-Body Cable Y-Raise', sets: 3, notes: '12–15 reps.' },
+          { name: 'Barbell Bench Press', sets: 1, reps: [3, 5], notes: 'One heavy set of 3–5, after working up to it.' },
+          { name: 'Larsen Press', sets: 2, reps: 10, notes: 'Legs off the floor — no leg drive, no arch. 10 reps.' },
+          { name: 'Arnold Press', sets: 3, reps: [8, 10], notes: 'Standing. 8–10 reps.' },
+          { name: 'Cable Press Around', sets: 2, reps: [12, 15], notes: '12–15 reps. Supersetted with a 30-second pec stretch.' },
+          { name: 'Cross-Body Cable Y-Raise', sets: 3, reps: [12, 15], notes: '12–15 reps.' },
           // The write-up says these two are supersetted, and now the app can
           // say so too rather than listing them as separate exercises.
-          { name: 'Triceps Pushdown', sets: 3, group: 0, notes: 'Squeeze-only partials, 8 reps.' },
-          { name: 'Overhead Cable Extension', sets: 3, group: 0, notes: 'Stretch-only partials, 8 reps. Straight into this from the pushdown.' },
-          { name: 'Cross-Body Cable Triceps Extension', sets: 2, notes: '10–12 reps.' },
+          { name: 'Triceps Pushdown', sets: 3, reps: 8, group: 0, notes: 'Squeeze-only partials, 8 reps.' },
+          { name: 'Overhead Cable Extension', sets: 3, reps: 8, group: 0, notes: 'Stretch-only partials, 8 reps. Straight into this from the pushdown.' },
+          { name: 'Cross-Body Cable Triceps Extension', sets: 2, reps: [10, 12], notes: '10–12 reps.' },
         ] },
       // ⚠️ The lat pulldown is written up as four FEEDER sets of 10 building to
       // the working weight, then two sets to failure, then ONE drop of about
@@ -184,12 +185,12 @@ export const PRESET_SYSTEMS = [
           + 'reps: pulldown to failure around 10, rows 10–12, pullover 10–12, face pulls '
           + '12–15, EZ curls 6–8, preacher curls 10–12.',
         exercises: [
-          { name: 'Lat Pulldown', sets: 2, setType: 'drop', minis: 1, notes: 'Medium grip. Four feeder sets of 10 first, building from easy to hard — they are warm-ups, so they are not planned here. Then two sets to failure at about 10 reps. The write-up puts ONE drop of about 30 % on the last set; this plans one on each, so skip the first if you are following it exactly.' },
-          { name: 'Chest-Supported Row', sets: 3, notes: 'Machine. Omni-grip — wide on the first set, closer on the second, neutral or underhand on the third. 10–12 reps each.' },
-          { name: 'Dumbbell Pullover', sets: 2, notes: 'Bottom half of the range only, where the lat is loaded at length. 10–12 reps. Supersetted with a 30-second static lat stretch per side.' },
-          { name: 'Face Pull', sets: 3, notes: 'Omni-direction — one set low-to-high, one mid-to-mid, one high-to-low. 12–15 reps each.' },
-          { name: 'EZ-Bar Curl', sets: 3, notes: '6–8 reps. The heavy biceps work of the session.' },
-          { name: 'Dumbbell Preacher Curl', sets: 2, notes: 'One arm at a time, bottom half of the range only. 10–12 reps.' },
+          { name: 'Lat Pulldown', sets: 2, reps: 10, setType: 'drop', minis: 1, notes: 'Medium grip. Four feeder sets of 10 first, building from easy to hard — they are warm-ups, so they are not planned here. Then two sets to failure at about 10 reps. The write-up puts ONE drop of about 30 % on the last set; this plans one on each, so skip the first if you are following it exactly.' },
+          { name: 'Chest-Supported Row', sets: 3, reps: [10, 12], notes: 'Machine. Omni-grip — wide on the first set, closer on the second, neutral or underhand on the third. 10–12 reps each.' },
+          { name: 'Dumbbell Pullover', sets: 2, reps: [10, 12], notes: 'Bottom half of the range only, where the lat is loaded at length. 10–12 reps. Supersetted with a 30-second static lat stretch per side.' },
+          { name: 'Face Pull', sets: 3, reps: [12, 15], notes: 'Omni-direction — one set low-to-high, one mid-to-mid, one high-to-low. 12–15 reps each.' },
+          { name: 'EZ-Bar Curl', sets: 3, reps: [6, 8], notes: '6–8 reps. The heavy biceps work of the session.' },
+          { name: 'Dumbbell Preacher Curl', sets: 2, reps: [10, 12], notes: 'One arm at a time, bottom half of the range only. 10–12 reps.' },
         ] },
       { key: 'legs-1', name: 'Legs 1', notes: 'One heavy squat, then hinge, single-leg, hamstring and calf work. '
           + 'Reported: squat 2–4 near max plus two paused back-off sets, RDL 8–10, lunges 10 per '
@@ -225,15 +226,15 @@ export const PRESET_SYSTEMS = [
            * 30 % is a drop-set reduction. Both would be wrong by a wide margin
            * if forced into this field, and a wrong weight on a bar is the one
            * failure this feature was built to avoid. */
-          { name: 'Back Squat', sets: 3, targets: [85, 65, 65],
+          { name: 'Back Squat', sets: 3, reps: [[2, 4], [5, 5], [5, 5]], targets: [85, 65, 65],
             notes: 'Work up, then one set of 2–4 at 85–90%. Two paused back-off sets of 5 at 75% of that. '
               + 'The planned weights take 85% — the bottom of that range — and 65% for the back-offs, '
               + 'which is 75% of the top set worked out for you rather than a number from the write-up.' },
-          { name: 'Romanian Deadlift', sets: 3, notes: '8–10 reps.' },
-          { name: 'Walking Lunge', sets: 3, notes: 'Dumbbells, 10 reps per leg.' },
-          { name: 'Seated Leg Curl', sets: 3, notes: '10–12 reps.' },
-          { name: 'Leg Press Calf Raise', sets: 4, notes: '10–12 reps.' },
-          { name: 'Decline Sit-Up', sets: 3, notes: 'Holding a plate. 10–12 reps.' },
+          { name: 'Romanian Deadlift', sets: 3, reps: [8, 10], notes: '8–10 reps.' },
+          { name: 'Walking Lunge', sets: 3, reps: 10, notes: 'Dumbbells, 10 reps per leg.' },
+          { name: 'Seated Leg Curl', sets: 3, reps: [10, 12], notes: '10–12 reps.' },
+          { name: 'Leg Press Calf Raise', sets: 4, reps: [10, 12], notes: '10–12 reps.' },
+          { name: 'Decline Sit-Up', sets: 3, reps: [10, 12], notes: 'Holding a plate. 10–12 reps.' },
         ] },
       // Push 2 is the best-sourced workout of the six: Fitness Volt and BarBend
       // agree exercise for exercise, set for set, including the 8 / 5 / 15
@@ -244,23 +245,23 @@ export const PRESET_SYSTEMS = [
           + 'reps: close-grip incline 8 / 5 / 15, shoulder press 10–12, skull crushers 6–8, '
           + 'cable flyes 10–12, lateral raises 20, front raises 15–20, push-ups to failure.',
         exercises: [
-          { name: 'Close-Grip Incline Bench Press', sets: 3, notes: 'One weight is not carried across the three: 8 reps at a moderate weight, then 5 heavy, then 15 light. Rest 3–5 minutes between them.' },
-          { name: 'Machine Shoulder Press', sets: 3, notes: '10–12 reps. Let the upper arms break parallel at the bottom rather than stopping short.' },
-          { name: 'Skull Crusher', sets: 3, notes: 'Floor reset variation — EZ bar, narrow underhand grip, rolled back to the floor between reps so the elbow extends further. 6–8 reps.' },
-          { name: 'Bent-Over Cable Fly', sets: 3, notes: '10–12 reps, torso bent to near parallel so the line of pull crosses the mid-pec.' },
-          { name: 'Machine Lateral Raise', sets: 3, notes: '20 reps, but not 20 of the same rep: the first 5 with a five-second negative, then 15 at a normal cadence to near failure.' },
-          { name: 'Plate Front Raise', sets: 2, notes: '15–20 reps, rotating the plate inwards on the way up.' },
+          { name: 'Close-Grip Incline Bench Press', sets: 3, reps: [[8, 8], [5, 5], [15, 15]], notes: 'One weight is not carried across the three: 8 reps at a moderate weight, then 5 heavy, then 15 light. Rest 3–5 minutes between them.' },
+          { name: 'Machine Shoulder Press', sets: 3, reps: [10, 12], notes: '10–12 reps. Let the upper arms break parallel at the bottom rather than stopping short.' },
+          { name: 'Skull Crusher', sets: 3, reps: [6, 8], notes: 'Floor reset variation — EZ bar, narrow underhand grip, rolled back to the floor between reps so the elbow extends further. 6–8 reps.' },
+          { name: 'Bent-Over Cable Fly', sets: 3, reps: [10, 12], notes: '10–12 reps, torso bent to near parallel so the line of pull crosses the mid-pec.' },
+          { name: 'Machine Lateral Raise', sets: 3, reps: 20, notes: '20 reps, but not 20 of the same rep: the first 5 with a five-second negative, then 15 at a normal cadence to near failure.' },
+          { name: 'Plate Front Raise', sets: 2, reps: [15, 20], notes: '15–20 reps, rotating the plate inwards on the way up.' },
           { name: 'Diamond Push-Up', sets: 1, notes: 'One set to failure to finish.' },
         ] },
       { key: 'pull-2', name: 'Pull 2', notes: 'Back, biceps, rear delts. Six exercises. Reported reps: pulldown '
           + '12–15, pull-ups to failure, Kroc rows 10–12, everything else 10–12.',
         exercises: [
-          { name: 'Single-Arm Lat Pulldown', sets: 3, notes: 'Half-kneeling, one arm. 12–15 reps.' },
+          { name: 'Single-Arm Lat Pulldown', sets: 3, reps: [12, 15], notes: 'Half-kneeling, one arm. 12–15 reps.' },
           { name: 'Pull-Up', sets: 1, notes: 'One set to failure. If you are cutting, aim to add a rep a week as your body weight drops.' },
-          { name: 'Kroc Row', sets: 3, notes: 'Heavy one-arm dumbbell row, 10–12 reps.' },
-          { name: 'Cable Shrug', sets: 3, notes: 'Shrug-ins from a low pulley — the traps fan out horizontally, so the cable angle suits them better than a barbell. 10–12 reps.' },
-          { name: 'Reverse Pec Deck', sets: 3, notes: '10–12 reps, changing grip each set — neutral, then overhand, then internally rotated.' },
-          { name: 'Cable Curl', sets: 3, notes: 'Overhead, which biases the long head more than a standing curl. 10–12 reps.' },
+          { name: 'Kroc Row', sets: 3, reps: [10, 12], notes: 'Heavy one-arm dumbbell row, 10–12 reps.' },
+          { name: 'Cable Shrug', sets: 3, reps: [10, 12], notes: 'Shrug-ins from a low pulley — the traps fan out horizontally, so the cable angle suits them better than a barbell. 10–12 reps.' },
+          { name: 'Reverse Pec Deck', sets: 3, reps: [10, 12], notes: '10–12 reps, changing grip each set — neutral, then overhand, then internally rotated.' },
+          { name: 'Cable Curl', sets: 3, reps: [10, 12], notes: 'Overhead, which biases the long head more than a standing curl. 10–12 reps.' },
         ] },
       // ⚠️ ONE SOURCE DISAGREEMENT, recorded rather than smoothed over. Fitness
       // Volt lists calves as 4 sets of SEATED calf raises; BarBend (via the
@@ -273,14 +274,14 @@ export const PRESET_SYSTEMS = [
           + 'than with load. Reported: deadlift one set of 5, stiff-legs 8, leg press 10–12, '
           + 'glute-ham raises 8–10, leg extensions 8–10, calves 15–20, leg raises 10–20.',
         exercises: [
-          { name: 'Deadlift', sets: 1, notes: 'Conventional or sumo. Four warm-up sets first — not planned here — then one working set of 5.' },
-          { name: 'Stiff-Leg Deadlift', sets: 2, notes: '8 reps at roughly 50–60 % of the deadlift top set.' },
-          { name: 'Leg Press', sets: 4, notes: '10–12 reps. Narrow foot placement to bias the quads, and no lockout — constant tension.' },
-          { name: 'Glute-Ham Raise', sets: 3, notes: '8–10 reps, cutting out the top quarter so the hamstrings keep the tension. No GHR machine? A partner holding your ankles for Nordic curls is the substitute he names.' },
-          { name: 'Leg Extension', sets: 3, notes: '8–10 reps with a three-second negative. This is the rectus femoris work a squat cannot give you.' },
-          { name: 'Seated Calf Raise', sets: 2, notes: '15–20 reps.' },
-          { name: 'Standing Calf Raise', sets: 2, notes: '15–20 reps.' },
-          { name: 'Captain’s Chair Leg Raise', sets: 3, notes: '10–20 reps, taken near failure. Written up as roman chair leg raises — the same station.' },
+          { name: 'Deadlift', sets: 1, reps: 5, notes: 'Conventional or sumo. Four warm-up sets first — not planned here — then one working set of 5.' },
+          { name: 'Stiff-Leg Deadlift', sets: 2, reps: 8, notes: '8 reps at roughly 50–60 % of the deadlift top set.' },
+          { name: 'Leg Press', sets: 4, reps: [10, 12], notes: '10–12 reps. Narrow foot placement to bias the quads, and no lockout — constant tension.' },
+          { name: 'Glute-Ham Raise', sets: 3, reps: [8, 10], notes: '8–10 reps, cutting out the top quarter so the hamstrings keep the tension. No GHR machine? A partner holding your ankles for Nordic curls is the substitute he names.' },
+          { name: 'Leg Extension', sets: 3, reps: [8, 10], notes: '8–10 reps with a three-second negative. This is the rectus femoris work a squat cannot give you.' },
+          { name: 'Seated Calf Raise', sets: 2, reps: [15, 20], notes: '15–20 reps.' },
+          { name: 'Standing Calf Raise', sets: 2, reps: [15, 20], notes: '15–20 reps.' },
+          { name: 'Captain’s Chair Leg Raise', sets: 3, reps: [10, 20], notes: '10–20 reps, taken near failure. Written up as roman chair leg raises — the same station.' },
         ] },
     ],
   },

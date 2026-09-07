@@ -25,6 +25,9 @@ import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exerci
 import {
   normalizeTargets, targetsApply, weightForTarget, summariseTargets,
 } from './set-targets.js';
+import {
+  expandRepSpec, weightRangeForReps, repsAreUsable, summariseReps,
+} from './set-reps.js';
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
 
@@ -514,12 +517,87 @@ export async function SessionView(workoutId) {
         }
       }
 
+      /* ================================================================
+       * 🆕 THE PLAN'S REP PRESCRIPTION — 2026-09-20, Tim's ask.
+       *
+       * > "while the Nippard guidelines don't necessarily suggest the % weight
+       * >  of max you should be lifting, it does often suggest the number of
+       * >  reps the user should do, which can be associated as the same thing."
+       *
+       * 🚨 SECOND TO `targets`, ALWAYS, and that is a precedence rather than a
+       * preference: an explicit percentage is the author saying exactly what
+       * he wants on the bar, and a rep count is the same instruction one
+       * inference further away. Where a workout carries both, the percentage
+       * is the more specific claim and it wins. In practice they rarely meet —
+       * of 41 exercises in Nippard's PPL, 39 name reps and one names a
+       * percentage.
+       *
+       * ⚠️ UNLIKE `targets`, THIS FILLS THE REPS TOO, and it is entitled to:
+       * the author DID say how many reps to do. The percentage path
+       * deliberately does not, because a percentage of a maximum says nothing
+       * whatever about a rep count.
+       * ================================================================ */
+      let repPlan = null;
+      const prescribed = targets ? null : expandRepSpec(item.reps, item.sets);
+      if (prescribed) {
+        const own = targetsApply(ex) ? ownBestSet(ex, rows, forDate) : null;
+        const max = own && !own.bodyIncluded
+          ? (own.perSide ? own.e1rm / 2 : own.e1rm)
+          : null;
+        const usable = prescribed.every((spec) => repsAreUsable(spec));
+        const applied = max && usable
+          ? prescribed.map((spec) => weightRangeForReps(spec, max, step))
+          : null;
+        if (applied && applied.every(Boolean)) {
+          applied.forEach((a, i) => {
+            if (!sets[i]) return;
+            sets[i].weight = a.weight;
+            // The reps the author asked for. A range fills its BOTTOM — the
+            // rep count you are certain to be asked for — and the lifter adds
+            // to it, the same direction every other default here leans.
+            sets[i].reps = a.reps[0];
+          });
+          // Same guard and same cost as the percentage path above: this number
+          // is the app's rather than last time's, so it must be touched before
+          // it can be recorded.
+          for (const s of sets) s.prefilled = true;
+          repPlan = {
+            specs: prescribed,
+            range: applied.map((a) => [a.low, a.high]),
+            confidence: applied.map((a) => a.confidence),
+            fromWeight: own.weight,
+            fromReps: own.reps,
+            fromDate: own.date,
+            source: own.source,
+            perSide: own.perSide,
+            withheld: null,
+          };
+        } else {
+          /* 🛑 THE THIRD REFUSAL IS NEW AND IT IS THE ONE WORTH READING: a
+           * prescription this app will not price. "12–15 reps" at 1–2 in
+           * reserve asks the curve about 13–17, past where D5 says a rep count
+           * is evidence of a maximum at all. It says so rather than printing a
+           * weight nobody should trust. The REPS still show — they are the
+           * author's own words and need no curve. */
+          repPlan = {
+            specs: prescribed,
+            withheld: !max
+              ? (own && own.bodyIncluded ? 'bodyweight' : 'no-max')
+              : 'too-many-reps',
+          };
+          prescribed.forEach((spec, i) => { if (sets[i]) sets[i].reps = spec[0]; });
+        }
+      }
+
       out.push({
         lastSets,
         suggestion,
         // The plan's percentages and what became of them — null when the
         // workout prescribes nothing, which is every workout in the app today.
         targets,
+        // The plan's REP prescription, and what became of it. Never set at the
+        // same time as `targets` — see the precedence note above.
+        repPlan,
         exerciseId: ex.id,
         exerciseName: ex.name,
         fields: ex.fields,
@@ -2574,6 +2652,33 @@ export async function SessionView(workoutId) {
                 + 'cannot be worked out for a lift your own body weight is part of.'
               : `Plan asks for ${summariseTargets(entry.targets.percents)} — nothing recorded `
                 + 'on this lift yet to take a percentage of.' })
+        : null,
+
+      /* 🆕 THE SAME SENTENCE FOR A REP PRESCRIPTION — 2026-09-20.
+       *
+       * 🚨 IT NAMES THE RESERVE OUT LOUD. "8–10 reps" over a weight, with no
+       * explanation, is the app quietly asserting that the author meant a set
+       * taken to failure — which is the assumption that would put the MOST
+       * weight on the bar and the one nobody could check. Saying "with 1–2 left
+       * in the tank" is what makes the number falsifiable: a lifter who
+       * disagrees with the reserve can see that they disagree, and change it.
+       *
+       * ⚠️ AND THE THIRD BRANCH IS A REFUSAL WITH THE REPS STILL ON SCREEN.
+       * The rep target is the author's own words; only the WEIGHT needed a
+       * curve, and only the weight is withheld. */
+      entry.repPlan
+        ? el('div', { class: 'session-ex-meta', text: entry.repPlan.withheld === null
+            ? `Plan: ${summariseReps(entry.repPlan.specs)} with 1–2 left in the tank, off your `
+              + `${units.withUnit(entry.repPlan.fromWeight)} × ${entry.repPlan.fromReps}`
+              + (entry.repPlan.source === 'benchmark' ? ' test' : '')
+            : entry.repPlan.withheld === 'too-many-reps'
+              ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — too many to work a weight `
+                + 'back from, so the reps are set and the weight is yours.'
+              : entry.repPlan.withheld === 'bodyweight'
+                ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — a weight cannot be worked `
+                  + 'out for a lift your own body weight is part of.'
+                : `Plan asks for ${summariseReps(entry.repPlan.specs)} — nothing recorded on this `
+                  + 'lift yet to work a weight back from.' })
         : null,
 
       /* 🚨 THE OTHER HALF OF THAT SENTENCE: WHY THERE IS NO NUMBER (2026-09-06).

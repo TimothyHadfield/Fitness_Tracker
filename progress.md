@@ -61,8 +61,21 @@ his own. `copiedVersionOf()` returns **null, not 0**, and that distinction is th
 property, **passed with the guard removed**, because it read the input array that `applyPresetPlan()`
 copies rather than mutates. Rewritten to assert on the row that gets SAVED. **§0.14's third
 corollary meeting its own example.**
-✅ **19 suites green, 5,393 assertions** (from 5,303), `render` **1,595**. Full write-up:
-`docs/history.md`, 2026-09-20.
+🆕 **AND A SECOND PASS THE SAME DAY: A PLANNED SET CAN CARRY A REP PRESCRIPTION** (`js/set-reps.js`).
+Tim: *"it does often suggest the number of reps the user should do, which can be associated as the
+same thing."* Measured before building: **39 of Nippard's 41 exercises name reps, one names a
+percentage.** 🚨 **D33 — A PRESCRIPTION IS READ AS CARRYING 1–2 REPS IN RESERVE**, his call, and
+🛑 **it is NOT the RIR field D28 refuses**: D28 refuses to ASK a lifter their effort; this is one
+assumption about what a COACH meant. The alternative (assume failure) is also an assumption and errs
+by making the bar **heavier**; every assumption here can only take weight off.
+🔒 **THE TRANSCRIBING AGENT FOUND A BUG IN THE MODULE THAT SENT IT** — `clampReps()` folded a
+prescribed **20 reps** down to **15**, so the app quoted Nippard saying something he did not say.
+The D5 gate belongs on the WEIGHT, never on the words. 🚨 **AND A SECOND WEAK ASSERTION WAS CAUGHT**:
+the test that a prescription is priced lighter than failure **passed with the reserve zeroed**,
+because it compared against an unrounded number. **Twice in one session for §0.14's third corollary.**
+🛑 **10 of the 39 get reps and NO weight** — past D5 once the reserve is added.
+✅ **19 suites green, 5,501 assertions** (from 5,303), `data-layer` **2,390**, `render` **1,595**.
+🚩 **Not driven in Chrome.** Full write-up: `docs/history.md`, 2026-09-20 and its second pass.
 
 **2026-09-19, the session before it** — **the Workouts tab is ONE PROGRAMME now.** Two questions
 answered without building, then a design he brought and it shipped whole.
@@ -174,15 +187,14 @@ than it — both deliberate, both explained to him, both the sort of thing that 
 
 ## 2026-09-10 to 2026-09-15 — COLLAPSED TO ONE POINTER, 2026-09-19
 
-⚠️ **The routine maintenance** (§0.3): this file hit its 160 KB budget writing 2026-09-19's summary,
-and these are the oldest sections whose durable halves all sit somewhere that is not a dated summary.
-Full write-ups: `docs/history.md` under each date.
+⚠️ **The routine maintenance** (§0.3), and it ran again on 2026-09-20. Full write-ups:
+`docs/history.md` under each date.
 
-- **2026-09-15 — the interrupted agents' leftovers, then the ratio table.** The accessibility audit
-  had already run and nobody had read it (272 routes, zero failures); `strength-fit` printed "22
-  figures outside tolerance" through a green suite and **the guard its header named did not exist**.
-  Then the table re-derived (§6.3) and σ per entry with a precision-weighted blend (§6.4): inside 5 %
-  went **38 → 85 of 105**, every muscle moved −2.3 % to +2.8 %, **every confidence unchanged**.
+- **2026-09-15 — the interrupted agents' leftovers, then the ratio table.** An accessibility audit
+  had run and nobody had read it; `strength-fit` printed "22 figures outside tolerance" through a
+  green suite and **the guard its header named did not exist** (§0.15). Then the table re-derived and
+  σ per entry with a precision-weighted blend: inside 5 % went **38 → 85 of 105**, every muscle moved
+  −2.3 % to +2.8 %, **every confidence unchanged**.
 - **2026-09-14 — the strength-accuracy build**, on *"Start building the improvements now."* ~25 ratio
   corrections and a sex axis (**D31**), one 1RM convention (**D30**), a rating that can FALL, and the
   typo quarantine wired. **Tim's three reported readings all had one cause.** 🔒 **NINE AGENTS WERE
@@ -412,30 +424,25 @@ that opens with *"catch up with progress.md"* reads and reports; it does not sta
 `npm i --no-save @firebase/rules-unit-testing` plus the emulator (§0.9), so it is not in that green.
 🛑 **Do not report "all twenty green" off a run that skipped it.**
 
-✅ **2026-09-09 WAS THREE PASSES AND THE ONE-LINERS ARE ABOVE.** In order: a friend's page got a real
-laptop layout and **their muscle map is now read against people like THEM rather than like the
-reader**; **Record rises from the bottom** with a **down arrow** that pushes it back onto Home (🛑 it
-is `down`, not `back` — it lands on Home whatever you came from, which is what he asked for); and the
-Profile tab's two social counts became **one, called Friends**, alongside more of the wordiness.
+✅ **2026-09-09's THREE PASSES ARE SUMMARISED ABOVE** and written up in `docs/history.md`. 🛑 The one
+detail worth not re-deriving: Record's corner control is `down`, **not `back`** — it lands on Home
+whatever you came from, which is what he asked for.
 
 ⏸️ **HE TOOK ONE ITEM FOR HIMSELF THE SAME DAY AND IT IS NOT YOURS**: checking the estimator against a
 real attempt (Open work 19). *"I'll do 4 myself sometime this week, but I'll come to you about it."*
 🛑 **Do not start it and do not offer it again.**
 
 ✅ ~~**THE BROWSER AUDIT HAS NEVER MEASURED A DESKTOP WIDTH**~~ **FIXED 2026-09-10** — it sweeps
-**360 / 390 / 880 / 1280** with `mobile` set per width. 🔒 The phone rows are provably unchanged
-(6,071 + 6,136 = **12,207**, byte-identical to the 2026-09-08 figure). 🚨 **The first desktop sweep
-immediately found an AA failure** — the active sidebar nav label at 3.96:1 — which is the same
+**360 / 390 / 880 / 1280**. 🚨 **The first desktop sweep immediately found an AA failure**, the same
 `--accent`-on-`--accent-dim` pair "fixed" on 2026-09-06 **for the one element a phone-width audit
-could see.** Reading the stylesheet for the pair found four more. **The lesson is the scope of the
-original fix: "every element that paints this today" means "every element the tool I ran can
-reach".** ⚠️ **`tools/a11y-audit.mjs` still does not cover a friend's page** — their uid is
-generated, so there is no static hash for the route list.
+could see**; reading the stylesheet found four more. **The lesson is the scope of the original fix:
+"every element that paints this today" means "every element the tool I ran can reach".**
+⚠️ **`tools/a11y-audit.mjs` still does not cover a friend's page** — their uid is generated, so there
+is no static hash for the route list.
 
-⚠️ **`tests/sw-update.test.mjs` REMAINS FLAKY ON THIS MACHINE.** Recorded 2026-09-07, and on
-2026-09-08 it failed once and passed three times across the day — always on *"the service worker
-takes control on the second load"*. **The control was measured rather than assumed** back then (three
-runs against a stashed, committed baseline failed 4 / 4 / 1). 🛑 **Do not report it as reliably
+⚠️ **`tests/sw-update.test.mjs` REMAINS FLAKY ON THIS MACHINE** — always on *"the service worker
+takes control on the second load"*. **The control was measured rather than assumed** (three runs
+against a committed baseline failed 4 / 4 / 1). 🛑 **Do not report it as reliably
 passing, and do not "fix" it by weakening it.** ⚠️ **One new thing to check first if it ever goes
 consistently red: `js/views-me.js` joined `sw.js`'s precache on 2026-09-08**, and a precache entry
 that cannot be fetched fails an install.
@@ -1006,21 +1013,14 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    history and one line of it turned out to be wrong** — "decline sits above flat" is true of a
    barbell and false of dumbbells. Kept for the method, not the conclusions.
 
-   ⚠️ **The 2026-08-24 anchor corrections that started it are in `docs/history.md`**, and the whole
-   table was re-derived against Strength Level on 2026-09-15 (Open work 30) — so those figures are
-   superseded and only the method is worth reading.
+   ⚠️ **The whole table was re-derived against Strength Level on 2026-09-15** (Open work 30), so
+   those figures are superseded and only the method is worth reading: **the errors were 7, 12, 15 and
+   15 % — not a constant**, so no blanket factor fixes it. Each entry is derived on its own — one
+   population, both lifts, a 180 lb male, divide, take the median.
 
-   ⚠️ **THE ERRORS WERE 7, 12, 15 AND 15 % — NOT A CONSTANT.** No blanket factor fixes this table.
-   Every remaining reasoned entry has to be derived on its own, by the technique now used four times:
-   one population, both lifts, a 180 lb male, divide, take the median.
-
-   **Still unchecked, in rough order of how much they move a rating:** the rest of the dumbbell
-   biceps family (Hammer, Incline, Concentration, Preacher, Zottman, Spider, Cross-Body); every
-   MACHINE entry (`q` 0.35–0.50 — Leg Press 2.00, Hack Squat 1.15, Machine Row 1.00, Pec Deck 0.55,
-   Machine Hip Thrust 1.20); the cable entries; and the deadlift family's 1.40–1.85 against Back.
-   ⚠️ **Machines are the harder half and may not be derivable at all** — a leg press ratio depends on
-   the machine's leverage, which is why those `q` values are already low. If a source cannot be
-   found, the honest outcome is to say so in the table rather than leave the guess unlabelled.
+   ⚠️ **MACHINES ARE THE HARDER HALF AND MAY NOT BE DERIVABLE AT ALL** — a leg press ratio depends
+   on the machine's leverage, which is why those `q` values are already low (0.35–0.50). If a source
+   cannot be found, say so in the table rather than leave the guess unlabelled.
 
 0i. **⚠️ THE BODY MAP'S TOUCH TARGETS — NOW THE ILLUSTRATION ONLY.** Measured for the first time
    2026-08-24; see that day's fourth-pass section. At 360px the smallest muscles are **Traps 42×11,
