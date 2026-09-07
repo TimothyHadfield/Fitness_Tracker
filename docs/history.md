@@ -17,6 +17,111 @@
 
 ---
 
+## 2026-09-20 (third pass) — 🚨 HEAVIER AND LONGER IS BETTER, AND THE APP DID NOT KNOW IT
+
+Tim, reading his own Back panel:
+
+> *"I noticed that it says I had 50x6 on lat pulldown, but this was upsetting to me because I did
+> 85x12 on my third set of a more recent workout, and it look like that wasn't affecting anything."*
+
+**He was right, and it was worse than he thought.** An agent traced it with a control: the 85×12
+reached the rating engine, became an observation, and was then dropped before the number was
+computed. **Delta: 0.00 lb.** Measured, the discarded set implied **131 lb** and the seated one
+**66.7**.
+
+### A. THE RULE THAT DID IT, AND WHY IT IS A CORRECTNESS BUG
+
+`seatCredit` is `quality × repFactor(reps) × recency × fatigue`. 🚨 **Weight appears nowhere in it.**
+Each exercise gets one seat and it goes to the most CREDIBLE set; a set at ≤ 8 reps beats everything
+longer outright, as a filter rather than a weighting. So more weight could not win a seat — it could
+only lose one, because a longer set is a longer guess.
+
+Tim named the property being violated better than the code did:
+
+> *"if the lift is higher in weight AND reps, than it's better, because you can just assume they
+> stopped at the lower weight's reps and then it's a higher weight… If the weight was higher but the
+> reps was lower, that's not necessarily something we could do."*
+
+**Had he racked the bar at six reps it would have counted; carrying on to twelve made it stop
+counting.** Tested against five dominance pairs, the old formula broke all five.
+
+### B. HIS DESIGN BEAT MINE, MEASURED
+
+The first proposal was to score every set at `min(reps, 8)`. His was to read the dominating set **at
+the rival's rep count**. Measured on his own numbers:
+
+| | estimate | credibility |
+|---|---|---|
+| 50×6, seated then | 66.7 | 0.95 |
+| 85×12 read at 8 (mine) | 116.3 | 0.85 ⬇ |
+| **85×12 read at 6 (his)** | **108.5** | **0.95** |
+
+🔒 **Mine bought a bigger number by spending confidence; his gets one at identical credibility**, and
+on his own worked example (80×15 against 70×12) mine gave 110.1 where his gives 124.2 — barely
+beating the set it was meant to beat. **The fixed-8 version threw away real information.** It also
+had a cost his does not: a lifter whose only sets are high-rep would have lost 12–18 %.
+
+### C. 🛑 THREE IMPLEMENTATIONS WERE WRONG BEFORE ONE WAS RIGHT, AND ALL THREE RAN TOO EARLY
+
+Put in `buildObservations()`, the rule ran **before the safety machinery**:
+
+1. **De-duplication collapsed genuine repeat sets** — three sets of 100×10 became one. Three sets at
+   a weight ARE more evidence than one.
+2. **The synthetic reading inherited the DOMINATOR's date**, so a whole progressive year folded onto
+   a handful of dates: the demo's Back fell from **720 observations to 44**, destroying 94 % of the
+   evidence *while the estimate barely moved* — the exact shape of change nobody spots from a screen.
+3. 🚨 **IT DISABLED THE TYPO QUARANTINE.** A mistyped 2050×5 dominates every real set, drags them all
+   up to its weight, and the day-screen — which works by spotting a set that disagrees with its
+   neighbours — then has nothing to spot. **Chest read Elite at 2282 lb.** One slip would promote a
+   muscle to the top of the scale.
+
+🔒 **THE LESSON, AND IT IS THE GENERAL FORM OF ALL THREE: A RULE THAT REWRITES EVIDENCE MUST RUN
+AFTER EVERYTHING THAT SCREENS IT.** At the seat step the day-screen has already quarantined the typo
+and `perDay` has already collapsed the duplicates, so the only thing left to decide is which set
+speaks — which is the whole of what this rule is for. It is 20 lines there.
+
+⚠️ **Each failure was caught by a column, not by reading the code**: the contributor count for (1)
+and (2), the render suite for (3). The estimates looked plausible every time.
+
+### D. `curveWeight`, and why a fourth field was needed
+
+Re-reading a set at fewer reps needs **the weight the curve was actually fed** — per hand on a
+dumbbell and doubled (D30), total resistance on a body-weight lift, the typed number only on a
+barbell. `setE1rm()` already computes it; it was simply not kept. It is carried on the observation
+now, because the alternative was a second copy of D30's three-branch convention in the file that
+would then disagree with it.
+
+### E. What it did, and to whom
+
+**Four of twelve muscles move on the demo year and eight do not** — Back +10.2 %, Core +12.9 %,
+Glutes +17.2 %, Quads +11.4 %. 🚨 **Every move is upward**, which is the property the rule is built to
+have. ⚠️ **Every observation count and every contributor count is unchanged**, and that is the
+load-bearing check rather than a coincidence: it is the column all three failed attempts moved.
+
+Tim's own case: **70.2 → 114.3 lb**, seated at **85×6**.
+
+⚠️ Two confidences soften (Back 0.8246 → 0.8169, Quads 0.9016 → 0.8510) because the seated readings
+sit further apart once the truncated ones join. Less agreement is less confidence; that is the model
+being honest.
+
+### F. 🔒 A THIRD WEAK ASSERTION IN ONE SESSION
+
+*"and it is seated at 85×6"* checked `reps === 6` — and reading the dominator at its OWN rep count
+**still leaves `reps` reading 6**, so the assertion passed over a value carrying twelve reps of
+extrapolation. It now asserts the number as well as the label, against `setE1rm(85, 6)` directly.
+**§0.14's third corollary, three times in one day.**
+
+### G. Tests
+
+19 suites green, **5,511** assertions. The new block covers Tim's case by name, the asymmetry he
+insisted on (heavier but shorter does NOT supersede), more-reps-at-one-weight and
+more-weight-at-one-rep-count, that adding a better set can only RAISE a rating, and 🛑 **that a
+mistyped 2,050 lb set is still quarantined** — the assertion that pins where this rule may live.
+Mutation-checked twice with the mutation printed: disabling dominance reverts every number exactly,
+and removing the truncation is caught by the golden table and by the strengthened assertion in F.
+
+---
+
 ## 2026-09-20 (second pass) — A PLANNED SET AS A REP PRESCRIPTION, AND D33
 
 Tim, reading back the claim that `targets` expressed one of four percentages in his own programme:

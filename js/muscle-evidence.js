@@ -2278,6 +2278,76 @@ export function rateMuscle(observations, muscle = null) {
    * 215 x 3 benchmark scores 1.00 against a 185 x 12's 0.45 and takes the seat
    * on its own merits. Recency is kept, so a stale reading loses to a current
    * one of equal quality. */
+  /* ------------------------------------------------------------------ *
+   * 🚨 DOMINANCE — 2026-09-20, and it is Tim's rule.
+   *
+   * > "if the lift is higher in weight AND reps, than it's better, because you
+   * >  can just assume they stopped at the lower weight's reps and then it's a
+   * >  higher weight… If the weight was higher but the reps was lower, that's
+   * >  not necessarily something we could do."
+   *
+   * WHAT HE CAUGHT. His Back was led by a Lat Pulldown of 50×6 while an 85×12
+   * three weeks NEWER contributed nothing. `seatCredit` below is
+   * `quality × repFactor × recency × fatigue` — **weight appears nowhere in
+   * it** — so a longer set could only ever lose the seat, however much heavier
+   * it was. Measured: the discarded set implied 131 lb, the seated one 66.7.
+   * Had he racked the bar at six reps it would have counted; carrying on to
+   * twelve made it stop counting.
+   *
+   * THE RULE. Within one exercise, if A is ≥ B in BOTH weight and reps, B is
+   * superseded — replaced by A re-read at B's rep count, which is a heavier set
+   * at the same credibility. Where neither dominates (heavier but shorter, the
+   * ordinary trade) nothing happens and the comparison below decides as before.
+   *
+   * ⚠️ TRUNCATED RATHER THAN TAKEN WHOLE. Reading the 85×12 as 85×6 gives 108 lb
+   * where its full twelve gives 131. The truncated figure is the conservative
+   * one — twelve reps at 85 certainly includes six at 85, with reserve — and it
+   * arrives at `repFactor(6)`, the credibility the rival had. It wins on weight
+   * at equal credibility rather than buying a bigger number with confidence.
+   *
+   * 🛑 IT RUNS HERE, AND THREE EARLIER PLACES WERE WRONG. Put in
+   * `buildObservations()` it ran before the safety machinery and broke all of
+   * it: identical straight sets collapsed, a whole progressive year folded onto
+   * a handful of dates (the demo's Back fell 720 → 44 observations), and worst,
+   * **it disabled the typo quarantine** — a mistyped 2050×5 dominates every
+   * real set, drags them all up to its weight, and then nothing disagrees with
+   * it, so Chest read Elite at 2282 lb. By this line the day-screen has already
+   * quarantined that set, `perDay` has already collapsed the duplicates, and
+   * the only thing left to decide is which set speaks. That is the whole of
+   * what this rule is for.
+   * ------------------------------------------------------------------ */
+  const dominate = (list) => {
+    if (!Array.isArray(list) || list.length < 2) return list;
+    return list.map((b) => {
+      let dom = null;
+      for (const a of list) {
+        if (a === b) continue;
+        if (a.weight < b.weight || a.reps < b.reps) continue;
+        if (a.weight === b.weight && a.reps === b.reps) continue;
+        if (!dom || a.weight > dom.weight) dom = a;
+      }
+      /* ⚠️ `curveWeight` IS REQUIRED, NOT OPTIONAL, and its absence is a refusal
+       * rather than a fallback. It is the number the curve was fed (per hand on
+       * a dumbbell, total resistance on a pull-up), and guessing it from
+       * `weight` would be a second copy of D30's convention — wrong by 5 % on
+       * every dumbbell lift and wildly wrong on every body-weight one. A friend's
+       * published rows predate this field, so they simply keep today's rule. */
+      if (!dom || !(dom.curveWeight > 0) || !(dom.rawE1rm > 0)) return b;
+      const at = e1rm(dom.curveWeight, b.reps);
+      const was = e1rm(dom.curveWeight, dom.reps);
+      if (!(at > 0) || !(was > 0)) return b;
+      const scale = at / was;
+      return {
+        ...b,
+        weight: dom.weight,
+        curveWeight: dom.curveWeight,
+        rawE1rm: dom.rawE1rm * scale,
+        estimate: dom.estimate * scale,
+        supersededWeight: b.weight,
+      };
+    });
+  };
+
   const seatCredit = (o) => o.quality * repFactor(o.reps) * recencyWeight(o.ageDays) * fatigueOf(o);
   const better = (o, prev) => (seatCredit(o) - seatCredit(prev))
     || (o.estimate - prev.estimate)
@@ -2295,7 +2365,8 @@ export function rateMuscle(observations, muscle = null) {
   }
   const representatives = [];
   for (const b of perExercise.values()) {
-    const pool = b.inWindow.length ? b.inWindow : b.all;
+    const raw = b.inWindow.length ? b.inWindow : b.all;
+    const pool = dominate(raw);
     const low = pool.filter((o) => o.reps <= LOW_REP_PREFERENCE);
     const field = low.length ? low : pool;
     let best = null;

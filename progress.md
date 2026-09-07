@@ -61,6 +61,30 @@ his own. `copiedVersionOf()` returns **null, not 0**, and that distinction is th
 property, **passed with the guard removed**, because it read the input array that `applyPresetPlan()`
 copies rather than mutates. Rewritten to assert on the row that gets SAVED. **§0.14's third
 corollary meeting its own example.**
+🚨 **AND A THIRD PASS: HEAVIER AND LONGER IS BETTER, AND THE APP DID NOT KNOW IT.** Tim, reading his
+own Back panel: *"I did 85x12 on my third set of a more recent workout, and it look like that wasn't
+affecting anything."* **Traced with a control: the 85×12 contributed 0.00 lb.** `seatCredit` is
+`quality × repFactor × recency × fatigue` — **weight appears nowhere in it** — so a heavier, longer
+set could only ever LOSE the seat. Measured: the discarded set implied **131 lb**, the seated 50×6
+implied **66.7**. 🔄 **A set ≥ in BOTH weight and reps now SUPERSEDES**, re-read at the weaker set's
+rep count (`dominate()` in `muscle-evidence.js`). 🛑 **Heavier but SHORTER does not** — Tim's own
+caveat, and a real trade the credibility comparison still decides. **His case: 70.2 → 114.3 lb.**
+🚨 **IT MUST RUN AT THE SEAT STEP AND NOWHERE EARLIER, AND THREE ATTEMPTS PROVED IT.** In
+`buildObservations()` it collapsed genuine repeat sets, folded a progressive year onto a handful of
+dates (**720 observations → 44**, with the estimate barely moving), and **disabled the typo
+quarantine** — a mistyped 2050×5 dominates everything, drags every real set up to its weight, and
+leaves the day-screen nothing to disagree with: **Chest read Elite at 2282 lb.** 🔒 **A rule that
+rewrites evidence runs after everything that screens it.** ⚠️ **Each failure was caught by a COLUMN,
+not by reading code** — the contributor count twice, the render suite once; the estimates looked
+plausible every time. 🔄 **Golden re-baselined**: four muscles move (Back +10.2 %, Core +12.9 %,
+Glutes +17.2 %, Quads +11.4 %), eight unchanged, **every move upward**, and **every observation and
+contributor count identical** — which is the load-bearing check, being the column all three failures
+moved. 🆕 `curveWeight` on the observation, because re-reading a set at fewer reps needs the number
+the curve was actually fed and the alternative was a second copy of D30.
+🛑 **NOT DONE, and it is the bigger lever**: the rating still uses **one set per exercise, top 3** —
+Tim's whole Back number rests on three sets. Blending every set weighted by credibility is the real
+accuracy work and is unstarted.
+
 🆕 **AND A SECOND PASS THE SAME DAY: A PLANNED SET CAN CARRY A REP PRESCRIPTION** (`js/set-reps.js`).
 Tim: *"it does often suggest the number of reps the user should do, which can be associated as the
 same thing."* Measured before building: **39 of Nippard's 41 exercises name reps, one names a
@@ -116,23 +140,16 @@ leg days `targets` expresses ONE**. Open work 33 and 34; full write-up `docs/his
 
 ## 2026-09-16 and 2026-09-17 — COLLAPSED TO ONE POINTER, 2026-09-20
 
-⚠️ **The routine maintenance** (§0.3): this file was 369 bytes under its 160 KB budget when
-2026-09-20's summary was written, and these are the oldest dated summaries whose every durable half
-sits somewhere that is not a dated summary. Full write-ups: `docs/history.md` under each date.
+⚠️ **The routine maintenance** (§0.3). Full write-ups: `docs/history.md` under each date.
 
-- **2026-09-17 — the network paths were run against the real project**, on the one item of three he
-  picked (*"Just work on 1 for now"*). **39 checks, 0 failures** against `fitness-tracker-th` and the
-  **deployed** rules, as throwaway accounts deleted afterwards. 💷 **An unchanged sync bills ZERO
-  document reads.** 🔒 Durable halves: **§0.16** (the harness, `tools/live-check.mjs`, and every trap
-  in running it) and the 💷 block below. 🚩 **Still worth knowing**: `shardDiff()` compares
-  `JSON.stringify(row)` and Firestore returns map keys in its own order — **not a bug**, but a path
-  that REBUILDS rows (restoring a backup) pays a write per row.
+- **2026-09-17 — the network paths were run against the real project.** **39 checks, 0 failures**
+  against `fitness-tracker-th` and the **deployed** rules, as throwaway accounts deleted afterwards.
+  💷 **An unchanged sync bills ZERO document reads.** 🔒 Durable half: **§0.16** and the 💷 block
+  below. 🚩 **Still worth knowing**: `shardDiff()` compares `JSON.stringify(row)` and Firestore
+  returns map keys in its own order — **not a bug**, but a path that REBUILDS rows pays a write each.
 - **2026-09-16 — five asks, five sub-agents.** Faces on the friends list; **a friend's page became
-  their PROFILE** with their Data screen behind "View data"; **a system can carry a weekly or cycle
-  plan**; **an empty month is one line**, with a bar chart of days per month. 🔒 Durable halves:
-  **D32** in the handbook §6 — `profile.gender`, `profile.age` and `connections` in both shared
-  documents, with `firestore.rules` shipped alongside or every publish is denied in silence — and
-  `docs/state.md`'s friend-profile and calendar rows.
+  their PROFILE**; **a system can carry a weekly or cycle plan**; **an empty month is one line**.
+  🔒 Durable half: **D32** in the handbook §6, and `docs/state.md`'s friend-profile row.
 - 🔄 ~~**a system folds open and closed**~~ **DELETED 2026-09-19** by the current system. Struck
   rather than removed: a line saying a feature exists over code that was deleted is the exact
   failure this file is for.
@@ -202,22 +219,15 @@ than it — both deliberate, both explained to him, both the sort of thing that 
   the rules are in the sub-agent entry below. 🚩 **Still Tim's**: the demo reads eleven Novice and one
   Intermediate; widening it means re-rolling the seeded year (Open work 25).
 
-- **2026-09-13 — 🛑 NOTHING WAS BUILT**, seven read-only agents on *"Don't do any building … Make a
-  plan"*; the deliverable is `docs/strength-accuracy-plan.md` plus `docs/research.md` §16. 🔒 **Two
-  findings outlived it**: the ±4.6 % accuracy claim is conditional on the curve (with the lab rep
-  curve as truth the bias is +7.9 %), and the backtest that would settle it needs **Tim's export**,
-  which he has not given.
-- **2026-09-11 and -12 — the Profile/Data split finished (Open work 29 closed)**, then years-first
-  calendars on every door, a set locking when you move on, the exercises drag following the finger,
-  Record covering the tab bar, and ranked best lifts. 🚨 **The Profile tab had never been audited** —
-  the route list had a row called *Profile* and it was `#/profile`, the form, so the name looked
-  taken. **A route absent from the list looks exactly like a route that passed.**
-- **2026-09-10 — Open work 27 closed** ("delete everything" had left five of ten collections and every
-  `shared/*` document). Record rose behind its own ghost; **nobody wrote `overflow-x: auto` — the
-  browser did**; the audit gained four widths. 🔒 Durable halves: `docs/state.md`'s Profile and Data
-  rows, `docs/direction.md` §4b.
-- 🚩 **Its two flagged items are in FOUR THINGS FLAGGED FOR TIM above** — the Months/Years pill, and
-  fill-on-open meeting the set lock.
+- **2026-09-13 — 🛑 NOTHING WAS BUILT**, seven read-only agents on *"Make a plan"*; the deliverable is
+  `docs/strength-accuracy-plan.md`. 🔒 **The finding that outlived it**: the ±4.6 % accuracy claim is
+  conditional on the curve, and the backtest that would settle it needs **Tim's export**.
+- **2026-09-11 and -12 — the Profile/Data split finished (Open work 29)**, years-first calendars, the
+  set lock, the finger-following drag and ranked best lifts. 🚨 **The Profile tab had never been
+  audited** — the route list had a row called *Profile* and it was `#/profile`, the form. **A route
+  absent from the list looks exactly like a route that passed.**
+- **2026-09-10 — Open work 27 closed.** Record rose behind its own ghost; **nobody wrote
+  `overflow-x: auto` — the browser did**. 🔒 Durable halves: `docs/state.md`, `direction.md` §4b.
 
 ## 2026-09-07 to 2026-09-09 — COLLAPSED TO ONE POINTER, 2026-09-16
 
@@ -913,34 +923,21 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    or a two-exercise superset becomes a three-exercise round and the walker desynchronises
    mid-workout. Mutation-checked: always-replace flips the two assertions about the kept sets.
 
-0e. **⚠️ JOINT WORKOUTS — Tim, 2026-08-24. The biggest idea in his list.** *"one person can record
-   both measurements for both people on one phone and account and then the data is saved to each
-   users specific account … 2+ names at the top that the user could click on to switch between which
+0e. **⚠️ JOINT WORKOUTS — Tim, 2026-08-24.** *"one person can record both measurements for both
+   people on one phone … 2+ names at the top that the user could click on to switch between which
    user they are recording the data to."* Restricted to people who are already friends.
 
-   **His decision, asked and answered: THE OTHER PERSON ACCEPTS IT.** Not a direct write into their
-   account. ⚠️ **This is the load-bearing choice and the reason it was worth asking.** A direct write
-   needs a Firestore rule letting account A write into account B's private collections, and
-   `sessions` is **one document per collection** (D-shape recorded in §4) — so a single bad write
-   does not corrupt one row, it **replaces someone's entire training history**. `docs/social-plan.md`
-   §2 already argues this from the other side: sharing publishes a derived copy rather than widening
-   a permission, precisely so that nobody's client can reach into anybody else's data.
+   **His decision, asked and answered: THE OTHER PERSON ACCEPTS IT** — not a direct write into their
+   account. ⚠️ **The load-bearing choice**: a direct write needs a rule letting account A write into
+   account B's private collections, and `sessions` is **one document per collection**, so a single
+   bad write does not corrupt one row — it **replaces someone's entire training history**.
 
-   **The shape that follows:** the recorder's phone runs the session with two or more names on it,
-   then publishes each friend's half to something they own and their client reads — the same
-   `invites/`-style path that already exists — and **their** app writes it into **their** account on
-   accept. Rules stay "only you write your own data". They also get to see what was logged in their
-   name before it lands, which a direct write never offers.
-
-   ⚠️ **SWITCHING NAMES HAS TO SWITCH THE WHOLE SUGGESTION, not just the destination.** Two people
-   doing the same workout are not on the same weights: each name carries its own history, its own
-   `trainingRange()`, its own next step. A version that only changed where the number was saved would
-   hand both lifters the same prescription, which is the one thing this app's progression rule is
-   built never to do.
-
-   **Worth building alongside it:** logging for a **guest** — a name with no account — kept in the
-   recorder's own data and handed over later if that person joins. That is the case Tim actually hit,
-   because his friend could not sign in at all.
+   ⚠️ **THE REST OF THIS SECTION WAS COLLAPSED 2026-09-20** (§0.3) — it is BUILT, and
+   `docs/state.md`'s runner row carries the mechanics. The two rules worth not re-deriving:
+   **switching names switches the whole SUGGESTION, not just the destination** (each person has their
+   own history and their own next step, and handing both lifters one prescription is the thing
+   progression is built never to do), and **logging for a GUEST** — a name with no account, kept in
+   the recorder's data and handed over later — which is the case Tim actually hit.
 
 0g. ~~**⚠️ WITHIN-SESSION FATIGUE DISTORTS THE MUSCLE RATING**~~ ✅ **TIERS 1 AND 2 BUILT AND
    DEPLOYED 2026-08-24**, same day as the finding, on Tim's *"deploy it now"*. The finding and the
@@ -973,7 +970,7 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
    probably where Tim's own 2026-08-21 report came from. **Do not close that item on the strength of
    the installed PWA working.**
 
-0b. **⚠️ THE EDGE-CASE REVIEW'S UNFIXED FINDINGS — 2026-08-22, and two of them can lose work.**
+0b. **⚠️ THE EDGE-CASE REVIEW'S UNFIXED FINDINGS — 2026-08-22.**
    Full write-up in `docs/history.md`, 2026-08-22 third pass; these are the ones nobody has done.
 
    - ~~**⚠️ (a) PROGRESSION RATCHETS REPS WITH NO TERMINAL STATE.**~~ ✅ **FIXED 2026-08-22** — a rep

@@ -182,6 +182,19 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
         ratio: c.ratio,
         reps: Math.round(Number(reps)),
         weight: Number(weight),
+        /* 🆕 THE WEIGHT THE CURVE WAS ACTUALLY APPLIED TO — 2026-09-20, and it
+         * is not `weight` for two of the three load types. `setE1rm()` feeds the
+         * curve the PER-HAND number on a dumbbell lift and doubles the result
+         * (D30), and the TOTAL RESISTANCE on a body-weight one, so `weight` — the
+         * pounds the lifter typed — is the curve's input only for a plain barbell
+         * or machine set.
+         *
+         * It is carried because `rateMuscle()` needs to re-read a set at FEWER
+         * reps for the dominance rule, and the only alternative was to
+         * re-implement the three-branch convention there. A second copy of D30's
+         * arithmetic is precisely what D30 was recorded to prevent — so the
+         * input travels with the observation instead. */
+        curveWeight: scored.perSide ? scored.perSideWeight : scored.load,
         loadType: ex ? ex.loadType : 'total',
         date,
         ageDays: ageOf(date),

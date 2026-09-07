@@ -2693,16 +2693,49 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    *
    * The lifter is still one coherent person and no muscle changed by more than
    * the model change that explains it. */
+  /* ── 🔄 RE-BASELINED 2026-09-20 FOR DOMINANCE, AND EVERY MOVE IS ATTRIBUTED ──
+   *
+   * Tim: *"if the lift is higher in weight AND reps, than it's better, because
+   * you can just assume they stopped at the lower weight's reps and then it's a
+   * higher weight."* A set heavier AND longer than another now supersedes it,
+   * re-read at the weaker set's rep count. `dominate()` in muscle-evidence.js.
+   *
+   * FOUR MUSCLES MOVE AND EIGHT DO NOT:
+   *     Back    167.3 → 184.4  (+10.2 %)    Core    97.5 → 110.1  (+12.9 %)
+   *     Glutes  311.1 → 364.5  (+17.2 %)    Quads  266.2 → 296.6  (+11.4 %)
+   *     Biceps · Calves · Chest · Forearms · Hamstrings · Shoulders · Traps ·
+   *     Triceps — unchanged to four places, because on those no set dominated
+   *     the one already seated.
+   *
+   * 🚨 EVERY MOVE IS UPWARD, which is the property the rule is built to have: it
+   * can only replace a reading with a heavier one at the same rep count.
+   *
+   * ⚠️ EVERY OBSERVATION COUNT AND EVERY CONTRIBUTOR COUNT IS UNCHANGED — 720,
+   * 904, 332 … and 212, 125, 84 … — and that is the load-bearing check on this
+   * re-baseline rather than a coincidence. Three earlier attempts put this rule
+   * in `buildObservations()`, before the safety machinery, and each was caught
+   * by one of these two columns: identical straight sets collapsed, then a whole
+   * progressive year folded onto a handful of dates (Back fell 720 → 44), and
+   * worst, **the typo quarantine stopped working** — a mistyped 2050×5
+   * dominates every real set, drags them all up to its weight, and then nothing
+   * disagrees with it, so Chest read Elite at 2282 lb. Running at the seat step
+   * instead means the day-screen has already quarantined that set and `perDay`
+   * has already collapsed the duplicates. **If either column ever moves in the
+   * same commit as these estimates, the rule has reached further than it may.**
+   *
+   * Two confidences soften (Back 0.8246 → 0.8169, Quads 0.9016 → 0.8510): the
+   * seated readings are further apart once the truncated ones join, and less
+   * agreement is less confidence. That is the model being honest, not a loss. */
   const GOLDEN = [
-    ['Back', 720, 167.3161, 0.8246, 212, 4],
+    ['Back', 720, 184.4332, 0.8169, 212, 4],
     ['Biceps', 904, 99.8499, 0.7680, 125, 2],
     ['Calves', 332, 225.0012, 0.8807, 84, 2],
     ['Chest', 465, 212.9457, 0.9044, 130, 2],
-    ['Core', 66, 97.5418, 0.2891, 22, 1],
+    ['Core', 66, 110.0914, 0.2891, 22, 1],
     ['Forearms', 904, 94.6849, 0.6006, 273, 5],
-    ['Glutes', 630, 311.0534, 0.8488, 64, 1],
+    ['Glutes', 630, 364.5160, 0.8488, 64, 1],
     ['Hamstrings', 882, 248.5222, 0.8524, 146, 3],
-    ['Quads', 567, 266.2301, 0.9016, 171, 4],
+    ['Quads', 567, 296.5619, 0.8510, 171, 4],
     ['Shoulders', 1080, 147.0894, 0.6903, 192, 4],
     ['Traps', 529, 272.9047, 0.5797, 148, 3],
     ['Triceps', 1100, 161.4063, 0.5481, 125, 2],
@@ -5798,6 +5831,111 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        + 'claim and wins, and the reps are still the author\'s words');
   }
   await st2.clearAll();
+}
+
+
+/* ================= DOMINANCE — heavier AND longer is better ================
+ *
+ * 2026-09-20, and it came out of Tim reading his own Back panel: it was led by
+ * a Lat Pulldown of 50×6 while an 85×12 three weeks newer contributed nothing.
+ * ========================================================================= */
+{
+  const { buildObservations } = await import('../js/strength-observations.js');
+  const { rateMuscle } = await import('../js/muscle-evidence.js');
+  const { BUILT_IN_EXERCISES: LIB } = await import('../js/exercises.js');
+  const exMap2 = new Map(LIB.map((e) => [e.id, e]));
+  const pulldown = LIB.find((e) => e.name === 'Lat Pulldown');
+  const sess = (date, weight, reps) => ({
+    workoutId: 'w', workoutName: 'Pull', date,
+    entries: [{ exerciseId: pulldown.id, exerciseName: pulldown.name, sets: [{ weight, reps }] }],
+  });
+  const rate = (sessions) => {
+    const built = buildObservations({
+      sessions, benchmarks: [], exMap: exMap2,
+      bodyWeights: [{ date: '2026-08-01', weight: 185 }],
+      today: '2026-09-20', sex: 'male',
+    });
+    return rateMuscle(built.byMuscle.get('Back') || [], 'Back');
+  };
+
+  /* ---- 🚨 TIM'S OWN CASE, WHICH IS WHY THIS EXISTS ---- */
+  {
+    const alone = rate([sess('2026-08-24', 50, 6)]);
+    const both = rate([sess('2026-08-24', 50, 6), sess('2026-09-14', 85, 12)]);
+    ok(both.estimate > alone.estimate * 1.5,
+       `🚨 an 85×12 logged after a 50×6 RAISES the rating instead of being discarded `
+       + `(${alone.estimate.toFixed(1)} → ${both.estimate.toFixed(1)} lb). Before this, seat credit `
+       + 'was quality × repFactor × recency × fatigue and weight appeared nowhere in it, so doing '
+       + 'more reps at more weight could only ever LOSE the seat');
+    const seat = both.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.reps === 6 && seat.weight === 85,
+       `⚠️ and it is seated at 85×6, not 85×12 (${seat.weight}×${seat.reps}) — the heavier set read `
+       + 'at the rival\'s rep count, which is the CONSERVATIVE reading and arrives at the same '
+       + 'credibility rather than buying a bigger number by spending confidence');
+    /* ⚠️ THE LINE ABOVE CHECKS THE LABEL AND THIS ONE CHECKS THE NUMBER, which
+     * is the difference a mutation found: reading the dominator at its OWN rep
+     * count still leaves `reps` reading 6, so the assertion above passed over a
+     * value that was 12 reps of extrapolation. §0.14's third corollary again. */
+    const { setE1rm: se } = await import('../js/set-e1rm.js');
+    const truncated = se(pulldown, 85, 6, {}).e1rm;
+    const whole = se(pulldown, 85, 12, {}).e1rm;
+    ok(Math.abs(seat.rawE1rm - truncated) < 0.01,
+       `🚨 and the NUMBER behind it is the six-rep reading (${seat.rawE1rm.toFixed(1)} lb, not the `
+       + `${whole.toFixed(1)} its full twelve reps would give) — the app takes the conservative half `
+       + 'of what it can prove, which is what makes reading a set short honest rather than lossy');
+  }
+
+  /* ---- 🛑 THE ASYMMETRY, WHICH IS TIM'S OWN CAVEAT ---- */
+  {
+    const r = rate([sess('2026-09-10', 100, 3), sess('2026-09-14', 60, 10)]);
+    const seat = r.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.weight === 100 && seat.reps === 3,
+       '🛑 heavier but SHORTER does not supersede — *"If the weight was higher but the reps was '
+       + 'lower, that\'s not necessarily something we could do."* Neither set dominates, so the '
+       + 'ordinary credibility comparison decides and nothing is rewritten');
+  }
+
+  /* ---- more reps at the SAME weight, and more weight at the SAME reps ---- */
+  {
+    const same = rate([sess('2026-09-10', 80, 5), sess('2026-09-14', 80, 9)]);
+    const seat = same.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.reps === 5 && seat.weight === 80,
+       'at one weight the longer set supersedes the shorter and is read back at its rep count — '
+       + 'the same evidence, never worse for having carried on');
+    const heavier = rate([sess('2026-09-10', 70, 8), sess('2026-09-14', 95, 8)]);
+    const s2 = heavier.used.find((u) => u.exerciseId === pulldown.id);
+    ok(s2.weight === 95,
+       'and at one rep count the heavier set simply wins, which it already did');
+  }
+
+  /* ---- 🚨 IT MUST NEVER LOWER A RATING ---- */
+  {
+    const base = rate([sess('2026-09-01', 70, 8), sess('2026-09-05', 90, 4)]);
+    const plus = rate([sess('2026-09-01', 70, 8), sess('2026-09-05', 90, 4),
+                       sess('2026-09-14', 95, 10)]);
+    ok(plus.estimate >= base.estimate,
+       '🚨 adding a set that beats everything already there can only RAISE the rating '
+       + `(${base.estimate.toFixed(1)} → ${plus.estimate.toFixed(1)}) — the property the whole rule `
+       + 'exists to guarantee, and the one Tim caught the app breaking');
+  }
+
+  /* ---- 🛑 AND IT MUST NOT REACH THE TYPO QUARANTINE ---- *
+   *
+   * The reason this rule is in the seat step and not in buildObservations(). A
+   * mistyped 2050 dominates every real set, so an earlier version dragged them
+   * all up to its weight — and the day-screen, which works by spotting a set
+   * that disagrees with its neighbours, then had nothing left to spot. */
+  {
+    const typo = rate([sess('2026-09-01', 70, 8), sess('2026-09-05', 85, 6),
+                       sess('2026-09-08', 90, 5), sess('2026-09-14', 2050, 5)]);
+    const seat = typo.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.weight !== 2050,
+       '🛑 a mistyped 2,050 lb pulldown is still quarantined and does NOT take the seat — the '
+       + 'screen runs BEFORE this rule, which is the whole reason it lives where it does');
+    ok(typo.estimate < 300,
+       `and the rating stays a human number (${typo.estimate.toFixed(1)} lb) rather than the four `
+       + 'figures the un-screened set produces');
+  }
 }
 
 

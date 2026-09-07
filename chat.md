@@ -2593,3 +2593,37 @@ up to date, and the notice never fires again.
 
 I haven't driven this in a browser yet, and no programme has actually been changed for real since —
 so the first time I edit a preset will be the first time the full path runs outside a test.
+
+## 2026-09-20 (third pass) — the 1RM problem you spotted
+
+You were right, and it was worse than you thought. Your 85×12 lat pulldown wasn't being hidden from
+the "from:" list — it was contributing **nothing at all**. I traced it with a control: the rating
+came out identical whether that set existed or not.
+
+**Why.** Each exercise gets one seat on a muscle rating, and the seat goes to the most *believable*
+set. Believability was reps, recency and fatigue — and **weight wasn't in the formula anywhere**. So
+your 50×6 held the seat against an 85×12 that implied nearly twice the max. Exactly as you put it:
+had you racked the bar at six reps it would have counted, and carrying on to twelve made it stop.
+
+**Your rule is what shipped.** A set heavier *and* longer than another now replaces it, read at the
+lower rep count. Your Back goes from **70 to 114 lbs** on that fixture, seated at "85×6". And your
+caveat is in there too: heavier but *shorter* doesn't supersede, because that genuinely isn't
+something you can assume.
+
+**Your version beat mine.** I'd proposed reading everything at 8 reps. Yours reads it at the rival's
+rep count, which gets a higher number *without* costing confidence — and on your own 80×15 example
+mine gave 110 where yours gives 124. Mine was throwing away real information.
+
+**Three attempts failed before one worked, and the third failure is the one worth knowing.** I first
+put the rule where sets become evidence, which is before the safety checks. That version **disabled
+the typo protection**: a mistyped 2050 lb bench dominates every real set, drags them all up to its
+weight, and then nothing disagrees with it — so a single typo read as Elite. Moving the rule to run
+*after* the screening fixed it. There's now a test that logs a fake 2,050 lb set specifically to keep
+that from coming back.
+
+**What moved:** four of twelve muscles on the demo year, all upward, between +10% and +17%. Two
+confidence figures drop slightly, because the sets it now seats sit further apart — less agreement is
+less confidence, and I'd rather it said so.
+
+**Still not done, and it's the bigger one:** your whole Back number rests on three sets. Using every
+set you've logged, weighted by how believable each is, is the real accuracy work.
