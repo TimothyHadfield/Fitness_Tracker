@@ -13,11 +13,23 @@
 //   training log into a place where people post their best day and quietly
 //   stop logging their worst.
 //
-//   A LIST YOU VISIT, not a feed. You open a friend and see their page. D7
-//   says no social feed, and this delivers "see what my friends are doing"
-//   without needing that decision reopened. No likes, no kudos, no comments,
-//   no streaks, no leaderboards — each is individually reasonable and
-//   collectively the product D7 was written against.
+//   ~~A LIST YOU VISIT, not a feed. You open a friend and see their page. D7
+//   says no social feed... No likes, no kudos, no comments, no streaks, no
+//   leaderboards.~~
+//   🔄 CORRECTED 2026-09-21, AND IT HAD BEEN WRONG HERE SINCE 2026-08-25.
+//   Home IS a feed of your friends' sessions, and a Hevy-shaped one since
+//   2026-09-02 — a card per session with the description they wrote, a
+//   Time · Sets row, and a tap through to #/friend/<uid>/<sessionId>. Kudos
+//   and comments exist too (2026-08-26), friends-only.
+//   🚨 D7 WAS NEVER REOPENED, and that is the part still worth reading: what
+//   D7 refuses is a DISCOVERY feed of STRANGERS (Open work 18, and the refusal
+//   itself was lifted by Tim on 2026-09-04 — nothing is built). A feed of
+//   people you chose to connect to is still a list you visit; you just visit
+//   it in one place. The asymmetry argument above is untouched and still
+//   binding.
+//   ⚠️ `docs/state.md` has carried this correction since 2026-09-02 and this
+//   header did not, which is why it survived a month: a reader who follows
+//   "read the header before touching X" met the retracted answer.
 //
 // Everything shown here comes from a PUBLISHED COPY (js/social.js), never from
 // anybody's private collections. This file cannot read another person's real

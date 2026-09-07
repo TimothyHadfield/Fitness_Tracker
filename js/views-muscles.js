@@ -767,12 +767,20 @@ function summary(muscles, trained = new Map()) {
 // person can act on, and it is still true: a pull-up's resistance cannot be known
 // without a body weight, and this screen's assumption supplies nothing that would
 // fix it. Forcing the comparison to `weight: 'any'` says who you are ranked
-// AGAINST — lifters of every size — it does not invent what you weigh, and only
-// the second could rate a pull-up. The two must not be confused.
+// AGAINST — ~~lifters of every size~~ **as if 180 lb** (140 lb for a woman) —
+// it does not invent what you weigh, and only the second could rate a pull-up.
+// The two must not be confused.
+// ⚠️ "lifters of every size" WAS THE RETRACTED PHRASING, corrected here
+// 2026-09-21. `js/strength-standards.js` says why in full: nothing in that file
+// integrates over body weight, so `any` is the REFERENCE weight rather than a
+// wider population, and it never was one. The argument this sentence is making
+// is unaffected — only the descriptor was wrong.
 //
-// The permanent kind is unchanged: an inverted row whose fraction spans 37–79 %
-// with a bar height the app does not record, or a handstand push-up nobody has
-// ever put on a force plate. Offering a button for those would be a promise the
+// The permanent kind is unchanged: an inverted row whose fraction is reported
+// rather than settled (⚠️ the 37–79 % figure this comment used to quote as
+// though it were established is retracted — see js/exercises.js, "should never
+// have been quoted as settled"; the real parameter is body ANGLE and the source
+// is unindexed), or a handstand push-up nobody has ever put on a force plate. Offering a button for those would be a promise the
 // app cannot keep — and there is still no button for the fixable kind either,
 // because the sentence already names the fix and the profile link sits above the
 // figure in every state this screen has.

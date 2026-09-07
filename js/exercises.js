@@ -2,7 +2,20 @@
 // Compact tuples: [name, muscleGroup, equipment, fieldCode]
 //   wr = weight + reps      r  = reps only        t  = time only
 //   dt = distance + time    wt = weight + time
-// Add to this list freely; ids are derived from the name so they stay stable.
+// ~~Add to this list freely~~ — ids are derived from the name so they stay
+// stable, but a row added here ALONE IS INERT.
+//
+// 🚨 A NEW EXERCISE NEEDS THREE THINGS OR IT DOES NOTHING (corrected here
+// 2026-09-21; this header said "freely" and `docs/state.md` said the truth):
+//
+//   1. the tuple here;
+//   2. a ratio rule in `js/muscle-evidence.js`, or it rates no muscle;
+//   3. a movement family in `js/exercise-families.js`, or it can never be
+//      offered as a swap.
+//
+// All three are asserted by tests, so a missing one fails rather than shipping
+// quietly — but the failure names the test, not this list, which is why the
+// requirement belongs where somebody adding a name will read it.
 //
 // ⚠️ Adding a name is free; deciding how its WEIGHT is counted is not. The two
 // override sets further down (FORCE_PER_SIDE, FORCE_TOTAL) are half of every
