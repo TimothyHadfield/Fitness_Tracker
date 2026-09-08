@@ -17,6 +17,180 @@
 
 ---
 
+## 2026-09-21 (second pass) — THE "FROM:" LINE BECAME A TABLE, AND TWO INVESTIGATIONS
+
+Tim opened a list: *"I'm going to just give you a list of things I want you to fix with the cite and
+you can deploy sub-agents to work on each one and have as many sub-agents under them as you would
+like."* One build item, then two questions. **Six agents, disjoint file sets, one integrator.**
+
+### A. THE ASK
+
+> *"make the From: details under the muscle group and estimated 1RM display better by putting the
+> details in columns: exercise, weightxreps, and date. Also I want to try having a "more details"
+> button which adds more columns… the estimated 1RM just from that specific contribution… the
+> confidence multiplier… Also, make each column have a different color."*
+
+**Shipped:** three columns compact, five behind a **More details** button, one colour each.
+
+```
+Deadlift        335 lbs×3    Sep 2    207 lbs   61%
+Barbell Row     135 lbs×6    Aug 28   168 lbs   28%
+Lat Pulldown    150 lbs×10   Aug 24   195 lbs   11%
+```
+
+### B. THE FAN-OUT, AND THE THING THAT MADE IT WORK
+
+🔒 **THE CONTRACT WAS WRITTEN BEFORE ANY AGENT STARTED** — the exact class names, the exact field
+names — so four writers on four files could not drift. `js/muscle-evidence.js` (the numbers),
+`css/app.css` (the colours), `js/views-muscles.js` (the table), the publish path
+(`social`/`store`/`shared-map`), plus two read-only agents on the calves question. **`tests/` was
+the integrator's alone**; every agent wrote proposed `ok(...)` blocks to its own scratch dir and
+they were placed afterwards. Nobody collided. ⚠️ **Two agents did share a scratch ROOT** and one
+overwrote the other's probe file — the 2026-09-16 rule wants its own directory per agent, and
+"your own scratch directory" in the brief was not specific enough to produce that.
+
+### C. `share` — AND WHAT IT REVEALED ABOUT THE ESTIMATOR
+
+**`share` is each contribution's fraction of the total blend weight**, built from the *identical*
+expression the blend uses — one array, two readers — so the printed number cannot drift from the one
+that decided the answer. 🚨 **The mutation that matters is the plausible wrong one**: re-deriving
+share from `evidenceWeight` still sums to 1 and still looks right on screen; only reconstructing
+`Σ(share × estimate)` against the rating catches it.
+
+🚨 **TIM'S OWN EXAMPLE DOES NOT COME OUT WHERE HE EXPECTED, AND THAT IS THE INTERESTING FINDING.**
+He guessed 130 / 140 / 155 would blend to ~138. Measured: **133.9**, because the shares are
+**67 % / 29 % / 4 %** — the blend leans hard on the key lift at low reps and the 12-rep machine set
+is worth 4 %. **The final number sits near the LOWEST contribution, not in the middle.** Without the
+column that reads as a bug; with it, it reads correctly. That is the strongest argument for the
+feature, and it came out of building it.
+
+⚠️ **ONE THING IS NOT BUILT AND WAS FLAGGED TO HIM.** `robustAggregate()` winsorises the values
+before the weighted mean — clipping `x`, never `w` — so where a contribution sits outside ±25 % of
+the credibility-weighted median the columns stop multiplying out (measured: 152.7 by hand against
+150.8 shown, 1.2 %). It only happens on a row that is already the least-weighted on the panel. He
+said *"these will be the only other numbers"*, so no third marker was added.
+
+### D. THE COLOURS, AND THREE VALIDATOR FAILURES THAT WERE ARGUED RATHER THAN WAVED THROUGH
+
+**Worst contrast anywhere: 5.01:1 light, 5.02:1 dark**, against AA's 4.5 — across **four palettes ×
+two themes × four surfaces**. 🔒 **One colour set for all four palettes**, with no
+`:not([data-palette])` rule anywhere, which is the cleanest possible answer to the
+`.load-badge.per-side` mistake rather than merely avoiding it.
+
+The validator returned three FAILs and each was answered with a measurement, not a shrug: the dark
+**lightness band** is calibrated for marks at 3:1 and these are text at 4.5:1 (lowering L into the
+band would drop them under AA); the light **chroma floor** is the sRGB gamut at that lightness, and
+the two flagged colours measure ΔE 8.4 and 9.8 from a neutral of their own lightness; the
+**all-pairs CVD** floor cannot be cleared by any five-colour set inside this app's contrast envelope
+— an exhaustive hue-wheel search proved it — which is exactly why the guidance caps its own default
+at three slots and why **colour is not the only cue here** (position, and a header row in the
+expanded state).
+
+### E. THE TOGGLE, AND THE SWITCH IT MUST NEVER BECOME
+
+🚨 **IT IS NOT `settings.moreDetails`.** That global switch is Tim's 2026-08-25 decision about the
+percentile being *"a little harsh for some people"*; this is local view state on one block. They
+have different names, different lifetimes and **an assertion that tapping the new button does not
+turn the percentile on** — because a suite that cannot tell them apart is how a later session wires
+them to one switch. State is module-level, the precedent `selected` and `calMode` already set.
+
+⚠️ **THE FIFTH COLUMN IS HEADED "INFLUENCE", NOT "CONFIDENCE".** Tim's phrase was *"confidence
+multiplier"*, and the panel already carries a **confidence** line three rows above it — a reader
+would reasonably expect the two to agree, and they measure different things. The class stays
+`msrc-share`.
+
+⚠️ **NO HEADER ROW IN THE COMPACT STATE**, and the 40-word cap is why: "Barbell Bench Press",
+"225 lbs×1" and "Aug 20" label themselves; "207 lbs" and "61 %" do not, which is precisely where the
+header appears. **The panel got SHORTER — 31 words to 30 — despite gaining a button**, because
+"from", "and" and the commas went out.
+
+### F. THE PUBLISH PATH, AND THE ONE ARGUMENT THAT WAS CLOSE
+
+Both numbers travel, because `detail()` draws a friend's panel through the **same function**.
+⚠️ **Neither is derivable from what was already published** — a reader has the exercise NAME and
+never its id, so no ratio — so withholding them would have cost the panel half its explanation
+rather than merely half its polish.
+
+🚨 **THE ARGUMENT AGAINST, AND WHY IT DID NOT DECIDE IT**: a contributor `estimate` on a body-weight
+row inverts to the owner's body weight, which is the one field D29 exempts. But **that door is
+already open and wider** — the published grid carries a percentile computed against the owner's own
+weight, so the inversion needs no per-row field at all. Refusing `estimate` would have closed
+nothing and been security theatre.
+
+✅ **No `firestore.rules` change**: `hasOnly` pins the document's **top-level** keys and `strength`
+is one of them — nothing inside it is enumerated. Verified directly rather than assumed, because a
+client publishing a key the rules do not name has **every publish denied in silence**.
+💷 **+868 bytes, 0.08 % of the 1 MB ceiling.**
+
+🔒 **`share: 0` IS REAL DATA AND ALMOST DIED.** The obvious `...(num(c.share) ? …)` — copied from the
+line directly above it — is falsy at zero and would have deleted the row's only honest statement
+about itself. *"It contributed nothing"* and *"their app has not published this yet"* are different
+facts and a reader cannot tell them apart afterwards.
+
+🚨 **AND A FRIEND'S PANEL OFFERS NO BUTTON WHEN THERE IS NOTHING BEHIND IT** — tested on the DATA,
+not on whose map it is, so it self-corrects as documents catch up. A control that opens two columns
+of dashes is a control that does nothing.
+
+### G. THE MEASUREMENT TRAP THAT COST THE VISUAL CHECK
+
+🚨 **A HASH-ONLY NAVIGATION DOES NOT RE-BOOT THE APP, SO A FLAG READ AT BOOT NEVER TAKES.** The
+first browser run set `sessionStorage['ftrack:v1:demo']` and then `Page.navigate`d from `/` to
+`/#/graphs` — a **same-document** navigation. The store never re-booted, the demo backend was never
+swapped in, and every one of 16 combinations reported *"no region"*. **It presents exactly as a
+broken feature**: the screen truthfully said *"Nothing to rank yet"* about a genuinely empty local
+account. `Page.reload` is what makes the flag take. §0.18's shape again — the run was green-ish and
+measuring nothing.
+
+✅ **Once fixed, driven against the real app with the real demo year**: all five columns render, each
+in its own colour, **identical x per column across every row** at 360 / 390 / 880 / 1280 in both
+themes. Phone widths fit all five with no scrolling; the ≥860px side column is 241px against 291px
+of content and **scrolls inside its own box** (Rule 1 — the page never overflows), because widening
+it would shrink the figure, which Rule 3's corollary forbids.
+
+### H. TWO INVESTIGATIONS, NEITHER BUILT
+
+**Tim's calves panel contradicted itself.** *"Nothing recorded for this muscle yet"* over *"2 sets
+recorded in the last 12 months"* over *"there is just no published standard to place it against"* —
+on a muscle that has had a published standard all along.
+
+🚨 **THE CAUSE: `strength-observations.js`'s D5 gate returns BEFORE the blocked-work bookkeeping**,
+so a set above 15 reps leaves no observation *and no record that anything was refused*. The panel
+sees `m = null` **and** `blocked = null`, which is the exact combination that prints Neck's sentence.
+**The boundary is exactly 15** — 200 lb × 15 rates, × 16 does not, at every weight and every age.
+⚠️ **It is not a calves bug: all twelve rankable muscles do it**, and lateral raises at 15–20 are the
+most common way anyone trains shoulders. There is a **second silent route** — a weighted exercise
+logged at zero weight. 🚩 **And a live bug beside it**: a friend's panel offers *"Benchmark Standing
+Calf Raise"*, which is the reader's own benchmark screen, on somebody else's body.
+
+**The neck: the app has been asserting something false.** Four places say no published neck norms
+exist and never will. Strength Level publishes neck curl and neck extension pages; they are simply
+not linked from its exercise index. 🛑 **Not shippable as found** — the female sample is 55 and 16
+people, the female table falls with bodyweight in every column (backwards), and Elite ÷ Beginner is
+38.8× where the bench press is 2.7×. Every entry in the standards table is a men's-and-women's pair.
+**Plan written to `docs/calf-neck-ranking-plan.md`; nothing built, on his instruction.**
+
+⚠️ **AND A DEFECT FOUND IN PASSING, NOT FIXED**: `store.js` publishes `caveat` with a comment
+promising it *"cannot be lost by being read on somebody else's phone"* — and `projectStrength()`'s
+whitelist never names it, so Core's thinner-standards caveat has never reached a friend's map. The
+2026-09-13 decision is not in effect. §0.15's shape: a comment that names its own guarantee is not
+evidence the guarantee exists.
+
+### I. WHAT LANDED
+
+✅ **All twenty-two no-Chrome suites green — 5,731 assertions**, from 5,693. `data-layer` **2,424**,
+`render` **1,608**, `social` **217**, `a11y` **153**. **Every new assertion mutation-checked with the
+mutation printed and its replacement count asserted.** Three of those checks earned their keep:
+five colours collapsing to one hue passes every contrast assertion ever written; dropping `estimate`
+from the store projection leaves every social assertion green; and a toggle that flips state without
+repainting passes anything that only reads the flag.
+
+🔒 **AND ONE ASSERTION FAILED HONESTLY ON ITS FIRST RUN, WHICH IS THE POINT OF IT.** The store-side
+vacuity guard — *"at least one row disagrees with the muscle's own figure"* — went red because the
+fixture it was placed in had **one** contributing exercise, so the muscle's estimate was that row's
+estimate by construction. A second lift was seeded rather than the assertion weakened.
+
+---
+
 ## 2026-09-21 — 🚨 THE PANEL WAS NAMING A SET NOBODY HAD DONE
 
 One instruction, after a catch-up:

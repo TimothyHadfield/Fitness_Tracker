@@ -104,6 +104,18 @@
      explicitly rather than passing the URL on the command line; and a relative `--user-data-dir`
      makes Chrome fail to start at all.
 
+   🚨 **A HASH-ONLY NAVIGATION DOES NOT RE-BOOT THE APP, SO A FLAG READ AT BOOT NEVER TAKES —
+   2026-09-21.** The demo flag lives in `sessionStorage` and `store.js` reads it once, while
+   booting. A driver that sets the flag and then `Page.navigate`s from `/` to `/#/graphs` has
+   performed a **same-document** navigation: nothing re-boots, the demo backend is never swapped
+   in, and every screen renders the empty local account instead. **It presents exactly as a broken
+   feature** — the app truthfully says *"Nothing to rank yet"* — and it cost sixteen
+   screen/width/theme combinations reporting "no region" before the harness was doubted rather
+   than the code. **`Page.reload` after setting the flag is the fix.** ⚠️ **The general form is
+   §0.18's**: the run completed, produced output, and looked like a finding. Anything read once at
+   boot — the demo flag, `firebase-config.js`, a palette attribute — needs a real load rather than
+   a hash change.
+
    **Use CDP whenever the thing you are checking involves input.** `dispatchEvent()` from page
    script does not reproduce focus, so it cannot show you a focus ring — that is exactly how the
    white box in the body map survived a screenshot review. `Input.dispatchMouseEvent` does.

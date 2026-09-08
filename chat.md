@@ -2727,3 +2727,41 @@ you'll get a bigger number than the panel shows. That's the rule doing its job. 
 anything on screen saying so — that's your call.
 
 Everything green, 5,693 checks. Pushed.
+
+## 2026-09-21 (second pass) — the "from:" columns, and two things I found instead
+
+**The table is in.** Three columns normally — exercise, weight×reps, date — and a **More details**
+button that adds two more: what that one set alone would call the muscle, and how much of the final
+number it's responsible for. Each column its own colour.
+
+**Your example doesn't come out where you expected, and that turned out to be the best argument for
+the feature.** Contributions of 130, 140 and 155 don't average to 138 — they come out at **133.9**,
+because the shares are 67% / 29% / 4%. The blend leans hard on whichever reading it trusts most, so
+the answer sits near the *lowest* number, not the middle. Without that column it looks broken.
+
+Two small calls I made inside your ask, both easy to reverse:
+
+- I called the last column **Influence** rather than Confidence. The panel already has a confidence
+  line three rows up measuring something different, and two things called confidence that disagree
+  is worse than a new word.
+- The **More details** button is its own thing, not the More details switch in Settings. That one is
+  your call about the percentile being harsh; wiring them together would mean hiding percentiles
+  also hides the working.
+
+**On the calves.** The two sentences contradicted each other because one is simply wrong — calves
+has had a published standard all along. What actually happened: your sets were over 15 reps, and the
+app throws those away *before* it records that it threw anything away. So the volume counter sees
+them and the rating doesn't, and the panel falls back to the wording written for the neck.
+
+It's not a calves problem. All twelve muscles do it, and lateral raises at 15–20 are the most common
+way anyone trains shoulders. There's also a live bug next to it: a friend's page offers you a
+"Benchmark Standing Calf Raise" button, which is *your* benchmark screen, on their body.
+
+**On the neck** — the app has been saying something untrue. It claims in four places that nobody
+publishes neck standards. They exist. But the women's data is 16 and 55 people and says heavier
+women should lift *less*, so I'm not recommending we build on it. Correcting the false sentences is
+free and worth doing.
+
+Neither of those is built — you said plan only. Both are written up.
+
+Everything green, 5,730 checks. Pushed.

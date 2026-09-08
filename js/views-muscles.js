@@ -32,6 +32,41 @@ const go = (hash) => { location.hash = hash; };
 let selected = null;
 
 /* ------------------------------------------------------------------ *
+ * THE SOURCE TABLE'S EXTRA COLUMNS — 2026-09-21
+ * ------------------------------------------------------------------ *
+ *
+ * 🚨 THIS IS NOT `settings.moreDetails`, AND THE TWO MUST NEVER BE MERGED.
+ * `settings.moreDetails` is Tim's 2026-08-25 decision about the PERCENTILE — *"showing the
+ * percentile is a little harsh for some people"* — and it reaches this file as the
+ * `moreDetails` argument to `detail()`, where it gates "stronger than 71%" and the
+ * percentages in the level key. It is a stored setting, it is about being ranked against
+ * other people, and it is changed in Settings.
+ *
+ * ⚠️ THIS one is a per-session view state on ONE block: does the source table show the two
+ * derived columns as well as the three recorded ones. Nothing about it is harsh, nothing
+ * about it is a ranking, and somebody who wants the working behind a blend has not thereby
+ * asked to be told what percentage of men they beat. Two unrelated things behind one switch
+ * is the fault; they are kept apart.
+ *
+ * ⚠️ MODULE-LEVEL, LIKE `selected` ABOVE AND `calMode` IN views-data.js. It therefore
+ * survives a re-render of the panel and a change of muscle within the session, and resets on
+ * reload — which is the right lifetime for "how much detail do I want", and the wrong one for
+ * anything that should be remembered. 🛑 NOT WRITTEN TO SETTINGS: it is a way of looking at a
+ * table, not a preference about the app.
+ *
+ * ⚠️ AND IT IS SHARED BY EVERY PANEL ALIVE AT ONCE, which is visible only on the two-body
+ * compare screen (`.cmp-grid .muscle-sources`, css/app.css): tapping one panel's button
+ * redraws that panel, and the other one catches up the next time it is built. Same trade
+ * `selected` already makes. A per-panel flag would be the alternative and it would forget the
+ * choice every time a muscle is tapped, which is worse for the common case of one panel.
+ */
+let sourceColumns = false;
+
+/* Unique per built panel, so the toggle can point `aria-controls` at the block it opens —
+ * the button sits AFTER the table it belongs to, so the relationship is not positional. */
+let sourceSeq = 0;
+
+/* ------------------------------------------------------------------ *
  * TRAINED, BUT NOT RANKABLE — the third state this map needs
  * ------------------------------------------------------------------ *
  *
@@ -885,6 +920,186 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
 
   const pct = Math.round(m.percentile);
 
+  /* ================================================================== *
+   * WHERE THE NUMBER CAME FROM — a table, since 2026-09-21
+   * ================================================================== *
+   *
+   * Rule 5: never let an inference look like a measurement. These name the sets the estimate
+   * was converted FROM, which is what lets somebody tell "195 lb bench" from "195 lb inferred
+   * off a dumbbell press".
+   *
+   * ⚠️ ALL THREE SINCE 2026-08-31, NOT JUST THE LEADER. Tim: *"you mentioned how the muscle
+   * group estimate is based off your top three recordings based on credibility, but when you
+   * click on a muscle it only shows one recording. Could you instead show all 3?"* The panel
+   * had been naming `m.best` — which is `contributors[0]` — and saying nothing about the other
+   * two, so a number built from three exercises looked like a number built from one. Showing
+   * the working is the whole reason this block exists; a third of the working is not the
+   * working. 🔒 UNCHANGED BY THE TABLE: every contributor still gets a row.
+   *
+   * ⚠️ IN CREDIBILITY ORDER, WHICH IS THE ORDER THEY ARE WEIGHTED IN, and the first one leads
+   * for a reason the reader can now see: `rateMuscle()` (js/muscle-evidence.js) sorts on
+   * `evidenceWeight`, not on which set was heaviest. 🔒 ALSO UNCHANGED — the rows are printed
+   * in the order `m.contributors` arrives in and nothing here re-sorts them.
+   *
+   * 🔄 ~~"from … and … and …"~~ — THE SENTENCE FRAMING IS GONE, on Tim's instruction
+   * (2026-09-21): *"make the From: details … display better by putting the details in columns:
+   * exercise, weightxreps, and date."* Three facts about three sets read as a table and not as
+   * a sentence; the "and" was doing typographic work that a column does better and for fewer
+   * words. What the sentence was CARRYING — all three, in credibility order, naming the
+   * performed set — is carried by the rows, which is why it could go.
+   *
+   * 🚨 AND IT NAMES THE SET THAT WAS PERFORMED, NOT THE ONE THE MODEL READ — 2026-09-21, Tim:
+   * *"it still says 85x6 instead of 85x12."* When a heavier, longer set supersedes a lighter
+   * one (`dominate()` in muscle-evidence.js) the observation keeps the SUPERSEDED set's rep
+   * count and date, because the truncated reading is the conservative one and has to arrive at
+   * the rival's credibility. That is right for the arithmetic and wrong on a screen: this
+   * block exists to say which real set the number came from, and it was printing 85 × 6 on a
+   * day he pulled 50 × 6. **A set nobody did, drawn as a measurement, is Rule 5 broken by the
+   * line that enforces it.** `performedReps` / `performedDate` are display-only and absent
+   * unless a set was superseded, so every other row is untouched. 🔒 THE FALLBACK CHAIN BELOW
+   * IS THE SAME ONE THAT SHIPPED THAT FIX AND MUST NOT BE "TIDIED" AWAY.
+   */
+  const sourceRows = (m.contributors && m.contributors.length ? m.contributors : [m.best])
+    .filter(Boolean);
+
+  /* 🚨 "ABSENT IS NOT EMPTY", AND ON A FRIEND'S PANEL BOTH EXTRA NUMBERS CAN BE ABSENT.
+   *
+   * This same `detail()` renders somebody else's map (`musclePanel()` below, fed by
+   * js/shared-map.js from a published document). That document's contributor rows are a
+   * WHITELIST — `projectStrength()` in js/social.js, and the projection in js/store.js that
+   * feeds it — and a field nobody has named there does not travel. `estimate` and `share` are
+   * not named there today, so a friend's rows carry neither.
+   *
+   * ⚠️ SO THE BUTTON IS NOT OFFERED WHEN THERE IS NOTHING BEHIND IT. Not a disabled button, not
+   * a table of dashes: a control that opens two columns of "—" is a control that does nothing,
+   * and the panel would be inviting a reader to go looking for numbers that were never
+   * published. This is the same rule the level key already applies one function up — a key
+   * entry for a mark that is nowhere on screen "is a puzzle rather than a key" (see
+   * `legend()`, `anyTrainedUnrankable`).
+   *
+   * ⚠️ PER-VALUE, THE CELL STILL DASHES rather than printing NaN% or "undefined", because
+   * "some rows have it" is a real state: `share` is 0 for a row `robustAggregate()` dropped,
+   * and a future document could publish one field and not the other. An em dash is a stated
+   * absence; a blank cell is a value somebody would read as zero.
+   *
+   * 🚨 THE TEST IS "IS THERE A NUMBER", NOT "IS THIS MY OWN MAP". Written the second way this
+   * would go wrong the moment the other half of today's work publishes the two fields — the
+   * friend's panel would have the numbers and still refuse to show them, and nobody would ever
+   * find out. Asking the data is both narrower and self-correcting. */
+  const canShowDerived = sourceRows.some(
+    (c) => Number.isFinite(c.estimate) || Number.isFinite(c.share));
+
+  const sourceId = `msrc-${++sourceSeq}`;
+  const sources = el('div', { class: 'muscle-sources', id: sourceId });
+
+  /* 🚨 RULE 5, IN WORDS, BECAUSE COLOUR IS NOT A CODE. The five columns are colour-coded so a
+   * reader can follow one down the table (Tim's ask), and D19's standing rule on this screen is
+   * that a colour may never be the only thing carrying a meaning — the level key exists for
+   * exactly that reason. Two of these columns are RECORDED and two are WORKED OUT, and that
+   * difference is the one Rule 5 is about, so it is said in words as well as being implied by
+   * the header row.
+   *
+   * ⚠️ ONLY IN THE EXPANDED STATE, and only because that is the state it is true of: the
+   * compact table has no derived columns to caveat, and a sentence about columns that are not
+   * on screen would be prose piling back onto a panel with a 40-word cap (tests/render.test.mjs).
+   *
+   * ⚠️ AND IT IS OUTSIDE `.muscle-sources`, not a sixth child of it. That block is a grid of
+   * five columns; a full-width sentence dropped into it would be laid out as a cell.
+   *
+   * 🚨 ITS TEXT IS EMPTIED IN THE COMPACT STATE, NOT MERELY `hidden`, and the difference cost a
+   * test run: `textContent` walks hidden nodes too, so a sentence parked behind the `hidden`
+   * attribute still counts against the 40-word cap and still reaches anything reading the
+   * panel's words. The node is kept and re-filled so that the button, which lives after it,
+   * is not rebuilt out from under the reader's focus. */
+  const SOURCE_NOTE =
+    'Exercise, set and date are recorded. The last two columns are worked out from them.';
+  const sourceNote = el('div', { class: 'field-help' });
+
+  /* ⚠️ A REAL `<button>`, not a tappable div: it is in the tab order, it fires on Enter and
+   * Space for free, and it is announced as a button with its state. `aria-expanded` is the
+   * state; `aria-controls` names the block, because the button sits under the table rather
+   * than above it and the relationship is otherwise only positional.
+   *
+   * 🚨 IT REDRAWS THE TABLE AND NOTHING ELSE, WHICH IS WHY THE SCROLL DOES NOT JUMP. Rebuilding
+   * the whole panel would replace the button under the reader's thumb — losing keyboard focus
+   * — and hand the pane a new subtree to lay out, which is how a scroller ends up somewhere
+   * else. `drawSources()` mutates the block's children and this button's own label in place,
+   * the same shape `draw()` uses inside `openCompareSheet()` above. */
+  const sourceToggle = el('button', {
+    class: 'msrc-toggle', type: 'button', 'aria-controls': sourceId,
+    onClick: () => { sourceColumns = !sourceColumns; drawSources(); },
+  });
+
+  function drawSources() {
+    const on = sourceColumns && canShowDerived;
+    sources.className = 'muscle-sources' + (on ? ' is-more' : '');
+
+    /* 🚨 NO HEADER ROW IN THE COMPACT STATE, AND THAT IS A MEASURED DECISION RATHER THAN A
+     * LOOK. "Barbell Bench Press", "225 lbs×1" and "Aug 20" say what they are; "131 lbs" and
+     * "34%" do not, which is exactly why the headers belong to the columns that need them.
+     * The panel is capped at 40 words for a clean rating (tests/render.test.mjs) and three
+     * header words bought nothing in the state everybody sees.
+     *
+     * ⚠️ THE HEADER CELLS CARRY THE SAME COLUMN CLASSES as the row cells. The stylesheet lays
+     * `.muscle-sources.is-more` out as one grid, so a header whose cells were class-less
+     * would be a header that could not be coloured or aligned with the column under it. */
+    const head = el('div', { class: 'msrc-head' },
+      el('span', { class: 'msrc-ex', text: 'Exercise' }),
+      el('span', { class: 'msrc-set', text: 'Set' }),
+      el('span', { class: 'msrc-date', text: 'Date' }),
+      // ⚠️ "Est." IS NOT AN ABBREVIATION FOR TIDINESS — it is the word that stops this column
+      // reading like the measured one two cells to its left. Same word the big number above
+      // carries ("Estimated 1-rep max in …"), for the same reason and about the same scale.
+      el('span', { class: 'msrc-est', text: 'Est. 1RM' }),
+      /* ⚠️ "Influence", NOT "Confidence". Tim called it *"the confidence multiplier"* and the
+       * field is `share`, but what it actually answers is *"how much of the final number did
+       * this row get to set"* — a fraction of the blend, summing to 1 across the rows
+       * (js/muscle-evidence.js, the `share` note). Calling it confidence would collide with
+       * the panel's OWN confidence line three rows up, which is a different quantity
+       * (`confidenceLine()`), and a reader would be right to think they must agree. */
+      el('span', { class: 'msrc-share', text: 'Influence' }),
+    );
+
+    setChildren(sources,
+      on ? head : null,
+      ...sourceRows.map((c) => el('div', { class: 'msrc-row' },
+        el('span', { class: 'msrc-ex', text: c.exerciseName }),
+        /* MEASURED. ⚠️ WITH ITS UNIT, unlike the sentence this replaced: in a column the
+         * weight has lost the words either side of it, and "225×1" beside an "Est. 1RM" of
+         * "239 lbs" invites the reader to wonder whether the two are even in the same unit. */
+        el('span', { class: 'msrc-set', text:
+          units.withUnit(c.weight)
+          + (c.loadType === 'per_side' ? '/side' : '')
+          + `×${c.performedReps || c.reps}` }),
+        // MEASURED.
+        el('span', { class: 'msrc-date', text: fmtDateShort(c.performedDate || c.date) }),
+        /* DERIVED — what this one contribution alone would have called the muscle, in the key
+         * lift's terms. Tim: *"if the user has 3 different contributions, the first might be
+         * estimating 130 …, another might be estimating 140, and the last one might be
+         * estimating 155, and the final estimation might show 138."* That reads only because
+         * this column is on the SAME SCALE as the big number at the top of the panel, so it is
+         * rounded and unit-formatted by the same expression that number uses — deliberately
+         * not `withUnitRounded()`, which rounds in the display unit and would put the column a
+         * kilo away from the headline it is supposed to be explaining. */
+        on ? el('span', { class: 'msrc-est', text:
+          Number.isFinite(c.estimate) ? units.withUnit(Math.round(c.estimate)) : '—' }) : null,
+        /* DERIVED — the fraction of the blend this row bought. ⚠️ 0 IS A REAL ANSWER AND IS
+         * PRINTED AS "0%": `robustAggregate()` drops a row whose weight or estimate is not
+         * positive, and a row that moved the number by nothing has an influence of nothing.
+         * Absent is the other case and prints a dash — see `canShowDerived`. */
+        on ? el('span', { class: 'msrc-share', text:
+          Number.isFinite(c.share) ? `${Math.round(c.share * 100)}%` : '—' }) : null,
+      )),
+    );
+
+    sourceNote.textContent = on ? SOURCE_NOTE : '';
+    sourceNote.hidden = !on;
+    // ⚠️ The label changes rather than the button being rebuilt, so focus survives the tap.
+    sourceToggle.textContent = on ? 'Fewer details' : 'More details';
+    sourceToggle.setAttribute('aria-expanded', String(on));
+  }
+  drawSources();
+
   /* ⚠️ WHAT THIS PANEL NO LONGER SHOWS, and why — Tim, 2026-08-21: "make way
      less words on the bottom… if there's anything you think isn't that
      important to show, then don't show it."
@@ -1005,42 +1220,17 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
 
     el('div', { class: 'muscle-meta', text: confidenceLine(m) }),
 
-    /* Rule 5: never let an inference look like a measurement. These name the
-     * sets the estimate was converted FROM, which is what lets somebody tell
-     * "195 lb bench" from "195 lb inferred off a dumbbell press".
+    /* The source table, the sentence that says which of its columns are recorded, and the
+     * button that opens the two derived ones. All three are built above `return`, because the
+     * button has to be able to redraw the table without rebuilding the panel around it — see
+     * the block headed "WHERE THE NUMBER CAME FROM".
      *
-     * ⚠️ ALL THREE SINCE 2026-08-31, NOT JUST THE LEADER. Tim: *"you mentioned
-     * how the muscle group estimate is based off your top three recordings based
-     * on credibility, but when you click on a muscle it only shows one
-     * recording. Could you instead show all 3?"* The panel had been naming
-     * `m.best` — which is `contributors[0]` — and saying nothing about the other
-     * two, so a number built from three exercises looked like a number built
-     * from one. Showing the working is the whole reason this line exists; a
-     * third of the working is not the working.
-     *
-     * ⚠️ IN CREDIBILITY ORDER, WHICH IS THE ORDER THEY ARE WEIGHTED IN, and the
-     * first one leads for a reason the reader can now see: `rateMuscle` sorts on
-     * `evidenceWeight`, not on which set was heaviest. "and" rather than a
-     * bullet, so the three read as one sentence about one number. *
-     *
-     * 🚨 AND IT NAMES THE SET THAT WAS PERFORMED, NOT THE ONE THE MODEL READ —
-     * 2026-09-21, Tim: *"it still says 85x6 instead of 85x12."* When a heavier,
-     * longer set supersedes a lighter one (`dominate()` in muscle-evidence.js)
-     * the observation keeps the SUPERSEDED set's rep count and date, because
-     * the truncated reading is the conservative one and has to arrive at the
-     * rival's credibility. That is right for the arithmetic and wrong on a
-     * screen: this line exists to say which real set the number came from, and
-     * it was printing 85 × 6 on a day he pulled 50 × 6. **A set nobody did,
-     * drawn as a measurement, is Rule 5 broken by the line that enforces it.**
-     * `performedReps` / `performedDate` are display-only and absent unless a
-     * set was superseded, so every other row is untouched. */
-    el('div', { class: 'muscle-sources' },
-      (m.contributors && m.contributors.length ? m.contributors : [m.best]).map((c, i) =>
-        el('div', { class: 'muscle-meta', text:
-          `${i === 0 ? 'from' : 'and'} ${c.exerciseName} ${units.fmtWeight(c.weight)}`
-          + (c.loadType === 'per_side' ? '/side' : '')
-          + `×${c.performedReps || c.reps}, ${fmtDateShort(c.performedDate || c.date)}` })),
-    ),
+     * ⚠️ THE BUTTON IS A SIBLING OF THE TABLE, NOT A CHILD. `.muscle-sources` is a grid of the
+     * five columns; a control inside it would be laid out as a cell. It is null, and nothing
+     * on the panel hints at it, where the numbers behind it were never published. */
+    sources,
+    canShowDerived ? sourceNote : null,
+    canShowDerived ? sourceToggle : null,
 
     m.basis === 'fallback'
       ? el('div', { class: 'muscle-warn', text:

@@ -882,6 +882,39 @@ export function projectStrength(strength) {
           // unsuperseded and this document has a ceiling it stops publishing at.
           ...(num(c && c.performedReps) ? { performedReps: num(c.performedReps) } : null),
           ...(str(c && c.performedDate, 10) ? { performedDate: str(c.performedDate, 10) } : null),
+          // 🚨 THE TWO "MORE DETAILS" COLUMNS — 2026-09-21. `estimate` is what
+          // this one set alone would have called the muscle, in the key lift's
+          // terms; `share` is the fraction of the final number it bought, in
+          // [0, 1]. They travel because `detail()` (js/views-muscles.js) draws a
+          // friend's panel through the same function as the owner's, and a
+          // published answer whose working stops at the door is the shape Rule 5
+          // refuses. The full argument — including why the body-weight inversion
+          // they open was judged not to decide it — is at the projection that
+          // feeds this, buildStrengthShare() in js/store.js.
+          //
+          // ⚠️ UNROUNDED, DELIBERATELY. A Firestore number costs 8 bytes at any
+          // precision, so rounding buys nothing — measured on the demo year,
+          // the pair adds 31 bytes a row and 868 bytes to a 77.6 kB document,
+          // 0.08 % of the 1 MB ceiling, against `activity` at 61 kB. And
+          // rounding here would make this a SECOND place that decides what a
+          // reader sees — the panel already rounds for display, and the whole
+          // premise of js/shared-map.js is that both panels read the same
+          // numbers and cannot drift into disagreeing about them.
+          //
+          // ⚠️ `share` IS COMPARED TO null, NOT TESTED FOR TRUTH — `num(0)` is
+          // 0 and falsy, and a share of 0 is a real statement ("this row moved
+          // the answer by nothing") that must not collapse into the absent key
+          // meaning "published before this existed". Same shape as `age` in
+          // buildProjection above, for the same reason.
+          //
+          // ⚠️ THE RANGE IS PINNED ON THE READ SIDE, NOT HERE. `share` sums to
+          // 1 across the rows by construction (rateMuscle divides one array by
+          // its own total), so there is nothing for this end to check that is
+          // not already true; the document a reader opens was written by
+          // somebody else's client, which is a different question, and
+          // js/shared-map.js drops an out-of-range one there.
+          ...(num(c && c.estimate) > 0 ? { estimate: num(c.estimate) } : null),
+          ...(num(c && c.share) === null ? null : { share: num(c.share) }),
         })),
       hint: str(m.hint, 200),
       confident: m.confident === true,

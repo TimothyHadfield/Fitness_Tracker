@@ -8035,6 +8035,47 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ THE VACUITY GUARD FOR THE REFUSAL ABOVE — with a real profile it publishes. Without this, '
      + 'a buildStrengthShare() that had been broken into returning null forever would pass the '
      + 'assertion above and look like a safety feature');
+
+  /* ---- 🆕 THE TWO "More details" NUMBERS ON THE PUBLISHED ROWS, 2026-09-21 ----
+   *
+   * `tests/social.test.mjs` asserts the WHITELIST that lets them through. This
+   * asserts the thing that feeds it — that `buildStrengthShare()` really puts
+   * them on the rows, from a real rating rather than a hand-written fixture.
+   * 🔒 Without this block, deleting both lines from the store projection leaves
+   * every social assertion green, because those build their own input.
+   *
+   * ⚠️ A SECOND EXERCISE IS SEEDED FIRST, AND IT IS NOT DECORATION. Everything
+   * above this line runs on one lift, and `rateMuscle()` gives one seat per
+   * exercise — so Chest had exactly ONE contributor and its estimate was the
+   * muscle's estimate by construction. The vacuity guard below caught that
+   * honestly on the first run: with one row it cannot tell a real projection
+   * from one that copied the muscle figure onto every row. Added after every
+   * assertion above has already run, so none of them sees it. */
+  await store.saveSession({
+    workoutId: 'w1', workoutName: 'Push', date: '2026-08-24',
+    entries: [{ exerciseId: byName('Incline Dumbbell Bench Press').id,
+                exerciseName: 'Incline Dumbbell Bench Press',
+                sets: [{ weight: 70, reps: 8 }] }],
+  });
+  const shareDoc = await buildStrengthShare();
+  const chest = shareDoc.muscles.find((m) => m.muscle === 'Chest');
+  const rows = chest && chest.contributors;
+  ok(rows && rows.length && rows.every((c) => c.estimate > 0),
+     '🚨 EVERY PUBLISHED CONTRIBUTOR CARRIES THE 1RM THAT ROW ALONE WOULD HAVE GIVEN, in the key '
+     + "lift's terms — the first of the two extra columns");
+  ok(rows.every((c) => Number.isFinite(c.share) && c.share >= 0 && c.share <= 1),
+     '⚠️ and the fraction of the answer it bought, in [0,1] — the number that explains why the '
+     + 'rating did not come out at the biggest row on the list');
+  ok(rows.some((c) => c.estimate !== chest.estimate),
+     "🛑 THE VACUITY GUARD: at least one row disagrees with the muscle's own figure. A projection "
+     + 'that copied the muscle estimate onto every row would pass both assertions above while '
+     + 'telling a reader that three different sets each independently said the same thing');
+  ok(!('evidenceWeight' in rows[0]) && !('quality' in rows[0]) && !('ratio' in rows[0])
+     && !('curveWeight' in rows[0]),
+     '🚨 AND THE REST OF THE RATING ROW STAYS HOME. `contributors` is `rating.used` — the live '
+     + 'observation objects, carrying a dozen internal terms — so this projection is the only '
+     + 'thing between them and a stranger, and it NAMES what travels rather than deleting what '
+     + 'does not');
 }
 
 /* ================================================================== *

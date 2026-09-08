@@ -4054,6 +4054,51 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
          * document has a 1 MB ceiling it stops publishing at (D32). */
         ...(c.performedReps ? { performedReps: c.performedReps } : null),
         ...(c.performedDate ? { performedDate: c.performedDate } : null),
+        /* ── 🚨 THE TWO "MORE DETAILS" COLUMNS — 2026-09-21 ──────────────────
+         *
+         * `estimate` is what THIS set alone would have called the muscle, in
+         * the key lift's terms — `raw / c.ratio` where the observation is built
+         * (js/strength-observations.js). `share` is the fraction of the final
+         * number it actually bought: its blend weight over the total, written
+         * onto the row by `rateMuscle()` (js/muscle-evidence.js). A row
+         * printing 155 beside a share of 8 % is the sentence that explains why
+         * the rating did not come out at 155.
+         *
+         * 🚨 THEY TRAVEL FOR THE SAME REASON `performedReps` DOES, one line up:
+         * `detail()` in js/views-muscles.js draws a friend's panel through the
+         * SAME function as your own. Left out, the "More details" button gives
+         * a stranger two columns of dashes on the one screen whose entire job
+         * is showing the working — an answer published without its working,
+         * which is the shape this project keeps refusing.
+         *
+         * ⚠️ NEITHER IS DERIVABLE FROM WHAT THE DOCUMENT ALREADY CARRIES, so
+         * this is a real widening rather than a convenience. `estimate` needs
+         * the exercise's contribution ratio (the row publishes a NAME, never an
+         * exerciseId) and a body weight on any body-weight lift; `share` needs
+         * σ, recency, fatigue and evidence weight, none of which travel.
+         *
+         * 🔒 THE PRIVACY ARGUMENT, WRITTEN DOWN BECAUSE IT WAS CLOSE. A
+         * contributor `estimate` on a `bodyweight` row inverts to the owner's
+         * body weight — back through the curve with `weightForReps()`, then
+         * divide out the fraction — and body weight is the ONE field D29
+         * exempts. It is published anyway because that door is already open and
+         * wider: the grid carries a percentile computed against the owner's own
+         * weight beside the muscle's estimate, `percentileFor()` is a ratio to
+         * body weight, and that inversion needs no per-row field at all. The
+         * header of js/social.js already says so in as many words. Withholding
+         * this would close nothing and would cost a friend's panel half its
+         * explanation.
+         *
+         * ⚠️ SPREAD — AND `share` IS COMPARED TO A NUMBER, NOT TESTED FOR
+         * TRUTH. A share of 0 is a real statement ("this row moved the answer
+         * by nothing"), and `...(c.share ? …)` would drop it into an absent key
+         * that a reader cannot tell from a document published before today.
+         *
+         * 🛑 `estimate` IS GATED ON `> 0` RATHER THAN ON FINITENESS: a
+         * non-positive per-set maximum is a bug, not a fact, and the column
+         * would print it as though somebody had lifted nothing. */
+        ...(c.estimate > 0 ? { estimate: c.estimate } : null),
+        ...(Number.isFinite(c.share) ? { share: c.share } : null),
       })),
       hint: m.hint || null,
       confident: m.confident === true,

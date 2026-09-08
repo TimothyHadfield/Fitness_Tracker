@@ -4,15 +4,14 @@
 > DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
 > here** — the environment traps, the working agreement, the architecture, the binding design rules
 > and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
-> **490 KB together as of 2026-09-21** (156 + 203 + 131), and none of it is optional. ⚠️ Each file has
-> a byte budget with a test behind it — see §0.3.
-> 🚩 **THIS FILE LIVES AT ITS CEILING AND HAS FOR FIVE SESSIONS RUNNING.** It opened 2026-09-21 with
-> **one byte of headroom**, so the day's summary could not be written until 2026-09-20's four-pass
-> block was collapsed to a paragraph. **Assume you will have to collapse something before you can add
-> anything**, and 🛑 **the fix is never to raise the
-> number**: the failure message names what to move and where. ⚠️ **The best collapses are the ones
-> that put a durable rule somewhere it is actually looked for** — three of the last five have been
-> moves into `docs/handbook.md` rather than deletions, and 2026-09-21's put a Rule 5 corollary there.
+> **500 KB together as of 2026-09-21** (160 + 204 + 136), and none of it is optional. ⚠️ Each file
+> has a byte budget with a test behind it — see §0.3.
+> 🚩 **THIS FILE LIVES AT ITS CEILING AND HAS FOR FIVE SESSIONS.** 2026-09-21 opened it with **one
+> byte free** and tripped the budget test **five times** while writing one day's summary — every one
+> fixed by collapsing something older. **Assume you will have to collapse before you can add**, and
+> 🛑 **the fix is never to raise the number**: the failure message names what to move and where.
+> ⚠️ **The best collapses put a durable rule where it is actually looked for** — two of the last
+> five went into `docs/handbook.md` rather than being deleted.
 >
 > 🚨 **EVERY `§N` REFERENCE IN THIS PROJECT MEANS `docs/handbook.md` — EXCEPT `§3`, WHICH IS
 > `docs/state.md`.** `§4` the architecture, `§6` the locked decisions, `§9` the known gaps, `§0.10`
@@ -33,7 +32,52 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-21 — **the muscle panel was naming a set nobody had done.** One
+**Last updated:** 2026-09-21 (second pass) — **the "from:" block is a TABLE, and two investigations
+that are his to decide.** He opened a list: *"I'm going to just give you a list of things I want you
+to fix with the cite and you can deploy sub-agents to work on each one."* 🟢 **SIX AGENTS, DISJOINT
+FILES, ONE INTEGRATOR** — and 🔒 **the thing that made it work was writing the CONTRACT (exact class
+names, exact field names) before any agent started**, so four writers on four files could not drift.
+`tests/` was the integrator's alone; every agent proposed `ok(...)` blocks to its own scratch dir.
+⚠️ **Two agents shared a scratch ROOT and one overwrote the other's probe** — "your own scratch
+directory" was not specific enough; name the path in the brief.
+
+🆕 **THREE COLUMNS COMPACT, FIVE BEHIND A "More details" BUTTON, ONE COLOUR EACH.** The extras are
+that contribution's **own estimated 1RM** and its **share of the final number** (`share`, new in
+`muscle-evidence.js`, built from the **identical expression the blend uses** — one array read twice,
+so the printed number cannot drift from the one that decided the answer).
+🚨 **HIS OWN EXAMPLE DOES NOT COME OUT WHERE HE EXPECTED, AND THAT IS THE FINDING.** 130/140/155
+blend to **133.9**, not 138, because the shares are **67/29/4 %** — the blend leans on the key lift
+at low reps and a 12-rep machine set is worth 4 %. **The answer sits near the LOWEST reading.**
+Without the column that reads as a bug; with it, correctly. 🛑 **NOT BUILT**: `robustAggregate()`
+winsorises, so a contribution outside ±25 % of the median stops multiplying out (152.7 by hand vs
+150.8 shown). Flagged; he said two extra numbers only.
+🛑 **THE BUTTON IS NOT `settings.moreDetails`** — that is the 2026-08-25 percentile decision; this is
+local module state, and an assertion pins that tapping it does not turn the percentile on.
+⚠️ **Headed "Influence", not "Confidence"** — the panel already has a confidence line measuring
+something else. ⚠️ **No header row compact**: the panel went **31 → 30 words** against its 40 cap
+despite gaining a button, because "from"/"and"/the commas went.
+🎨 **`--msrc-1..5`, worst contrast 5.01:1** over four palettes × two themes × four surfaces, **one
+set, no palette overrides** — the clean answer to `.load-badge.per-side` rather than the avoidance.
+Three validator FAILs were each answered with a measurement; **no five-colour set can clear
+all-pairs CVD**, which is why colour is not the only cue. ✅ **Pinned by `tests/a11y.test.mjs`**,
+which could not see them: a feature-local `:root` block is invisible to its walker.
+⚠️ **Both numbers are PUBLISHED** — a friend's panel is the same `detail()`, and neither is
+derivable from what already travelled. ✅ **No rules change** (`hasOnly` pins top-level keys only,
+verified); 💷 **+868 bytes.** 🛑 **A friend's panel with nothing behind it offers no button.**
+✅ **5,731 assertions, all 22 suites green.** ⚠️ **Driven in Chrome against the real demo year** at
+360/390/880/1280, both themes: columns align exactly, phone fits five, the ≥860px side column
+scrolls inside its own box. 🚨 **§0.6 gained a trap**: a hash-only navigation does not re-boot the
+app, so a flag read at boot never takes — 16 combinations reported "no region" and it read as a
+broken feature. **Details: `docs/history.md` 2026-09-21 second pass.**
+
+🚩 **TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE — see the ten-row table below (rows 11
+and 12).** His calves panel contradicted itself; the cause is the **D5 rep gate returning before the
+blocked-work bookkeeping**, so a set over 15 reps leaves no trace at all and the panel prints Neck's
+sentence. **All twelve rankable muscles can do this.** And **the app asserts in four places that no
+published neck standards exist — they do**, but the women's half is unusable. Plan:
+`docs/calf-neck-ranking-plan.md`.
+
+**2026-09-21 (first pass)** — **the muscle panel was naming a set nobody had done.** One
 instruction, after a catch-up: *"it still says 85x6 instead of 85x12 like we talked about on the
 muscle group 'from:'"*. **He is right, and it is a fault yesterday's dominance fix created on the day
 it shipped.**
@@ -70,51 +114,36 @@ one does, every screen printing its fields verbatim starts lying. **When one fie
 meanings, the caller that gets the wrong one is the screen** — it is the only caller that cannot fail
 a test. **Details: `docs/history.md` 2026-09-21.**
 
-**2026-09-20, the session before it — COLLAPSED TO THIS SUMMARY, 2026-09-21** (§0.3). Four passes on
-one open-ended instruction; **full write-ups in `docs/history.md` under that date and its three
-further passes**, and every durable half is in the handbook, `docs/state.md` or a D-number.
-🆕 **Open work 36 — a copied programme can be told its original moved on.** `js/preset-updates.js`
-(pure), three stamps (`system.presetVersion`, `workout.presetKey`, `exercise.origin`) and a notice.
-🛑 **The copy is still a copy**; three refusals — never deletes, never overwrites an edit, appends
-rather than inserts. 🚨 **`origin` is the only thing that tells "the original changed" from "you
-changed it"**, and it **had to be named in `normalizeWorkout()`**. ✅ A test pins a content **hash**
-per preset beside its `version`. ⚠️ **Every copy made before that day is unstamped, Tim's included.**
-🆕 **D33 — a planned set can carry a REP PRESCRIPTION** (`js/set-reps.js`), read as carrying 1–2 reps
-in reserve. 🛑 **Not the RIR field D28 refuses**: D28 refuses to ASK a lifter; this is one assumption
-about what a COACH meant, and it can only take weight off the bar.
-🔄 **Heavier AND longer supersedes** (`dominate()`) — Tim's 85×12 contributed 0.00 lb, and it had to
-be enforced at **both** places that make the same comparison. 🔄 **And the rep ladder had no source**:
-`js/rep-sigma.js` measures σ as the disagreement between research §1.2's seven formulas, added in
-quadrature, so a 12-rep set carries **86 %** of an 8-rep set on a machine and **57 %** on the key
-lift where the ladder said 53 % everywhere.
+**2026-09-20 — COLLAPSED, 2026-09-21** (§0.3). Four passes; **full write-ups in `docs/history.md`**
+under that date, every durable half in the handbook, `docs/state.md` or a D-number.
+🆕 **Open work 36 — a copied programme can be told its original moved on** (`js/preset-updates.js`,
+three stamps, three refusals). 🚨 **`exercise.origin` is the only thing that tells "the original
+changed" from "you changed it"** and **had to be named in `normalizeWorkout()`**. ⚠️ **Every copy
+made before that day is unstamped, Tim's included.**
+🆕 **D33 — a planned set can carry a REP PRESCRIPTION**, read as carrying 1–2 reps in reserve.
+🛑 **Not the RIR field D28 refuses**: D28 refuses to ASK a lifter; this is one assumption about what
+a COACH meant, and it can only take weight off the bar.
+🔄 **Heavier AND longer supersedes** (`dominate()`), enforced at **both** places that make the same
+comparison. 🔄 **The rep ladder had no source** — `js/rep-sigma.js` measures σ from the disagreement
+between research §1.2's seven formulas, so a 12-rep set carries **86 %** of an 8-rep set on a machine
+and **57 %** on the key lift, where the hand-typed ladder said 53 % everywhere.
 🚩 **He argued a high-rep set is evidence of a MINIMUM and it was deliberately NOT built** — row 9.
-**2026-09-19, the session before it** — **the Workouts tab is ONE PROGRAMME now.** Two questions
-answered without building, then a design he brought and it shipped whole.
-🆕 **THE CURRENT SYSTEM** (`settings.currentSystemId`, `store.currentSystem()`) — Tim: *"make the user
-pick a 'current system' and then the main display inside the worout are the detials inside that
-system … inside the weightlifting category in record, it will show you just the workouts inside your
-current system."* The Workouts tab is that programme's own screen (plan, workouts, New workout,
-notes, rating), its name pinned above the pane as a **switcher** that also holds New system and
-Explore; **Record shows only its workouts**. 🔒 **Both drawn by the same `systemBody()`.**
-🚨 **IT DERIVES WHEN NOTHING HAS BEEN CHOSEN, and that is the load-bearing decision** — every account
-on disk has no pointer, and demanding a pick would be a wall in front of their own programme (D8/D9).
-It reads one out of the training and **never writes what it derived**. 🔄 **It DELETED the folding
-systems of 2026-09-16** — with one programme on screen a fold memory is a variable nothing reads.
-🛑 **Adding or creating a programme does NOT make it current**; `#/system/<id>` has a button.
-🚨 **FIVE OF ITS NEW ASSERTIONS WERE THE EMPTY ACCOUNT, whose empty states had NEVER been tested** —
-without that guard the Workouts tab throws on a new account.
-🛑 **AND A LIVE LINK TO PRE-BUILT SYSTEMS WAS ASSESSED AND REFUSED** — ✅ **the recommendation it
-made instead was BUILT 2026-09-20**, above. 🔒 **A review agent found four false claims in the new
-comments and all four were real; the first correction introduced a fifth** — now **§0.19**: grep for
-what you are about to ASSERT. ⚠️ **The same review was WRONG about a layout claim**: an agent's
-finding is a hypothesis with a line number attached. `docs/history.md`, 2026-09-19.
+**2026-09-19 — COLLAPSED TO THIS PARAGRAPH, 2026-09-21** (§0.3). 🆕 **THE CURRENT SYSTEM**
+(`settings.currentSystemId`, `store.currentSystem()`) — the Workouts tab is one programme's own
+screen with its name above the pane as a switcher, and Record shows only its workouts, both drawn by
+one `systemBody()`. 🚨 **It DERIVES when nothing has been chosen and never writes what it derived** —
+every account on disk has no pointer and demanding a pick would be a wall in front of their own
+programme (D8/D9). 🔄 It deleted the folding systems of 2026-09-16. 🛑 A live link to pre-built
+systems was assessed and **refused**; the recommendation it made instead became Open work 36.
+🔒 **§0.19 came out of that day** — grep for what you are about to ASSERT, not only for what you are
+removing. Full write-up and the rest: `docs/history.md`, 2026-09-19; the durable halves are in
+`docs/state.md` and Open work 35.
 
-**2026-09-18, two sessions before it** — 🆕 **a planned set can carry a PERCENTAGE OF YOUR MAX**
-(`js/set-targets.js`) and 🆕 **the label under the weight is the PLATES** (`js/plates.js`).
-🚨 **The percentage is of your OWN best recorded set on that lift, never the cross-muscle estimate**;
-body-weight and assisted lifts refused. 🔒 **The plate agent was told WHY greedy is optimal, measured
-it, and the reason was FALSE** — the shipped pound inventory has **no 35s**; a justification in a
-brief is a claim, not a premise. Open work 33 and 34; `docs/history.md` 2026-09-18.
+**2026-09-18** — 🆕 **a planned set as a PERCENTAGE OF YOUR MAX** (`js/set-targets.js`, of your own
+best recorded set on that lift, never the cross-muscle estimate) and 🆕 **the PLATES under the
+weight** (`js/plates.js`). 🔒 **The plate brief's justification for greedy was FALSE and the agent
+measured it** — no 35s in the shipped inventory; a justification in a brief is a claim, not a
+premise. Open work 33 and 34; `docs/history.md` 2026-09-18.
 
 ## 2026-09-16 and 2026-09-17 — COLLAPSED TO ONE POINTER, 2026-09-20
 
@@ -132,19 +161,17 @@ brief is a claim, not a premise. Open work 33 and 34; `docs/history.md` 2026-09-
   rather than removed: a line saying a feature exists over code that was deleted is the exact
   failure this file is for.
 
-🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT. IT IS NOT A GO-AHEAD FOR ANYTHING.** Tim,
-2026-09-11, having caught a session already building: *"When I tell you to catch up with progress.md,
-you should not start working on anything until I tell you. It's okay to tell me what you think next
-steps are, but don't start working until I tell you to."* 🚨 **An authorisation recorded in an
-earlier session is not an instruction to resume it in this one** — including anything on the Open
-work list, however green the light looks in these notes. Read all four files, say in a few plain
-lines what changed and what is open, **then stop.**
+🛑 **"CATCH UP WITH PROGRESS.MD" MEANS READ AND REPORT — IT AUTHORISES NOTHING.** Read all four
+files, say in a few plain lines what changed and what is open, **then stop.** 🚨 **An authorisation
+recorded in an earlier session is not an instruction to resume it in this one**, however green the
+light looks here. **Tim's words and the incident behind it are under Standing instructions**, which
+is where this rule lives — this is the pointer, not a second copy.
 
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Everything below is committed and pushed and
 the working tree is clean **outside `Fitness_Research/`** — 🛑 **another agent's folder; stay out, and
 never `git add -A`** (first entry under **Standing instructions**).
-**All twenty-two no-Chrome suites are green — 5,693 assertions**, `data-layer` **2,420**, `render`
-**1,599**. ⚠️ **Three of those suites came from a PARALLEL AGENT in this same checkout, not from
+**All twenty-two no-Chrome suites are green — 5,731 assertions**, `data-layer` **2,424**, `render`
+**1,608**. ⚠️ **Three of those suites came from a PARALLEL AGENT in this same checkout, not from
 this chat** — see the "Everything at once" row.
 ✅ **`rules` is 221**, run on the emulator on 2026-09-16 (§0.9) and **deployed** — and since
 2026-09-17 the deployed copy is verified from the outside as well, by `tools/live-check.mjs` (§0.16);
@@ -186,18 +213,14 @@ first genuine version bump is the first time the stamped path runs outside a tes
 programme not reaching Record, and no way to look at a programme without switching to it. **Row 8**
 carries both and the three answers.
 
-🆕 **WHERE 2026-09-18 STOPPED.** All finished. 🚩 **TWO THINGS HE WAS TOLD AND HAS NOT ANSWERED**: a
-targeted set is `prefilled`, so accepting the weight AND reps untouched drops it at save (row 7); and
-🚨 **`targets` expresses ONE of the four percentages in his own programme** — the rest are a % of a
-top set, of ANOTHER lift, or a drop, **both buildable and neither authorised**. 🆕 **Open work 32**:
-the app never states its logging conventions where you log. **Words on screens.**
-
-🆕 **WHERE 2026-09-17 AND -16 STOPPED.** Both finished. 🛑 **The two items Tim did NOT pick on -17
-are not authorised** — the accessibility work (a deferral by name now; ⚠️ **do not offer it again**)
-and pointing the audit at a friend's screens through the demo's deterministic uid. 🚩 **The thing to
-expect a report about**: a friend's gender, age and friends list only appear after **their** app
-republishes, and the calendar no longer draws the current month when the last recording is older
-than it — both deliberate, both explained to him, both the sort of thing that reads as a bug.
+🆕 **WHERE 2026-09-16 TO -18 STOPPED — COLLAPSED, 2026-09-21** (§0.3). All finished. 🚩 Still
+unanswered by him and carried by **row 7**: a targeted set is `prefilled`, so accepting the weight
+AND reps untouched drops it at save; and `targets` expresses only ONE of the four percentage kinds
+in his own programme. 🆕 **Open work 32** — the app never states its logging conventions where you
+log; **words on screens**. 🛑 **Not authorised**: the accessibility work (a deferral by name —
+⚠️ **do not offer it again**) and pointing the audit at a friend's screens. 🚩 **Expect a report
+about**: a friend's gender/age/friends appearing only after **their** app republishes, and the
+calendar not drawing the current month when the last recording is older than it — both deliberate.
 
 ## 2026-09-10 to 2026-09-15 — COLLAPSED TO ONE POINTER, 2026-09-19
 
@@ -236,13 +259,11 @@ male*, and **an agent ran `git stash` mid-flight** (the rule is in the sub-agent
 
 🚨 **THE ONE THING THAT STAYS HERE, because `docs/direction.md` §4.1 points at it by name — THE
 WORDINESS MEASUREMENT, 2026-09-07:** **18,631 user-facing words, 304 sentences over 15 words, 63
-blocks of 40+.** Ranked worst first by file: `research-topics.js` 54 · `preset-systems.js` 37 ·
-`views-goals.js` 30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19.
-⚠️ **The top two are not the app's voice** — transcribed coaching notes, and teaching content that
-already has word budgets. 🚨 **The finding: the copy is not padded, it is MIS-PLACED** — almost every
-offender is the app explaining itself, and the standing rule that every caveat is stated on screen
-never said WHERE. **`views-account.js` is done** (2026-09-08); the rest is what *"if the wordiness
-fix isn't complete yet, then keep working on it"* authorises, and **he points at screens.**
+blocks of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 · `views-goals.js`
+30 · `views-data.js` 28 · `views-social.js` 24 · `views-account.js` 19 (done, 2026-09-08).
+⚠️ **The top two are not the app's voice.** 🚨 **The finding: the copy is not padded, it is
+MIS-PLACED** — almost every offender is the app explaining itself, and the rule that every caveat is
+stated on screen never said WHERE. **He points at screens.**
 
 ## 💷 WHAT IT COSTS TO RUN — the numbers a fresh session should not re-derive
 
@@ -360,11 +381,12 @@ from what the emulator answers. `tools/live-check.mjs` (§0.16) published both d
 live project and had four negative controls refused on the wire, so the deploy provably landed.
 💷 **It also measured the read pattern: an unchanged sync bills ZERO document reads.**
 
-## 🛑 THE TEN THINGS WAITING ON TIM — 9 and 10 added 2026-09-20
+## 🛑 THE TWELVE THINGS WAITING ON TIM — 11 and 12 added 2026-09-21
 
 **What is waiting is his, not yours** — read the standing rule at the top of this file before picking
-any of it up, and note that **three of these eight put words on a screen**, which is the category he
-has reserved for himself.
+any of it up, and note that **five of these twelve put words on a screen**, which is the category he
+has reserved for himself. ⚠️ **Rows 11 and 12 came out of a question he asked** (*"What is happening
+here?"*), not out of an instruction to fix anything — both were diagnosed and deliberately left.
 
 | | what | what it needs |
 |---|---|---|
@@ -377,6 +399,8 @@ has reserved for himself.
 | 7 | 🆕 **A SET WITH A PRESCRIBED WEIGHT IS `prefilled`, so accepting the weight AND the reps untouched drops it at save** (2026-09-18). Deliberate — the number is the app's, not last time's, and `finish()` refusing it is what stands between a prescription and a workout nobody did. ⚠️ But a target is *meant* to be obeyed, so it is far easier to hit than the derived opening weight this rule was written for. It does not touch the untargeted path, so **item 15 is still open and still separate** | **his word** — leave it, warn on the screen, or count "moved on from" as done |
 | 8 | 🆕 **BENCHMARK WORKOUTS KEPT IN A SEPARATE PROGRAMME NO LONGER APPEAR ON RECORD** (2026-09-19). The weightlifting picker is scoped to the current system, so a "Testing" programme has to be switched to before its days are reachable. ⚠️ **`#/benchmark` is not a substitute** — it records one lift's best, not a workout. 🚩 **The second half of the same trade**: tapping a row in the switcher makes that programme current immediately and writes it to `settings`, so it syncs; **there is no "look without switching"**. Both follow from what he asked for, and both are cheap to undo | **his word** — leave it, surface benchmark workouts from every programme on Record, or give the switcher a read-only peek |
 | 9 | 🆕 **SHOULD A HIGH-REP SET COUNT AS A FLOOR?** (2026-09-20, his idea.) He argued a 12-rep set is right-skewed evidence — *"it should have high confidence that it's at LEAST 131"* — because you cannot do fewer reps than you did, so the true max sits above the estimate. 🚨 **He is mechanically right, and it is the ONE thing built today that was deliberately not built.** Correcting a RECORDED set upward for assumed reserve is the move `docs/fatigue-plan.md` §4 refused in writing as *the only mechanism that can make a number bigger than what was observed*. ⚠️ **Note the asymmetry with D33**, shipped the same day: assuming reserve on a PRESCRIPTION takes weight off the bar; assuming it on a recorded set makes him stronger on paper. Same assumption, opposite safety direction. ⚠️ **And the light-load bias points the other way** — at his 85 lb the curve already reads ~10 % above Epley, so 131 is not a floor | **his word, and it reverses a refusal** — leave it, or add a separate *"at least X"* reading beside the estimate rather than moving the estimate |
+| 11 | 🆕 **THE 15-REP GATE THROWS SETS AWAY SILENTLY, ON EVERY MUSCLE** (2026-09-21, from his calves report). `strength-observations.js`'s D5 check returns **before** the blocked-work bookkeeping, so a set above 15 reps leaves no observation **and no record that anything was refused** — the panel then sees "no rating, nothing blocked" and prints the sentence written for Neck, on a muscle that has a published standard. 🚨 **Boundary is exactly 15**: 200 lb × 15 rates, × 16 does not. ⚠️ **Not a calves bug — all twelve rankable muscles**, and lateral raises at 15–20 are the commonest way anyone trains shoulders. There is a **second silent route** (a weighted lift logged at zero weight) and a **live bug beside it**: a friend's panel offers *"Benchmark Standing Calf Raise"*, the reader's own benchmark screen, on somebody else's body. ✅ **The fix is small and changes no number**: make the refusal leave a note, which fires a sentence the app already has. 🛑 **Not built — he asked what was happening, not for a fix** | **his word** — the note, the button guard, or both |
+| 12 | 🆕 **NECK: THE APP ASSERTS SOMETHING FALSE, AND THE FIX IS NOT THE OBVIOUS ONE** (2026-09-21). Four places say no published neck norms exist and never will; **Strength Level publishes neck curl and neck extension**, unlinked from its index. 🛑 **Not shippable as found**: the female sample is 55 and 16 people, the female table **falls** with bodyweight in every column, and Elite ÷ Beginner is 38.8× against the bench's 2.7×. Every standards entry is a men's-and-women's pair, so shipping means inventing the women's half or giving women a hatch where men get a colour. ✅ **What is free and worth doing: correct the four false sentences and file the research**, so the next session does not inherit a wrong permanent fact. ⚠️ **And `direction.md` §3.1 changed this question** — under "something is always better than nothing" a labelled rough rating is allowed where it was once refused. `docs/calf-neck-ranking-plan.md` | **his word** — and the sexed-availability question is the one to answer first |
 | 10 | 🆕 **ONE SET PER EXERCISE, TOP THREE — the rating still rests on three sets** (2026-09-20). His whole Back number comes from three of the dozens he has logged; everything else only moves the confidence label. 🚨 **This is the biggest remaining accuracy lever in the app** and it is what σ_rep and dominance were both working around. Blending every set at its own precision is the real fix, and inverse-variance weighting is already the machinery for it. 🛑 **NOT STARTED**, and it moves every rating in the app | **his go-ahead** — it is a re-baseline of the golden table and a change to what every number means |
 
 ⚠️ **AND THE ONE THING THAT MOVED USER-VISIBLE NUMBERS ON 2026-09-15**: the ratio pass and the
@@ -420,9 +444,6 @@ demo than it was.
 ✅ **THE PROFILE/DATA SPLIT IS DONE — all five steps, Open work 29 closed 2026-09-11.** Read that
 entry before touching Profile, Data, Account or Settings: it carries the line the whole thing rests
 on, which is `direction.md` §4b's.
-
-🛑 **AND READ THE "CATCH UP" RULE AT THE TOP OF THIS FILE BEFORE PICKING ANYTHING UP.** A session
-that opens with *"catch up with progress.md"* reads and reports; it does not start.
 
 ⚠️ **THERE ARE TWENTY SUITE FILES, NOT SEVENTEEN, AND NINETEEN OF THEM RUN HERE UNAIDED** — recounted
 2026-09-09 by running every one. `tests/rules.test.mjs` is the twentieth and needs
@@ -475,25 +496,19 @@ this file has broken most often. Shipped is working unless Tim says otherwise.
   Research's teaching content is carved out by name** — `docs/direction.md` §4.1.
 - 🛑 **Photos — PAUSED BY TIM, 2026-09-10, after a second round of costing.** *"lets keep a pause on
   the photos for now. I don't think it's necessary yet."* 🛑 **Do not raise it again; he will.**
-  Costed 2026-09-07 (~$100/yr at 1,000 users, ~$2,500/yr at 10,000) and re-examined today at the
-  scale he actually has. What that round established, so nobody re-derives it:
-  - **Per user it is 10–25¢ a year** — but the figure **RISES with scale**, uniquely in this app,
-    because the bill is people LOOKING and more users means more eyes per photo.
-  - 🔒 **STORAGE NOW NEEDS BLAZE AS A PLAN GATE, NOT A QUOTA — confirmed live 2026-09-10.** Since
-    **3 February 2026** Google aligned Cloud Storage for Firebase with standard Cloud Storage rules:
-    creating *or keeping* a bucket needs a linked billing account whatever the usage, and a Spark
-    project's Storage calls return **402/403**. 🚨 **THE FIREBASE PRICING PAGE STILL ADVERTISES SPARK
-    ALLOWANCES FOR STORAGE, so reading that page alone gives the WRONG answer** — this is written
-    down because the next session to check will land on the same page.
-  - ✅ **At his real scale the bill would be zero.** The free allowances still apply on Blaze; at 10
-    users it is ~416 MB stored against 5 GB and ~10 MB/day of egress against 1 GB/day.
-  - **Where paying actually starts, on a modern `firebasestorage.app` bucket: ~145 users**, and it is
-    **download OPERATIONS** (50K/month) that bind first, not bandwidth (~1,480 users). ⚠️ **Storage
-    is measured in USER-YEARS** — 5 GB ≈ 120 user-years, cumulative, and arrives without a single new
-    user. ⚠️ **The ~20-viewers-per-photo assumption is unmeasured** and thumbnails plus cache headers
-    could multiply the 145 several times.
-  - 💷 **WITHOUT photos the app is free to ~1,894 users** (after the 2026-09-08 read-pattern fix).
-    **Photos are what would move that ceiling to ~145.**
+  ⚠️ **COLLAPSED 2026-09-21** (§0.3); the full costing is `docs/history.md` 2026-09-07 and -10, and
+  `docs/running-costs.html`. The four facts worth not re-deriving:
+  - 💷 **Without photos the app is free to ~1,894 users; photos move that ceiling to ~145** — and it
+    is **download OPERATIONS** that bind first, not bandwidth. Per user it is 10–25¢ a year, and
+    uniquely in this app **the figure RISES with scale**, because the bill is people LOOKING.
+  - 🔒 **STORAGE NEEDS BLAZE AS A PLAN GATE, NOT A QUOTA — confirmed live 2026-09-10.** Since
+    3 February 2026 keeping a bucket at all needs a linked billing account, and Spark Storage calls
+    return **402/403**. 🚨 **The Firebase pricing page still advertises Spark allowances for
+    Storage, so reading that page alone gives the WRONG answer** — the next session to check will
+    land on the same page.
+  - ✅ **At his real scale the bill would be zero**, and ⚠️ **storage is measured in USER-YEARS**
+    (5 GB ≈ 120 of them, cumulative, arriving without a single new user).
+  - ⚠️ **The ~20-viewers-per-photo assumption is unmeasured.**
 
 ## ⏸️ THE OPEN THREAD THAT IS TIM'S: HOW TO RANK ABS — he asked, it was answered, HE HAS NOT PICKED
 
@@ -698,6 +713,15 @@ for whether a day may be collapsed:
   2026-09-03**: a scripted two-string replacement in this file worked fine, twice — which is exactly
   how the habit comes back. The tools are not slower for one edit; they are only slower for the
   ten-edit sweep that is the one you should not be doing.
+- 🆕 **AND A FIFTH TIME ON 2026-09-21, ON `progress.md` ITSELF, WITH A NEW CONSEQUENCE.** A single
+  `sed -i` two-string swap to update a suite count — the exact "it is only one edit" case §0.11
+  warns is how the habit returns. The text came out right and **the whole file went CRLF → LF**,
+  1,201 bytes smaller on disk. 🚨 **THE NEW HALF IS WHAT THAT DOES TO THE BYTE BUDGET**: the test
+  measures the file on disk, so it reported **1,272 bytes free where a fresh checkout has 71** —
+  the one number this file's whole maintenance routine is steered by, reading nearly 1.2 KB
+  optimistic. ⚠️ **`git checkout --` did NOT put the endings back** (the index already held the
+  normalised content), and the commit is unaffected either way because git normalises the blob —
+  which is precisely why nothing downstream would ever have flagged it. **Use the editing tools.**
 - ⚠️ **A `.js` FILE EDITED BY SCRIPT REWRITES ITS LINE ENDINGS.** The same day, a Python edit to
   `views-workouts.js` converted the whole file from CRLF to LF. Harmless here — git normalises, and
   the diff stayed at ten lines — but it is noise in a review and it is avoidable.
@@ -1060,38 +1084,21 @@ it.** What it still gates is the Goals *verdict* and the weight/rep half of `doc
      dot is on from the first paint including in the demo; and the smaller items listed in the pass.
 
 1. ~~**Social: get two accounts to connect. THIS IS THE BIGGEST UNVERIFIED THING IN THE PROJECT.**~~
-   ✅ **RAN 2026-08-22 AGAINST THE LIVE PROJECT — it works, and it found two defects.** Two
-   throwaway email accounts in two SEPARATE Chrome profiles (different uids, confirmed before
-   anything was shared), driven over CDP with real mouse events. Invite → open as somebody else →
-   claim → accept → set a tier → publish → read, all the way through, then both accounts deleted and
-   the project checked back to the state it started in. **⚠️ The brief said the project held zero
-   users. It does not** — it holds Tim's two real accounts and their training data, and anything that
-   "cleans up to zero" would destroy them. **Snapshot the baseline first and diff against it.**
-
-   **Enforcement was checked ON THE WIRE, not in the UI.** Reading the other account's private
-   collections is refused, and so is LISTING `shared/` or `invites/`. The sharpest test: a
-   `shared/mid` document was made to exist, holding every weight and rep, with the viewer out of its
-   `viewers` list — Firestore refused it. Moving somebody down a tier and disconnecting them both
-   cut access to a document that still existed.
-
-   **Two defects, both found by driving it:**
-   - **Every expired invite read as `open`.** `expiresAt` is stored as a Date, so the SDK returns a
-     **Timestamp object**; `Date.parse()` on one is NaN and `NaN <= now` is false. A link three
-     weeks stale offered "Connect", and only the rules stopped the claim — surfacing as a raw
-     "Missing or insufficient permissions". "That link has expired" could never be shown. **Fixed**
-     in `js/social.js` (`instantMillis`), with six assertions in `tests/social.test.mjs` that fail
-     without it. The old tests missed it because their fixture had no `expiresAt` at all, so they
-     only ever exercised the fallback path the app never takes. *A pure module has to be handed the
-     shape the network really returns.*
-   - **⚠️ Disconnect is one-sided, and the confirm sheet says otherwise. NOT FIXED — design call.**
-     `social.remove()` edits only MY graph, so their published copy still lists me in `viewers` and
-     **I can still read their data after pressing Disconnect** — while the sheet promises "you will
-     not see theirs" (`js/views-social.js` ~484). They are never told I left, and I lose the screen
-     that would let me notice. A real mutual disconnect needs something their client can read, which
-     is a new rules path, not a small fix.
-
-   ⚠️ **The trap** (`docs/improvement-plan.md` §0): use two SEPARATE browser profiles, not two tabs,
-   or you will "prove" a round trip that never crossed accounts.
+   ✅ **RAN 2026-08-22 AGAINST THE LIVE PROJECT — it works, and it found two defects.**
+   ⚠️ **COLLAPSED 2026-09-21** (§0.3); full account in `docs/history.md` 2026-08-22, and both
+   defects are closed (the expired-invite one fixed the same day, disconnect by 0j on -27). Four
+   things worth not re-deriving:
+   - 🛑 **The project holds Tim's two real accounts**, not zero users. Anything that "cleans up to
+     zero" destroys them. **Snapshot the baseline first and diff against it.**
+   - ⚠️ **Use two SEPARATE browser profiles, not two tabs**, or you prove a round trip that never
+     crossed accounts (`docs/improvement-plan.md` §0).
+   - 🔒 **Enforcement was checked ON THE WIRE, not in the UI** — the sharpest test made a shared
+     document exist holding every weight and rep with the viewer out of its `viewers` list, and
+     Firestore refused it.
+   - 🔒 **The lesson that outlived it**: `expiresAt` comes back from the SDK as a **Timestamp
+     object**, so `Date.parse()` is NaN and every expired invite read as open. The old tests missed
+     it because their fixture had no `expiresAt` at all. *A pure module has to be handed the shape
+     the network really returns.*
 
 1b. ~~**⚠️ THE FIRST-RUN PATH PROMISES ONE THING AND DELIVERS ANOTHER.**~~ **BUILT 2026-08-21 —
    five taps from a cold install to a loggable set, measured, against about a dozen. See the
@@ -1155,7 +1162,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 🆕 **5,693 across the TWENTY-TWO that need no Chrome, re-counted 2026-09-21 by running every one.** Per suite: data-layer 2,420 · render 1,599 · goals 278 · social 205 · bodyweight 187 · a11y 140 · template-lint 96 · share-image 91 · optimal 76 · volume-map 64 · compare 63 · demo 58 · rep-decrement 57 · year-grid 45 · core-rating 44 · routine 42 · estimate 37 · exercise-evidence 33 · qr 33 · figure-note 27 · feedback 26 · strength-estimate 72. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | 🆕 **5,731 across the TWENTY-TWO that need no Chrome, re-counted 2026-09-21 by running every one.** Per suite: data-layer 2,424 · render 1,608 · goals 278 · social 217 · bodyweight 187 · a11y 153 · template-lint 96 · share-image 91 · optimal 76 · volume-map 64 · compare 63 · demo 58 · rep-decrement 57 · year-grid 45 · core-rating 44 · routine 42 · estimate 37 · exercise-evidence 33 · qr 33 · figure-note 27 · feedback 26 · strength-estimate 72. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | 🆕 **Fatigue tests** | `node tests/rep-decrement.test.mjs` — **57 assertions** (2026-09-14), **no dependencies**. The per-set rep decrement that reaches the runner's caption. 🚨 **The two load-bearing ones are the invariants, and both are mutation-checked with the mutation printed in the source first**: every multiplier is ≤ 1 (so a wrong constant can only make the caption easier to beat), and a lifter whose reps RISE across a run is **clamped** rather than handed a bigger number. Also: a weight change ends a run, a prefilled set is not a set, drops/supersets/benchmarks contribute nothing (`group != null`, because a truthy test let the first superset of every workout through), 90 s ties to the SHORTER rest column, and the caption never prints "maybe 0". ⚠️ **What it does NOT cover is the wiring** — no mounted screen asserts the multiplier actually reaches the caption; see START HERE |
 | **Data tests** | `node tests/data-layer.test.mjs` — **2,118 assertions** (2026-09-15), **no dependencies**. 🆕 **Since 2026-09-15 it holds σ AND THE PRECISION BLEND** — the key lift carrying no conversion uncertainty, a flat published ratio beating a drifting one, gearing surviving a flat drift, the q bridge for an entry with no page, and the load-bearing one: **the same two disagreeing numbers land at 204.5 or 294.6 depending on which conversion is better established**, where the old blend gave 225.0 both ways. Plus **the quarantine's cross-exercise behaviour** from both sides of its 2.0× boundary (kept at 1.99, set aside at 2.01) with two guards on the demo year — nothing set aside on a real year, and the cross-exercise spread under 1.5× so a future ratio correction cannot start withholding real sets silently — and 🚨 **the sexed path pinned beside the golden table**, because `store.js` passes a sex and the table never did. 🆕 **Since 2026-09-14 it holds THE FOUR SEAT RULES AND THE QUARANTINE**: a 3-rep benchmark beats a 12-rep back-off set on the same day (which is what told Tim a tested 215 was "above his max"), a set at ≤ 8 reps is preferred but not required, the 84-day window lets a rating FALL while a lay-off keeps its record, the same history walked in either order gives an identical rating (it read Fair one way and High the other), and the typo screen holds back a ×10 slip **by name** while leaving a personal best and the good sets logged beside it alone. Plus the ratio pins **per sex** on both sides of every pair, and six **split-ordering** checks (a specific rule must not fall below its family — the machine lateral raise inside `/Lateral Raise/` was a 3.7× inflation). ⚠️ **The GOLDEN table was re-baselined on 2026-09-14 with every move attributed by name** — eleven of twelve muscles down, Traps up 14 % because the deadlift stopped standing in for it. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** **⚠️ THE AUGUST HALF IS COMPRESSED HERE, 2026-09-15**, the same cut the render row took and for the same reason. Still asserted, detail in `docs/history.md` 2026-08-24 to -30: the **exercise-picture manifest** against the folder and the sw precache, the **movement families** (271 members each resolving to exactly one exercise, four family-less on purpose), the **Research tab's content and WORD BUDGETS** (45 an answer, 260 a topic — the only thing that can catch prose piling back up, since every other assertion checks a thing is PRESENT), the **crop maths** (1,925 combinations, zero escapes), the **file-import refusals** (date order, weight unit, distance unit each refused rather than guessed), **how full the cloud is**, and the **within-session fatigue** section built on Tim's real back session. ⚠️ **That last one changed shape on 2026-09-15** — see the σ note at the top of this row |

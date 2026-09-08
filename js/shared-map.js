@@ -40,6 +40,47 @@ export function ownSexOf(strength) {
 }
 
 /**
+ * One published contributor row, with the two numbers the "More details"
+ * columns print pinned to values that can honestly be shown.
+ *
+ * 🚨 ABSENT IS NOT EMPTY, AND THAT IS THE WHOLE JOB OF THIS FUNCTION. Every
+ * document published before 2026-09-21 carries no `estimate` and no `share` on
+ * its contributor rows, and there are far more of those than there are new
+ * ones. A missing key must stay missing so the panel prints its dash; it must
+ * never become a 0, which would tell a reader that a set contributed nothing
+ * when the truth is that their friend's app has not published it yet.
+ *
+ * ⚠️ AND THE OTHER DIRECTION — a value that is present and cannot be shown. The
+ * document was written by SOMEBODY ELSE'S CLIENT: an old build, a hand-written
+ * one, or a version of the projection with a bug in it. `share` renders as a
+ * percentage, so a non-finite one is a literal "NaN%" on the screen and a 1.5
+ * is "150 % of the answer" stated with the same authority as a real figure. So
+ * a value outside [0, 1] is DELETED rather than clamped: "we cannot say what
+ * this contributed" is the true statement, and clamping 1.5 to 1 would invent
+ * a different false one. The tolerance is for floating-point only — a muscle
+ * with one contributor divides a number by itself.
+ *
+ * 🛑 IT DROPS KEYS AND NEVER RENAMES OR ADDS ONE. A whitelist here would be a
+ * second copy of `projectStrength()` (js/social.js) on the read side, and the
+ * two would drift the first time a field is added — a friend's panel silently
+ * missing a number the owner's publishes. The row travels whole; exactly the
+ * two fields this module makes a claim about are checked.
+ */
+function readableContributor(c) {
+  if (!c || typeof c !== 'object' || Array.isArray(c)) return c;
+  const bad = [];
+  if ('estimate' in c && !(Number(c.estimate) > 0)) bad.push('estimate');
+  if ('share' in c) {
+    const s = Number(c.share);
+    if (!Number.isFinite(s) || s < 0 || s > 1.0001) bad.push('share');
+  }
+  if (!bad.length) return c;
+  const out = { ...c };
+  for (const k of bad) delete out[k];
+  return out;
+}
+
+/**
  * One published map, read under one comparison group.
  *
  * @param {object} strength  the `strength` block of a published document
@@ -71,7 +112,8 @@ export function ratingsFromShared(strength, compare) {
     const toNext = Number.isFinite(pair[1]) ? pair[1] : null;
     const level = levelFor(percentile);
     const next = nextLevelAfter(level);
-    const contributors = Array.isArray(m.contributors) ? m.contributors : [];
+    const contributors = (Array.isArray(m.contributors) ? m.contributors : [])
+      .map(readableContributor);
     const top = contributors[0] || null;
 
     out.set(m.muscle, {
@@ -105,6 +147,14 @@ export function ratingsFromShared(strength, compare) {
           // published before that date — the panel falls through to reps/date.
           ...(top.performedReps ? { performedReps: top.performedReps } : null),
           ...(top.performedDate ? { performedDate: top.performedDate } : null),
+          // ⚠️ AND THE SAME FOR THE TWO "More details" NUMBERS — 2026-09-21.
+          // `best` is the object rebuilt field by field rather than spread, so
+          // it is the half that gets forgotten: `performedReps` above was
+          // forgotten here once already. Copied through `readableContributor()`
+          // above, so an out-of-range value is absent here too rather than
+          // arriving by a second route the checks do not cover.
+          ...('estimate' in top ? { estimate: top.estimate } : null),
+          ...('share' in top ? { share: top.share } : null),
         }
         : null,
       percentile,

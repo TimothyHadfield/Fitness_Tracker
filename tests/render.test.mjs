@@ -469,8 +469,55 @@ ok(!/stronger than/.test(panelText) && !/\b\d+%/.test(panelText),
    '⚠️ but NOT the percentile — the ranking is the answer, and being ranked against people by number is the part that stings');
 ok(/confidence/i.test(panelText),
    '⚠️ and how much to believe it — shortened to a word, never dropped');
-ok(/from .+\d+×\d+/.test(panelText),
-   '⚠️ and the set it was converted FROM (Rule 5: an inference must not look like a measurement)');
+/* 🔄 READ OFF THE COLUMNS, NOT OUT OF A SENTENCE — 2026-09-21. ~~`/from .+\d+×\d+/`~~ matched
+ * the "from Barbell Bench Press 225×1" framing, which Tim replaced with a table: *"make the
+ * From: details … display better by putting the details in columns: exercise, weightxreps, and
+ * date."* The CLAIM is unchanged and is still Rule 5's anchor — a real recorded set named beside
+ * the estimate — and asserting it per column is STRICTER than asserting it on the prose, because
+ * a row that had lost its date entirely would still have satisfied the old regex. */
+const src0 = panel.querySelector('.muscle-sources .msrc-row');
+ok(Boolean(src0)
+   && /\S/.test(src0.querySelector('.msrc-ex').textContent)
+   && /\d+ lbs×\d+/.test(src0.querySelector('.msrc-set').textContent)
+   && /\S/.test(src0.querySelector('.msrc-date').textContent),
+   '⚠️ and the set it was converted FROM — exercise, weight×reps and date, one column each '
+   + '(Rule 5: an inference must not look like a measurement)');
+
+/* ── the compact state carries NO header row, and the cap is why ──────────
+ * "Barbell Bench Press", "225 lbs×1" and "Aug 20" say what they are; five header words in the
+ * state everybody sees buy nothing and cost the 40-word budget asserted above. The two derived
+ * columns are the ones that need labelling, which is exactly where the header appears. */
+ok(!panel.querySelector('.msrc-head'),
+   'the compact source table has no header row — the three recorded columns label themselves');
+ok(!panel.querySelector('.msrc-est') && !panel.querySelector('.msrc-share'),
+   'and no derived columns until they are asked for');
+
+/* ── the toggle, and the thing it must never become ──────────────────────
+ * 🚨 `settings.moreDetails` is Tim's 2026-08-25 decision about the percentile being "a little
+ * harsh". This is local view state on one block. A suite that cannot tell them apart is how
+ * they get quietly wired to one switch by a later session. */
+{
+  const msrcBtn = panel.querySelector('button.msrc-toggle');
+  ok(Boolean(msrcBtn) && msrcBtn.tagName === 'BUTTON' && /More details/.test(msrcBtn.textContent),
+     'the extra columns are behind a real button, in the tab order, with an accessible name');
+  ok(msrcBtn.getAttribute('aria-expanded') === 'false',
+     'and it announces its own state rather than leaving a screen reader to guess');
+  msrcBtn.click();
+  ok(panel.querySelector('.muscle-sources').classList.contains('is-more')
+     && Boolean(panel.querySelector('.msrc-head'))
+     && panel.querySelectorAll('.msrc-row .msrc-est').length
+        === panel.querySelectorAll('.msrc-row').length,
+     'tapping it adds the header and one estimate cell per contribution');
+  ok(msrcBtn.getAttribute('aria-expanded') === 'true' && /Fewer details/.test(msrcBtn.textContent),
+     'and the button says so');
+  ok(!/stronger than/.test(panel.textContent),
+     '🚨 AND IT DID NOT TURN THE PERCENTILE ON — the local table state and settings.moreDetails '
+     + 'are two different things and must never be wired to one switch');
+  msrcBtn.click();   // module-level state: leave it where the rest of the suite expects it
+  ok(!panel.querySelector('.msrc-head'),
+     '⚠️ and it closes again — the vacuity guard for the four assertions above, which a button '
+     + 'that only ever opened would satisfy');
+}
 // One benchmark in this fixture, so one source line — the multi-source case is
 // driven with three real chest lifts further down.
 ok(panel.querySelectorAll('.muscle-sources > *').length === 1,
@@ -541,11 +588,22 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
   ok(sources.length === 3,
      `🚨 all three contributing sets are named (${sources.length}) — the estimate is a blend of `
      + 'three exercises and the panel now shows the whole of the working');
-  ok(/^from /.test(sources[0]) && sources.slice(1).every((s) => /^and /.test(s)),
-     'reading as one sentence: "from … and … and …", in the credibility order they are weighted in');
-  ok(new Set(sources.map((s) => s.replace(/^(from|and) /, '').split(/\s\d/)[0])).size === 3,
+  /* 🔄 ~~"from … and … and …"~~ WENT WITH THE TABLE (Tim, 2026-09-21) — but the ORDER that
+   * sentence was carrying did not, and that is the half worth a test. `rateMuscle()` sorts on
+   * `evidenceWeight`, so the leader here is the BENCHMARK (225×1) rather than the most recent
+   * set — which is what makes this non-vacuous: date order and credibility order disagree in
+   * this fixture, and the panel prints credibility order. */
+  const exNames = [...many.querySelectorAll('.muscle-sources .msrc-row .msrc-ex')]
+    .map((n) => n.textContent);
+  const setCells = [...many.querySelectorAll('.muscle-sources .msrc-row .msrc-set')]
+    .map((n) => n.textContent);
+  ok(exNames[0] === 'Barbell Bench Press' && /^225 lbs×1$/.test(setCells[0]),
+     `in credibility order, the leader first (${exNames.join(' · ')}) — the benchmark, not the `
+     + 'most recent set and not the one at the top of the calendar');
+  ok(new Set(exNames).size === 3,
      '⚠️ and they are three DIFFERENT exercises — one seat each, which is what makes a corroborated '
-     + 'reading different from the same lift counted three times');
+     + 'reading different from the same lift counted three times. Read off `.msrc-ex` rather than '
+     + 'sliced out of a sentence, which used to land on the date by luck');
 
   /* ===== 🚨 THE SOURCE LINE NAMES A SET THAT WAS ACTUALLY PERFORMED ===== *
    *
@@ -574,8 +632,13 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
         sets: [{ weight: 225, reps: 10 }] }],
     });
     const withHeavy = await openMuscles();
-    const benchLine = [...withHeavy.querySelectorAll('.muscle-sources > *')]
-      .map((n) => n.textContent).find((s) => s.includes('Barbell Bench Press'));
+    /* 🔄 READ OFF THE CELLS SINCE 2026-09-21 — the row's `textContent` now concatenates
+     * columns with no separator ("Barbell Bench Press225 lbs×10Aug 20"), so a regex over the
+     * whole row proves nothing about which column carried which fact. Cell-wise is stricter. */
+    const benchRow = [...withHeavy.querySelectorAll('.muscle-sources .msrc-row')]
+      .find((r) => r.querySelector('.msrc-ex').textContent === 'Barbell Bench Press');
+    const benchSet = benchRow && benchRow.querySelector('.msrc-set').textContent;
+    const benchDate = benchRow && benchRow.querySelector('.msrc-date').textContent;
     const heavyText = withHeavy.querySelector('.muscle-detail').textContent.replace(/\s+/g, ' ');
     /* 🚨 THE VACUITY GUARD, AND IT IS THE WHOLE REASON THIS BLOCK IS SAFE. The
      * source line reads the same — "225×10, Aug 20" — whether the seat is the
@@ -588,13 +651,14 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
        '⚠️ the seat really IS the superseded row — no "From a N-rep set" caveat, which only a '
        + 'reading at five reps or fewer suppresses, so the arithmetic is running on the truncation '
        + 'while the line below names the twelve');
-    ok(Boolean(benchLine) && /225×10/.test(benchLine.replace(/\s+/g, '')),
-       `🚨 the panel names the set he PERFORMED — "${benchLine}" — not the rep count the model `
+    ok(/^225 lbs×10$/.test(benchSet || ''),
+       `🚨 the panel names the set he PERFORMED — "${benchSet}" — not the rep count the model `
        + 'truncated it to. A 225 × 10 that supersedes a lighter set is read at the lighter set\'s '
        + 'reps for the arithmetic, and printing that reads as a set nobody did');
-    ok(/Aug 20/.test(benchLine),
-       `⚠️ and on the day he did it (${benchLine}) — the superseded row carries the OTHER set's `
-       + 'date too, so the same fault sits one field along');
+    ok(/Aug 20/.test(benchDate || ''),
+       `⚠️ and on the day he did it (${benchDate}) — the superseded row carries the OTHER set's `
+       + "date too, so the same fault sits one field along. Aimed at the DATE cell now: the old "
+       + 'version matched the whole row and passed on a substring wherever it happened to sit');
 
     await store.deleteSession(added.id);
     const after = await openMuscles();
@@ -7264,10 +7328,26 @@ ok(!data.querySelector('.rep-target'),
        + 'group like that own user can on themselves and pull details from it"');
     ok(/Estimated 1-rep max/.test(panel),
        '⚠️ including the estimate, which the projection deliberately withheld until today');
-    ok(/Barbell Bench Press 205/.test(panel.replace(/\s+/g, ' ')),
+    /* 🔄 CELL-WISE SINCE 2026-09-21 — the space in ~~"Barbell Bench Press 205"~~ was a sentence
+     * artefact and the name and the weight are two columns now. */
+    const fRow = [...fr.querySelectorAll('.muscle-sources .msrc-row')]
+      .find((r) => /Barbell Bench Press/.test(r.querySelector('.msrc-ex').textContent));
+    ok(Boolean(fRow) && /^205 lbs×/.test(fRow.querySelector('.msrc-set').textContent),
        '🚨 AND THE RECORDED SETS IT CAME FROM. Rule 5 travels with the number: an estimate whose '
        + 'source is not on screen is indistinguishable from one the app made up');
     ok(/confidence/i.test(panel), 'and how much it is worth believing');
+
+    /* 🚨 ABSENT IS NOT EMPTY, ON THE ONE SCREEN WHERE THE READER CANNOT CHECK — 2026-09-21.
+     * This fixture is a document published BEFORE the two derived numbers existed, which is
+     * what almost every document in the world is. A button that opens two columns of dashes is
+     * a control that does nothing and invites a hunt for numbers nobody published. The test is
+     * on the DATA rather than on whose map it is, so it self-corrects as documents catch up. */
+    const fHasDerived = [...fr.querySelectorAll('.muscle-sources .msrc-row')]
+      .some((r) => r.querySelector('.msrc-est'));
+    ok(!fHasDerived && !fr.querySelector('.msrc-toggle'),
+       '🚨 a panel whose document carries no derived numbers offers no button to open them, and '
+       + 'no empty columns either — the same rule legend() already applies: a key for a mark that '
+       + 'is nowhere on screen is a puzzle rather than a key');
 
     /* ⚠️ THE COMPARISON GROUP IS THEIRS, NOT MINE. The label over their figure
      * must not claim a body weight this device does not have. */

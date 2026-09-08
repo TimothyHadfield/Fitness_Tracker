@@ -2599,12 +2599,70 @@ export function rateMuscle(observations, muscle = null) {
    * weight of a 3-rep one on evidence that says "less accurate", not "half".
    * Recency, fatigue and the benchmark bonus stay: none of them is a statement
    * about how far the curve is extrapolating. */
-  const estimate = robustAggregate(used.map((u) => {
+  /* 🔒 BUILT ONCE AND READ TWICE — by the blend on the next line, and by the
+   * `share` each row carries below. The panel now prints how much of the answer
+   * each contribution bought, and a SECOND copy of the expression below, written
+   * out for the display, is the exact fault this file keeps having to undo: the
+   * two drift apart, and the screen then explains the rating with a number that
+   * did not produce it. One array, both readers. */
+  const blendWeight = used.map((u) => {
     const sigma = readingSigma(u);
-    const w = (u.evidenceWeight / u.quality / repFactor(u.reps)) / (sigma * sigma);
-    return { x: u.estimate, w };
-  }));
+    return (u.evidenceWeight / u.quality / repFactor(u.reps)) / (sigma * sigma);
+  });
+
+  const estimate = robustAggregate(used.map((u, i) => ({ x: u.estimate, w: blendWeight[i] })));
   if (!(estimate > 0)) return null;
+
+  /* ── `share` — WHAT FRACTION OF THE ANSWER EACH ROW BOUGHT ────────────────
+   *
+   * The second of the two numbers the "more details" columns show. `estimate`,
+   * already on every row, answers *"what would this set alone have called it"*;
+   * this answers *"and how much of the final number did it actually get to
+   * set"*. A row printing 155 next to a share of 0.08 is telling the truth about
+   * why the rating did not come out at 155.
+   *
+   * WHAT IS IN IT, so the column can be described honestly: recency
+   * (`recencyWeight(ageDays)`), fatigue (`fatigueOf()`), the benchmark bonus,
+   * and 1/σ² from `readingSigma()` — which is the conversion doubt
+   * (`sigmaFor()`: how far this exercise's published ratio is trusted to
+   * transfer, plus gearing, plus a stand-in hop) in quadrature with the rep
+   * doubt (`repSigma()`). WHAT IS NOT IN IT: `quality` and `repFactor(reps)`,
+   * divided straight back out on the line above, because σ now carries both of
+   * those doubts and charging them twice is the defect the 🔄 note documents.
+   * So Tim's *"date, exercise transferability, etc."* is the right description
+   * — the rep count is in there too, but as variance inside σ rather than as a
+   * multiplier of its own.
+   *
+   * ⚠️ THE ZERO FILTER MIRRORS `robustAggregate()`, which drops anything with
+   * `w <= 0` or `x <= 0` before it averages (strength-estimate.js, its `live`
+   * line). A row it dropped moved the answer by nothing, so its share is 0
+   * rather than a slice of a total it never joined — otherwise the column would
+   * add up to more influence than the blend actually distributed. Neither case
+   * can arise on today's data: `evidenceWeight > 0` is filtered where `scored`
+   * is built, `estimate > 0` at `admissible` and `dominate()` only ever rescales
+   * it by a positive factor, and σ cannot be 0 because `sigmaFor()` floors every
+   * branch at `SIGMA_SOURCE` (0.05). It is guarded anyway because the failure
+   * mode is a literal "NaN" printed on a user's screen.
+   *
+   * 🛑 THE DEGENERATE CASES, DECIDED RATHER THAN INHERITED:
+   *   • empty `used` never reaches here — `robustAggregate()` returns null on an
+   *     empty list and the guard above has already returned.
+   *   • a zero or non-finite total gives EVERY row share 0, not 1/n. "We cannot
+   *     say what this contributed" is true; an even split fabricated to make the
+   *     column add to 1 is not, and it would be indistinguishable from a real
+   *     three-way tie.
+   *   • otherwise the shares sum to 1 to floating-point tolerance, by
+   *     construction — they are one array divided by its own total.
+   *
+   * 🚨 IT IS ADDITIVE AND NOTHING ABOVE READS IT. `estimate`, `confidence`, the
+   * candidate sort, `contributorCount`, `exerciseCount` and `quarantined` are
+   * all already decided by this point; this loop only writes a new field onto
+   * rows that are about to be returned. */
+  const counted = blendWeight.map((w, i) => (
+    Number.isFinite(w) && w > 0 && used[i].estimate > 0 ? w : 0));
+  const shareTotal = counted.reduce((a, w) => a + w, 0);
+  const shareable = Number.isFinite(shareTotal) && shareTotal > 0;
+  used.forEach((u, i) => { u.share = shareable ? counted[i] / shareTotal : 0; });
 
   return {
     estimate,

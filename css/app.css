@@ -4101,9 +4101,185 @@ a.seg {
    in the card's normal rhythm, because it is a CAPTION on that number and not
    another fact about the muscle — at the card's 7px gap it read as a third
    line of equal standing. */
-/* The two or three sets the estimate was built from, as one block rather than
-   three lines in the card's own rhythm — they are one answer to one question. */
-.muscle-sources { display: flex; flex-direction: column; gap: 2px; }
+/* ── The sets the estimate was built from, as COLUMNS (2026-09-21) ──────────
+   🚨 Tim: *"make the From: details under the muscle group and estimated 1RM
+   display better by putting the details in columns: exercise, weightxreps, and
+   date. Also I want to try having a 'more details' button which adds more
+   columns… Also, make each column have a different color so it's easy to see
+   which numbers correspond to where."*
+
+   It used to be three sentences stacked — "from Lat Pulldown 85 lbs×12, 14 Sep"
+   / "and …" — so the weight sat in a different place on every line and nothing
+   could be read DOWN the block. That is the whole request: the same fact in the
+   same place on every row.
+
+   ⚠️ `display: contents` ON THE ROW IS THE LOAD-BEARING LINE. The tracks belong
+   to `.muscle-sources`; a row that stayed a box would size its own columns and
+   the three rows would not line up with each other — which is the one thing this
+   was asked to fix. Rows are 1–3 in practice (the rating uses at most three
+   contributions), so there is no case where a flat grid is the wrong shape.
+
+   🛑 NO MOTION when the two extra columns arrive, and that is a decision rather
+   than an omission. `grid-template-columns` does not interpolate between a
+   three-track and a five-track list, so the only animation available is a fade
+   on the new cells — and Rule 7 wants motion that SHOWS A RELATIONSHIP. The
+   relationship here ("same three rows, two more facts about each") is already
+   shown by the three original columns not moving. A fade would decorate it. */
+
+/* 🚨 FIVE COLUMN COLOURS, AND EVERY ONE OF THEM IS A NEW TOKEN. Neither `--lv-*`
+   nor `--series-*` could be borrowed: those carry MEANING — a strength level and
+   a point in time — and a date column wearing "Advanced" blue would be saying
+   something false. Chosen the way the chart series were: OKLCH, one lightness
+   band per theme (light L .473–.511, dark L .674–.695) so the five read as one
+   weight rather than as a ranking, hues chosen by exhaustive search over the
+   wheel to maximise the OKLab separation of ADJACENT columns.
+
+   ⚠️ HUES 33° AND 159° ARE EXCLUDED BY HAND: they are `--danger` and `--good`,
+   which are reserved meanings in this app. A red column would read as an error
+   and a green one as a pass.
+
+   ⚠️ THE MEASURED NUMBERS, because this file's own history says a hex nudged by
+   eye invalidates all of it. Every colour was checked against `--ground`,
+   `--surface`, `--raised` and `--rule-soft` in BOTH themes and ALL FOUR palettes
+   — 80 pairs per theme. Worst cell 5.01:1 light, 5.02:1 dark, against the 4.5:1
+   WCAG AA needs for text under 18.66px; on `--ground`, which is what is actually
+   painted behind this panel, the range is 5.69–6.71. Adjacent-pair separation
+   under simulated protanopia/deuteranopia (Machado 2009, severity 1.0) is
+   ΔE ≥ 14.0, against a target of 8; unsimulated it is ΔE ≥ 15.8, against a floor
+   of 15. On the harder ALL-pairs list the unsimulated worst is 15.3 and the CVD
+   worst is 5.1 — five categorical colours cannot clear the all-pairs CVD floor
+   in any design system, which is why colour is never the only cue here (below).
+
+   ⚠️ TWO OF THE LIGHT VALUES SIT UNDER THE 0.10 CHROMA FLOOR (--msrc-1 at .084,
+   --msrc-2 at .098) and that is the sRGB gamut, not a slack choice: there is no
+   more chroma at those hues at this lightness. Measured against a neutral grey
+   of their own lightness they are ΔE 8.4 and 9.8 apart — coloured, not grey. */
+:root {
+  --msrc-1: #00A9C6;   /* exercise      cyan        OKLCH .676 .120 216° */
+  --msrc-2: #B39700;   /* weight × reps olive       OKLCH .681 .140  96° */
+  --msrc-3: #7C89FE;   /* date          periwinkle  OKLCH .674 .172 276° */
+  --msrc-4: #FF5588;   /* est. 1RM      rose        OKLCH .692 .208   6° */
+  --msrc-5: #E159EF;   /* share         orchid      OKLCH .695 .240 324° */
+}
+:root[data-theme="light"] {
+  /* Same five hues, re-stepped for a light ground — not flipped. A light theme
+     that reuses the dark steps is the bug the strength ramp's note describes. */
+  --msrc-1: #00677A;
+  --msrc-2: #6D5C00;
+  --msrc-3: #473AE2;
+  --msrc-4: #BB0154;
+  --msrc-5: #A300B1;
+}
+
+/* ⚠️ NOT OVERRIDDEN PER PALETTE, AND THAT IS DELIBERATE — it is what keeps this
+   block clear of the `.load-badge.per-side` trap (2026-09-06). The four palettes
+   move the surfaces by at most 0.3:1 on these colours, so one set clears AA on
+   all four; a palette-scoped fix would need `:not([data-palette])` for gold and
+   is exactly the rule somebody writes unscoped and breaks three to fix one. */
+
+.muscle-sources {
+  display: grid;
+  /* 🚨 THE FIRST COLUMN IS THE ONLY ONE ALLOWED TO GIVE WAY. An exercise name
+     wraps; "85 lbs×12" and "14 Sep" must not, because a number split over two
+     lines stops being one number. The 4.5em floor is what stops `1fr`
+     collapsing to nothing when five columns will not fit — past that the block
+     scrolls inside itself rather than crushing the name to one letter a line. */
+  grid-template-columns: minmax(4.5em, 1fr) max-content max-content;
+  align-items: baseline;
+  column-gap: 9px;
+  row-gap: 2px;
+  /* Rule 1: wide content scrolls inside its own box, never the page. `min-width:
+     0` is the line that makes that do anything at all inside a column flex
+     parent — the `.research-scroll` lesson, which was inert for eight days
+     without it. The Y axis is stated because leaving it `visible` computes it to
+     `auto` and invents a vertical scroller (2026-09-02). */
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.muscle-sources.is-more { grid-template-columns: minmax(4.5em, 1fr) repeat(4, max-content); }
+
+.msrc-head, .msrc-row { display: contents; }
+
+/* 🔒 The two extra columns are hidden rather than assumed absent, so the toggle
+   still works if the view leaves every cell in the DOM and only flips the class.
+   Same for the header, which is a legend for colours that are not on screen yet
+   in the three-column state. */
+.muscle-sources:not(.is-more) .msrc-head,
+.muscle-sources:not(.is-more) .msrc-est,
+.muscle-sources:not(.is-more) .msrc-share { display: none; }
+
+/* 🛑 COLOUR IS NEVER THE ONLY THING SAYING WHICH COLUMN A NUMBER IS IN — Rule 5's
+   general form, and the reason the all-pairs CVD number above is survivable. A
+   column is identified by its fixed position first, by this header second, and
+   by its colour third. The header's hairline stops at each column gap on
+   purpose: five ticks that mark the tracks, not one rule that draws a table
+   (Rule 2). */
+.msrc-head > * {
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-bottom: 3px;
+  margin-bottom: 2px;
+  /* --rule, not --rule-soft: measured in the browser at 360px in both themes,
+     the soft one was invisible at 1px under 9.5px type and the header stopped
+     being a second cue at all. */
+  border-bottom: 1px solid var(--rule);
+}
+
+.msrc-ex { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.msrc-set, .msrc-date, .msrc-est, .msrc-share { white-space: nowrap; }
+/* The two derived numbers are right-aligned so their magnitudes line up; the
+   record's own columns stay left, where a unit suffix reads as part of a phrase
+   rather than as a figure in a ledger. */
+.msrc-est, .msrc-share,
+.msrc-head > :nth-child(4), .msrc-head > :nth-child(5) { text-align: right; }
+
+/* One colour per column. Written twice — once on the class the row uses, once by
+   position — so the header legend is painted whether or not the view repeats the
+   cell classes in it. */
+.msrc-ex,    .msrc-head > :nth-child(1) { color: var(--msrc-1); }
+.msrc-set,   .msrc-head > :nth-child(2) { color: var(--msrc-2); }
+.msrc-date,  .msrc-head > :nth-child(3) { color: var(--msrc-3); }
+.msrc-est,   .msrc-head > :nth-child(4) { color: var(--msrc-4); }
+.msrc-share, .msrc-head > :nth-child(5) { color: var(--msrc-5); }
+
+/* The "More details" switch. It wears `.add-set`'s shape — a 32px raised pill,
+   fully rounded — because that is what a small inline control looks like in this
+   app already, and it hits at 44px through the same pseudo-element the icon
+   buttons and the session pills use. A request for another view of the same rows
+   is not permission to ship a 32px touch target.
+   ⚠️ The open state is `--raised-hi` and `--ink`, NOT `--accent` on
+   `--accent-dim`: that pair measures 3.96:1 in gold light and has now had to be
+   fixed on six separate classes. `.mini-btn:active` already paints this one. */
+.msrc-toggle {
+  position: relative;
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.msrc-toggle::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 44px;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
+}
+.msrc-toggle:active { transform: scale(.96); background: var(--raised-hi); }
+.msrc-toggle[aria-expanded="true"] { background: var(--raised-hi); color: var(--ink); }
 
 .muscle-est-note {
   margin-top: -5px;

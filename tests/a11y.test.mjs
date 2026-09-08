@@ -45,6 +45,47 @@ ok(contrast('#000000', '#FFFFFF') === 21, 'black on white is 21:1 — the contra
 ok(contrast('#777777', '#FFFFFF') >= 4.47 && contrast('#777777', '#FFFFFF') <= 4.5,
    'and mid grey on white is the ~4.48 that sits just under AA, so the scale is not inverted');
 
+/* ---------- perceptual DISTANCE, which contrast cannot answer ---------- *
+ *
+ * ⚠️ A DIFFERENT QUESTION FROM THE ONE ABOVE, and the muscle panel's column
+ * colours need both. Contrast asks "can this be read against that background";
+ * ΔE asks "can these two be told apart from each other". Two colours can sit at
+ * an identical contrast ratio against the same ground and be indistinguishable
+ * — luminance is one number and colour is three — which is exactly the failure
+ * a five-colour legend has to rule out.
+ *
+ * CIE76 in Lab: the simple one. It understates differences in saturated blues,
+ * so it is CONSERVATIVE for this use — a set that clears the floor here clears
+ * it under CIEDE2000 too. sRGB → linear → XYZ (D65) → Lab. */
+const XYZ = (hex) => {
+  const [r, g, b] = rgb(hex).map(chan);
+  return [
+    r * 0.4124564 + g * 0.3575761 + b * 0.1804375,
+    r * 0.2126729 + g * 0.7151522 + b * 0.0721750,
+    r * 0.0193339 + g * 0.1191920 + b * 0.9503041,
+  ];
+};
+const LAB = (hex) => {
+  const [X, Y, Z] = XYZ(hex);
+  const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const [fx, fy, fz] = [f(X / 0.95047), f(Y / 1), f(Z / 1.08883)];
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+};
+const deltaE = (a, b) => {
+  const [l1, a1, b1] = LAB(a); const [l2, a2, b2] = LAB(b);
+  return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+};
+
+/* 🚨 THE DISTANCE MATHS GETS ITS OWN SANITY CHECK FOR THE SAME REASON THE
+ * CONTRAST MATHS DOES — and it is the more necessary of the two, because a
+ * broken ΔE would report a healthy number for a collapsed palette and the
+ * assertion built on it would pass while measuring nothing (§0.18). A colour
+ * against itself must be exactly 0, and black-to-white must be Lab's full
+ * 100 lightness span. */
+ok(deltaE('#00A9C6', '#00A9C6') === 0, 'a colour is zero distance from itself — the ΔE maths is real');
+ok(Math.round(deltaE('#000000', '#FFFFFF')) === 100,
+   'and black to white spans the full 100 of Lab lightness, so the scale is not squashed');
+
 /* ---------- read the two palettes out of the stylesheet ---------- */
 
 // Bare :root is DARK in this sheet; :root[data-theme="light"] overrides it.
@@ -158,6 +199,99 @@ for (const t of TEXT) {
        `${name}: --accent-ink reads on a filled accent button (${contrast(pal['accent-ink'], pal.accent)})`);
     ok(contrast(pal.good, pal.ground) >= AA && contrast(pal.danger, pal.ground) >= AA,
        `${name}: --good and --danger both read on the ground`);
+  }
+
+  /* ================================================================== *
+   * 🚨 THE MUSCLE PANEL'S FIVE COLUMN COLOURS — 2026-09-21
+   * ================================================================== *
+   *
+   * Tim: *"make each column have a different color so it's easy to see which
+   * numbers correspond to where."* Five text colours, one per column of the
+   * "from …" table, painted on `--ground`.
+   *
+   * 🚨 THEY ARE INVISIBLE TO EVERY CHECK ABOVE, AND THAT IS WHY THIS BLOCK
+   * EXISTS. `block()` matches the FIRST `:root` block only, so tokens declared
+   * in a feature-local one further down the sheet never reach `dark`/`light`;
+   * and the names are not in `TEXT` anyway. **This is the `.load-badge.per-side`
+   * shape exactly** (2026-09-06): a pair no `:root` rule declares, measured at
+   * 3.96:1 in one theme of one palette, which this suite could not see and the
+   * browser audit had to find. The fix then was to assert the pair directly.
+   * Same answer here, before it costs anything.
+   *
+   * ⚠️ PARSED FROM THE WHOLE SHEET, NOT FROM THE FIRST BLOCK. If somebody later
+   * moves these tokens up into the main palette block this keeps working; if
+   * somebody deletes them the presence assertion fails by name rather than the
+   * loop below quietly comparing `undefined`. */
+  {
+    const allBlocks = (re) => {
+      const out = {};
+      for (const m of CSS.matchAll(re)) {
+        for (const [, k, v] of m[1].matchAll(/--([\w-]+):\s*(#[0-9A-Fa-f]{6})\s*;/g)) {
+          out[k] = v.toUpperCase();
+        }
+      }
+      return out;
+    };
+    const COLS = ['msrc-1', 'msrc-2', 'msrc-3', 'msrc-4', 'msrc-5'];
+    const msrcDark = allBlocks(/:root\s*\{([\s\S]*?)\n\}/g);
+    const msrcLight = allBlocks(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\n\}/g);
+
+    ok(COLS.every((c) => msrcDark[c]) && COLS.every((c) => msrcLight[c]),
+       '🚨 all five column colours are declared in BOTH themes — a column that inherits the dark '
+       + 'value on a light ground is the one failure mode this whole block exists to catch');
+
+    /* ⚠️ ALL FOUR PALETTES, because there are no palette-scoped overrides for
+     * these: one set is expected to clear AA against every palette's surfaces.
+     * That is a stronger claim than a per-palette set would make, so it needs
+     * the stronger check — and it is what stops somebody "fixing" a future
+     * failure the way `.load-badge.per-side` nearly was, by painting one
+     * palette's value over all four. */
+    const surfaceSets = [
+      ['default dark', dark], ['default light', light],
+      ...PALETTES.flatMap((p) => [
+        [`${p} dark`, { ...dark, ...paletteBlock(p, false) }],
+        [`${p} light`, { ...dark, ...lightOnly, ...paletteBlock(p, true) }],
+      ]),
+    ];
+    for (const [name, pal] of surfaceSets) {
+      const isLight = name.includes('light');
+      const cols = isLight ? msrcLight : msrcDark;
+      let worst = Infinity, worstAt = '';
+      for (const c of COLS) {
+        for (const s of SURFACES) {
+          const r = contrast(cols[c], pal[s]);
+          if (r < worst) { worst = r; worstAt = `--${c} on --${s}`; }
+        }
+      }
+      ok(worst >= AA,
+         `${name}: every column colour clears AA on every surface — worst ${worst}:1 (${worstAt})`);
+    }
+
+    /* ⚠️ VACUITY GUARD, and it is the one that matters here. Five colours that
+     * all clear AA and are all the same colour would satisfy every assertion
+     * above while destroying the entire point of the feature. Tim asked for
+     * this so the columns are TELLABLE APART, so that is what gets asserted —
+     * measured as a real perceptual distance, not as "the hexes differ".
+     *
+     * The floor is deliberately low. Five categorical colours cannot clear the
+     * all-pairs CVD floor in any design system (the dataviz guidance caps its
+     * own default at three), which is exactly why colour is not the only cue on
+     * this table — position and, in the expanded state, a header row carry it.
+     * What this number rules out is a set that has collapsed. */
+    for (const [name, cols] of [['dark', msrcDark], ['light', msrcLight]]) {
+      let worst = Infinity, pair = '';
+      for (let i = 0; i < COLS.length; i++) {
+        for (let j = i + 1; j < COLS.length; j++) {
+          const d = deltaE(cols[COLS[i]], cols[COLS[j]]);
+          if (d < worst) { worst = d; pair = `${COLS[i]}/${COLS[j]}`; }
+        }
+      }
+      ok(worst >= 5,
+         `${name}: the five columns are visibly different from each other — closest pair ${pair} `
+         + `at ΔE ${worst.toFixed(1)}. Colour is not the only cue (position, and a header row when `
+         + 'the extra columns are showing), but a set that had collapsed to one hue would pass '
+         + 'every contrast assertion above and deliver nothing Tim asked for');
+    }
   }
 
   // The dark/light weight parity, per palette — a caption must not read as an

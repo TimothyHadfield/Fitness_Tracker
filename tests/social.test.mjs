@@ -382,6 +382,128 @@ ok(projectStrength({ muscles: [{ muscle: 'Chest', secretNote: 'x' }], grid: {} }
 ok(projectStrength(null).muscles.length === 0 && projectStrength([]).grid !== undefined,
    'and a missing or legacy-shaped map degrades to an empty one rather than throwing mid-publish');
 
+/* ================================================================== *
+ * 🆕 THE TWO "MORE DETAILS" NUMBERS — 2026-09-21
+ * ================================================================== *
+ *
+ * Tim asked the muscle panel's "from …" block to become columns, with a More
+ * details button adding what each contribution ALONE would have called the
+ * muscle (`estimate`) and how much of the final number it bought (`share`).
+ *
+ * 🚨 THEY HAVE TO TRAVEL, because `detail()` in js/views-muscles.js draws a
+ * friend's panel through the SAME function as the owner's. Withheld, the button
+ * gives a stranger two columns of dashes on the one screen whose entire job is
+ * showing the working. Neither is derivable from what was already published: a
+ * reader has the exercise NAME and never its id, so no ratio; and `share` needs
+ * σ, recency, fatigue and evidence weight, none of which travel.
+ *
+ * ⚠️ THE FIXTURE IS BUILT HERE RATHER THAN ADDED TO `STRENGTH`, because the
+ * discriminating row is a share of exactly ZERO and that fixture has no natural
+ * one — and because the surrounding assertions are calibrated against it. */
+{
+  const rows = [
+    { exerciseName: 'Barbell Bench Press', weight: 205, reps: 3, date: '2026-08-10',
+      loadType: 'total', source: 'benchmark', estimate: 233.4, share: 0.68 },
+    /* 🚨 THE ROW THIS BLOCK EXISTS FOR. A share of exactly 0 is a real
+     * statement — this set moved the answer by nothing — and it is precisely
+     * the value a truthiness test deletes. "It contributed nothing" and "their
+     * app has not published this yet" are different facts, and a reader cannot
+     * tell them apart after the key is gone. */
+    { exerciseName: 'Push-Up', weight: 0, reps: 30, date: '2026-08-02',
+      loadType: 'total', source: 'workout', estimate: 96.2, share: 0 },
+    { exerciseName: 'Cable Fly', weight: 40, reps: 12, date: '2026-08-15',
+      loadType: 'per_side', source: 'workout' },
+  ];
+  const map = {
+    muscles: [{
+      muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 233.4, confidence: 0.71,
+      band: 'Good', basis: 'direct', contributorCount: 9, exerciseCount: 3,
+      contributors: rows, hint: null, confident: false,
+    }],
+    grid: { 'lifters|male|own|own': { Chest: [62, 24.5] } },
+    defaultCompare: 'lifters|male|own|own',
+  };
+  const out = projectStrength(map).muscles[0].contributors;
+
+  ok(out[0].estimate === 233.4 && out[0].share === 0.68,
+     '🚨 BOTH "More details" NUMBERS TRAVEL — what this set alone would have called the muscle, '
+     + 'and how much of the final number it bought');
+  ok(out[1].share === 0,
+     '🚨 AND A SHARE OF EXACTLY 0 SURVIVES. The mutation this exists for is `...(num(c.share) ? …)`, '
+     + "which is falsy at zero and would delete the row's only honest statement about itself");
+  ok(!('estimate' in out[2]) && !('share' in out[2]),
+     '⚠️ a row carrying neither carries neither KEY — absent, never null. Every document published '
+     + 'before today is that row, and two nulls apiece is size the 1 MB ceiling need not spend');
+
+  const junk = projectStrength({
+    muscles: [{ muscle: 'Chest', contributors: [
+      { exerciseName: 'A', estimate: 0, share: Number.NaN },
+      { exerciseName: 'B', estimate: -5, share: 'lots' },
+    ] }],
+    grid: {},
+  }).muscles[0].contributors;
+  ok(!('estimate' in junk[0]) && !('share' in junk[0])
+     && !('estimate' in junk[1]) && !('share' in junk[1]),
+     '⚠️ and they are sanitised like every other field here — a non-positive estimate is a bug '
+     + 'rather than a fact, and a non-numeric share would reach a percentage formatter');
+
+  const doc = buildProjection({
+    audience: PUBLIC, profile: { name: 'Tim' }, sessions: [], benchmarks: [],
+    strength: map, publishedAt: '2026-09-21T12:00:00.000Z',
+  });
+  ok(doc.strength.muscles[0].contributors[0].share === 0.68,
+     'they survive a whole publish, not just the projection called by hand');
+  ok(assertAudienceClean(doc, PUBLIC) === true,
+     '⚠️ and the guard needs no extension to accept them: numbers inside a block that is already '
+     + 'whitelisted, not a new structure the way `connections` was, and neither is body weight');
+
+  /* ---- the read side, which had NO coverage at all before today ---- *
+   *
+   * 🚨 ABSENT IS NOT EMPTY. Almost every published document was written before
+   * these fields existed, and a friend's panel must show that rather than a
+   * blank column pretending to be data or a "0 %" that is a lie. */
+  const { ratingsFromShared } = await import('../js/shared-map.js');
+  const read = (contributors) => ratingsFromShared({
+    muscles: [{ muscle: 'Chest', lift: 'Barbell Bench Press', estimate: 233.4, confidence: 0.71,
+      band: 'Good', basis: 'direct', contributorCount: 3, exerciseCount: 2, contributors }],
+    grid: { 'lifters|male|own|own': { Chest: [62, 24.5] } },
+    defaultCompare: 'lifters|male|own|own',
+  }, { pool: 'lifters', sex: 'male', weight: 'own', age: 'own' }).muscles.get('Chest');
+
+  const fresh = read(out);
+  ok(fresh.contributors[0].estimate === 233.4 && fresh.contributors[0].share === 0.68
+     && fresh.contributors[1].share === 0,
+     'a document published today reads both numbers back, zero included');
+  ok(fresh.best.estimate === 233.4 && fresh.best.share === 0.68,
+     '🚨 AND `best` CARRIES THEM TOO — it is rebuilt field by field rather than spread, so it is '
+     + 'the half that gets forgotten; `performedReps` was forgotten there once already');
+
+  const old = read([{ exerciseName: 'Barbell Bench Press', weight: 205, reps: 3,
+    date: '2026-08-10', loadType: 'total', source: 'benchmark' }]);
+  ok(!('estimate' in old.contributors[0]) && !('share' in old.contributors[0])
+     && !('estimate' in old.best) && !('share' in old.best),
+     '🚨 A DOCUMENT PUBLISHED BEFORE TODAY reads back with the keys still ABSENT — never filled '
+     + 'with 0 or null on the way through, because the panel decides between "—" and a real figure '
+     + 'by asking whether the key is there');
+
+  const hostile = read([
+    { exerciseName: 'A', weight: 1, reps: 1, share: 1.5, estimate: 100 },
+    { exerciseName: 'B', weight: 1, reps: 1, share: Number.NaN, estimate: 100 },
+    { exerciseName: 'C', weight: 1, reps: 1, share: 0.5, estimate: -3 },
+  ]);
+  ok(!('share' in hostile.contributors[0]) && !('share' in hostile.contributors[1]),
+     '🚨 A SHARE THAT CANNOT BE SHOWN IS DELETED, NOT CLAMPED. That document was written by '
+     + "somebody else's client, and `share` renders as a percentage: NaN prints a literal \"NaN%\" "
+     + 'and 1.5 prints "150 % of the answer" with the authority of a real figure. Clamping 1.5 to 1 '
+     + 'would invent a different false statement');
+  ok(!('estimate' in hostile.contributors[2]) && hostile.contributors[2].share === 0.5,
+     '⚠️ and the two are checked independently — one unusable number does not cost the other column');
+  ok(hostile.contributors[0].weight === 1 && hostile.contributors[0].exerciseName === 'A',
+     '🛑 THE VACUITY GUARD: the read side DROPS KEYS and never whitelists. A whitelist there would '
+     + 'be a second copy of projectStrength() that drifts from it the first time a field is added, '
+     + "and the symptom would be a friend's panel silently missing a number the owner publishes");
+}
+
 /* ------------------------------------------------------------------ *
  * Identity
  * ------------------------------------------------------------------ */
