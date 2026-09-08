@@ -2803,3 +2803,21 @@ colours the muscle bellies, and its hands sit further out from the body. Both ar
 the code.
 
 Everything green, 6,239 checks, and I drove it in Chrome across six screens.
+
+**Tim:** *"prepare md files for chat reset."*
+
+Done. Most of it was already written as I went, but two things needed doing.
+
+**The other agent shipped a Research rewrite and updated none of the notes.** Nineteen topics in five
+sections with facets, where every file said eleven flat topics. I corrected the counts and pointed at
+their own write-up, but I didn't document their feature — it isn't mine and I'd only be guessing at
+what they meant. Their code comments still say eleven too; I left those and wrote down that I left
+them. The wider lesson is now at the top of progress.md: checking `git log` since the last session is
+part of catching up, because the repo moves while nobody's here and the notes don't move with it.
+
+**And progress.md was 936 bytes from full**, which is where the last few resets have started and why
+the previous one kept tripping the size check. I collapsed three days and cut the render-test row
+from 8 KB down to the part that's actually a lesson, moving that into the handbook where someone
+would look for it. There's about 7 KB free now — a session or two of room.
+
+Everything still green, 6,239 checks.

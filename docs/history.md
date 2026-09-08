@@ -143,7 +143,40 @@ pane and the SVG fits inside it. The female figure therefore letterboxes there s
 from the male. It is not broken, it is not new behaviour, and changing it would be touching a screen
 Tim did not point at.
 
-### F. WHAT IS LEFT
+### F. THE RESET PASS, AND THE THING IT CAUGHT
+
+Tim: *"prepare md files for chat reset."* Most of it was already done as the work went in. Two things
+were not, and the second is the one worth keeping.
+
+🚩 **THE PARALLEL AGENT SHIPPED A FEATURE AND UPDATED NONE OF THE NOTES.** `462e8a8` — *"the research
+tab gets facets, hooks and eight more topics"* — landed between this session's start and its push,
+and it touched `js/research-topics.js`, `js/views-data.js`, two suites and a plan doc. It did **not**
+touch `progress.md`, `docs/state.md`, `docs/handbook.md` or `chat.md`. So the four files a fresh
+session reads described **eleven flat topics** where the code now ships **nineteen in five sections**
+with facets and hooks. `TOPICS.length` says so in one line; nothing in the notes did.
+
+🛑 **IT WAS FLAGGED, NOT DOCUMENTED, AND THAT IS THE CALL.** The counts in `state.md` and the
+handbook were corrected because a row that contradicts the code is a bug in that file by its own
+header — but the feature itself is written up in **their** `docs/research-plan.md`, and describing
+somebody else's work from the outside is a guess at what they meant (§0.19, which is exactly the trap
+of correcting a comment from memory). ⚠️ **Their own code comments still say "eleven topics" in
+`views-data.js` and `views-social.js`** and were left alone for the same reason; that is recorded so
+the next session does not read them as current either.
+
+🔒 **THE GENERAL FORM, AND IT IS NOW AT THE TOP OF `progress.md`: `git log` SINCE YOUR LAST SESSION
+IS PART OF CATCHING UP.** §0.20 already says HEAD moves while you work. What this adds is that it
+moves while you are *not here*, and the notes do not move with it — so "the docs are current" is a
+claim about who wrote them, not about the repo.
+
+⚠️ **AND THE BUDGET WAS THE OTHER HALF.** `progress.md` had **936 bytes free** after the day's
+write-up, which is the state every recent reset has started from and the reason the last one tripped
+the budget test five times. Three days were collapsed and the **Render-tests row cut from 8 KB to
+its method**, with the four ways of writing an assertion moved to **§0.21** — a rule about how to
+test, sitting in a reference row nobody re-reads, which is precisely where §0.3 says a rule must not
+sit. **~7 KB free now**, and the header says to spend it and refill it rather than let it return to
+one byte. 🚩 **The handbook is the tight one now** (211 KB of 220), and the header says that too.
+
+### G. WHAT IS LEFT
 
 ⏸️ **The source PNGs are working files at the repo root and are git-ignored** (`/*.png`), exactly as
 `Human_Muscle_Groups.jpg` is. **The art cannot be rebuilt without them** — same standing exposure the
