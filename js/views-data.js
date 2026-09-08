@@ -30,7 +30,9 @@ import {
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
-import { TOPICS, CONFIDENCE, topicSources } from './research-topics.js';
+import {
+  TOPICS, CONFIDENCE, CONFIDENCE_ORDER, SECTIONS, SECTION_ORDER, topicSources,
+} from './research-topics.js';
 import { ageCoefficient } from './strength-standards.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, publishedDaysLabel, DOW_LABELS } from './year-grid.js';
@@ -3824,14 +3826,56 @@ function sourceLine(topic) {
   );
 }
 
+/* The disagreement badge.
+ *
+ * ⚠️ A BADGE RATHER THAN A SECTION, and that was the whole argument. A
+ * "where sources disagree" section would hold a second copy of every topic in
+ * it, so nothing would have one home and a reader would not know which was
+ * canonical. As a flag on the topic itself there is one copy, one place, and
+ * the filter chip below does the job the section would have done.
+ *
+ * It stays rare on purpose — a test caps it at half the topics, because a badge
+ * most things carry is a badge that says nothing. */
+function contestedBadge(topic) {
+  if (!topic.contested) return null;
+  const c = topic.contested;
+  return el('span', { class: 'rt-contested', title: `${c.what} — ${c.verdict}` },
+    'Sources disagree');
+}
+
 function topicBlock(topic) {
-  return el('details', { class: 'rt-topic', dataset: { topic: topic.id } },
+  return el('details', {
+    class: 'rt-topic',
+    dataset: {
+      topic: topic.id,
+      conf: topic.confidence,
+      contested: topic.contested ? '1' : '0',
+    },
+  },
     el('summary', { class: 'rt-summary' },
-      el('span', { class: 'rt-q', text: topic.question }),
-      confidencePill(topic.confidence),
+      el('span', { class: 'rt-head' },
+        el('span', { class: 'rt-q', text: topic.question }),
+        /* THE HOOK. One sentence, in the collapsed row, so a closed list is
+           worth reading rather than a column of headings.
+           🚨 It may be as loud as it likes about WHAT the finding is and may
+           never overstate HOW SURE anyone is — the confidence pill beside it is
+           not decoration, and a hook that outruns it is the exact failure this
+           tab exists to argue against. Asserted in tests/data-layer.test.mjs. */
+        el('span', { class: 'rt-hook', text: topic.hook }),
+      ),
+      el('span', { class: 'rt-flags' },
+        contestedBadge(topic),
+        confidencePill(topic.confidence),
+      ),
     ),
     el('div', { class: 'rt-body' },
       el('div', { class: 'rt-lead', text: topic.lead }),
+      topic.contested
+        ? el('div', { class: 'rt-verdict' },
+          el('b', { text: 'Sources disagree. ' }),
+          `${topic.contested.what}. `,
+          el('span', { class: 'rt-verdict-call', text: topic.contested.verdict }))
+        : null,
       el('p', { class: 'rt-answer', text: topic.answer }),
       el('ul', { class: 'rt-points' },
         ...topic.points.map((p) => el('li', {},
@@ -3844,6 +3888,16 @@ function topicBlock(topic) {
     ),
   );
 }
+
+/* Exposed for `tests/research-pane.test.mjs`.
+ *
+ * ⚠️ The filter chips are behaviour, and behaviour is what a data-layer test
+ * cannot reach: every assertion there checks that something is PRESENT in a
+ * data structure, and a filter that hides everything is a fully populated
+ * structure drawn wrong. This is the only handle the pane needs to be testable,
+ * and it is a read-only builder — nothing about it is a second way in for the
+ * app itself. */
+export function __researchTopicsPane() { return basicsSection(); }
 
 function basicsSection() {
   return el('div', { class: 'rt-section' },
@@ -3861,8 +3915,131 @@ function basicsSection() {
       helpDot('Every topic says how much to believe it and links what it came from. Every one '
         + 'also names its own weak spot: a finding with nothing to admit usually has not been '
         + 'checked.', { label: 'How to read these' })),
-    el('div', { class: 'rt-list' }, ...TOPICS.map(topicBlock)),
+    ...(() => {
+      const list = topicList();
+      const empty = el('div', { class: 'field-help rt-empty', hidden: true,
+        text: 'Nothing matches those filters.' });
+      // Built before the row so the filter can hold both and never query the DOM
+      // for them — a filter that looks its own list up by class breaks the day
+      // this section is drawn twice.
+      return [topicFilters(list, empty), list, empty].filter(Boolean);
+    })(),
   );
+}
+
+/**
+ * The topic list, grouped into sections once there are enough topics to need it.
+ *
+ * ⚠️ THE THRESHOLD IS ABOUT THE LIST, NOT THE SECTION. The plan first said a
+ * section appears at eight topics of its own, which read well until the content
+ * arrived: "How to train" reached eight while three other sections held two or
+ * three, so that rule would have drawn ONE header and left eleven topics loose
+ * underneath it. A header over some of a list is worse than no header at all.
+ *
+ * So the whole list groups, or none of it does, and the line is drawn at 16 —
+ * the point where scrolling an ungrouped list costs more than the headers do.
+ * Below it the filter chips are the only structure, which is enough for eleven.
+ */
+function topicList() {
+  const list = el('div', { class: 'rt-list' });
+  if (TOPICS.length < 16) {
+    setChildren(list, ...TOPICS.map(topicBlock));
+    return list;
+  }
+  for (const key of SECTION_ORDER) {
+    const inSection = TOPICS.filter((t) => t.section === key);
+    if (!inSection.length) continue;
+    list.append(el('div', { class: 'rt-group', dataset: { section: key } },
+      el('h3', { class: 'rt-group-head', text: SECTIONS[key] }),
+      ...inSection.map(topicBlock)));
+  }
+  return list;
+}
+
+/**
+ * The filter row: confidence, and whether sources disagree.
+ *
+ * ⚠️ WHY FILTERS RATHER THAN A TREE — the long version is in
+ * `docs/research-plan.md` §2, and the short version is that a tree forces one
+ * axis. "How do I train chest" and "how many sets" are both real ways in, and a
+ * hierarchy makes the reader pick the one the author happened to choose. A flat
+ * list plus facets puts both one tap away from the same place.
+ *
+ * ⚠️ CONFIDENCE WAS ALREADY A FIELD AND DID NO WORK. It was printed on every
+ * row and could not be acted on. Making it a filter is the cheapest way to let
+ * somebody say "show me only what is actually settled" — which is the question
+ * this tab is for.
+ *
+ * ⚠️ THE ROW HIDES ITSELF WHEN IT WOULD DO NOTHING. With no contested topics
+ * the second chip never renders, and with fewer than three topics neither does
+ * the first. A control that cannot change what you see is clutter on a 360px
+ * screen, and this app already carries a note about a tab bar that had to
+ * scroll because it held two jobs.
+ *
+ * Filtering is done by toggling a class on the list rather than rebuilding it,
+ * so an open `<details>` stays open when the filter changes and nothing loses
+ * scroll position.
+ */
+function topicFilters(list, empty) {
+  if (TOPICS.length < 3) return null;
+
+  const state = { conf: 'all', contested: false };
+  const chips = [];
+
+  const spec = [{ kind: 'conf', value: 'all', label: 'All' }];
+  for (const c of CONFIDENCE_ORDER) {
+    const n = TOPICS.filter((t) => t.confidence === c).length;
+    // The count is on the chip because "Limited 1" tells you it is worth a tap
+    // and "Limited 0" would not have been drawn at all.
+    if (n) spec.push({ kind: 'conf', value: c, label: `${CONFIDENCE[c].label.split(' ')[0]} ${n}` });
+  }
+  if (TOPICS.some((t) => t.contested)) {
+    spec.push({ kind: 'contested', value: 'contested', label: 'Sources disagree' });
+  }
+  if (spec.length < 3) return null;
+
+  const paint = () => {
+    for (const { node, kind, value } of chips) {
+      const on = kind === 'conf' ? state.conf === value : state.contested;
+      node.setAttribute('aria-pressed', on ? 'true' : 'false');
+      node.classList.toggle('chip-on', on);
+    }
+    let shown = 0;
+    for (const node of list.querySelectorAll('.rt-topic')) {
+      const show = (state.conf === 'all' || node.dataset.conf === state.conf)
+        && (!state.contested || node.dataset.contested === '1');
+      node.hidden = !show;
+      if (show) shown++;
+    }
+    // A section header over nothing is worse than no header, so a group whose
+    // topics are all filtered out goes with them.
+    for (const group of list.querySelectorAll('.rt-group')) {
+      group.hidden = !group.querySelector('.rt-topic:not([hidden])');
+    }
+    // §3.1's rule: labelling survives, blank states do not.
+    empty.hidden = shown > 0;
+  };
+
+  const row = el('div', { class: 'rt-filters', role: 'group', 'aria-label': 'Filter topics' });
+  for (const s of spec) {
+    const node = el('button', {
+      class: 'chip rt-chip',
+      type: 'button',
+      // The chip's identity lives in the DOM as well as the closure so the pane
+      // can be driven from a test without reading its labels, which are prose
+      // and will change.
+      dataset: { kind: s.kind, value: s.value },
+      onClick: () => {
+        if (s.kind === 'conf') state.conf = s.value;
+        else state.contested = !state.contested;
+        paint();
+      },
+    }, s.label);
+    chips.push({ ...s, node });
+    row.append(node);
+  }
+  paint();
+  return row;
 }
 
 async function renderResearchPane(host, top) {

@@ -70,6 +70,87 @@ export const CONFIDENCE = {
 
 export const CONFIDENCE_ORDER = ['strong', 'good', 'limited'];
 
+/* ── SECTIONS, TAGS AND HOOKS — 2026-09-07, docs/research-plan.md ────────────
+ *
+ * ⚠️ WHY THIS IS FIVE SECTIONS AND A TAG LIST RATHER THAN A TREE. The first
+ * answer to "how should this be organised" was a nine-section, ninety-leaf
+ * hierarchy — Foundations, Training variables, Exercise selection, Technique,
+ * Recovery, Nutrition, Reading the evidence, Disagreements, Myths, each three
+ * deep. It is a good plan for what to WRITE and a bad screen to READ:
+ *
+ *   - three taps to reach one paragraph on a 360px phone;
+ *   - it forces one axis when readers want two — "how do I train chest" and
+ *     "how many sets" are both real entry points and a tree makes you pick;
+ *   - a "disagreements" branch duplicates every topic it holds, so nothing has
+ *     one home;
+ *   - and it is ninety slots for eleven topics, which is mostly empty rooms.
+ *
+ * So the tree lives in the plan as the writing backlog, and the screen gets
+ * FACETS instead: a topic has one `section` and any number of `tags`, and the
+ * reader filters. "Chest" becomes a filter rather than a location, which is
+ * what dissolves the muscle-vs-variable problem — both are one tap from the
+ * same list.
+ *
+ * 🚨 A SECTION IS NOT SHOWN UNTIL IT HAS EIGHT TOPICS. A header over a list of
+ * two is a label pretending to be structure. The threshold is in views-data.js
+ * where the drawing happens.
+ */
+export const SECTIONS = {
+  'how-it-works': 'How it works',
+  'how-to-train': 'How to train',
+  'what-to-do': 'What to do',
+  'recovery-and-food': 'Recovery and food',
+  'judging-evidence': 'Judging the evidence',
+};
+export const SECTION_ORDER = ['how-it-works', 'how-to-train', 'what-to-do',
+  'recovery-and-food', 'judging-evidence'];
+
+/**
+ * The tag vocabulary, closed on purpose.
+ *
+ * ⚠️ Free-text tags drift into synonyms within a month — "rest", "rest times",
+ * "rest periods" — and a filter built on them silently splits one topic into
+ * three. A test rejects any tag not defined here, so widening the vocabulary is
+ * a deliberate edit rather than a typo.
+ */
+export const TAGS = {
+  volume: 'Volume',
+  effort: 'Effort',
+  load: 'Load and reps',
+  frequency: 'Frequency',
+  'range-of-motion': 'Range of motion',
+  tempo: 'Tempo',
+  rest: 'Rest',
+  progression: 'Progression',
+  periodisation: 'Periodisation',
+  'exercise-choice': 'Exercise choice',
+  recovery: 'Recovery',
+  nutrition: 'Nutrition',
+  method: 'Reading evidence',
+  chest: 'Chest',
+  back: 'Back',
+  shoulders: 'Shoulders',
+  arms: 'Arms',
+  legs: 'Legs',
+  core: 'Core',
+};
+
+/**
+ * Words a hook may not use when the evidence is `limited`.
+ *
+ * 🚨 THE RULE THE HOOK EXISTS UNDER: a hook may be as loud as it likes about
+ * WHAT a finding is, and may never overstate HOW SURE anyone is. That is Design
+ * Rule 9's shape applied to headlines, and it is not a style preference — the
+ * research library this content is drawn from is substantially a catalogue of
+ * what happens when fitness writing breaks it: position stands whose headline
+ * is firmer than the review above it, a video titled "11 Studies" resting on
+ * two, "one third faster growth" that is a relabelled effect size of 0.11.
+ *
+ * The supply of honest hooks is large because the findings are genuinely
+ * surprising. Nothing here needs inflating to be worth reading.
+ */
+export const HOOK_BANNED_WHEN_LIMITED = ['proven', 'always', 'never', 'must', 'guaranteed'];
+
 /**
  * Every source, defined once.
  *
@@ -217,6 +298,176 @@ export const SOURCES = {
     n: '269 studies, 7,289 people',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10933212/',
   },
+  pedrosa2022: {
+    label: 'Pedrosa et al. (2022), partials at long vs short muscle lengths',
+    n: '45 untrained women, 12 weeks, knee extension',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33977835/',
+  },
+  bloomquist2013: {
+    label: 'Bloomquist et al. (2013), squat depth',
+    n: '17 men, 12 weeks, six regions of the thigh measured',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/23604798/',
+  },
+  martinezcava2022: {
+    label: 'Martínez-Cava et al. (2022), full vs partial bench press',
+    n: '49 men, 10 weeks — strength measured, growth not',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/31567719/',
+  },
+  lacerda2021: {
+    label: 'Lacerda et al. (2021), two seconds a rep vs six',
+    n: '10 untrained men, one leg each way, 14 weeks',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33665031/',
+  },
+  schoenfeld2015tempo: {
+    label: 'Schoenfeld, Ogborn & Krieger (2015), how long a rep takes',
+    n: 'meta-analysis; the 0.5–8 second parity rests on 4 to-failure studies',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/25601394/',
+  },
+  chaves2020: {
+    label: 'Chaves et al. (2020), a controlled rep speed vs your own',
+    n: 'untrained men, 8 weeks, sets to failure at 70% of max',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/32185108/',
+  },
+  schuenke2012: {
+    label: 'Schuenke et al. (2012), super-slow vs normal lifting',
+    n: '19 untrained women, 6 weeks',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/22328004/',
+  },
+  moesgaard2022: {
+    label: 'Moesgaard et al. (2022), periodisation',
+    n: 'meta-analysis of volume-equated programmes, trained and untrained',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/35044672/',
+  },
+  ogasawara2013: {
+    label: 'Ogasawara et al. (2013), continuous vs periodic training',
+    n: '14 previously untrained men, 24 weeks',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/23053130/',
+  },
+  coleman2023: {
+    label: 'Coleman et al., a week off mid-block',
+    n: '39 trained people, 9 weeks — preprint, not yet peer reviewed',
+    url: 'https://sportrxiv.org/index.php/server/preprint/view/302/',
+  },
+  hortobagyi1993: {
+    label: 'Hortobágyi et al. (1993), two weeks off in strength athletes',
+    n: '4 powerlifters and 8 college footballers',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/8371654/',
+  },
+  wall2014: {
+    label: 'Wall et al. (2014), muscle loss during disuse',
+    n: 'healthy young men in a full leg cast; the 14-day arm',
+    url: 'https://doi.org/10.1111/apha.12190',
+  },
+  mujika2001: {
+    label: 'Mujika & Padilla (2001), what detraining does',
+    n: 'review, not a meta-analysis',
+    url: 'https://doi.org/10.1097/00005768-200108000-00009',
+  },
+  smith2003: {
+    label: 'Smith et al. (2003), three years after stopping',
+    n: 'older adults who trained two years, then stopped for three',
+    url: 'https://doi.org/10.1139/h03-034',
+  },
+  bosquet2013: {
+    label: 'Bosquet et al. (2013), stopping training',
+    n: 'meta-analysis of training cessation',
+    url: 'https://doi.org/10.1111/sms.12047',
+  },
+  gaffney2021: {
+    label: 'Gaffney et al. (2021), 72 hours in a sling',
+    n: 'grip strength fell about 22% with no muscle lost',
+    url: 'https://doi.org/10.3389/fnhum.2021.640642',
+  },
+  bruusgaard2010: {
+    label: 'Bruusgaard et al. (2010), nuclei kept after detraining',
+    n: 'animal model — mice, not people',
+    url: 'https://doi.org/10.1073/pnas.0913935107',
+  },
+  vigotsky2017: {
+    label: 'Vigotsky et al. (2017), what surface EMG measures',
+    n: 'methods review; the signal moves with joint angle at constant input',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/29354060/',
+  },
+  vigotsky2022: {
+    label: 'Vigotsky et al. (2022), EMG as a predictor of growth',
+    n: 'review — acute EMG amplitude is not a validated predictor of hypertrophy',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/35006527/',
+  },
+  brandao2020: {
+    label: 'Brandão et al. (2020), what pressing grows in the triceps',
+    n: '43 untrained men, 10 weeks, MRI head by head',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/32149887/',
+  },
+  burke2024: {
+    label: 'Burke et al. (2024), exercise choice and regional growth',
+    n: '28 trained people, one leg per exercise',
+    url: 'https://doi.org/10.1007/s42978-024-00299-4',
+  },
+  maeo2023: {
+    label: 'Maeo et al. (2023), overhead vs neutral triceps extensions',
+    n: '21 untrained people, 12 weeks, one arm each, range of motion matched',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/35819335/',
+  },
+  maeo2021: {
+    label: 'Maeo et al. (2021), seated vs lying leg curls',
+    n: 'training at long vs short hamstring lengths, one leg each',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33009197/',
+  },
+  bazvalle2019: {
+    label: 'Baz-Valle et al. (2019), changing exercises every session',
+    n: '19 trained men, 8 weeks, an 80-exercise randomiser against a fixed list',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/31881066/',
+  },
+  rindom2019: {
+    label: 'Rindom et al. (2019), tension and growth signalling',
+    n: 'rat muscle — signalling over hours, not size over months',
+    url: 'https://doi.org/10.1111/apha.13336',
+  },
+  wackerhage2019: {
+    label: 'Wackerhage et al. (2019), what starts hypertrophy',
+    n: 'mechanism review, largely cell and animal work',
+    url: 'https://doi.org/10.1152/japplphysiol.00685.2018',
+  },
+  hirono2022: {
+    label: 'Hirono et al. (2022), swelling and later growth',
+    n: 'the only direct test of the pump; correlation 0.4–0.6',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/31904714/',
+  },
+  lixandrao2018: {
+    label: 'Lixandrão et al. (2018), blood-flow restriction vs heavy loads',
+    n: 'systematic review and meta-analysis',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/29043659/',
+  },
+  damas2016: {
+    label: 'Damas et al. (2016), protein synthesis and muscle damage',
+    n: 'the signal tracked growth only after damage subsided',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/27219125/',
+  },
+  pinto2025: {
+    label: 'Pinto et al. (2025), one set against three',
+    n: '15 untrained men, 12 weeks, one arm each',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/40266636/',
+  },
+  kadlec2022: {
+    label: 'Kadlec et al. (2022), errors in strength and conditioning meta-analyses',
+    n: 'the 20 most-cited; most published before 2019, most not about growth',
+    url: 'https://doi.org/10.1007/s40279-022-01766-0',
+  },
+  mortonAR2018: {
+    label: 'Morton et al. (2018), androgen receptors and responders',
+    n: '49 trained men, 12 weeks — associational, not causal',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/30356739/',
+  },
+  mobley2018: {
+    label: 'Mobley et al. (2018), markers across responder tiers',
+    n: '67 untrained men, 12 weeks',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/29621305/',
+  },
+  margaritelis2021: {
+    label: 'Margaritelis et al. (2021), damage markers across 10 weeks',
+    n: 'untrained men, eccentric-only knee extensions; damage measured, not growth',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33156414/',
+  },
 };
 
 /**
@@ -233,6 +484,9 @@ export const TOPICS = [
     question: 'Growing muscle vs getting stronger',
     lead: 'How should training change to maximise each?',
     confidence: 'strong',
+    hook: 'The same sets build both — only the load and the practice differ.',
+    section: 'how-it-works',
+    tags: ['load', 'effort'],
     answer: 'They overlap far more than people think — the same sets build both. '
       + 'What changes is how heavy you lift and how much you practise the exact lift you want to be strong at.',
     points: [
@@ -266,6 +520,14 @@ export const TOPICS = [
     question: 'Sets and reps — per workout and per week',
     lead: 'What is optimal? Does it matter?',
     confidence: 'strong',
+    hook: 'Past about 19 sets a week, ten more buy one more gain.',
+    section: 'how-to-train',
+    tags: ['volume', 'load'],
+    contested: {
+      what: 'Whether more volume keeps paying off',
+      verdict: 'No ceiling has been demonstrated, yet every source still recommends 10-20 sets.',
+      confidence: 'good',
+    },
     answer: 'Weekly sets per muscle is the number that matters most. About 4 hard sets a week is where an '
       + 'effect first shows up, 5–10 is the best return per set, and more keeps working with steadily worse value.',
     points: [
@@ -299,6 +561,14 @@ export const TOPICS = [
     question: 'Reps in reserve, and going to failure',
     lead: 'Should every set go to failure? How many reps should you leave?',
     confidence: 'good',
+    hook: 'No study has found an advantage to grinding out the last rep.',
+    section: 'how-to-train',
+    tags: ['effort'],
+    contested: {
+      what: 'How close to failure a set has to be',
+      verdict: 'Stopping 1-3 reps short matches failure at normal volumes.',
+      confidence: 'strong',
+    },
     answer: 'Hard, but not all the way. Stopping 1–3 reps short builds as much muscle as grinding to a '
       + 'complete stop, and no study has shown an advantage to going to failure.',
     points: [
@@ -332,6 +602,9 @@ export const TOPICS = [
     question: 'Free weights vs machines',
     lead: 'Is one better? What are the risks?',
     confidence: 'strong',
+    hook: 'Machines matched free weights for both size and strength.',
+    section: 'what-to-do',
+    tags: ['exercise-choice'],
     answer: 'Neither is better for size or strength. The one real difference is specificity — you get best '
       + 'at the thing you actually train on.',
     points: [
@@ -365,6 +638,9 @@ export const TOPICS = [
     question: 'Warming up and stretching',
     lead: 'Necessary? Does it improve gains, or just reduce risk? What should it look like?',
     confidence: 'good',
+    hook: 'Stretching does not lower your injury risk — the training does.',
+    section: 'recovery-and-food',
+    tags: ['recovery'],
     answer: 'Warming up helps you perform on the day. Stretching is fine if you like it, but it is not what '
       + 'protects you from injury — the training itself is.',
     points: [
@@ -398,6 +674,9 @@ export const TOPICS = [
     question: 'Time of day',
     lead: 'Is there a best time to train?',
     confidence: 'good',
+    hook: 'You are stronger in the evening, and it changes nothing you gain.',
+    section: 'recovery-and-food',
+    tags: ['recovery'],
     answer: 'No time of day builds more muscle or more strength. You are usually a little stronger later in '
       + 'the day, and that does not change what you gain.',
     points: [
@@ -426,6 +705,9 @@ export const TOPICS = [
     question: 'Adding weight over time',
     lead: 'When should the weight go up, and by how much?',
     confidence: 'good',
+    hook: 'On a light lift the smallest plate in the gym is already too big.',
+    section: 'how-to-train',
+    tags: ['progression', 'load'],
     answer: 'Earn the reps first, then add the smallest jump you can. The recommended step is 2–10% — and on '
       + 'a light lift the smallest plate in the gym is already bigger than that.',
     points: [
@@ -454,6 +736,9 @@ export const TOPICS = [
     question: 'Rest between sets',
     lead: 'How long, and does it change what you build?',
     confidence: 'limited',
+    hook: 'Every range in the analysis crosses zero.',
+    section: 'how-to-train',
+    tags: ['rest'],
     answer: 'Less than it feels like. Over 60 seconds looks slightly better than under for muscle growth, '
       + 'and past about 90 seconds nothing more is gained.',
     points: [
@@ -480,6 +765,9 @@ export const TOPICS = [
     question: 'The things around the training',
     lead: 'Protein, sleep, and how far to move the weight.',
     confidence: 'good',
+    hook: 'Three things outside the sets have real evidence, and each has a limit.',
+    section: 'recovery-and-food',
+    tags: ['nutrition', 'recovery', 'range-of-motion'],
     answer: 'Three things outside the sets themselves have real evidence behind them, '
       + 'and each has a limit worth knowing.',
     points: [
@@ -508,6 +796,9 @@ export const TOPICS = [
     question: 'Common misconceptions',
     lead: 'Things repeated everywhere that the evidence does not support.',
     confidence: 'good',
+    hook: 'Soreness does not measure a workout, and there are seven more like it.',
+    section: 'judging-evidence',
+    tags: ['method'],
     answer: 'Each of these is popular, and each has been tested.',
     points: [
       {
@@ -562,6 +853,9 @@ export const TOPICS = [
     question: 'What to expect from yourself',
     lead: 'How much of this is programming, and how much is you?',
     confidence: 'strong',
+    hook: 'Your programme explains about a quarter of your result.',
+    section: 'how-it-works',
+    tags: ['method'],
     answer: 'Programming explains roughly a quarter of why two people training the same way get different '
       + 'results. The rest is individual, and it varies enormously.',
     points: [
@@ -583,6 +877,371 @@ export const TOPICS = [
     ],
     caveat: 'This is why nothing here will tell you how many pounds you will add in three months. '
       + 'No app can, and one that does is guessing.',
+  },
+  {
+    id: 'range-of-motion',
+    question: 'Range of motion',
+    lead: 'Does a full range beat a partial one?',
+    hook: 'Half reps at the stretch matched full reps in trained lifters.',
+    section: 'how-to-train',
+    tags: ['range-of-motion'],
+    confidence: 'good',
+    contested: {
+      what: 'Whether lengthened partials beat full range',
+      verdict: 'Equal in trained lifters — the nulls are nulls, not reversals',
+      confidence: 'good',
+    },
+    answer: 'Where in the range you load the muscle matters more than how much of '
+      + 'it you use. Cutting the stretched half costs you growth; cutting the '
+      + 'shortened half appears not to. Full range stays the sensible default.',
+    points: [
+      {
+        text: 'Cut the stretched half and you pay for it. In one squat trial the '
+          + 'shallow group grew only the top of the thigh and lost size at the '
+          + 'bottom.',
+        sources: ['bloomquist2013'],
+      },
+      {
+        text: 'Cut the shortened half instead and trained lifters grew the same as on '
+          + 'full reps — one side of the body against the other, every set to '
+          + 'failure.',
+        sources: ['wolf2025'],
+      },
+      {
+        text: 'The people who pushed lengthened partials hardest walked it back in '
+          + '2024. All three untrained studies favoured partials; all three trained '
+          + 'ones came out level.',
+        sources: ['pedrosa2022', 'wolf2025'],
+      },
+      {
+        text: 'Bench press is the clean test: full-range training beat both partial '
+          + 'groups on all three strength tests, including at the partial ranges '
+          + 'those groups had trained.',
+        sources: ['martinezcava2022'],
+      },
+    ],
+    caveat: 'Both trained-lifter nulls measured only the middle of the muscle, '
+      + 'which is where any difference is smallest, and nothing here ran longer '
+      + 'than a few months.',
+  },
+  {
+    id: 'tempo-and-tension',
+    question: 'Tempo and time under tension',
+    lead: 'How fast should you lift, and do the negatives need to be slow?',
+    hook: 'Sets lasting 25 seconds grew as much as sets lasting 50.',
+    section: 'how-to-train',
+    tags: ['tempo'],
+    confidence: 'good',
+    answer: 'Anything from about half a second to eight seconds a rep builds the '
+      + 'same muscle, so long as the set is taken close to failure. Time under '
+      + 'tension is not the thing being measured.',
+    points: [
+      {
+        text: 'With effort controlled the difference disappears: one leg at two '
+          + 'seconds a rep, the other at six, both to failure, the same growth.',
+        sources: ['lacerda2021'],
+      },
+      {
+        myth: 'A set has to last 30 to 60 seconds.',
+        text: 'Sets running 25 to 38 seconds grew the same. Light loads produce far '
+          + 'longer sets without more growth, which is the argument against the '
+          + 'rule.',
+        sources: ['lacerda2021', 'lopez2021'],
+      },
+      {
+        text: 'The studies that favoured slow reps fixed both load and rep count, so '
+          + 'the slow group was necessarily closer to failure. They measured '
+          + 'effort, not tempo.',
+        sources: ['schoenfeld2015tempo'],
+      },
+      {
+        text: 'Nor do the negatives need slowing: a deliberate four-second rep '
+          + 'matched a self-selected one of about a second each way, over eight '
+          + 'weeks of sets to failure.',
+        sources: ['chaves2020'],
+      },
+      {
+        text: 'The one speed with evidence against it is genuine super-slow — ten '
+          + 'seconds up, four down — which lost to normal lifting on fibre size.',
+        sources: ['schuenke2012'],
+      },
+    ],
+    caveat: 'Nearly all of this was measured in untrained people over a few months, '
+      + 'and the two sources behind the popular time-under-tension numbers cite '
+      + 'nothing you can check.',
+  },
+  {
+    id: 'periodisation-and-deloads',
+    question: 'Periodisation and deloads',
+    lead: 'Do blocks, waves and planned deloads do anything?',
+    hook: 'No study has tested a deload — the break trials stopped training entirely.',
+    section: 'how-to-train',
+    tags: ['periodisation', 'progression'],
+    confidence: 'good',
+    answer: 'For size, a periodised programme is not better than one rep range and '
+      + 'steady progression. For maximal strength it looks better, and the '
+      + 'reason may simply be that it included heavier sets.',
+    points: [
+      {
+        text: 'With volume equated, no size difference between periodised and '
+          + 'non-periodised training in either trained or untrained people, and '
+          + 'none between linear and undulating.',
+        sources: ['moesgaard2022', 'acsm2026'],
+      },
+      {
+        text: 'The strength result carries a confound: periodised groups usually '
+          + 'spent more time at heavy low reps, which raises a one-rep max by '
+          + 'itself. That trial has not been run.',
+        sources: ['moesgaard2022'],
+      },
+      {
+        text: 'Six weeks on and three weeks off, for six months, matched training '
+          + 'straight through on chest size, triceps size and bench max — with a '
+          + 'quarter less training done.',
+        sources: ['ogasawara2013'],
+      },
+      {
+        text: 'A week completely off mid-block cost nothing in lower-body size and a '
+          + 'little in strength. The break group reported feeling lethargic '
+          + 'afterwards rather than fresh.',
+        sources: ['coleman2023'],
+      },
+      {
+        text: 'Neither break study reduced volume — both stopped — so nobody has '
+          + 'compared a deload against training through.',
+        sources: ['ogasawara2013', 'coleman2023'],
+      },
+    ],
+    caveat: 'Most periodisation studies ran twelve weeks or less, and several had '
+      + 'the periodised group dropping to sets of four, which is not the best '
+      + 'range for growth.',
+  },
+  {
+    id: 'time-off-and-muscle-memory',
+    question: 'Time off, and coming back',
+    lead: 'What do you lose when you stop, and how fast does it return?',
+    hook: 'Two weeks off cost trained athletes no measurable strength or whole-muscle size.',
+    section: 'how-to-train',
+    tags: ['periodisation'],
+    confidence: 'good',
+    answer: 'Less than you fear, and strength goes before size. Two weeks off '
+      + 'usually sits inside measurement noise, and months off still leave you '
+      + 'above where you started.',
+    points: [
+      {
+        text: 'Two weeks off in powerlifters and college footballers produced no '
+          + 'significant loss of strength or whole-muscle size, though fast-twitch '
+          + 'fibre area had already shrunk.',
+        sources: ['hortobagyi1993'],
+      },
+      {
+        text: 'Two weeks in a full leg cast is the other thing entirely: 8.4% of '
+          + 'cross-sectional area and 22.9% of strength. That is the figure people '
+          + 'quote about a holiday.',
+        sources: ['wall2014'],
+      },
+      {
+        text: 'Over two to three months trained people lose roughly 7–12% and stay '
+          + 'above untrained. Older adults who trained two years then stopped three '
+          + 'were still 14% up on leg press.',
+        sources: ['mujika2001', 'smith2003'],
+      },
+      {
+        text: 'Order of loss: strength stamina first, then maximal strength; size is '
+          + 'slow to go, and rate of force development is largely kept. A heavy '
+          + 'first session back is mostly rust.',
+        sources: ['bosquet2013', 'gaffney2021'],
+      },
+      {
+        text: 'Muscle memory: nuclei gained in training survived detraining in mice, '
+          + 'which is the mechanism everyone cites. In humans it has not been '
+          + 'followed through a long layoff.',
+        sources: ['bruusgaard2010'],
+      },
+    ],
+    caveat: 'The structural half of muscle memory rests on an animal study, and the '
+      + 'advice about how to train your way back is coaching judgement with no '
+      + 'trial behind it.',
+  },
+  {
+    id: 'picking-exercises',
+    question: 'Choosing exercises',
+    lead: 'What does it mean to say a lift "targets" a muscle?',
+    hook: 'The triceps long head reads high on the bench press and barely grows.',
+    section: 'what-to-do',
+    tags: ['exercise-choice', 'range-of-motion'],
+    confidence: 'good',
+    answer: 'Ask what ends the set and where the muscle is loaded, not which '
+      + 'exercise is best. Only one selection principle has measured growth '
+      + 'behind it, and it is about muscles that cross two joints.',
+    points: [
+      {
+        myth: '"It targets that muscle" usually means somebody read an EMG.',
+        text: 'Surface EMG shifts with joint angle even at constant input, and has '
+          + 'never been validated as a predictor of size. Scanned head by head, '
+          + 'benching grows the lateral triceps and barely the long one.',
+        sources: ['vigotsky2017', 'vigotsky2022', 'brandao2020'],
+      },
+      {
+        text: 'The principle that survives: a two-joint muscle grows poorly when one '
+          + 'of its actions fights the compound. 28 trained people, one leg '
+          + 'pressing and one extending — rectus femoris favoured the extension, '
+          + 'vastus lateralis the press.',
+        sources: ['burke2024'],
+      },
+      {
+        text: 'The same rule the other way — put the far joint where the muscle is '
+          + 'long. Overhead triceps extensions beat pushdowns at matched range, one '
+          + 'arm each, and seated leg curls beat lying ones.',
+        sources: ['maeo2023', 'maeo2021'],
+      },
+      {
+        text: 'Swapping exercises every session is not the lever. 19 trained men, an '
+          + '80-exercise randomiser against a fixed list: quad growth '
+          + 'indistinguishable, raw numbers favouring fixed. Motivation was what '
+          + 'moved.',
+        sources: ['bazvalle2019'],
+      },
+    ],
+    caveat: 'Most of this is untrained people over 8–12 weeks. And the handful of '
+      + 'claims above is close to everything in this field backed by measured '
+      + 'growth — nearly every exercise ranking you meet online is built on '
+      + 'activation readings or leverage maths instead.',
+  },
+  {
+    id: 'how-muscle-grows',
+    question: 'What makes a muscle grow',
+    lead: 'Is it tension, damage, or the pump?',
+    hook: 'The pump and the soreness both rise without the muscle following.',
+    section: 'how-it-works',
+    tags: ['effort', 'load'],
+    confidence: 'good',
+    contested: {
+      what: 'Whether damage and metabolites contribute at all',
+      verdict: 'Possibly, up to a low threshold every training style already crosses — '
+        + 'which would look exactly like this, with chasing more of them doing '
+        + 'nothing',
+      confidence: 'limited',
+    },
+    answer: 'Mechanical tension is the best current answer and the worst measured '
+      + 'part of it. What is settled is the negative: deliberately raising the '
+      + 'pump, the burn or the damage does not produce more growth.',
+    points: [
+      {
+        text: 'The case for tension is signalling, not size. Its cleanest study is a '
+          + 'rat experiment, where growth signalling tracked the tension applied '
+          + 'rather than the electrical input driving it. Nobody can measure '
+          + 'tension inside a training human.',
+        sources: ['rindom2019', 'wackerhage2019'],
+      },
+      {
+        myth: 'The pump is the sign it is working.',
+        text: 'The one direct test tied first-session swelling to six-week growth at '
+          + 'a correlation of 0.4–0.6. Light loads under blood-flow restriction '
+          + 'give an enormous pump and match heavy training rather than beating it.',
+        sources: ['hirono2022', 'lixandrao2018'],
+      },
+      {
+        myth: 'Damage is repaired bigger.',
+        text: 'The protein-synthesis spike after a first session did not track '
+          + 'eventual growth, and only started to once the soreness had faded. '
+          + 'Training that causes little damage builds as much muscle.',
+        sources: ['damas2016', 'damas2018'],
+      },
+    ],
+    caveat: 'Hold "the pump and damage are not drivers" far more firmly than '
+      + '"tension is the driver". The first is muscle size measured over '
+      + 'months; the second is signalling measured over hours, some of it in '
+      + 'animals.',
+  },
+  {
+    id: 'reading-a-study',
+    question: 'How to judge a study',
+    lead: 'Someone has just sent you one. What do you ask of it?',
+    hook: 'One small trial is a data point, not a verdict.',
+    section: 'judging-evidence',
+    tags: ['method'],
+    confidence: 'good',
+    answer: 'Ask how many people, whether they were trained, and what was actually '
+      + 'measured. Two well-run studies disagreeing is normal — it is what '
+      + 'small samples do, not a sign either one is broken.',
+    points: [
+      {
+        myth: '"No significant difference" means there is no difference.',
+        text: 'It means that study could not detect one. 15 untrained men trained one '
+          + 'arm with a single set and the other with three for 12 weeks, and both '
+          + 'pecs grew alike — still compatible with three sets being better.',
+        sources: ['pinto2025'],
+      },
+      {
+        text: 'Ask what the losing arm was doing. 20 of 23 protein-timing studies '
+          + 'also fed the timed group more protein, so none of them separated the '
+          + 'timing from the total.',
+        sources: ['schoenfeld2013'],
+      },
+      {
+        myth: 'A stand-in for growth is not growth.',
+        text: 'Activation readings, protein synthesis over a day and strength gains '
+          + 'have each been shown to come apart from measured size. If nobody '
+          + 'scanned a muscle, nobody measured growth.',
+        sources: ['vigotsky2022', 'damas2016'],
+      },
+      {
+        text: 'Pooling corrects small samples; it does not guarantee correctness. A '
+          + '2022 review of the 20 most-cited strength and conditioning '
+          + 'meta-analyses found at least one statistical error in 85% of them.',
+        sources: ['kadlec2022'],
+      },
+    ],
+    caveat: 'These rules cut both ways and are easy to abuse — any result can be '
+      + 'waved off by naming a limitation. A null is a finding to be weighed, '
+      + 'not a licence to keep believing what you already did.',
+  },
+  {
+    id: 'why-people-differ',
+    question: 'Why two people get different results',
+    lead: 'Same programme, different outcomes — how much of that is really individual?',
+    hook: 'A limb that started smaller looks exactly like a low responder.',
+    section: 'how-it-works',
+    tags: ['method'],
+    confidence: 'limited',
+    contested: {
+      what: 'Whether androgen receptor content explains high and low responders',
+      verdict: 'Two comparable studies disagree, and nothing is known to raise it anyway',
+      confidence: 'limited',
+    },
+    answer: 'Less of it is you than it looks. A study can show a spread of results; '
+      + 'what it usually cannot show is that the spread belongs to the people '
+      + 'rather than to the measurement.',
+    points: [
+      {
+        text: 'The famous spreads come from single studies, and inside one study four '
+          + 'things draw the same picture: someone who started with more room to '
+          + 'grow, something outside the study hitting one side, measurement error '
+          + 'landing unevenly, and chance.',
+        sources: ['hubal2005', 'pinto2025'],
+      },
+      {
+        text: 'The explanations keep coming up empty. Resting hormones do not '
+          + 'separate high responders from low, and neither does testosterone '
+          + 'measured inside the muscle itself.',
+        sources: ['mortonAR2018', 'mobley2018'],
+      },
+      {
+        text: 'One difference does move. Ten weeks of deliberately brutal eccentric '
+          + 'work ended with almost no soreness and falling damage markers — though '
+          + 'a handful of those subjects were still fatigued in week 10.',
+        sources: ['margaritelis2021'],
+      },
+      {
+        text: 'What separates a real difference from noise is running the same person '
+          + 'through the same block twice, and that has rarely been done.',
+        sources: ['rantila2025'],
+      },
+    ],
+    caveat: 'Treating a claimed individual response as noise is a rule for reading '
+      + 'studies, not a reason to ignore your own log — which is the one record '
+      + 'built from the same person measured over and over.',
   },
 ];
 

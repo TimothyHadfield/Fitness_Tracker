@@ -5637,6 +5637,43 @@ a.row { text-decoration: none; }
 .rt-myth { color: var(--ink); }
 .rt-caveat { margin: 0; font-size: 12.5px; }
 .rt-caveat b { color: var(--ink); }
+/* ── Facets, hooks and groups — 2026-09-07, docs/research-plan.md ───────────
+   The collapsed row now carries a hook under the question, so a closed list is
+   worth reading rather than a column of headings. `.rt-head` is the column that
+   holds both; `.rt-flags` holds the badge and the pill so they stay together
+   when a long question wraps at 360px. */
+.rt-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.rt-hook { font-size: 12px; line-height: 1.45; color: var(--ink-faint); }
+.rt-topic[open] .rt-hook { display: none; }
+.rt-flags { flex: none; margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.rt-flags .rt-conf { margin-left: 0; }
+
+/* The disagreement badge. Solid rather than dashed, because unlike the
+   confidence pill it is not a statement about strength of evidence — it says
+   two sources contradict each other, which is either true or it is not. */
+.rt-contested {
+  flex: none; font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--accent); color: var(--accent);
+}
+.rt-verdict { font-size: 12.5px; }
+.rt-verdict b { color: var(--ink); }
+.rt-verdict-call { color: var(--ink); }
+
+.rt-filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 4px; }
+.rt-chip { cursor: pointer; }
+/* Pressed state carries a border and a weight change, not colour alone —
+   Design Rule 5, the same reason the confidence pill says its level in words. */
+.chip-on { border-color: var(--ink-soft); color: var(--ink); font-weight: 600; }
+
+.rt-group { display: flex; flex-direction: column; }
+.rt-group-head {
+  margin: 14px 0 0; font-size: 11.5px; font-weight: 600;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint);
+}
+.rt-group:first-child .rt-group-head { margin-top: 2px; }
+.rt-empty { padding: 10px 2px; }
+
 .rt-src { font-size: 11.5px; line-height: 1.5; color: var(--ink-faint); }
 .rt-src b { color: var(--ink-soft); }
 .rt-src a { color: var(--accent); }

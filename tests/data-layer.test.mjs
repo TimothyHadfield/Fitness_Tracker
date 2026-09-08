@@ -7442,6 +7442,61 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      '⚠️ time of day is stated as no difference, not as an optimum');
   ok(/cannot check/.test(text('growth-vs-strength')),
      '⚠️ the topic says the app cannot see how heavy the plan was — §6.13.3 on screen');
+
+  /* ── FACETS AND HOOKS — 2026-09-07, docs/research-plan.md ──────────────────
+     The section/tag/hook fields exist so the list can grow past eleven topics
+     without becoming a tree. These assertions are what stops the vocabulary
+     rotting and the hooks drifting into the thing this whole tab exists to
+     argue against. */
+  const { SECTIONS, SECTION_ORDER, TAGS, HOOK_BANNED_WHEN_LIMITED } = rt;
+
+  ok(SECTION_ORDER.length === Object.keys(SECTIONS).length,
+     'every section is ordered and every ordered section exists');
+  ok(SECTION_ORDER.every((s) => SECTIONS[s]), 'the order names only real sections');
+
+  for (const t of TOPICS) {
+    ok(Boolean(SECTIONS[t.section]), `${t.id}: sits in a section that exists (${t.section})`);
+    ok(Array.isArray(t.tags) && t.tags.length > 0, `${t.id}: carries at least one tag`);
+    // ⚠️ The closed vocabulary is the whole point — "rest", "rest times" and
+    // "rest periods" would split one filter into three within a month.
+    for (const g of t.tags) ok(Boolean(TAGS[g]), `${t.id}: '${g}' is in the tag vocabulary`);
+    ok(new Set(t.tags).size === t.tags.length, `${t.id}: no tag is repeated`);
+
+    ok(Boolean(t.hook), `${t.id}: has a hook`);
+    const hookWords = t.hook.trim().split(/\s+/).length;
+    ok(hookWords <= 14, `${t.id}: the hook is ${hookWords} words (cap 14)`);
+    ok(!/[.!?]\s+\S/.test(t.hook.trim()), `${t.id}: the hook is one sentence`);
+
+    /* 🚨 THE ASSERTION THIS SECTION EXISTS FOR. A hook may be as loud as it
+       likes about WHAT a finding is and may never overstate HOW SURE anyone
+       is. On a `limited` topic the certainty words are the exact failure the
+       research library documents in its own sources — a headline firmer than
+       the evidence review printed directly beneath it. */
+    if (t.confidence === 'limited') {
+      for (const w of HOOK_BANNED_WHEN_LIMITED) {
+        ok(!new RegExp(`\\b${w}\\b`, 'i').test(t.hook),
+           `${t.id}: a limited finding's hook does not claim "${w}"`);
+      }
+    }
+
+    if (t.contested) {
+      ok(Boolean(t.contested.what && t.contested.verdict),
+         `${t.id}: a contested topic states the disagreement and the verdict`);
+      ok(!t.contested.confidence || CONFIDENCE_ORDER.includes(t.contested.confidence),
+         `${t.id}: the verdict's confidence is one of the declared levels`);
+    }
+  }
+
+  // Contested is a badge rather than a section, so it must stay rare enough to
+  // mean something. If most topics are contested the badge says nothing.
+  const contestedCount = TOPICS.filter((t) => t.contested).length;
+  ok(contestedCount <= Math.ceil(TOPICS.length / 2),
+     `${contestedCount} of ${TOPICS.length} topics are contested — the badge still means something`);
+
+  // Every tag in the vocabulary should eventually be used, but an unused one is
+  // a backlog item rather than a bug, so this only reports.
+  const usedTags = new Set(TOPICS.flatMap((t) => t.tags));
+  console.log(`      (tags in use: ${usedTags.size}/${Object.keys(TAGS).length})`);
 }
 
 /* ================= movement families (2026-08-30) =======================
