@@ -4829,6 +4829,96 @@ ok(!data.querySelector('.rep-target'),
   ok(picked === 'Traps', 'tapping a halo picks its muscle');
 }
 
+/* ================= TWO FIGURES, PICKED BY SEX (2026-09-07) =================
+ *
+ * Tim drew a female figure and asked for it wherever the profile says female.
+ * What is pinned here is that `bodySvg()` really does swap BOTH halves — the
+ * traced fills AND the ink mask — because they are two separate lookups and
+ * getting one without the other is the failure that would ship: the male's
+ * keylines laid over the female's fills, which reads as a smudged figure rather
+ * than as the wrong art.
+ *
+ * ⚠️ EVERY ASSERTION HERE NEEDS ITS VACUITY GUARD, because "the figure has
+ * paths and a mask" is true of both and says nothing. The guard is always the
+ * OTHER sex measured in the same breath: the viewBox differs, the mask href
+ * differs, and at least one muscle's `d` differs. If the two art files were
+ * ever the same file, all three of those flip.
+ */
+{
+  const { bodySvg } = await import(BASE + 'body-map.js');
+  const male = bodySvg(new Map(), null, () => {}, { sex: 'male' });
+  const female = bodySvg(new Map(), null, () => {}, { sex: 'female' });
+  const fallback = bodySvg(new Map(), null, () => {}, {});
+
+  const box = (svg) => svg.getAttribute('viewBox');
+  ok(box(male) !== box(female),
+     `the two figures have different viewBoxes (${box(male)} vs ${box(female)})`);
+  ok(box(fallback) === box(male),
+     '⚠️ no sex draws the male figure — a body map with no body would be worse');
+  ok(box(bodySvg(new Map(), null, () => {}, { sex: 'FEMALE' })) === box(male),
+     'and the match is exact: only the string "female" swaps the figure');
+
+  const inks = (svg) => [...svg.querySelectorAll('mask image')].map((n) => n.getAttribute('href'));
+  ok(inks(male).length === 2 && inks(male).every((h) => /^img\/ink-(front|back)\.webp$/.test(h)),
+     `the male figure reaches for the male masks (${inks(male).join(', ')})`);
+  ok(inks(female).length === 2 && inks(female).every((h) => /^img\/ink-(front|back)-female\.webp$/.test(h)),
+     `🚨 the female figure reaches for the female masks (${inks(female).join(', ')})`);
+
+  const dOf = (svg, m) => {
+    const n = [...svg.querySelectorAll('.body-region')].find((x) => x.dataset.muscle === m);
+    return n ? n.getAttribute('d') : null;
+  };
+  ok(dOf(male, 'Chest') && dOf(female, 'Chest') && dOf(male, 'Chest') !== dOf(female, 'Chest'),
+     '🚨 and the FILLS are the other figure\'s too, not just the mask over them');
+
+  // The same thirteen groups, the same controls, the same halos — "function
+  // identically" is the whole ask, and this is the part of it a test can hold.
+  const muscles = (svg) => [...svg.querySelectorAll('.body-region')]
+    .map((n) => n.dataset.muscle).sort().join('|');
+  ok(muscles(male) === muscles(female) && muscles(male).length > 0,
+     'both figures draw the same muscles, in both views');
+  const halosOf = (svg) => svg.querySelectorAll('.body-halo').length;
+  ok(halosOf(female) === halosOf(male) && halosOf(female) > 0,
+     `the female figure carries the same hit halos (${halosOf(female)})`);
+  ok([...female.querySelectorAll('.body-region')].every((n) => n.getAttribute('tabindex') === '0'
+     && n.getAttribute('role') === 'button' && n.getAttribute('aria-label')),
+     'and every one of its muscles is still a named, focusable control');
+
+  let pickedF = null;
+  const fem = bodySvg(new Map(), null, (m) => { pickedF = m; }, { sex: 'female' });
+  const chest = [...fem.querySelectorAll('.body-region')].find((n) => n.dataset.muscle === 'Chest');
+  chest.dispatchEvent(new window.Event('click', { bubbles: true }));
+  ok(pickedF === 'Chest', 'tapping a muscle on the female figure picks it');
+}
+
+/* The Muscles tab reads the SEX OFF THE PROFILE, which is the wire the block
+ * above cannot test — `bodySvg()` doing the right thing with an argument nobody
+ * passes it is exactly the shape of the freshness-line bug two screens over
+ * (`freshnessLine()` has no caller to this day). */
+{
+  const { muscleGroupsPane } = await import(BASE + 'views-muscles.js');
+  const paneFor = async () => {
+    const host = window.document.createElement('div');
+    const top = window.document.createElement('div');
+    await muscleGroupsPane(host, top);
+    const svg = host.querySelector('svg.body-map');
+    return svg ? svg.getAttribute('viewBox') : null;
+  };
+
+  const before = await store.getProfile();
+  await store.saveProfile({ gender: 'female' });
+  const asFemale = await paneFor();
+  await store.saveProfile({ gender: 'male' });
+  const asMale = await paneFor();
+  // Put the account back exactly as the rest of the file expects to find it.
+  await store.saveProfile({ gender: before.gender, birthYear: before.birthYear });
+
+  ok(asFemale && asMale && asFemale !== asMale,
+     `🚨 the Muscles tab draws a different figure per profile sex (${asMale} vs ${asFemale})`);
+  ok(asMale === (await paneFor()),
+     'and putting the profile back puts the figure back — the pane reads it every render');
+}
+
 /* ================= the polish sweep (UX review leftovers) ================= */
 {
   // Explore explains its numbers BEFORE the nine cards, not nine cards later.

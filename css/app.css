@@ -5371,7 +5371,9 @@ a.row { text-decoration: none; }
    ⚠️ 58dvh IS THE CAP AND IT IS THERE FOR THE KEY. Uncapped, the figure filled a
    360×720 phone exactly and the screen arrived as a red-and-green body with no
    legend in sight — on a ramp this project is only allowed to ship BECAUSE the
-   legend is there. --body-ar is set inline from js/body-map.js's BODY_ASPECT. */
+   legend is there. --body-ar is set inline from js/body-map.js's bodyAspect(),
+   which takes a SEX — the two figures are not the same shape, so a female map
+   gets a wider box rather than a smaller figure in a male-shaped one. */
 .vol-figure {
   width: 100%;
   aspect-ratio: var(--body-ar, 1);

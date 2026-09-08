@@ -1528,13 +1528,20 @@ function relationshipFooter({ uid, conn, isFriend, state, demo }) {
  * at the call site that has it. See `FRIEND_SEGMENTS`.
  */
 async function dataScreenFor({ uid, name, doc, back, down, tab, parts }) {
-  const { GraphView } = await import('./views-data.js');
+  const [{ GraphView }, { ownSexOf }] = await Promise.all([
+    import('./views-data.js'), import('./shared-map.js'),
+  ]);
   return GraphView({
     subject: name,
     tab,
     back,
     down,
     segments: FRIEND_SEGMENTS,
+    // Whose body the Volume figure draws. Theirs, read out of their published
+    // MAP — the same source `friendBody()` uses for the figure beside it, so
+    // the two panels of one screen cannot disagree. `GraphView` will not fall
+    // back to the reader's own for a screen handed somebody else's rows.
+    sex: ownSexOf(doc.strength),
     rows: {
       sessions: doc.activity || [],
       benchmarks: doc.benchmarks || [],
@@ -1702,7 +1709,7 @@ export async function FriendPeopleView(uid) {
  * to answer anything is worse still.
  */
 async function legacyBody(doc, name) {
-  const [{ legacyLevels }, { bodySvg, BODY_ASPECT }, { LEVELS }, muscles] = await Promise.all([
+  const [{ legacyLevels }, { bodySvg, bodyAspect }, { LEVELS }, muscles] = await Promise.all([
     import('./social.js'), import('./body-map.js'), import('./strength-standards.js'),
     import('./views-muscles.js'),
   ]);
@@ -1718,10 +1725,14 @@ async function legacyBody(doc, name) {
   if (!levels.size) return null;
 
   const settings = await store.getSettings();
+  // ⚠️ A legacy document predates D32 and carries no `profile` at all, so this
+  // is undefined and the figure falls back to male. That is the honest answer:
+  // their app has not told us, and this whole screen is about a stale publish.
+  const sex = doc && doc.profile ? doc.profile.gender : null;
   return el('div', null,
-    el('div', { class: 'friend-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` },
+    el('div', { class: 'friend-body', style: `--body-ar:${bodyAspect(sex).toFixed(4)}` },
       bodySvg(levels, null, () => {},
-        { label: `${name}'s muscle groups, coloured by strength level` })),
+        { label: `${name}'s muscle groups, coloured by strength level`, sex })),
     muscles.legend(settings.moreDetails === true),
     el('div', { class: 'card' },
       el('div', { class: 'field-help', text:
@@ -1861,7 +1872,7 @@ export async function CompareBodiesView(param) {
   };
 
   const [
-    { ratingsFromShared, levelMapFrom }, { bodySvg, BODY_ASPECT }, muscles,
+    { ratingsFromShared, levelMapFrom, ownSexOf }, { bodySvg, bodyAspect }, muscles,
     { comparisonLabel, comparePreset }, settings,
   ] = await Promise.all([
     import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
@@ -1879,7 +1890,21 @@ export async function CompareBodiesView(param) {
     const r = await friendDoc(uid).catch(() => ({ fail: true }));
     const map = r && r.doc && r.doc.strength;
     if (map && map.muscles && map.muscles.length) {
-      sides.push({ uid, name: r.name, strength: map, demo: Boolean(r.demo) });
+      /* ⚠️ EACH SIDE CARRIES ITS OWN SEX, and it is read OUT OF THE MAP rather
+       * than off `profile.gender`. This screen already learned the general form
+       * on 2026-09-05 — the comparison group is resolved per person, never once
+       * for both — and the figure is that same question asked about the drawing.
+       *
+       * 🚨 `ownSexOf()` IS THE SOURCE BECAUSE IT IS THE ONE THE COLOURS USED.
+       * `profile.gender` is a second, nearly-always-equal answer, and the first
+       * version of this used it and drew a female friend as male in the demo,
+       * where the fixture publishes a map and no profile block. Same value, two
+       * places, and the screen took the one that can be absent — Rule 5's
+       * corollary about a field with two meanings, arriving from the side. */
+      sides.push({
+        uid, name: r.name, strength: map, demo: Boolean(r.demo),
+        sex: ownSexOf(map),
+      });
       continue;
     }
     /* 🚨 SAY WHO, AND SAY WHY. This screen shipped saying "One of these two has
@@ -1907,7 +1932,9 @@ export async function CompareBodiesView(param) {
    * demo, so this needs no branch of its own. */
   if (!rightUid) {
     mine = await mySharedMap().catch(() => null);
-    if (mine) sides.push({ uid: null, name: 'You', strength: mine });
+    // Read the same way as a friend's, off the map rather than off the profile,
+    // so the two columns cannot answer "whose sex is this" by two routes.
+    if (mine) sides.push({ uid: null, name: 'You', strength: mine, sex: ownSexOf(mine) });
   }
 
   const top = el('div', { class: 'pane-top' });
@@ -1979,6 +2006,22 @@ export async function CompareBodiesView(param) {
 
     const read = sides.map((s) => ({ ...s, ...ratingsFromShared(s.strength, compare) }));
 
+    /* 🚨 ONE BOX SHAPE FOR BOTH COLUMNS, TAKEN FROM THE WIDER FIGURE — 2026-09-07,
+     * and it exists because two differently-shaped drawings can now sit side by
+     * side. `.cmp-body` sets its height from its width and its aspect, so giving
+     * each column its own ratio put the two figures at different heights with
+     * their FRONT/BACK captions on different baselines — the exact fault
+     * `.cmp-name`'s own comment already guards the NAMES against, arriving from
+     * underneath.
+     *
+     * ⚠️ THE COST IS PAID BY THE NARROWER FIGURE and it is the right way round: a
+     * male figure in a female-shaped box is letterboxed by about 15 % of its
+     * width, and nothing is cropped or stretched, because an SVG with a viewBox
+     * fits rather than fills. ⚠️ AND IT IS A NO-OP WHENEVER BOTH SIDES ARE THE
+     * SAME SEX, which is most of the time — the max of two equal numbers is the
+     * number, so same-sex comparisons render exactly as they did before. */
+    const arMax = Math.max(...read.map((s) => bodyAspect(s.sex)));
+
     const columns = read.map((s) => {
       const figure = bodySvg(levelMapFrom(s.muscles), selected, (muscle) => {
         // ⚠️ TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH. Two
@@ -1986,12 +2029,12 @@ export async function CompareBodiesView(param) {
         // chest against the other's back and never notices.
         selected = selected === muscle ? null : muscle;
         draw();
-      }, { label: `${s.name}'s muscle groups, coloured by strength level` });
+      }, { label: `${s.name}'s muscle groups, coloured by strength level`, sex: s.sex });
       return el('div', { class: 'cmp-col' },
         el('div', { class: 'cmp-name', text: s.name }),
-        // The drawing's own aspect ratio, so the box is the picture's shape at
-        // every width and the SVG never letterboxes inside it — see the CSS.
-        el('div', { class: 'cmp-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),
+        // The shared box shape — see `arMax` above for why it is not this
+        // column's own, and why that costs nothing when both sides match.
+        el('div', { class: 'cmp-body', style: `--body-ar:${arMax.toFixed(4)}` }, figure),
       );
     });
 
@@ -2988,7 +3031,7 @@ function publishedRating(rated, strength, muscle) {
 
 async function friendBody(strength, who) {
   const [
-    { bodySvg, setSelected, BODY_ASPECT },
+    { bodySvg, setSelected, bodyAspect },
     { ratingsFromShared, levelMapFrom, ownSexOf },
     muscles,
   ] = await Promise.all([
@@ -3014,8 +3057,9 @@ async function friendBody(strength, who) {
   const asThem = { gender: theirSex, whose: 'their' };
 
   // The drawing's own ratio, so the capped box is the picture's shape at every
-  // width and the figure never letterboxes inside it.
-  const wrap = el('div', { class: 'friend-body', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` });
+  // width and the figure never letterboxes inside it. ⚠️ `theirSex` chooses the
+  // FIGURE as well as the words, from the one value, for the reason above it.
+  const wrap = el('div', { class: 'friend-body', style: `--body-ar:${bodyAspect(theirSex).toFixed(4)}` });
   const foot = el('div', { class: 'body-foot' });
 
   const draw = () => {
@@ -3028,7 +3072,7 @@ async function friendBody(strength, who) {
       selected = selected === muscle ? null : muscle;
       setSelected(body, selected);
       paintFoot(rated, missing);
-    }, { label: `${who.name}'s muscle groups, coloured by strength level` });
+    }, { label: `${who.name}'s muscle groups, coloured by strength level`, sex: theirSex });
     setChildren(wrap, body);
     paintFoot(rated, missing);
     paintControls();

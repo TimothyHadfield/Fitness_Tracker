@@ -32,7 +32,33 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-21 (second pass) — **the "from:" block is a TABLE, and two investigations
+**Last updated:** 2026-09-22 — **THE MUSCLE MAP HAS A FEMALE FIGURE.** Tim drew two images and asked
+for them wherever the profile says female, *"function[ing] identically to the male display"*, with
+the outlines smooth this time. ✅ **Done and pushed.** Same thirteen groups, same views, same fill/ink
+split, same hit halos; `bodySvg(..., { sex })` swaps the traced art and the ink mask **together**.
+🚨 **THE FIGURE BELONGS TO WHOSE BODY IS DRAWN, NOT THE READER** — a friend's map, their Volume
+figure and each compare column read THEIRS, and 🔒 **their sex comes out of the published MAP
+(`ownSexOf`), not `profile.gender`**: both exist, they nearly always agree, and the first version
+took the one that can be absent and drew the demo's female friend as male.
+🔒 **ONE TOOL, TWO FRONT-ENDS, ONE BACK-END.** The male sheet is a colour field (a muscle is a hue),
+the female is monochrome line art (a muscle is a region the keylines enclose) — so only the READING
+differs; smoothing, the piece guard and the trace are shared, which is where the 2026-09-07
+crenellation fix lives. ✅ **The male art regenerates BYTE-IDENTICAL** (hashed), and **the smoothing
+guard passed first time at the same `SMOOTH`** — a PNG's keylines wobble far less than a JPEG's.
+🚨 **TWO THINGS THE NEW DRAWING DOES THAT THE OLD ONE DOES NOT**: the background floods through a
+gap in the BACK figure's foot outline — presenting **not as a hole but as a figure with no feet** —
+now sealed, with a seed-point check that fails loudly if it returns; and the front shin runs into the
+foot with **no line between them** (a measured 15px anatomical waist, so no threshold to lower onto
+it), which needed two hand-placed ankle cuts. ⚠️ **`BODY_ASPECT` became `bodyAspect(sex)`** — 582
+units wide against 506, both 1527 tall.
+✅ **23 suites green, 6,239 assertions** (+19 data-layer, +12 render), **mutation-checked with the
+mutation grepped out of the file first** — pinning the figure to male flips exactly five assertions.
+✅ **Driven in Chrome against the demo year** at 390 and 880 across six screens.
+🚩 **The first run of that driver reported a bug that was the DRIVER'S** — a hash set to the value it
+already holds fires no `hashchange`, so the pane was a stale closure. §0.6 in a second costume.
+**Details: `docs/history.md` 2026-09-22.**
+
+**2026-09-21 (second pass)** — **the "from:" block is a TABLE, and two investigations
 that are his to decide.** He opened a list: *"I'm going to just give you a list of things I want you
 to fix with the cite and you can deploy sub-agents to work on each one."* 🟢 **SIX AGENTS, DISJOINT
 FILES, ONE INTEGRATOR** — and 🔒 **the thing that made it work was writing the CONTRACT (exact class
@@ -81,69 +107,37 @@ published neck standards exist — they do**, but the women's half is unusable. 
 instruction, after a catch-up: *"it still says 85x6 instead of 85x12 like we talked about on the
 muscle group 'from:'"*. **He is right, and it is a fault yesterday's dominance fix created on the day
 it shipped.**
-🚨 **THE ARITHMETIC IS UNCHANGED AND WAS NEVER WRONG.** `dominate()` re-reads an 85×12 at the rival's
-six reps — the conservative half of what the set proves, arriving at `repFactor(6)` so it wins on
-weight rather than by spending confidence. The row it returns carries the dominating set's **weight**
-over the superseded set's **reps and date**, and the panel prints `weight × reps, date` under the
-word ***"from"***. He did 50×6 on the 24th and 85×12 three weeks later; the line spliced half of
-each. 🛑 **It is Rule 5 broken by the line that enforces Rule 5** — the one slot on that panel a
-reader may take literally. ⚠️ **Worse than reported**: on the render fixture the old line read
-**"225×1, Aug 15"**, a single on a day he benched something else.
-🆕 **`performedReps` / `performedDate`** — display-only, stamped by `dominate()`, **absent unless a
-row was superseded**. `reps` and `date` are untouched and still drive `repFactor`, recency,
-`confident` and both comparisons; an assertion beside the new ones pins that, so nobody folds the two
-pairs into one. 🚨 **THEY CHAIN RATHER THAN RE-STAMP** — `dominate()` runs twice, so the row reaching
-the seat may already be a rewrite, and `dom.reps` there names the *first* pass's truncation (85×8:
-closer, still wrong, quieter). 🔒 **The first version of that assertion PASSED with the chain
-deleted** — on the obvious fixture the seat pass never touches the winning row, so the heavy day has
-to be the **older** one. §0.14's other half, again.
-🚨 **FIVE LINES ACROSS THREE FILES WERE PRINTING THE SAME SPLICE**, each under a comment claiming a
-measured set: the sources line and the low-rep caveat on the muscle panel (which had begun
-contradicting each other), Goals' estimate source and its *"how recent this comparison actually is"*
-line, and a friend's best lifts. ⚠️ **And the publish path** — `projectStrength()` whitelists both
-fields, or a friend's panel would show the fabrication while the owner's showed the real set.
-🛑 **No `firestore.rules` change and no deploy**: `hasOnly` pins top-level keys and `strength` is one.
-🔒 **No estimate moved, no golden re-baseline, every count identical.** ✅ **All twenty-two suites
-green — 5,693 assertions** (`data-layer` **2,420**, `render` **1,599**, `social` **205**), every new
-one mutation-checked. 🔒 **The render assertion needed a VACUITY GUARD**: *"225×10, Aug 20"* reads the
-same whether the seat is the real set or a rewrite naming it, and only `confident` (`reps <= 5` on
-what the model read) separates them. 🚩 **Not driven in Chrome.**
-🔒 **THE RULE IT PRODUCED — Rule 5's new corollary in the handbook**: `dominate()` is the first thing
-here that **manufactures** an observation rather than screening or re-weighting one, and the moment
-one does, every screen printing its fields verbatim starts lying. **When one field carries two
-meanings, the caller that gets the wrong one is the screen** — it is the only caller that cannot fail
-a test. **Details: `docs/history.md` 2026-09-21.**
+⚠️ **COLLAPSED 2026-09-22** (§0.3); full account in `docs/history.md` 2026-09-21, and **the durable
+half is Rule 5's new corollary in `docs/handbook.md` §5** plus the Muscles row in `docs/state.md`.
+🚨 **THE ARITHMETIC WAS NEVER WRONG.** `dominate()` re-reads an 85×12 at the rival's six reps — the
+conservative half of what the set proves — so the row carries the dominating set's **weight** over
+the superseded set's **reps and date**, and the panel printed that splice under the word *"from"*.
+🆕 **`performedReps` / `performedDate`** are display-only, absent unless a row was superseded, and
+**five lines across three files** were printing the splice. 🔒 **The rule it produced**: `dominate()`
+is the first thing here that MANUFACTURES an observation, and **when one field carries two meanings
+the caller that gets the wrong one is the screen** — the only caller that cannot fail a test.
 
-**2026-09-20 — COLLAPSED, 2026-09-21** (§0.3). Four passes; **full write-ups in `docs/history.md`**
-under that date, every durable half in the handbook, `docs/state.md` or a D-number.
-🆕 **Open work 36 — a copied programme can be told its original moved on** (`js/preset-updates.js`,
-three stamps, three refusals). 🚨 **`exercise.origin` is the only thing that tells "the original
-changed" from "you changed it"** and **had to be named in `normalizeWorkout()`**. ⚠️ **Every copy
-made before that day is unstamped, Tim's included.**
-🆕 **D33 — a planned set can carry a REP PRESCRIPTION**, read as carrying 1–2 reps in reserve.
-🛑 **Not the RIR field D28 refuses**: D28 refuses to ASK a lifter; this is one assumption about what
-a COACH meant, and it can only take weight off the bar.
-🔄 **Heavier AND longer supersedes** (`dominate()`), enforced at **both** places that make the same
-comparison. 🔄 **The rep ladder had no source** — `js/rep-sigma.js` measures σ from the disagreement
-between research §1.2's seven formulas, so a 12-rep set carries **86 %** of an 8-rep set on a machine
-and **57 %** on the key lift, where the hand-typed ladder said 53 % everywhere.
-🚩 **He argued a high-rep set is evidence of a MINIMUM and it was deliberately NOT built** — row 9.
-**2026-09-19 — COLLAPSED TO THIS PARAGRAPH, 2026-09-21** (§0.3). 🆕 **THE CURRENT SYSTEM**
-(`settings.currentSystemId`, `store.currentSystem()`) — the Workouts tab is one programme's own
-screen with its name above the pane as a switcher, and Record shows only its workouts, both drawn by
-one `systemBody()`. 🚨 **It DERIVES when nothing has been chosen and never writes what it derived** —
-every account on disk has no pointer and demanding a pick would be a wall in front of their own
-programme (D8/D9). 🔄 It deleted the folding systems of 2026-09-16. 🛑 A live link to pre-built
-systems was assessed and **refused**; the recommendation it made instead became Open work 36.
-🔒 **§0.19 came out of that day** — grep for what you are about to ASSERT, not only for what you are
-removing. Full write-up and the rest: `docs/history.md`, 2026-09-19; the durable halves are in
-`docs/state.md` and Open work 35.
+## 2026-09-18 to 2026-09-20 — COLLAPSED TO FOUR LINES, 2026-09-22 (§0.3)
 
-**2026-09-18** — 🆕 **a planned set as a PERCENTAGE OF YOUR MAX** (`js/set-targets.js`, of your own
-best recorded set on that lift, never the cross-muscle estimate) and 🆕 **the PLATES under the
-weight** (`js/plates.js`). 🔒 **The plate brief's justification for greedy was FALSE and the agent
-measured it** — no 35s in the shipped inventory; a justification in a brief is a claim, not a
-premise. Open work 33 and 34; `docs/history.md` 2026-09-18.
+⚠️ **Full write-ups: `docs/history.md` under each date; every durable half is in the handbook,
+`docs/state.md`, a D-number or an Open work row.** What stays here is only what a fresh session must
+not re-derive:
+
+- 🔄 **Heavier AND longer supersedes** (`dominate()`), enforced at **both** places making the same
+  comparison, and 🔄 **the rep ladder had no source** — `js/rep-sigma.js` measures σ from the
+  disagreement between research §1.2's seven formulas, so a 12-rep set carries **86 %** of an 8-rep
+  set on a machine and **57 %** on the key lift where the hand-typed ladder said 53 % everywhere.
+  🚩 He argued a high-rep set is evidence of a MINIMUM and it was deliberately **not** built — row 9.
+- 🆕 **D33 — a planned set can carry a REP PRESCRIPTION**, read as carrying 1–2 reps in reserve.
+  🛑 **Not the RIR field D28 refuses**: D28 refuses to ASK a lifter; this is one assumption about
+  what a COACH meant, and it can only take weight off the bar. Plus **% of your own max** and **the
+  plates under the weight** (Open work 33, 34).
+- 🆕 **THE CURRENT SYSTEM** (`settings.currentSystemId`) — the Workouts tab is one programme's own
+  screen and Record shows only its workouts, both drawn by one `systemBody()`. 🚨 **It DERIVES when
+  nothing has been chosen and never writes what it derived** (D8/D9). Open work 35.
+- 🆕 **Open work 36 — a copied programme can be told its original moved on.** 🚨 `exercise.origin` is
+  the only thing separating "the original changed" from "you changed it", and **every copy made
+  before 2026-09-20 is unstamped, Tim's included.**
 
 ## 2026-09-16 and 2026-09-17 — COLLAPSED TO ONE POINTER, 2026-09-20
 
@@ -170,8 +164,9 @@ is where this rule lives — this is the pointer, not a second copy.
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Everything below is committed and pushed and
 the working tree is clean **outside `Fitness_Research/`** — 🛑 **another agent's folder; stay out, and
 never `git add -A`** (first entry under **Standing instructions**).
-**All twenty-two no-Chrome suites are green — 5,731 assertions**, `data-layer` **2,424**, `render`
-**1,608**. ⚠️ **Three of those suites came from a PARALLEL AGENT in this same checkout, not from
+**All TWENTY-THREE no-Chrome suites are green — 6,239 assertions** (recounted 2026-09-22 by running
+every one), `data-layer` **2,861**, `render` **1,620**. ⚠️ **The count jumped because the parallel
+agent has been adding too** — `research-pane` is a suite this chat has never opened. ⚠️ **Three of those suites came from a PARALLEL AGENT in this same checkout, not from
 this chat** — see the "Everything at once" row.
 ✅ **`rules` is 221**, run on the emulator on 2026-09-16 (§0.9) and **deployed** — and since
 2026-09-17 the deployed copy is verified from the outside as well, by `tools/live-check.mjs` (§0.16);
@@ -182,9 +177,18 @@ closed on 2026-09-17**, along with 26's; **33 and 34 are 2026-09-18 and are fini
 2026-09-19 and is finished; 36 is 2026-09-20 and is finished.** Every other item is either Tim's,
 pinned, or parked.
 
-🆕 **WHERE 2026-09-21 STOPPED.** One reported bug, fixed whole and pushed. **Nothing half-done and
-nothing new is waiting on Tim** — the ten rows below are unchanged. 🚩 **What to expect a report
-about**: the *"from …"* line on a muscle now names the heavier, longer set (85 × 12) while the
+🆕 **WHERE 2026-09-22 STOPPED.** One ask, built whole and pushed. **Nothing half-done and nothing new
+is waiting on Tim** — the twelve rows below are unchanged. 🚩 **What to expect a report about**: the
+female figure **fills the whole shin** where the male's colours cover only the muscle bellies, and
+its **hands sit further from the body**, so the two maps do not look like the same drawing recoloured
+— that is the art, not the pipeline. ⚠️ **And the Muscles tab letterboxes the two figures slightly
+differently**, because `.body-wrap` is a fixed 57 % of the pane and does not use `bodyAspect()` —
+pre-existing, not new, and changing it means touching a screen he did not point at.
+🛑 **The female source PNGs are git-ignored working files at the repo root**, exactly like
+`Human_Muscle_Groups.jpg`: **the art cannot be rebuilt without them.**
+
+🆕 **WHERE 2026-09-21 STOPPED.** One reported bug, fixed whole and pushed. 🚩 **What to expect a
+report about**: the *"from …"* line on a muscle now names the heavier, longer set (85 × 12) while the
 **estimate is still the truncated reading** of it (85 × 6), so anyone recomputing 85 × 12 by hand
 gets a bigger number than the panel shows. **That is the rule working** — the truncation is the
 conservative half of what the set proves — and it is the obvious next thing he might ask to see
@@ -1162,7 +1166,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 🆕 **5,731 across the TWENTY-TWO that need no Chrome, re-counted 2026-09-21 by running every one.** Per suite: data-layer 2,424 · render 1,608 · goals 278 · social 217 · bodyweight 187 · a11y 153 · template-lint 96 · share-image 91 · optimal 76 · volume-map 64 · compare 63 · demo 58 · rep-decrement 57 · year-grid 45 · core-rating 44 · routine 42 · estimate 37 · exercise-evidence 33 · qr 33 · figure-note 27 · feedback 26 · strength-estimate 72. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | 🆕 **6,239 across the TWENTY-THREE that need no Chrome, re-counted 2026-09-22 by running every one.** ⚠️ **`research-pane` (59) is a suite this chat has never opened** — the parallel agent's, like `exercise-evidence`, `template-lint` and `figure-note`; and the jump from 5,731 is theirs as much as this session's. Per suite: data-layer 2,861 · render 1,620 · goals 278 · social 217 · bodyweight 187 · a11y 153 · template-lint 96 · share-image 91 · optimal 76 · volume-map 64 · compare 63 · demo 58 · rep-decrement 57 · year-grid 45 · core-rating 44 · routine 42 · estimate 37 · exercise-evidence 33 · qr 33 · figure-note 27 · feedback 26 · strength-estimate 72. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | 🆕 **Fatigue tests** | `node tests/rep-decrement.test.mjs` — **57 assertions** (2026-09-14), **no dependencies**. The per-set rep decrement that reaches the runner's caption. 🚨 **The two load-bearing ones are the invariants, and both are mutation-checked with the mutation printed in the source first**: every multiplier is ≤ 1 (so a wrong constant can only make the caption easier to beat), and a lifter whose reps RISE across a run is **clamped** rather than handed a bigger number. Also: a weight change ends a run, a prefilled set is not a set, drops/supersets/benchmarks contribute nothing (`group != null`, because a truthy test let the first superset of every workout through), 90 s ties to the SHORTER rest column, and the caption never prints "maybe 0". ⚠️ **What it does NOT cover is the wiring** — no mounted screen asserts the multiplier actually reaches the caption; see START HERE |
 | **Data tests** | `node tests/data-layer.test.mjs` — **2,118 assertions** (2026-09-15), **no dependencies**. 🆕 **Since 2026-09-15 it holds σ AND THE PRECISION BLEND** — the key lift carrying no conversion uncertainty, a flat published ratio beating a drifting one, gearing surviving a flat drift, the q bridge for an entry with no page, and the load-bearing one: **the same two disagreeing numbers land at 204.5 or 294.6 depending on which conversion is better established**, where the old blend gave 225.0 both ways. Plus **the quarantine's cross-exercise behaviour** from both sides of its 2.0× boundary (kept at 1.99, set aside at 2.01) with two guards on the demo year — nothing set aside on a real year, and the cross-exercise spread under 1.5× so a future ratio correction cannot start withholding real sets silently — and 🚨 **the sexed path pinned beside the golden table**, because `store.js` passes a sex and the table never did. 🆕 **Since 2026-09-14 it holds THE FOUR SEAT RULES AND THE QUARANTINE**: a 3-rep benchmark beats a 12-rep back-off set on the same day (which is what told Tim a tested 215 was "above his max"), a set at ≤ 8 reps is preferred but not required, the 84-day window lets a rating FALL while a lay-off keeps its record, the same history walked in either order gives an identical rating (it read Fair one way and High the other), and the typo screen holds back a ×10 slip **by name** while leaving a personal best and the good sets logged beside it alone. Plus the ratio pins **per sex** on both sides of every pair, and six **split-ordering** checks (a specific rule must not fall below its family — the machine lateral raise inside `/Lateral Raise/` was a 3.7× inflation). ⚠️ **The GOLDEN table was re-baselined on 2026-09-14 with every move attributed by name** — eleven of twelve muscles down, Traps up 14 % because the deadlift stopped standing in for it. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** **⚠️ THE AUGUST HALF IS COMPRESSED HERE, 2026-09-15**, the same cut the render row took and for the same reason. Still asserted, detail in `docs/history.md` 2026-08-24 to -30: the **exercise-picture manifest** against the folder and the sw precache, the **movement families** (271 members each resolving to exactly one exercise, four family-less on purpose), the **Research tab's content and WORD BUDGETS** (45 an answer, 260 a topic — the only thing that can catch prose piling back up, since every other assertion checks a thing is PRESENT), the **crop maths** (1,925 combinations, zero escapes), the **file-import refusals** (date order, weight unit, distance unit each refused rather than guessed), **how full the cloud is**, and the **within-session fatigue** section built on Tim's real back session. ⚠️ **That last one changed shape on 2026-09-15** — see the σ note at the top of this row |
@@ -1184,7 +1188,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **QR tests** | `node tests/qr.test.mjs` — 33 assertions. Needs `npm i --no-save jsqr` for the strongest layer: the encoder's output is rendered to pixels and **decoded by an independent implementation**, which validates format-info, masking, placement, interleaving and ECC in one assertion. Also carries ZXing's published Reed-Solomon vectors. ⚠️ **It does NOT assert which mask a payload gets** — ZXing, Nayuki and the ISO text disagree on penalty-rule-3 details, so a correct implementation can legitimately pick a different one |
 | **Rules tests** | `npm i --no-save @firebase/rules-unit-testing`, then **`JAVA_HOME` must point at Temurin 21** (`C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot`), then `firebase emulators:exec --only firestore --project demo-test "node tests/rules.test.mjs"` — **221 assertions** (2026-09-16), who may READ your data — and since 2026-08-27 who may OFFER you a workout and who may announce a disconnection, and since 2026-08-29 who may ASK to connect. 🚨 **One assertion in here is deliberately an `allow` that records a cost rather than a guarantee** — "any signed-in account can list the whole directory" — because a suite that pinned only the good news would describe a feature this app does not have. **It is the line that flips to a denial when the handle version lands.** ⚠️ **On the Oracle JDK the emulator dies silently** — see §0.9 |
 | **Rebuild the picture manifest** | `node tools/build-exercise-images.mjs` — after dropping files into `img/exercises/` named `<exerciseId>.<ext>`. Rewrites the manifest in `js/exercise-images.js` AND the precache block in `sw.js`. ⚠️ It REFUSES a badly-named file rather than skipping it: a picture that never appears looks exactly like one that was never bought. `img/exercises/README.md` has the naming and the licensing |
-| **Rebuild the body art** | `python tools/build-body-art.py` — only if the source JPG or the seeds change. Needs `pip install pillow numpy scipy potracer` |
+| **Rebuild the body art** | `python tools/build-body-art.py` — only if a source image or the seeds change. `--only male\|female` for one figure. Needs `pip install pillow numpy scipy potracer`. 🆕 **TWO FIGURES SINCE 2026-09-22**: the male sheet `Human_Muscle_Groups.jpg` and the female pair `Female_Muscle_Groups_Front.png` / `_Back.png`, all three git-ignored at the repo root — **the art cannot be rebuilt without them.** 🔒 **The male output must come back BYTE-IDENTICAL** after any change to the shared half (smoothing, the piece guard, the trace); hash it, because that is the only thing that makes "I did not touch the male figure" a measurement |
 | **Look at it** | headless Chrome — §0.6. Use CDP + `Emulation.setDeviceMetricsOverride` for anything involving input |
 | **Firebase** | project `fitness-tracker-th` · [console](https://console.firebase.google.com/project/fitness-tracker-th/overview) · `firebase deploy --only firestore:rules` |
 | **Deploy** | commit + push to `main`; Pages rebuilds in ~40–50s |

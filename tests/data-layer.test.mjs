@@ -681,6 +681,59 @@ for (const m of bm.MAPPED_MUSCLES) {
   ok(drawn.length >= 1, `"${m}" has a traced path (${drawn.length} view(s))`);
 }
 
+/* 🚨 AND THE SAME THING FOR THE FEMALE FIGURE — 2026-09-07, when there started
+ * being two of them.
+ *
+ * ⚠️ THE ASSERTION THAT MATTERS IS THE PAIRING, VIEW BY VIEW, and it is not the
+ * same claim as "each figure covers the standards table". Two figures could each
+ * satisfy the loop above while disagreeing about WHICH VIEW a group is drawn on
+ * — Traps on the male's back and the female's front, say — and the symptom would
+ * be a muscle that cannot be tapped on one person's map and can on another's,
+ * with every count in this file still green. tools/build-body-art.py refuses to
+ * emit that; this is the check that the emitted files really are what it said.
+ *
+ * ⚠️ `MAPPED_MUSCLES` IS THE UNION OF BOTH, so the two loops above are already
+ * asserting the female figure's groups against the standards table as well —
+ * which is why a group drawn on ONE figure and missing from the other fails
+ * "rankable muscle is drawn" only if it is missing from both. That is exactly
+ * the hole this block closes. */
+const artF = await import('../js/body-art-female.js');
+for (const view of ['front', 'back']) {
+  const male = Object.keys(art.ART[view].muscles).sort();
+  const female = Object.keys(artF.ART[view].muscles).sort();
+  ok(male.join('|') === female.join('|'),
+    `🚨 both figures draw the same groups on the ${view} (${male.length}: ${male.join(', ')})`);
+}
+for (const m of bm.MAPPED_MUSCLES) {
+  const drawn = Object.values(artF.ART)
+    .map((v) => v.muscles[m] || '')
+    .filter((d) => d.length > 200);
+  ok(drawn.length >= 1, `female figure: "${m}" has a traced path (${drawn.length} view(s))`);
+}
+// The silhouette is the paper every fill is printed on. A view that lost it
+// would render each muscle as a shape floating in nothing, which is the one
+// failure that does not look like a missing muscle.
+for (const view of ['front', 'back']) {
+  ok(artF.ART[view].body.length > 2000,
+    `female figure: the ${view} silhouette is a real path (${artF.ART[view].body.length} chars)`);
+}
+/* ⚠️ THE TWO FIGURES ARE DIFFERENT SHAPES AND THE APP HAS TO KNOW. Both are
+ * 1527 tall on purpose — a woman and a man are drawn the same size, because this
+ * is a diagram — and the female is wider because the drawing holds its hands
+ * further out. `bodyAspect()` exists so a container is the picture's shape; if
+ * these two were equal it would not need an argument and every call site
+ * threading a sex through would be dead weight somebody would later delete. */
+ok(artF.FIGURE.h === art.FIGURE.h,
+  `both figures are ${art.FIGURE.h} units tall, so neither is drawn smaller`);
+ok(artF.FIGURE.w > art.FIGURE.w,
+  `the female figure is wider (${artF.FIGURE.w} against ${art.FIGURE.w}) — bodyAspect() has to differ`);
+ok(bm.bodyAspect('female') > bm.bodyAspect('male'),
+  'bodyAspect() reports the wider box for female');
+ok(bm.bodyAspect(null) === bm.bodyAspect('male')
+  && bm.bodyAspect(undefined) === bm.bodyAspect('male')
+  && bm.bodyAspect('') === bm.bodyAspect('male'),
+  '⚠️ an unknown sex falls back to the male figure rather than refusing to draw');
+
 /* ⚠️ THE MEDIANS MOVED ON 2026-09-13 AND THEY MOVED FOR A REASON THAT IS NOT
  * ABOUT THIS FILE. The ratio table is derived by dividing Strength Level's rows
  * for two lifts; ranking the result against Gravitus medians 7-9 % lower meant

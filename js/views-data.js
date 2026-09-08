@@ -9,7 +9,7 @@ import {
   hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
   VOLUME_SHADES, volumeShade,
 } from './volume-map.js';
-import { bodySvg, setSelected, MAPPED_MUSCLES, BODY_ASPECT } from './body-map.js';
+import { bodySvg, setSelected, MAPPED_MUSCLES, bodyAspect } from './body-map.js';
 import { FIELD_META, LOAD_LABEL } from './exercises.js';
 import {
   clampReps, repConfidence, normalizeBlockedReason, MIN_TARGET_REPS, MAX_TARGET_REPS,
@@ -1562,6 +1562,14 @@ function pickSource(opt) {
 export async function GraphView(opts = {}) {
   const rows = opts.rows || null;
   const subject = opts.subject || null;
+  /* 🚨 WHOSE BODY THE VOLUME FIGURE DRAWS (2026-09-07, the female figure).
+   * `rows` present means this screen is showing somebody else, and their sex has
+   * to come from THEIR published document — reading the account's own here would
+   * draw a friend's training on the reader's body, which is the same mistake as
+   * ranking her against men (fixed 2026-09-09, one screen over). So the fallback
+   * is deliberately only on the own-screen branch, and a friend that publishes
+   * no sex gets the default figure rather than the reader's. */
+  const sex = rows ? (opts.sex || null) : (await store.getProfile()).gender;
   /* ⚠️ `benchmarkComparison()` USED TO BE READ HERE AND IS NOT ANY MORE. Bars is
    * no longer benchmarks-only — it builds its rows through `pickSource()` so a
    * lift with workout sets and no benchmarks can still be compared — and two
@@ -2188,7 +2196,7 @@ export async function GraphView(opts = {}) {
        * would put it behind one more decision than it deserves. */
       if (opts.musclesExtra) host.append(opts.musclesExtra);
     } else if (mode === 'volume') {
-      await renderVolumePane(host, top, { rows: rows && rows.sessions, subject });
+      await renderVolumePane(host, top, { rows: rows && rows.sessions, subject, sex });
     } else if (mode === 'compare') await renderCompare();
     else if (mode === 'research') await renderResearchPane(host, top);
     else if (mode === 'calendar') await renderCalendarPane(host, top, { rows, subject });
@@ -3303,7 +3311,7 @@ function volDetail(m, weeks) {
  * with 21 recorded sets was painted the colour of somebody training hard. That
  * is the fault the key's own header comment describes, arriving through the
  * figure instead of through the chips. One unit, one scale, one key. */
-function volumeFigure(data, selected, onPick) {
+function volumeFigure(data, selected, onPick, sex) {
   const byMuscle = new Map(data.muscles.map((m) => [m.muscle, m]));
   const levels = new Map();
   for (const muscle of MAPPED_MUSCLES) {
@@ -3320,6 +3328,7 @@ function volumeFigure(data, selected, onPick) {
   }
   return bodySvg(levels, selected, onPick, {
     label: 'Muscle groups coloured by how many sets a week each one is getting',
+    sex,
   });
 }
 
@@ -3519,7 +3528,7 @@ export async function renderVolumePane(host, top, opts = {}) {
     m, scale, volOpen === m.muscle, () => select(m.muscle),
   )));
 
-  const figure = volumeFigure(data, volOpen, select);
+  const figure = volumeFigure(data, volOpen, select, opts.sex);
   const picked = el('div', { class: 'vol-picked' });
   // ⚠️ The panel is inside the collapsing wrapper the motion pass built, so
   // picking a muscle SLIDES the list down rather than jolting it. Same class,
@@ -3608,7 +3617,7 @@ export async function renderVolumePane(host, top, opts = {}) {
           { label: 'Why this is not a settled rate' })),
       ),
 
-      el('div', { class: 'vol-figure', style: `--body-ar:${BODY_ASPECT.toFixed(4)}` }, figure),
+      el('div', { class: 'vol-figure', style: `--body-ar:${bodyAspect(opts.sex).toFixed(4)}` }, figure),
       legendHost,
       hint,
       pickedWrap,

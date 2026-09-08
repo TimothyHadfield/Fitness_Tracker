@@ -17,6 +17,146 @@
 
 ---
 
+## 2026-09-22 — A FEMALE FIGURE FOR THE MUSCLE MAP
+
+Tim: *"I just created 2 new images for the muscle maps… If the user puts their gender as female
+instead of male, I want you to display their muscle groups with this new image rather than the
+current male image. Make them function identically to the male display. Remember the outlines of the
+muslce groups laste time had issues with how smooth they were and stuff like that so make sure that
+doesn't happen when you outline it this time."* Two PNGs, front and back, pasted into the chat and
+sitting in `Downloads`.
+
+### A. THE TWO SOURCES HAVE ALMOST NOTHING IN COMMON
+
+The male sheet is a **colour-field** drawing: one image holding both views on white paper, each
+muscle its own saturated hue. `segment()` reads it by asking what colour a pixel is — `painted` is a
+saturation threshold, and `ndi.label` over that gives one component per muscle for free.
+
+The female drawing is **monochrome line art**: one PNG per view, at two different resolutions, white
+keylines on black, every muscle the same dark grey. There is no colour to segment by, so the reading
+had to change from a question about hue to a question about topology: **a muscle is a region of the
+body that the white keylines enclose.** `segment_female()` thresholds the linework, labels the gaps
+between it, and seeds those exactly as the male path does.
+
+🔒 **THE TOOL IS ONE TOOL WITH TWO FRONT-ENDS AND ONE BACK-END, AND THE SPLIT IS THE POINT.**
+`smooth_fills()`, the piece-count guard, `trace()` and the emit are shared and unchanged — that is
+where the outline quality lives, and it is exactly the code that fixed the crenellation Tim is
+remembering (2026-09-07). A second copy of it would be a second place for that bug to come back.
+🔒 **The male output regenerates BYTE-IDENTICAL** — `js/body-art.js` and both ink webps hashed before
+and after the refactor — which is the only thing that makes "I did not touch the male figure" a
+measurement rather than a claim.
+
+✅ **AND THE SMOOTHING GUARD PASSED FIRST TIME ON THE NEW ART**, at the same `SMOOTH = 2.0`. That is
+not luck: the crenellation came from thresholding a **JPEG's** wobbling edges, and this source is a
+PNG whose keylines are already clean, so the low-pass had less to do rather than more.
+
+### B. THREE THINGS THE DRAWING DOES THAT THE MALE ONE DOES NOT
+
+🚨 **THE BACKGROUND FLOODED INTO BOTH FEET ON THE BACK VIEW, AND IT DOES NOT PRESENT AS A LEAK.** The
+silhouette is found by flooding the page background and inverting; the back figure's foot outline
+fades to about 0.08 in two places and the flood walks straight through a gap that narrow. Because
+`alpha[~body] = 0`, the symptom is not a hole — it is **a figure with no feet**, with the fills
+stopping at the ankle looking entirely deliberate. Closing the linework by one pixel before flooding
+seals it. 🔒 **And the tool now CHECKS it**: every unpainted region has a named seed point, and
+`build_female()` exits if one of them is outside the silhouette, naming the coordinate. A repair with
+no assertion behind it is a repair that quietly stops working.
+
+🚨 **THE FRONT SHIN RUNS INTO THE FOOT WITH NO LINE BETWEEN THEM.** The male sheet needs nothing here
+because it stops *painting* at the ankle — the foot is unpainted and falls out on its own. The female
+drawing fills the whole body with one tone, so shin and foot are one region. Measured before
+inventing anything: the component narrows to **15px at y≈1340** and opens back out into the foot,
+which is an anatomical waist rather than a faint line, so there is no threshold to lower onto it.
+The answer is `CUTS_F` — hand-placed segments forced into the keyline mask, documented as such, one
+per ankle. ⚠️ **It leaves a straight edge where the male figure tapers**, because the female drawing
+genuinely fills the shin where the male's colours only cover the muscle bellies. At the size the map
+is actually drawn — the figure is ~170px wide on a phone — it is invisible; it was checked at that
+size rather than at the 3× zoom it was found at.
+
+⚠️ **THE HEAD, HANDS AND FEET ARE THE SAME GREY AS A MUSCLE**, where on the male sheet they are simply
+uncoloured. So an unclaimed component could mean "the head" or "a muscle nobody assigned", and the
+coverage check that makes the male seeds trustworthy would have gone soft. `IGNORE_F` names all
+thirteen of them, and after that an unclaimed component is always a mistake.
+
+### C. THE INK LAYER IS AN INVERSION, AND THAT IS ALL IT IS
+
+The male tool *solves* for ink: it works out each muscle's own base colour and asks how much the
+drawing darkens it. There is nothing to solve here — this drawing has one base and it is black — so
+`female_ink()` is a straight tonal inversion: the brighter the source, the more ink. A keyline comes
+out solid, a striation faint, a flat interior nothing at all. **The app's own look is the output
+either way**: dark keylines over coloured muscles on pale paper, which is what the female source is a
+photographic negative of.
+
+### D. WHAT THE APP DOES WITH IT
+
+`body-map.js` holds a `FIGURES` table and `bodySvg(..., { sex })` picks. 🚨 **Both halves swap
+together or neither does** — the traced fills and the ink mask are two separate lookups, and getting
+one without the other paints the male's keylines over the female's fills, which reads as a smudged
+drawing rather than as the wrong art. An assertion pins each half separately.
+
+🚨 **THE FIGURE BELONGS TO WHOSE BODY IS BEING DRAWN, NOT TO THE READER.** Five call sites, and the
+interesting ones are the three that are about somebody else: a friend's map, their Volume figure and
+each column of the compare screen. Drawing a friend on the reader's own body would be the same class
+of mistake as ranking her against men, which is what 2026-09-09 fixed one screen over.
+
+🔒 **AND THE SEX IS READ OUT OF THE PUBLISHED MAP (`ownSexOf`), NOT OFF `profile.gender` — the first
+version used the profile and drew a female friend as male.** Both fields exist, they nearly always
+agree, and the screen took the one that can be absent: the demo's friend fixture publishes a map and
+no profile block. `ownSexOf()` reads the sex the map's own colours were computed against, which is
+also what the caption beside it already used — one value, one meaning. **Rule 5's corollary about a
+field with two meanings, arriving from the side.**
+
+⚠️ **`BODY_ASPECT` BECAME `bodyAspect(sex)` because the two drawings are not the same shape** — 582
+units wide against 506, both 1527 tall, since a woman and a man are drawn the same *size* on what is
+a diagram. A container built to the male ratio would draw her smaller and pad the sides, which is the
+bug that constant's own docstring records.
+
+🆕 **ONE VISUAL CHANGE NOBODY ASKED FOR, AND IT IS A REPAIR RATHER THAN A REDESIGN.** The compare
+screen sizes each column's box from its own aspect, so a mixed-sex comparison put the two figures at
+different heights with their FRONT/BACK captions on different baselines — the exact fault
+`.cmp-name`'s own comment guards the *names* against, arriving from underneath. Both columns now take
+the wider figure's shape. ⚠️ **It is a no-op whenever both sides are the same sex**, which is most of
+the time, and the cost when they are not is ~15 % of width on the narrower figure, letterboxed rather
+than cropped or stretched.
+
+### E. WHAT WAS CHECKED
+
+✅ **All 23 no-Chrome suites green — 6,239 assertions** (`data-layer` **2,861**, `render` **1,620**;
+recounted by running every one, and three of the suites are the parallel agent's, not this chat's).
+**+19 in `data-layer`, +12 in `render`.**
+🔒 **MUTATION-CHECKED WITH THE MUTATION PRINTED FIRST** (§0.14): pinning `figureFor()` to male flipped
+exactly five assertions across the two suites — the viewBox, the mask href, the fill geometry, the
+Muscles tab's own wire and `bodyAspect()` — and nothing else. The marker was grepped out of the file
+before the run rather than assumed to have landed.
+✅ **DRIVEN IN CHROME AGAINST THE REAL DEMO YEAR** at 390 and 880, both figures, on the Muscles tab,
+the Volume tab, a friend's map, a friend's Volume panel and both compare screens. The reported
+viewBox and mask href were read off the live DOM every time rather than eyeballed.
+🚩 **THE FIRST RUN OF THAT DRIVER REPORTED A BUG THAT WAS THE DRIVER'S** — the female Volume pane drew
+the male figure, because setting `location.hash` to the value it already holds fires no `hashchange`
+and re-renders nothing, so the pane was still the closure built while the profile said male. **§0.6's
+trap in a second costume**: the harness was doubted only after the code had been. Navigating away and
+back fixed the driver and the app was right all along.
+⚠️ **What that did surface, and it is not a bug**: the Muscles pane re-reads the profile on every
+render, the Volume pane captures the sex when `GraphView` is built. You cannot change your sex without
+leaving the Data screen, so it cannot go stale — noted rather than changed.
+🛑 **The Muscles tab does NOT use `bodyAspect()` and never did** — `.body-wrap` is a fixed 57 % of the
+pane and the SVG fits inside it. The female figure therefore letterboxes there slightly differently
+from the male. It is not broken, it is not new behaviour, and changing it would be touching a screen
+Tim did not point at.
+
+### F. WHAT IS LEFT
+
+⏸️ **The source PNGs are working files at the repo root and are git-ignored** (`/*.png`), exactly as
+`Human_Muscle_Groups.jpg` is. **The art cannot be rebuilt without them** — same standing exposure the
+male figure has always had.
+⏸️ **The back drawing is 1067px tall against the front's 1501**, so its ink layer carries genuinely
+less detail. Written at its own scale rather than upsampled into a bigger precached file carrying no
+more information; nothing to do about it short of a larger source.
+⏸️ **`tools/a11y-audit.mjs` was not re-run.** Nothing here adds text or a colour token, and
+`tests/a11y.test.mjs` is green, but the audit is the only thing that measures contrast against the
+pixels actually painted.
+
+---
+
 ## 2026-09-21 (second pass) — THE "FROM:" LINE BECAME A TABLE, AND TWO INVESTIGATIONS
 
 Tim opened a list: *"I'm going to just give you a list of things I want you to fix with the cite and

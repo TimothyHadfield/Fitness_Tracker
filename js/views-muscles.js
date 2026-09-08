@@ -358,7 +358,7 @@ export async function muscleGroupsPane(host, top) {
     selected = selected === muscle ? null : muscle;
     setSelected(body, selected);
     renderPanel();
-  });
+  }, { sex: profile.gender });
   const foot = el('div', { class: 'body-foot' });
 
   function renderPanel() {

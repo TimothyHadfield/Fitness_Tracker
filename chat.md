@@ -2765,3 +2765,41 @@ free and worth doing.
 Neither of those is built — you said plan only. Both are written up.
 
 Everything green, 5,730 checks. Pushed.
+
+## 2026-09-22 — the female muscle map
+
+**Tim:** *"I just created 2 new images for the muscle maps… If the user puts their gender as female
+instead of male, I want you to display their muscle groups with this new image rather than the
+current male image. Make them function identically to the male display. Remember the outlines of the
+muslce groups laste time had issues with how smooth they were and stuff like that so make sure that
+doesn't happen when you outline it this time."*
+
+Done and pushed. Set your profile to female and the map draws your figure instead — same thirteen
+muscles, same tapping, same colours, same everything.
+
+**On the outlines** — they came out clean first try, and there's a reason beyond luck. The bumpiness
+last time came from reading a JPEG, where the edge between two colours wobbles a pixel or two on
+every row. Your new images are PNGs with clean white lines, so there was much less to iron out. I
+reused the exact same smoothing and tracing code rather than writing new code for the new figure,
+which is the other half of it.
+
+**Two things your new drawing does that the old one doesn't**, both of which I had to handle:
+
+The back figure's feet have a tiny gap in the outline, and the app fills the body by "pouring paint
+in from outside and seeing where it can't reach". Paint got into both feet through the gap. That
+doesn't show up as a hole — it shows up as *a figure with no feet*, looking completely deliberate.
+Sealed, and there's now a check that shouts if it ever comes back.
+
+And on the front, there's no line where the shin meets the foot, so they're one region as far as the
+app is concerned. The old drawing didn't need this because you simply didn't colour the feet in. I
+put a cut at the ankle by hand. At the size the map actually draws, you can't see it.
+
+**One thing worth knowing:** a friend's map uses *their* sex, not yours. So does their volume figure,
+and each side of the compare screen — which now shows a woman and a man side by side as two different
+bodies. That felt like what "function identically" meant.
+
+Two things I'd expect you to notice: the female figure fills the whole shin where the male one only
+colours the muscle bellies, and its hands sit further out from the body. Both are the drawings, not
+the code.
+
+Everything green, 6,239 checks, and I drove it in Chrome across six screens.

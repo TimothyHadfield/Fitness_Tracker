@@ -22,7 +22,8 @@
 // two mask images and flash the figure, so the SVG is built once and selection
 // is an attribute — see setSelected().
 
-import { ART, FIGURE } from './body-art.js';
+import { ART as ART_MALE, FIGURE as FIGURE_MALE } from './body-art.js';
+import { ART as ART_FEMALE, FIGURE as FIGURE_FEMALE } from './body-art-female.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -33,8 +34,38 @@ const CAPTION_H = 30;
 // being replaced by another) would otherwise both point at the same id.
 let seq = 0;
 
+/* 🚨 TWO FIGURES SINCE 2026-09-07, AND THE SEX IS THE PERSON'S, NOT THE
+ * READER'S. Tim drew a female figure and asked for it wherever the profile says
+ * female. It is the same drawing job either way — same thirteen groups, same
+ * fill/ink split, same hit targets — so nothing below this line branches on it
+ * except which art and which mask to reach for.
+ *
+ * ⚠️ THE FIGURE BELONGS TO WHOSE BODY IS BEING DRAWN. On `#/me` that is the
+ * account's own profile; on a friend's page it is THEIR published
+ * `profile.gender`, which is why every caller passes it rather than the map
+ * reading a global. A friend's map drawn on the reader's own figure would be
+ * the same class of mistake as reading her strength against men, which is what
+ * 2026-09-09 fixed one screen over.
+ *
+ * ⚠️ ABSENT IS MALE, STATED HERE ONCE. `settings.gender` is null until somebody
+ * fills the profile in, and the rest of the app already resolves an unknown sex
+ * to male rather than refusing to draw (strength-standards.js says so on the
+ * screen). A body map with no body would be worse than a body map with the
+ * commoner default.
+ */
+const FIGURES = {
+  male: { art: ART_MALE, figure: FIGURE_MALE, ink: (v) => `img/ink-${v}.webp` },
+  female: { art: ART_FEMALE, figure: FIGURE_FEMALE, ink: (v) => `img/ink-${v}-female.webp` },
+};
+
+function figureFor(sex) {
+  return FIGURES[sex === 'female' ? 'female' : 'male'];
+}
+
 export const MAPPED_MUSCLES = [...new Set(
-  Object.values(ART).flatMap((v) => Object.keys(v.muscles)),
+  Object.values(FIGURES).flatMap(
+    (f) => Object.values(f.art).flatMap((v) => Object.keys(v.muscles)),
+  ),
 )];
 
 /**
@@ -48,8 +79,16 @@ export const MAPPED_MUSCLES = [...new Set(
  * display is really small" on the same day the same figure measured LARGER than
  * the Muscles tab's on a phone. A container carrying this ratio is always
  * exactly the picture's shape, so the picture is always as big as the space.
+ *
+ * ⚠️ IT TAKES A SEX BECAUSE THE TWO DRAWINGS ARE NOT THE SAME SHAPE — the female
+ * figure holds its hands further out and is 582 units wide against 506. A
+ * container built to the male ratio would draw her smaller and pad the sides,
+ * which is exactly the bug the paragraph above records.
  */
-export const BODY_ASPECT = (FIGURE.w * 2 + FIGURE.gap) / (FIGURE.h + CAPTION_H);
+export function bodyAspect(sex) {
+  const { w, h, gap } = figureFor(sex).figure;
+  return (w * 2 + gap) / (h + CAPTION_H);
+}
 
 function mk(shape, attrs, cls) {
   const n = document.createElementNS(NS, shape);
@@ -78,15 +117,19 @@ function markFocus(view, d) {
  * @param {Map<string,{levelKey,label}>} levels  muscle -> level, absent = grey
  * @param {string|null} selected                 highlighted muscle
  * @param {(muscle:string)=>void} onPick
- * @param {{label?: string}} [opts]  what the whole figure is coloured BY.
+ * @param {{label?: string, sex?: string}} [opts]
+ *   `label` is what the whole figure is coloured BY.
  *   ⚠️ It has to be said, because since 2026-09-01 there are two of these on two
  *   different screens carrying two different meanings for the same colours —
  *   strength on Muscles, weekly sets on Volume. A figure that announced itself
  *   as "coloured by strength level" on both would be telling a screen-reader
  *   user the opposite of what the second screen shows.
+ *   `sex` is whose body this is — 'female' draws the female figure, anything
+ *   else draws the male one. See FIGURES above.
  */
 export function bodySvg(levels, selected, onPick, opts = {}) {
-  const { w, h, gap } = FIGURE;
+  const { art: ART, figure, ink } = figureFor(opts.sex);
+  const { w, h, gap } = figure;
   const id = ++seq;
 
   // role=group, not role=img: an img is presentational and its subtree is
@@ -230,7 +273,7 @@ export function bodySvg(levels, selected, onPick, opts = {}) {
       id: maskId, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: w, height: h,
     });
     mask.append(mk('image', {
-      href: `img/ink-${view}.webp`, x: 0, y: 0, width: w, height: h,
+      href: ink(view), x: 0, y: 0, width: w, height: h,
     }));
     defs.append(mask);
     g.append(mk('rect', {

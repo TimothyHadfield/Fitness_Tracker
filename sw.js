@@ -36,12 +36,15 @@ const SHELL = [
   './css/app.css',
   './img/ink-front.webp',
   './img/ink-back.webp',
+  './img/ink-front-female.webp',
+  './img/ink-back-female.webp',
   // A figure from an openly licensed paper, shown inside a "?" popover. Cached
   // with the shell because a popover that explains a number is no use offline
   // with its evidence missing.
   './img/figures/fphys-09-00744-g002.jpg',
   './js/app.js',
   './js/body-art.js',
+  './js/body-art-female.js',
   './js/body-map.js',
   './js/e1rm.js',
   './js/exercises.js',
