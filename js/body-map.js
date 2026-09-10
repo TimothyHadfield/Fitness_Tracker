@@ -143,7 +143,17 @@ export function bodySvg(levels, selected, onPick, opts = {}) {
   const defs = mk('defs', {});
   svg.append(defs);
 
-  /* THE HATCH for "trained, can't be ranked" — Core and Neck.
+  /* THE HATCH for a muscle that was trained and could not be rated.
+   *
+   * 🔄 ~~"Core and Neck"~~ — NEITHER, SINCE 2026-09-23. Core became rankable on
+   * 2026-09-04 and Neck on 2026-09-23, so the two muscles this mark was built
+   * for both wear a level now. It is not dead: what reaches it today is a
+   * muscle whose EVIDENCE the rating refused — every set longer than the map
+   * reads a maximum from, or work whose body-weight fraction nobody has
+   * measured — which is a statement about your training rather than about the
+   * world. `views-muscles.js` splits those two into different words; they
+   * share this one mark on purpose, because a key names a mark and there is
+   * only one.
    *
    * ⚠️ THE ID IS PER-FIGURE (`seq`), and that is not tidiness. The compare
    * screen puts TWO of these in one document, and a duplicated def id means the

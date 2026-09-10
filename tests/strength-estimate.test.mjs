@@ -524,12 +524,31 @@ ok(edge.flaps / EDGE.length < 0.5,
   // The rep table is duplicated in muscle-evidence.js on purpose (see the note
   // on repFactor). This is the check that would catch it drifting silently.
   const me = await import('../js/muscle-evidence.js');
-  const same = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 20]
+  /* 🔄 THEY DIVERGED ON 2026-09-23, AND THE DIVERGENCE IS NOW THE THING PINNED.
+   * This assertion used to read "still agree ... at 1..20" and its own failure
+   * message said what to do when it broke: *decide which was fitted, and say so
+   * in both headers.* That is what happened. The muscle map reads to
+   * `MAX_MAP_REPS` (25) and prices what it admits out of 1/σ²; this module stops
+   * at 15 because its constants were fitted against the simulator with that
+   * ceiling in place, and moving the gate without re-fitting would leave every
+   * fitted number describing a model that no longer exists (§0.15).
+   *
+   * 🚨 THE GUARD IS NOT WEAKER FOR IT — it is two guards now. Silent drift in
+   * the range they share is still caught, and the split above it is pinned in
+   * DIRECTION, so neither "tidying" them back together nor letting this module
+   * quietly follow the map upward can pass. */
+  const shared = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15]
     .every((r) => me.repFactor(r) === repFactor(r));
-  ok(same,
+  ok(shared,
      'js/muscle-evidence.js and js/strength-estimate.js still agree on what a set of N reps is '
-     + 'worth. If this fails, one of them was fitted and the other was not — decide which, '
-     + 'and say so in both headers');
+     + 'worth at every rep count they both read (1-15). If this fails, one of them was fitted '
+     + 'and the other was not — decide which, and say so in both headers');
+  const split = [16, 20, 25].every((r) => me.repFactor(r) > 0 && repFactor(r) === 0);
+  ok(split,
+     '🛑 and above 15 they deliberately disagree: the map admits and prices a long set, this '
+     + 'module refuses it, because its constants were fitted with the 15-rep ceiling in place');
+  ok(me.repFactor(26) === 0 && repFactor(26) === 0,
+     'and they agree again past the map\'s own ceiling, where neither reads a maximum');
 }
 
 ok(MIN_CONFIDENCE > 0,

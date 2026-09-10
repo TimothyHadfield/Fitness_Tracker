@@ -12,6 +12,12 @@
  * ⚠️ A ONE-REP SET HAS σ = 0 because nothing is converted. The rise is smooth
  * and monotone, which the ladder was not.
  *
+ * 🚨 THE TABLE RUNS TO 25 AND D5'S GATE IS STILL 15 — 2026-09-23. Those are two
+ * different questions and this file only answers the second one: how far apart
+ * are the seven formulas at r reps. The muscle map reads rows 16–25 because its
+ * blend is inverse-variance and can PRICE a long set (`MAX_MAP_REPS`,
+ * js/e1rm.js); everything that prints one number off one set still stops at 15.
+ *
  * Regenerate: node tools/build-rep-sigma.mjs --write
  */
 
@@ -32,17 +38,37 @@ export const REP_SIGMA = new Map([
   [13, 0.07016],
   [14, 0.08226],
   [15, 0.09575],
+  [16, 0.11071],
+  [17, 0.12725],
+  [18, 0.14552],
+  [19, 0.16567],
+  [20, 0.18792],
+  [21, 0.21251],
+  [22, 0.23973],
+  [23, 0.26991],
+  [24, 0.30346],
+  [25, 0.34087],
 ]);
 
 /**
  * The conversion uncertainty for a set of `reps` reps, as a fraction.
  *
- * ⚠️ Above D5's ceiling the set is not evidence of a maximum and the caller
- * should already have refused it; this returns the ceiling's σ rather than
- * extrapolating a table that stops.
+ * ⚠️ ~~Above D5's ceiling the set is not evidence of a maximum and the caller
+ * should already have refused it~~ — that stopped being the whole truth on
+ * 2026-09-23. It is still true of every caller that turns one set into one
+ * printed maximum, and it is NOT true of the muscle map, which admits up to
+ * `MAX_MAP_REPS` (25) and pays for the extra reps out of 1/σ². The table now
+ * covers exactly that range, so those callers get a measured σ rather than the
+ * 15-rep σ standing in for a 20-rep set — which understated the doubt twofold.
+ *
+ * Past 25 this still returns the last row rather than extrapolating a table that
+ * stops. Nothing should ask: 25 is the map's ceiling and 15 is everyone else's.
+ * The clamp is the honest answer to a question with no measurement behind it,
+ * and at 30 reps σ is 61 % — past `SIGMA_MAX`, where the blend can no longer
+ * tell one long set from another anyway.
  */
 export function repSigma(reps) {
   const r = Math.round(Number(reps));
-  if (!Number.isFinite(r) || r < 1) return REP_SIGMA.get(15);
-  return REP_SIGMA.get(Math.min(r, 15));
+  if (!Number.isFinite(r) || r < 1) return REP_SIGMA.get(25);
+  return REP_SIGMA.get(Math.min(r, 25));
 }

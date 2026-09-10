@@ -11349,6 +11349,120 @@ ok(!data.querySelector('.rep-target'),
   await store.clearAll();
 }
 
+/* ================= 🚨 THE HATCH SAYS WHICH REFUSAL — 2026-09-23 =================
+ *
+ * "trained, can't be ranked" was six words doing two opposite jobs. A muscle the
+ * world publishes no standard for cannot be cleared by anybody; a muscle whose
+ * every set ran to thirty reps is cleared by ONE heavier set. Until this session
+ * both wore the same words under the same hatch — which is how Tim's calves came
+ * to print the sentence written for a neck.
+ *
+ * ⚠️ PLACED LAST, DELIBERATELY. This block seeds sessions of its own, and this
+ * file is one progressively-seeded store: anything left behind changes what every
+ * later block reads (handbook §4). Nothing follows it. */
+{
+  await store.clearAll();
+
+  /* ⚠️ THE FIXTURE IS THE ASSERTION (§0.21). Standing Calf Raise records a
+   * weight and has a published ratio, so nothing about the EXERCISE is refused
+   * here — only the length of the sets. A bodyweight calf raise would pass
+   * whichever way the code was written. */
+  /* ⚠️ AND THE BENCH PRESS IN THIS FIXTURE IS NOT PADDING. With NOTHING rated at
+   * all the screen shows "Nothing to rank yet" and draws no figure, so there is
+   * no mark to inspect — which is also the honest shape of the real report: Tim's
+   * calves were hatched BESIDE muscles that rated. A fixture of long calf sets
+   * alone would be testing the empty state instead. */
+  const standingCalf = byName('Standing Calf Raise');
+  const bench = byName('Barbell Bench Press');
+  await store.saveSession({
+    workoutName: 'Chest', date: '2026-08-30', startedAt: '2026-08-30T10:00:00.000Z',
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name,
+      sets: [{ weight: 185, reps: 5 }, { weight: 185, reps: 5 }] }],
+  });
+  await store.saveSession({
+    workoutName: 'Calves', date: '2026-09-01', startedAt: '2026-09-01T10:00:00.000Z',
+    entries: [{ exerciseId: standingCalf.id, exerciseName: standingCalf.name,
+      sets: [{ weight: 90, reps: 30 }, { weight: 90, reps: 28 }, { weight: 90, reps: 30 }] }],
+  });
+
+  const pane = await mount(GraphView());
+  const seg = [...pane.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
+  if (seg) seg.click();
+  await settle();
+  const calves = [...pane.querySelectorAll('.body-region')]
+    .find((r) => (r.getAttribute('aria-label') || '').startsWith('Calves'));
+
+  ok(calves && calves.classList.contains('lv-unranked'),
+     `🚨 calves trained only in 30-rep sets are hatched, not grey — the work is not "no data" `
+     + `(${calves ? [...calves.classList].join(' ') : 'no region'})`);
+
+  const label = (calves && calves.getAttribute('aria-label')) || '';
+  ok(/no set we can read a max from/.test(label),
+     `🚨 and the mark says WHICH refusal: the sets were too long, not "no standard exists" (${label})`);
+  ok(!/can't be ranked/.test(label),
+     '⚠️ and it does NOT wear the old words, which claim a permanence that is false here — a '
+     + 'published standard, a key lift and a ratio all exist for Calves');
+
+  /* Tapping it. `direction.md` §3.1 — be upfront about what is missing, and the
+   * half a person can act on is the half worth printing. */
+  calves.dispatchEvent(new pane.ownerDocument.defaultView.Event('click', { bubbles: true }));
+  await settle();
+  const warn = [...pane.querySelectorAll('.muscle-warn')].map((n) => n.textContent).join(' ');
+  ok(/Standing Calf Raise/.test(warn),
+     `🚨 the panel names the sets it threw away and the exercise they came from (${warn.slice(0, 110)})`);
+  ok(/more than \d+ reps/.test(warn),
+     '⚠️ and states the reason the rating itself recorded, rather than a second guess at it');
+  /* 🛑 AND THE FIX SENTENCE IS NOT HUNG ON `blocked.fixable`, WHICH IS FALSE
+   * HERE. That flag is `/weigh-in/` and nothing else, so a sentence gated on it
+   * would never render — and would read as a wording bug rather than as a flag
+   * answering a different question. This fails loudly if somebody tidies the
+   * gate onto it. */
+  ok(/One heavier set in a normal rep range rates the muscle\./.test(warn),
+     '🚨 and says what would FIX it, gated on the REASON rather than on `fixable` — which is the '
+     + 'whole difference between this state and the permanent one');
+
+  /* 🚨 THE SENTENCE THAT STARTED ALL OF THIS MUST BE GONE FROM THE SCREEN.
+   * Neck left `UNRANKABLE` this session, so no muscle drawn on the figure has
+   * "no published standard" as its reason any more. */
+  ok(!/no published strength standard/.test(pane.textContent),
+     '🛑 and nothing anywhere on this screen still says a drawn muscle has no published standard — '
+     + 'Core left UNRANKABLE in September and Neck followed it on 2026-09-23');
+
+  /* ⚠️ A ONE-SIDED TEST PASSES JUST AS WELL AGAINST CODE THAT RELABELLED
+   * EVERYTHING. Single-Leg Calf Raise carries a body-weight fraction nobody has
+   * measured, so its sets are refused for a reason no rep count can cure, and it
+   * must KEEP the older words. This pair — not either line alone — is what pins
+   * the split. */
+  await store.clearAll();
+  const singleLeg = byName('Single-Leg Calf Raise');
+  await store.saveSession({
+    workoutName: 'Chest', date: '2026-08-30', startedAt: '2026-08-30T10:00:00.000Z',
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name,
+      sets: [{ weight: 185, reps: 5 }, { weight: 185, reps: 5 }] }],
+  });
+  await store.saveSession({
+    workoutName: 'Calves', date: '2026-09-02', startedAt: '2026-09-02T10:00:00.000Z',
+    entries: [{ exerciseId: singleLeg.id, exerciseName: singleLeg.name,
+      sets: [{ reps: 12 }, { reps: 12 }] }],
+  });
+  const pane2 = await mount(GraphView());
+  const seg2 = [...pane2.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
+  if (seg2) seg2.click();
+  await settle();
+  const calves2 = [...pane2.querySelectorAll('.body-region')]
+    .find((r) => (r.getAttribute('aria-label') || '').startsWith('Calves'));
+  const label2 = (calves2 && calves2.getAttribute('aria-label')) || '';
+  ok(calves2 && calves2.classList.contains('lv-unranked'),
+     'a calf refused for an unmeasured body-weight fraction is hatched too — same mark, both states');
+  ok(/can't be ranked/.test(label2),
+     `🚨 and KEEPS the original words, because nothing the lifter does clears this one (${label2})`);
+  ok(!/no set we can read a max from/.test(label2),
+     '🛑 so the new wording did not simply replace the old one everywhere, which is the failure a '
+     + 'one-sided fixture could never have caught');
+
+  await store.clearAll();
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 

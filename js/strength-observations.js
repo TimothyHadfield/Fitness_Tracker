@@ -22,7 +22,12 @@
    it must never import store.js, which imports it.
    ========================================================================== */
 
-import { isRankableSet, bodyWeightOn } from './e1rm.js';
+// ⚠️ `isMapRankableSet` RATHER THAN `isRankableSet`, AND THIS IS THE ONLY
+// MODULE THAT MAY DO THAT (2026-09-23). The map's gate is 25 because the map
+// PRICES a long set at 1/σ² instead of believing it; D5's 15 is untouched
+// everywhere a set becomes one printed number. The argument, in full, is on
+// MAX_MAP_REPS in e1rm.js — read it before adding a second importer.
+import { isMapRankableSet, MAX_EVIDENCE_REPS, MAX_MAP_REPS, e1rm, bodyWeightOn } from './e1rm.js';
 import { setE1rm } from './set-e1rm.js';
 import { contributionsFor, rankBlockedReason, fatigueFactor } from './muscle-evidence.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
@@ -41,6 +46,14 @@ import { volumeContributions } from './volume-map.js';
  * @returns {{ byMuscle: Map<string, object[]>, blocked: Map<string, object> }}
  *   `byMuscle` is what rateMuscle() consumes; `blocked` is the work the rating
  *   had to throw away, per muscle, for the panel to own up to.
+ *
+ * ⚠️ TWO REASONS LAND IN `blocked` SINCE 2026-09-23, and they are independent.
+ * An exercise that converts to nothing is refused for its EXERCISE (no published
+ * body-weight fraction, no weigh-in), filed under `ex.muscle`. A set longer than
+ * MAX_MAP_REPS is refused for its LENGTH even though the exercise converts
+ * perfectly well, and is filed under every muscle it contributes to. The second
+ * one used to be no reason at all: the gate returned before the bookkeeping, so
+ * the map was the one path in the app that dropped a set in silence.
  *
  * ⚠️ `sex` ARRIVES HERE AND GOES STRAIGHT INTO THE CONVERSION (2026-09-13).
  * Roughly a quarter of the RATIOS table is now a male/female pair, because for
@@ -98,13 +111,37 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
   // really did that the rating had to throw away, kept so the panel can say so.
   const blockedByMuscle = new Map();
 
+  /* One set, refused, written down against one muscle.
+   *
+   * 🔒 A FUNCTION RATHER THAN THE BOOKKEEPING WRITTEN OUT TWICE (2026-09-23),
+   * because there are now TWO independent reasons a set can be refused and they
+   * do not fire in the same place — see the rep gate below. Two copies of "make
+   * the bag, look the name up, bump the count" is two places for the shape to
+   * drift, and the shape is a contract with whatever renders it.
+   *
+   * ⚠️ FIRST REASON WINS, AND THE SETS STILL ADD UP. One exercise can genuinely
+   * collect both refusals under one muscle — a pull-up logged on a day with no
+   * weigh-in (no contributions at all) and the same pull-up at 30 reps on a day
+   * with one. The entry names the first refusal seen and counts every refused
+   * set, which is honest about the total and picks one of two true sentences;
+   * the shape has one `reason` slot and inventing a second would break the
+   * contract to fix a case that needs a screen decision, not a data one. */
+  const noteBlocked = (muscle, name, reason, fixable) => {
+    if (!muscle || !name || !reason) return;
+    if (!blockedByMuscle.has(muscle)) blockedByMuscle.set(muscle, new Map());
+    const bag = blockedByMuscle.get(muscle);
+    const prev = bag.get(name) || { name, sets: 0, reason, fixable: Boolean(fixable) };
+    prev.sets += 1;
+    bag.set(name, prev);
+  };
+
+  /* 🚨 THE EXACT SENTENCE, AND ANOTHER MODULE PRINTS IT. Built from
+   * MAX_MAP_REPS rather than typed, so the number in the sentence cannot drift
+   * from the number in the gate — that pair going out of step would put a wrong
+   * figure in front of a user with nothing failing anywhere. */
+  const TOO_MANY_REPS = `more than ${MAX_MAP_REPS} reps — this app does not read a maximum off a set that long`;
+
   const record = (exerciseId, exerciseName, weight, reps, date, isBenchmark, priorByMuscle) => {
-    // D5: a maximum is not inferred from a set above 15 reps. Without this the
-    // formula extrapolates a 135x25 burnout set to 258 lb, which beats a real
-    // 205x5 top set and moves the muscle a whole level on the back of the least
-    // informative set of the week. A benchmark gets no exemption — a 25-rep
-    // benchmark is no more evidence of a max than a 25-rep set is.
-    if (!isRankableSet(reps)) return;
     // ⚠️ The body weight of THE DAY OF THE SET, never today's. Somebody who has
     // lost twenty pounds must not have last year's pull-ups re-scored at this
     // year's weight — that would quietly rewrite history every time they
@@ -122,13 +159,46 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
       const why = ex0 && MUSCLE_LIFTS[ex0.muscle]
         ? rankBlockedReason(ex0, bw ? { bodyWeight: bw.weight } : undefined)
         : null;
-      if (why) {
-        if (!blockedByMuscle.has(ex0.muscle)) blockedByMuscle.set(ex0.muscle, new Map());
-        const bag = blockedByMuscle.get(ex0.muscle);
-        const name = exerciseName || ex0.name;
-        const prev = bag.get(name) || { name, sets: 0, reason: why, fixable: /weigh-in/.test(why) };
-        prev.sets += 1;
-        bag.set(name, prev);
+      if (why) noteBlocked(ex0.muscle, exerciseName || ex0.name, why, /weigh-in/.test(why));
+      return;
+    }
+
+    /* ── THE REP GATE, AND IT NOW LEAVES A NOTE ───────────────────────────────
+     *
+     * 🚨 IT MOVED BELOW THE CONTRIBUTIONS ON 2026-09-23, AND THE MOVE IS THE
+     * WHOLE FIX. ~~`if (!isRankableSet(reps)) return;` sat above the block
+     * above~~, so a refused set left no observation AND no record that anything
+     * had been refused — the one path in the app that drops silently. Tim's
+     * calves were the symptom: forty weeks of 20-rep calf raises produced a
+     * hatched muscle wearing the sentence written for the Neck, whose problem is
+     * that the world publishes no standard at all. One rep was the difference
+     * between "Novice, high confidence" and a hatch, and no screen said "reps".
+     * `docs/calf-neck-ranking-plan.md` §1.2 proved it against the real modules.
+     *
+     * ⚠️ A SECOND, INDEPENDENT REASON — NOT A BRANCH OF THE ONE ABOVE. The block
+     * above fires only when an exercise contributes to NOTHING. A 30-rep
+     * standing calf raise has perfectly good contributions and is refused purely
+     * for its length, so it is recorded against THE MUSCLES IT CONTRIBUTES TO
+     * and never against `ex.muscle`: a Leg Press Calf Raise is filed under
+     * `Legs` in the library and the work that was thrown away was the Calves'.
+     * Reading `ex.muscle` here would have put the sentence on the wrong muscle's
+     * panel — true words, wrong screen, which is worse than silence.
+     *
+     * ⚠️ NO REP COUNT IS NOT THE SAME AS TOO MANY REPS. A set with a missing or
+     * unparseable rep field is dropped exactly as it always was, silently: it is
+     * not evidence, and it is not "a set that long" either. Only a real number
+     * above the ceiling earns the sentence.
+     *
+     * 🛑 A BENCHMARK GETS NO EXEMPTION, as it never did. A 40-rep benchmark is no
+     * more evidence of a maximum than a 40-rep set, and it is refused in the
+     * same words. */
+    const r = Number(reps);
+    if (!isMapRankableSet(r)) {
+      if (Number.isFinite(r) && r > MAX_MAP_REPS) {
+        for (const c of contributions) {
+          noteBlocked(c.muscle, exerciseName || (exMap.get(exerciseId) || {}).name || exerciseId,
+            TOO_MANY_REPS, false);
+        }
       }
       return;
     }
@@ -153,12 +223,52 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
      * the other six had the assist sign or the doubling wrong, which is how
      * taking MORE help off an assisted pull-up came to be a personal best. One
      * function, one convention, one place to be wrong. */
-    const scored = setE1rm(ex, weight, reps, bw
+    /* 🚨 `setE1rm()` IS ASKED AT D5'S CEILING AND THE CURVE IS THEN WALKED OUT
+     * BY A RATIO — 2026-09-23. It is deliberately NOT asked about a 20-rep set,
+     * and this is the load-bearing half of the map's higher ceiling.
+     *
+     * `setE1rm()` enforces D5 itself and MUST keep doing so: it is the single
+     * entry point every printed maximum in the app comes through, and the day
+     * four of seven hand-built copies of the load convention had the assist sign
+     * or the dumbbell doubling wrong is why it exists at all. Loosening it would
+     * hand a 20-rep set to the personal-bests table and the Data tab, which is
+     * exactly what MAX_MAP_REPS was made narrow to avoid.
+     *
+     * So the map asks it the question it is allowed to answer — the convention
+     * at 15 reps — and moves along the SAME curve to the real rep count as a
+     * RATIO. The three things that make this exact rather than approximate:
+     *
+     *   · `load`, `perSide`, `perSideWeight` and `quality` do not depend on the
+     *     rep count at all. They are the convention: per hand on a dumbbell,
+     *     fraction × body weight ± the logged number on a body-weight lift.
+     *   · `curveWeight` is the number the curve was actually fed, and a ratio of
+     *     two `e1rm()` calls on it CANCELS the per-side doubling — so nothing
+     *     here restates D30 and there is no second copy to get wrong.
+     *   · `dominate()` in muscle-evidence.js already re-reads a set at a
+     *     DIFFERENT rep count this exact way, off this exact field. This is that
+     *     technique pointed the other direction: it truncates downward, this
+     *     extends upward, and both are one curve evaluated twice.
+     *
+     * ⚠️ At or below 15 the call is byte-for-byte what it was, `over` is false
+     * and no ratio is computed — an unchanged path for every set the app has
+     * ever rated. */
+    const over = r > MAX_EVIDENCE_REPS;
+    const scored = setE1rm(ex, weight, over ? MAX_EVIDENCE_REPS : reps, bw
       ? { bodyWeight: bw.weight, bodyWeightQuality: bw.quality }
       : undefined);
     if (!scored) return;
     const load = scored.load;
-    const raw = scored.e1rm;
+    const curveWeight = scored.perSide ? scored.perSideWeight : scored.load;
+    let raw = scored.e1rm;
+    if (over) {
+      const at = e1rm(curveWeight, r);
+      const was = e1rm(curveWeight, MAX_EVIDENCE_REPS);
+      // Refuse rather than fall back. A missing scale factor would silently
+      // score a 20-rep set as a 15-rep one — a FLATTERING failure, and the one
+      // direction this whole change is being careful about.
+      if (!(at > 0) || !(was > 0)) return;
+      raw *= at / was;
+    }
 
     for (const c of contributions) {
       if (!byMuscle.has(c.muscle)) byMuscle.set(c.muscle, []);
@@ -194,7 +304,7 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
          * re-implement the three-branch convention there. A second copy of D30's
          * arithmetic is precisely what D30 was recorded to prevent — so the
          * input travels with the observation instead. */
-        curveWeight: scored.perSide ? scored.perSideWeight : scored.load,
+        curveWeight,
         loadType: ex ? ex.loadType : 'total',
         date,
         ageDays: ageOf(date),
@@ -254,6 +364,12 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
       // Is there something the user can DO about it? Only a missing weigh-in
       // is fixable; "nobody has measured this exercise" is not, and offering a
       // button for it would be a false promise.
+      // ⚠️ NOR IS THE REP REFUSAL, and it is the one most likely to look like it
+      // is (2026-09-23). "Log a heavier set of eight" IS something a person can
+      // go and do — but it is a training instruction, not a button, and this
+      // flag exists to decide whether the panel puts a control under the
+      // sentence. `fixable: false` on it, so a muscle blocked only for reps
+      // offers no control and the sentence carries the whole message.
       fixable: list.some((e) => e.fixable),
     });
   }

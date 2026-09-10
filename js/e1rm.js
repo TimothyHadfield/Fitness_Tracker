@@ -410,6 +410,66 @@ export function isRankableSet(reps) {
   return Number.isFinite(r) && r >= 1 && r <= MAX_EVIDENCE_REPS;
 }
 
+/**
+ * 🚨 THE MUSCLE MAP'S OWN CEILING, AND IT IS THE ONLY THING THAT MAY USE IT —
+ * 2026-09-23, on Tim's instruction to make the calves and the neck rank like
+ * every other muscle. `docs/calf-neck-ranking-plan.md` §1.5 option B, taken
+ * narrow rather than global.
+ *
+ * ⚠️ `MAX_EVIDENCE_REPS` IS STILL 15 AND `isRankableSet()` IS UNCHANGED. The
+ * charts, the personal bests, progression, the comparison screen and
+ * `setE1rm()` all keep the old gate, deliberately: raising the global number
+ * would move a bench-press figure on a screen nobody asked about, and D5's 15 is
+ * what stops the burnout bug it was written for — 135 × 25 extrapolates to
+ * 258 lb, which beat a real 205 × 5 top set and promoted a muscle a whole level
+ * on the least informative set of the week.
+ *
+ * ── SO WHY IS 25 HONEST HERE AND NOT THERE? ─────────────────────────────────
+ *
+ * **Because the map's blend is inverse-variance and the other callers' is not.**
+ * `rateMuscle()` weights every reading by 1/σ² (`readingSigma()` in
+ * muscle-evidence.js), so a long set does not have to be BELIEVED to be
+ * admitted — it can be PRICED, and the price is measured rather than judged.
+ * `tools/build-rep-sigma.mjs` now runs to 25 and reports the disagreement
+ * between the seven classical formulas of `docs/research.md` §1.2 at every rep
+ * count: 9.6 % at 15, 18.8 % at 20, 34.1 % at 25. Through 1/σ² a 20-rep set
+ * carries about 31 % of a 15-rep set's vote on a key lift and a 25-rep set about
+ * 10 %. It speaks, quietly, and a real 8-rep set drowns it out nine times over.
+ *
+ * Everywhere else one set becomes ONE PRINTED NUMBER — a personal best, a chart
+ * point, a suggested working weight — and there is no 1/σ² to pay with. A
+ * number is either shown or it is not, so 15 stays.
+ *
+ * 🛑 25 RATHER THAN 30, AND THE REASON IS THE CLAMP. At 30 reps σ_rep is 61 %,
+ * past `SIGMA_MAX` (0.50) in muscle-evidence.js — every set from 30 up would
+ * price identically, so the pricing would stop being a measurement and start
+ * being a floor. 25 is the last rep count the blend can still tell apart.
+ *
+ * ⚠️ THE ERROR DIRECTION IS UP, AND ONLY UP, AND THAT IS THE COST TIM ACCEPTED.
+ * Admitting a set the curve extrapolates further can only ever read stronger:
+ * a 180 lb man's 120 lb calf raise reads 192 lb at 15 reps and 233 lb at 25,
+ * p20.2 → p30.6. On the calf standard — the second-widest in the file — that is
+ * five points per five reps inside one level; on a narrow standard like the
+ * bench it would cross two level boundaries, which is exactly why this ceiling
+ * does not leave the map. `docs/fatigue-plan.md` §4 refuses this move in writing
+ * for the global case, and it is still refused there.
+ */
+export const MAX_MAP_REPS = 25;
+
+/**
+ * Is this set something the MUSCLE MAP may price? Same shape as
+ * `isRankableSet()`, ceiling `MAX_MAP_REPS`.
+ *
+ * ⚠️ One caller, and it should stay that way: `buildObservations()` in
+ * js/strength-observations.js. If a second module wants this, the question to
+ * ask first is whether that module blends at 1/σ² — if it prints, it wants
+ * `isRankableSet()`.
+ */
+export function isMapRankableSet(reps) {
+  const r = Number(reps);
+  return Number.isFinite(r) && r >= 1 && r <= MAX_MAP_REPS;
+}
+
 // Returns null for anything that is not a usable rep count. The explicit type
 // guard matters: Number(null) and Number('') are both 0, which would otherwise
 // clamp up to 1 and turn missing data into a silent "1 rep".

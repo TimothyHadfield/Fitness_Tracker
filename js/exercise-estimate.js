@@ -410,8 +410,14 @@ function tableAt(column, pct) {
  * because a single integer at ±2.5 reps was the one runner estimate with no
  * band, no source and no caveat (agent E's D13).
  *
- * ⚠️ THE CEILING IS `MAX_EVIDENCE_REPS`, AND IT IS THE SAME 15 AS EVERYWHERE
- * ELSE (D5). Above fifteen reps this app refuses to infer a maximum FROM a set;
+ * ⚠️ THE CEILING IS `MAX_EVIDENCE_REPS` (D5). ~~AND IT IS THE SAME 15 AS
+ * EVERYWHERE ELSE~~ 🔄 **THE MUSCLE MAP READS FURTHER SINCE 2026-09-23** — to
+ * `MAX_MAP_REPS` (25), because it blends at 1/σ² and can therefore PRICE a long
+ * set rather than believe it. **This module keeps the 15 and must**: it prints
+ * one number with no blend to pay for it, which is the same reason the personal
+ * bests, the charts and `setE1rm()` all keep it. Two ceilings, and which one
+ * applies is decided by whether the answer is weighed or shown.
+ * Above fifteen reps this app refuses to infer a maximum FROM a set;
  * predicting a 30-rep set would be that refusal held in one hand and ignored in
  * the other. So once the table's mean reaches the ceiling it says "15+" and
  * stops counting, and a band whose top would pass it is capped there and

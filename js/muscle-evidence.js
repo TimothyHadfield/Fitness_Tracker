@@ -59,7 +59,11 @@
 //     hand into the curve, then doubled (§2.8, decision e). `totalLoad()` and
 //     `setLoad()` stay exported for the callers that still hold a load.
 
-import { e1rm, isRankableSet, totalResistance } from './e1rm.js';
+// ⚠️ `isMapRankableSet` / `MAX_EVIDENCE_REPS` RATHER THAN `isRankableSet` — the
+// map's rep ceiling (MAX_MAP_REPS, 25) and D5's evidence ceiling (15) are two
+// different numbers since 2026-09-23 and `repFactor()` needs both. See the
+// comment on that function for why asking for the wrong one is silent.
+import { e1rm, isMapRankableSet, MAX_EVIDENCE_REPS, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
 import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
@@ -1329,6 +1333,59 @@ const RATIOS = {
     // written in the same shape as the rest: 1.13 male / 0.89 female.
     [/^Machine Crunch$/, { m: 1.13, f: 0.89 }, 0.55],
   ],
+
+  /* 🚨 NECK — NEW 2026-09-23, three entries for the three exercises the library
+   * has (Neck Curl, Neck Extension, Neck Harness Extension; all `wr`, all
+   * equipment "Other", so all FORCE_TOTAL and no per-side doubling applies).
+   * The key lift and its anchors are `MUSCLE_LIFTS.Neck` in
+   * strength-standards.js — read that row's comment before touching these, in
+   * particular the part about the female median being DERIVED. Nothing in this
+   * block depends on it: both entries below are sex-neutral on purpose.
+   */
+  Neck: [ // key: Neck Curl
+    [/^Neck Curl$/, 1.00, 1.00],
+    /* ⚠️ 1.06, AND THE BRIEF THAT COMMISSIONED THIS ENTRY ASKED FOR 0.94 — the
+     * same division taken the other way up. Recorded rather than quietly
+     * changed, because the number is one keystroke either side and the
+     * reasoning is the part worth keeping.
+     *
+     * `ratio` on this table is defined at the top of the file as THIS
+     * EXERCISE'S load as a fraction of the KEY LIFT's, and `rateMuscle()`
+     * DIVIDES by it — the same direction that gave a dumbbell row a 429 lb
+     * wrist curl when it was taken backwards once before. Strength Level's
+     * male 180 lb medians are neck extension 69 and neck curl 65, so
+     * 69 / 65 = 1.06: people extend slightly MORE than they curl, and a 69 lb
+     * extension has to convert back to a 65 lb curl. At 0.94 it would convert
+     * to 73 instead — a 13 % flattery on the one lift whose standard is
+     * already the weakest on the page.
+     *
+     * ⚠️ SEX-NEUTRAL ON PURPOSE, and this is the entry where D31's `{ m, f }`
+     * shape would do harm rather than good. The female neck pages are n = 55
+     * (curl) and n = 16 (extension); their medians give 33 / 47 = 0.70, which
+     * sits on the OTHER SIDE OF PARITY from the male 1.06. Two rows that
+     * disagree about the DIRECTION of an effect, one of them fitted on sixteen
+     * people, are noise — and a pair here would dress sixteen women up as a
+     * finding about women. One number, honestly wide.
+     *
+     * ⚠️ q 0.40 AND NOT HIGHER, even though this is a straight division of two
+     * pages by the same publisher on the same day. The two pages contradict
+     * the physiology and each other: every dynamometry dataset puts extension
+     * at 1.3–1.6× flexion, and these two are 1.06 apart. The likeliest reading
+     * is that lifters log ONE plate-on-the-head movement under both names, in
+     * which case this ratio is measuring a naming convention rather than a
+     * lift. That is machine-grade doubt about what the number means, which is
+     * exactly what q prices — and it is below FALLBACK_MIN_QUALITY, so neck
+     * work rates Neck and stands in for nothing. */
+    [/^Neck Extension$/, 1.06, 0.40],
+    /* ⚠️ THE SAME 1.06 AT A LOWER q, and the gap is the whole entry. A harness
+     * hangs the plate off a strap at the back of the head; a plate held on the
+     * forehead sits at a different moment arm, and nothing published maps one
+     * to the other. So this is the extension figure CARRIED, not derived — the
+     * same "carried, not measured" discount the Kroc Row and Machine Pullover
+     * entries take, and for the same reason. 0.30 keeps it well under the
+     * fallback floor. */
+    [/^Neck Harness Extension$/, 1.06, 0.30],
+  ],
 };
 
 /* 🚨 A CUSTOM EXERCISE NO LONGER RATES ANYTHING — 2026-08-31, AND THIS REVERSES
@@ -1711,17 +1768,50 @@ function buildContributions(exercise, qualityScale, sex) {
  * ------------------------------------------------------------------ */
 
 // How far the e1RM formula is extrapolating. Marzagao is trustworthy at low
-// reps and degrades above ~10 — see docs/research.md §1. Above 15 the set is
-// not evidence of a maximum at all, which isRankableSet() already enforces.
+// reps and degrades above ~10 — see docs/research.md §1.
+//
+/* 🚨 THE GATE IS `isMapRankableSet()` SINCE 2026-09-23, NOT `isRankableSet()`,
+ * AND THE SWAP IS LOAD-BEARING RATHER THAN TIDYING. The map's ceiling is
+ * MAX_MAP_REPS (25) where D5's evidence ceiling is 15. `rateMuscle()` admits an
+ * observation on `repFactor(o.reps) > 0` and then spends `quality × repFactor ×
+ * recency × fatigue` as `seatCredit` — so a 20-rep set that got past the
+ * observation gate while this function still returned 0 would enter the pool,
+ * score zero credit, and be unable to take a seat no matter what else was in
+ * the account. It would not be refused; it would be present and worthless,
+ * which is the shape of failure this file's blocked-reason machinery exists to
+ * end. The two ceilings are now asked for by name, so neither can drift into
+ * the other's job.
+ *
+ * 🛑 NOTHING BELOW 15 MOVED, AND THAT IS DELIBERATE — nothing currently rated
+ * changes by a percentile. The five steps to 15 are exactly as they were.
+ *
+ * 🚨 AND NO SIXTH AND SEVENTH STEP WERE TYPED. A hand-typed ladder is precisely
+ * what 2026-09-20 spent the day removing after Tim asked where 0.45 came from
+ * and nothing anywhere answered (see the header of rep-sigma.js). Above the old
+ * ceiling the fall-off is DERIVED from the measured table instead:
+ *
+ *     repFactor(r > 15) = 0.25 × (repSigma(15) / repSigma(r))²
+ *
+ * i.e. the top step's value scaled by the ratio of PRECISIONS. `repSigma` is the
+ * disagreement between the seven classical rep→1RM formulas at that rep count,
+ * generated rather than typed; precision is 1/σ², so this says a 20-rep set is
+ * worth what a 15-rep set is worth, discounted by exactly how much less the
+ * formulas agree about it. It is monotone because repSigma is, it is continuous
+ * at 15 (the ratio is 1 there), and it introduces NO NEW CONSTANT — which is the
+ * whole reason it is written as a formula and not as two more numbers. If the
+ * next reader wants to know where the 20-rep value came from, the answer is the
+ * table, and the table says where it came from.
+ */
 export function repFactor(reps) {
   const r = Number(reps);
-  if (!isRankableSet(r)) return 0;
+  if (!isMapRankableSet(r)) return 0;
   if (r <= 3) return 1.00;
   if (r <= 6) return 0.95;
   if (r <= 8) return 0.85;
   if (r <= 10) return 0.70;
   if (r <= 12) return 0.45;
-  return 0.25;
+  if (r <= MAX_EVIDENCE_REPS) return 0.25;
+  return 0.25 * (repSigma(MAX_EVIDENCE_REPS) / repSigma(r)) ** 2;
 }
 
 // Two different half-lives, on purpose.

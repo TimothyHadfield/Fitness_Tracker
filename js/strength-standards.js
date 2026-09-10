@@ -163,6 +163,14 @@ const TRAINING_RATE = 0.319;
 //   machine calf raise  0.601 / 0.433   0.755 / 0.511
 //   wrist curl          0.957 / 0.593   1.347 / 0.710
 //   cable crunch        0.548 / 0.409   0.619 / 0.447
+//   neck curl           1.324 / 0.711   1.309 / 0.725
+//
+// ⚠️ AND THE NECK'S IS WIDER STILL — 38 % past the wrist curl, 2.4× the bench —
+// which is priced in its `standardQuality` rather than smoothed away. Read its
+// row below before quoting either number. ⚠️ Its two sexes agree to the third
+// decimal for a reason that is NOT a finding: the female anchors are the male
+// anchors times a constant, so the fit is arithmetically the same curve and the
+// tiny difference is rounding. The neck row measures no woman's SPREAD.
 //
 // ⚠️ THE WRIST CURL'S SPREAD IS ENORMOUS and it is the source, not a slip:
 // Strength Level's Beginner wrist curl is 17 lb for a 180 lb man and 4 lb for a
@@ -259,8 +267,124 @@ export const MUSCLE_LIFTS = {
     caveat: 'Core standards are thinner than the rest — one measured source, and '
       + 'a cable stack depends on the machine. Treat it as a rough placing.',
   }),
-  // Neck has no usable published standards — nobody publishes neck norms — so it
-  // stays unranked permanently, and the UI says so rather than looking broken.
+  /* 🚨 NECK — RANKABLE SINCE 2026-09-23, AND ~~Neck has no usable published
+   * standards — nobody publishes neck norms — so it stays unranked permanently,
+   * and the UI says so rather than looking broken~~ WAS FALSE WHEN IT WAS
+   * WRITTEN. Strength Level publish two neck pages; they are simply not linked
+   * from the browse index, which is the whole reason they read as absent. The
+   * struck sentence is kept rather than deleted because a claim that something
+   * is PERMANENTLY impossible is exactly the kind that stops the next session
+   * looking — docs/calf-neck-ranking-plan.md §2.1, and §14.6's warning about
+   * "no honest source exists" arriving for real a second time.
+   *
+   * Tim, 2026-09-23, having been told first that the men's data is usable but
+   * wide and the women's published table is unusable: *"okay seems like youre
+   * ready to make calves and neck join the muscle group rankings just like all
+   * the other muscles. Just do it no matter what. I know the research isn't
+   * great, but do whatever you can to make it work with what you have."*
+   *
+   * ── THE MALE ROW IS MEASURED ────────────────────────────────────────────
+   * strengthlevel.com/strength-standards/neck-curl/lb at 180 lb, verified live
+   * 2026-09-23: 2,726 qualifying results out of 91,634 logged lifts, 14 Aug
+   * 2020 – 5 Mar 2026, of which 2,671 are male and 55 female. Same publisher,
+   * same 5/20/50/80/95 tier definitions, same page shape as the twelve rows
+   * above. That is the same bar Core cleared.
+   *
+   * ══ 🚨 THE FEMALE ROW IS NOT PUBLISHED. IT IS DERIVED, AND NOTHING ON THIS
+   * ══ PAGE OR ANY OTHER MEASURED A WOMAN'S NECK CURL. It is the male row times
+   * 0.606, rounded to the pound. This is the ONLY invented median in
+   * `MUSCLE_LIFTS` and it must not become a precedent by accident: every other
+   * female row on this table is a page somebody fetched.
+   *
+   * ⚠️ 0.606 IS MEASURED, NOT CHOSEN, which is the whole difference between
+   * this and the Fitness Volt figure §14.2 refused. Catenaccio et al. 2017
+   * (PM&R, PMC5545075) measured peak isometric neck strength in 157 healthy
+   * adults aged 18–35 — 84 men, 73 women — on a microFET2 hand-held
+   * dynamometer held in a FIXED FRAME, and published a full percentile table by
+   * sex and by direction. Female median forward flexion 88.6 N against male
+   * 146.2 N = 0.606. The extension pair (135.7 / 228.3) gives 0.594, so two
+   * directions measured on the same instrument in the same cohort agree within
+   * 2 %. A neck curl is flexion, so the flexion figure is the one used.
+   *
+   * 🛑 AND CATENACCIO'S ABSOLUTE NUMBERS ARE NOT ALLOWED NEAR THIS TABLE — not
+   * in a comment as a sanity check, not as a second source, not converted.
+   * They are newtons of isometric push at one moment arm; these anchors are
+   * pounds on a one-rep-max neck curl with a plate on the forehead at another.
+   * ONLY THE RATIO CROSSES, because a ratio between two groups measured the
+   * same way on the same instrument cancels the units — which is precisely the
+   * argument every conversion ratio in muscle-evidence.js already rests on
+   * ("one population, both lifts, divide"). docs/research.md §15 is the
+   * near-miss where a peak dynamic force was nearly merged with a static hold
+   * because the two numbers looked compatible; §2.3 of the plan lays the same
+   * trap three deep for the neck (228 N ≈ 51 lbf, a rugby harness 32 kg ≈ 70 lb,
+   * and Strength Level's 69 lb — three different quantities, two of them within
+   * a pound of each other). Merging any of them would need a moment arm for the
+   * pad, a moment arm for the plate, and the assumption that an isometric peak
+   * is a concentric 1RM: three unmeasured assumptions stacked.
+   *
+   * ⚠️ WHY STRENGTH LEVEL'S OWN FEMALE ROW WAS REFUSED, recorded because it is
+   * the obvious source and it is the wrong one. n = 55, and their table FALLS
+   * with body weight in every single column — Intermediate 53 lb at 90 lb of
+   * body weight down to 39 lb at 260 lb (verified live 2026-09-23). A heavier
+   * woman is asked for less. `medianForPopulation()` scales by
+   * `bodyWeight^0.67`, so taking their 140 lb row (47 lb) this app computes
+   * 71 lb at 260 lb where they publish 39 — an 82 % disagreement, in the
+   * OPPOSITE direction, against the very page the median came from. That is not
+   * a finding about necks; it is an n=55 fit. Neck extension is worse: n = 16.
+   *
+   * ⚠️ THE PLAUSIBILITY CHECK THAT MAKES 0.606 DEFENSIBLE RATHER THAN INVENTED.
+   * Across the twelve rows already in this table the female median over the male
+   * median runs 0.49 (chest 108/220, back 97/198) to 0.61 (calves 193/317),
+   * with Core the one outlier above at 0.70 (106/151). A neck at 0.606 sits
+   * inside the band every other lift on this page already shows, at the calf end
+   * of it. (Rounding to the pound lands the row's REALISED median ratio on
+   * 39/65 = 0.600 rather than 0.606. The pound is the unit the app displays in,
+   * and a third decimal on a median nobody measured would be false precision.)
+   * ⚠️ That is a check, NOT a derivation — it says the number is not
+   * absurd, it does not say the number is right, and if it had landed outside
+   * the band the correct move would have been to doubt Catenaccio's transfer
+   * rather than to nudge the ratio.
+   *
+   * ⚠️ `sigma` IS THE MALE SPREAD ON BOTH SIDES, ARITHMETICALLY. Scaling five
+   * anchors by a constant leaves `fitSigma` unchanged, so 1.324 / 0.711 (men)
+   * and 1.309 / 0.725 (women) are one curve and a rounding difference. The
+   * women's row therefore claims a median and NOTHING about how women's neck
+   * strength is distributed.
+   *
+   * ⚠️ `standardQuality` 0.4 — BELOW CORE'S 0.6, and four separate things put it
+   * there rather than one:
+   *   1. One measured source with no agreeing second. Core has exactly this
+   *      much doubt and nothing more, which is what 0.6 buys.
+   *   2. PLUS a DERIVED female half. Half the users of this app are ranked
+   *      against a median no one measured.
+   *   3. PLUS the two neck pages contradicting each other physiologically: male
+   *      flexion 65 against extension 69, a ratio of 1.06, where every
+   *      dynamometry dataset puts extension at 1.3–1.6× flexion. The likely
+   *      reading is that people are logging one plate-on-the-head movement under
+   *      both names. (The female pages run the other way, 47 vs 33 — which is
+   *      n=55 against n=16 and is noise, not a counter-finding.)
+   *   4. PLUS a spread 2.4× the bench press's and 38 % past the wrist curl,
+   *      which this file already flags as a page dominated at the light end by
+   *      people logging an empty-handed movement. A lifter sitting exactly on
+   *      the published Beginner anchor reads p2.6 here, against p4.0 for Core
+   *      and p4.5 for the bench — the anchors do not quite reproduce themselves.
+   *
+   * ⚠️ THE ERROR DIRECTION, so nobody mistakes the symptom for a bug: a spread
+   * this wide makes the percentile barely respond to the weight. A 180 lb man
+   * reads p40.6 at 25 lb × 12 and p53.0 at 40 lb × 12 — sixty percent more
+   * weight for twelve percentile points. It is FLAT rather than flattering,
+   * which is the safer of the two failures and still a failure.
+   */
+  // neck-curl
+  Neck: keyLift('Neck Curl', [5, 26, 65, 123, 194], [3, 16, 39, 75, 118], {
+    standardQuality: 0.4,
+    // Shown under every Neck rating, like Core's. The one thing a user must not
+    // do with this number is read it as the bench figure — and a woman must not
+    // read it as having been measured on women at all.
+    caveat: 'Neck standards are the thinnest here — one measured source, and the '
+      + 'women’s figures are scaled from a clinical study rather than published. '
+      + 'Treat it as a rough placing.',
+  }),
 };
 
 // ⚠️ 'Activity' joins these the day it exists, not later. A group that is not
@@ -269,9 +393,23 @@ export const MUSCLE_LIFTS = {
 //
 // 🔄 CORE LEFT THIS LIST ON 2026-09-04. It is not a general loosening: Core left
 // because a measured table for a weighted core lift was found and pulled, which
-// is the same bar every other entry cleared. Neck is still here and there is no
-// route out for it.
-export const UNRANKABLE = ['Neck', 'Cardio', 'Activity'];
+// is the same bar every other entry cleared. ~~Neck is still here and there is
+// no route out for it.~~
+//
+// 🔄 AND NECK LEFT IT ON 2026-09-23 — the struck sentence was false when it was
+// written, not overtaken. A measured neck-curl page existed the whole time (see
+// the Neck row above); what did not exist was a measured female half, and the
+// route out was the one thing that sentence declared impossible. ⚠️ THE BAR IT
+// CLEARED IS NOT THE BAR CORE CLEARED: the male anchors are a fetched page, the
+// female anchors are the male ones scaled by a clinically measured sex ratio,
+// and `standardQuality` 0.4 is where that difference is carried. Tim was told
+// that before he said *"just do it no matter what"*.
+//
+// 🛑 WHAT IS STILL TRUE IS THE PARAGRAPH AT THE TOP OF THIS COMMENT: the two
+// groups left have no lift to stand on at all, and no page anywhere turns a
+// 40-minute hike into a percentile. Neck left because a page was found; that is
+// not a reason to expect one for these.
+export const UNRANKABLE = ['Cardio', 'Activity'];
 
 /**
  * The log-space spread to rank this muscle with: one number, for the sex and

@@ -32,9 +32,23 @@ const FEMALE = { gender: 'female', bodyWeight: 140, age: 30 };
   ok(Boolean(byName('Cable Crunch')),
      '⚠️ which exists in the library — a key lift naming an exercise nobody can log rates nothing');
   ok(!S.UNRANKABLE.includes('Core'), 'Core has left UNRANKABLE');
-  ok(S.UNRANKABLE.includes('Neck'),
-     '🛑 and Neck has NOT — there are still no published neck norms, and this was not a general loosening');
-  ok(S.canRank('Core') && !S.canRank('Neck'), 'canRank() agrees with both');
+  /* 🔄 ~~"and Neck has NOT — there are still no published neck norms"~~ —
+   * **NECK LEFT ON 2026-09-23 AND THE OLD SENTENCE WAS FALSE WHEN IT WAS
+   * WRITTEN.** Strength Level publishes neck curl and neck extension; the pages
+   * are simply not linked from their browse index, so four places in this repo
+   * had "nobody publishes neck norms" recorded as a permanent fact. It went the
+   * same way Core did — a measured page was found and pulled, which is the bar
+   * every key lift in the table has cleared. docs/research.md §17.
+   *
+   * 🛑 WHAT THIS MUST KEEP SAYING is that it is not a general loosening, so the
+   * guard moved rather than being deleted: the two shelves left in `UNRANKABLE`
+   * have no page and no prospect of one. A muscle leaves this list when
+   * somebody finds a table, never because the map looked empty. */
+  ok(!S.UNRANKABLE.includes('Neck'), '🔄 and Neck has too, since 2026-09-23');
+  ok(S.UNRANKABLE.includes('Cardio') && S.UNRANKABLE.includes('Activity'),
+     '🛑 but Cardio and Activity have not — no published standard turns a 40-minute hike into a percentile');
+  ok(S.canRank('Core') && S.canRank('Neck') && !S.canRank('Cardio'),
+     'canRank() agrees with all three');
 }
 
 /* ================= the published anchors, reproduced =================
@@ -247,8 +261,20 @@ function erf(x) {
   ok(Boolean(caveat), 'Core carries a caveat');
   ok(/rough placing/.test(caveat),
      `and it says what to do with the number rather than only how it was made (${caveat})`);
-  ok(S.standardCaveatFor('Chest') === null && S.standardCaveatFor('Neck') === null,
-     'no other muscle has one, so it can never read as boilerplate');
+  /* 🔄 ~~"no other muscle has one"~~ — NECK HAS ONE SINCE 2026-09-23, and the
+   * reason this assertion existed still binds: a caveat that appeared on every
+   * muscle would be read as boilerplate and stop being read at all. So the test
+   * is now that the muscles with thin standards have one, the ones with real
+   * standards do not, and the two caveats are DIFFERENT SENTENCES — a shared
+   * string would be the boilerplate this was guarding against, arriving by a
+   * different door. */
+  const neckCaveat = S.standardCaveatFor('Neck');
+  ok(S.standardCaveatFor('Chest') === null && S.standardCaveatFor('Back') === null,
+     'a muscle with a real standard carries no caveat, so one never reads as boilerplate');
+  ok(Boolean(neckCaveat) && neckCaveat !== caveat,
+     'Neck carries its own, and it is not a copy of Core\'s');
+  ok(/scaled|clinical|not published|rather than published/i.test(neckCaveat),
+     `🚨 and it says the women's figures are derived rather than published (${neckCaveat})`);
 }
 
 /* ================= end to end, on a plausible lifter ================= */

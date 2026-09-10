@@ -654,11 +654,18 @@ for (const muscle of Object.keys(ss.MUSCLE_LIFTS)) {
 ok(ss.muscleForLift(byName('Barbell Bench Press').id) === 'Chest', 'reverse lookup works');
 // 🔄 CORE BECAME RANKABLE 2026-09-04 — a measured Cable Crunch table was found
 // and pulled (docs/research.md §14), which is the same bar every other key lift
-// cleared. ⚠️ NECK DID NOT AND THERE IS NO ROUTE OUT FOR IT: nobody publishes
-// neck norms. Asserting both here is what keeps this from reading as a general
-// loosening; tests/core-rating.test.mjs holds the rest of Core's guarantees.
+// cleared. 🔄 ~~NECK DID NOT AND THERE IS NO ROUTE OUT FOR IT: nobody publishes
+// neck norms.~~ **NECK BECAME RANKABLE 2026-09-23, AND THAT SENTENCE WAS SIMPLY
+// FALSE** — Strength Level publishes neck curl and neck extension, unlinked from
+// their browse index, which is why four places in this repo had recorded "nobody
+// publishes them" as a permanent fact. docs/research.md §17.
+// 🚨 IT IS STILL NOT A GENERAL LOOSENING, and this pair is what says so: a
+// muscle leaves `UNRANKABLE` when a measured page is found for it, never because
+// the map looks empty. Cardio and Activity have no page and no prospect of one.
 ok(ss.canRank('Core'), 'Core is rankable — its key lift has a measured standard');
-ok(!ss.canRank('Neck'), '🛑 and Neck is still deliberately unrankable');
+ok(ss.canRank('Neck'), '🔄 and so is Neck, since 2026-09-23 — a page was found, not a rule relaxed');
+ok(!ss.canRank('Cardio') && !ss.canRank('Activity'),
+   '🛑 and the two library shelves are not — no published standard turns a hike into a percentile');
 
 // Every muscle drawn on the body must either be rankable or explicitly
 // unrankable — otherwise a region would be permanently grey for no stated reason.
@@ -754,7 +761,129 @@ ok(ss.medianFor('Chest', male150) > 220 * (150 / 180), 'allometric beats a flat 
 ok(ss.medianFor('Chest', { gender: 'female', bodyWeight: 140, age: 30 }) === 108,
    'female standards are their own numbers, not a blanket multiplier');
 ok(ss.medianFor('Chest', { gender: 'male' }) === null, 'no body weight means no standard');
-ok(ss.medianFor('Neck', male180) === null, 'an unrankable muscle has no standard');
+// 🔄 ~~Neck~~ Cardio, since 2026-09-23 — Neck has a standard now, and this
+// assertion needs a muscle that genuinely has none or it stops testing anything.
+ok(ss.medianFor('Cardio', male180) === null, 'an unrankable muscle has no standard');
+// 🚨 AND THE DERIVED HALF, PINNED AT THE REFERENCE WEIGHTS. The men's row is
+// Strength Level's published page; the women's is that row x 0.606, the
+// female/male median Catenaccio 2017 measured on 157 adults — because Strength
+// Level's own women's table is 55 people and asks a HEAVIER woman for LESS.
+// Pinning both is what stops somebody "restoring" the published female row.
+ok(near(ss.medianFor('Neck', male180), 65, 1), 'the neck median is the published 65 lb for men');
+ok(near(ss.medianFor('Neck', { gender: 'female', bodyWeight: 140, age: 30 }), 39, 1),
+   'and 39 lb for women — 65 x 0.606, never the 47 lb their own page publishes');
+
+/* ================= 🚨 THE NECK ROW, AND WHAT IS DERIVED IN IT =================
+ *
+ * Neck left `UNRANKABLE` on 2026-09-23 because a measured page was found where
+ * this project had recorded "nobody publishes neck norms" as a permanent fact,
+ * in four places. docs/research.md §17 is the pull.
+ *
+ * 🚨 THE FEMALE HALF IS THE ONLY INVENTED MEDIAN IN `MUSCLE_LIFTS`, and most of
+ * this block exists to keep it labelled as one. It is the male row scaled by
+ * 0.606 — the female/male median Catenaccio 2017 measured on 157 adults on one
+ * dynamometer. 🛑 THE RATIO IS THE ONLY THING THAT CROSSES: newtons of isometric
+ * push are not pounds on a neck curl, and §15 records the near-miss where two
+ * such quantities were nearly merged because the numbers looked compatible. */
+{
+  const N = ss.MUSCLE_LIFTS.Neck;
+  ok(N.lift === 'Neck Curl' && Boolean(byName('Neck Curl')),
+     'the key lift is the Neck Curl, and it exists in the library — a key lift naming '
+     + 'an exercise nobody can log rates nothing');
+  ok(N.anchors.male.join('/') === '5/26/65/123/194',
+     'the male row is Strength Level\'s published page at 180 lb, transcribed (2,671 men)');
+  const derived = N.anchors.male.map((w) => Math.round(w * 0.606));
+  ok(N.anchors.female.every((w, i) => w === derived[i]),
+     `🚨 and every female anchor is the male one x 0.606 rounded to the pound `
+     + `(${N.anchors.female.join('/')}) — derived, NOT a published table`);
+  /* 🛑 The assertion that stops a later session "fixing" the derived row back to
+   * the published one, which is the obvious-looking repair and is wrong. */
+  ok(!N.anchors.female.every((w, i) => w === [2, 17, 47, 91, 147][i]),
+     '🛑 and it is deliberately NOT their published female row — n=55, and its body-weight '
+     + 'slope runs backwards, so the app computes 71 lb at 260 lb where they publish 39');
+
+  /* The plausibility check, as an assertion. ⚠️ It is a CHECK, not a derivation:
+   * if it ever fails, doubt the dynamometer-to-plate transfer rather than
+   * nudging the ratio until the test goes green. */
+  const fetched = Object.entries(ss.MUSCLE_LIFTS).filter(([m]) => m !== 'Neck')
+    .map(([, s]) => s.median.female / s.median.male);
+  const lo = Math.min(...fetched), hi = Math.max(...fetched);
+  const neckRatio = N.median.female / N.median.male;
+  ok(neckRatio >= lo && neckRatio <= hi,
+     `the neck's ${neckRatio.toFixed(3)} sits inside the ${lo.toFixed(2)}-${hi.toFixed(2)} band the `
+     + 'twelve fetched rows already show');
+
+  /* 🚨 THE TWO SEXES' SPREADS AGREE TO THREE DECIMALS AND THAT IS NOT A FINDING.
+   * Scaling five anchors by a constant leaves `fitSigma` unchanged, so the
+   * women's curve IS the men's. If anybody ever reads the female row as evidence
+   * about how women's neck strength is DISTRIBUTED, the answer is here. */
+  ok(near(ss.sigmaFor('Neck', 'male', 'below'), 1.324, 0.002)
+     && near(ss.sigmaFor('Neck', 'male', 'above'), 0.711, 0.002),
+     'the fitted spread is 1.324 / 0.711 — 4x the bench press\'s below-median sigma');
+  ok(near(ss.sigmaFor('Neck', 'female', 'below'), ss.sigmaFor('Neck', 'male', 'below'), 0.02),
+     '🚨 and the women\'s is the same curve to a rounding error — the derived row claims a '
+     + 'median and nothing whatever about a spread');
+  ok(ss.sigmaFor('Neck', 'male', 'below') > ss.sigmaFor('Forearms', 'male', 'below'),
+     '⚠️ wider even than the wrist curl, which this file already flags as a page dominated '
+     + 'at the light end by people logging an empty-handed movement');
+
+  /* 🚨 PRICED, NOT HIDDEN. standardQuality multiplies the rating's confidence, so
+   * a flawless neck reading still lands below a flawed chest one. Stated as an
+   * ORDERING as well as a number: whatever either constant becomes, a neck
+   * reading may never be trusted more than a core one. */
+  ok(ss.standardQualityFor('Neck') === 0.4, 'standardQuality is 0.4');
+  ok(ss.standardQualityFor('Neck') < ss.standardQualityFor('Core'),
+     '🚨 and below Core\'s, as an ordering rather than a coincidence of two constants');
+
+  /* ⚠️ THE POINT OF THIS PAIR IS THE FLATNESS, NOT THE NUMBERS. Sixty percent
+   * more weight moves a man twelve percentile points, because Elite is 38.8x
+   * Beginner on that page. It reads near Intermediate for almost everybody —
+   * which is a failure, in the safe direction, and still a failure. If a later
+   * change makes the neck RESPONSIVE that is a new standard rather than a
+   * tuning, and this assertion should be rewritten alongside it. */
+  const M = { gender: 'male', bodyWeight: 180, age: 30 };
+  const read = (w, r) => ss.percentileFor(e1rm(w, r), 'Neck', M);
+  ok(read(40, 12) - read(25, 12) < 15,
+     `🚨 25 lb x 12 reads p${read(25, 12).toFixed(1)} and 40 lb x 12 reads p${read(40, 12).toFixed(1)} — `
+     + 'sixty percent more weight buys under fifteen points, so the reading is FLAT rather '
+     + 'than flattering, and that is the known cost of shipping this page');
+  ok(Math.abs(ss.percentileFor(65, 'Neck', M) - 50) < 0.1,
+     'the median anchor still reproduces exactly, which is what makes the row usable at all');
+  const beginner = ss.percentileFor(5, 'Neck', M);
+  ok(beginner > 2.0 && beginner < 3.2,
+     `and a man on the published Beginner mark reads p${beginner.toFixed(1)} — against Core's p4.0 `
+     + 'and the bench\'s p4.5, the widest miss in the table');
+}
+
+/* ================= RATIOS.Neck, and the DIRECTION is the test =================
+ * `ratio` is this exercise's load as a fraction of the KEY LIFT's, and
+ * `rateMuscle()` DIVIDES by it. Strength Level's male medians are extension 69
+ * and curl 65, so 69/65 = 1.06 and a 69 lb extension converts back to a 65 lb
+ * curl. 🚨 Taken the other way up (0.94 — which is what this session's own brief
+ * to the agent specified) it converts to 73 instead: a 13 % flattery on the
+ * weakest standard in the file. */
+{
+  // Imported locally: `me` is bound much further down this flat script, and a
+  // block that runs before its own dependency is the one failure mode a
+  // progressively-seeded file has (handbook §4, "why the big files stay big").
+  const mev = await import('../js/muscle-evidence.js');
+  const only = (name, sex) => mev.contributionsFor(byName(name), { sex })[0];
+  ok(only('Neck Curl', 'male').ratio === 1.00 && only('Neck Curl', 'male').quality === 1.00,
+     'the Neck Curl is the key lift, 1.00 at quality 1.00');
+  ok(only('Neck Extension', 'male').ratio === 1.06,
+     '🚨 Neck Extension is 1.06 — extension OVER curl, because the estimate divides by it');
+  ok(only('Neck Extension', 'male').ratio === only('Neck Extension', 'female').ratio,
+     '🛑 sex-neutral on purpose: the female pages are n=55 and n=16 and their medians put the '
+     + 'ratio on the OTHER side of parity, which is noise, and a {m,f} pair would dress '
+     + 'sixteen women up as a finding (D31)');
+  ok(only('Neck Harness Extension', 'male').ratio === only('Neck Extension', 'male').ratio
+     && only('Neck Harness Extension', 'male').quality < only('Neck Extension', 'male').quality,
+     'the harness carries the extension ratio at a lower quality — a strap changes the moment '
+     + 'arm and nothing published maps one to a plate');
+  ok(only('Neck Extension', 'male').quality <= mev.FALLBACK_MIN_QUALITY
+     && only('Neck Harness Extension', 'male').quality <= mev.FALLBACK_MIN_QUALITY,
+     '⚠️ and both sit under FALLBACK_MIN_QUALITY, so neck work rates Neck and stands in for nothing');
+}
 // Core has one now, and it is the measured figure rather than something derived
 // from a neighbouring lift — 151 lb at the reference body weight.
 ok(near(ss.medianFor('Core', male180), 151, 1),
@@ -2807,17 +2936,52 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * above, same reason: this is a weighting change and it may not cost evidence.
    * Quads' confidence rises (0.8510 → 0.8793) because the seats it now blends
    * agree more closely than the ones the filter forced on it. */
+  /* 🔄 RE-BASELINED AGAIN, 2026-09-23 — TWO CHANGES, AND THEY MOVE DIFFERENT
+   * COLUMNS, WHICH IS THE THING TO READ BEFORE BELIEVING EITHER.
+   *
+   * (1) NECK IS A THIRTEENTH ROW. It left `UNRANKABLE` the way Core did on
+   * 2026-09-04: a measured page was found (Strength Level's neck curl, 2,671
+   * men) where this project had asserted in four places that none existed.
+   * The women's half of that page is unusable — 55 people, and it asks a
+   * HEAVIER woman for LESS weight in every column — so the female anchors are
+   * the male ones scaled by 0.606, the female/male median measured by
+   * Catenaccio 2017 on 157 adults. docs/research.md §17.
+   *
+   * (2) THE MAP'S REP CEILING IS 25, NOT 15 (`MAX_MAP_REPS`), so sets that used
+   * to be dropped in silence are now admitted and PRICED — a 25-rep set carries
+   * about a tenth of a 15-rep set's blend weight, and the whole discount is
+   * `repSigma()`, which is measured rather than chosen. `MAX_EVIDENCE_REPS` is
+   * still 15 everywhere else: the charts, the personal bests, the comparison
+   * screen and `setE1rm()` are untouched, because one printed number has no
+   * 1/σ² to pay for a long set with.
+   *
+   * 🚨 THE OBSERVATION COUNTS MOVE AND THE ESTIMATES DO NOT, AND THAT IS THE
+   * WHOLE FINDING OF (2). Calves 332 → 336, Quads 567 → 571, Shoulders
+   * 1080 → 1093 — the 16-rep sets the demo year contains are now evidence — and
+   * every estimate and confidence in those three rows is IDENTICAL to four
+   * places, because one exercise gets one seat and a long set does not win it.
+   * ⚠️ Read that as the guard it is: if an estimate had moved here, a set the
+   * old ceiling refused would have taken a seat from a better one, which is the
+   * failure the 15 was protecting against. It did not happen on this year;
+   * `docs/history.md` 2026-09-23 has the same check on a year where every set is
+   * long, which is where the pricing actually shows. */
   const GOLDEN = [
     ['Back', 720, 184.7349, 0.8169, 212, 4],
     ['Biceps', 904, 99.6686, 0.7680, 125, 2],
-    ['Calves', 332, 225.2087, 0.8807, 84, 2],
+    ['Calves', 336, 225.2087, 0.8807, 84, 2],
     ['Chest', 465, 212.8341, 0.9044, 130, 2],
     ['Core', 66, 117.2576, 0.2891, 22, 1],
     ['Forearms', 904, 94.6823, 0.6006, 273, 5],
     ['Glutes', 630, 364.5160, 0.8488, 64, 1],
     ['Hamstrings', 882, 248.3142, 0.8524, 146, 3],
-    ['Quads', 567, 294.6888, 0.8793, 171, 4],
-    ['Shoulders', 1080, 146.0904, 0.6903, 192, 4],
+    // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — 0.1803,
+    // against Core's 0.2891, which was the previous floor and was itself
+    // built to say "the standard is thin, not your training". That is
+    // `standardQuality` 0.4 doing exactly what it is for, and it is the
+    // honest shape of a page whose Elite is 38.8x its Beginner.
+    ['Neck', 66, 37.1477, 0.1803, 22, 1],
+    ['Quads', 571, 294.6888, 0.8793, 171, 4],
+    ['Shoulders', 1093, 146.0904, 0.6903, 192, 4],
     ['Traps', 529, 272.8760, 0.5797, 148, 3],
     ['Triceps', 1100, 161.4694, 0.5481, 125, 2],
   ];
@@ -2945,6 +3109,150 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(Boolean(bl) && bl.sets === 3 && bl.exercises.length === 1
      && bl.exercises[0].name === 'Inverted Row' && !bl.fixable,
      `the three inverted-row sets are reported, and as the permanent kind (${bl && bl.sets})`);
+
+  /* ================= 🚨 THE MAP'S OWN REP CEILING — 2026-09-23 =================
+   *
+   * Tim's calves panel contradicted itself: it printed the sentence written for
+   * a muscle the world has no standard for, over a muscle that has one. The
+   * cause was `strength-observations.js` returning on the rep gate BEFORE the
+   * bookkeeping twenty lines below it, so a long set left no observation AND no
+   * record that anything had been refused.
+   *
+   * Two changes, and the pair is the design:
+   *   - the MAP reads to `MAX_MAP_REPS` (25) and PRICES what it admits at 1/σ²;
+   *   - everywhere a single number is printed the ceiling is still 15. */
+  {
+    const { isRankableSet, isMapRankableSet, MAX_EVIDENCE_REPS, MAX_MAP_REPS, totalResistance }
+      = await import('../js/e1rm.js');
+    const { REP_SIGMA, repSigma } = await import('../js/rep-sigma.js');
+    const bw = [{ date: '2026-01-01', weight: 180 }];
+    const NOW = '2026-09-23';
+    const walk = (sessions) => buildObservations({
+      sessions, benchmarks: [], exMap, bodyWeights: bw, today: NOW, sex: 'male' });
+
+    /* 🚨 THE POINT OF THIS PAIR IS THAT THERE ARE TWO NUMBERS. An assertion on
+     * MAX_MAP_REPS alone would pass just as happily on the day somebody "tidied"
+     * the two constants into one, which is the change it exists to prevent. */
+    ok(MAX_EVIDENCE_REPS === 15 && MAX_MAP_REPS === 25,
+       `D5's gate is still 15 and the map's is 25 (${MAX_EVIDENCE_REPS}, ${MAX_MAP_REPS})`);
+    ok(isRankableSet(15) && !isRankableSet(16),
+       'isRankableSet is UNCHANGED — 16 reps is still not evidence of a maximum anywhere else');
+    ok(isMapRankableSet(16) && isMapRankableSet(25) && !isMapRankableSet(26),
+       'the map admits 16 and 25 and refuses 26');
+    ok(!isMapRankableSet(null) && !isMapRankableSet(NaN) && !isMapRankableSet(0),
+       'a missing rep count is not a low one — the same explicit guard isRankableSet has');
+
+    /* The ceiling is only defensible because the blend prices a long set, and
+     * the price is measured. ⚠️ A BUDGET RATHER THAN A PRESENCE CHECK (§0.21):
+     * at 30 reps σ is 61 %, past `SIGMA_MAX`, where the clamp eats it and every
+     * long set prices identically. 25 is the last rep count the blend can tell
+     * apart, so this is what catches the ceiling creeping up. */
+    ok(REP_SIGMA.size === MAX_MAP_REPS,
+       `the generated table covers every rep count the map can admit (${REP_SIGMA.size} rows)`);
+    ok(repSigma(MAX_MAP_REPS) < 0.50,
+       `and the ceiling is inside SIGMA_MAX, so a long set is priced rather than clamped `
+       + `(σ=${repSigma(MAX_MAP_REPS).toFixed(3)})`);
+
+    /* ---- the thing Tim asked for ---- */
+    const calfId = BUILT_IN_EXERCISES.find((e) => e.name === 'Standing Calf Raise').id;
+    const forty = (reps) => walk(Array.from({ length: 40 }, (_, w) => ({
+      date: new Date(Date.UTC(2025, 11, 1) + w * 7 * 86400000).toISOString().slice(0, 10),
+      entries: [{ exerciseId: calfId, exerciseName: 'Standing Calf Raise',
+        sets: [{ weight: 120, reps }, { weight: 120, reps }, { weight: 120, reps }] }],
+    })));
+    const at15 = rateMuscle(forty(15).byMuscle.get('Calves'), 'Calves');
+    const at20 = rateMuscle(forty(20).byMuscle.get('Calves') || [], 'Calves');
+    ok(Boolean(at20),
+       '🚨 forty weeks of 20-rep calf raises now RANK the calves — the whole of the ask');
+    /* Vacuity guard, and it is what makes the line above mean anything: before
+     * this change the identical fixture produced no observation AND no blocked
+     * entry, so a test asserting only the sentence would have passed over a
+     * build that ranked nothing. */
+    const over = forty(26);
+    ok(!(over.byMuscle.get('Calves') || []).length,
+       'and 26 reps still ranks nothing — the ceiling is a ceiling, not a removal');
+    /* 🚨 ERROR DIRECTION, PINNED. Admitting a longer set can only read STRONGER,
+     * which is the cost accepted here, and the confidence has to fall with it or
+     * the pricing is not happening. */
+    ok(at20.estimate > at15.estimate && at20.confidence < at15.confidence,
+       `a longer set reads higher and is believed LESS (${at15.estimate.toFixed(1)}@`
+       + `${at15.confidence.toFixed(3)} -> ${at20.estimate.toFixed(1)}@${at20.confidence.toFixed(3)})`);
+
+    /* ---- the refusal leaves a note, and on the RIGHT muscle ----
+     * ⚠️ THE DEADLIFT IS THE FIXTURE THAT CAN FAIL AND A CALF RAISE IS NOT
+     * (§0.21). Every calf raise is filed under Calves and contributes to Calves,
+     * so a refusal written against `ex.muscle` and one written against the
+     * contributions give the same answer and the fixture cannot tell them apart.
+     * The deadlift is filed under Back and contributes to three muscles. */
+    const dlId = BUILT_IN_EXERCISES.find((e) => e.name === 'Deadlift').id;
+    const long = walk([{ date: '2026-08-10', entries: [{ exerciseId: dlId, exerciseName: 'Deadlift',
+      sets: [{ weight: 135, reps: 30 }, { weight: 135, reps: 30 }] }] }]);
+    ok(['Glutes', 'Back', 'Hamstrings'].every((m) => long.blocked.has(m)),
+       `a 30-rep deadlift is reported against every muscle it contributes to, not the one the `
+       + `library files it under (${[...long.blocked.keys()].join(', ')})`);
+    const dbl = long.blocked.get('Glutes');
+    ok(dbl.sets === 2 && dbl.exercises[0].name === 'Deadlift',
+       `both refused sets are counted, by name (${dbl.sets})`);
+    /* 🚨 QUOTED WHOLE RATHER THAN PATTERN-MATCHED — another module prints this
+     * verbatim, and a regex on "reps" would survive the number going wrong. */
+    ok(dbl.exercises[0].reason
+         === 'more than 25 reps — this app does not read a maximum off a set that long',
+       `and it says WHY, in the exact words the panel prints ("${dbl.exercises[0].reason}")`);
+    ok(dbl.exercises[0].fixable === false,
+       'not fixable — "log a heavier set of eight" is a training instruction, not a button');
+
+    /* ABSENCE, and it is what makes the sentence safe to print. A set with no
+     * rep count is not a set that was too long, and saying so would be the app
+     * inventing a reason for data it never had. */
+    const noReps = walk([{ date: '2026-08-10', entries: [{ exerciseId: calfId,
+      exerciseName: 'Standing Calf Raise', sets: [{ weight: 120, reps: null }, { weight: 120 }] }] }]);
+    ok(!(noReps.byMuscle.get('Calves') || []).length && noReps.blocked.size === 0,
+       'a set with NO rep count is still dropped in silence — it is not evidence, and it is '
+       + 'not "a set that long" either');
+
+    /* ---- D5's own regression case, which now passes for a DIFFERENT reason ----
+     * 🚨 THIS IS THE ASSERTION MOST LIKELY TO GO VACUOUS UNNOTICED. The burnout
+     * guard (135x25 must not beat 205x5) used to pass because the 25-rep set
+     * never became an observation. It is admitted now and still loses, because
+     * one exercise gets ONE seat and repFactor(25) is 0.0197 against 0.95. So
+     * the guard has moved from the gate to the seat rule: the first line pins
+     * that the set IS there, and the rest pin that it changes nothing. */
+    const benchId = BUILT_IN_EXERCISES.find((e) => e.name === 'Barbell Bench Press').id;
+    const top = { date: '2026-08-10', entries: [{ exerciseId: benchId,
+      exerciseName: 'Barbell Bench Press', sets: [{ weight: 205, reps: 5 }] }] };
+    const burn = { date: '2026-08-11', entries: [{ exerciseId: benchId,
+      exerciseName: 'Barbell Bench Press', sets: [{ weight: 135, reps: 25 }] }] };
+    const both = walk([top, burn]).byMuscle.get('Chest');
+    ok(both.some((o) => o.reps === 25),
+       `the burnout set IS admitted now — so what follows is not vacuous `
+       + `(${both.map((o) => o.weight + 'x' + o.reps).join(', ')})`);
+    ok(e1rm(135, 25) > e1rm(205, 5),
+       'and the raw formula still rates it above the real top set, which is what D5 was written for');
+    const alone = rateMuscle(walk([top]).byMuscle.get('Chest'), 'Chest');
+    const rated = rateMuscle(both, 'Chest');
+    ok(Math.abs(rated.estimate - alone.estimate) < 0.01,
+       `yet the rating does not move at all (${alone.estimate.toFixed(2)} -> ${rated.estimate.toFixed(2)})`);
+
+    /* ---- 🚨 THE ONE PLACE THIS COULD HAVE GONE SILENTLY WRONG ----
+     * `setE1rm()` refuses a 20-rep set, so the walk asks it for the convention at
+     * 15 and extends the SAME curve by a ratio. If that ratio ever stopped
+     * cancelling the per-side doubling, every dumbbell lift past the gate would
+     * read half or double and nothing else in this suite would say so. Both
+     * figures below are D30's convention computed independently of the module. */
+    const dbId = BUILT_IN_EXERCISES.find((e) => e.name === 'Dumbbell Bench Press').id;
+    const dbObs = walk([{ date: '2026-08-10', entries: [{ exerciseId: dbId,
+      exerciseName: 'Dumbbell Bench Press', sets: [{ weight: 80, reps: 20 }] }] }])
+      .byMuscle.get('Chest')[0];
+    ok(Math.abs(dbObs.rawE1rm - 2 * e1rm(80, 20)) < 1e-6,
+       `a 20-rep dumbbell set is still 2 x e1rm(per hand) — D30 survives the walk past the gate `
+       + `(${dbObs.rawE1rm.toFixed(4)} vs ${(2 * e1rm(80, 20)).toFixed(4)})`);
+    const pu = BUILT_IN_EXERCISES.find((e) => e.name === 'Pull-Up');
+    const puObs = walk([{ date: '2026-08-10', entries: [{ exerciseId: pu.id,
+      exerciseName: 'Pull-Up', sets: [{ weight: 0, reps: 20 }] }] }]).byMuscle.get('Back')[0];
+    ok(Math.abs(puObs.rawE1rm - e1rm(totalResistance(pu, 0, 180).load, 20)) < 1e-6,
+       `and a 20-rep pull-up is still the curve on fraction x body weight, not on the added zero `
+       + `(${puObs.rawE1rm.toFixed(4)})`);
+  }
   ok(fixture.byMuscle.get('Back').some((o) => /Pull-Up/.test(o.exerciseName)),
      'while the pull-ups from the same session counted');
 
@@ -3949,12 +4257,30 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   }
 
   // ---- rep gate and rep weighting ----
-  ok(me.repFactor(25) === 0, 'a 25-rep set is not evidence of a maximum');
-  ok(me.repFactor(16) === 0, 'and neither is 16');
-  ok(me.repFactor(15) > 0, 'but 15 is, which is where the documented cut sits');
+  /* 🔄 ~~"a 25-rep set is not evidence of a maximum" / "and neither is 16"~~ —
+   * BOTH REVERSED 2026-09-23, and the reversal is the point of the change. The
+   * MAP reads up to `MAX_MAP_REPS` (25) because it blends at 1/σ² and can
+   * therefore PRICE a long set instead of believing it. Everywhere a single
+   * number gets printed the ceiling is still 15. */
+  ok(me.repFactor(26) === 0, 'a 26-rep set is still not evidence of a maximum, even on the map');
+  ok(me.repFactor(25) > 0, '🔄 but 25 now is — priced, not trusted');
+  ok(me.repFactor(16) > 0, 'and so is 16, which used to be the silent cliff Tim walked off');
+  ok(me.repFactor(15) > 0, 'and 15 is, which is where the documented cut used to sit');
+  /* 🚨 THE STEPS TO 15 ARE UNTOUCHED, ASSERTED RATHER THAN ASSUMED. The whole
+   * safety of this change is that nothing already rated moves; a session that
+   * "tidies" the ladder into one expression would break that silently. */
+  ok(me.repFactor(3) === 1.00 && me.repFactor(6) === 0.95 && me.repFactor(8) === 0.85
+     && me.repFactor(10) === 0.70 && me.repFactor(12) === 0.45 && me.repFactor(15) === 0.25,
+     'every step at or below 15 reps is exactly what it was before the ceiling moved');
+  /* Above 15 the fall-off is DERIVED from the measured table rather than typed —
+   * 0.25 x (σ15/σr)², pinned against `repSigma()` itself in the rep-sigma block
+   * below, which is where that module is in scope. A hand-typed step here would
+   * be the ladder Tim asked about coming back in through the roof. */
+  ok(me.repFactor(25) < me.repFactor(15) / 10,
+     `a 25-rep set is worth under a tenth of a 15-rep one (${me.repFactor(25).toFixed(4)})`);
   let repMonotone = true;
-  for (let r = 2; r <= 15; r++) if (me.repFactor(r) > me.repFactor(r - 1)) repMonotone = false;
-  ok(repMonotone, 'the rep factor never rises as reps go up');
+  for (let r = 2; r <= 25; r++) if (me.repFactor(r) > me.repFactor(r - 1)) repMonotone = false;
+  ok(repMonotone, 'the rep factor never rises as reps go up, all the way to the new ceiling');
 
   // ---- recency ----
   ok(near(me.recencyWeight(0), 1, 1e-9), 'today counts fully');
@@ -6192,8 +6518,25 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(repSigma(12) > repSigma(8) && repSigma(8) > repSigma(3),
      'a 12-rep set is genuinely less certain than an 8, and an 8 than a 3 — Reynolds (2006) and '
      + 'Mayhew (2008) both find the equations degrade above ten, so the PREFERENCE was never wrong');
-  ok(REP_SIGMA.size === 15 && repSigma(99) === REP_SIGMA.get(15),
-     'the table stops at D5\'s ceiling and does not extrapolate past where it was measured');
+  /* 🔄 ~~"the table stops at D5's ceiling"~~ — IT STOPS AT `MAX_MAP_REPS` (25)
+   * SINCE 2026-09-23, and the reason it stops THERE is the interesting half:
+   * at 30 reps σ is 61.3 %, past `SIGMA_MAX` (0.50), so every set from about 30
+   * up would price identically and the pricing would stop being a measurement.
+   * The table ending at 25 is a statement, not an omission. */
+  ok(REP_SIGMA.size === 25 && repSigma(99) === REP_SIGMA.get(25),
+     'the table stops where the clamp makes it meaningless, and does not extrapolate past it');
+  /* Rows 1–15 are the same numbers they were before the table was extended —
+   * this is what makes "nothing already rated moves" a measurement. */
+  ok(repSigma(15).toFixed(5) === '0.09575' && repSigma(8).toFixed(5) === '0.03078'
+     && repSigma(1) === 0,
+     'and extending it changed no row that already existed');
+  /* The seat comparison above 15 is the measured σ ratio rather than a new
+   * hand-typed step. Pinned here because `repSigma` is in scope. */
+  const rfx = (await import('../js/muscle-evidence.js')).repFactor;
+  for (const r of [16, 20, 25]) {
+    ok(Math.abs(rfx(r) - 0.25 * (repSigma(15) / repSigma(r)) ** 2) < 1e-12,
+       `repFactor(${r}) is 0.25 x (σ15/σ${r})² — derived, not chosen (${rfx(r).toFixed(4)})`);
+  }
 
   /* ---- 🚨 THE BEHAVIOUR HE ASKED FOR, AND IT FALLS OUT OF THE QUADRATURE ---- */
   {

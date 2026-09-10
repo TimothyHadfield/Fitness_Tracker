@@ -182,10 +182,23 @@ const LIFTS = {
    *
    * ⚠️ ONE OF EACH, ON PURPOSE, BECAUSE THE TWO STATES CANNOT COEXIST ON ONE
    * MUSCLE. Cable Crunch makes **Core rank** — it is Core's key lift, so the
-   * demo now shows the new rating, its lower confidence and its caveat. Neck
-   * Curl makes **Neck hatch** — trained, and no published standard to place it
-   * against — which is the state Core itself was in this morning and which
-   * nothing else in the demo can produce now that Core is rankable.
+   * demo now shows the new rating, its lower confidence and its caveat.
+   * 🔄 ~~Neck Curl makes **Neck hatch** — trained, and no published standard to
+   * place it against.~~ **NOT SINCE 2026-09-23: NECK RANKS TOO**, off a page
+   * that was there all along (docs/research.md §17), so this fixture now
+   * produces the demo's THIRTEENTH rating rather than its only hatch — and at
+   * 0.1803 it is the lowest confidence in the golden table, which is
+   * `standardQuality` 0.4 doing its job.
+   *
+   * 🚩 SO THE DEMO NO LONGER CONTAINS A HATCHED MUSCLE AT ALL, and that is a
+   * real gap rather than a tidy-up: the trained-but-unrankable state is now
+   * unreachable in the one account this project uses to look at, measure and
+   * audit every screen (§0.10) — the exact fault the paragraph above this one
+   * was written about, arriving from the other side. Two things would produce
+   * one: a set over `MAX_MAP_REPS`, or an exercise whose body-weight fraction
+   * nobody has measured (a Single-Leg Calf Raise). 🛑 NEITHER IS BUILT — adding
+   * an exercise re-rolls the whole seeded year and re-baselining a regression
+   * pin is Tim's call, not a side effect (Open work 25).
    *
    * ⚠️ NECK WORK IS NOT ODD FOR THIS LIFTER, and it is worth saying so before
    * somebody "tidies" it out: it is three sets of a light isolation movement on

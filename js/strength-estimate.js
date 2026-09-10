@@ -298,12 +298,24 @@ export const DEFAULTS = Object.freeze({
  * research.md §1). Above 15 the set is limited by breathing, grip and pain
  * tolerance rather than by strength, and isRankableSet() rejects it outright.
  *
- * ⚠️ This is deliberately the SAME table as `repFactor()` in muscle-evidence.js
- * rather than an import. They answer the same question and today they agree —
- * but that module weighs an observation for a *muscle* rating built on
- * conversion ratios, and this one weighs it for a *lift* estimate with no ratio
- * in it, so they are entitled to diverge once both are fitted. A test asserts
- * they currently agree, which is what would catch a silent drift.
+ * ⚠️ ~~This is deliberately the SAME table as `repFactor()` in
+ * muscle-evidence.js~~ 🔄 **THEY DIVERGED ON 2026-09-23, WHICH IS THE CASE THIS
+ * NOTE ALWAYS SAID WAS COMING** — *"they are entitled to diverge once both are
+ * fitted."* They still agree exactly at 15 reps and below; above 15 they now
+ * answer different questions:
+ *
+ *   - muscle-evidence.js reads to `MAX_MAP_REPS` (25) and PRICES what it
+ *     admits, because the map blends at 1/σ² and a long set can therefore be
+ *     paid for out of its own uncertainty rather than believed.
+ *   - THIS module stops at `MAX_EVIDENCE_REPS` (15) and must keep stopping
+ *     there, because its constants were FITTED against tools/strength-sim.mjs
+ *     with a 15-rep ceiling in place. Extending the gate without re-fitting
+ *     would leave every fitted number describing a model that no longer exists
+ *     — the §0.15 fault, where a tool's header outlives what the tool measures.
+ *
+ * 🛑 SO THE DIVERGENCE IS THE DECISION, NOT AN OVERSIGHT. A test pins that they
+ * agree to 15 and disagree above it in exactly this direction, so drift is still
+ * caught while the deliberate split cannot be "fixed" back into a bug.
  */
 export function repFactor(reps) {
   const r = Number(reps);

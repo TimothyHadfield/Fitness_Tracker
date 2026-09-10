@@ -17,6 +17,213 @@
 
 ---
 
+## 2026-09-23 — CALVES AND NECK JOIN THE RANKINGS
+
+**Tim, after being shown why the neck's published women's data is unusable and being asked nothing:**
+*"okay seems like youre ready to make calves and neck join the muscle group rankings just like all
+the other muscles. Just do it no matter what. I know the research isn't great, but do whatever you
+can to make it work with what you have."*
+
+🚨 **HE WAS TOLD THE COST FIRST AND REAFFIRMED.** The message before it laid out that the women's
+neck table is 55 people and runs backwards with body weight, that fixing it means deriving it or
+hatching women, and — the part he did not ask about and got anyway — that the **men's** table may be
+the worse problem, because Elite ÷ Beginner is 38.8× against the bench press's 2.7×. He said do it
+anyway. **That is a decision, and the flatness below is its known cost rather than a defect
+discovered afterwards.**
+
+**Four agents on disjoint files, one integrator.** `docs/calf-neck-ranking-plan.md` (2026-09-21) was
+the assessment; this built options **A**, **B** and **F** from it, plus the neck row **G** which that
+plan recommended *against* building until Tim answered the sexed-availability question. He answered
+it by refusing the question.
+
+### A. Calves — the gate, and why it is TWO ceilings rather than one
+
+🚨 **THE DIAGNOSIS FROM 2026-09-21 HELD.** `strength-observations.js` returned on the rep gate
+**before** the blocked-work bookkeeping twenty lines below it, so a set over 15 reps left no
+observation *and* no record that anything had been refused — and the panel, seeing "no rating,
+nothing blocked", printed the sentence written for a muscle the world has no standard for.
+
+🔒 **THE SHAPE OF THE FIX IS THE THING TO CARRY: `MAX_MAP_REPS` (25) IS A SECOND CEILING, NOT A
+RAISED ONE.** `MAX_EVIDENCE_REPS` is still 15 and `isRankableSet()` is byte-identical, so the charts,
+the personal bests, progression, the comparison screen and `setE1rm()` are all untouched. The
+argument for the split is not caution, it is arithmetic: **the map blends at 1/σ², so it can PRICE a
+long set out of its own uncertainty; a screen printing one number has nothing to pay with.**
+
+- **The price is measured, not chosen.** `tools/build-rep-sigma.mjs` went from 15 rows to 25 and
+  regenerated `js/rep-sigma.js`. **Rows 1–15 are unchanged to the last digit**, which is what makes
+  "nothing already rated moves" a measurement rather than a hope. σ_rep at 20 reps is 18.8 % and at
+  25 is 34.1 %, so on the key lift a 20-rep set carries **31 %** of a 15-rep set's blend weight and a
+  25-rep set **10 %**.
+- 🛑 **25 AND NOT 30, AND THE REASON IS A CLAMP.** At 30 reps σ is 61.3 %, past `SIGMA_MAX` (0.50),
+  where every long set would price identically and the pricing would stop being a measurement. The
+  table ending at 25 is a statement rather than an omission, and an assertion pins it.
+- 🚨 **`setE1rm()` WOULD HAVE SILENTLY BLOCKED THE WHOLE THING, TWENTY LINES DOWNSTREAM.** D30 puts
+  the 15-rep gate inside the one function every printed maximum goes through, so a 20-rep set that
+  cleared the new gate returned `null` anyway. **The walk now asks `setE1rm()` for the convention at
+  15 and extends the SAME curve by a RATIO of two `e1rm()` calls** — `load`, `perSide` and `quality`
+  are rep-independent and a ratio cancels the per-side doubling, so D30's convention survives
+  untouched. Pinned from both sides: a 20-rep dumbbell set is still exactly `2 × e1rm(80, 20)` and a
+  20-rep pull-up still runs the curve on fraction × body weight.
+- 🚨 **AND `repFactor()` HAD TO MOVE WITH IT OR THE FEATURE WOULD HAVE BEEN INERT.** `rateMuscle()`
+  admits an observation on `repFactor(reps) > 0`; a 20-rep set past the gate with `repFactor` still
+  stopping at 15 would have entered the pool at **zero seat credit** — present and worthless, with
+  nothing on any screen saying so. 🛑 **No new ladder steps were typed**: the steps to 15 are
+  byte-identical and above 15 the value is `0.25 × (σ15/σr)²`, derived from the generated table.
+  Hand-typing a sixteenth step would have been the ladder Tim asked about in September coming back
+  in through the roof.
+- ✅ **The refusal now leaves a note**, and against **every muscle the exercise contributes to**
+  rather than the one the library files it under. ⚠️ **The fixture that can catch that is a
+  DEADLIFT, not a calf raise** (§0.21): every calf raise is filed under Calves *and* contributes to
+  Calves, so a wrong reading and a right one give the same answer. A 30-rep deadlift is reported
+  under Glutes, Back and Hamstrings.
+- ✅ **Measured on the reported case**: forty weeks of three sets at 120 lb read **nothing** at 16
+  reps before and now read 196.1 lb; at 20 reps 213.0 lb at 0.760 confidence; at 25 reps 233.5 lb at
+  0.607. **Higher and believed less, in one line** — which is the pricing made visible.
+- 🚨 **D5'S OWN REGRESSION CASE NOW PASSES FOR A DIFFERENT REASON, AND THAT IS WORTH KNOWING.** The
+  135 × 25 burnout set that used to be refused at the gate is **admitted** now, at 258 lb, and still
+  loses — one exercise gets one seat and `repFactor(25)` is 0.0197 against 0.95. The rating moves by
+  **0.000 %**. The guard has moved from the gate to the seat rule, so the old assertion was one
+  session away from being vacuous in the reassuring direction; it now pins that the set is PRESENT
+  before pinning that it changes nothing.
+
+### B. Neck — a page existed, and this project had recorded its absence as a permanent fact
+
+🚨 **FOUR PLACES SAID NOBODY PUBLISHES NECK NORMS. STRENGTH LEVEL PUBLISHES TWO PAGES.** They are
+simply not linked from the browse index. Both re-fetched live: **neck curl**, 2,726 qualifying
+results from 91,634 lifts, **2,671 men and 55 women**; **neck extension**, 1,159 of 63,467,
+**1,143 men and 16 women**. §14.6 had recorded the plank and sit-up norms as *unchecked rather than
+rejected* precisely because *"no honest source exists"* had been wrong once before. **It was wrong
+again, and this time it was written into the code as permanent.**
+
+🛑 **THE WOMEN'S PAGE IS UNUSABLE AND THE REASON IS SHAPE, NOT SIZE.** Their table asks a **heavier**
+woman for **less** weight in every column — Intermediate 53 lb at 90 lb body weight down to 39 lb at
+260 lb. `medianForPopulation()` scales by `bodyWeight^0.67`, so from their own 140 lb row the app
+computes **71 lb at 260 lb where they publish 39** — an 82 % disagreement, in the opposite direction,
+against the page the median came from.
+
+✅ **WHAT SHIPPED: the men's row as published, the women's row DERIVED FROM A MEASURED RATIO.**
+Catenaccio et al. 2017 (*PM&R*, PMC5545075) measured peak isometric neck strength in 157 healthy
+adults (84 M / 73 F) on one microFET2 in a belted rigid chair, and publishes a full percentile table
+by sex and direction. Female median forward flexion **88.6 N** against male **146.2 N** = **0.606**;
+the extension pair gives **0.594**, so two directions on one instrument agree within 2 %. Neck curl
+is flexion, so 0.606 is the figure. Male `[5, 26, 65, 123, 194]` × 0.606 → female
+`[3, 16, 39, 75, 118]`.
+
+🔒 **WHY A RATIO MAY CROSS WHERE AN ABSOLUTE NUMBER MAY NOT, AND IT IS THE LOAD-BEARING ARGUMENT.**
+Catenaccio measures newtons of isometric push at one moment arm; the app publishes pounds on a 1RM
+neck curl. **Three unmeasured assumptions separate those absolute numbers** — a moment arm for the
+pad, one for the plate, and isometric peak equalling a concentric 1RM. A ratio between two groups
+measured on the same instrument carries none of them, which is the same argument the whole conversion
+table already rests on. 🚨 **The tempting coincidence is named in the code and in `docs/research.md`
+§17 so nobody chases it**: Catenaccio's male median extension is 228 N ≈ 51 lbf and Strength Level's
+male median neck extension is 69 lb. Close enough to look mergeable. Different quantities. §15 is the
+near-miss where exactly that was nearly done with two push-up figures.
+
+✅ **The plausibility check that makes it a derivation rather than an invention**: the female/male
+median ratio across the twelve fetched rows runs **0.490 (back, chest) to 0.702 (core)**, and the
+neck's 0.600 sits inside it. ⚠️ **It is a CHECK, not a derivation** — if it ever fails, doubt the
+dynamometer-to-plate transfer rather than nudging the ratio until the test goes green, and the
+assertion says so.
+
+⚠️ **`standardQuality` 0.4, below Core's 0.6**, and pinned as an **ordering** rather than as two
+constants: one measured source with no agreeing second (Core's situation), *plus* a derived female
+half, *plus* two pages that contradict the physiology and each other (male flexion 65 vs extension
+69 is a ratio of 1.06 where dynamometry puts extension at 1.3–1.6× flexion, and the female pages run
+the other way — the likely reading is that lifters log one plate-on-the-head movement under both
+names), *plus* a spread 4× the bench press's.
+
+🚨 **THE COST, MEASURED AND SHIPPED ANYWAY BECAUSE HE SAID TO: THE READING IS FLAT.** Fitted σ is
+**1.324 / 0.711**, wider than the wrist curl, which this file already flags as a page dominated at
+the light end by people logging an empty-handed movement. A 180 lb man reads **p40.6 at 25 lb × 12
+and p53.0 at 40 lb × 12** — sixty percent more weight for twelve percentile points — and a man on the
+published Beginner mark reads **p2.6**, against Core's p4.0 and the bench's p4.5. **It will read near
+Intermediate for almost everybody.** That is a failure in the safe direction and it is still a
+failure; an assertion pins the flatness so a later change that makes the neck responsive is
+recognised as a new standard rather than a tuning.
+
+### C. The conversion ratio, and an error in this session's own brief
+
+🚨 **THE BRIEF SPECIFIED 0.94 FOR NECK EXTENSION AND IT WAS UPSIDE DOWN.** `ratio` is *this
+exercise's* load as a fraction of the *key lift's* and `rateMuscle()` **divides** by it. Extension
+(69 lb) is stronger than the curl (65), so it is **69/65 = 1.06**. At 0.94 every extension set would
+have converted **12.8 % high** on the weakest standard in the file. **The agent refused the number,
+derived it from the file's own convention, shipped 1.06 and reported the disagreement** — which is
+the "read the what-I-decided-NOT-to-do section" rule paying for itself again. The direction is now an
+assertion, not a comment.
+
+Harness extension carries the same 1.06 at a lower quality — a strap changes the moment arm and
+nothing published maps one to a plate — and **both sit under `FALLBACK_MIN_QUALITY`**, so neck work
+rates Neck and stands in for nothing.
+
+### D. The screen
+
+- **The hatch says WHICH refusal.** "trained, can't be ranked" was six words doing two opposite jobs:
+  a muscle the world has no standard for cannot be cleared by anybody, and a muscle whose every set
+  ran to thirty reps is cleared by **one heavier set**. The long-set state now reads *"trained, no
+  set we can read a max from"* and the panel adds *"One heavier set in a normal rep range rates the
+  muscle."*
+- 🛑 **That fix sentence is gated on the REASON, not on `blocked.fixable`** — that flag is
+  `/weigh-in/` and nothing else, so a sentence hung on it would never have rendered at all, and would
+  have read as a wording bug rather than as a flag answering a different question.
+- ✅ **The false sentences left the screen**, guarded rather than deleted: with Neck rankable, no
+  muscle drawn on the figure is in the "no published standard" state, so the branch renders for
+  nobody and stays as the honest line if one ever re-enters `UNRANKABLE`. ⚠️ Unguarded it did not
+  render nothing — it rendered *" can't be ranked — there are no published strength standards for ."*
+- 🔒 **A real ordering bug fell out of it**: `detail()` tested `note` *inside* the `lift` test, so a
+  muscle with no key lift was told it had no standards while a blocked list underneath it named its
+  sets.
+- 🛑 **The legend still has ONE entry.** Both states wear the same hatch, so a second row would be a
+  second identical swatch told apart by words — a key that makes the reader doubt the drawing.
+
+### What it cost, and what is now true
+
+✅ **All twenty-three no-Chrome suites green — 6,303 assertions**, up from 6,239.
+✅ **Driven in Chrome against the demo year at 390 and 880**, both landing on the Muscles pane with
+the demo flag set and a **`Page.reload`** after it (§0.6 — a hash-only navigation never re-boots the
+app and the whole run would have measured an empty account). Neck paints, reads *"Neck — Novice, low
+confidence"*, 37 lbs in the panel with its caveat in the open, zero horizontal overflow, and the "no
+published strength standard" sentence is gone from the screen.
+
+🔄 **THE GOLDEN TABLE RE-BASELINED, AND THE TWO HALVES MOVE DIFFERENT COLUMNS.** Neck is a
+thirteenth row — 66 observations, **37.1477 lb at 0.1803 confidence**, the lowest any muscle has ever
+carried here and below Core's 0.2891. And **three observation counts rose with no estimate moving at
+all**: Calves 332 → 336, Quads 567 → 571, Shoulders 1080 → 1093, every estimate and confidence
+identical to four places. 🔒 **Read that as the guard it is** — if an estimate had moved, a set the
+old ceiling refused would have taken a seat from a better one, which is the failure the 15 protects
+against.
+
+🚩 **AND ONE THING THE DEMO LOST.** Its Neck Curl fixture existed to produce the trained-but-
+unrankable **hatch**, and Neck ranking takes that away — so **no muscle in the demo hatches any
+more**, and that state is unreachable in the one account used to look at, measure and audit every
+screen (§0.10). It is the same fault the fixture was added to fix, arriving from the other side.
+🛑 **Not fixed**: producing one needs a set over 25 reps or a body-weight exercise nobody has
+measured, and adding an exercise re-rolls the whole seeded year — Tim's call, not a side effect
+(Open work 25).
+
+🚩 **AND ONE THING THE BROWSER SHOWED THAT NO TEST DID.** With **nothing else rated**, a lifter whose
+only logged work is long sets sees *"Nothing to rank yet"* and **no figure at all** — the hatch needs
+at least one rated muscle beside it to exist on. That is pre-existing and it is not what Tim reported
+(his calves were hatched among rated muscles), but it is the same complaint one step further along.
+Recorded, not built.
+
+⚠️ **A NECK PANEL IS 70 WORDS AGAINST THE PANEL'S 40-WORD CAP**, 29 of them the caveat. The cap's
+fixture is a clean rating, so this is not a regression — Core already does the same thing — but it is
+the second muscle to do it and a third would make "capped at 40" a sentence that is true of the test
+and false of the product.
+
+⚠️ **AND THE §0.11 RULE WAS BROKEN ONCE, BY ME, ON `tests/render.test.mjs`.** A two-string swap
+through a Python one-liner, for the reason the rule names as the commonest — "it is only two
+replacements". The content diff was clean (114 insertions, 0 deletions) and the whole file went
+**CRLF → LF**; restored, verified at 114/0 again, and the suite re-run after. **Nothing was lost and
+the rule still held**: it is the sixth time this project has recorded this and the first where the
+person doing it had read the rule an hour earlier.
+
+**Not run:** `tests/rules.test.mjs` (needs the emulator; `firestore.rules` did not change — the
+published document gains a muscle inside the strength grid, and `hasOnly` pins top-level keys only)
+and `tests/sw-update.test.mjs` (needs Chrome, flaky here).
+
+---
+
 ## 2026-09-22 — A FEMALE FIGURE FOR THE MUSCLE MAP
 
 Tim: *"I just created 2 new images for the muscle maps… If the user puts their gender as female

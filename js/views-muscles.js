@@ -109,15 +109,82 @@ let sourceSeq = 0;
  * ⚠️ Asking instead whether a rating CAME OUT is both narrower and more honest,
  * and it generalises for free: a Back whose only sets were 20-rep inverted rows
  * has work and no rating too, and it has been painted "No data" all along.
+ *
+ * 🔄 ~~"Core and Neck have no published strength standards"~~ — NEITHER OF THEM
+ * IS IN THAT STATE ANY MORE. Core left `UNRANKABLE` on 2026-09-04 and **Neck
+ * left it on 2026-09-23**, so the two muscles this whole state was built around
+ * are both rankable and `UNRANKABLE` holds `Cardio` and `Activity` alone — two
+ * library shelves that are not drawn on the figure at all.
+ *
+ * 🚨 THE STATE DID NOT LEAVE WITH THEM, IT CHANGED HANDS. Everything that
+ * reaches the hatch now is work the APP refused — a set too long to read a
+ * maximum off, a body-weight fraction nobody has measured — rather than work
+ * the world has no standard for, and those are not the same message. See the
+ * block above `LONG_SET_REASON`.
  */
 const TRAINED_WINDOW_DAYS = 365;
+
+/* ------------------------------------------------------------------ *
+ * TWO REASONS, TWO SETS OF WORDS — 2026-09-23
+ * ------------------------------------------------------------------ *
+ *
+ * 🚨 THE HATCH WORE ONE LABEL AND MEANT TWO OPPOSITE THINGS, which is the same
+ * fault the hatch itself was built to fix one level down. "trained, can't be
+ * ranked" was written when the only way into this state was a muscle nobody has
+ * published a standard for; since then the app has started refusing evidence of
+ * its own, and every one of those muscles got the identical six words. **One of
+ * the two can be cleared by the reader in a single set and the other cannot**,
+ * and the panel was saying nothing about which they were in.
+ *
+ * 🚨 THE ANSWER COMES FROM THE BLOCKED REASONS THE MUSCLE ALREADY CARRIES, NOT
+ * FROM A SECOND GUESS. `buildObservations()` (js/strength-observations.js)
+ * recorded, per exercise, why it threw a set away. Re-deriving that here would
+ * be a second opinion, free to disagree with the sentence `blockedNote()`
+ * prints a few rows below — on the same panel, about the same sets.
+ *
+ * ⚠️ MATCHED ON THE SHAPE OF THE REASON, NEVER ON THE CEILING INSIDE IT. That
+ * number is `MAX_MAP_REPS` (js/e1rm.js) and it has already moved once — 15 to
+ * 25 — so a literal here is a copy that goes stale in silence and takes a
+ * label with it. Same technique the observation walk uses for its own flag
+ * (`fixable: /weigh-in/.test(why)`), for the same reason.
+ *
+ * ⚠️ `every`, NOT `some`. A muscle whose refused work is part long sets and
+ * part something permanent has not been refused for one reason, and "no set we
+ * can read a max from" would then be a claim about the other exercise too.
+ * Mixed falls back to the older words, which are true of every case in the way
+ * the specific ones are not.
+ */
+const LONG_SET_REASON = /^more than \d+ reps/;
+
+const TRAINED_LABEL = {
+  // The work is there and readable; the sets are simply too long to take a
+  // maximum off. Curable, and blockedNote() says how.
+  reps: 'trained, no set we can read a max from',
+  // Everything else — a body-weight fraction nobody has measured (Single-Leg
+  // Calf Raise, Tibialis Raise), a custom exercise, a band. The original words,
+  // kept because they are still exactly right for these.
+  other: 'trained, can\'t be ranked',
+};
+
+/** Which of the two hatched states this muscle is in. Never throws on a missing bag. */
+function trainedWhy(bag) {
+  const list = bag && bag.exercises;
+  if (!list || !list.length) return 'other';
+  return list.every((e) => LONG_SET_REASON.test(String(e.reason || ''))) ? 'reps' : 'other';
+}
 
 /**
  * Muscles with recorded work that produced no rating.
  * @param {Map} rated  what `muscleStrength()` managed to rank — anything in here
  *   is already coloured and must not be hatched over the top of its own level.
+ * @param {Array} [rows]  sessions, when the caller already holds them.
+ * @param {Map} [blocked]  ⚠️ THE WORK THE RATING THREW AWAY, per muscle, and it is
+ *   what decides which of the two labels this muscle wears. Optional and defaults
+ *   to the older wording, because a caller that cannot supply it — a published
+ *   friend's map never carries a blocked list — must degrade to the sentence that
+ *   is true of every case rather than to a guess.
  */
-async function trainedButUnrankable(rated, rows = null) {
+async function trainedButUnrankable(rated, rows = null, blocked = null) {
   const out = new Map();
   // Cardio and Activity are library shelves rather than muscles — they are not
   // on the figure at all, so marking them would mark nothing.
@@ -128,10 +195,17 @@ async function trainedButUnrankable(rated, rows = null) {
 
   for (const m of vol.muscles) {
     if (shelves.has(m.muscle) || (rated && rated.has(m.muscle)) || !m.totalSets) continue;
+    const why = trainedWhy(blocked ? blocked.get(m.muscle) : null);
     out.set(m.muscle, {
       sets: m.totalSets,
       days: m.daysTrained,
       windowDays: TRAINED_WINDOW_DAYS,
+      // ⚠️ THE REASON AND ITS WORDS TRAVEL TOGETHER, decided once here. The
+      // figure's accessible name, the summary sentence and the panel's own line
+      // all read this entry, so there is no way for the three of them to end up
+      // describing the same muscle differently.
+      why,
+      label: TRAINED_LABEL[why],
       // Named, for the same reason the rated panel names the set it came from:
       // "we counted 14 sets" is a claim somebody should be able to check.
       contributors: m.contributors,
@@ -257,7 +331,11 @@ export async function muscleGroupsPane(host, top) {
   // Sequenced, not parallel: which muscles are "trained but unranked" is defined
   // against what actually got ranked, so it cannot be computed until that is
   // known. Costs nothing — the sessions it walks are already in the read cache.
-  const trained = await trainedButUnrankable(muscles);
+  // ⚠️ `blocked` IS HANDED IN SINCE 2026-09-23 and it is not an optimisation: it
+  // is the only thing that can tell a muscle whose sets were too long from a
+  // muscle whose exercise nobody has measured, and both of them arrive here as
+  // "has work, has no rating".
+  const trained = await trainedButUnrankable(muscles, null, blocked);
   const recent = recentDirectWork(sessions, exMap, todayISO());
   // ⚠️ OFF BY DEFAULT — Tim, 2026-08-25: *"showing the percentile is a little
   // harsh for some people."* The level is the answer; the percentile is the
@@ -349,7 +427,11 @@ export async function muscleGroupsPane(host, top) {
   // disjoint by construction anyway.
   for (const [muscle, t] of trained) {
     if (levelMap.has(muscle)) continue;
-    levelMap.set(muscle, { unrankable: true, label: 'trained, can\'t be ranked', sets: t.sets });
+    // ⚠️ THE WORDS COME FROM THE ENTRY, NOT FROM A LITERAL HERE. body-map.js puts
+    // `label` straight into the region's accessible name and its <title>, so a
+    // second copy of the sentence in this line is a second place for the figure
+    // and the panel below it to start disagreeing about the same muscle.
+    levelMap.set(muscle, { unrankable: true, label: t.label, sets: t.sets });
   }
 
   // The figure is built ONCE. Rebuilding it on every tap would re-attach the
@@ -459,7 +541,17 @@ export function legend(moreDetails, anyTrainedUnrankable = false) {
          entry for a mark that is nowhere on screen is a puzzle rather than a
          key — it invites somebody to go looking for a state they are not in.
          Same reasoning as "No data", which is always shown because a body with
-         nothing recorded is the state everybody starts in. */
+         nothing recorded is the state everybody starts in.
+
+         🛑 ONE ENTRY, THOUGH THE HATCH NOW CARRIES TWO MEANINGS — 2026-09-23. A
+         muscle refused for the length of its sets and a muscle refused for an
+         unmeasured body-weight fraction wear the SAME mark, so a second row here
+         would be a second swatch identical to the first: a key whose two lines
+         are told apart by their words alone is a key that makes the reader doubt
+         the drawing. **A key names a MARK, and there is one mark.** The
+         distinction is carried where it belongs and where it can be specific —
+         the region's own accessible name, the summary's two sentences, and
+         `blockedNote()`, which names the sets and what would fix them. */
       anyTrainedUnrankable
         ? el('span', { class: 'lv-key-item' },
             el('i', { class: 'lv-sw lv-unranked' }),
@@ -748,6 +840,19 @@ function summary(muscles, trained = new Map()) {
   const strongest = ranked.slice().sort((a, b) => b.percentile - a.percentile)[0];
   const weakest = ranked.slice().sort((a, b) => a.percentile - b.percentile)[0];
 
+  /* ⚠️ TWO SENTENCES SINCE 2026-09-23, BECAUSE THE HATCH IS TWO STATES.
+   *
+   * One list said "nothing in it could be placed against other people", which is
+   * a permanent-sounding claim, and it was being printed over a calf whose only
+   * fault is that every set was thirty reps — work this app CAN place the moment
+   * one heavier set is logged. Two claims of that different a kind, under one
+   * "and", is the same running-together the hatch itself exists to end.
+   *
+   * ⚠️ SPLIT ON `t.why`, WHICH WAS DECIDED ONCE FROM THE BLOCKED REASONS. This
+   * function does not re-open the question — see trainedButUnrankable(). */
+  const longSets = [...trained].filter(([, t]) => t.why === 'reps').map(([name]) => name);
+  const other = [...trained].filter(([, t]) => t.why !== 'reps').map(([name]) => name);
+
   return el('div', { class: 'card' },
     el('div', { class: 'field-help', text: 'Tap a muscle for its numbers.' }),
     strongest && weakest && strongest !== weakest
@@ -762,20 +867,54 @@ function summary(muscles, trained = new Map()) {
        the hatch reading as a worse level.
 
        ⚠️ THE TWO HALVES ARE DIFFERENT CLAIMS AND ARE NOT THE SAME LIST. The
-       first is about the WORLD — Neck has no published standards and never will.
+       first is about the WORLD — ~~Neck has no published standards and never
+       will~~, which stopped being true on 2026-09-23 and is why that half now
+       renders nothing at all (see below).
        The second is about YOU: work the app holds and could not place, which
        since Core became rankable (2026-09-04) is usually somebody whose ab
        training is planks rather than a muscle with no standards at all. Merging
        them would tell a plank-doer that abs cannot be ranked, which is no longer
-       true — they just cannot be ranked from a plank. */
-    el('div', { class: 'field-help', text:
-      `${unranked.join(' and ')} can't be ranked — there ${unranked.length === 1 ? 'is' : 'are'} `
-      + `no published strength standard${unranked.length === 1 ? '' : 's'} for `
-      + `${unranked.length === 1 ? 'it' : 'them'}.` }),
-    trained.size
+       true — they just cannot be ranked from a plank.
+
+       🔄 ~~"Core and Neck can't be ranked — there are no published strength
+       standards for them."~~ — **OFF THE SCREEN SINCE 2026-09-23, AND IT IS THE
+       GUARD THAT TURNED IT OFF RATHER THAN A DELETION.** Neck left `UNRANKABLE`
+       the way Core did on 2026-09-04, so the list this filters is `['Cardio',
+       'Activity']`, the filter empties it, and **no muscle on the figure is in
+       this state any more.**
+
+       🚨 UNGUARDED IT DID NOT PRINT NOTHING — IT PRINTED NONSENSE. An empty list
+       is not an absent sentence: `[].join(' and ')` is the empty string and
+       `length === 1` is false, so the pane rendered " can't be ranked — there
+       are no published strength standards for ." — no subject, a plural chosen
+       for a length of zero, and a full stop after a preposition.
+
+       ⚠️ THE BRANCH IS KEPT RATHER THAN CUT because the sentence is still the
+       honest one for a DRAWN muscle with no standard, and `data-layer.test.mjs`
+       pins exactly that pairing — every drawn muscle is rankable or declared
+       unrankable. The day one of them goes back on that list, this is the line
+       that owns up to it. It is not a line anybody will see today. */
+    unranked.length
       ? el('div', { class: 'field-help', text:
-          `Your ${[...trained.keys()].join(' and ')} work is recorded and counted toward volume, `
+          `${unranked.join(' and ')} can't be ranked — there ${unranked.length === 1 ? 'is' : 'are'} `
+          + `no published strength standard${unranked.length === 1 ? '' : 's'} for `
+          + `${unranked.length === 1 ? 'it' : 'them'}.` })
+      : null,
+    other.length
+      ? el('div', { class: 'field-help', text:
+          `Your ${other.join(' and ')} work is recorded and counted toward volume, `
           + 'but nothing in it could be placed against other people. Tap for what it found.' })
+      : null,
+    /* ⚠️ "counts toward volume" IS SAID ON BOTH BRANCHES ON PURPOSE. It is the
+       one reassurance this state exists to give — the work was not lost — and
+       dropping it from the curable half to save six words would leave the
+       reader of a hatched calf wondering whether their thirty-rep sets went
+       anywhere at all. What differs is the second clause, which is the whole
+       point of splitting them. */
+    longSets.length
+      ? el('div', { class: 'field-help', text:
+          `Your ${longSets.join(' and ')} work is all long sets — it counts toward volume, `
+          + 'but a maximum cannot be read off a set that long. Tap for what would rate it.' })
       : null,
   );
 }
@@ -830,15 +969,51 @@ function blockedNote(blocked) {
     ? names.join(' and ')
     : `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
   const sets = blocked.sets;
+  // Only the leader's reason is stated for the whole list, and that is the
+  // long-standing shape of this line rather than something introduced below.
+  const reason = String(blocked.exercises[0].reason || '');
+
+  /* 🚨 A SET REFUSED FOR ITS LENGTH IS THE ONE REFUSAL ON THIS SCREEN THE READER
+   * CAN CLEAR TODAY, SO IT SAYS SO — 2026-09-23, docs/direction.md §3.1: be
+   * upfront about what is missing, and the half a person can act on is the half
+   * worth printing. "more than 25 reps" alone tells somebody their calves are
+   * hatched and leaves them nowhere to go.
+   *
+   * 🛑 GATED ON THE REASON, NOT ON `blocked.fixable`, AND THAT IS THE TRAP THIS
+   * NOTE EXISTS FOR. `fixable` is `/weigh-in/` and nothing else
+   * (js/strength-observations.js), so it is FALSE here — and this function has
+   * never read the flag at all. A sentence hung on it would simply never have
+   * appeared, and would have read as a wording bug rather than as a flag
+   * answering a different question. The flag asks *"is there a button worth
+   * offering"*; this asks *"is there a next set worth naming"*.
+   *
+   * ⚠️ AND GATED ON THE REASON THIS LINE ACTUALLY PRINTS, never on "some entry
+   * in the list carries it". The list is sorted by set count and only the leader
+   * is quoted, so advice keyed to a reason further down would sit directly under
+   * a sentence about sets it cannot fix — a non-sequitur the reader has no way
+   * to resolve, because the sentence it belongs to is not on screen.
+   *
+   * 🛑 NO BUTTON. Same rule the note above this function draws: the sentence
+   * names the fix, and a control that opens the logging screen would be the app
+   * telling somebody to go and lift. */
+  const fix = LONG_SET_REASON.test(reason)
+    ? ' One heavier set in a normal rep range rates the muscle.'
+    : '';
+
   // One line, same claim. It has to keep naming the exercises: the whole point
   // is that a muscle must not read as "nothing recorded" over work somebody
   // actually did, and "3 sets not counted" without saying which is no better.
   return el('div', { class: 'muscle-warn', text:
-    `${sets} set${sets === 1 ? '' : 's'} of ${listed} not counted — ${blocked.exercises[0].reason}.` });
+    `${sets} set${sets === 1 ? '' : 's'} of ${listed} not counted — ${reason}.${fix}` });
 }
 
 /**
- * What a muscle with no standards HAS got: sets, days, and the exercises.
+ * What a muscle the map could not rate HAS got: sets, days, and the exercises.
+ *
+ * ⚠️ ~~"a muscle with no standards"~~ — 2026-09-23. Since Neck left `UNRANKABLE`
+ * that describes nothing on the figure; what reaches this block is a muscle
+ * whose EVIDENCE the app refused, which is a different sentence and is why the
+ * closing clause below is now conditional.
  *
  * ⚠️ EVERY NUMBER HERE IS A COUNT OF THINGS THAT HAPPENED, and that is the whole
  * design. A count needs no published median, no body weight, no age and no
@@ -851,7 +1026,7 @@ function blockedNote(blocked) {
  */
 function trainedNote(trained) {
   if (!trained || !trained.sets) return null;
-  const { sets, days, windowDays, contributors } = trained;
+  const { sets, days, windowDays, contributors, why } = trained;
   const months = Math.round(windowDays / 30);
   const names = (contributors || []).slice(0, 3).map((c) => c.name);
   const rest = (contributors || []).length - names.length;
@@ -862,11 +1037,25 @@ function trainedNote(trained) {
      the Muscles tab they are already looking at, which is a dead end wearing a
      button. Naming the screen in words is the honest version until the segment
      is addressable. */
+  /* 🚨 THE CLOSING CLAUSE IS A CLAIM ABOUT THE WORLD AND IT IS FALSE FOR HALF OF
+   * THIS STATE — 2026-09-23. "there is just no published standard to place it
+   * against" was written when Core and Neck were the only muscles that could get
+   * here. A calf whose every set was thirty reps has a published standard, a key
+   * lift and a ratio; what it does not have is a set short enough to read a
+   * maximum off. Printing the old clause over it blames the world for a
+   * refusal the app made, and points the reader at nothing.
+   *
+   * ⚠️ IT IS DROPPED RATHER THAN REPLACED, and the sentence that would have gone
+   * here is one row down in `blockedNote()`, which names the exercises, the set
+   * count and the fix. Two sentences about the same refusal, six words apart, is
+   * how a panel with a word cap gets talked back into a paragraph — and the one
+   * that names its evidence is the one worth keeping. **Shortened, not
+   * softened**: nothing is claimed here that was not claimed before. */
   return el('div', { class: 'muscle-logged' },
     el('div', { text:
       `${sets} set${sets === 1 ? '' : 's'} recorded in the last ${months} months, `
       + `across ${days} session${days === 1 ? '' : 's'}, and every one counts toward your weekly `
-      + 'volume — there is just no published standard to place it against.' }),
+      + `volume${why === 'reps' ? '.' : ' — there is just no published standard to place it against.'}` }),
     names.length
       ? el('div', { text: `From ${names.join(', ')}${rest > 0 ? ` and ${rest} more` : ''}.` })
       : null,
@@ -894,16 +1083,35 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
   if (!m) {
     const lift = keyLiftFor(muscle);
     const note = blockedNote(blocked);
+    /* 🔄 ~~"This muscle has no published strength standards, so it can't be
+       ranked."~~ — **GONE 2026-09-23, AND IT WAS UNREACHABLE BEFORE IT WAS
+       FALSE.** It hung off `!lift`, and `keyLiftFor()` returns null only for a
+       muscle with no standards — which since Neck left `UNRANKABLE` means
+       `Cardio` and `Activity` alone. Neither is drawn on the figure, so neither
+       can be tapped, so this sentence had no reader left.
+
+       🚨 THE ORDER OF THE TEST IS WHAT CHANGED, AND IT IS THE FIX RATHER THAN A
+       TIDY-UP. `note` was checked INSIDE the `lift` branch, so a muscle with no
+       key lift was told it had no standards **even while a blocked list under
+       it named the sets it had done** — the exact "nothing recorded over work
+       somebody did" lie the blocked list was built to end, one branch up from
+       where it was fixed. Asking about the evidence first is both narrower and
+       true of every muscle: a blocked note only exists where work exists.
+
+       ⚠️ THE `!lift` FALL-THROUGH IS KEPT AND NO LONGER MENTIONS STANDARDS. It
+       cannot fire today; if a muscle is ever drawn without a key lift it says
+       what is true of it — nothing recorded — instead of a claim about
+       publishing that this file is in no position to make. */
     return el('div', { class: 'card' },
       el('div', { class: 'section-label', text: muscle }),
       el('div', { class: 'field-help' },
-        lift
-          ? (note
-            ? 'Nothing here can be ranked yet, but that is not the same as nothing recorded.'
-            : `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
+        note
+          ? 'Nothing here can be ranked yet, but that is not the same as nothing recorded.'
+          : lift
+            ? `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
               + `${lift.name} is the standard it is measured against, but it is not the only thing `
-              + 'that rates it.')
-          : 'This muscle has no published strength standards, so it can\'t be ranked.'),
+              + 'that rates it.'
+            : 'Nothing recorded for this muscle yet. Any exercise that trains it counts.'),
       /* 🚨 THE HALF THE PANEL WAS MISSING. Tapping Core used to say only that it
          cannot be ranked, which is a statement about the world rather than about
          you — and it is what made grey feel like the app had not noticed. What
@@ -1186,8 +1394,20 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
      * why it may leave them. Those qualify this reading — a fallback, a high-rep
      * set, an unusual comparison group — and each can be argued away by logging
      * something better. This one qualifies the STANDARD, applies identically to
-     * a perfect reading, and cannot be improved by the user at all. Set only for
-     * Core (docs/research.md §14). */
+     * a perfect reading, and cannot be improved by the user at all.
+     *
+     * 🔄 ~~Set only for Core (docs/research.md §14).~~ — **AND FOR NECK SINCE
+     * 2026-09-23**, which joined the rankable muscles on a thin standard of its
+     * own (`standardQuality` 0.4, the same shape Core has carried since
+     * 2026-09-04). ⚠️ NOTHING IN THIS FILE CHANGED TO CARRY IT: the sentence
+     * arrives as `m.caveat` from `standardCaveatFor()`
+     * (js/strength-standards.js) and this row prints whatever is there, which
+     * is the whole reason a second muscle costs no code.
+     *
+     * 🛑 AND IT STAYS IN THE OPEN — Rule 9's own test, not an exemption from it.
+     * A caveat that changes what the reader thinks the NUMBER IS never moves
+     * behind the "?"; only where a number came from does. "Neck standards are
+     * thin" is the first kind, exactly as Core's is. */
     m.caveat ? el('div', { class: 'muscle-warn', text: m.caveat }) : null,
 
     /* A set held back as a likely typo, named (2026-09-13).
