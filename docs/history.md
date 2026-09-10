@@ -17,6 +17,110 @@
 
 ---
 
+## 2026-09-24 — THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP
+
+**Tim:** *"On the laptop/computer, the muslce groups section allows for a little more space. Could
+you make the details on the right side a little wider so that you don't need to click 'more details'
+to see the other things? Keep the version the same on the phone to conserve space."*
+
+He pointed at a screen, which is the working shape of every visual change in this project.
+
+### What it is
+
+The source table's two derived columns — **Est. 1RM** and **Influence** — were behind a *More
+details* button on every width, because at 340px they did not fit. On a laptop they now show without
+a click, with the header row and the colour coding, and the button stays as **Fewer details** so the
+reader can still collapse it. **The phone is byte-for-byte unchanged**, which is the half he asked
+to keep.
+
+### 🚨 The first version was wrong and the MEASUREMENT is the only reason it did not ship
+
+The obvious implementation widens the panel at **860px**, the breakpoint the figure and its panel
+already split at. Driven in Chrome at an 880px window, that gave:
+
+| | figure | panel | exercise column |
+|---|---|---|---|
+| **first attempt, 880px** | **298 × 702** | 320 | **59px — its 4.5em floor** |
+
+**The figure was narrower than the panel beside it**, and "Barbell Bench Press" was wrapping inside
+59px. 🛑 **That is Rule 3's corollary exactly** — *content must not shrink because you asked it a
+question* — and the figure is the content on this screen. Buying five columns by crushing the body
+is the trade that rule exists to refuse.
+
+🔒 **SO THE WIDTH AND THE COLUMNS ARRIVE TOGETHER, AT 1024px.** Between 860 and 1023 nothing changes
+at all: the panel is still `clamp(260px, 32%, 340px)`, the table is still three columns, the button
+still says *More details*. Measured across the breakpoint, demo year, Back selected:
+
+| width | figure | panel | columns | exercise col | overflow |
+|---|---|---|---|---|---|
+| 360 | 332 × 340 | 332 | 3 | 214px | 0 |
+| 390 | 362 × 340 | 362 | 3 | 244px | 0 |
+| 880 | 358 × 702 | 260 | 3 | 123px | 0 |
+| **1023** | **501 × 702** | 260 | 3 | 123px | 0 |
+| **1024** | **422 × 702** | 340 | **5** | 79px | 0 |
+| 1280 | 546 × 702 | 376 | **5** | 115px | 0 |
+
+⚠️ **THE STEP AT THE BREAKPOINT IS REAL AND IS THE PRICE: the figure drops 501 → 422 as the panel
+takes its 80px.** It is still larger than at any narrower window, and comfortably above the 338 × 370
+the stacked layout gives — which is the comparison the 860px split was originally chosen on — so
+Rule 3's tie-break still holds. **Somebody dragging a window across 1024px will see the body change
+size once.** Recorded rather than hidden.
+
+### The state machine grew a third value, and that is the whole implementation
+
+`sourceColumns` was `false`. It is now **`false | true | null`**, where `null` means *nobody has
+chosen* and the layout answers instead. 🚨 **`false` could not express the default** — it is a
+decision, and starting every desktop session with a decision the reader never made is precisely the
+click he was complaining about. **An explicit tap still wins on either width and for the session.**
+
+- 🚨 **THE TOGGLE READS THE RESOLVED STATE, NOT THE FLAG.** `!null` is `true`, so a toggle written
+  against the raw value would have turned the columns ON while they were already showing, and the
+  first tap on a laptop would have visibly done nothing. Pinned by an assertion.
+- 🚨 **ONE BREAKPOINT, TWO FILES, AND A TEST THAT MAKES THAT SAFE.** CSS owns the width; the cells
+  are built in JS before there is a layout to measure, so `WIDE_PANEL_QUERY` in `js/views-muscles.js`
+  and the media query in `css/app.css` are two copies of 1024. **`tests/a11y.test.mjs` reads the
+  stylesheet and fails if they drift** — and it also pins that the 860px split is still its own,
+  narrower breakpoint, so nobody "tidies" the two into one and walks back into the measured failure
+  above.
+- ⚠️ **Read at draw time rather than latched at boot**, so widening the window gets the wide default
+  on the next panel. **No resize listener on purpose**: it would have to redraw the table under the
+  reader's finger to be useful, and a table that reshapes while being read is worse than one that
+  waits for the next tap.
+
+### 🚨 A test that was passing for the wrong reason, found by this change
+
+`tests/render.test.mjs` had a block that tapped the toggle twice and carried the comment *"module-level
+state: leave it where the rest of the suite expects it."* Two taps restore **`false`** — an explicit
+choice — not the unset state. The whole file shares one module instance, so **every later block was
+testing an explicit "no" while believing it was testing the default.** It did not matter until the
+default started depending on something.
+
+`resetPanelViewState()` is the fix: exported, documented as test-only, called by that block and by
+the new one. 🛑 **Nothing in `js/` calls it and nothing should** — in the running app the reset is a
+page load, which is the lifetime this state is meant to have.
+
+⚠️ **AND THE NEW BLOCK'S FIXTURE HAD TO CHANGE TWICE BEFORE IT COULD FAIL.** Three sessions of ONE
+exercise produce a single contributor, and a muscle with one contributor has no blend to take a share
+of — `canShowDerived` is false and the columns correctly never appear at any width, so the fixture
+passed whichever way the code was written (§0.21). It is three different chest lifts now. The helper
+also had to stop clicking blindly: `selected` survives a re-mount, so the second call arrived with
+Chest already open and the tap **deselected** it.
+
+### Fallout, handled rather than left
+
+- **A friend's map panel widens at 1024 too.** The columns' default is one piece of module state
+  shared by every panel alive, so that screen would otherwise have rendered five columns in a box
+  sized for three. Fixing the consequence of a change he asked for is part of the change.
+- **`.muscle-sources.is-more` scrolls inside its own box** where it still does not fit — the
+  two-body compare screen puts two of these side by side. ⚠️ **Both axes are stated**, which
+  `tests/a11y.test.mjs` insists on and caught: a box that sets one axis and leaves the other
+  `visible` gets the free one computed to `auto`, so an x-scroller quietly becomes a y-scroller.
+
+✅ **23 suites green, 6,315 assertions** (up from 6,303). ✅ **Driven in Chrome at 360 / 390 / 880 /
+1023 / 1024 / 1280**, zero horizontal overflow at every one.
+
+---
+
 ## 2026-09-23 — CALVES AND NECK JOIN THE RANKINGS
 
 **Tim, after being shown why the neck's published women's data is unusable and being asked nothing:**

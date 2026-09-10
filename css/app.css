@@ -3458,6 +3458,47 @@ a.seg {
   .graph-host.is-muscles .lv-key { gap: 6px 12px; }
 }
 
+/* ==========================================================================
+   THE DETAIL PANEL GETS ITS FIVE COLUMNS — 2026-09-24, Tim's ask
+   ==========================================================================
+   *"On the laptop/computer, the muslce groups section allows for a little more
+   space. Could you make the details on the right side a little wider so that
+   you don't need to click 'more details' to see the other things? Keep the
+   version the same on the phone to conserve space."*
+
+   🚨 THIS BREAKPOINT IS 1024px AND THE SPLIT'S IS 860px, AND THE GAP BETWEEN
+   THEM IS THE WHOLE DESIGN. The first attempt widened the panel at 860 and it
+   was measured rather than eyeballed, which is the only reason it did not ship:
+   at an 880px window the figure fell to **298px wide against the panel's 320**,
+   and the exercise column sat on its 4.5em floor, so "Barbell Bench Press" was
+   wrapping inside 59px. **Buying five columns by crushing the body is exactly
+   what Rule 3's corollary forbids** — the figure is the content on this screen.
+
+   So the extra width and the extra columns arrive TOGETHER, at the width where
+   there is genuinely room for both. Between 860 and 1023 nothing changes at all:
+   the panel is still clamp(260px, 32%, 340px), the table is still three columns,
+   and "More details" is still there for anyone who wants the working.
+
+   ⚠️ `js/views-muscles.js` HOLDS THE SAME NUMBER, because CSS cannot tell JS what
+   it matched and the table's cells are built before there is a layout to measure.
+   **`tests/a11y.test.mjs` reads this file and fails if the two stop agreeing** —
+   that test is what makes the duplication safe rather than a latent drift.
+
+   Measured after the change, demo year, Back selected:
+     1024px — figure 372x702, panel 349, exercise column 88px
+     1280px — figure 527x702, panel 395, exercise column 134px
+   Both still clear the 338x370 the stacked layout gives, which is the comparison
+   the 860px breakpoint was originally chosen on.
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .graph-host.is-muscles .body-foot,
+  /* ⚠️ The friend's map gets it too, and that is FALLOUT rather than a second
+     ask: the columns' default is one piece of module state shared by every panel
+     alive, so a friend's panel would otherwise show five columns in a box sized
+     for three. Fixing the consequence of a change he asked for is part of it. */
+  .map-split > .body-foot { width: clamp(340px, 40%, 460px); }
+}
+
 @media (min-width: 1200px) {
   .pane-top > *, .pane-scroll > *, .pane-bottom > * { max-width: 940px; }
 }
@@ -4201,7 +4242,25 @@ a.seg {
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
-.muscle-sources.is-more { grid-template-columns: minmax(4.5em, 1fr) repeat(4, max-content); }
+.muscle-sources.is-more {
+  grid-template-columns: minmax(4.5em, 1fr) repeat(4, max-content);
+  /* 🆕 2026-09-24 — THE SAFETY NET, AND IT IS FOR THE PANELS NOBODY WIDENED. Since the derived
+     columns default to ON above 860px and that default is one piece of module state shared by
+     every panel alive, this table can now appear in a box that was never sized for five
+     columns — the two-body compare screen puts two of them side by side. Where it does not
+     fit it scrolls inside its OWN box rather than pushing the layout sideways, which is Rule
+     1's standing answer for wide content and the same shape `.research-scroll` uses.
+     ⚠️ `min-width: 0` is the load-bearing half: without it a grid item refuses to shrink below
+     its content and the overflow lands on the pane instead, which is the fault this is here to
+     prevent. */
+  overflow-x: auto;
+  /* ⚠️ AND THE Y AXIS IS STATED, which `tests/a11y.test.mjs` insists on and is right to: a box
+     that sets one axis and leaves the other `visible` gets the free one computed to `auto`, so
+     an x-scroller quietly becomes a y-scroller too. `hidden` clips nothing here — the grid's
+     height is its content's, so there is never anything below the fold to reach. */
+  overflow-y: hidden;
+  min-width: 0;
+}
 
 .msrc-head, .msrc-row { display: contents; }
 

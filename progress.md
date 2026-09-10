@@ -38,7 +38,27 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-23 — **CALVES AND NECK RANK LIKE EVERY OTHER MUSCLE.** Tim: *"make calves
+**Last updated:** 2026-09-24 — **THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP.** Tim: *"the
+muslce groups section allows for a little more space. Could you make the details on the right side a
+little wider so that you don't need to click 'more details' … Keep the version the same on the phone
+to conserve space."* ✅ **Done and pushed.** At **≥1024px** the panel widens and the two derived
+columns default to showing, header and all; the button stays as *Fewer details*. 🛑 **The phone is
+byte-for-byte unchanged, and so is everything between 860 and 1023.**
+🚨 **THE FIRST VERSION WIDENED AT 860 AND THE MEASUREMENT IS THE ONLY REASON IT DID NOT SHIP**: at an
+880px window that put the figure at **298px wide against a 320px panel**, exercise column on its
+4.5em floor. **Rule 3's corollary — content does not shrink because you asked it a question** — so
+the width and the columns now arrive together. ⚠️ **The step is real**: 501 → 422 across the
+breakpoint, still bigger than at any narrower width.
+🔒 **`sourceColumns` is `false | true | null`** — `null` = nobody has chosen, so the layout answers —
+and **an explicit tap still wins**. The toggle reads the RESOLVED state, or the first tap on a laptop
+does nothing. 🚨 **The breakpoint lives in TWO files and `tests/a11y.test.mjs` fails if they drift.**
+🚩 **AND IT FOUND A TEST PASSING FOR THE WRONG REASON**: a block tapped the toggle twice and restored
+`false`, not *unset*, so every later block was testing an explicit "no" while believing it tested the
+default. `resetPanelViewState()` is the fix, test-only.
+✅ **23 suites green, 6,315 assertions.** ✅ **Chrome at 360/390/880/1023/1024/1280, zero overflow.**
+**Details: `docs/history.md` 2026-09-24.**
+
+**2026-09-23** — **CALVES AND NECK RANK LIKE EVERY OTHER MUSCLE.** Tim: *"make calves
 and neck join the muscle group rankings just like all the other muscles. Just do it no matter what.
 I know the research isn't great, but do whatever you can to make it work with what you have."*
 ✅ **Done and pushed. Rows 11 and 12 of the table below are CLOSED.**
@@ -85,41 +105,19 @@ names, exact field names) before any agent started**, so four writers on four fi
 ⚠️ **Two agents shared a scratch ROOT and one overwrote the other's probe** — "your own scratch
 directory" was not specific enough; name the path in the brief.
 
-🆕 **THREE COLUMNS COMPACT, FIVE BEHIND A "More details" BUTTON, ONE COLOUR EACH.** The extras are
-that contribution's **own estimated 1RM** and its **share of the final number** (`share`, new in
-`muscle-evidence.js`, built from the **identical expression the blend uses** — one array read twice,
-so the printed number cannot drift from the one that decided the answer).
-🚨 **HIS OWN EXAMPLE DOES NOT COME OUT WHERE HE EXPECTED, AND THAT IS THE FINDING.** 130/140/155
-blend to **133.9**, not 138, because the shares are **67/29/4 %** — the blend leans on the key lift
-at low reps and a 12-rep machine set is worth 4 %. **The answer sits near the LOWEST reading.**
-Without the column that reads as a bug; with it, correctly. 🛑 **NOT BUILT**: `robustAggregate()`
-winsorises, so a contribution outside ±25 % of the median stops multiplying out (152.7 by hand vs
-150.8 shown). Flagged; he said two extra numbers only.
-🛑 **THE BUTTON IS NOT `settings.moreDetails`** — that is the 2026-08-25 percentile decision; this is
-local module state, and an assertion pins that tapping it does not turn the percentile on.
-⚠️ **Headed "Influence", not "Confidence"** — the panel already has a confidence line measuring
-something else. ⚠️ **No header row compact**: the panel went **31 → 30 words** against its 40 cap
-despite gaining a button, because "from"/"and"/the commas went.
-🎨 **`--msrc-1..5`, worst contrast 5.01:1** over four palettes × two themes × four surfaces, **one
-set, no palette overrides** — the clean answer to `.load-badge.per-side` rather than the avoidance.
-Three validator FAILs were each answered with a measurement; **no five-colour set can clear
-all-pairs CVD**, which is why colour is not the only cue. ✅ **Pinned by `tests/a11y.test.mjs`**,
-which could not see them: a feature-local `:root` block is invisible to its walker.
-⚠️ **Both numbers are PUBLISHED** — a friend's panel is the same `detail()`, and neither is
-derivable from what already travelled. ✅ **No rules change** (`hasOnly` pins top-level keys only,
-verified); 💷 **+868 bytes.** 🛑 **A friend's panel with nothing behind it offers no button.**
-✅ **5,731 assertions, all 22 suites green.** ⚠️ **Driven in Chrome against the real demo year** at
-360/390/880/1280, both themes: columns align exactly, phone fits five, the ≥860px side column
-scrolls inside its own box. 🚨 **§0.6 gained a trap**: a hash-only navigation does not re-boot the
-app, so a flag read at boot never takes — 16 combinations reported "no region" and it read as a
-broken feature. **Details: `docs/history.md` 2026-09-21 second pass.**
+⚠️ **THE REST COLLAPSED 2026-09-24** (§0.3). **The "from:" block became a five-column table** —
+three compact, two behind a button, one colour each. 🔒 **The durable halves live in
+`docs/state.md`'s Muscles row**: the button is NOT `settings.moreDetails`, the fifth column is headed
+**Influence** rather than Confidence because the panel already has a confidence line, and both new
+numbers are **published** so a friend's panel matches the owner's. 🚨 **The finding worth not
+re-deriving**: contributions of 130/140/155 blend to **133.9**, not 138, because the shares are
+67/29/4 % — the answer sits near the LOWEST reading, and without the column that reads as a bug.
+🛑 **Still not built**: `robustAggregate()` winsorises, so the columns stop multiplying out where a
+contribution sits outside ±25 % of the median (152.7 by hand vs 150.8 shown) — he said two extra
+numbers only. **Full write-up: `docs/history.md` 2026-09-21 second pass.**
 
-🚩 **TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE — see the twelve-row table below (rows 11
-and 12).** His calves panel contradicted itself; the cause is the **D5 rep gate returning before the
-blocked-work bookkeeping**, so a set over 15 reps leaves no trace at all and the panel prints Neck's
-sentence. **All twelve rankable muscles can do this.** And **the app asserts in four places that no
-published neck standards exist — they do**, but the women's half is unusable. Plan:
-`docs/calf-neck-ranking-plan.md`.
+✅ ~~**TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE**~~ **BOTH BUILT ON 2026-09-23** — the
+calves rep gate and the neck standards. Rows 11 and 12 below carry what shipped.
 
 **2026-09-21 (first pass)** — **the muscle panel was naming a set nobody had done.** One
 instruction, after a catch-up: *"it still says 85x6 instead of 85x12 like we talked about on the

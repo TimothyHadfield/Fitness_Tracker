@@ -1326,6 +1326,16 @@ leftover space, not the opposite."*
 The line chart is **measured, not fixed**: `fillChart()` reads the container's real pixel size and
 draws at exactly that, with a `ResizeObserver`. Gridline and date-label density scale with size.
 
+🆕 **AND IT DECIDED A BREAKPOINT ON 2026-09-24, WHICH IS THE CLEAREST WORKED EXAMPLE OF IT.** Tim
+asked for the muscle panel's extra columns to show without a click on a laptop. Widening the panel at
+the 860px split — the obvious implementation — was **measured** at an 880px window and put the figure
+at **298px wide against a 320px panel**, with the exercise column on its 4.5em floor. Five columns
+bought by crushing the body is exactly the trade this corollary refuses, so the extra width and the
+extra columns now arrive together at **1024px** and nothing changes between 860 and 1023.
+⚠️ **The general form: when a layout change makes the content pay, the answer is usually a different
+BREAKPOINT rather than a different ratio** — and only a browser can tell you which, since jsdom has
+no layout and the numbers above are the whole argument.
+
 **Corollary — content must not shrink because you asked it a question.** Tapping a muscle used to
 open the detail *below* the body map, which pushed the figures up and shrank them. On ≥ 860px the
 panel is now a side column instead, so the body is the same size selected or not. Measured at 960px

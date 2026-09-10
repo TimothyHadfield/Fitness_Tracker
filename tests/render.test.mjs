@@ -517,6 +517,12 @@ ok(!panel.querySelector('.msrc-est') && !panel.querySelector('.msrc-share'),
   ok(!panel.querySelector('.msrc-head'),
      '⚠️ and it closes again — the vacuity guard for the four assertions above, which a button '
      + 'that only ever opened would satisfy');
+  /* 🚨 AND THE STATE GOES BACK TO *UNSET*, NOT TO `false` — 2026-09-24. The two clicks above
+   * leave an explicit choice behind, and since the columns' default now follows the viewport
+   * width, an explicit choice is precisely what suppresses it. Without this line the
+   * width-default block at the end of this file passed its phone assertion for the wrong
+   * reason: not "narrow, so compact" but "somebody up here already said no". */
+  (await import(BASE + 'views-muscles.js')).resetPanelViewState();
 }
 // One benchmark in this fixture, so one source line — the multi-source case is
 // driven with three real chest lifts further down.
@@ -11460,6 +11466,109 @@ ok(!data.querySelector('.rep-target'),
      '🛑 so the new wording did not simply replace the old one everywhere, which is the failure a '
      + 'one-sided fixture could never have caught');
 
+  await store.clearAll();
+}
+
+/* ================= 🚨 THE PANEL'S COLUMNS FOLLOW THE WIDTH — 2026-09-24 =========
+ *
+ * Tim: *"On the laptop/computer, the muslce groups section allows for a little
+ * more space. Could you make the details on the right side a little wider so
+ * that you don't need to click 'more details' to see the other things? Keep the
+ * version the same on the phone to conserve space."*
+ *
+ * ⚠️ jsdom HAS NO LAYOUT AND REPORTS `matches: false` FOR EVERY QUERY, so the
+ * default here IS the phone case — which is exactly the half he asked to keep,
+ * and is why the wide half has to be driven with `matchMedia` STUBBED rather
+ * than assumed. §0.6's rule in a new costume: jsdom pins the structure, only a
+ * browser can tell you what a width did. The pixels are measured in Chrome and
+ * written down in `docs/history.md` 2026-09-24. */
+{
+  await store.clearAll();
+  /* Back to "nobody has chosen", which is the state under test. Cheap insurance:
+   * any future block that taps the button would otherwise silently disarm this
+   * whole section, which is exactly what had already happened once. */
+  (await import(BASE + 'views-muscles.js')).resetPanelViewState();
+  /* ⚠️ THREE DIFFERENT CHEST LIFTS, NOT THREE SESSIONS OF ONE. The derived
+   * columns are an estimate and a SHARE OF THE BLEND, and a muscle with one
+   * contributor has no blend to take a share of — `canShowDerived` is false and
+   * the columns correctly never appear however wide the screen is. A one-exercise
+   * fixture passes whichever way the width code is written, which is §0.21's rule
+   * about giving the fixture the case that can fail. */
+  const lifts = ['Barbell Bench Press', 'Incline Barbell Bench Press', 'Dumbbell Bench Press'];
+  for (const [i, name] of lifts.entries()) {
+    const ex = byName(name);
+    await store.saveSession({
+      workoutName: 'Chest', date: `2026-08-2${i + 1}`, startedAt: `2026-08-2${i + 1}T10:00:00.000Z`,
+      entries: [{ exerciseId: ex.id, exerciseName: ex.name,
+        sets: [{ weight: 150 + i * 10, reps: 5 }, { weight: 150 + i * 10, reps: 5 }] }],
+    });
+  }
+
+  /* ⚠️ CLICKS ONLY IF IT NEEDS TO, and that is not defensiveness — `selected` is
+   * module state that survives a re-mount, so the second call arrives with Chest
+   * ALREADY open and a second tap on the same muscle deselects it. The first
+   * version did exactly that and the panel it then asserted against did not
+   * exist. Ask the screen what it is showing rather than assuming a fresh one. */
+  const openChest = async () => {
+    const pane = await mount(GraphView());
+    const seg = [...pane.querySelectorAll('.seg')].find((b) => b.textContent === 'Muscles');
+    if (seg) seg.click();
+    await settle();
+    if (!pane.querySelector('.muscle-sources')) {
+      const chest = [...pane.querySelectorAll('.body-region')]
+        .find((r) => (r.getAttribute('aria-label') || '').startsWith('Chest'));
+      chest.dispatchEvent(new pane.ownerDocument.defaultView.Event('click', { bubbles: true }));
+      await settle();
+    }
+    return pane;
+  };
+
+  const narrow = await openChest();
+  const tblN = narrow.querySelector('.muscle-sources');
+  ok(tblN && !tblN.classList.contains('is-more'),
+     '🚨 on a phone the table is still the compact three columns — the half he asked to KEEP');
+  ok(narrow.querySelector('.msrc-toggle')
+     && /More details/.test(narrow.querySelector('.msrc-toggle').textContent),
+     'and the button still offers the working, unchanged');
+  ok(!tblN.querySelector('.msrc-est') && !tblN.querySelector('.msrc-share'),
+     '⚠️ and the derived cells are ABSENT rather than hidden — `textContent` walks hidden nodes, '
+     + 'so a CSS-only version would have pushed two columns of numbers into the 40-word cap');
+
+  /* Now the laptop, with the query stubbed to match. ⚠️ Restored in a `finally`:
+   * a leaked stub would silently flip every later block in this file, and this
+   * one runs last precisely so it cannot. */
+  const win = narrow.ownerDocument.defaultView;
+  const realMM = win.matchMedia;
+  const { WIDE_PANEL_QUERY } = await import(BASE + 'views-muscles.js');
+  try {
+    win.matchMedia = (q) => ({
+      matches: q === WIDE_PANEL_QUERY, media: q,
+      addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {},
+    });
+    const wide = await openChest();
+    const tblW = wide.querySelector('.muscle-sources');
+    ok(tblW && tblW.classList.contains('is-more'),
+       '🚨 and on a laptop the five columns are there WITHOUT a click, which is the whole ask');
+    ok(Boolean(tblW.querySelector('.msrc-est')) && Boolean(tblW.querySelector('.msrc-share')),
+       'both derived columns render');
+    ok(Boolean(wide.querySelector('.muscle-sources.is-more .msrc-head')),
+       'and the header row comes with them — "131 lbs" and "34%" do not say what they are');
+    const btn = wide.querySelector('.msrc-toggle');
+    ok(btn && /Fewer details/.test(btn.textContent),
+       'the button is still there and reads "Fewer details" — the reader can still collapse it');
+
+    /* 🚨 THE FIRST TAP MUST DO SOMETHING. The state is a THIRD value — null, meaning
+     * "the layout is deciding" — and `!null` is `true`, so a toggle written against
+     * the raw flag would have turned the columns ON while they were already on and
+     * the button would have visibly done nothing. */
+    btn.click();
+    await settle();
+    ok(!wide.querySelector('.muscle-sources').classList.contains('is-more'),
+       '🚨 and the FIRST tap collapses it rather than doing nothing — the toggle reads the '
+       + 'resolved state, not the unset flag');
+  } finally {
+    win.matchMedia = realMM;
+  }
   await store.clearAll();
 }
 

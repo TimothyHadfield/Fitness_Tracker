@@ -693,5 +693,44 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      + 'workout name — `flex: none` there is how a row gets pushed off the side of a 360px screen');
 }
 
+/* ================= 🚨 ONE BREAKPOINT, TWO FILES — 2026-09-24 =================
+ *
+ * The muscle panel's derived columns default to SHOWING where there is room for
+ * them, and "where there is room" is a width. CSS owns the width; the table's
+ * cells are built in JS before there is any layout to measure. So the number
+ * exists twice — `WIDE_PANEL_QUERY` in `js/views-muscles.js` and a media query
+ * in `css/app.css` — and **this block is the only thing that makes that safe.**
+ *
+ * ⚠️ IT IS DELIBERATELY NOT THE 860px THE FIGURE AND ITS PANEL SPLIT AT. Widening
+ * the panel at 860 was tried and measured: at an 880px window the figure fell to
+ * 298px wide against a 320px panel, with the exercise column on its 4.5em floor.
+ * Rule 3's corollary — the body must not shrink because you asked it a question
+ * — is what ruled it out, so the width and the columns arrive together at 1024
+ * and nothing changes between 860 and 1023.
+ */
+{
+  const { WIDE_PANEL_QUERY } = await import('../js/views-muscles.js');
+  const px = /\(min-width:\s*(\d+)px\)/.exec(WIDE_PANEL_QUERY);
+  ok(Boolean(px), `the JS query is a min-width query (${WIDE_PANEL_QUERY})`);
+  const at = px && px[1];
+  ok(at === '1024',
+     `and it is 1024px — the width where the five-column table and a full-size figure both fit (${at})`);
+  /* The stylesheet must carry a media query at the SAME width that widens the
+     panel. Matched on the number and the selector together: a bare
+     "@media (min-width: 1024px)" somewhere else in the file would satisfy a
+     laxer test while the panel stayed 340px wide. */
+  const block = new RegExp(
+    `@media\\s*\\(min-width:\\s*${at}px\\)\\s*\\{[\\s\\S]{0,900}?\\.body-foot\\s*\\{[^}]*width:`);
+  ok(block.test(CSS),
+     `css/app.css widens .body-foot inside a (min-width: ${at}px) block — if this fails, the two `
+     + 'copies of the breakpoint have drifted and the columns will render in a box sized for three');
+  /* 🛑 AND THE 860px SPLIT MUST STILL BE 860. If somebody "tidies" the two
+     breakpoints into one, the measured failure above comes straight back. */
+  ok(/@media\s*\(min-width:\s*860px\)\s*\{[\s\S]{0,4000}?\.graph-host\.is-muscles\s*\{/.test(CSS)
+     || /\.graph-host\.is-muscles\s*\{[^}]*flex-direction:\s*row/.test(CSS),
+     '🛑 and the figure/panel split is still its own, narrower breakpoint — the two are different '
+     + 'questions and merging them is what the measurement above rejected');
+}
+
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');
 process.exit(fails ? 1 : 0);

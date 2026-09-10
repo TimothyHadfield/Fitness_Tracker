@@ -2862,3 +2862,34 @@ I also broke the project's own no-scripted-edits rule once, on a test file, and 
 endings back.
 
 All 23 suites green, 6,303 checks, driven in Chrome at phone and desktop widths.
+
+---
+
+## 2026-09-24 — the detail panel gets its five columns on a laptop
+
+**Tim:** *"On the laptop/computer, the muslce groups section allows for a little more space. Could
+you make the details on the right side a little wider so that you don't need to click 'more details'
+to see the other things? Keep the version the same on the phone to conserve space."*
+
+Done. On a laptop the two extra columns — the estimate each lift alone would give, and how much of
+the final number it bought — are just there, with their headings, no click. The button stays so you
+can still collapse them. The phone is exactly as it was.
+
+The interesting part is what the first attempt did. The obvious version widens the panel at the same
+860px where the panel moves beside the figure, and when I measured it at an 880px window the body
+had shrunk to 298px wide against a 320px panel — narrower than the panel next to it — with the
+exercise column squeezed so hard that "Barbell Bench Press" was wrapping inside 59 pixels. The rule
+this project already had for that is that content doesn't shrink because you asked it a question,
+and on that screen the body is the content. So the extra width and the extra columns now both start
+at 1024px instead, and nothing at all changes between 860 and 1023. Across the breakpoint the figure
+does step down once, 501px to 422px, to pay for the panel — still bigger than it is at any narrower
+window.
+
+One thing that fell out of it: a test in the suite had been passing for the wrong reason. A block
+taps that button twice to check it opens and closes, and its comment said it was putting the state
+back where the rest of the suite expected it — but two taps leave an explicit "no", not "nobody has
+chosen", and the whole file shares one copy of that state. It never mattered until the default
+started depending on the window width. Fixed, and the default is genuinely tested now.
+
+23 suites green, 6,315 checks, driven in Chrome at six widths with no sideways overflow at any of
+them.

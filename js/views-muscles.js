@@ -60,7 +60,68 @@ let selected = null;
  * `selected` already makes. A per-panel flag would be the alternative and it would forget the
  * choice every time a muscle is tapped, which is worse for the common case of one panel.
  */
-let sourceColumns = false;
+/* 🆕 2026-09-24 — `null` MEANS "NOT CHOSEN", AND IT IS A THIRD STATE RATHER THAN A SECOND
+ * DEFAULT. Tim, pointing at a laptop: *"the muslce groups section allows for a little more
+ * space. Could you make the details on the right side a little wider so that you don't need to
+ * click 'more details' to see the other things? Keep the version the same on the phone to
+ * conserve space."*
+ *
+ * So the answer to "are the derived columns showing" is now: **whatever the reader last said,
+ * and if they have not said anything, whatever the layout can afford.** `false` could not
+ * express that — it is a decision, and starting every desktop session with a decision the
+ * reader did not make is what forced the click he is complaining about.
+ *
+ * 🚨 AN EXPLICIT TAP STILL WINS, ON EITHER WIDTH. Tapping "Fewer details" on a laptop sticks
+ * for the session exactly as tapping "More details" on a phone does; the width only decides
+ * where somebody who has not touched it starts. A width check that overrode the reader would
+ * be the app arguing with them about their own screen. */
+let sourceColumns = null;
+
+/* 🚨 1024px, AND IT IS DELIBERATELY *NOT* THE 860px THE FIGURE AND ITS PANEL SPLIT AT. The
+ * first version used 860 and was measured rather than eyeballed, which is the only reason it
+ * did not ship: at an 880px window the figure fell to 298px wide against a 320px panel, with
+ * the exercise column on its 4.5em floor wrapping "Barbell Bench Press" inside 59px. **Buying
+ * five columns by crushing the body is what Rule 3's corollary forbids.** The extra width and
+ * the extra columns now arrive together, at the width that affords both; between 860 and 1023
+ * nothing changes at all.
+ *
+ * 🚨 THE STYLESHEET HOLDS THE SAME NUMBER, AND THE TWO COPIES ARE PINNED AGAINST EACH OTHER BY
+ * `tests/a11y.test.mjs` — it reads `css/app.css` and fails if this string and the media query
+ * stop agreeing. They have to be two copies: CSS cannot tell JS what it matched, and a
+ * `getBoundingClientRect()` here would be reading layout to answer a question the layout has
+ * not finished deciding. **The test is what makes the duplication safe.**
+ *
+ * ⚠️ READ AT DRAW TIME, NOT LATCHED AT BOOT, so opening the app narrow and widening the window
+ * gets the wide default on the next panel rather than the boot-time one. There is deliberately
+ * no resize listener: the panel would have to redraw under the reader's finger to use it, and
+ * a table that reshapes while being read is worse than one that waits for the next tap. */
+export const WIDE_PANEL_QUERY = '(min-width: 1024px)';
+const panelHasRoomForColumns = () => Boolean(
+  typeof window !== 'undefined' && window.matchMedia
+  && window.matchMedia(WIDE_PANEL_QUERY).matches);
+
+/* ⚠️ jsdom REPORTS `matches: false` FOR EVERY QUERY, so `tests/render.test.mjs` sees the phone
+ * behaviour by default — which is correct, and is also why the wide case has to be asserted
+ * with `matchMedia` stubbed rather than assumed. §0.6's rule in a new costume: jsdom pins the
+ * structure and only a browser can tell you what a width did. */
+const derivedColumnsOn = () => (sourceColumns === null ? panelHasRoomForColumns() : sourceColumns);
+
+/* 🛑 TEST-ONLY, AND THE REASON IT HAS TO EXIST IS THE THIRD STATE ITSELF.
+ *
+ * `null` means "nobody has chosen yet", and it is the state the width default hangs off — so it
+ * is also the state worth testing. But it is reachable exactly once per page load, and a test
+ * suite shares ONE module instance across every block in the file: the moment any block taps
+ * the button, `sourceColumns` becomes a real boolean and every block after it is testing an
+ * explicit choice while believing it is testing the default.
+ *
+ * ⚠️ THAT ALREADY HAPPENED. `tests/render.test.mjs` had a block that tapped the button twice and
+ * carried the comment *"module-level state: leave it where the rest of the suite expects it"* —
+ * which restored `false`, not `null`, and silently made the later default-state assertions pass
+ * for the wrong reason. This is what that comment actually wanted.
+ *
+ * 🛑 NOT FOR THE APP. Nothing in `js/` calls it and nothing should: in the running app the reset
+ * is a page load, which is exactly the lifetime this state is supposed to have. */
+export function resetPanelViewState() { sourceColumns = null; }
 
 /* Unique per built panel, so the toggle can point `aria-controls` at the block it opens —
  * the button sits AFTER the table it belongs to, so the relationship is not positional. */
@@ -1235,11 +1296,15 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
    * the same shape `draw()` uses inside `openCompareSheet()` above. */
   const sourceToggle = el('button', {
     class: 'msrc-toggle', type: 'button', 'aria-controls': sourceId,
-    onClick: () => { sourceColumns = !sourceColumns; drawSources(); },
+    // ⚠️ TOGGLES OFF WHAT IS ON SCREEN, not off `sourceColumns` — which may be `null`, meaning
+    // "the layout is deciding". `!null` is `true`, so the first tap on a laptop would have
+    // turned the columns ON while they were already showing, and the button would have done
+    // visibly nothing. Reading the resolved state is what makes the first tap always work.
+    onClick: () => { sourceColumns = !derivedColumnsOn(); drawSources(); },
   });
 
   function drawSources() {
-    const on = sourceColumns && canShowDerived;
+    const on = derivedColumnsOn() && canShowDerived;
     sources.className = 'muscle-sources' + (on ? ' is-more' : '');
 
     /* 🚨 NO HEADER ROW IN THE COMPACT STATE, AND THAT IS A MEASURED DECISION RATHER THAN A
