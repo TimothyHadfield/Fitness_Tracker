@@ -4,17 +4,23 @@
 > DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
 > here** — the environment traps, the working agreement, the architecture, the binding design rules
 > and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
-> **503 KB together as of 2026-09-22** (153 + 211 + 139), and none of it is optional. ⚠️ Each file
+> **531 KB together as of 2026-09-25** (159 + 216 + 156), and none of it is optional. ⚠️ Each file
 > has a byte budget with a test behind it — see §0.3. 🚩 **The handbook is the tight one now** (211 of
 > 220) — this file bought itself room today and that one paid some of it.
 > 🔄 ~~**THIS FILE LIVES AT ITS CEILING**~~ **AND IT DID FOR SIX SESSIONS, UNTIL 2026-09-22.**
 > 2026-09-21 opened it with **one byte free** and tripped the budget test **five times** while writing
-> one day's summary. ~~🆕 **There are 7 KB free now, on purpose**~~ 🆕 **AND 2026-09-23 SPENT MOST OF
-> IT — ABOUT 2.5 KB FREE.** That session collapsed 2026-09-22 to a pointer on its way IN and still
-> ended tighter than it started, which is simply what a build session costs this file. 🔒 **So the
-> lesson is the ORDER: collapse before you write, not after.** The two 2026-09-21 blocks and the
-> 2026-09-18-to-20 group are the obvious next candidates, and every durable half of them already
-> sits in the handbook, `docs/state.md` or an Open work row.
+> one day's summary. ~~🆕 **There are 7 KB free now, on purpose**~~ 🆕 **AND THREE BUILD SESSIONS
+> SPENT IT: ABOUT 2 KB FREE AS OF 2026-09-25.** 🔒 **The lesson is the ORDER — collapse before you
+> write, not after** — and 2026-09-25 is the worked example: it collapsed **four** dated blocks
+> (09-21, -22, -23 and the 09-16-to-20 group) and still only got back to 2 KB.
+> 🚨 **AND ONE OF THOSE BLOCKS HAD GONE FALSE, WHICH IS THE REAL ARGUMENT FOR COLLAPSING.** The
+> *"WHERE 2026-09-21 STOPPED"* note said the estimate was still a truncated reading of the set — true
+> when written, removed by the 09-25 fix, and left sitting at the top of the file telling a fresh
+> session something untrue. **A "what to expect" block outlives the thing it describes.**
+> ⚠️ **NEXT CANDIDATES, and neither needs new prose**: the sub-agent entry under Standing
+> instructions has grown six dated layers and is METHOD, so it belongs in the handbook (which has
+> ~4 KB free); and the 💷 running-costs block is a reference table that `docs/running-costs.html`
+> already holds in full.
 > 🛑 **The fix is never to raise the number**: the failure message names what to move and where.
 > ⚠️ **The best collapses put a durable rule where it is actually looked for** — three have gone into
 > `docs/handbook.md` rather than being deleted, most recently §0.21.
@@ -88,30 +94,20 @@ while believing they tested the default; `resetPanelViewState()` is the fix, tes
 and neck join the muscle group rankings just like all the other muscles. Just do it no matter what.
 I know the research isn't great, but do whatever you can to make it work with what you have."*
 ✅ **Done and pushed. Rows 11 and 12 of the table below are CLOSED.**
-🚨 **TWO DIFFERENT PROBLEMS.** **Calves always had a standard** — the evidence gate was throwing the
-sets away *and leaving no trace*, so the panel printed Neck's sentence. **The map now reads to
-`MAX_MAP_REPS` (25)**, and 🔒 **that is a SECOND ceiling, not a raised one**: `MAX_EVIDENCE_REPS` is
-still 15 and `isRankableSet()` is byte-identical, so charts, personal bests, progression, compare and
-`setE1rm()` are untouched. **The map blends at 1/σ² and can PRICE a long set; a screen printing one
-number has nothing to pay with.** A 25-rep set carries a tenth of a 15-rep set's weight — measured by
-`js/rep-sigma.js` (now 25 rows, 1–15 unchanged to the last digit), not chosen. 🛑 **25 not 30**: at
-30 σ passes `SIGMA_MAX` and every long set would price identically. Above 25 the refusal finally
-**leaves a note**, on every muscle the exercise contributes to.
-🚨 **AND NECK HAD A PUBLISHED PAGE ALL ALONG** — four places here called its absence permanent.
-Men's row as published (2,671 men); 🛑 **the women's row is DERIVED and says so on screen**, because
-their published women's table is 55 people and asks a *heavier* woman for *less* in every column.
-Female = male × **0.606**, the sex ratio Catenaccio 2017 measured on 157 adults. **Only the RATIO
-crosses** — newtons of isometric push are not pounds on a curl, and a ratio cancels what the absolute
-numbers cannot (§15's near-miss). `standardQuality` **0.4**, below Core's 0.6.
-🚩 **THE KNOWN COST, SHIPPED BECAUSE HE SAID TO: THE NECK READING IS FLAT** — Elite is 38.8×
-Beginner, so 60 % more weight buys twelve percentile points and almost everyone reads near
-Intermediate. **He was told before authorising it.**
-🚨 **THE BRIEF I WROTE HAD THE EXTENSION RATIO UPSIDE DOWN** (0.94 for 1.06, a 12.8 % flattery); the
-agent refused it, derived it from the file's own convention and reported the disagreement.
-✅ **23 suites green, 6,303 assertions.** ✅ **Driven in Chrome at 390 and 880.**
-🔄 **Golden re-baselined**: Neck is a 13th row (37.1477 lb, **conf 0.1803** — the lowest ever here),
-and Calves/Quads/Shoulders gained observations with **every estimate identical to four places**,
-which is the guard working. **Details: `docs/history.md` 2026-09-23.**
+⚠️ **COLLAPSED 2026-09-25** (§0.3) — **the durable halves are `docs/state.md`'s Muscles row and
+`docs/research.md` §17**, which is the neck pull. What a fresh session must not re-derive:
+🔒 **THE MAP HAS ITS OWN REP CEILING, `MAX_MAP_REPS` (25), AND IT IS A SECOND CEILING RATHER THAN A
+RAISED ONE** — `MAX_EVIDENCE_REPS` is still 15 everywhere a single number is printed, because the map
+blends at 1/σ² and can PRICE a long set while a screen has nothing to pay with. 🛑 **25 not 30**: at
+30 σ passes `SIGMA_MAX` and every long set would price identically.
+🛑 **THE NECK'S WOMEN'S ROW IS DERIVED — male × 0.606 — AND SAYS SO ON EVERY RATING**, because the
+published women's table is 55 people and asks a heavier woman for less. **Only the RATIO crosses**
+between a dynamometer and a plate; the absolute newtons never may (§15's near-miss).
+🚩 **The neck reading is FLAT and he accepted that knowingly** — Elite is 38.8× Beginner.
+🚨 **AND A LESSON ABOUT BRIEFS: THE ONE I WROTE HAD THE EXTENSION RATIO UPSIDE DOWN** (0.94 for 1.06,
+a 12.8 % flattery). The agent refused the number, derived it from the file's own convention and
+reported the disagreement — which is what the "read the what-I-decided-NOT-to-do section" rule buys.
+**Details: `docs/history.md` 2026-09-23.**
 
 **2026-09-22 — COLLAPSED 2026-09-23** (§0.3). **The muscle map got a female figure**, picked on the
 profile's sex. 🔒 **The durable halves are in `docs/state.md`'s Muscles row and the handbook's
@@ -200,8 +196,8 @@ is where this rule lives — this is the pointer, not a second copy.
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Everything below is committed and pushed and
 the working tree is clean **outside `Fitness_Research/`** — 🛑 **another agent's folder; stay out, and
 never `git add -A`** (first entry under **Standing instructions**).
-**All TWENTY-THREE no-Chrome suites are green — 6,303 assertions** (recounted 2026-09-23 by running
-every one), `data-layer` **2,910**, `render` **1,630**. ⚠️ **FOUR of those suites are a PARALLEL
+**All TWENTY-THREE no-Chrome suites are green — 6,318 assertions** (recounted 2026-09-25 by running
+every one), `data-layer` **2,913**, `render` **1,638**. ⚠️ **FOUR of those suites are a PARALLEL
 AGENT'S, not this chat's** — `exercise-evidence`, `template-lint`, `figure-note` and now
 `research-pane`, and most of the jump from 5,731 is theirs. See the "Everything at once" row.
 
@@ -224,61 +220,46 @@ closed on 2026-09-17**, along with 26's; **33 and 34 are 2026-09-18 and are fini
 2026-09-19 and is finished; 36 is 2026-09-20 and is finished.** Every other item is either Tim's,
 pinned, or parked.
 
-🆕 **WHERE 2026-09-23 STOPPED.** One ask, built whole and pushed. **Nothing is half-done.** Rows 11
-and 12 below are CLOSED, so **ten** rows are waiting on him, not twelve.
-🚩 **THREE THINGS TO EXPECT A REPORT ABOUT, and all three were stated to him at the time.**
-(1) **The neck reads near Intermediate for almost everybody** — that is the page's 38.8× spread, it
-is priced into a 0.4 `standardQuality`, and it is the cost he accepted. (2) **His calves will read
-HIGHER than before** if he trains them at 16–25 reps, because those sets used to be discarded — the
-number is priced, not promoted, and the confidence falls as the reps rise. (3) **A muscle trained
-ONLY above 25 reps still ranks nothing**; it now says so instead of printing Neck's sentence.
-🚩 **AND TWO THINGS FOUND ON THE WAY THAT ARE NOT BUILT.** The **demo has no hatched muscle left**
-(its Neck Curl was the one, and Neck ranks now), so that state is unreachable in the account used to
-audit every screen — fixing it means a new demo exercise, which re-rolls the seeded year (Open work
-25). And with **nothing else rated at all**, a lifter whose only work is long sets sees *"Nothing to
-rank yet"* and no figure — the hatch needs one rated muscle beside it to exist on. Pre-existing, and
-not what he reported.
-⚠️ **A NECK PANEL IS 70 WORDS AGAINST THE 40-WORD CAP**, 29 of them the caveat. Core already does
-this and the cap's fixture is a clean rating, so it is not a regression — but a third caveat-carrying
-muscle would make "capped at 40" true of the test and false of the product.
+🆕 **WHERE 2026-09-25 STOPPED.** Two asks in one message, both built whole and pushed. **Nothing is
+half-done and nothing is authorised.** ⚠️ **THE 09-21, -22 AND -23 "WHERE IT STOPPED" BLOCKS WERE
+COLLAPSED INTO THIS ONE**, and 🚨 **the 09-21 one had gone FALSE**: it said the estimate was still the
+truncated reading of the set, which is exactly what 09-25 removed. **A "what to expect" block outlives
+the thing it describes and then misleads** — collapse them forward, do not stack them.
 
-**WHERE 2026-09-22 STOPPED.** One ask, built whole and pushed. **Nothing half-done and nothing new
-was waiting on Tim.** 🚩 **What to expect a report about**: the
-female figure **fills the whole shin** where the male's colours cover only the muscle bellies, and
-its **hands sit further from the body**, so the two maps do not look like the same drawing recoloured
-— that is the art, not the pipeline. ⚠️ **And the Muscles tab letterboxes the two figures slightly
-differently**, because `.body-wrap` is a fixed 57 % of the pane and does not use `bodyAspect()` —
-pre-existing, not new, and changing it means touching a screen he did not point at.
-🛑 **The female source PNGs are git-ignored working files at the repo root**, exactly like
-`Human_Muscle_Groups.jpg`: **the art cannot be rebuilt without them.**
+🚩 **WHAT TO EXPECT A REPORT ABOUT, and every one was stated to him at the time.**
+- **Every rating in the app went UP a few percent on 2026-09-25** (calves +14 %, neck +25 %) and
+  **Glutes, Quads and Back went DOWN** (−6.2 / −3.4 / −2.7 %). The falls are a fabrication stopping,
+  not a loss: an old heavy set used to wear a recent set's date and read as fresh.
+- **The neck reads near Intermediate for almost everybody** — the page's Elite is 38.8× its Beginner.
+  Priced into `standardQuality` 0.4, and the cost he accepted knowingly.
+- **His converted numbers are still low at the light end** — that is Open work **13**, the
+  level-blind ratio, diagnosed with his own data and deliberately not built.
+- **The female figure** fills the whole shin where the male's colours cover only the bellies, and its
+  hands sit further from the body — that is the art, not the pipeline.
 
-🆕 **WHERE 2026-09-21 STOPPED.** One reported bug, fixed whole and pushed. 🚩 **What to expect a
-report about**: the *"from …"* line on a muscle now names the heavier, longer set (85 × 12) while the
-**estimate is still the truncated reading** of it (85 × 6), so anyone recomputing 85 × 12 by hand
-gets a bigger number than the panel shows. **That is the rule working** — the truncation is the
-conservative half of what the set proves — and it is the obvious next thing he might ask to see
-stated on screen. 🛑 **NOT stated, and not offered**: it puts a new sentence on a screen, which is
-his category, and the panel has a 40-word cap.
-🚩 **NOT DRIVEN IN CHROME**, and the one screen that would be worth looking at is his own Back panel.
+🚩 **AND THREE THINGS FOUND ON THE WAY THAT ARE NOT BUILT.**
+- **The demo has no hatched muscle left** (its Neck Curl was the one, and Neck ranks now), so
+  "trained but unrankable" is unreachable in the account used to audit every screen. Fixing it needs
+  a new demo exercise, which re-rolls the seeded year — Open work 25, his call.
+- **With nothing else rated at all**, a lifter whose only work is long sets sees *"Nothing to rank
+  yet"* and no figure — the hatch needs one rated muscle beside it to exist on. Pre-existing.
+- **A neck panel is 70 words against the 40-word cap**, 29 of them the caveat. Core already does this
+  and the cap's fixture is a clean rating, so it is not a regression — but a third caveat-carrying
+  muscle would make "capped at 40" true of the test and false of the product.
+⚠️ **The Muscles tab letterboxes the two figures slightly differently** — `.body-wrap` is a fixed
+57 % of the pane on the phone and does not use `bodyAspect()`. Pre-existing; he has not pointed at it.
 
-🆕 **WHERE 2026-09-20 STOPPED — COLLAPSED 2026-09-22** (§0.3). All finished; rows 9 and 10 are what it
-added to Tim's list and neither is authorised. 🔒 **The method lesson, because it cost three wrong
-implementations**: the rating code has **two places that make the same weight-blind comparison**
-(`betterSameDay` per exercise-day, `seatCredit` at the seat) and **a rule enforced at one of them is
-not enforced** — every failure was caught by a COLUMN in the golden table or by the render suite,
-never by reading the code. ⚠️ **Most likely to read as a bug**: his copy of Nippard's PPL still has
-no percentages, because a preset copy is a snapshot and his predates the stamps — the app now SAYS so
-and offers no button, which is correct. 🚩 **2026-09-19's two undecided consequences are unchanged**
-and **row 8** carries both.
-
-🆕 **WHERE 2026-09-16 TO -18 STOPPED — COLLAPSED, 2026-09-21** (§0.3). All finished. 🚩 Still
-unanswered by him and carried by **row 7**: a targeted set is `prefilled`, so accepting the weight
-AND reps untouched drops it at save; and `targets` expresses only ONE of the four percentage kinds
-in his own programme. 🆕 **Open work 32** — the app never states its logging conventions where you
-log; **words on screens**. 🛑 **Not authorised**: the accessibility work (a deferral by name —
-⚠️ **do not offer it again**) and pointing the audit at a friend's screens. 🚩 **Expect a report
-about**: a friend's gender/age/friends appearing only after **their** app republishes, and the
-calendar not drawing the current month when the last recording is older than it — both deliberate.
+🆕 **WHERE 2026-09-16 TO -20 STOPPED — COLLAPSED AGAIN 2026-09-25** (§0.3). All finished; **rows 7, 8,
+9 and 10 carry everything still undecided** and none is authorised. 🔒 **The one method lesson worth
+keeping, because it cost three wrong implementations**: the rating code has **two places that make
+the same weight-blind comparison** (`betterSameDay` per exercise-day, `seatCredit` at the seat), and
+**a rule enforced at one of them is not enforced** — every failure was caught by a COLUMN in the
+golden table or by the render suite, never by reading the code. 🛑 **Not authorised**: the
+accessibility work (a deferral by name — ⚠️ **do not offer it again**) and pointing the audit at a
+friend's screens. 🚩 **Expect a report about**: his copy of Nippard's PPL having no percentages (a
+preset copy is a snapshot and his predates the stamps — the app says so and offers no button); a
+friend's gender/age/friends appearing only after **their** app republishes; and the calendar not
+drawing the current month when the last recording is older than it. **All three deliberate.**
 
 ## 2026-09-10 to 2026-09-15 — COLLAPSED TO ONE POINTER, 2026-09-19
 
@@ -428,7 +409,9 @@ fixed** (20).
 # 🟢 START HERE: NOTHING IS HALF-BUILT
 
 **Everything is committed and pushed, the working tree is clean, and every runnable suite was green
-at the end of 2026-09-17.** ✅ **The rules suite was run on 2026-09-16 — 221 assertions, 0 failures**
+at the end of 2026-09-25** (23 suites, 6,318 assertions). ⚠️ **`firestore.rules` has not changed since
+2026-09-16**, so the two paragraphs below are still the last word on it — nothing since has touched
+what is published or who may read it. ✅ **The rules suite was run on 2026-09-16 — 221 assertions, 0 failures**
 (emulator, §0.9), because `firestore.rules` changed with D32 and **the rules were deployed with the
 client rather than after it.** 🚨 **That order is not a preference**: `validProjection()` pins the
 document with `hasOnly`, so a client publishing a field the rules do not name has every publish
@@ -439,12 +422,14 @@ from what the emulator answers. `tools/live-check.mjs` (§0.16) published both d
 live project and had four negative controls refused on the wire, so the deploy provably landed.
 💷 **It also measured the read pattern: an unchanged sync bills ZERO document reads.**
 
-## 🛑 THE TWELVE THINGS WAITING ON TIM — 11 and 12 added 2026-09-21
+## 🛑 THE ELEVEN THINGS WAITING ON TIM — 11 and 12 CLOSED 2026-09-23, 13 added 2026-09-25
 
 **What is waiting is his, not yours** — read the standing rule at the top of this file before picking
-any of it up, and note that **five of these twelve put words on a screen**, which is the category he
-has reserved for himself. ⚠️ **Rows 11 and 12 came out of a question he asked** (*"What is happening
-here?"*), not out of an instruction to fix anything — both were diagnosed and deliberately left.
+any of it up, and note that **five of them put words on a screen**, which is the category he has
+reserved for himself. ⚠️ **The count in this heading has been wrong before** (it said EIGHT for weeks
+while the table grew), so it is stated as a count of OPEN rows and the closed ones keep their numbers
+— **11 and 12 are struck through in place, not deleted**, because the reasoning under them is why the
+built version looks the way it does.
 
 | | what | what it needs |
 |---|---|---|
@@ -460,6 +445,7 @@ here?"*), not out of an instruction to fix anything — both were diagnosed and 
 | 11 | ✅ ~~**THE 15-REP GATE THROWS SETS AWAY SILENTLY, ON EVERY MUSCLE**~~ **FIXED 2026-09-23, AND HE WENT FURTHER THAN THE NOTE** — the map reads to 25 reps now and prices what it admits, so a high-rep calf RANKS rather than merely explaining itself; above 25 the refusal leaves a note and the hatch says which refusal it was. 🚩 **ONE HALF OF THIS ROW IS STILL OPEN AND IT IS THE BUTTON**: a friend's panel still offers *"Benchmark Standing Calf Raise"* — the reader's own benchmark screen — on somebody else's body. Untouched, because it is a different bug that happened to be found beside this one. The original report, for the record: `strength-observations.js`'s D5 check returns **before** the blocked-work bookkeeping, so a set above 15 reps leaves no observation **and no record that anything was refused** — the panel then sees "no rating, nothing blocked" and prints the sentence written for Neck, on a muscle that has a published standard. 🚨 **Boundary is exactly 15**: 200 lb × 15 rates, × 16 does not. ⚠️ **Not a calves bug — all twelve rankable muscles**, and lateral raises at 15–20 are the commonest way anyone trains shoulders. There is a **second silent route** (a weighted lift logged at zero weight) and a **live bug beside it**: a friend's panel offers *"Benchmark Standing Calf Raise"*, the reader's own benchmark screen, on somebody else's body. ✅ **The fix is small and changes no number**: make the refusal leave a note, which fires a sentence the app already has. 🛑 ~~**Not built — he asked what was happening, not for a fix**~~ **BUILT 2026-09-23 on his instruction** | 🚩 **the friend-panel benchmark button is what is left** |
 | 12 | ✅ ~~**NECK: THE APP ASSERTS SOMETHING FALSE, AND THE FIX IS NOT THE OBVIOUS ONE**~~ **BUILT 2026-09-23, AND HE ANSWERED THE SEXED-AVAILABILITY QUESTION BY REFUSING IT** — *"just do it no matter what"*, so Neck ranks for both sexes with the women's anchors derived from a measured ratio and labelled as derived on every rating, rather than women getting a hatch where men get a colour. 🚩 **The flatness this row warned about is real, measured and shipped**: p2.6 at the Beginner anchor, twelve percentile points for sixty percent more weight. The original assessment, for the record: Four places say no published neck norms exist and never will; **Strength Level publishes neck curl and neck extension**, unlinked from its index. 🛑 **Not shippable as found**: the female sample is 55 and 16 people, the female table **falls** with bodyweight in every column, and Elite ÷ Beginner is 38.8× against the bench's 2.7×. Every standards entry is a men's-and-women's pair, so shipping means inventing the women's half or giving women a hatch where men get a colour. ✅ **What is free and worth doing: correct the four false sentences and file the research**, so the next session does not inherit a wrong permanent fact. ⚠️ **And `direction.md` §3.1 changed this question** — under "something is always better than nothing" a labelled rough rating is allowed where it was once refused. `docs/calf-neck-ranking-plan.md`, and `docs/research.md` §17 is the pull that shipped | ✅ **answered and built** |
 | 10 | 🆕 **ONE SET PER EXERCISE, TOP THREE — the rating still rests on three sets** (2026-09-20). His whole Back number comes from three of the dozens he has logged; everything else only moves the confidence label. 🚨 **This is the biggest remaining accuracy lever in the app** and it is what σ_rep and dominance were both working around. Blending every set at its own precision is the real fix, and inverse-variance weighting is already the machinery for it. 🛑 **NOT STARTED**, and it moves every rating in the app | **his go-ahead** — it is a re-baseline of the golden table and a change to what every number means |
+| 13 | 🆕 **THE CONVERSION RATIOS ARE LEVEL-BLIND, AND IT IS THE BIGGEST REMAINING ERROR IN A PRINTED NUMBER** (2026-09-25, out of his machine shoulder press report). A ratio is ONE median applied to everybody, and the published ratio drifts hard with strength: machine shoulder press over overhead press runs **0.89 beginner · 1.08 novice · 1.23 intermediate · 1.35 advanced · 1.44 elite**. The app uses 1.23 for all of them. 🚨 **THE SELF-CONTRADICTION IS THE PROOF, ON HIS OWN DATA**: his 55 × 9 is an 81 lb machine max, which is **above** Strength Level's beginner machine mark (67) — and the 66 lb overhead press it converts to is **below** their beginner overhead press mark (75). Same lifter, same source, opposite verdicts. At the beginner-end ratio it reads **91**. ✅ **THE DATA IS ALREADY IN THE REPO AND NEEDS NO NEW RESEARCH** — `tools/strength-level-data.mjs` holds full five-anchor tables for **115 exercises, both sexes**. ✅ **The shape is PERCENTILE MATCHING**: place the reading on its own exercise's distribution, read the key lift's weight at the same percentile. No iteration, and it largely removes the drift `js/ratio-sigma.js` currently carries as uncertainty. 🛑 **NOT BUILT, deliberately**: it is a second re-baseline of every number in the app, and two in one commit means neither can be attributed — which is the whole reason the golden table carries its moves by name. `docs/history.md` 2026-09-25 | **his go-ahead** — a re-baseline, and it changes what every converted number means |
 
 ⚠️ **AND THE ONE THING THAT MOVED USER-VISIBLE NUMBERS ON 2026-09-15**: the ratio pass and the
 precision blend moved every muscle on the map by **−2.3 % to +2.8 %**, with every confidence
@@ -1221,7 +1207,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 🆕 **6,303 across the TWENTY-THREE that need no Chrome, re-counted 2026-09-23 by running every one.** Per suite as of 2026-09-23: data-layer 2,910 · render 1,630 · goals 278 · social 217 · bodyweight 187 · a11y 153 · template-lint 96 · share-image 91 · optimal 76 · strength-estimate 74 · volume-map 64 · compare 63 · research-pane 59 · demo 58 · rep-decrement 57 · core-rating 47 · year-grid 45 · routine 42 · estimate 37 · qr 33 · exercise-evidence 33 · figure-note 27 · feedback 26. *(The 2026-09-22 breakdown, kept only for the shape of the growth:)* ⚠️ **`research-pane` (59) is a suite this chat has never opened** — the parallel agent's, like `exercise-evidence`, `template-lint` and `figure-note`; and the jump from 5,731 is theirs as much as this session's. Per suite: data-layer 2,861 · render 1,620 · goals 278 · social 217 · bodyweight 187 · a11y 153 · template-lint 96 · share-image 91 · optimal 76 · volume-map 64 · compare 63 · demo 58 · rep-decrement 57 · year-grid 45 · core-rating 44 · routine 42 · estimate 37 · exercise-evidence 33 · qr 33 · figure-note 27 · feedback 26 · strength-estimate 72. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | 🆕 **6,318 across the TWENTY-THREE that need no Chrome, re-counted 2026-09-25 by running every one.** Per suite: data-layer 2,913 · render 1,638 · goals 278 · social 217 · bodyweight 187 · a11y 157 · template-lint 96 · share-image 91 · optimal 76 · strength-estimate 74 · volume-map 64 · compare 63 · research-pane 59 · demo 58 · rep-decrement 57 · core-rating 47 · year-grid 45 · routine 42 · estimate 37 · qr 33 · exercise-evidence 33 · figure-note 27 · feedback 26. ⚠️ **`research-pane` (59) is a suite this chat has never opened** — the parallel agent's, like `exercise-evidence`, `template-lint` and `figure-note`. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | 🆕 **Fatigue tests** | `node tests/rep-decrement.test.mjs` — **57 assertions** (2026-09-14), **no dependencies**. The per-set rep decrement that reaches the runner's caption. 🚨 **The two load-bearing ones are the invariants, and both are mutation-checked with the mutation printed in the source first**: every multiplier is ≤ 1 (so a wrong constant can only make the caption easier to beat), and a lifter whose reps RISE across a run is **clamped** rather than handed a bigger number. Also: a weight change ends a run, a prefilled set is not a set, drops/supersets/benchmarks contribute nothing (`group != null`, because a truthy test let the first superset of every workout through), 90 s ties to the SHORTER rest column, and the caption never prints "maybe 0". ⚠️ **What it does NOT cover is the wiring** — no mounted screen asserts the multiplier actually reaches the caption; see START HERE |
 | **Data tests** | `node tests/data-layer.test.mjs` — **2,861 assertions** (2026-09-22), **no dependencies**. 🆕 **Since 2026-09-22 it pins THE TWO BODY FIGURES against each other** — the same groups on the same views, a traced path and a silhouette for each, both boxes 1527 tall, and `bodyAspect()` reporting the wider one for female with an unknown sex falling back to male. 🆕 **Since 2026-09-15 it holds σ AND THE PRECISION BLEND** — the key lift carrying no conversion uncertainty, a flat published ratio beating a drifting one, gearing surviving a flat drift, the q bridge for an entry with no page, and the load-bearing one: **the same two disagreeing numbers land at 204.5 or 294.6 depending on which conversion is better established**, where the old blend gave 225.0 both ways. Plus **the quarantine's cross-exercise behaviour** from both sides of its 2.0× boundary (kept at 1.99, set aside at 2.01) with two guards on the demo year — nothing set aside on a real year, and the cross-exercise spread under 1.5× so a future ratio correction cannot start withholding real sets silently — and 🚨 **the sexed path pinned beside the golden table**, because `store.js` passes a sex and the table never did. 🆕 **Since 2026-09-14 it holds THE FOUR SEAT RULES AND THE QUARANTINE**: a 3-rep benchmark beats a 12-rep back-off set on the same day (which is what told Tim a tested 215 was "above his max"), a set at ≤ 8 reps is preferred but not required, the 84-day window lets a rating FALL while a lay-off keeps its record, the same history walked in either order gives an identical rating (it read Fair one way and High the other), and the typo screen holds back a ×10 slip **by name** while leaving a personal best and the good sets logged beside it alone. Plus the ratio pins **per sex** on both sides of every pair, and six **split-ordering** checks (a specific rule must not fall below its family — the machine lateral raise inside `/Lateral Raise/` was a 3.7× inflation). ⚠️ **The GOLDEN table was re-baselined on 2026-09-14 with every move attributed by name** — eleven of twelve muscles down, Traps up 14 % because the deadlift stopped standing in for it. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** **⚠️ THE AUGUST HALF IS COMPRESSED HERE, 2026-09-15**, the same cut the render row took and for the same reason. Still asserted, detail in `docs/history.md` 2026-08-24 to -30: the **exercise-picture manifest** against the folder and the sw precache, the **movement families** (271 members each resolving to exactly one exercise, four family-less on purpose), the **Research tab's content and WORD BUDGETS** (45 an answer, 260 a topic — the only thing that can catch prose piling back up, since every other assertion checks a thing is PRESENT), the **crop maths** (1,925 combinations, zero escapes), the **file-import refusals** (date order, weight unit, distance unit each refused rather than guessed), **how full the cloud is**, and the **within-session fatigue** section built on Tim's real back session. ⚠️ **That last one changed shape on 2026-09-15** — see the σ note at the top of this row |
