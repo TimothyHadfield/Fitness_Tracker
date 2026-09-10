@@ -38,24 +38,50 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-24 — **THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP.** Tim: *"the
+**Last updated:** 2026-09-25 — **A SET WAS LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF.** Tim, on
+his own machine shoulder press: *"I did 55x9 … but it estimates that my overhead press 1RM is 57. I
+can't imagine the lifts being so different."* ✅ **Two faults, both fixed, pushed.**
+🚨 **(1)** `dominate()` replaced a dominated set with the dominating set re-read at the weaker set's
+reps, and that synthetic row **beat the real set it was made from** (`seatCredit` rewards low reps).
+**55×9 alone read 66.2; 55×9 then 55×5 read 56.6** — so **adding a worse set made you weaker**, the
+complaint dominance was built to answer, one level down. **20 of 29 demo seats were truncated**, 4–13 %
+low. 🚨 **(2) WORSE AND UNNOTICED**: the rewrite kept the weaker set's **date** with the stronger
+set's **weight**, so **a stale PR refreshed its own recency for ever** (demo Glutes sat on a 335×3
+from six weeks back wearing last week's date).
+✅ **It DROPS the dominated set now and manufactures nothing.** `performedReps`/`performedDate` are
+no longer produced (readers kept for older friend documents), and dominance is **idempotent**, which
+retires the two-pass chaining bug class.
+🔄 **Golden re-baselined: ten up, three down** — Calves +14 %, Neck +25 %, Traps +10 %; **Glutes
+−6.2 %, Quads −3.4 %, Back −2.7 %, and those three are fault (2) stopping.** ⚠️ **Every observation
+and contributor count unchanged** — the guard that this drops seat candidates, not evidence.
+**Mutation-checked**: disabling the drop flips 16 assertions.
+🚩 **HIS OTHER HALF, INVESTIGATED AND DELIBERATELY NOT BUILT — the conversion is LEVEL-BLIND.** The
+machine→barbell ratio runs **0.89 beginner → 1.44 elite** and the app uses the median for everyone,
+so his reading lands *below* the beginner overhead-press standard while his machine number is *above*
+the beginner machine standard. ✅ **`tools/strength-level-data.mjs` already holds five-anchor tables
+for 115 exercises**, so **percentile matching** needs no new research. 🛑 **Not bundled: it is a
+second re-baseline of every number and two in one commit means neither is attributable. His call.**
+🔄 **AND THE LAPTOP PANEL FROM 2026-09-24 WAS WORSE, NOT BETTER — he reported it and both halves were
+real.** The pane was capped at 940px so the panel sat **186px** off the right edge (now exempt, 1280px
+cap, **22px** gap, figure 546 → 790), and the table was **12.5px with a 9.5px header** against 15.5px
+body text (now 13.5/11, wide state only — the phone is untouched).
+✅ **23 suites green, 6,318 assertions.** ✅ **Chrome at nine widths.**
+**Details: `docs/history.md` 2026-09-25.**
+
+**2026-09-24** — **THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP.** Tim: *"the
 muslce groups section allows for a little more space. Could you make the details on the right side a
 little wider so that you don't need to click 'more details' … Keep the version the same on the phone
 to conserve space."* ✅ **Done and pushed.** At **≥1024px** the panel widens and the two derived
 columns default to showing, header and all; the button stays as *Fewer details*. 🛑 **The phone is
 byte-for-byte unchanged, and so is everything between 860 and 1023.**
-🚨 **THE FIRST VERSION WIDENED AT 860 AND THE MEASUREMENT IS THE ONLY REASON IT DID NOT SHIP**: at an
-880px window that put the figure at **298px wide against a 320px panel**, exercise column on its
-4.5em floor. **Rule 3's corollary — content does not shrink because you asked it a question** — so
-the width and the columns now arrive together. ⚠️ **The step is real**: 501 → 422 across the
-breakpoint, still bigger than at any narrower width.
-🔒 **`sourceColumns` is `false | true | null`** — `null` = nobody has chosen, so the layout answers —
-and **an explicit tap still wins**. The toggle reads the RESOLVED state, or the first tap on a laptop
-does nothing. 🚨 **The breakpoint lives in TWO files and `tests/a11y.test.mjs` fails if they drift.**
-🚩 **AND IT FOUND A TEST PASSING FOR THE WRONG REASON**: a block tapped the toggle twice and restored
-`false`, not *unset*, so every later block was testing an explicit "no" while believing it tested the
-default. `resetPanelViewState()` is the fix, test-only.
-✅ **23 suites green, 6,315 assertions.** ✅ **Chrome at 360/390/880/1023/1024/1280, zero overflow.**
+⚠️ **COLLAPSED 2026-09-25** (§0.3) — the durable halves are the Muscles row in `docs/state.md` and
+the note on Rule 3's corollary in `docs/handbook.md` §5, which is where the reasoning belongs: the
+first version widened at 860 and **the measurement is the only reason it did not ship**, because it
+crushed the figure to 298px against a 320px panel. 🔒 **`sourceColumns` is `false | true | null`**
+(`null` = the layout decides, an explicit tap still wins) and **the breakpoint lives in two files
+with `tests/a11y.test.mjs` failing if they drift.** 🚩 **It also found a test passing for the wrong
+reason** — a block restored `false` rather than *unset*, so later blocks tested an explicit "no"
+while believing they tested the default; `resetPanelViewState()` is the fix, test-only.
 **Details: `docs/history.md` 2026-09-24.**
 
 **2026-09-23** — **CALVES AND NECK RANK LIKE EVERY OTHER MUSCLE.** Tim: *"make calves
@@ -119,19 +145,13 @@ numbers only. **Full write-up: `docs/history.md` 2026-09-21 second pass.**
 ✅ ~~**TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE**~~ **BOTH BUILT ON 2026-09-23** — the
 calves rep gate and the neck standards. Rows 11 and 12 below carry what shipped.
 
-**2026-09-21 (first pass)** — **the muscle panel was naming a set nobody had done.** One
-instruction, after a catch-up: *"it still says 85x6 instead of 85x12 like we talked about on the
-muscle group 'from:'"*. **He is right, and it is a fault yesterday's dominance fix created on the day
-it shipped.**
-⚠️ **COLLAPSED 2026-09-22** (§0.3); full account in `docs/history.md` 2026-09-21, and **the durable
-half is Rule 5's new corollary in `docs/handbook.md` §5** plus the Muscles row in `docs/state.md`.
-🚨 **THE ARITHMETIC WAS NEVER WRONG.** `dominate()` re-reads an 85×12 at the rival's six reps — the
-conservative half of what the set proves — so the row carries the dominating set's **weight** over
-the superseded set's **reps and date**, and the panel printed that splice under the word *"from"*.
-🆕 **`performedReps` / `performedDate`** are display-only, absent unless a row was superseded, and
-**five lines across three files** were printing the splice. 🔒 **The rule it produced**: `dominate()`
-is the first thing here that MANUFACTURES an observation, and **when one field carries two meanings
-the caller that gets the wrong one is the screen** — the only caller that cannot fail a test.
+**2026-09-21 (first pass)** — ✅ ~~**the muscle panel was naming a set nobody had done**~~
+**SUPERSEDED 2026-09-25 AND COLLAPSED WITH IT.** That day patched the SCREEN (`performedReps` /
+`performedDate`) while leaving the fabrication in the model; 2026-09-25 removed the fabrication and
+those fields with it. 🔒 **The durable half is Rule 5's corollary in `docs/handbook.md` §5**, which
+now carries both halves — including the general form the second pass taught: **a display fix on top
+of a model that invents data leaves the invention running.** Full account: `docs/history.md`
+2026-09-21 and 2026-09-25.
 
 ## 2026-09-18 to 2026-09-20 — COLLAPSED TO FOUR LINES, 2026-09-22 (§0.3)
 

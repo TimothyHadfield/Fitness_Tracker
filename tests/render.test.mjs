@@ -653,18 +653,28 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
      * count the MODEL read, so the truncated row (5) prints no "From a N-rep
      * set" caveat and the untruncated one (10) does. Without this, a fixture in
      * which nothing was superseded would pass every assertion below. */
-    ok(!/-rep set/.test(heavyText),
-       '⚠️ the seat really IS the superseded row — no "From a N-rep set" caveat, which only a '
-       + 'reading at five reps or fewer suppresses, so the arithmetic is running on the truncation '
-       + 'while the line below names the twelve');
+    /* 🔄 THE GUARD FLIPPED ON 2026-09-25 AND ITS LOGIC IS UNCHANGED — which is
+     * why it is worth keeping rather than deleting. The source line reads
+     * "225×10, Aug 20" whether the seat is the genuine set or a rewrite of the
+     * 150 × 5 that names it, and `confident` (`reps <= 5`) on the rep count the
+     * MODEL read is still the one thing on the panel that separates them.
+     *
+     * Before, the seat WAS the rewrite, so the caveat was absent and this
+     * asserted its absence. Dominance drops the 150 × 5 now instead of rewriting
+     * it, so the seat is the real ten-rep set and the caveat is PRESENT. Same
+     * discriminator, opposite expectation, and it still fails loudly if a
+     * truncation ever comes back. */
+    ok(/-rep set/.test(heavyText),
+       '🚨 the seat is the REAL 225 × 10 — the "From a N-rep set" caveat is printed, which only a '
+       + 'reading above five reps produces, so the arithmetic is running on the set he did rather '
+       + 'than on a truncation of it');
     ok(/^225 lbs×10$/.test(benchSet || ''),
-       `🚨 the panel names the set he PERFORMED — "${benchSet}" — not the rep count the model `
-       + 'truncated it to. A 225 × 10 that supersedes a lighter set is read at the lighter set\'s '
-       + 'reps for the arithmetic, and printing that reads as a set nobody did');
+       `🚨 and the panel names that same set — "${benchSet}". It used to name it while the model `
+       + 'read a different one; now the two agree because there is only one');
     ok(/Aug 20/.test(benchDate || ''),
-       `⚠️ and on the day he did it (${benchDate}) — the superseded row carries the OTHER set's `
-       + "date too, so the same fault sits one field along. Aimed at the DATE cell now: the old "
-       + 'version matched the whole row and passed on a substring wherever it happened to sit');
+       `⚠️ on the day he did it (${benchDate}). The old rewrite carried the OTHER set's date, which `
+       + 'is the half that let a stale personal best read as fresh — aimed at the DATE cell, because '
+       + 'an earlier version matched the whole row and passed on a substring wherever it sat');
 
     await store.deleteSession(added.id);
     const after = await openMuscles();

@@ -2723,12 +2723,37 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const after15 = (await muscleStrength()).muscles.get('Chest');
     ok(after15.contributorCount > before15.contributorCount,
        '15 reps is still admissible — the cut is above it, not at it');
-    // ⚠️ And this is the other half of the 2026-09-13 seat rule, stated as a
-    // property rather than left implied: a 15-rep set is EVIDENCE but does not
-    // LEAD an exercise that also holds heavy low-rep sets, however big the
-    // number it extrapolates to.
-    ok(after15.best.reps <= 8,
-       'but it does not take the seat while a heavier low-rep set exists');
+    /* 🔄 REWRITTEN 2026-09-25 — ~~"it does not take the seat while a heavier
+     * low-rep set exists"~~, and the old sentence was hiding an assumption.
+     *
+     * The heavier low-rep set here is a 205 × 5, and the set just added is a
+     * **225 × 15** — heavier AND longer. It does not merely out-extrapolate the
+     * triple, it beats it on both axes, and somebody who benches 225 for fifteen
+     * is not described by "205 for five". Dominance drops the 205 × 5 and the
+     * 15-rep set leads, correctly.
+     *
+     * 🛑 THE PREFERENCE FOR LOW REPS SURVIVES WHERE IT MEANS SOMETHING — between
+     * sets that do NOT dominate each other, which is the second half below. What
+     * it no longer does is refuse a set for being long when it is also heavier,
+     * which is the complaint the whole dominance rule exists to answer. */
+    ok(after15.best.reps === 15 && after15.best.weight === 225,
+       `🔄 a 15-rep set LEADS when it beats the alternatives on both axes `
+       + `(${after15.best.weight}×${after15.best.reps}) — 225 for fifteen is not described by the `
+       + '205 × 5 it supersedes, and σ_rep prices the extrapolation in the blend');
+    /* The other side, and the pair is the test: a heavier set at LOW reps that
+     * nothing dominates still outranks a long one. Neither dominates the other,
+     * so credibility decides — which is exactly where the low-rep preference
+     * belongs and all it was ever meant to do. */
+    await st.saveSession({
+      workoutId: 'w9c', workoutName: 'Push', date: '2026-08-18',
+      entries: [{ exerciseId: benchId, exerciseName: 'Barbell Bench Press',
+                  sets: [{ weight: 275, reps: 3 }] }],
+    });
+    const afterTriple = (await muscleStrength()).muscles.get('Chest');
+    ok(afterTriple.best.reps === 3 && afterTriple.best.weight === 275,
+       `🛑 but a heavier triple that nothing dominates still takes the seat back `
+       + `(${afterTriple.best.weight}×${afterTriple.best.reps}) — 275 × 3 and 225 × 15 beat each `
+       + 'other on opposite axes, so neither is dropped and the credibility comparison decides');
   }
 
   // A benchmark gets no exemption: a 25-rep test is no more informative.
@@ -2965,25 +2990,51 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * failure the 15 was protecting against. It did not happen on this year;
    * `docs/history.md` 2026-09-23 has the same check on a year where every set is
    * long, which is where the pricing actually shows. */
+  /* 🔄 RE-BASELINED 2026-09-25 — DOMINANCE STOPPED READING THE SEAT SHORT, and
+   * this is the biggest single move the table has ever taken.
+   *
+   * Tim found it on a machine shoulder press: a set was losing its seat to a
+   * truncated copy of ITSELF, because the copy carried a low rep count and
+   * `seatCredit` rewards low reps. **20 of 29 seats here were truncated
+   * readings**, each 4–13 % under what its own set gives.
+   *
+   * 🚨 TEN MUSCLES RISE AND THREE FALL, AND THE THREE ARE THE INTERESTING HALF.
+   * The rewrite kept the WEAKER set's date while taking the STRONGER set's
+   * weight, so an old heavy set could wear a recent set's date and read as
+   * fresh — a stale personal best refreshing its own recency for ever. Glutes
+   * was seated on a Deadlift 335×3 from six weeks earlier wearing last week's
+   * date; it now sits on the real 285×6 and falls 6.2 %. Back −2.7 % and Quads
+   * −3.4 % are the same fabrication stopping.
+   *
+   *   Back 184.73 → 179.71   Biceps 99.67 → 108.86   Calves 225.21 → 257.48
+   *   Chest 212.83 → 224.69  Core 117.26 → 124.19    Forearms 94.68 → 104.78
+   *   Glutes 364.52 → 341.77 Hamstrings 248.31 → 258.52  Neck 37.15 → 46.47
+   *   Quads 294.69 → 284.77  Shoulders 146.09 → 147.02   Traps 272.88 → 300.79
+   *   Triceps 161.47 → 173.23
+   *
+   * ⚠️ EVERY OBSERVATION AND CONTRIBUTOR COUNT IS UNCHANGED, and that is the
+   * guard: this drops rows from a per-exercise SEAT contest, not from the
+   * evidence. If a count had moved, dominance would be costing the map real
+   * training rather than removing a duplicate. */
   const GOLDEN = [
-    ['Back', 720, 184.7349, 0.8169, 212, 4],
-    ['Biceps', 904, 99.6686, 0.7680, 125, 2],
-    ['Calves', 336, 225.2087, 0.8807, 84, 2],
-    ['Chest', 465, 212.8341, 0.9044, 130, 2],
-    ['Core', 66, 117.2576, 0.2891, 22, 1],
-    ['Forearms', 904, 94.6823, 0.6006, 273, 5],
-    ['Glutes', 630, 364.5160, 0.8488, 64, 1],
-    ['Hamstrings', 882, 248.3142, 0.8524, 146, 3],
-    // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — 0.1803,
-    // against Core's 0.2891, which was the previous floor and was itself
-    // built to say "the standard is thin, not your training". That is
-    // `standardQuality` 0.4 doing exactly what it is for, and it is the
-    // honest shape of a page whose Elite is 38.8x its Beginner.
-    ['Neck', 66, 37.1477, 0.1803, 22, 1],
-    ['Quads', 571, 294.6888, 0.8793, 171, 4],
-    ['Shoulders', 1093, 146.0904, 0.6903, 192, 4],
-    ['Traps', 529, 272.8760, 0.5797, 148, 3],
-    ['Triceps', 1100, 161.4694, 0.5481, 125, 2],
+    ['Back', 720, 179.7075, 0.8078, 212, 4],
+    ['Biceps', 904, 108.8580, 0.7932, 125, 2],
+    ['Calves', 336, 257.4837, 0.9793, 84, 2],
+    ['Chest', 465, 224.6893, 0.9422, 130, 2],
+    ['Core', 66, 124.1868, 0.2800, 22, 1],
+    ['Forearms', 904, 104.7764, 0.5777, 273, 5],
+    ['Glutes', 630, 341.7694, 0.8587, 64, 1],
+    ['Hamstrings', 882, 258.5188, 0.8877, 146, 3],
+    // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
+    // which was the previous floor and was itself built to say "the standard is
+    // thin, not your training". That is `standardQuality` 0.4 doing exactly what
+    // it is for, and it is the honest shape of a page whose Elite is 38.8x its
+    // Beginner.
+    ['Neck', 66, 46.4714, 0.1705, 22, 1],
+    ['Quads', 571, 284.7679, 0.9456, 171, 4],
+    ['Shoulders', 1093, 147.0226, 0.7825, 192, 4],
+    ['Traps', 529, 300.7915, 0.5618, 148, 3],
+    ['Triceps', 1100, 173.2312, 0.5193, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -3036,8 +3087,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const noSex = rateMuscle(byMuscle.get('Calves') || [], 'Calves').estimate;
     /* 228.2721 → 228.6592 on 2026-09-20, re-baselined with the golden table
      * above for σ_rep. +0.17 %: this muscle's seats barely move, which is what
-     * a re-weighting should do to a muscle whose evidence already agreed. */
-    ok(near(asMan, 228.6592, 0.0001),
+     * a re-weighting should do to a muscle whose evidence already agreed.
+     * 🔄 228.6592 → 262.4573 on 2026-09-25, +14.8 %, with the golden table again:
+     * dominance stopped reading the seat short, so the calf's own longer sets
+     * are worth what they prove. The biggest single move in the table, because
+     * calf work is trained at high reps and was losing the most to truncation. */
+    ok(near(asMan, 262.4573, 0.0001),
        `🚨 the app's own path — the demo lifter walked as the man he is (${asMan.toFixed(4)})`);
     ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
        `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
@@ -6277,48 +6332,67 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        + `(${alone.estimate.toFixed(1)} → ${both.estimate.toFixed(1)} lb). Before this, seat credit `
        + 'was quality × repFactor × recency × fatigue and weight appeared nowhere in it, so doing '
        + 'more reps at more weight could only ever LOSE the seat');
+    /* 🔄 REWRITTEN 2026-09-25 — THE TRUNCATION IS GONE AND THESE PIN ITS ABSENCE.
+     *
+     * Until today the dominated set was REWRITTEN into the dominating set read
+     * at the weaker set's rep count, and these assertions pinned that: seated at
+     * 85×6, with `performedReps` carrying the 12 for the screen. Tim found what
+     * that cost, on a machine shoulder press: *"I did 55x9 … but it estimates
+     * that my overhead press 1RM is 57."* The synthetic low-rep row competed
+     * against the real set it was made from and WON, because `seatCredit`
+     * multiplies by `repFactor` and the ladder rewards low reps.
+     *
+     * 🛑 SO ADDING A WORSE SET MADE YOU WEAKER — the exact complaint this whole
+     * section was built to answer, reintroduced one level down by its own fix.
+     * The dominated set is simply DROPPED now; nothing is manufactured. */
     const seat = both.used.find((u) => u.exerciseId === pulldown.id);
-    ok(seat.reps === 6 && seat.weight === 85,
-       `⚠️ and it is seated at 85×6, not 85×12 (${seat.weight}×${seat.reps}) — the heavier set read `
-       + 'at the rival\'s rep count, which is the CONSERVATIVE reading and arrives at the same '
-       + 'credibility rather than buying a bigger number by spending confidence');
-    /* ⚠️ THE LINE ABOVE CHECKS THE LABEL AND THIS ONE CHECKS THE NUMBER, which
-     * is the difference a mutation found: reading the dominator at its OWN rep
-     * count still leaves `reps` reading 6, so the assertion above passed over a
-     * value that was 12 reps of extrapolation. §0.14's third corollary again. */
+    ok(seat.reps === 12 && seat.weight === 85,
+       `🚨 the seat is the set he actually did — 85×12 (${seat.weight}×${seat.reps}) — not a `
+       + 'synthetic 85×6 assembled from the weight of one set and the rep count of another');
+    /* ⚠️ THE LINE ABOVE CHECKS THE LABEL AND THIS ONE CHECKS THE NUMBER, which is
+     * the difference a mutation found once: a row can read `reps: 12` while
+     * carrying a six-rep value. §0.14's third corollary. */
     const { setE1rm: se } = await import('../js/set-e1rm.js');
     const truncated = se(pulldown, 85, 6, {}).e1rm;
     const whole = se(pulldown, 85, 12, {}).e1rm;
-    ok(Math.abs(seat.rawE1rm - truncated) < 0.01,
-       `🚨 and the NUMBER behind it is the six-rep reading (${seat.rawE1rm.toFixed(1)} lb, not the `
-       + `${whole.toFixed(1)} its full twelve reps would give) — the app takes the conservative half `
-       + 'of what it can prove, which is what makes reading a set short honest rather than lossy');
+    ok(Math.abs(seat.rawE1rm - whole) < 0.01,
+       `🚨 and the NUMBER is its full twelve-rep reading (${seat.rawE1rm.toFixed(1)} lb, not the `
+       + `${truncated.toFixed(1)} the six-rep truncation used to give). Rep uncertainty is priced by `
+       + 'the measured σ_rep in the blend, which is where it has belonged since 2026-09-20 — not by '
+       + 'quietly reading the set short');
+    ok(!both.used.some((u) => u.exerciseId === pulldown.id && u.weight === 50),
+       '⚠️ and the 50×6 is gone from the pool rather than rewritten — dominance removes a set that '
+       + 'another set beats on both axes, which is all it ever needed to do');
+    ok(seat.performedReps === undefined && seat.performedDate === undefined,
+       '🛑 NOTHING MANUFACTURES AN OBSERVATION ANY MORE. `performedReps`/`performedDate` existed '
+       + 'only to paper over the splice — the panel printed "85 × 6" on a day he did 50 × 6 — and '
+       + 'with no splice there is nothing to paper over. The READERS stay, for a friend still '
+       + 'publishing them from an older build');
+  }
 
-    /* ---- 🚨 AND THE SCREEN NAMES THE SET HE ACTUALLY DID — 2026-09-21 ---- *
-     *
-     * Tim, on the panel this whole section exists to fix: *"it still says 85x6
-     * instead of 85x12."* He was right again, and it is a fault the dominance
-     * row created the day it was written. The truncation is correct arithmetic
-     * — the re-read has to meet the rival at the rival's credibility — but the
-     * muscle panel prints `weight × reps, date` under the words *"from"*, as
-     * the real recorded set the estimate was converted from. So it was drawing
-     * **85 × 6 on the day he did 50 × 6**: a set nobody performed, presented as
-     * a measurement, by the one line in the app whose job is Rule 5.
-     *
-     * 🛑 DISPLAY ONLY. `reps` and `date` are unchanged and still drive
-     * `repFactor`, recency and the seat — the two assertions above pin exactly
-     * that, and they must keep passing beside these. */
-    ok(seat.performedReps === 12,
-       `🚨 THE PANEL NAMES THE SET THAT WAS PERFORMED: 85 × ${seat.performedReps}, not the `
-       + `${seat.reps} reps the model read it at. "from Lat Pulldown 85 lbs ×6" describes a set he `
-       + 'never did, on a line that exists to say which real set the number came from');
-    ok(seat.performedDate === '2026-09-14',
-       `⚠️ and its DATE with it (${seat.performedDate}) — printing ${seat.date} would name the day `
-       + 'of the 50 × 6 as the day he pulled 85, which is the same fault one field along');
-    ok(seat.reps === 6 && seat.date === '2026-08-24',
-       '🛑 and the ARITHMETIC still reads the truncation — `reps` and `date` are untouched, so '
-       + '`repFactor`, recency and the seat comparison all behave exactly as they did. This is a '
-       + 'second pair of fields for the screen, not a change to what the model believes');
+  /* ---- 🚨 AND THE HALF NOBODY HAD NOTICED: THE REWRITE LAUNDERED RECENCY ----
+   *
+   * Found while re-baselining on 2026-09-25, and it is the worse of the two
+   * faults. The rewritten row kept the WEAKER set's `date` and took the STRONGER
+   * set's weight, so a light recent set inherited an old heavy set's whole
+   * estimate **at the recent date**. `recencyWeight` then read it as fresh.
+   *
+   * 🛑 A STALE PERSONAL BEST REFRESHED ITS OWN RECENCY FOR EVER. On the demo year
+   * this was holding three muscles up: Glutes was seated on a Deadlift 335×3 from
+   * six weeks earlier, wearing last week's date because a 285×3 had been logged
+   * last week. Those muscles fall now, and the fall is the fabrication stopping.
+   */
+  {
+    const heavyOld = sess('2026-07-10', 200, 3);
+    const lightNew = sess('2026-09-18', 150, 3);
+    const r = rate([heavyOld, lightNew]);
+    const seat = r.used.find((u) => u.exerciseId === pulldown.id);
+    ok(seat.weight === 200 ? seat.date === '2026-07-10' : true,
+       `🚨 a 200×3 stays dated the day it was lifted (${seat.weight}×${seat.reps} on ${seat.date}) — `
+       + 'it may not borrow the date of a lighter set at the same rep count');
+    ok(!(seat.weight === 200 && seat.date === '2026-09-18'),
+       '🛑 and specifically NOT 200 lb wearing the recent set\'s date, which is what the rewrite '
+       + 'produced and what let an old PR keep refreshing itself');
   }
 
   /* ---- 🚨 THE SAME RULE ONE LEVEL UP, AND THE FIRST FIX MISSED IT ---- *
@@ -6359,29 +6433,27 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        `🚨 TIM'S ACTUAL CASE: an 85×12 logged as the THIRD set of a day that opened with 65×8 still `
        + `reaches the rating (seated ${seat.weight}×${seat.reps}). Before this it was discarded by `
        + 'the per-day collapse, one step before the seat, and the rating read the 65×8');
-    ok(seat.reps === 8,
-       '⚠️ read at 8 reps — the rep count of the set it superseded WITHIN the day, which is the '
-       + 'same truncation rule applied at the same place the comparison happens');
-    ok(seat.performedReps === 12 && seat.performedDate === '2026-09-14',
-       `⚠️ and the day's winner still names the real set (85 × ${seat.performedReps}) — here the `
-       + 'first `dominate()` pass is the one that rewrote it, and its `dom` was the genuine 85 × 12');
+    /* 🔄 2026-09-25 — ~~read at 8 reps~~. The day pass drops the sets the 85×12
+     * beats on both axes instead of rewriting them, so the day's winner is the
+     * set itself at its own rep count. */
+    ok(seat.reps === 12,
+       `⚠️ at its own twelve reps (${seat.reps}) — the 65×8 and 75×10 it beats on BOTH axes are `
+       + 'dropped from the day, not folded into a synthetic 85×8');
+    ok(seat.performedReps === undefined,
+       '🛑 and nothing is stamped for the screen, because nothing was spliced');
   }
 
-  /* ---- 🚨 THE CHAIN, WHICH THE FIXTURE ABOVE CANNOT REACH ---- *
+  /* ---- 🔄 THE CHAIN — AND SINCE 2026-09-25 THERE IS NOTHING TO CHAIN ---- *
    *
-   * `dominate()` runs twice — once per exercise-day, once at the seat — so a
-   * row arriving at the seat may ALREADY be a superseding row carrying a
-   * truncated `reps`. If the second pass re-stamps `performedReps` from
-   * `dom.reps` instead of carrying `dom.performedReps` through, it names the
-   * FIRST pass's truncation: 85 × 8 rather than 85 × 12. Closer than 85 × 6,
-   * still a set nobody did, and quieter.
+   * `dominate()` still runs twice, once per exercise-day and once at the seat.
+   * When it REWROTE rows, the second pass could stamp the first pass's own
+   * truncation and name a set nobody did (85 × 8 rather than 85 × 12) — quieter
+   * than the original fault and the same kind. Dropping is idempotent: a set
+   * that survives one pass is unchanged by the next, so the whole class is gone.
    *
-   * ⚠️ THE ORDER OF THE DAYS IS WHAT MAKES IT VISIBLE, and getting it wrong is
-   * how the first version of this assertion passed with the chain deleted. The
-   * heavy day has to be the OLDER one, so that the row rewritten at the seat —
-   * the short set, read at 85 — wins on recency and rep factor together. With
-   * the heavy day newer it wins the seat itself, was rewritten by the day pass
-   * rather than the seat pass, and the second pass never touches it. */
+   * ⚠️ THE FIXTURE IS KEPT EXACTLY AS IT WAS — heavy day older, short set newer —
+   * because it is the shape that made the chain visible, and a fixture retired
+   * along with the bug it caught is how the next version of that bug ships. */
   {
     const sameDay = (date, sets) => ({
       workoutId: 'w' + date, workoutName: 'Pull', date,
@@ -6398,14 +6470,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     });
     const r = rateMuscle(built.byMuscle.get('Back'), 'Back');
     const seat = r.used.find((u) => u.exerciseId === pulldown.id);
-    ok(seat.weight === 85 && seat.reps === 6,
-       `⚠️ the seat is the SECOND pass's own rewrite (${seat.weight}×${seat.reps}) — the newer `
-       + '55 × 6 superseded by a row that was itself already a rewrite of the 85 × 12');
-    ok(seat.performedReps === 12 && seat.performedDate === '2026-08-24',
-       `🚨 AND IT STILL NAMES 85 × ${seat.performedReps} on ${seat.performedDate}, not the 8 reps `
-       + 'the day pass had truncated it to. `performedReps` is carried through rather than '
-       + 're-stamped, or the second pass quietly overwrites the first pass\'s answer with its own '
-       + 'truncation');
+    ok(seat.weight === 85 && seat.reps === 12,
+       `🚨 the seat is the real 85 × 12 (${seat.weight}×${seat.reps}), reached through two passes `
+       + 'of dominance without either one altering it — dropping is idempotent where rewriting '
+       + 'compounded');
+    ok(seat.date === '2026-08-24' && seat.performedReps === undefined,
+       `⚠️ dated the day it was lifted (${seat.date}) with nothing stamped for the screen. The old `
+       + 'rewrite would have carried 85 lb onto the newer 55×6\'s date and read it as fresh');
   }
 
   /* ---- 🛑 THE ASYMMETRY, WHICH IS TIM'S OWN CAVEAT ---- */
@@ -6426,9 +6497,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   {
     const same = rate([sess('2026-09-10', 80, 5), sess('2026-09-14', 80, 9)]);
     const seat = same.used.find((u) => u.exerciseId === pulldown.id);
-    ok(seat.reps === 5 && seat.weight === 80,
-       'at one weight the longer set supersedes the shorter and is read back at its rep count — '
-       + 'the same evidence, never worse for having carried on');
+    /* 🔄 2026-09-25 — ~~"read back at its rep count … never worse for having
+     * carried on"~~. It was never worse and it was never BETTER: reading the
+     * 9-rep set at five reps landed on exactly the number the 5-rep set already
+     * gave, so the extra four reps bought nothing at all. **This is Tim's machine
+     * shoulder press in miniature** — the case that found it. */
+    ok(seat.reps === 9 && seat.weight === 80,
+       `🚨 at one weight the LONGER set holds the seat at its own rep count `
+       + `(${seat.weight}×${seat.reps}) — carrying on now counts for something`);
+    const alone5 = rate([sess('2026-09-10', 80, 5)]);
+    ok(same.estimate > alone5.estimate * 1.05,
+       `🛑 AND IT IS WORTH MORE THAN THE SHORT SET ALONE (${alone5.estimate.toFixed(1)} → `
+       + `${same.estimate.toFixed(1)} lb). This is the assertion that would have caught the fault: `
+       + 'the old rule made these two identical, so doing five more reps at the same weight moved '
+       + 'the rating by exactly zero');
     const heavier = rate([sess('2026-09-10', 70, 8), sess('2026-09-14', 95, 8)]);
     const s2 = heavier.used.find((u) => u.exerciseId === pulldown.id);
     ok(s2.weight === 95,

@@ -1371,10 +1371,21 @@ files were printing the same splice, each under a comment claiming a measured se
   screening or re-weighting one. The winsoriser clips a value, the quarantine withholds a row,
   fatigue scales a weight — none of them invents a set. The moment one does, every screen reading its
   fields verbatim starts lying, and it does so in the slot a reader is entitled to take literally.
-- **The fix is a second pair of fields, never a change to the first** — `performedReps` /
-  `performedDate`, display-only, absent unless a row was superseded. `reps` and `date` still drive
-  `repFactor`, recency, `confident` and both comparisons, pinned by an assertion sitting beside the
-  new ones so nobody later "tidies" the two pairs into one.
+- ~~**The fix is a second pair of fields, never a change to the first** — `performedReps` /
+  `performedDate`, display-only.~~ 🔄 **THE REAL FIX WAS TO STOP MANUFACTURING IT — 2026-09-25, and
+  the display fields went with it.** Patching the screen left the fabrication in the model, and it
+  was costing two things at once. **(1)** The synthetic low-rep row competed for the seat against the
+  real set it was made from and *won*, because `seatCredit` multiplies by `repFactor` and the ladder
+  rewards low reps — so **adding a worse set made you weaker**, which is the complaint dominance was
+  built to answer, arriving one level down. Tim found it on a 55 × 9 machine shoulder press reading
+  as a 5-rep set. **(2)** Worse and unnoticed for four days: the rewrite kept the *weaker* set's
+  `date` while taking the *stronger* set's weight, so **a stale personal best refreshed its own
+  recency for ever**. `dominate()` DROPS the dominated set now and rewrites nothing.
+- 🔒 **THE GENERAL FORM, AND IT IS THE ONE TO CARRY: A DISPLAY FIX ON TOP OF A MODEL THAT INVENTS
+  DATA LEAVES THE INVENTION RUNNING.** The 2026-09-21 pass was correct about the symptom and treated
+  it where it showed rather than where it came from, and both of the faults above were already
+  present in the code it left behind. **When a screen is printing something nobody did, ask what put
+  it there before deciding what to print instead.**
 - ⚠️ **THE GENERAL FORM IS ABOUT FIELDS, NOT ABOUT THIS RULE.** `reps` was answering *"what did the
   model read"* and *"what did he lift"* at the same time, and the two stopped agreeing the day
   dominance shipped. **When one field carries two meanings, the caller that gets the wrong one is

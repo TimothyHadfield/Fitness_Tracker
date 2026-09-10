@@ -3497,6 +3497,45 @@ a.seg {
      alive, so a friend's panel would otherwise show five columns in a box sized
      for three. Fixing the consequence of a change he asked for is part of it. */
   .map-split > .body-foot { width: clamp(340px, 40%, 460px); }
+
+  /* 🚨 AND THE TYPE GOES UP WITH THE COLUMNS — 2026-09-25, Tim's report:
+     *"much of the text just got a lot smaller and much harder to read. This made
+     it worse rather than better."*
+
+     He was right and the numbers are ugly: body text on this app is 15.5px, the
+     source rows are 12.5px, and the header row is **9.5px** — so the moment the
+     five-column state became the DEFAULT on a laptop, the thing he had asked to
+     see more of was rendered in the smallest type in the product, and a header
+     he had never had to read before became the smallest of all.
+
+     ⚠️ THE 9.5px WAS DEFENSIBLE WHEN IT WAS OPT-IN AND IS NOT NOW. It was sized
+     for a phone, where the header is a legend somebody deliberately opened and
+     glances at once. A default is read every time.
+
+     🛑 SCOPED TO THE WIDE STATE ON PURPOSE — the phone keeps 12.5/9.5 exactly,
+     which is the half he asked to leave alone, and it has the width for neither. */
+  .graph-host.is-muscles .muscle-sources,
+  .map-split .muscle-sources { font-size: 13.5px; }
+  .graph-host.is-muscles .msrc-head > *,
+  .map-split .msrc-head > * { font-size: 11px; letter-spacing: 0.06em; }
+}
+
+/* 🚨 THE MUSCLES PANE IS EXEMPT FROM THE 940px READING WIDTH — 2026-09-25.
+   Tim: *"the side menu is moved a couple inches off the right side wall."*
+
+   Measured at 1512: the pane was capped at 940px and the panel's right edge sat
+   **186px** from the window edge — about the two inches he described. The cap
+   below is a LINE-LENGTH rule and it is right for prose; this screen is a figure
+   beside a data table, where the cap was spending the space he had just asked to
+   use on empty margin.
+
+   ⚠️ IT IS AN EXEMPTION, NOT A CHANGE TO THE RULE. Every other pane in the app
+   still reads at 940px, because that is what stops a paragraph running the width
+   of a monitor. `.graph-host.is-muscles` is the only selector lifted, and it is
+   lifted to a CAP rather than to `none` — at 1920 an uncapped figure would be
+   half a metre of chest. */
+@media (min-width: 1200px) {
+  .pane-scroll > .graph-host.is-muscles { max-width: 1280px; }
 }
 
 @media (min-width: 1200px) {

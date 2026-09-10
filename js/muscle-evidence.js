@@ -2330,54 +2330,60 @@ export function rateMuscle(observations, muscle = null) {
    * Chest read Elite at 2282 lb. By this line the day-screen has already
    * quarantined that set.
    * ------------------------------------------------------------------ */
+  /* 🔄 IT DROPS THE DOMINATED SET NOW; IT NO LONGER REWRITES IT — 2026-09-25,
+   * and this replaces the whole of the 2026-09-20/21 truncation machinery.
+   *
+   * Tim, on a machine shoulder press: *"I did 55x9 … but it estimates that my
+   * overhead press 1RM is 57. I can't imagine the lifts being so different that
+   * 9 reps on one is nearly the same as 1 rep on the other."*
+   *
+   * 🚨 HE HAD FOUND A SET LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF. The old
+   * version replaced every dominated row `b` with the dominating set re-read at
+   * `b.reps` — a synthetic row carrying the heavy weight at the light set's rep
+   * count. That row then competed in the seat comparison against the real set it
+   * was made from, and WON, because `seatCredit` multiplies by `repFactor` and
+   * the ladder rewards low reps: `repFactor(5)` is 0.95 against `repFactor(9)`'s
+   * 0.70. Measured on his case: 55×9 alone reads 66.2 lb, and 55×9 followed by
+   * 55×5 reads 56.6 — the number he saw.
+   *
+   * 🛑 SO ADDING A WORSE SET MADE YOU WEAKER, which is the exact complaint the
+   * 2026-09-20 dominance work was built to answer, reintroduced by its own fix
+   * one level down. Anybody whose reps fall across a run of sets — which is
+   * everybody — was rated off their last set at their best set's weight.
+   * Measured over the demo year: **20 of 29 seats were a truncated reading**,
+   * each 4–13 % below what its own set gives.
+   *
+   * 🔒 THE TRUNCATION WAS NEVER ABOUT THE NUMBER, AND THAT IS WHY IT CAN GO. Its
+   * job was to let a heavier-but-longer set take a seat from a lighter-but-
+   * shorter one under a `repFactor` ladder that would otherwise refuse it —
+   * "meet the rival at the rival's credibility". **Dropping the rival does the
+   * same job without inventing anything**: the heavy set is then the only
+   * candidate, and its own rep count is priced by the measured σ_rep in the
+   * blend, which is where rep uncertainty has belonged since 2026-09-20.
+   *
+   * 🔒 AND IT REMOVES THE ONLY PLACE THIS PROJECT MANUFACTURED AN OBSERVATION —
+   * Rule 5's corollary in `docs/handbook.md` §5, which was written about exactly
+   * this function and which cost a display bug in September (`85 × 6` printed on
+   * a day nobody did an 85 × 6). `performedReps` / `performedDate` existed only
+   * to paper over that splice; nothing produces them now. The READERS stay, so a
+   * friend still on an older build whose published rows carry them keeps reading
+   * correctly.
+   *
+   * ⚠️ THE COMPARISON IS UNCHANGED — `>=` on BOTH weight and reps, with an exact
+   * tie kept, so two identical sets never delete each other. Heavier-but-shorter
+   * still does not dominate: that is a real trade and `seatCredit` still decides
+   * it. */
   const dominate = (list) => {
     if (!Array.isArray(list) || list.length < 2) return list;
-    return list.map((b) => {
-      let dom = null;
-      for (const a of list) {
-        if (a === b) continue;
-        if (a.weight < b.weight || a.reps < b.reps) continue;
-        if (a.weight === b.weight && a.reps === b.reps) continue;
-        if (!dom || a.weight > dom.weight) dom = a;
-      }
-      /* ⚠️ `curveWeight` IS REQUIRED, NOT OPTIONAL, and its absence is a refusal
-       * rather than a fallback. It is the number the curve was fed (per hand on
-       * a dumbbell, total resistance on a pull-up), and guessing it from
-       * `weight` would be a second copy of D30's convention — wrong by 5 % on
-       * every dumbbell lift and wildly wrong on every body-weight one. A friend's
-       * published rows predate this field, so they simply keep today's rule. */
-      if (!dom || !(dom.curveWeight > 0) || !(dom.rawE1rm > 0)) return b;
-      const at = e1rm(dom.curveWeight, b.reps);
-      const was = e1rm(dom.curveWeight, dom.reps);
-      if (!(at > 0) || !(was > 0)) return b;
-      const scale = at / was;
-      return {
-        ...b,
-        weight: dom.weight,
-        curveWeight: dom.curveWeight,
-        rawE1rm: dom.rawE1rm * scale,
-        estimate: dom.estimate * scale,
-        supersededWeight: b.weight,
-        /* 🚨 WHAT WAS ACTUALLY LIFTED, FOR THE SCREEN — 2026-09-21, and it is a
-         * Rule 5 fault this row created the day it was written. The row keeps
-         * `b.reps` and `b.date` on purpose: the truncation IS the conservative
-         * reading, and the seat comparison has to meet the rival at the rival's
-         * credibility. But the muscle panel prints `weight × reps, date` as
-         * *"the set the number came from"*, so it was naming **85 × 6 on a day
-         * he did 50 × 6** — a set nobody performed, presented as a measurement.
-         * Tim: *"it still says 85x6 instead of 85x12."*
-         *
-         * 🛑 DISPLAY ONLY. Nothing here is read by the arithmetic; `reps` and
-         * `date` still drive `repFactor`, recency and the seat, unchanged.
-         *
-         * ⚠️ IT CHAINS RATHER THAN RESTAMPS. `dominate()` runs twice — once per
-         * exercise-day, once at the seat — so `dom` may itself already be a
-         * superseding row, and taking `dom.reps` blindly on the second pass
-         * would name the first pass's truncation instead of the real set. */
-        performedReps: dom.performedReps || dom.reps,
-        performedDate: dom.performedDate || dom.date,
-      };
-    });
+    const dominated = (b) => list.some((a) => a !== b
+      && a.weight >= b.weight && a.reps >= b.reps
+      && !(a.weight === b.weight && a.reps === b.reps));
+    const kept = list.filter((b) => !dominated(b));
+    /* ⚠️ NEVER RETURN AN EMPTY POOL. Nothing above can empty it — a maximal set
+     * always survives a partial order — but a later edit to the comparison could,
+     * and a muscle silently losing all its evidence to a screening step is the
+     * failure mode this whole file keeps re-learning. */
+    return kept.length ? kept : list;
   };
 
   const betterSameDay = (o, prev) => (o.quality * repFactor(o.reps) - prev.quality * repFactor(prev.reps))

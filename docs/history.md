@@ -17,6 +17,131 @@
 
 ---
 
+## 2026-09-25 — A SET WAS LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF
+
+**Tim, on his own machine shoulder press:** *"I did 55x9 on the machine shoulder press, but it
+estimates (just from that set) that my overhead press 1RM is 57. I can't imagine the lifts being so
+different that 9 reps on one is nearly the same as 1 rep on the other. Does this concern you or do
+you think that's accurate?"* Then, given the answer: *"Start the fixing now."*
+
+**It concerned me, and he had found two faults with one number.**
+
+### What the app was actually claiming
+
+Not that nine reps equals one. The chain is 55 × 9 → **81.4 lb machine max** (Marzagão) → divide by
+**1.23**, the published machine-to-barbell ratio → **66.2 lb overhead press**. Working as designed it
+should have read 66, not 57.
+
+### 🚨 Fault one — the seat went to a synthetic copy of the set
+
+`dominate()` replaced every dominated row `b` with the dominating set re-read at `b.reps`. That
+synthetic row then entered the seat comparison **against the real set it was made from**, and won:
+`seatCredit` is `quality × repFactor × recency × fatigue`, and `repFactor(5)` is 0.95 against
+`repFactor(9)`'s 0.70.
+
+| | estimate |
+|---|---|
+| 55 × 9 alone | **66.2** |
+| 55 × 9 then 55 × 5 | **56.6** |
+| 55 × 9, 55 × 7, 55 × 5 — how anyone actually trains | **56.6** |
+
+🛑 **So doing more work made you weaker** — the exact complaint the 2026-09-20 dominance work was
+built to answer, reintroduced one level down by its own fix. **20 of 29 seats on the demo year were
+truncated readings**, each 4–13 % below what its own set gives.
+
+### 🚨 Fault two — the rewrite laundered RECENCY, and nobody had noticed
+
+Found while re-baselining, and it is the worse of the two. The rewritten row kept the **weaker set's
+`date`** and took the **stronger set's weight**. So a light recent set inherited an old heavy set's
+whole estimate *at the recent date*, and `recencyWeight` read it as fresh.
+
+🛑 **A stale personal best refreshed its own recency for ever.** On the demo year, Glutes was seated
+on a **Deadlift 335 × 3 from six weeks earlier wearing last week's date**, because a 285 × 3 had been
+logged last week. Three muscles were being held up by that, and they fall now.
+
+### The fix
+
+**`dominate()` drops the dominated set instead of rewriting it.** The truncation was never about the
+number — its job was to let a heavier-but-longer set take a seat under a `repFactor` ladder that
+would otherwise refuse it, *"meet the rival at the rival's credibility"*. **Dropping the rival does
+the same job without inventing anything**: the heavy set is then the only candidate, and its rep
+count is priced by the measured σ_rep in the blend, which is where rep uncertainty has belonged since
+2026-09-20.
+
+🔒 **It removes the only place this project manufactured an observation** — Rule 5's corollary was
+written about this exact function. `performedReps` / `performedDate` existed only to paper over the
+splice and nothing produces them now; the **readers stay**, so a friend still publishing them from an
+older build keeps rendering correctly.
+
+⚠️ **Dominance is idempotent now**, which retires a whole class of bug: `dominate()` runs twice, and
+the rewrite could stamp the first pass's own truncation on the second (85 × 8 rather than 85 × 12 —
+quieter than the original fault and the same kind). A set that survives one pass is unchanged by the
+next. **The fixture that caught the chain is kept**, because a fixture retired with the bug it caught
+is how the next version of that bug ships.
+
+### The re-baseline: ten up, three down
+
+    Back 184.73 → 179.71   Biceps 99.67 → 108.86    Calves 225.21 → 257.48
+    Chest 212.83 → 224.69  Core 117.26 → 124.19     Forearms 94.68 → 104.78
+    Glutes 364.52 → 341.77 Hamstrings 248.31 → 258.52   Neck 37.15 → 46.47
+    Quads 294.69 → 284.77  Shoulders 146.09 → 147.02    Traps 272.88 → 300.79
+    Triceps 161.47 → 173.23
+
+🚨 **The three that FALL are the interesting half** — Glutes −6.2 %, Quads −3.4 %, Back −2.7 % — and
+every one is fault two stopping. ⚠️ **Every observation and contributor count is unchanged**, which is
+the guard: this drops rows from a per-exercise seat contest, not from the evidence. A moved count
+would have meant dominance was costing the map real training.
+
+**Mutation-checked with the mutation grepped out of the file first**: disabling the drop flips 16
+assertions across two suites.
+
+### 🚩 The OTHER half of his question, investigated and NOT built
+
+The conversion is **level-blind**. That machine-to-barbell ratio is not one number — measured off
+Strength Level's own pages it runs **0.89 at beginner, 1.23 at intermediate, 1.44 at elite** — and
+the app applies the median to everybody. At Tim's end the right figure is ~0.89, giving **91 lb**
+rather than 66.
+
+🚨 **AND THE APP CONTRADICTS ITSELF ON HIS DATA**: his 81 lb machine max is *above* the published
+beginner machine standard (67), while the 66 it prints is *below* the published beginner overhead
+press standard (75). Same lifter, same source, opposite verdicts.
+
+✅ **The data to fix it is already in the repo** — `tools/strength-level-data.mjs` holds full
+five-anchor tables for **115 exercises, both sexes**, including this one. The shape is
+**percentile matching**: place the reading on its own exercise's distribution, then read the key
+lift's weight at the same percentile. No iteration, no new research, and it largely removes the drift
+that `js/ratio-sigma.js` currently has to carry as uncertainty.
+
+🛑 **Deliberately not bundled into this commit.** It is a second re-baseline of every number in the
+app, and shipping two in one commit means neither can be attributed — which is the whole reason this
+table carries its moves by name. It is the next piece and it is Tim's call.
+
+### Also this session: the laptop panel he had just asked for was worse, not better
+
+**Tim:** *"the side menu is moved a couple inches off the right side wall, and much of the text just
+got a lot smaller and much harder to read. This made it worse rather than better."* Both true, both
+measured at 1512:
+
+- **The gap.** The pane was capped at **940px** by the global reading-width rule, so the panel's
+  right edge sat **186px** from the window edge. That cap is a LINE-LENGTH rule and is right for
+  prose; on a screen that is a figure beside a data table it was spending the space he had just asked
+  to use on empty margin. `.graph-host.is-muscles` is now exempt, to a **1280px** cap rather than to
+  `none` — at 1920 an uncapped figure would be half a metre of chest. Measured after: the gap is
+  **22px** at both 1440 and 1512, and the figure grows 546 → 790.
+- **The type.** Body text is 15.5px; the source rows were **12.5px** and the header **9.5px**. The
+  moment the five-column state became the default, the thing he had asked to see more of was
+  rendering in the smallest type in the product. Now **13.5px / 11px**, scoped to the wide state so
+  the phone keeps exactly what it had.
+
+⚠️ **The 9.5px was defensible while it was opt-in and stopped being so when it became the default** —
+it was sized for a legend somebody opens deliberately and glances at once, not for something read
+every time.
+
+✅ **23 suites green, 6,318 assertions.** ✅ **Chrome at 360 / 390 / 880 / 1023 / 1024 / 1280 / 1440 /
+1512 / 1920.**
+
+---
+
 ## 2026-09-24 — THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP
 
 **Tim:** *"On the laptop/computer, the muslce groups section allows for a little more space. Could

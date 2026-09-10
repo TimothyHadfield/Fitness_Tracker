@@ -2893,3 +2893,46 @@ started depending on the window width. Fixed, and the default is genuinely teste
 
 23 suites green, 6,315 checks, driven in Chrome at six widths with no sideways overflow at any of
 them.
+
+---
+
+## 2026-09-25 — a set was losing its seat to a truncated copy of itself
+
+**Tim:** *"I have some concerns with the 1RM estimation. For example, I did 55x9 on the machine
+shoulder press, but it estimates (just from that set) that my overhead press 1RM is 57 … Does this
+concern you or do you think that's accurate?"* Then: *"Start the fixing now."*
+
+It concerned me. He'd found two things with one number.
+
+The app was never claiming nine reps equals one. It read 55×9 as an 81 lb max on the machine, then
+divided by 1.23 because people press more on that machine than overhead with a bar — which should
+give 66, not 57.
+
+The missing 9 lb was a bug, and it was the one he reported in August coming back through its own fix.
+When a set beat another on both weight and reps, the app used to rewrite the weaker set into the
+stronger one "read at" the weaker set's rep count — and that made-up set then competed against the
+real set it came from, and won, because the seat comparison rewards low reps. So 55×9 on its own read
+66, but 55×9 followed by 55×5 read 56.6. Doing more work made you look weaker. It was affecting 20 of
+the 29 muscle seats in the demo year.
+
+Then, re-baselining, I found the worse half nobody had spotted: that rewrite kept the *weaker* set's
+date while taking the *stronger* set's weight. So an old heavy set could wear a recent set's date and
+be read as fresh — a stale personal best refreshing its own recency for ever. Three muscles were
+being propped up by that, and they go down now.
+
+The fix is that a beaten set is simply dropped instead of being rewritten. Nothing gets invented any
+more. Ten muscles went up (calves 14%, neck 25%), three went down, and every observation count stayed
+identical, which is what says this dropped duplicates rather than evidence.
+
+**The other half of his question I looked at and did not build.** The machine-to-barbell conversion
+uses one number where the published data runs 0.89 for a beginner to 1.44 for an elite, so his
+reading lands below the beginner overhead-press standard while his machine number is above the
+beginner machine standard. The data to fix it properly is already in the repo — 115 exercises with
+full tables — but it's a second re-baseline of every number in the app, and doing two in one commit
+means neither can be attributed. That one's his call.
+
+Also fixed the laptop panel from yesterday, which he reported as worse rather than better: it was
+sitting 186px off the right edge because of a page-wide reading-width cap, and the table was 12.5px
+with a 9.5px header against 15.5px body text. Now flush to the edge and legible, phone untouched.
+
+23 suites green, 6,318 checks.
