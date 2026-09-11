@@ -140,6 +140,7 @@ which safety may be raised unprompted.
 | 👤 **It is only ever you and him** | *"Just us."* No second contributor to write for. |
 | ⏱️ **Steady, most days. No deadline.** | Nothing needs to be sequenced backwards from a date. |
 | 🟢 **Deploy sub-agents** | *"I'm giving you some more assignments so you really should deploy many sub-agents to help you out."* (2026-09-08 — the third time he has asked.) **One named file each**; see `progress.md`'s standing-instructions entry for the rules that make it work. |
+| 🛑 **Don't bring him other apps' features** | 2026-09-26, after asking for the competitive review and reading the whole of it: *"okay forget the improvements from other apps. I want to build it myself."* **The review is reference, not a queue** — `docs/history.md` 2026-09-26. ⚠️ Two of its findings constrain what gets built whoever proposes it: volume targets built on MEV/MRV have no literature behind them, and showing uncertainty on a strength number is the one position no competitor holds. |
 
 ## 4a. 🆕 WHAT HOME IS FOR — 2026-09-08, and it is a brief rather than a feature
 

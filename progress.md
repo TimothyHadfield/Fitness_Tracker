@@ -4,23 +4,23 @@
 > DOING ANYTHING.** This one is **what is true now and what is left**. The handbook is **how to work
 > here** — the environment traps, the working agreement, the architecture, the binding design rules
 > and the locked decisions. `docs/state.md` is **what the app currently does**, screen by screen.
-> **531 KB together as of 2026-09-25** (159 + 216 + 156), and none of it is optional. ⚠️ Each file
-> has a byte budget with a test behind it — see §0.3. 🚩 **The handbook is the tight one now** (211 of
-> 220) — this file bought itself room today and that one paid some of it.
+> **522 KB together as of 2026-09-26** (157 + 216 + 149), and none of it is optional. ⚠️ Each file
+> has a byte budget with a test behind it — see §0.3. 🚩 **The handbook is the tight one now** (215 of
+> 220 KB, ~4.5 KB free).
 > 🔄 ~~**THIS FILE LIVES AT ITS CEILING**~~ **AND IT DID FOR SIX SESSIONS, UNTIL 2026-09-22.**
 > 2026-09-21 opened it with **one byte free** and tripped the budget test **five times** while writing
 > one day's summary. ~~🆕 **There are 7 KB free now, on purpose**~~ 🆕 **AND THREE BUILD SESSIONS
-> SPENT IT: ABOUT 2 KB FREE AS OF 2026-09-25.** 🔒 **The lesson is the ORDER — collapse before you
+> SPENT IT: ABOUT 2 KB FREE AS OF 2026-09-25**, and **2026-09-26 collapsed first (the 💷 block and
+> the 09-25 summary) and left ~2.6 KB**. 🔒 **The lesson is the ORDER — collapse before you
 > write, not after** — and 2026-09-25 is the worked example: it collapsed **four** dated blocks
 > (09-21, -22, -23 and the 09-16-to-20 group) and still only got back to 2 KB.
 > 🚨 **AND ONE OF THOSE BLOCKS HAD GONE FALSE, WHICH IS THE REAL ARGUMENT FOR COLLAPSING.** The
 > *"WHERE 2026-09-21 STOPPED"* note said the estimate was still a truncated reading of the set — true
 > when written, removed by the 09-25 fix, and left sitting at the top of the file telling a fresh
 > session something untrue. **A "what to expect" block outlives the thing it describes.**
-> ⚠️ **NEXT CANDIDATES, and neither needs new prose**: the sub-agent entry under Standing
-> instructions has grown six dated layers and is METHOD, so it belongs in the handbook (which has
-> ~4 KB free); and the 💷 running-costs block is a reference table that `docs/running-costs.html`
-> already holds in full.
+> ⚠️ **NEXT CANDIDATE, and it needs no new prose**: the sub-agent entry under Standing instructions
+> has grown six dated layers and is METHOD, so it belongs in the handbook — ⚠️ **measure it first**,
+> since the handbook has ~4.5 KB free. ~~The 💷 running-costs block~~ was collapsed 2026-09-26.
 > 🛑 **The fix is never to raise the number**: the failure message names what to move and where.
 > ⚠️ **The best collapses put a durable rule where it is actually looked for** — three have gone into
 > `docs/handbook.md` rather than being deleted, most recently §0.21.
@@ -44,35 +44,22 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-25 — **A SET WAS LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF.** Tim, on
-his own machine shoulder press: *"I did 55x9 … but it estimates that my overhead press 1RM is 57. I
-can't imagine the lifts being so different."* ✅ **Two faults, both fixed, pushed.**
-🚨 **(1)** `dominate()` replaced a dominated set with the dominating set re-read at the weaker set's
-reps, and that synthetic row **beat the real set it was made from** (`seatCredit` rewards low reps).
-**55×9 alone read 66.2; 55×9 then 55×5 read 56.6** — so **adding a worse set made you weaker**, the
-complaint dominance was built to answer, one level down. **20 of 29 demo seats were truncated**, 4–13 %
-low. 🚨 **(2) WORSE AND UNNOTICED**: the rewrite kept the weaker set's **date** with the stronger
-set's **weight**, so **a stale PR refreshed its own recency for ever** (demo Glutes sat on a 335×3
-from six weeks back wearing last week's date).
-✅ **It DROPS the dominated set now and manufactures nothing.** `performedReps`/`performedDate` are
-no longer produced (readers kept for older friend documents), and dominance is **idempotent**, which
-retires the two-pass chaining bug class.
-🔄 **Golden re-baselined: ten up, three down** — Calves +14 %, Neck +25 %, Traps +10 %; **Glutes
-−6.2 %, Quads −3.4 %, Back −2.7 %, and those three are fault (2) stopping.** ⚠️ **Every observation
-and contributor count unchanged** — the guard that this drops seat candidates, not evidence.
-**Mutation-checked**: disabling the drop flips 16 assertions.
-🚩 **HIS OTHER HALF, INVESTIGATED AND DELIBERATELY NOT BUILT — the conversion is LEVEL-BLIND.** The
-machine→barbell ratio runs **0.89 beginner → 1.44 elite** and the app uses the median for everyone,
-so his reading lands *below* the beginner overhead-press standard while his machine number is *above*
-the beginner machine standard. ✅ **`tools/strength-level-data.mjs` already holds five-anchor tables
-for 115 exercises**, so **percentile matching** needs no new research. 🛑 **Not bundled: it is a
-second re-baseline of every number and two in one commit means neither is attributable. His call.**
-🔄 **AND THE LAPTOP PANEL FROM 2026-09-24 WAS WORSE, NOT BETTER — he reported it and both halves were
-real.** The pane was capped at 940px so the panel sat **186px** off the right edge (now exempt, 1280px
-cap, **22px** gap, figure 546 → 790), and the table was **12.5px with a 9.5px header** against 15.5px
-body text (now 13.5/11, wide state only — the phone is untouched).
-✅ **23 suites green, 6,318 assertions.** ✅ **Chrome at nine widths.**
-**Details: `docs/history.md` 2026-09-25.**
+**Last updated:** 2026-09-26 — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
+other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim
+reviews. 🛑 **NOTHING WAS BUILT, and no code changed.** Then: *"okay forget the improvements from other
+apps. I want to build it myself."* — now a standing instruction. 🔒 **Two findings outlive it**:
+**nobody in the category shows uncertainty on a strength number** (Juggernaut, partly, on readiness
+only) — this app's design is the opening; and **MEV/MRV volume landmarks have no footprint in the
+peer-reviewed literature**, so volume targets built on them are a 🛑. **Details: `docs/history.md`
+2026-09-26.**
+
+**2026-09-25** — **A SET WAS LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF.** ✅ **Fixed and pushed.**
+`dominate()` now **drops** a dominated set instead of rewriting it — the rewrite beat the real set it
+was made from (55×9 read 66.2 alone, 56.6 with a 55×5 after it), and it laundered a stale PR's date.
+Golden re-baselined, ten up and three down, **every observation count unchanged**. 🔒 Durable halves:
+`docs/state.md`'s Muscles row, Rule 5's corollary in `docs/handbook.md` §5, and **Open work 13** —
+his other half, the level-blind conversion ratio, investigated and deliberately not built. The laptop
+panel from 2026-09-24 was fixed the same day. **Details: `docs/history.md` 2026-09-25.**
 
 **2026-09-24** — **THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP.** Tim: *"the
 muslce groups section allows for a little more space. Could you make the details on the right side a
@@ -194,7 +181,8 @@ light looks here. **Tim's words and the incident behind it are under Standing in
 is where this rule lives — this is the pointer, not a second copy.
 
 ✅ **NOTHING IS HALF-BUILT AND NOTHING IS AUTHORISED.** Everything below is committed and pushed and
-the working tree is clean **outside `Fitness_Research/`** — 🛑 **another agent's folder; stay out, and
+the working tree is clean **outside `Fitness_Research/`** and an untracked **`Claude Data/`** that is not
+this chat's (there at the 2026-09-26 open, untouched) — 🛑 **another agent's folder; stay out, and
 never `git add -A`** (first entry under **Standing instructions**).
 **All TWENTY-THREE no-Chrome suites are green — 6,318 assertions** (recounted 2026-09-25 by running
 every one), `data-layer` **2,913**, `render` **1,638**. ⚠️ **FOUR of those suites are a PARALLEL
@@ -304,32 +292,21 @@ blocks of 40+.** Worst first: `research-topics.js` 54 · `preset-systems.js` 37 
 MIS-PLACED** — almost every offender is the app explaining itself, and the rule that every caveat is
 stated on screen never said WHERE. **He points at screens.**
 
-## 💷 WHAT IT COSTS TO RUN — the numbers a fresh session should not re-derive
+## 💷 WHAT IT COSTS TO RUN — COLLAPSED TO A POINTER, 2026-09-26 (§0.3)
 
-**`docs/running-costs.html`** is the full analysis; `docs/history.md` 2026-09-06 is how it was built.
+**`docs/running-costs.html` is the full analysis and always held this table in full**;
+`docs/history.md` 2026-09-06 is how it was built. ⚠️ **Prices were confirmed 2026-09-01 and drift —
+re-confirm one before re-quoting it; the measurements are properties of this code and do not.** The
+headline: **$110/year today**, **Firestore free to ~1,894 users** since the read-pattern fix (Open work
+26; ~94 before it), and **an unchanged sync bills zero document reads** (measured 2026-09-17). What a
+fresh session must not re-derive or do:
 
-- **$110/year, total, today** — Apple's $99 plus a domain. **GitHub Pages is $0 and structurally
-  CANNOT bill** (it degrades and emails). **Basic Firebase Auth is $0 with no ceiling.**
-- **Firestore is free to ~94 users**, and below ~1,000 users the fixed cost IS the whole bill.
-- 🚨 ~~**COST SCALES WITH A USER'S HISTORY, NOT THEIR TRAINING**~~ **FIXED 2026-09-08 (Open work 26),
-  and the finding is kept because it is about this code rather than Google's prices.** `readShard()
-  ` used to `getDocs()` the whole sessions collection **every cold open**, so a three-year user cost
-  3× a one-year user for the same exercise. **Reads were 81 % of the bill at 10 k users**; reading
-  only what changed is worth **~20× at every scale** — free to **~1,894 users** instead of ~94, and
-  measured on the wire on 2026-09-17. ⚠️ **Offline persistence does not help**: a plain `getDoc` is
-  billed even when the data is on the device.
-- 🛑 **NO HARD SPENDING CAP EXISTS FOR FIRESTORE.** Google shipped spend caps 2026-07-28 and
-  **Firestore and Auth are not eligible**. Alerts lag **up to days**; the only true stop deletes the
-  billing account and the project with it.
-- 🚨 **NEVER OPT INTO IDENTITY PLATFORM** — basic Auth is unlimited and free, and the upgrade bills
-  **anonymous** users as monthly actives. **D12 makes this app anonymous-first**, so every abandoned
-  browser profile would be a line item.
-- ⚠️ **Region is a silent 2× fixed at database creation** — which one `fitness-tracker-th` uses was
-  **not checked**, and it cannot be changed afterwards.
-- ⚠️ **Ads are a worse fit than they look** — Apple 2.5.18 forbids behavioural ads on health data.
-  **No ad revenue figure was modelled**: every available RPM number is vendor marketing.
-- ⚠️ **PRICES WERE CONFIRMED 2026-09-01 AND WILL DRIFT. The measurements will not** — they are
-  properties of this code. Re-confirm every price before re-quoting one.
+- 🛑 **NO HARD SPENDING CAP EXISTS FOR FIRESTORE** — Google's 2026-07-28 caps exclude Firestore and
+  Auth, alerts lag up to days, and the only true stop deletes the project.
+- 🚨 **NEVER OPT INTO IDENTITY PLATFORM** — it bills **anonymous** users as monthly actives, and D12
+  makes this app anonymous-first.
+- ⚠️ **Region is a silent 2× fixed at creation** and `fitness-tracker-th`'s was never checked.
+  ⚠️ **Ads**: Apple 2.5.18 forbids behavioural ads on health data; no revenue figure was modelled.
 
 🔒 **Three lessons from that day are about METHOD and MOVED TO THE HANDBOOK** (2026-09-17): **§0.14**
 (a mutation check can lie in the reassuring direction), **§0.17** (a rule guarded by its weakest
@@ -677,6 +654,12 @@ for whether a day may be collapsed:
 - 🛑 **RECOMMEND ONLY WHEN ASKED**, and then give a real ranked answer. The one exception he granted:
   if a decision being made now would be **expensive to undo once moderation exists**, say so at the
   time. Nothing else gets raised unprompted.
+- 🛑 **DON'T BRING HIM FEATURES FROM OTHER APPS — Tim, 2026-09-26.** He asked for the competitive
+  review (P3), read it, and closed it: *"okay forget the improvements from other apps. I want to build
+  it myself."* The findings are in `docs/history.md` 2026-09-26 — **reference, not a queue**. ⚠️ Two
+  constrain what gets built whoever proposes it: volume targets on MEV/MRV have no literature behind
+  them, and uncertainty on a strength number is the one position no competitor holds.
+  `docs/direction.md` §4.
 - 🛑 **THE APP ICON IS CLOSED AND MUST NOT BE REOPENED** (2026-08-30, fourth pass).
 - 🔄 ~~**DO NOT BUILD THE DISCOVERY FEED**~~ **THE REFUSAL IS LIFTED — Tim, 2026-09-04: "It has to go
   eventually."** It was decided twice in writing, and both times the premise was an app for two
@@ -879,7 +862,7 @@ by name. Otherwise leave them alone.
 |---|---|---|
 | **P1** | **activity PRs** (activities Phase 2, item 5) | ⚠️ **It crosses a line the project drew on purpose.** D27 says activities are recorded first-class and **modelled not at all**, and "fastest 5k-ish" is modelling — the distance-bucketing decision *is* a judgement about what counts as comparable, and getting it wrong celebrates a PR that is not one. Nobody has asked for it, and Strava does it properly for the people who care. The fair counterargument is that lifts get a PR screen and runs do not, which reads as inconsistent. Not enough |
 | **P2** | **the Strava feed exclusion** | Correctly sequenced *inside* item 10, not ahead of it. Building a restriction for a feature that may never exist is dead code enforcing the terms of a service the app does not talk to. ⚠️ **Ready is not the same as worth it** |
-| **P3** | **the competitive review** | The odd one of the seven briefed on 2026-08-19: the six that ran inspected the **app** and found defects; this one inspects the **market** and produces opinions. `docs/competitive-teardown.html` already covers some of that ground. ⚠️ **Its likely output is a list of things other apps do — the exact input that would push this app toward inventing numbers, the one thing it is good at refusing.** Tim drives the design now and has been right every time |
+| **P3** | ✅ ~~**the competitive review**~~ **RAN 2026-09-26, on Tim's ask by name** | 🔒 **The prediction below held**: it produced a list of other apps' features and Tim set it aside — *"forget the improvements from other apps. I want to build it myself."* `docs/history.md` 2026-09-26. ~~ The odd one of the seven briefed on 2026-08-19: the six that ran inspected the **app** and found defects; this one inspects the **market** and produces opinions. `docs/competitive-teardown.html` already covers some of that ground. ⚠️ **Its likely output is a list of things other apps do — the exact input that would push this app toward inventing numbers, the one thing it is good at refusing.** Tim drives the design now and has been right every time |
 | **P4** | **the effect-size research** (items 3 and 4) | Cheap, and it **closes** rather than builds. `docs/fatigue-plan.md` §4 already argues the literature reports reps-at-fixed-load rather than 1RM decrement, and that using it would break Rule 5 — it is the only mechanism on the table that makes a number BIGGER than what was observed. The realistic output is a written "no". Worth an hour **only** to stop items 3 and 4 sitting open implying a maybe |
 
 ### Parked at Tim's instruction — do not start these
@@ -923,7 +906,7 @@ percentage with no caveat), the **accessibility audit**, the first this project 
 failed, and on 2026-08-22 **edge cases / data integrity** (the DST day-index bug and eight more),
 **the live social round trip** (it works; two defects), and **human behaviour / UX** (Goals told a
 user meeting their target that they were short). The first three are in the 2026-08-20 section and
-the rest have their own on 2026-08-22. **Only the competitive review is outstanding.**
+the rest have their own on 2026-08-22. **All seven have now run — the competitive review last, on 2026-09-26** (P3).
 
 ⚠️ **The UX review's list is where the unfinished work is**, and it is judgement rather than bugs —
 so it wants Tim's eye more than the others did. Item 1 on it is the sharpest unaddressed thing in

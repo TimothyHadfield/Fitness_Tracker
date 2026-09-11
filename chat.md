@@ -2936,3 +2936,34 @@ sitting 186px off the right edge because of a page-wide reading-width cap, and t
 with a 9.5px header against 15.5px body text. Now flush to the edge and legible, phone untouched.
 
 23 suites green, 6,318 checks.
+
+---
+
+## 2026-09-26 — what other apps have, and Tim sets it aside
+
+Caught up with the notes; nothing had moved since the last session.
+
+Then Tim asked what other workout apps have that his doesn't. That's the one review the notes had
+deliberately pinned, because its likely output is a list of things other apps do. I said so in a
+sentence and ran it anyway: research agents over Hevy, Strong, Alpha Progression, Boostcamp,
+Liftosaur, Jefit, Fitbod, RP, Juggernaut and Caliber, plus a few hundred real App Store reviews.
+Reddit was blocked, though two agents got to it through an archive.
+
+The short version of what came back. His app already does several things users are asking the big
+apps for — offline logging, per-side weights, assisted lifts charted properly, a volume body map you
+can tap into, a chart on a real time axis — and holds the one position nobody else does: showing how
+uncertain a strength number is. What it lacks, which he called small or not-yet: stall detection, a
+recap, push/pull balance, per-muscle frequency, an LLM export. And bigger: a programme generator,
+exercise demonstrations, training blocks, knowing what equipment your gym has, health-app sync, and
+a watch app it can't have as a website.
+
+One finding is a firm "don't": volume targets built on MEV/MRV. Those landmarks have no footprint in
+the research literature, RP itself calls them averages from coaching experience, and recent trials
+found no benefit to ramping volume and no harm from overshooting it. The app's refusal to draw
+targets was right.
+
+I corrected myself in front of him several times, mostly by passing on one researcher's finding
+before the next one landed. Lesson taken: wait for the lot, then summarise.
+
+He asked for the summary shorter, then plainer. Then: "okay forget the improvements from other apps.
+I want to build it myself." Dropped. Then prepared the notes for a reset.

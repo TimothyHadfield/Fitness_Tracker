@@ -17,6 +17,147 @@
 
 ---
 
+## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE
+
+🛑 **NOTHING WAS BUILT. No code changed and no suite was run** — there was nothing for one to test.
+
+**Tim, after the catch-up:** *"There are only a couple changes I think I would make off the top of my
+head before I start to not really know what to do with the app. Could you analyze the features with
+other workout apps and let me know what might be missing with mine?"* That is **P3 by name** — the
+one pinned item whose predicted failure is producing a list of things other apps do. The pin's
+reason was stated to him in one sentence and the review ran anyway, as the pin's own rule allows.
+
+### Method, and the two traps worth knowing
+
+Four top-level research agents (Hevy + Strong; Alpha Progression, Boostcamp, Liftosaur, Jefit;
+Fitbod, RP Hypertrophy, JuggernautAI, Caliber; and the demand side), which spawned their own
+children — about twenty in all. Primary sources only: vendor help centres and changelogs, **Apple's
+customer-review RSS** (`itunes.apple.com/us/rss/customerreviews/id=<appid>/sortby=mostrecent/json`),
+**Google Play's review endpoint**, GitHub, and ~350 verbatim App Store reviews for the demand side.
+
+- 🚨 **REDDIT IS BLOCKED AT EVERY LAYER** — fetch, search and every redlib mirror. Two agents reached
+  it through the **Arctic Shift archive** (`arctic-shift.photon-reddit.com/api/...`), which returns
+  raw post and comment JSON with real permalinks. It times out on full-text search of large subs
+  (r/fitness, r/naturalbodybuilding, r/bodybuilding) — "not searched", never "nothing found".
+- 🚨 **THE "BEST LIFTING APP 2026" LAYER FABRICATES PRODUCT FACTS, AND WAS EXCLUDED WHOLESALE.** It is
+  almost entirely competitor content marketing ranking itself. Two caught in the act: third-party
+  sites say **Alpha Progression warns as you approach MRV** — Alpha's own 465-term glossary has no
+  MEV, MAV or MRV entry and its own RP comparison concedes it is *"less specialized in subjective
+  volume autoregulation"*; and they say **Juggernaut "uses your e1RM trends"** — the term appears
+  nowhere in Juggernaut's own material. One "Reddit consensus" page labels its quotes *"paraphrased
+  composites"*. **A claim about an app is only as good as a first-party page or a dated review.**
+
+### What the app already has that the market does not — record these so nobody "discovers" them as gaps
+
+- **Free with no caps.** Taking away what was free is the #1 churn event in the corpus (StrongLifts'
+  lifetime-to-subscription move; Boostcamp's exercise-swap paywall, promised rolled back and still
+  locked seven months later). ⚠️ **NOT true of Hevy** — its subscription threads are overwhelmingly
+  positive, so being free is a weaker lever against the closest competitor than against the rest.
+- **Offline-first.** Hevy is not: its **19 January 2026 outage** lost users' finished workouts, and
+  its support blamed growth outrunning capacity.
+- **Per-side vs total weight.** Hevy lists it "under investigation"; Strong users are still asking.
+- **Assisted lifts charted correctly** — *"I'd like to see positive progress be shown using less
+  weight"* (Hevy, App Store and r/Hevy, unfixed since 2024).
+- **A volume body map with per-exercise drill-down.** Liftosaur — the most sophisticated volume model
+  found, 0.5 synergist credit and user ranges — has **no body map**, and GitHub issue **#622** asking
+  for one is unanswered. A Boostcamp user asked verbatim for *"biceps, 10.6 sets... see 5 of them were
+  preacher curls, 3 of them were barbell curls, and 1.6 from lat pulldowns"*.
+- **The line chart is on a real time axis** (`views-data.js:2527`). r/Hevy's second most-upvoted 2026
+  complaint (113) is that theirs is index-spaced: *"there's a four year gap between data points four
+  and five"*.
+- **Refusals that say why.** A Liftoff user asked for a warning *"when the rep limit is reached"*
+  because their rank silently stopped moving — the 2026-09-23 note, in a stranger's words.
+- **Progression that proposes and explains** (`PROGRESSION_EXPLAINER` / `PROGRESSION_WHY`). A Jefit
+  user copies their numbers into the Notes app to escape Jefit's engine.
+- **Rounding DOWN to a real increment, and printing nothing when no plates make it.** RP's sharpest
+  current complaint is 0.75 kg / 1.75 kg jumps, 2.5 lb on machines with no 2.5, *"How am I expected
+  to go from a 15 kg dumbbell to 15.5 kg?"*
+- **Session notes readable in the day view** (`DayView`, `views-data.js:1372`). Notes that cannot be
+  read back are the single most-repeated feature complaint across Hevy and Strong.
+- 🔒 **THE ONE UNOCCUPIED POSITION: NOBODY SHOWS UNCERTAINTY ON A STRENGTH NUMBER.** Juggernaut is the
+  lone partial exception — a readiness card reading `WINDOW 62-73` over a 64, and load prescribed as a
+  range — and markets neither. **Fitbod computes its own prediction error ("1RM displacement") and
+  never shows it.** Across Fitbod, RP and Juggernaut the recurring complaint is not bad theory but
+  *"it did something odd, I couldn't see why, I told it and it didn't listen."*
+
+### What competitors have that the app does not
+
+- **Small, per Tim**: stall detection on a lift's own estimate (`stallReasons()` only names causes,
+  only inside Goals); a weekly or yearly recap (Hevy, Boostcamp, Jefit); movement balance push:pull
+  and hinge:squat (Jefit); frequency per muscle (Liftosaur); body measurements; one-tap export to an
+  LLM (Hevy 9 Sep 2026, Caliber's MCP server, Liftosaur's MCP server).
+- **Big**: a **programme generator** (everyone — including **Hevy Trainer since 18 Feb 2026**, bundled
+  into Pro at $2.99/mo or $74.99 lifetime, which is the price floor); **exercise demonstrations** (the
+  manifest is empty; Alpha has 795 filmed, Jefit 1,400+, Hevy 400+) — first called "small, a
+  purchase", corrected: for strangers and beginners it is a wall; **training blocks** with phases and
+  deloads; **equipment-aware prescription with multiple gym profiles** (Alpha, Jefit, Liftosaur); and
+  **Apple Health / Health Connect / Strava**.
+- **Structural**: **Apple Watch** — a top-three defection cause (~19 % of Strong's recent reviews
+  mention it). A PWA cannot, nor Live Activities or the Dynamic Island.
+
+### 🛑 DO NOT BUILD VOLUME TARGETS ON LANDMARKS (MEV / MAV / MRV) — the evidence
+
+- **PubMed returns zero** for "maximum recoverable volume" / "maximal recoverable volume" with
+  hypertrophy, zero for "minimum effective volume" with resistance training, zero for "volume
+  landmarks". Israetel's six indexed papers operationalise none of them. "Stimulus-to-fatigue ratio"
+  returns no resistance-training paper — it is an RP coinage.
+- **RP says so, quietly** (Bicep guide, 31 Dec 2023): *"these are averages based on our experience
+  working with lots of clients and our own training... not dogmatic scriptures to follow to the
+  letter."* The app's sales page says *"know exactly the weight and reps"*.
+- **RP's own numbers moved and nothing was corrected**: a 2019 SBS piece co-written by Israetel put
+  ~30 sets a week *"probably near or beyond MRV"*; RP's 12 Sep 2025 arms blueprint builds to ~30 sets
+  per arm muscle, above its own still-live biceps MRV of 20–26.
+- **Wadhi et al., *J Appl Physiol* 2025, DOI 10.1152/japplphysiol.00476.2024** — +30 % and +60 % over
+  maintained volume: no hypertrophy advantage.
+- **Camargo et al. 2026, bioRxiv DOI 10.64898/2026.02.23.707462 — PREPRINT** — a +120 % abrupt
+  increase: no impairment, which is the opposite of what an exceeded ceiling predicts.
+- **Robinson et al. 2025, bioRxiv DOI 10.1101/2025.07.24.666533 — PREPRINT** — replicated
+  within-participant design; the tendency to respond better to one volume correlated **0.04–0.06**
+  across phases. Personal volume optima are not reliably detectable, so "your MRV" has no referent.
+- **Räntilä & Ahtiainen, *J Sci Sport Exerc* 2026, DOI 10.1007/s42978-026-00387-7** — no benefit
+  past ~60 sets a week, and no decrement either.
+- ✅ **What survives is already in the app**: Pelland et al., *Sports Med* 2026, DOI
+  10.1007/s40279-025-02344-w — 100 % posterior probability that volume increases gains, with
+  diminishing returns and no modelled downturn. That is the source of the efficiency tiers.
+
+⇒ **Rule 6's refusal to draw volume targets was right, and now has evidence rather than caution
+behind it.** Juggernaut exposes MEV/MRV numerically per lift, and its dominant complaint for five
+years is volume the app will not reduce — *"preemptively assume you are on gear"*; its vendor
+publicly shipped a fix in 2025 that existing users only got by manually recalculating. An RP user:
+*"It gave me tendinitis and most of my year with it was fighting against the app."*
+
+### Six corrections made to Tim mid-session, so this record matches what he was told
+
+1. *"Decides and explains is unoccupied"* — **wrong**: Jefit shipped per-target reasoning in Sep 2026.
+2. *"The 0.5 indirect rule is unique to you"* — **wrong**: Liftosaur's synergist default is 0.5.
+3. *"Nobody shows uncertainty"* — **narrowed**: Juggernaut does, on readiness and load only.
+4. *"The paywall is the loudest complaint about every app"* — **wrong for Hevy**.
+5. *"Alpha warns at MRV"* — **almost certainly false**; see the traps above.
+6. *"Exercise demos are small"* — **wrong**, see Big above.
+
+⚠️ **The method lesson inside those**: five of the six were a finding reported on one agent's word
+before a second agent's report landed. **With parallel researchers, hold the synthesis until they are
+in** — drip-feeding interim findings meant correcting four of them in front of him.
+
+### How it ended
+
+He read the list and said the small items did not appeal or were not for now, asked for bigger
+ones, got the five above, then: 🛑 **"okay forget the improvements from other apps. I want to build
+it myself."** Dropped on the spot, and recorded in `docs/direction.md` §4 as how he wants to be
+worked with. **The findings are reference, not a queue.** Then *"prepare md files for chat reset"*.
+
+### Loose ends, none of them work
+
+- **`docs/competitive-teardown.html` is from August and now stale** in several claims (Alpha as the
+  "lone exception" on per-muscle volume, "skip the social layer", RP's autoregulation as the thing to
+  steal). This section supersedes it. Not edited: it is HTML and the ask was the md files.
+- The agents' raw dumps (900 Play reviews, 611 r/Boostcamp posts) sat in this session's scratchpad
+  and do not survive it.
+- An **untracked `Claude Data/` folder** is at the repo root. It was there when the session opened, is
+  not this chat's, and was not touched.
+
+---
+
 ## 2026-09-25 — A SET WAS LOSING ITS SEAT TO A TRUNCATED COPY OF ITSELF
 
 **Tim, on his own machine shoulder press:** *"I did 55x9 on the machine shoulder press, but it
