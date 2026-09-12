@@ -2744,6 +2744,83 @@ ok(!data.querySelector('.rep-target'),
   const missing = await mount(ExploreDetailView('no-such-preset'));
   ok(/no longer exists/.test(missing.textContent),
      'an unknown system id gives a real screen, not a crash');
+
+  /* ================= ADDING ONE, AND TAKING IT BACK (2026-09-27) =================
+   *
+   * Tim: *"it's very unclear when it's officially added. Could you add a message
+   * that says something like 'added' and then changes the button to 'remove from
+   * my system'"* — and, in the same report, *"After I added it, it says there
+   * are no workouts in that system, even though when I view it in the explore
+   * menu, it lists the workouts."*
+   *
+   * 🚨 NOTHING HAD EVER CLICKED THIS BUTTON. The whole add path — the copy, the
+   * confirmation, the navigation — was untested, which is why a screen that
+   * threw its own confirmation away survived to be reported. */
+  {
+    const { store } = await import(BASE + 'store.js');
+    await store.clearAll();
+
+    const ppl = PRESET_SYSTEMS.find((p) => p.id === 'preset-nippard-ppl-2023') || PRESET_SYSTEMS[0];
+    const screen = await mount(ExploreDetailView(ppl.id));
+    await settle();
+
+    const addBtn = [...screen.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Add to my systems');
+    ok(Boolean(addBtn), 'a fresh account is offered the plain Add button');
+
+    addBtn.click();
+    for (let i = 0; i < 10; i++) await settle();
+
+    /* 🔒 THE COPY LANDED COMPLETE, and this is the half the bug report doubted.
+       Asserted against the store rather than the screen: what he could not see
+       was whether the DATA arrived, and that is a different question from what
+       any screen chose to draw. */
+    const systems = await store.getSystems();
+    const copy = systems.find((s) => s.presetId === ppl.id);
+    ok(Boolean(copy), 'tapping Add copies the programme into the account');
+    const inside = await store.getWorkouts(copy.id);
+    ok(inside.length === ppl.workouts.length,
+       `🚨 with ALL ${ppl.workouts.length} of its workouts, not none (${inside.length}) — the thing `
+       + 'the bug report was actually about');
+
+    /* ---- and the screen now says so, in place ---- */
+    const after = await mount(ExploreDetailView(ppl.id));
+    await settle();
+    const afterText = after.textContent.replace(/\s+/g, ' ');
+    ok(/Added to your systems/.test(afterText),
+       '🚨 the screen SAYS it is added — a receipt that stays, where the old one was a toast '
+       + 'destroyed by the navigation that fired with it');
+    ok([...after.querySelectorAll('button')].some((b) => /Remove from my systems/.test(b.textContent)),
+       'and the button Tim asked for is there');
+    ok(!/^Add to my systems$/m.test(afterText.trim()) || /Add another copy/.test(afterText),
+       '…while adding a second copy is still possible, because two copies is a tested feature');
+
+    /* 🚨 THE SENTENCE THAT EXPLAINS WHAT HE SAW. The copy is not the current
+       programme — adding deliberately does not switch you — so the Workouts tab
+       still shows the old one. Before today nothing said that anywhere. */
+    ok(/will not appear there until you switch/.test(afterText)
+       || /It is your current programme/.test(afterText),
+       '🔒 and it states where the copy does and does not show up, which is the whole bug report');
+
+    /* ---- remove it again ---- */
+    const removeBtn = [...after.querySelectorAll('button')]
+      .find((b) => /Remove from my systems/.test(b.textContent));
+    removeBtn.click();
+    for (let i = 0; i < 6; i++) await settle();
+    const confirm = [...document.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Remove');
+    ok(Boolean(confirm),
+       '🛑 removing asks first — it deletes the workouts inside it, like every other delete here');
+    confirm.click();
+    for (let i = 0; i < 10; i++) await settle();
+
+    const left = await store.getSystems();
+    ok(!left.some((s) => s.presetId === ppl.id), 'confirming removes the copy from the account');
+    ok((await store.getWorkouts()).length === 0,
+       '…and its workouts with it, which is what deleteSystem() has always done');
+
+    await store.clearAll();
+  }
 }
 
 
@@ -3680,8 +3757,16 @@ ok(!data.querySelector('.rep-target'),
      'switching to the empty programme shows it');
   ok(!emptyTab.querySelector('.own-rating'),
      'and it shows no rating rather than an empty one');
-  ok(/No workouts in this system yet/.test(emptyTab.textContent),
-     'saying so in words, with New workout beside it');
+  /* 🔄 IT NAMES THE PROGRAMME SINCE 2026-09-27, and the bug report is the
+     reason this assertion got stricter rather than looser. Tim added a
+     programme from Explore, tapped Workouts, and read "No workouts in this
+     system yet" as the copy having arrived empty — it had not; the tab was
+     showing his current programme, which is a different one. An unnamed "this
+     system" cannot tell those two apart, so the name is now the assertion. */
+  ok(/Nothing here has no workouts yet/.test(emptyTab.textContent),
+     '🚨 saying so in words AND naming which programme it means, with New workout beside it');
+  ok(!/No workouts in this system yet/.test(emptyTab.textContent),
+     '…and the old unnamed wording is gone rather than sitting beside the new one');
 
   await store.clearAll();
 

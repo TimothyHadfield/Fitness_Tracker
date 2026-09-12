@@ -2996,3 +2996,20 @@ the three shared timing values, so it passed. Fixed, and both are written down.
 
 He then reported two things about adding a ready-made programme: no clear confirmation that it was
 added, and the added programme showing no workouts even though Explore lists them all.
+
+Both fixed, and the second one was not what it looked like. His copy of Ultimate Push Pull Legs was
+complete the whole time — all six workouts, every exercise — and I proved that by driving the real
+Add button and checking the stored data rather than the screen. What he was looking at afterwards was
+the Workouts tab, which always shows your *current* programme, and adding one deliberately doesn't
+switch you to it. So he was reading his old, empty programme being told it had no workouts. I left
+that rule alone and fixed what was actually missing: the empty state now names which programme it
+means, and the Explore screen says outright that a copy won't appear on the Workouts tab until you
+switch, with a button to switch.
+
+The confirmation was being thrown away by the app itself — it showed "added" and changed screens in
+the same instant. Now it stays on the screen, says "Added to your systems", and the button becomes
+"Remove from my systems". Two other things came out of it: a failed add could leave half a programme
+behind and say nothing, which is now caught, and nothing in the test suite had ever clicked that
+button, which is how a screen that destroyed its own confirmation survived long enough to be
+reported. I also found, and left alone, a separate bug where an old workout from before programmes
+existed gets absorbed into whichever programme is newest.

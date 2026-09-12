@@ -5409,6 +5409,18 @@ a.feed-mine-row:active { background: var(--raised); }
 .feed-mine-what { font-size: 12px; font-weight: 650; color: var(--ink-soft); }
 .feed-mine-who { font-size: 13px; color: var(--ink); line-height: 1.45; overflow-wrap: anywhere; }
 
+/* "Added to your systems" — the receipt on the Explore detail screen.
+   Not a button and not a toast: a toast is gone in 2.4s and the old version
+   fired one at the same moment it navigated away, which is why Tim could not
+   tell whether the add had worked. This stays on the screen for as long as the
+   copy exists. Accent tick, ordinary ink, no box (Rule 2). */
+.added-note {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13.5px; font-weight: 650;
+  padding: 2px 0 2px;
+}
+.added-note svg { color: var(--accent); flex: none; }
+
 /* ── Your own workouts, as cards ───────────────────────────────────────────
    `#/me/workouts` draws the same card the feed does (js/workout-card.js).
 

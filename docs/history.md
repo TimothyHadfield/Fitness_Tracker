@@ -116,6 +116,63 @@ on your own workout**; `#/me/workouts/<id>` marks exactly one card and hides non
 bare route marks nothing (the vacuity guard); and an id naming a deleted workout shows the list from
 the top rather than explaining an absence.
 
+### THEN A BUG REPORT, AND THE COPY WAS NEVER THE PROBLEM
+
+**Tim, later the same session:** *"right now I tried viewing a pre-made program workout system
+(ultimate push pull legs) and then adding it to my system, and it's very unclear when it's officially
+added. Could you add a message that says something like 'added' and then changes the button to
+'remove from my system' or something like that? Additionally, After I added it, it says there are no
+workouts in that system, even though when I view it in the explore menu, it lists the workouts and
+all their exercises and details."*
+
+🟢 **Two read-only agents in parallel** — one on the empty-system trace, one mapping the button — and
+**both fixes written by hand afterwards**, because both land in `views-workouts.js` and two agents
+writing one file is the collision the sub-agent rules exist to prevent.
+
+🚨 **THE SECOND HALF WAS NOT A BUG IN THE COPY, AND TWO WRONG HYPOTHESES DIED ON THE WAY.**
+**(1)** `addPresetSystem()` has `if (!exercises.length) continue;` — a workout whose exercise names
+all fail to resolve is skipped whole and silently. Resolving all nine presets against the real
+library: **`preset-nippard-ppl-2023` → 6 workouts, 0 unresolved, 0 dropped.** Dead.
+**(2)** The read cache. Driving the real sequence in Node — warm the cache the way boot does, add the
+preset, then read the new system exactly as `#/system/<id>` does — returned **6 of 6**, with the rows
+on disk under the right `systemId`. Dead. `backend.write()` refreshes the cache immediately after
+every successful write, so there is no stale window.
+
+🔒 **THE ACTUAL CAUSE: the Workouts tab renders the CURRENT programme, and adding deliberately does
+not make a copy current.** So `add()` dropped him on `#/system/<newId>` — six workouts present — and
+the moment he tapped Workouts he was back on his old, empty programme reading *"No workouts in this
+system yet"*. **The data was perfect; the screen was describing something else and could not say so.**
+
+🛑 **THE RULE WAS NOT REVERSED.** Copying a programme to look at it is still not a statement that you
+are switching to it, and moving somebody off the plan they are running mid-week changes what Record
+offers under them. **What was missing is that nothing SAID any of it at the moment it mattered.**
+
+✅ **What shipped.** `systemBody()`'s empty state **names the programme** — *"Nothing here has no
+workouts yet"*. `add()` **no longer navigates**: it stays put and `refreshRoute()`s, so the foot of
+the Explore screen becomes a standing receipt (*"Added to your systems"*, an accent tick, **Open it**,
+**Add another copy**, **Remove from my systems** behind the usual `confirmSheet`), and when the copy
+is not current it says *"Your Workouts tab shows <name>, so this one will not appear there until you
+switch to it"* with **Make it my current programme** beside it. 🛑 **Remove is offered only when there
+is exactly ONE copy** — two copies is a deliberate, test-pinned feature, and with two the button
+would have to choose one for you.
+
+⚠️ **AND A SILENT PARTIAL FAILURE WAS CLOSED.** The system row is written first and the workouts
+follow one at a time with no transaction or rollback, and `add()` had no `try`/`catch` — so a write
+refused partway (the zero-guard, a rules denial, a full disk) left a real system holding some of its
+days and told nobody, because the throw happened before the toast. The agent forced it: *"SYSTEM ROW
+WRITTEN ANYWAY: 1 … workouts that survived: 2 of 6."*
+
+🚩 **NOTHING HAD EVER CLICKED THAT BUTTON.** The copy, the confirmation and the navigation were all
+untested, which is how a screen that destroyed its own confirmation survived to be reported. The new
+block drives the real Add, asserts the six workouts **against the store** rather than the screen —
+that is the half the report doubted, and it is a different question from what any screen chose to
+draw — then clicks Remove and its confirm. **1,657 assertions, 0 failures.**
+
+🚩 **ONE INCIDENTAL BUG FOUND AND DELIBERATELY NOT FIXED**: a pre-systems workout with no `systemId`
+is stamped onto `systemsRows[0]` by `ensureSystems()`, which can be a programme just copied from
+Explore — the agent produced a 7-workout *"Ultimate Push Pull Legs"* containing an unrelated "Old
+workout". **Reported, not fixed**: it mutates stored data and nobody asked for it.
+
 ---
 
 ## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE

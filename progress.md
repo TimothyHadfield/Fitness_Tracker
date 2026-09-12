@@ -56,7 +56,19 @@ difference between the two cards**, and it is not a preference: your `#/day/` ex
 session has entries, a friend's projection may carry none. 🚨 **AND THE A11Y SUITE PASSED A 1600ms
 ANIMATION** — its duration check reads the three `--t*` TOKENS, never a `@keyframes` that hard-codes
 its own; **a test that pins the tokens does not pin the motion.** Rewritten on `--t-slow`.
-**Render 1,646 · a11y · data-layer all green. Details: `docs/history.md` 2026-09-27.**
+**Render 1,657 · a11y · data-layer all green. Details: `docs/history.md` 2026-09-27.**
+
+🆕 **AND THEN A BUG REPORT: "I added Ultimate Push Pull Legs and it says there are no workouts in that
+system."** ✅ **Fixed and pushed.** 🚨 **THE COPY WAS ALWAYS COMPLETE** — six workouts, 0 unresolved
+names, proved by driving the real Add button and asserting against the STORE. **The Workouts tab
+renders the CURRENT programme and adding deliberately does not make a copy current**, so he was
+reading his old empty one. 🛑 **The rule was not reversed**: `systemBody()`'s empty state now NAMES its
+programme, and Explore says a copy will not appear there until you switch. 🔄 **`add()` no longer
+navigates** — it stays put and `refreshRoute()`s, so *"Added to your systems"* is a standing receipt
+with **Remove from my systems** beside it (one copy only; two copies is a tested feature).
+⚠️ **A failed add could leave HALF a programme and said nothing** — now wrapped. 🚩 **Nothing had ever
+clicked that button.** 🚩 **Found, NOT fixed**: `ensureSystems()` stamps a `systemId`-less legacy
+workout onto `systemsRows[0]`, which can be a programme just copied.
 
 **2026-09-26** — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
 other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim

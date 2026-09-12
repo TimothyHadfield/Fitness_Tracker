@@ -929,7 +929,15 @@ async function systemBody(system, workouts) {
             ),
             chevron(),
           )))
-      : emptyState('No workouts in this system yet',
+      /* 🚨 IT NAMES THE PROGRAMME SINCE 2026-09-27, and the bug report is why.
+       * This screen is drawn for the CURRENT programme on the Workouts tab and
+       * for whichever one you opened on `#/system/<id>`, so an unnamed "this
+       * system" is read as being about the last system the reader was thinking
+       * about — which, right after adding a programme from Explore, is the copy
+       * they just made rather than the one on screen. Tim read it as the copy
+       * arriving empty. The copy was complete; the tab was showing something
+       * else, and the sentence could not tell him which. */
+      : emptyState(`${system.name} has no workouts yet`,
           'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
     el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
       icon('plus'), 'New workout'),
@@ -1801,8 +1809,12 @@ function warningBlock(text) {
 }
 
 export async function ExploreDetailView(id) {
-  const [{ presetById, presetSetCount }, added] = await Promise.all([
-    import('./preset-systems.js'), store.addedPresetIds(),
+  /* 🔄 `getSystems()` RATHER THAN `addedPresetIds()` SINCE 2026-09-27. The Set
+   * answers "is it added" and nothing else; Remove needs the system's ID, and
+   * "is it the one your Workouts tab is showing" needs the row. Both are on the
+   * list this already had to read. */
+  const [{ presetById, presetSetCount }, systems, workouts] = await Promise.all([
+    import('./preset-systems.js'), store.getSystems(), store.getWorkouts(),
   ]);
   const preset = presetById(id);
 
@@ -1813,12 +1825,120 @@ export async function ExploreDetailView(id) {
     });
   }
 
-  const alreadyAdded = added.has(preset.id);
+  const copies = systems.filter((s) => s.presetId === preset.id);
+  const current = await store.currentSystem({ systems, workouts }).catch(() => null);
 
+  /* 🚨 THE BUG TIM REPORTED ON 2026-09-27, AND IT WAS NEVER THE COPY.
+   *
+   * *"After I added it, it says there are no workouts in that system, even
+   * though when I view it in the explore menu, it lists the workouts and all
+   * their exercises and details."*
+   *
+   * The copy lands complete — six workouts, every exercise resolved, proved by
+   * driving the real Add button. What he then looked at was the WORKOUTS TAB,
+   * which renders the CURRENT programme, and adding deliberately does not make
+   * a copy current (see the "Make this my current programme" button's own
+   * comment). So he was reading a different, empty system and being told it had
+   * no workouts — which reads as the copy having failed.
+   *
+   * 🛑 THE RULE IS NOT REVERSED. Copying a programme to look at it is still not
+   * a statement that you are switching to it. What was missing is that nothing
+   * SAID so at the moment it mattered, so the screen now says it and offers the
+   * switch in one tap. */
   async function add() {
-    const { system, skipped } = await store.addPresetSystem(preset);
-    toast(skipped ? `Added — ${skipped} exercise(s) skipped` : 'Added to your systems');
-    go('#/system/' + system.id);
+    try {
+      const { skipped } = await store.addPresetSystem(preset);
+      toast(skipped ? `Added — ${skipped} exercise(s) skipped` : 'Added to your systems');
+      /* 🔄 IT NO LONGER NAVIGATES, and that is the other half of what he asked
+       * for: *"it's very unclear when it's officially added."* The old version
+       * toasted and called `go('#/system/<id>')` in the same breath, so the one
+       * confirmation the feature had was destroyed by the screen change that
+       * followed it. Staying put means the button itself is the receipt. */
+      refreshRoute();
+    } catch (err) {
+      /* 🚨 A FAILED ADD USED TO BE SILENT AND COULD LEAVE HALF A PROGRAMME.
+       * The system row is written first and the workouts follow one at a time
+       * with no transaction, so a write refused partway — the zero-guard, a
+       * rules denial, a full disk — left a real system holding some of its
+       * days and told nobody, because the throw happened before the toast. */
+      toast('That could not be added. ' + ((err && err.message) || ''));
+      refreshRoute();
+    }
+  }
+
+  function remove(copy) {
+    const inside = workouts.filter((w) => w.systemId === copy.id).length;
+    confirmSheet({
+      title: `Remove ${copy.name}?`,
+      message: inside
+        ? `${plural(inside, 'workout')} inside it will be deleted too. Workouts you have already `
+          + 'recorded stay in your history and on your calendar — only the templates go.'
+        : 'It has no workouts in it.',
+      confirmLabel: 'Remove',
+      onConfirm: async () => {
+        await store.deleteSystem(copy.id);
+        toast('Removed from your systems');
+        refreshRoute();
+      },
+    });
+  }
+
+  async function makeCurrent(copy) {
+    await store.setCurrentSystem(copy.id);
+    toast('Now your current programme');
+    refreshRoute();
+  }
+
+  /* What the foot of the screen says, in three states.
+   *
+   * ⚠️ TWO COPIES IS A FEATURE, NOT A MISTAKE — `addPresetSystem()` is
+   * deliberately not idempotent and a data-layer test pins that deleting one
+   * copy leaves the other alone. So "Remove from my systems" is only offered
+   * when there is exactly ONE copy to mean; with two, the button would have to
+   * pick one for you and there is no honest way to choose. */
+  function foot() {
+    if (!copies.length) {
+      return [
+        el('button', { class: 'btn primary block', text: 'Add to my systems', onClick: add }),
+      ];
+    }
+
+    if (copies.length > 1) {
+      return [
+        el('div', { class: 'field-help', text:
+          `Added — you have ${copies.length} separate copies of this in your systems.` }),
+        el('button', { class: 'btn block', text: 'Open the first one',
+          onClick: () => go('#/system/' + copies[0].id) }),
+        el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
+        el('div', { class: 'field-help', text:
+          'Remove one from its own screen — with more than one copy, this button could not know '
+          + 'which you meant.' }),
+      ];
+    }
+
+    const copy = copies[0];
+    const isCurrent = Boolean(current && current.id === copy.id);
+    return [
+      el('div', { class: 'added-note' }, icon('check', 16), 'Added to your systems'),
+      isCurrent
+        ? el('div', { class: 'field-help', text:
+            'It is your current programme, so it is what your Workouts tab shows.' })
+        : el('button', { class: 'btn primary block', text: 'Make it my current programme',
+            onClick: () => makeCurrent(copy) }),
+      // 🚨 THE SENTENCE THAT WOULD HAVE SAVED THE BUG REPORT.
+      isCurrent
+        ? null
+        : el('div', { class: 'field-help', text:
+            `Your Workouts tab shows ${current ? current.name : 'your current programme'}, so this `
+            + 'one will not appear there until you switch to it. It is on its own screen either way.' }),
+      el('button', { class: 'btn block', text: 'Open it',
+        onClick: () => go('#/system/' + copy.id) }),
+      el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
+      el('div', { class: 'field-help', text: 'Adding it again makes a second, separate copy.' }),
+      el('div', { class: 'danger-zone' },
+        el('button', { class: 'btn danger block', text: 'Remove from my systems',
+          onClick: () => remove(copy) })),
+    ];
   }
 
   return screenShell({
@@ -1887,21 +2007,7 @@ export async function ExploreDetailView(id) {
           ))),
       ]),
     ],
-    bottom: [
-      el('button', {
-        class: 'btn primary block',
-        text: alreadyAdded ? 'Add another copy' : 'Add to my systems',
-        onClick: add,
-      }),
-      // ⚠️ The button above already says "Add another copy" when this shows, so
-      // "You have already added this one" was the button read back to the
-      // reader — the shape Rule 9 deletes rather than hides. What is left is
-      // the half the button does not say: the two copies are separate.
-      alreadyAdded
-        ? el('div', { class: 'field-help', text:
-            'Adding it again makes a second, separate copy.' })
-        : null,
-    ],
+    bottom: foot().filter(Boolean),
   });
 }
 
