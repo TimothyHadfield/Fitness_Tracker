@@ -67,8 +67,26 @@ programme, and Explore says a copy will not appear there until you switch. 🔄 
 navigates** — it stays put and `refreshRoute()`s, so *"Added to your systems"* is a standing receipt
 with **Remove from my systems** beside it (one copy only; two copies is a tested feature).
 ⚠️ **A failed add could leave HALF a programme and said nothing** — now wrapped. 🚩 **Nothing had ever
-clicked that button.** 🚩 **Found, NOT fixed**: `ensureSystems()` stamps a `systemId`-less legacy
-workout onto `systemsRows[0]`, which can be a programme just copied.
+clicked that button.**
+
+🚨 **AND THAT FIX WAS WRONG — HE PROVED IT, AND THE CAUSE WAS THREE BUGS DEEP.** 🛑 **"Your copy is
+fine" was a claim about the WRONG MACHINE**: the repro that proved it ran on `LocalBackend` and his
+phone runs Firestore. 🔒 **THE CAUSE: FIRESTORE CANNOT STORE AN ARRAY WHOSE ELEMENTS ARE ARRAYS.**
+`reps` was one `[lo, hi]` pair per set — **210 nested arrays** in one copy — so `setDoc()` rejected
+the whole document. The system row is written first and holds only scalars, so it landed; the first
+`saveWorkout()` threw, the `workouts` document was **never created**, and every read returned `[]`.
+🚨 **NOT A PRESET BUG — any workout with per-set rep prescriptions has been unsaveable to the cloud
+since 2026-09-18, including a hand-built one.** ✅ **Stored shape is now `{lo, hi}`; the in-memory
+shape is unchanged and `normalizeRepSpec` reads all three forms, so nothing on disk is lost.**
+🚩 **The quiet breakage on the way**: `sameReps()` returned false for any non-Array, which would have
+called **every** exercise of every copy edited and refused real updates. 🔒 **Why nothing caught it:
+`LocalBackend` is `JSON.stringify` and the Firestore double type-checks nothing — the only thing that
+refuses nested arrays is the real server, which no suite reaches.** ✅ **A guard now walks every
+collection and fails on any nested array.** 🚩 **Two more real bugs fixed, NEITHER TESTABLE HERE** (the
+window is zero locally and seconds on Firestore): `ensureSystems()` could write back a pre-copy
+snapshot and lose the six new rows — neither the zero-guard nor the mass-delete guard can see it —
+and a stale revalidation could blank a screen for 30 s **and then suppress its own re-check.**
+**Details: `docs/history.md` 2026-09-27.**
 
 **2026-09-26** — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
 other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim
@@ -87,20 +105,14 @@ Golden re-baselined, ten up and three down, **every observation count unchanged*
 his other half, the level-blind conversion ratio, investigated and deliberately not built. The laptop
 panel from 2026-09-24 was fixed the same day. **Details: `docs/history.md` 2026-09-25.**
 
-**2026-09-24** — **THE DETAIL PANEL GETS ITS FIVE COLUMNS ON A LAPTOP.** Tim: *"the
-muslce groups section allows for a little more space. Could you make the details on the right side a
-little wider so that you don't need to click 'more details' … Keep the version the same on the phone
-to conserve space."* ✅ **Done and pushed.** At **≥1024px** the panel widens and the two derived
-columns default to showing, header and all; the button stays as *Fewer details*. 🛑 **The phone is
-byte-for-byte unchanged, and so is everything between 860 and 1023.**
-⚠️ **COLLAPSED 2026-09-25** (§0.3) — the durable halves are the Muscles row in `docs/state.md` and
-the note on Rule 3's corollary in `docs/handbook.md` §5, which is where the reasoning belongs: the
-first version widened at 860 and **the measurement is the only reason it did not ship**, because it
-crushed the figure to 298px against a 320px panel. 🔒 **`sourceColumns` is `false | true | null`**
-(`null` = the layout decides, an explicit tap still wins) and **the breakpoint lives in two files
-with `tests/a11y.test.mjs` failing if they drift.** 🚩 **It also found a test passing for the wrong
-reason** — a block restored `false` rather than *unset*, so later blocks tested an explicit "no"
-while believing they tested the default; `resetPanelViewState()` is the fix, test-only.
+**2026-09-24 — COLLAPSED AGAIN 2026-09-27** (§0.3). **The muscle panel gets five columns at
+≥1024px**, phone byte-for-byte unchanged. 🔒 **Durable halves: `docs/state.md`'s Muscles row and Rule
+3's corollary in `docs/handbook.md` §5** — *when a layout change makes the CONTENT pay, the answer is
+a different breakpoint rather than a different ratio, and only a browser can tell you which* (at 860
+the figure crushed to 298px against a 320px panel). 🔒 **`sourceColumns` is `false | true | null`**
+and **the breakpoint lives in two files, with `tests/a11y.test.mjs` failing if they drift.**
+🚩 **It also found a test passing for the wrong reason** — a block restored `false` rather than
+*unset*, so later blocks tested an explicit "no" believing they tested the default.
 **Details: `docs/history.md` 2026-09-24.**
 
 **2026-09-23** — **CALVES AND NECK RANK LIKE EVERY OTHER MUSCLE.** Tim: *"make calves
@@ -143,13 +155,9 @@ out — he asked for two extra numbers only. **`docs/history.md` 2026-09-21 seco
 ✅ ~~**TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE**~~ **BOTH BUILT ON 2026-09-23** — the
 calves rep gate and the neck standards. Rows 11 and 12 below carry what shipped.
 
-**2026-09-21 (first pass)** — ✅ ~~**the muscle panel was naming a set nobody had done**~~
-**SUPERSEDED 2026-09-25 AND COLLAPSED WITH IT.** That day patched the SCREEN (`performedReps` /
-`performedDate`) while leaving the fabrication in the model; 2026-09-25 removed the fabrication and
-those fields with it. 🔒 **The durable half is Rule 5's corollary in `docs/handbook.md` §5**, which
-now carries both halves — including the general form the second pass taught: **a display fix on top
-of a model that invents data leaves the invention running.** Full account: `docs/history.md`
-2026-09-21 and 2026-09-25.
+**2026-09-21 (first pass)** — ~~the panel named a set nobody had done~~ **SUPERSEDED 2026-09-25**
+(§0.3). 🔒 **Durable half: Rule 5's corollary in `docs/handbook.md` §5** — *a display fix on top of a
+model that invents data leaves the invention running.* `docs/history.md` 2026-09-21 and -25.
 
 ## 2026-09-18 to 2026-09-20 — COLLAPSED TO FOUR LINES, 2026-09-22 (§0.3)
 
@@ -229,28 +237,15 @@ COLLAPSED INTO THIS ONE**, and 🚨 **the 09-21 one had gone FALSE**: it said th
 truncated reading of the set, which is exactly what 09-25 removed. **A "what to expect" block outlives
 the thing it describes and then misleads** — collapse them forward, do not stack them.
 
-🚩 **WHAT TO EXPECT A REPORT ABOUT, and every one was stated to him at the time.**
-- **Every rating in the app went UP a few percent on 2026-09-25** (calves +14 %, neck +25 %) and
-  **Glutes, Quads and Back went DOWN** (−6.2 / −3.4 / −2.7 %). The falls are a fabrication stopping,
-  not a loss: an old heavy set used to wear a recent set's date and read as fresh.
-- **The neck reads near Intermediate for almost everybody** — the page's Elite is 38.8× its Beginner.
-  Priced into `standardQuality` 0.4, and the cost he accepted knowingly.
-- **His converted numbers are still low at the light end** — that is Open work **13**, the
-  level-blind ratio, diagnosed with his own data and deliberately not built.
-- **The female figure** fills the whole shin where the male's colours cover only the bellies, and its
-  hands sit further from the body — that is the art, not the pipeline.
-
-🚩 **AND THREE THINGS FOUND ON THE WAY THAT ARE NOT BUILT.**
-- **The demo has no hatched muscle left** (its Neck Curl was the one, and Neck ranks now), so
-  "trained but unrankable" is unreachable in the account used to audit every screen. Fixing it needs
-  a new demo exercise, which re-rolls the seeded year — Open work 25, his call.
-- **With nothing else rated at all**, a lifter whose only work is long sets sees *"Nothing to rank
-  yet"* and no figure — the hatch needs one rated muscle beside it to exist on. Pre-existing.
-- **A neck panel is 70 words against the 40-word cap**, 29 of them the caveat. Core already does this
-  and the cap's fixture is a clean rating, so it is not a regression — but a third caveat-carrying
-  muscle would make "capped at 40" true of the test and false of the product.
-⚠️ **The Muscles tab letterboxes the two figures slightly differently** — `.body-wrap` is a fixed
-57 % of the pane on the phone and does not use `bodyAspect()`. Pre-existing; he has not pointed at it.
+🚩 **THE 2026-09-25 "WHAT TO EXPECT" BLOCK — COLLAPSED 2026-09-27** (§0.3, and by its own lesson: a
+"what to expect" block outlives the thing it describes). Every item was stated to him at the time and
+each durable half lives elsewhere: the rating moves and the flat neck are in `docs/state.md`'s Muscles
+row and `docs/research.md` §17; the low converted numbers at the light end are **Open work 13**; the
+demo's missing hatched muscle is **Open work 25**; the female figure's shin fill and hand position are
+the ART, not the pipeline. ⚠️ **Still true and unpointed-at**: a neck panel runs 70 words against the
+40-word cap (29 of them the caveat), and `.body-wrap` letterboxes the two figures differently — a
+fixed 57 % of the pane on the phone rather than `bodyAspect()`. **Full list: `docs/history.md`
+2026-09-25.**
 
 🆕 **WHERE 2026-09-16 TO -20 STOPPED — COLLAPSED AGAIN 2026-09-25** (§0.3). All finished; **rows 7, 8,
 9 and 10 carry everything still undecided** and none is authorised. 🔒 **The one method lesson worth
@@ -1209,7 +1204,7 @@ half built and §1.6's verdict is the one hole in it — both wait on the same e
 | **Live app** | https://timothyhadfield.github.io/Fitness_Tracker/ |
 | **Repo** | https://github.com/TimothyHadfield/Fitness_Tracker (public, Pages from `main` root) |
 | **Run locally** | `python -m http.server 8765` from the project root → `http://127.0.0.1:8765` |
-| **Everything at once** | 🆕 **6,318 across the TWENTY-THREE that need no Chrome, re-counted 2026-09-25 by running every one.** Per suite: data-layer 2,913 · render 1,638 · goals 278 · social 217 · bodyweight 187 · a11y 157 · template-lint 96 · share-image 91 · optimal 76 · strength-estimate 74 · volume-map 64 · compare 63 · research-pane 59 · demo 58 · rep-decrement 57 · core-rating 47 · year-grid 45 · routine 42 · estimate 37 · qr 33 · exercise-evidence 33 · figure-note 27 · feedback 26. ⚠️ **`research-pane` (59) is a suite this chat has never opened** — the parallel agent's, like `exercise-evidence`, `template-lint` and `figure-note`. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
+| **Everything at once** | 🆕 **6,343 across the TWENTY-FOUR that need no Chrome, re-counted 2026-09-27 by running every one** (`qr` is in that number now — see the trap below). 🚨 **AND THE RECOUNT CAUGHT A SUITE CONTRIBUTING NOTHING: `qr` reported 0 PASS AND 0 FAIL**, because `npm i --no-save jsdom` had silently removed `jsqr` (this row's own warning, walked into). **A zero count is not a pass** — §0.18's lesson in a third costume. Install them in ONE command. *(Previous count: 6,318 across twenty-three, 2026-09-25.)* Per suite: data-layer 2,913 · render 1,638 · goals 278 · social 217 · bodyweight 187 · a11y 157 · template-lint 96 · share-image 91 · optimal 76 · strength-estimate 74 · volume-map 64 · compare 63 · research-pane 59 · demo 58 · rep-decrement 57 · core-rating 47 · year-grid 45 · routine 42 · estimate 37 · qr 33 · exercise-evidence 33 · figure-note 27 · feedback 26. ⚠️ **`research-pane` (59) is a suite this chat has never opened** — the parallel agent's, like `exercise-evidence`, `template-lint` and `figure-note`. `sw-update` (needs Chrome) and `rules` (needs the emulator) are the other two of the **twenty-four** files. 🚨 **THREE OF THESE SUITES ARE NOT THIS CHAT'S** — `exercise-evidence`, `template-lint` and `figure-note` (156 assertions between them) arrived from a **parallel agent working in this same checkout** on 2026-09-20, along with `js/exercise-evidence.js` and `js/template-lint.js`. **Do not assume a suite you do not recognise is stale or yours to change**; see §0.20 and the standing instruction about that agent. **Counted as lines matching `^PASS`**, which is what `render`'s own tally agrees with exactly. *(Earlier recounts, for the shape of the growth: 5,680 on 2026-09-20 · 4,822 on -14 · 4,699 on -12 · 4,380 on -09 · 4,193 on 2026-09-06.)* 🚨 **THE WARNING THIS ROW EXISTS TO CARRY, from 2026-09-09: "SEVENTEEN SUITES" WAS WRONG FOR WEEKS.** `core-rating` and `feedback` shipped on 2026-09-04, were never added here, and so were absent from every total quoted after — a hand-maintained list of files, the same fault as the `sw.js` precache and the doc budgets, both of which are tests. **This row still is not one.** ⚠️ **Test-only npm deps, none of which ship**: `render` needs `jsdom`, `qr` needs `jsqr`, `rules` needs `@firebase/rules-unit-testing`. ⚠️ **`npm i --no-save` REPLACES what is there** — install them in one command (`npm i --no-save jsdom jsqr @firebase/rules-unit-testing`) or the previous one vanishes and its suite fails with MODULE_NOT_FOUND. Everything else needs nothing. ⚠️ Treat any number here as a recount rather than a running tally |
 | **Year-grid tests** | `node tests/year-grid.test.mjs` — 45 assertions, **no dependencies**. The calendar's Years view: every day drawn exactly once, every square in its real weekday row, every month label over its own month |
 | 🆕 **Fatigue tests** | `node tests/rep-decrement.test.mjs` — **57 assertions** (2026-09-14), **no dependencies**. The per-set rep decrement that reaches the runner's caption. 🚨 **The two load-bearing ones are the invariants, and both are mutation-checked with the mutation printed in the source first**: every multiplier is ≤ 1 (so a wrong constant can only make the caption easier to beat), and a lifter whose reps RISE across a run is **clamped** rather than handed a bigger number. Also: a weight change ends a run, a prefilled set is not a set, drops/supersets/benchmarks contribute nothing (`group != null`, because a truthy test let the first superset of every workout through), 90 s ties to the SHORTER rest column, and the caption never prints "maybe 0". ⚠️ **What it does NOT cover is the wiring** — no mounted screen asserts the multiplier actually reaches the caption; see START HERE |
 | **Data tests** | `node tests/data-layer.test.mjs` — **2,861 assertions** (2026-09-22), **no dependencies**. 🆕 **Since 2026-09-22 it pins THE TWO BODY FIGURES against each other** — the same groups on the same views, a traced path and a silhouette for each, both boxes 1527 tall, and `bodyAspect()` reporting the wider one for female with an unknown sex falling back to male. 🆕 **Since 2026-09-15 it holds σ AND THE PRECISION BLEND** — the key lift carrying no conversion uncertainty, a flat published ratio beating a drifting one, gearing surviving a flat drift, the q bridge for an entry with no page, and the load-bearing one: **the same two disagreeing numbers land at 204.5 or 294.6 depending on which conversion is better established**, where the old blend gave 225.0 both ways. Plus **the quarantine's cross-exercise behaviour** from both sides of its 2.0× boundary (kept at 1.99, set aside at 2.01) with two guards on the demo year — nothing set aside on a real year, and the cross-exercise spread under 1.5× so a future ratio correction cannot start withholding real sets silently — and 🚨 **the sexed path pinned beside the golden table**, because `store.js` passes a sex and the table never did. 🆕 **Since 2026-09-14 it holds THE FOUR SEAT RULES AND THE QUARANTINE**: a 3-rep benchmark beats a 12-rep back-off set on the same day (which is what told Tim a tested 215 was "above his max"), a set at ≤ 8 reps is preferred but not required, the 84-day window lets a rating FALL while a lay-off keeps its record, the same history walked in either order gives an identical rating (it read Fair one way and High the other), and the typo screen holds back a ×10 slip **by name** while leaving a personal best and the good sets logged beside it alone. Plus the ratio pins **per sex** on both sides of every pair, and six **split-ordering** checks (a specific rule must not fall below its family — the machine lateral raise inside `/Lateral Raise/` was a 3.7× inflation). ⚠️ **The GOLDEN table was re-baselined on 2026-09-14 with every move attributed by name** — eleven of twelve muscles down, Traps up 14 % because the deadlift stopped standing in for it. 🆕 **Since 2026-09-12 it holds the RANKED BEST LIFTS** (`js/profile-ranking.js`) on a discriminating fixture — a 343 lb squat below a 139 lb curl, a never-done core lift converted, a stand-in-only one with no number, the heaviest "other" lift last because unranked; flipping the comparator fails exactly the three ordering assertions. 🆕 **Since 2026-09-08 the Google flow's `created` flag**, which decides whether creating an account absorbs this device's local rows: linking an anonymous session counts, and 🚨 `signInWithCredential` after `credential-already-in-use` does NOT — that branch is reached precisely because the account already exists. **Mutation-checked in both directions.** **⚠️ THE AUGUST HALF IS COMPRESSED HERE, 2026-09-15**, the same cut the render row took and for the same reason. Still asserted, detail in `docs/history.md` 2026-08-24 to -30: the **exercise-picture manifest** against the folder and the sw precache, the **movement families** (271 members each resolving to exactly one exercise, four family-less on purpose), the **Research tab's content and WORD BUDGETS** (45 an answer, 260 a topic — the only thing that can catch prose piling back up, since every other assertion checks a thing is PRESENT), the **crop maths** (1,925 combinations, zero escapes), the **file-import refusals** (date order, weight unit, distance unit each refused rather than guessed), **how full the cloud is**, and the **within-session fatigue** section built on Tim's real back session. ⚠️ **That last one changed shape on 2026-09-15** — see the σ note at the top of this row |

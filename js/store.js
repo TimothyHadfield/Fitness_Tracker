@@ -283,6 +283,11 @@ const backend = {
         + 'Clearing a collection must go through the wholesale path.');
     }
 
+    /* Bumped BEFORE the await, not after, and that is the whole point: a
+     * revalidation issued while this write is in flight must be discarded when
+     * it resolves, and it can only know that if the generation has already
+     * moved. See writeGeneration. */
+    bumpGeneration(collection);
     const okay = await (await active()).write(collection, rows, opts);
     // We have just decided what this collection contains, so the cache is not
     // guessing — it is recording. Set AFTER the await: a write that threw has
@@ -501,6 +506,28 @@ const readCache = new Map();
 const lastRead = new Map();
 const revalidating = new Set();
 
+/* 🚨 HOW MANY TIMES THIS COLLECTION HAS BEEN WRITTEN — 2026-09-27.
+ *
+ * A background revalidation reads the server, then writes what it got into the
+ * cache. If a WRITE lands between the read being issued and it resolving, the
+ * revalidation's rows are older than the cache it is about to overwrite, and it
+ * overwrites it anyway. The result is the app forgetting something it just did.
+ *
+ * Tim hit the shape of this on 2026-09-27: a programme copied from Explore
+ * showing zero workouts. (His actual cause was a rejected write — Firestore
+ * refuses nested arrays, js/set-reps.js — but this race produces the identical
+ * screen and would have survived that fix.) The window is wide on a phone:
+ * `addPresetSystem()` is fourteen round trips, and a revalidation issued when
+ * the Explore screen rendered can easily resolve in the middle of them.
+ *
+ * ⚠️ IT WAS INVISIBLE LOCALLY. `LocalBackend.read` resolves on the next
+ * microtask, so the window is effectively zero; on Firestore it is seconds.
+ * That asymmetry is why no test could have caught it.
+ */
+const writeGeneration = new Map();
+const bumpGeneration = (collection) =>
+  writeGeneration.set(collection, (writeGeneration.get(collection) || 0) + 1);
+
 // Long enough that a burst of tab switching costs nothing, short enough that a
 // change made on another device shows up within a minute of ordinary use.
 const REVALIDATE_MS = 30000;
@@ -557,8 +584,21 @@ function maybeRevalidate(collection) {
   if (revalidating.has(collection)) return;
   if (Date.now() - (lastRead.get(collection) || 0) < REVALIDATE_MS) return;
   revalidating.add(collection);
+  // The generation as it was when this read was ISSUED. See writeGeneration.
+  const issuedAt = writeGeneration.get(collection) || 0;
   backend.read(collection)
     .then((rows) => {
+      /* 🚨 A WRITE LANDED WHILE THIS READ WAS IN FLIGHT, so these rows are
+       * older than what is in the cache and must be thrown away. `write()` has
+       * already put the authoritative list there — it does not guess, it
+       * records what it just stored.
+       *
+       * 🛑 AND `lastRead` IS DELIBERATELY NOT BUMPED HERE. Bumping it on a
+       * discarded read would suppress the next revalidation for another thirty
+       * seconds, which is exactly what turned a momentary stale cache into a
+       * screen that stayed wrong. Leaving it alone means the next getter
+       * re-checks immediately. */
+      if ((writeGeneration.get(collection) || 0) !== issuedAt) return;
       readCache.set(collection, rows.slice());
       lastRead.set(collection, Date.now());
     })
@@ -917,7 +957,17 @@ export function normalizeWorkout(w) {
            * update notice would still appear and would then decide every
            * exercise had been edited, so it would offer to change nothing and
            * look like a bug in the comparison rather than a lost field. */
-          ...(e.origin ? { origin: e.origin } : {}),
+          /* ⚠️ `origin.reps` CARRIES THE SAME SHAPE AND HAD THE SAME BUG.
+           * It is a second copy of the prescription as it ARRIVED, so it was a
+           * second array-of-arrays in the same document — and a document is
+           * rejected whole. Converted here rather than at the one call site
+           * that builds it, because `origin` also arrives from rows written
+           * before today and from restored backups. js/set-reps.js. */
+          ...(e.origin
+            ? { origin: Array.isArray(e.origin.reps)
+                ? { ...e.origin, reps: normalizeReps(e.origin.reps, e.origin.sets || sets) || undefined }
+                : e.origin }
+            : {}),
           ...(isNested(e.setType) ? { setType: e.setType, minis: plannedMinis(e) } : {}),
           ...(e.group == null ? {} : { group: e.group }),
         };
@@ -1005,9 +1055,8 @@ export const store = {
       const [freshSystems, freshWorkouts] = await Promise.all([
         backend.read('systems'), backend.read('workouts'),
       ]);
-      const orphans = freshWorkouts.filter((w) => !w.systemId);
-      if (!orphans.length) return freshSystems.map(normalizeSystem);
-      const [systemsRows, workoutsRows] = [freshSystems, freshWorkouts];
+      if (!freshWorkouts.some((w) => !w.systemId)) return freshSystems.map(normalizeSystem);
+      const systemsRows = freshSystems;
 
       let home = systemsRows[0];
       if (!home) {
@@ -1016,6 +1065,30 @@ export const store = {
         systemsRows.push(home);
         await backend.write('systems', systemsRows);
       }
+
+      /* 🚨 RE-READ IMMEDIATELY BEFORE THE WRITE, 2026-09-27 — this used to
+       * stamp a list captured several awaits ago and write the WHOLE collection
+       * back from it.
+       *
+       * That is a lost update, and the rows it loses are rows nobody here ever
+       * looked at. `addPresetSystem()` is fourteen sequential round trips on
+       * Firestore, and this function runs on every `getWorkouts()` and every
+       * `getSystems()` — including the ones a re-render fires. So a fix-up that
+       * began before a programme was copied could finish after it and replace
+       * six freshly-written workouts with a snapshot that predates them.
+       *
+       * 🛑 NEITHER GUARD CATCHES IT: the zero-guard in `write()` only refuses an
+       * EMPTY list, and the mass-delete guard is in the sharded backend, which
+       * `workouts` does not use. A write that silently drops six rows out of
+       * many is invisible to both.
+       *
+       * Re-reading here does not make it atomic — nothing in this store is —
+       * but it narrows the window from "the whole of an add" to two adjacent
+       * statements, and it means the list written back contains whatever else
+       * landed in the meantime. */
+      const workoutsRows = await backend.read('workouts');
+      const orphans = workoutsRows.filter((w) => !w.systemId);
+      if (!orphans.length) return systemsRows.map(normalizeSystem);
       for (const w of orphans) w.systemId = home.id;
       await backend.write('workouts', workoutsRows);
       return systemsRows.map(normalizeSystem);

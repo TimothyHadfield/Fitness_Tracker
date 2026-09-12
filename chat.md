@@ -3013,3 +3013,25 @@ behind and say nothing, which is now caught, and nothing in the test suite had e
 button, which is how a screen that destroyed its own confirmation survived long enough to be
 reported. I also found, and left alone, a separate bug where an old workout from before programmes
 existed gets absorbed into whichever programme is newest.
+
+Then he showed me it was still broken, and I had been wrong. I'd told him his copy was fine because I
+reproduced it successfully — but my reproduction ran against local storage and his phone runs
+Firestore, so it proved nothing about his device. Three agents went out on different parts of the
+data layer and came back with three different causes. Two were wrong.
+
+The real one: Firestore cannot store an array whose elements are arrays, and rep prescriptions were
+stored as one [low, high] pair per set. So the whole workouts document was rejected — the programme
+row saved because it holds only plain values, then the first workout write failed, the document was
+never created, and every read after that found nothing. Not a preset problem at all: any workout with
+per-set rep targets has been unsaveable to the cloud since that feature shipped. Prescriptions are
+now stored as {lo, hi}, which Firestore accepts, and everything still reads the old shape so nothing
+already saved is lost.
+
+Nothing caught it because both backends the tests use accept nested arrays happily — the only thing
+that refuses them is the real server, which no test touches. There's now a test that walks everything
+the app would write and fails on any nested array, which is the guard that was missing.
+
+Two further real bugs turned up while looking: a migration that could overwrite the workouts list
+with an older copy of itself, and a background refresh that could blank a screen for thirty seconds
+by overwriting fresh data with stale. Both fixed, and both honestly untestable here — they only exist
+because the cloud is slow and local storage is instant, which is the same reason the main bug hid.

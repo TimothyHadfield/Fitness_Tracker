@@ -173,6 +173,82 @@ is stamped onto `systemsRows[0]` by `ensureSystems()`, which can be a programme 
 Explore — the agent produced a 7-workout *"Ultimate Push Pull Legs"* containing an unrelated "Old
 workout". **Reported, not fixed**: it mutates stored data and nobody asked for it.
 
+### 🚨 AND THEN HE PROVED THE FIX WRONG, AND THE REAL CAUSE WAS THREE BUGS DEEP
+
+**Tim, pasting the screen:** *"When I click 'open it' after adding it, even after your change, it says
+there are no workouts in that system."* The system row was there — name and full notes rendering, set
+as current — and zero workouts inside it.
+
+🛑 **MY EARLIER "THE COPY IS FINE" WAS WRONG, AND THE REASON IS THE LESSON.** The reproduction that
+proved it ran on `LocalBackend`. **His device runs Firestore.** A local repro cannot clear a cloud
+path, and saying "your data is safe" off one is a claim about the wrong machine.
+
+🟢 **Three read-only agents on disjoint parts of the data layer**, and they came back with **three
+different causes**. Two were wrong and one was right, which is why they were run in parallel.
+
+**Ruled out first, each cheaply and by measurement rather than argument:** all nine presets resolve
+every exercise name (so `if (!exercises.length) continue;` never fires); the deployed site is
+byte-identical to HEAD on all three files; no commit has touched `store.js` or `firebase-backend.js`
+since the session began; and `firestore.rules`' `validPayload()` checks only the envelope
+(`rows`, `updatedAt`), so no field on a row can be silently denied.
+
+#### 🔒 THE CAUSE: FIRESTORE CANNOT STORE AN ARRAY WHOSE ELEMENTS ARE ARRAYS
+
+`reps` was one `[lo, hi]` pair per set, so the stored value was `[[3,5],[8,8]]`. **`setDoc()` rejects
+the whole document.** Measured on the copy: **210 nested arrays**, the first at
+`rows[0].exercises[0].reps[0]` — Nippard's opening bench press, `reps: [3, 5]`. The system row is
+written first and holds only scalars, so it lands; the first `saveWorkout()` then throws, the
+`workouts` document is **never created**, and every later read finds `snap.exists() === false` and
+returns `[]`. **Zero rather than partial is the signature of a first-iteration throw.**
+
+🚨 **IT WAS NEVER ABOUT PRESETS.** Any workout carrying per-set rep prescriptions is unsaveable to
+the cloud the same way, **including one built by hand** — true since prescriptions shipped
+2026-09-18.
+
+✅ **The fix: the STORED shape is `{lo, hi}`; the in-memory shape is unchanged.** `normalizeRepSpec`
+accepts all three forms (the legacy pair, the stored map, a bare number), so every row already on
+disk still reads. Only `normalizeReps` — the one boundary every read and write passes through —
+emits the new shape. 🔒 **`origin.reps` carried the same nested array and converts with it.**
+
+⚠️ **THREE THINGS BROKE ON THE WAY, AND THE QUIET ONE IS THE WARNING.** `preset-updates.js` cloned
+rep lists with `p.slice()` in three places (crashes on a map), and — worse — **`sameReps()` returned
+false the moment either side was not an Array**, which would have reported *every* exercise of every
+copy as edited and refused real updates as "you changed this". A crash announces itself; that does
+not. Both now compare and clone through `set-reps.js`. And `expandRepSpec()` decided "per-set list"
+by `Array.isArray(spec[0])`, so a stored list was re-expanded as a single range — **a misreading that
+only bites on the SECOND read of a workout.**
+
+#### 🔒 WHY EVERY TEST IN THIS PROJECT PASSED
+
+**`LocalBackend` is `JSON.stringify`, which nests arrays happily, and the Firestore double's `setDoc`
+stores whatever object it is handed without type-checking.** The one place the constraint exists is
+the real server, which no suite reaches. ✅ **So the constraint is now asserted against the ROWS**:
+`tests/data-layer.test.mjs` walks every collection after copying all nine presets and fails on any
+array inside an array, with a vacuity guard proving the walker finds one when it is there. **Keep it
+general — the next nested array will not be in `reps`.**
+
+#### 🚩 TWO MORE REAL BUGS FOUND BY THE OTHER TWO AGENTS, BOTH FIXED, NEITHER TESTED
+
+- **`ensureSystems()` could wipe the workouts document.** It stamped a list captured several awaits
+  earlier and wrote the WHOLE collection back from it, while running on every `getWorkouts()` and
+  `getSystems()` — so a fix-up begun before a copy could finish after it and replace six new rows
+  with a pre-copy snapshot. 🛑 **Neither guard catches it**: the zero-guard refuses only an EMPTY
+  list, and the mass-delete guard lives in the sharded backend, which `workouts` does not use. Now
+  re-reads immediately before the write. ⚠️ **It needs an account holding a pre-systems workout with
+  no `systemId`**, which is why an empty test account can never reproduce it — and it is the same
+  incidental bug flagged and left alone earlier the same day.
+- **A stale revalidation could blank a screen for thirty seconds.** A background read issued before a
+  write landed after it and overwrote the cache with the older list, **then bumped `lastRead`, which
+  suppressed the re-check that would have healed it.** Now a per-collection write generation is
+  captured when the read is issued and the result is discarded if a write intervened — **and
+  `lastRead` is deliberately not bumped on a discard.**
+
+⚠️ **BOTH ARE REASONED, NOT ASSERTED.** Neither race can be driven from a suite: the window is
+effectively zero on `LocalBackend` (it resolves on the next microtask) and seconds on Firestore.
+**That asymmetry is the whole reason they existed**, and it is the honest caveat on both fixes.
+
+**Measured:** `data-layer`, `render` (1,657), `a11y` and `goals` green.
+
 ---
 
 ## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE

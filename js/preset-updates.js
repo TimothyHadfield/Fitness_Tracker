@@ -63,7 +63,21 @@
  * screen has to say that the differences may be their own — see `status`.
  * ------------------------------------------------------------------ */
 
-import { expandRepSpec, summariseReps } from './set-reps.js';
+import { expandRepSpec, summariseReps, normalizeRepSpec, repSpecToStored } from './set-reps.js';
+
+/* A rep list, cloned into the STORED shape — `{lo, hi}` per set.
+ *
+ * ⚠️ THIS REPLACED `list.map((p) => p.slice())` IN THREE PLACES, 2026-09-27.
+ * That clone assumed every entry was an array and threw outright once entries
+ * became maps. Going through `repSpecToStored` clones and canonicalises in one
+ * step, so a row copied from a preset, a row read off disk from before the
+ * change, and a row the update sheet just wrote all end up identical — which is
+ * what stops the next read reporting a change nobody made. */
+function cloneReps(list) {
+  if (!Array.isArray(list)) return null;
+  const out = list.map(repSpecToStored);
+  return out.every(Boolean) ? out : null;
+}
 
 /** A preset with no `version` is version 1. Nine of them shipped without one. */
 export function presetVersionOf(preset) {
@@ -101,20 +115,32 @@ function sameTargets(a, b) {
   return x.every((v, i) => Number(v) === Number(y[i]));
 }
 
-/* Rep prescriptions are one `[lo, hi]` pair per set, so this is `sameTargets`
- * one level deeper. Compared by value rather than by JSON, because the two
- * sides arrive from different places — one from disk, one from the module —
- * and `shardDiff()`'s lesson is that a stringify comparison answers a question
- * about serialisation rather than about content (§4). */
+/* Rep prescriptions are one prescription per set, so this is `sameTargets` one
+ * level deeper. Compared by value rather than by JSON, because the two sides
+ * arrive from different places — one from disk, one from the module — and
+ * `shardDiff()`'s lesson is that a stringify comparison answers a question
+ * about serialisation rather than about content (§4).
+ *
+ * 🚨 IT COMPARES THROUGH `normalizeRepSpec` SINCE 2026-09-27, and that is not
+ * tidying. The stored shape became `{lo, hi}` that day (Firestore refuses an
+ * array of arrays — js/set-reps.js), so the two sides genuinely can arrive in
+ * different shapes: a row written today is a map, a row written last week is a
+ * pair, and a preset authors `reps: 8`. The previous version returned false the
+ * moment either side was not an Array, which would have reported EVERY
+ * exercise of every copy as edited — and the failure is silent and in the worst
+ * direction: `isUntouched()` would answer no, so a real update would be refused
+ * as "you changed this" rather than offered. Value equality is the only
+ * comparison that survives a change of storage shape. */
 function sameReps(a, b) {
   const x = Array.isArray(a) ? a : null;
   const y = Array.isArray(b) ? b : null;
   if (!x && !y) return true;
   if (!x || !y || x.length !== y.length) return false;
-  return x.every((pair, i) => {
-    const other = y[i];
-    if (!Array.isArray(pair) || !Array.isArray(other)) return false;
-    return Number(pair[0]) === Number(other[0]) && Number(pair[1]) === Number(other[1]);
+  return x.every((spec, i) => {
+    const mine = normalizeRepSpec(spec);
+    const other = normalizeRepSpec(y[i]);
+    if (!mine || !other) return false;
+    return mine[0] === other[0] && mine[1] === other[1];
   });
 }
 
@@ -392,7 +418,7 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
       if (c.now) ex.targets = c.now.slice();
       else delete ex.targets;
     } else if (c.kind === 'reps') {
-      if (c.now) ex.reps = c.now.map((p) => p.slice());
+      if (c.now) ex.reps = cloneReps(c.now);
       else delete ex.reps;
     } else if (c.kind === 'sets') {
       ex.sets = c.now;
@@ -403,7 +429,7 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
       sets: Number(ex.sets),
       notes: ex.notes || '',
       ...(ex.targets ? { targets: ex.targets.slice() } : {}),
-      ...(ex.reps ? { reps: ex.reps.map((p) => p.slice()) } : {}),
+      ...(ex.reps ? { reps: cloneReps(ex.reps) } : {}),
     };
   }
 
@@ -419,7 +445,7 @@ export function stampedExercise(t) {
     sets: t.sets == null ? undefined : t.sets,
     notes: t.notes || '',
     ...(t.targets ? { targets: t.targets.slice() } : {}),
-    ...(t.reps ? { reps: t.reps.map((p) => p.slice()) } : {}),
+    ...(t.reps ? { reps: cloneReps(t.reps) } : {}),
   };
   // The row and its record of itself are built from ONE object, so they cannot
   // drift — the first version listed the fields twice and gaining `reps` meant

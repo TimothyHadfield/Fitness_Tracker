@@ -109,12 +109,59 @@ function prescribedReps(n) {
  * drop a whole workout's plan for a transposition.
  */
 export function normalizeRepSpec(spec) {
-  const pair = Array.isArray(spec) ? spec : [spec, spec];
+  /* 🚨 THREE SHAPES IN, ONE SHAPE OUT — 2026-09-27, and the third one is the
+   * bug fix. `{lo, hi}` is how a prescription is STORED (see repSpecToStored
+   * below); `[lo, hi]` is how presets are authored and how every row written
+   * before today sits in localStorage; a bare number is a range of one. All
+   * three mean the same thing and nothing downstream should have to ask. */
+  const pair = spec && typeof spec === 'object' && !Array.isArray(spec)
+    ? [spec.lo, spec.hi]
+    : (Array.isArray(spec) ? spec : [spec, spec]);
   if (pair.length !== 2) return null;
   const lo = prescribedReps(pair[0]);
   const hi = prescribedReps(pair[1]);
   if (lo === null || hi === null) return null;
   return lo <= hi ? [lo, hi] : [hi, lo];
+}
+
+/* ------------------------------------------------------------------ *
+ * 🚨 HOW A PRESCRIPTION IS STORED, AND WHY IT IS NOT A PAIR — 2026-09-27.
+ *
+ * Tim: *"After I added it, it says there are no workouts in that system."*
+ * The copy was landing six complete workouts on the LOCAL backend and nothing
+ * at all on Firestore, and this field is why.
+ *
+ * 🛑 FIRESTORE CANNOT STORE AN ARRAY WHOSE ELEMENTS ARE ARRAYS. `reps` was one
+ * `[lo, hi]` pair per set, so the stored value was `[[3,5],[8,8]]` — an array
+ * of arrays. `setDoc()` rejects the WHOLE document, so the very first
+ * `saveWorkout()` of a copied programme threw, the `workouts` document was
+ * never created, and every later read returned `[]`. The system row is written
+ * first and holds only scalars, so it survived — which is exactly the shape of
+ * what he saw: a real programme, correctly named, containing nothing.
+ *
+ * 🚨 IT WAS NEVER ABOUT PRESETS. Any workout carrying per-set rep prescriptions
+ * is unsaveable to the cloud the same way, including one built by hand. It had
+ * been true since prescriptions shipped on 2026-09-18.
+ *
+ * ⚠️ WHY NOTHING CAUGHT IT: `LocalBackend` is `JSON.stringify`, which nests
+ * arrays happily, and the Firestore test double's `setDoc` stores whatever
+ * object it is handed without type-checking. The one constraint that matters
+ * was enforced in exactly one place — the real server — and no test reaches it.
+ * `tests/data-layer.test.mjs` now walks everything the app would write and
+ * fails on any nested array, which is the guard that was missing.
+ *
+ * 🔒 THE IN-MEMORY SHAPE IS UNCHANGED and that is deliberate: `normalizeRepSpec`
+ * still returns `[lo, hi]`, so `views-session.js`, `weightRangeForReps`,
+ * `describeRepSpec` and `summariseReps` are untouched. Only what reaches disk
+ * is a map. A conversion at the storage boundary is the smallest change that
+ * makes the field legal, and `normalizeRepSpec` accepting both shapes is what
+ * lets every row already written stay readable.
+ * ------------------------------------------------------------------ */
+
+/** `[lo, hi]` → `{lo, hi}` — the stored form. Firestore-legal, self-describing. */
+export function repSpecToStored(spec) {
+  const pair = normalizeRepSpec(spec);
+  return pair ? { lo: pair[0], hi: pair[1] } : null;
 }
 
 /**
@@ -133,7 +180,12 @@ export function normalizeReps(reps, sets) {
   if (clean.some((v) => v === null)) return null;
   const out = clean.slice(0, n);
   while (out.length < n) out.push(out[out.length - 1]);
-  return out;
+  /* 🚨 RETURNS THE STORED SHAPE — `[{lo, hi}, …]`, never `[[lo, hi], …]`.
+   * This function's output is written to disk by `normalizeWorkout()`, which
+   * every read and write passes through, so this is the one place the nested
+   * array has to stop. See repSpecToStored above for what Firestore refuses.
+   * Readers keep taking either shape through `normalizeRepSpec`. */
+  return out.map((pair) => ({ lo: pair[0], hi: pair[1] }));
 }
 
 /**
@@ -152,7 +204,17 @@ export function normalizeReps(reps, sets) {
 export function expandRepSpec(spec, sets) {
   const n = Number(sets) > 0 ? Math.floor(Number(sets)) : 0;
   if (!n || spec == null) return null;
-  const perSet = Array.isArray(spec) && spec.length && Array.isArray(spec[0]);
+  /* 🚨 A PER-SET LIST IS ONE WHOSE FIRST ENTRY IS ITSELF A PRESCRIPTION, and
+   * since 2026-09-27 a prescription can be either shape. `[[3,5],[8,8]]` is two
+   * sets and so is `[{lo:3,hi:5},{lo:8,hi:8}]` — the second is what this app
+   * now STORES, so testing only for an array meant a stored list was read as a
+   * single range and re-expanded into something the author never wrote. That is
+   * the silent misreading this function's own header warns about, arriving
+   * through the new shape: `[{lo:3,hi:5}]` on a 3-set exercise would become
+   * three sets of 3–5 rather than one. It bites on the SECOND read of a
+   * workout, not the first, which is the hardest kind to notice. */
+  const first = Array.isArray(spec) && spec.length ? spec[0] : null;
+  const perSet = Array.isArray(first) || (first !== null && typeof first === 'object');
   return normalizeReps(perSet ? spec : Array(n).fill(spec), n);
 }
 

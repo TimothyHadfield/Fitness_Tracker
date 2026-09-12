@@ -5775,6 +5775,94 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        `"${p.name}" keeps programme order (${ws.map((w) => w.name).join(', ')})`);
   }
 
+  /* ================================================================== *
+   * 🚨 NOTHING THIS APP WRITES MAY CONTAIN A NESTED ARRAY — 2026-09-27
+   *
+   * Firestore cannot store an array whose elements are arrays. `setDoc()`
+   * rejects the WHOLE document, so one bad field loses an entire collection.
+   *
+   * This is not hypothetical. Tim reported *"it says there are no workouts in
+   * that system"* after copying a programme: `reps` was one `[lo, hi]` pair per
+   * set, so the stored value was `[[3,5],[8,8]]`, the first saveWorkout() threw
+   * on the real backend, the `workouts` document was never created, and every
+   * read returned empty. The system row is written first and holds only
+   * scalars, so it survived — a correctly-named programme containing nothing.
+   *
+   * 🚨 IT SURVIVED EVERY TEST IN THIS PROJECT because the only two backends the
+   * suites exercise both accept it: LocalBackend is JSON.stringify, and the
+   * Firestore double's setDoc stores whatever object it is handed. The one
+   * place the constraint is enforced is the real server, which no test reaches.
+   * So the constraint is asserted HERE instead, against the rows themselves.
+   *
+   * ⚠️ IT WALKS EVERY COLLECTION, not just workouts. The next nested array will
+   * not be in `reps`, and this is the only thing that can catch it before a
+   * user does. Keep it general; do not narrow it to the field that caused it.
+   * ================================================================== */
+  {
+    await st.clearAll();
+    // Every preset, because they are the richest rows the app can produce —
+    // prescriptions, targets, set types, minis, groups and `origin` together.
+    for (const p of PRESET_SYSTEMS) await st.addPresetSystem(p);
+
+    const nested = [];
+    const walk = (v, path) => {
+      if (Array.isArray(v)) {
+        v.forEach((el, i) => {
+          if (Array.isArray(el)) nested.push(`${path}[${i}]`);
+          walk(el, `${path}[${i}]`);
+        });
+      } else if (v && typeof v === 'object') {
+        for (const [k, val] of Object.entries(v)) walk(val, path ? `${path}.${k}` : k);
+      }
+    };
+    /* ⚠️ READ THE RAW ROWS, not the getters. The getters normalise on the way
+     * out, so a shape that is only wrong ON DISK would be repaired before this
+     * ever saw it — and on disk is precisely where Firestore reads from. This
+     * list must match COLLECTIONS in js/store.js; a collection missing here is
+     * simply unchecked, which is the quiet half of the same failure. */
+    const RAW = ['customExercises', 'workouts', 'sessions', 'benchmarks', 'settings',
+                 'bodyWeight', 'systems', 'goals', 'guestSessions', 'people'];
+    for (const c of RAW) walk(JSON.parse(localStorage.getItem('ftrack:v1:' + c) || '[]'), c);
+
+    ok(nested.length === 0,
+       `🚨 no stored value is an array inside an array — Firestore rejects the whole document `
+       + `(${nested.length ? nested.slice(0, 4).join(', ') + '…' : 'none'})`);
+
+    /* 🔒 THE VACUITY GUARD, and this block needs one badly: if the walker were
+       broken, or the presets stopped carrying prescriptions, the assertion
+       above would pass while checking nothing. So prove the walker finds a
+       nested array when one really is there, and prove the rows it just
+       cleared really do carry the field that caused this. */
+    const probe = [];
+    const probeWalk = (v, path) => {
+      if (Array.isArray(v)) v.forEach((el, i) => {
+        if (Array.isArray(el)) probe.push(`${path}[${i}]`);
+        probeWalk(el, `${path}[${i}]`);
+      });
+      else if (v && typeof v === 'object') for (const [k, val] of Object.entries(v)) probeWalk(val, path ? `${path}.${k}` : k);
+    };
+    probeWalk([{ reps: [[3, 5]] }], 'probe');
+    ok(probe.length === 1, 'the walker really does find a nested array when one is there');
+
+    const withReps = (await st.getWorkouts())
+      .flatMap((w) => w.exercises).filter((e) => e.reps && e.reps.length);
+    ok(withReps.length > 0,
+       `…and the rows just checked really do carry prescriptions (${withReps.length} exercises)`);
+    ok(withReps.every((e) => e.reps.every((r) => r && typeof r === 'object' && !Array.isArray(r)
+                                                  && typeof r.lo === 'number' && typeof r.hi === 'number')),
+       '🔒 a stored prescription is {lo, hi} per set, never [lo, hi] — the shape that broke Firestore');
+
+    /* ⚠️ AND THE READING SIDE STILL UNDERSTANDS BOTH, or every workout written
+       before today loses its prescription in silence on the next read. */
+    const { normalizeRepSpec } = await import('../js/set-reps.js');
+    ok(JSON.stringify(normalizeRepSpec([3, 5])) === '[3,5]'
+       && JSON.stringify(normalizeRepSpec({ lo: 3, hi: 5 })) === '[3,5]'
+       && JSON.stringify(normalizeRepSpec(8)) === '[8,8]',
+       '🚨 all three shapes read back identically — the legacy pair, the stored map, and a bare number');
+
+    await st.clearAll();
+  }
+
   // A workout the user adds afterwards has no order and lands at the END,
   // rather than wedging itself into someone's split by its initial letter.
   {
@@ -6165,7 +6253,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(sr.normalizeRepSpec(0) === null && sr.normalizeRepSpec('') === null
      && sr.normalizeRepSpec(null) === null,
      'nothing that is not a rep count becomes one');
-  ok(JSON.stringify(sr.normalizeReps([[3, 5], 8], 4)) === '[[3,5],[8,8],[8,8],[8,8]]',
+  /* 🔄 THE STORED SHAPE IS `{lo, hi}` SINCE 2026-09-27, not `[lo, hi]`.
+     Firestore cannot store an array whose elements are arrays, so a pair per
+     set made the whole `workouts` document unwritable — see the nested-array
+     guard above. `normalizeReps` is the boundary, so this is where the shape
+     is pinned; readers still take either form. */
+  ok(JSON.stringify(sr.normalizeReps([[3, 5], 8], 4))
+       === '[{"lo":3,"hi":5},{"lo":8,"hi":8},{"lo":8,"hi":8},{"lo":8,"hi":8}]',
      'padding repeats the LAST prescription, the same rule `targets` follows');
   ok(sr.normalizeReps([[3, 5], 8], 1).length === 1, 'and truncation drops from the end');
   ok(sr.normalizeReps([[3, 5], 'nonsense'], 2) === null,
@@ -6173,11 +6267,18 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + 'quietly given a made-up rep target is the app writing somebody\'s programme for them');
 
   /* ---- 🚨 the ambiguity `expandRepSpec` exists to resolve ---- */
-  ok(JSON.stringify(sr.expandRepSpec([3, 5], 2)) === '[[3,5],[3,5]]',
+  ok(JSON.stringify(sr.expandRepSpec([3, 5], 2)) === '[{"lo":3,"hi":5},{"lo":3,"hi":5}]',
      '🚨 `[3, 5]` is ONE range across every set — read the other way it would be set 1 at 3 reps '
      + 'and set 2 at 5, which is a different workout and would fail silently');
-  ok(JSON.stringify(sr.expandRepSpec([[8, 8], [5, 5]], 2)) === '[[8,8],[5,5]]',
+  ok(JSON.stringify(sr.expandRepSpec([[8, 8], [5, 5]], 2)) === '[{"lo":8,"hi":8},{"lo":5,"hi":5}]',
      'and a nested list is per-set, which is how Nippard\'s squat and incline press are written');
+  /* 🔒 THE INPUT SHAPES ARE UNCHANGED, and that is the half worth pinning: a
+     preset still authors `[3, 5]` and `[[8,8],[5,5]]`, and every workout
+     already on disk still holds pairs. Only the OUTPUT moved. */
+  ok(JSON.stringify(sr.expandRepSpec([{ lo: 8, hi: 8 }, { lo: 5, hi: 5 }], 2))
+       === '[{"lo":8,"hi":8},{"lo":5,"hi":5}]',
+     '…and a list already in the stored shape round-trips unchanged, which is what makes a '
+     + 'second read of the same workout idempotent rather than a rewrite');
   ok(sr.expandRepSpec(null, 3) === null, 'no prescription stays no prescription');
 
   /* ---- D33: the reserve, and the direction it errs in ---- */
@@ -6228,7 +6329,11 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const w = normalizeWorkout({ id: 'w', name: 'W', exercises: [
       { exerciseId: 'x', sets: 3, reps: [[3, 5], [3, 5], [3, 5]] },
     ] });
-    ok(JSON.stringify(w.exercises[0].reps) === '[[3,5],[3,5],[3,5]]',
+    /* ⚠️ THE INPUT IS THE LEGACY PAIR SHAPE ON PURPOSE — this is what every
+       workout written before 2026-09-27 holds, so it is also the migration
+       test: a row read off disk in the old shape comes back in the new one. */
+    ok(JSON.stringify(w.exercises[0].reps)
+         === '[{"lo":3,"hi":5},{"lo":3,"hi":5},{"lo":3,"hi":5}]',
        '🚨 `reps` survives normalizeWorkout() — the fourth field caught by that function\'s own '
        + 'warning, and for Nippard\'s programme it is very nearly the whole of the plan');
     const grown = normalizeWorkout({ id: 'w', name: 'W', exercises: [
@@ -6282,7 +6387,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const made = await st2.getWorkouts(system.id);
     const push1 = made.find((w) => w.presetKey === 'push-1');
     const larsen = push1.exercises[1];
-    ok(JSON.stringify(larsen.reps) === '[[10,10],[10,10]]',
+    ok(JSON.stringify(larsen.reps) === '[{"lo":10,"hi":10},{"lo":10,"hi":10}]',
        '🚨 a copied programme brings its rep prescription with it, expanded to one per set — the '
        + 'second place `reps` has to be named, and the trap `targets` already fell into once');
     ok(larsen.origin && JSON.stringify(larsen.origin.reps) === JSON.stringify(larsen.reps),
