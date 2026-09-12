@@ -17,6 +17,107 @@
 
 ---
 
+## 2026-09-27 — A NOTIFICATION BECOMES A WAY IN, AND YOUR OWN WORKOUTS DRAW THE FEED'S CARD
+
+**Tim, opening the session:** *"Never give me messages that long. Always 2-3 paragraphs max unless I
+ask for more information. Make every word you give me intentional. Put that in the progress file so
+you don't forget."* 🔒 **It is now a standing instruction** under Standing instructions in
+`progress.md`. §1 already said "plain short sentences"; what was missing was the LENGTH, and the
+catch-up report that prompted it ran to a dozen bullets.
+
+**Then the work:** *"I want to work on the home page and notifications or anything that might be
+placed there. One thing I have in mind is that there are notifications that say '(thumbs up) ______'
+or '(comment) autumn: "____"', but it's quite hard to know which workout the user is referring to. To
+help with this, allow the user to click on this notification that brings them straight to the workout
+details inside the 'workouts' section inside the user's profile. Additionally, when you click on the
+workouts section inside the user's profile, make the list of workouts look like the same style of the
+home page of your workouts from your friends."*
+
+### What the notification is, and what it was missing
+
+The "notifications" are `reactionsOnMine()` in `js/views-workouts.js` — a strip above the Home feed,
+headed *"On your workouts"*, one line per session, newest first, capped at three. It reads
+`users/{me}/reactions/*` and renders `👍 Autumn` / `💬 Autumn: "…"` under the workout's name and
+relative day. **Nothing in it was clickable**, and nothing had ever tested it.
+
+🚨 **THE ROW ALREADY KNEW EVERYTHING IT NEEDED.** It holds the reader's own full local session
+object — it has to, since it looks each reaction's `sessionId` up in `store.getSessions()` to drop
+reactions to deleted workouts. So the link cost no new read.
+
+### Where it lands, and the screen that was NOT built
+
+🛑 **`#/day/<date>` WOULD HAVE BEEN THE WRONG TARGET, AND THAT IS THE ONE INTERESTING DECISION HERE.**
+Your own sessions are addressed by DATE, and a day can hold two sessions — `views-workouts.js` notes
+it has happened twice. A date-addressed notification answers *"which workout did they mean"* with
+both of them, which is the exact complaint.
+
+🛑 **AND AN OWNER-SIDE TWIN OF `FriendSessionView` WAS REFUSED, IN WRITING, BEFORE THIS SESSION.**
+`js/views-social.js` says it: *"your own sessions already have a detail screen at `#/day/<date>`, and
+giving them a second one would put two screens in the app that must agree about the same workout
+forever."* That refusal still holds and was not reopened.
+
+✅ **The answer is `#/me/workouts/<sessionId>`** — the list Tim was asking to restyle anyway. The
+notification names one card in it; the card IS the detail, because a feed card already carries the
+title, description, duration, set count and every exercise line. **No new screen exists.**
+
+### The card is shared, not copied
+
+🔒 **`js/workout-card.js` — ONE BUILDER, TWO SUBJECTS**, the same shape `profile-shape.js` took for
+the two profiles and `systemBody()` for the two programme doors. `feedCard()` kept only the half that
+is about a FRIEND (their face, a link to their page, the Kudos/Comment/Share row) and hands the rest
+over. A second implementation in `views-me.js` would have been two bodies of code that must agree
+forever about a stat row, a five-exercise cap, an empty case and a kind glyph.
+
+**Three things came out of the extraction:**
+
+- 🚩 **A LIVE BUG NOBODY HAD SEEN: every row on `#/me/workouts` had been reading "0 sets" since it
+  shipped.** It called `recordedSetCount(s)` with a SESSION, and that function reads `entry.sets` — a
+  session has no `.sets`. The import is gone; the card counts through `sessionStats()` like every
+  other screen.
+- 🔒 **`alwaysOpen` IS THE ONE PLACE THE TWO CARDS DIFFER, AND IT IS NOT A PREFERENCE.** A friend's
+  empty card is deliberately flat, because their published projection can carry no entries at all —
+  there may be nothing behind it. Your own `#/day/<date>` exists for every date you recorded, so the
+  shared rule applied to your list would have silently removed a way in the old row list had. **The
+  test fixture's sessions all have `entries: []`, which is exactly the case that proves it.**
+- 🔄 **`fmtClock()` moved to `ui.js`.** It was file-local while one screen used it; two screens
+  formatting the same clock is the drift the extraction exists to remove.
+
+### The foot of your own card, and why it is a readout
+
+A friend's card takes Kudos/Comment/Share. **Yours shows who pressed them** — `firestore.rules`
+gates a reaction on `isFriendOf()` and nobody is their own friend, so buttons there could only ever
+refuse. It also does the real work of the feature: the card you arrive at is the one the notification
+was about, **and it says so**. ⚠️ It prints EVERY comment where the Home strip truncates at two and
+60 characters — the strip is a glance, and this is the screen that glance points at; arriving to find
+the sentence still cut off would make the tap pointless.
+
+### 🚨 A MISTAKE WORTH RECORDING: THE A11Y SUITE PASSED SOMETHING RULE 7 FORBIDS
+
+The first version of the "which card did they mean" mark was a **1600ms** fade. Rule 7 caps motion at
+**250ms** and `tests/a11y.test.mjs` enforces it — **and the suite went green**, because that check
+reads the three `--t*` TOKEN DEFINITIONS out of the stylesheet and says nothing about a `@keyframes`
+block that hard-codes its own duration. 🔒 **The general form: a test that pins the tokens does not
+pin the motion.** Rewritten as a `--t-slow` fade into a raised ground that STAYS while you are on the
+screen — leaving rebuilds the list and clears it. A mark that times itself out is motion answering a
+question the reader may not have finished reading.
+
+### What was measured
+
+**`tests/render.test.mjs` — 1,646 assertions, 0 failures** (1,638 before), and ⚠️ **the new block was
+confirmed to have RUN rather than inferred from the total** — the count rose by 8 where 11 were added
+and 2 removed, which is exactly the arithmetic that hides a block that never executed. Each new
+assertion was grepped out of the output by name. `tests/a11y.test.mjs` and
+`tests/data-layer.test.mjs` both green, the latter covering the `sw.js` precache list, which now
+carries `js/workout-card.js` (it walks the `js/` folder, so a new module fails it by default).
+
+**Asserted:** the profile list builds `.feed-card`, not `a.row`, and is the feed's own class rather
+than a lookalike; newest first; every card is a way in even with no entries; **no `.feed-act` anywhere
+on your own workout**; `#/me/workouts/<id>` marks exactly one card and hides none of the others; the
+bare route marks nothing (the vacuity guard); and an id naming a deleted workout shows the list from
+the top rather than explaining an absence.
+
+---
+
 ## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE
 
 🛑 **NOTHING WAS BUILT. No code changed and no suite was run** — there was nothing for one to test.

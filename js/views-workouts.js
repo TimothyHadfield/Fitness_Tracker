@@ -24,11 +24,14 @@ import {
 import { describeChange } from './preset-updates.js';
 import { contributionsFor } from './muscle-evidence.js';
 import { alternativesFor } from './exercise-families.js';
-import { sessionStats, setsLabel } from './session-stats.js';
-
-/** The library's Activity shelf, by lowercased name — see feedCard(). */
-const ACTIVITY_NAMES = new Set(
-  BUILT_IN_EXERCISES.filter((e) => e.muscle === 'Activity').map((e) => e.name.toLowerCase()));
+/* 🔄 THE CARD MOVED OUT ON 2026-09-27 — `js/workout-card.js`, because your own
+ * workouts draw the same one now (Tim: *"make the list of workouts look like
+ * the same style of the home page of your workouts from your friends"*). The
+ * stat row, the five-exercise cap, the kind glyph, the empty case and the
+ * minute format went with it; what stays in this file is the half that is about
+ * a FRIEND. `sessionStats`/`setsLabel`/`ACTIVITY_NAMES` left with it and are
+ * imported here no longer — they had no other caller. */
+import { workoutCard, cardMeta } from './workout-card.js';
 
 /* A built-in exercise by NAME, for the ready-made-system screens — those list
  * their exercises by name (`preset-systems.js` references them that way on
@@ -55,7 +58,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
-  personFace, helpDot, parkScreen, refreshRoute,
+  personFace, helpDot, parkScreen, refreshRoute, fmtClock,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -247,8 +250,22 @@ async function fillFeed(body) {
 
 /**
  * A quiet strip above the feed: who reacted to YOUR recent workouts.
- * One line per session, newest session first, capped at three — a readout,
- * not a notification system.
+ * One line per session, newest session first, capped at three.
+ *
+ * 🔄 EACH LINE IS A LINK SINCE 2026-09-27, on Tim's report: *"it's quite hard
+ * to know which workout the user is referring to. To help with this, allow the
+ * user to click on this notification that brings them straight to the workout
+ * details inside the 'workouts' section inside the user's profile."*
+ *
+ * 🚨 IT GOES TO `#/me/workouts/<id>`, NOT `#/day/<date>`, and the difference is
+ * the whole point of the change. A day can hold two sessions — it has happened
+ * twice — so a date-addressed link answers "which workout did they mean" with
+ * both of them. The session id is the only thing that names one.
+ *
+ * 🛑 AND IT IS NOT A NEW SCREEN. `views-social.js` refuses an owner-side twin of
+ * the friend session screen on the grounds that two screens describing one
+ * workout must agree forever; this lands on the card in your own list, which is
+ * a list that already had to exist.
  */
 async function reactionsOnMine(state, names) {
   const mine = await social.reactionsFor(state.uid);
@@ -261,7 +278,7 @@ async function reactionsOnMine(state, names) {
     const s = byId.get(sid);
     if (!s) continue;                    // reaction to something since deleted
     if (!slot.kudos.length && !slot.comments.length) continue;
-    rows.push({ s, slot });
+    rows.push({ s, slot, sid });
   }
   if (!rows.length) return null;
   rows.sort((a, b) => b.s.date.localeCompare(a.s.date));
@@ -269,7 +286,7 @@ async function reactionsOnMine(state, names) {
   const who = (uid) => names.get(uid) || 'Someone';
   return el('div', { class: 'feed-mine' },
     el('div', { class: 'section-label', text: 'On your workouts' }),
-    ...rows.slice(0, 3).map(({ s, slot }) => {
+    ...rows.slice(0, 3).map(({ s, slot, sid }) => {
       const bits = [];
       if (slot.kudos.length) {
         bits.push(`👍 ${slot.kudos.map(who).join(', ')}`);
@@ -277,7 +294,13 @@ async function reactionsOnMine(state, names) {
       for (const c of slot.comments.slice(-2)) {
         bits.push(`💬 ${c.fromName || who(c.from)}: “${c.text.length > 60 ? c.text.slice(0, 57) + '…' : c.text}”`);
       }
-      return el('div', { class: 'feed-mine-row' },
+      /* ⚠️ AN `<a>`, NOT A ROW WITH AN onClick. The whole line is the target,
+       * it is keyboard-reachable for free, and it survives the same
+       * right-click/long-press the rest of the app's links do. */
+      return el('a', {
+        class: 'feed-mine-row',
+        href: `#/me/workouts/${encodeURIComponent(sid)}`,
+      },
         el('span', { class: 'feed-mine-what', text: `${s.workoutName || 'Workout'} · ${relativeDay(s.date)}` }),
         el('span', { class: 'feed-mine-who', text: bits.join('   ') }),
       );
@@ -314,114 +337,18 @@ function feedEntries(seen) {
     || String(y.act.startedAt || '').localeCompare(String(x.act.startedAt || '')));
 }
 
-/* The numbers under the title — Hevy's stat row, in our type.
+/**
+ * One friend's workout, as a card.
  *
- * ⚠️ THEIRS READS `Time · Volume · Records` AND OURS READS `Time · Sets`, which
- * is Tim's call (2026-09-01: *"Replace Volume for # of sets"*) and is also the
- * only column of the three that can be computed honestly for somebody else's
- * session. `js/session-stats.js` has the full argument; the short version is
- * that a friend's bodyweight sets have no external load to total and their body
- * weight is not ours to have, so a pounds figure would quietly halve a session
- * of pull-ups. A set count is the same number for everybody.
- *
- * Small grey label above, bold value below, in columns — their shape, because
- * it is a good one. No boxes and no rules between the columns (Rule 2); the
- * gaps do the separating.
+ * 🔄 THE MIDDLE OF IT LIVES IN `js/workout-card.js` SINCE 2026-09-27 — the
+ * title, the description, the stat row and the exercise lines are identical to
+ * the card your own workouts now draw on `#/me/workouts`, so they are built
+ * once. What stays here is the half that is genuinely about a FRIEND: their
+ * face and a link to their page at the top, and the Kudos/Comment/Share row at
+ * the bottom, which is theirs to receive and yours to press.
  */
-function statRow(pairs) {
-  const cells = pairs.filter((p) => p && p[1] != null && p[1] !== '');
-  if (!cells.length) return null;
-  return el('div', { class: 'feed-stats' },
-    ...cells.map(([label, value]) => el('div', { class: 'feed-stat' },
-      el('div', { class: 'feed-stat-label', text: label }),
-      el('div', { class: 'feed-stat-value', text: String(value) }),
-    )));
-}
-
-/** "1h 4min" / "45 min" — their format, because a two-hour session in minutes
- *  is a number you have to do arithmetic on to understand. */
-function fmtMinutes(mins) {
-  const n = Math.round(Number(mins) || 0);
-  if (n <= 0) return null;
-  if (n < 60) return `${n} min`;
-  const h = Math.floor(n / 60);
-  const m = n % 60;
-  return m ? `${h}h ${m}min` : `${h}h`;
-}
-
-/* How many exercises to list on a card before it says "see the rest".
- *
- * Five, which is what Hevy's current build shows before "See 1 more exercise"
- * (social-plan §12.13). Below that a leg day reads as a stub; above it one
- * person's marathon session pushes everybody else's card off the screen. */
-const FEED_EX_LIMIT = 5;
-
 function feedCard(e) {
   const a = e.act;
-
-  // ⚠️ Strava's meta line is "{date} at {time}" plus a location, and it drops
-  // the location half silently when there is none rather than leaving a hole.
-  // Same here — and there is never a location yet, so the line is currently
-  // always just the left half. Written this way so adding one is one term.
-  const when = [relativeDay(a.date), fmtClock(a.startedAt)].filter(Boolean).join(' at ');
-  // ⚠️ MINUTES LEFT THIS LINE ON 2026-09-02 and moved into the stat row, where
-  // it is read rather than skimmed past. It must not appear in both — the same
-  // number twice on one card reads as two different facts.
-  const meta = [when, a.location].filter(Boolean).join(' · ');
-
-  // What they did. ⚠️ `entries` used to be missing at the lowest tier, which is
-  // why the card has an honest empty case at all; the tiers went on 2026-09-03
-  // and the empty case stays, because an activity carries no entries either.
-  const names = (a.entries || [])
-    .map((x) => x && x.name)
-    .filter(Boolean);
-
-  const stats = sessionStats(a.entries);
-  const title = a.name || 'Workout';
-
-  /* ⚠️ A RUN SHOULD READ AS A RUN WITHOUT BEING READ — activities-plan §3
-   * item 4. The projection carries no group (it publishes what was done, not
-   * how this app files it), so the kind is recovered on the CLIENT by matching
-   * the title against the library's own Activity shelf. Presentation only:
-   * getting it wrong shows the wrong little glyph and changes nothing else,
-   * which is why a name match is an acceptable way to decide it. */
-  const isActivity = ACTIVITY_NAMES.has(title.trim().toLowerCase());
-
-  // An activity session is one entry named after itself, so the card was
-  // printing "Running" directly under "Running". Say it once.
-  const said = names.length === 1 && names[0].trim().toLowerCase() === title.trim().toLowerCase()
-    ? [] : names;
-
-  /* ⚠️ ONE ROW PER EXERCISE, SET COUNT FIRST — the second-biggest gap in
-   * social-plan §12.14. A run-on line of names says what was touched and
-   * nothing about how much was done, which is the whole difference between a
-   * receipt and a record.
-   *
-   * The run-on survives as the fallback, and it earns its place: a session can
-   * still have entries where no set carries a
-   * number — an old row, or a workout abandoned after the first exercise — and
-   * printing "0 sets" against every name would be a worse lie than the names
-   * alone. `stats.byExercise` is empty in exactly that case. */
-  const selfNamed = names.length === 1 && said.length === 0;
-  const rows = selfNamed ? [] : stats.byExercise;
-
-  const did = rows.length
-    ? el('div', { class: 'feed-exs' },
-        ...rows.slice(0, FEED_EX_LIMIT).map((x) => el('div', { class: 'feed-ex' },
-          el('span', { class: 'feed-ex-sets', text: setsLabel(x.sets) }),
-          el('span', { class: 'feed-ex-name', text: x.name }),
-        )),
-        rows.length > FEED_EX_LIMIT
-          ? el('div', { class: 'feed-ex is-quiet', text:
-              `See ${rows.length - FEED_EX_LIMIT} more exercise`
-              + (rows.length - FEED_EX_LIMIT === 1 ? '' : 's') })
-          : null,
-      )
-    : said.length
-      ? el('div', { class: 'feed-did', text: said.join(' · ') })
-      : names.length
-        ? null
-        : el('div', { class: 'feed-did is-quiet', text: 'Nothing was recorded inside this one.' });
 
   /* Tapping the card opens the workout — social-plan §13 step 3, and §12.14's
    * fifth difference ("the card is not a way in").
@@ -431,52 +358,22 @@ function feedCard(e) {
    * friend's page — a real destination where the same session is one tap
    * further — instead of on a route that cannot resolve. A dead tap is the
    * failure this project keeps refusing to ship; a slightly less specific
-   * destination is not. A session with nothing inside it has no workout to open,
-   * so the body is not a link and the quiet line above says why. */
-  const openable = Boolean(a.entries && a.entries.length);
+   * destination is not. */
   const href = a.id
     ? `#/friend/${encodeURIComponent(e.uid)}/${encodeURIComponent(a.id)}`
     : `#/friend/${encodeURIComponent(e.uid)}`;
 
-  const heading = el('h2', { class: 'feed-title' },
-    // ⚠️ The workout's name is the LARGEST text in the card, above the athlete's
-    // own name — which is Strava's hierarchy, and it is right: you scan a feed
-    // for what happened, and whose it is qualifies it.
-    el('span', { class: 'feed-kind' }, icon(isActivity ? 'activity' : 'dumbbell', 16)),
-    title);
-
-  // Their description, published at "my workouts" and above. Second thing you
-  // read, under the title and above the numbers — Hevy's order (§12.13), and
-  // the right one: it is what the person said, and the stats are what the app
-  // counted.
-  const note = typeof a.note === 'string' && a.note
-    ? el('p', { class: 'feed-note', text: a.note })
-    : null;
-
-  const body = [
-    heading,
-    note,
-    // ⚠️ NO SET COUNT ON A RUN. "1 set" is an artifact of how a quick activity
-    // is stored, not something anybody did, and D27 is explicit that activities
-    // are recorded first-class and modelled not at all. Time is the honest
-    // column for them and it is already there.
-    statRow([['Time', fmtMinutes(a.minutes)], ['Sets', isActivity ? null : (stats.sets || null)]]),
-    did,
-  ].filter(Boolean);
-
-  return el('article', { class: 'feed-card' },
-    el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
+  return workoutCard(a, {
+    head: el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
       el('span', { class: 'feed-avatar' }, personFace(e.avatar, 19)),
       el('span', { class: 'feed-who' },
         el('span', { class: 'feed-name', text: e.name }),
-        el('span', { class: 'feed-meta', text: meta }),
+        el('span', { class: 'feed-meta', text: cardMeta(a, fmtClock) }),
       ),
     ),
-    openable
-      ? el('a', { class: 'feed-open', href }, ...body)
-      : el('div', { class: 'feed-open is-flat' }, ...body),
-    feedActions(e),
-  );
+    href,
+    foot: feedActions(e),
+  });
 }
 
 /**
@@ -632,21 +529,9 @@ async function shareActivity(e) {
   }
 }
 
-/**
- * "6:32 PM" from an ISO timestamp, or null.
- *
- * ⚠️ NULL RATHER THAN A GUESS. Sessions recorded before `startedAt` existed have
- * no time at all, and a card reading "at 12:00 AM" would be inventing one. The
- * meta line drops the half it has nothing for.
- */
-function fmtClock(iso) {
-  if (typeof iso !== 'string' || !iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  try {
-    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  } catch (_) { return null; }
-}
+// ⚠️ `fmtClock()` LIVED HERE AND MOVED TO `ui.js` ON 2026-09-27, when your own
+// workouts started drawing the same card. Two screens formatting the same clock
+// is the drift the card extraction exists to remove.
 
 // ⚠️ `sessionRow()` LIVED HERE AND IS GONE, 2026-08-25. It drew Home's "Recent
 // activity" list of the user's OWN sessions, which the feed replaced on Tim's

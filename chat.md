@@ -2967,3 +2967,32 @@ before the next one landed. Lesson taken: wait for the lot, then summarise.
 
 He asked for the summary shorter, then plainer. Then: "okay forget the improvements from other apps.
 I want to build it myself." Dropped. Then prepared the notes for a reset.
+
+---
+
+## 2026-09-27 — notifications you can tap, and your own workouts as cards
+
+Tim opened with a rule rather than a task: "Never give me messages that long. Always 2-3 paragraphs
+max unless I ask for more information. Make every word you give me intentional." He asked for it to
+go in the notes so it survives a reset, and it did.
+
+Then the work. The strip at the top of Home that says who gave you kudos or left a comment named the
+workout but couldn't take you to it — "it's quite hard to know which workout the user is referring
+to". He wanted the line tappable, landing on the workout inside his profile's Workouts section, and
+he wanted that list to look like the friends' cards on Home rather than plain rows.
+
+Both done. The notification now links to one specific workout rather than to a date, which matters
+because a day can hold two sessions and a date-addressed link would have shown him both. I did not
+build a new screen for it: the notes already refused an owner-side copy of the friend-workout screen
+on the grounds that two screens describing the same workout have to agree forever, so the tap lands
+on the card in his own list, and a card already shows the title, description, time, set count and
+every exercise. The card itself is now one piece of code drawing both lists, not two that look alike.
+
+Two things fell out of it. Every row on his Workouts list had been reading "0 sets" since it shipped
+— a set-counting function was being handed a whole session instead of one exercise, and it silently
+returned zero. And my first version of the "here's the one they meant" highlight ran for 1.6 seconds,
+which breaks the app's own quarter-second rule on motion; the test that guards that rule only checks
+the three shared timing values, so it passed. Fixed, and both are written down.
+
+He then reported two things about adding a ready-made programme: no clear confirmation that it was
+added, and the added programme showing no workouts even though Explore lists them all.

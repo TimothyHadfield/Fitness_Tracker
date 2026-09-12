@@ -44,7 +44,21 @@
 > "not verified on a phone" warnings, and how visuals may be touched. **The handbook still contains
 > the old versions in places** — direction.md quotes both, so you can tell which is which.
 
-**Last updated:** 2026-09-26 — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
+**Last updated:** 2026-09-27 — **A NOTIFICATION IS A WAY IN, AND YOUR OWN WORKOUTS DRAW THE FEED'S
+CARD.** ✅ **Built, green, pushed.** The *"On your workouts"* strip links to
+**`#/me/workouts/<sessionId>`**, and that list is now the **SAME** card the feed builds
+(`js/workout-card.js` — one builder, two subjects; `feedCard()` keeps only the friend half).
+🛑 **`#/day/<date>` WAS THE WRONG TARGET and no owner-side session screen was built** — a day can hold
+two sessions, and `docs/state.md`'s refusal of a second screen describing one workout still stands.
+🚩 **A live bug fell out: every row on that list had read "0 sets" since it shipped** —
+`recordedSetCount()` was handed a SESSION and reads `entry.sets`. 🔒 **`alwaysOpen` is the only
+difference between the two cards**, and it is not a preference: your `#/day/` exists whether or not a
+session has entries, a friend's projection may carry none. 🚨 **AND THE A11Y SUITE PASSED A 1600ms
+ANIMATION** — its duration check reads the three `--t*` TOKENS, never a `@keyframes` that hard-codes
+its own; **a test that pins the tokens does not pin the motion.** Rewritten on `--t-slow`.
+**Render 1,646 · a11y · data-layer all green. Details: `docs/history.md` 2026-09-27.**
+
+**2026-09-26** — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
 other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim
 reviews. 🛑 **NOTHING WAS BUILT, and no code changed.** Then: *"okay forget the improvements from other
 apps. I want to build it myself."* — now a standing instruction. 🔒 **Two findings outlive it**:
@@ -105,25 +119,14 @@ so the male art must regenerate **byte-identical**. 🛑 **The female source PNG
 working files at the repo root; the art cannot be rebuilt without them.** Full write-up:
 `docs/history.md` 2026-09-22.
 
-**2026-09-21 (second pass)** — **the "from:" block is a TABLE, and two investigations
-that are his to decide.** He opened a list: *"I'm going to just give you a list of things I want you
-to fix with the cite and you can deploy sub-agents to work on each one."* 🟢 **SIX AGENTS, DISJOINT
-FILES, ONE INTEGRATOR** — and 🔒 **the thing that made it work was writing the CONTRACT (exact class
-names, exact field names) before any agent started**, so four writers on four files could not drift.
-`tests/` was the integrator's alone; every agent proposed `ok(...)` blocks to its own scratch dir.
-⚠️ **Two agents shared a scratch ROOT and one overwrote the other's probe** — "your own scratch
-directory" was not specific enough; name the path in the brief.
-
-⚠️ **THE REST COLLAPSED 2026-09-24** (§0.3). **The "from:" block became a five-column table** —
-three compact, two behind a button, one colour each. 🔒 **The durable halves live in
-`docs/state.md`'s Muscles row**: the button is NOT `settings.moreDetails`, the fifth column is headed
-**Influence** rather than Confidence because the panel already has a confidence line, and both new
-numbers are **published** so a friend's panel matches the owner's. 🚨 **The finding worth not
-re-deriving**: contributions of 130/140/155 blend to **133.9**, not 138, because the shares are
-67/29/4 % — the answer sits near the LOWEST reading, and without the column that reads as a bug.
-🛑 **Still not built**: `robustAggregate()` winsorises, so the columns stop multiplying out where a
-contribution sits outside ±25 % of the median (152.7 by hand vs 150.8 shown) — he said two extra
-numbers only. **Full write-up: `docs/history.md` 2026-09-21 second pass.**
+**2026-09-21 (second pass) — COLLAPSED AGAIN 2026-09-27** (§0.3). The "from:" block became a
+five-column table; **the durable halves are in `docs/state.md`'s Muscles row**. Three things a fresh
+session must not re-derive: 🔒 **six agents on disjoint files worked because the CONTRACT — exact
+class and field names — was written before any of them started**, with `tests/` the integrator's
+alone; ⚠️ **two shared a scratch ROOT and one overwrote the other's probe**, so name the path in the
+brief; 🚨 **contributions of 130/140/155 blend to 133.9, not 138** (shares 67/29/4 %), which reads as
+a bug without the column. 🛑 **Still not built**: winsorising means the columns do not always multiply
+out — he asked for two extra numbers only. **`docs/history.md` 2026-09-21 second pass.**
 
 ✅ ~~**TWO INVESTIGATIONS, NEITHER BUILT, BOTH HIS TO DECIDE**~~ **BOTH BUILT ON 2026-09-23** — the
 calves rep gate and the neck standards. Rows 11 and 12 below carry what shipped.
@@ -637,6 +640,10 @@ for whether a day may be collapsed:
   no conflict, because both sides staged by name. 🚨 **THE PRACTICAL RULE: a file, module or suite
   you do not recognise is not necessarily stale, wrong, or yours to change.** Check `git log` for it
   before assuming, and stage by name so you cannot carry somebody else's half-finished work.
+- 🛑 **TWO OR THREE PARAGRAPHS, MAXIMUM — Tim, 2026-09-27.** *"Never give me messages that long.
+  Always 2-3 paragraphs max unless I ask for more information. Make every word you give me
+  intentional."* Said of a catch-up report that ran to a dozen bullets. **He asks when he wants
+  more.** §1 already said "plain short sentences"; this is the LENGTH, and it is a hard cap.
 - 🛑 **"CATCH UP WITH PROGRESS.MD" IS AN INSTRUCTION TO READ, NOT TO BUILD — Tim, 2026-09-11.**
   *"When I tell you to catch up with progress.md, you should not start working on anything until I
   tell you. It's okay to tell me what you think next steps are, but don't start working until I tell

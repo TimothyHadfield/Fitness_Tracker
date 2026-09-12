@@ -1135,6 +1135,28 @@ export function fmtDateLong(iso) {
   });
 }
 
+/**
+ * "6:32 PM" from an ISO timestamp, or null.
+ *
+ * ⚠️ NULL RATHER THAN A GUESS. Sessions recorded before `startedAt` existed have
+ * no time at all, and a card reading "at 12:00 AM" would be inventing one. The
+ * meta line drops the half it has nothing for.
+ *
+ * 🔄 MOVED HERE FROM `views-workouts.js` ON 2026-09-27, when your own workouts
+ * started drawing the same card a friend's do. It was file-local while one
+ * screen used it; a second copy in `views-me.js` would be two formatters that
+ * must agree about the same clock forever, which is the drift the card
+ * extraction exists to remove.
+ */
+export function fmtClock(iso) {
+  if (typeof iso !== 'string' || !iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  try {
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch (_) { return null; }
+}
+
 export function fmtDateShort(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });

@@ -77,6 +77,7 @@ const SHELL = [
   './js/set-targets.js',
   './js/set-reps.js',
   './js/session-stats.js',
+  './js/workout-card.js',
   './js/session-draft.js',
   './js/live-session.js',
   './js/strength-observations.js',

@@ -9446,14 +9446,63 @@ ok(!data.querySelector('.rep-target'),
        `🚨 and it is titled Friends however you got to it (${which})`);
   }
 
-  /* ---- the workouts list ---- */
+  /* ---- the workouts list, and it is the FEED'S CARD since 2026-09-27 ----
+   *
+   * Tim: *"make the list of workouts look like the same style of the home page
+   * of your workouts from your friends."* Asserted as the same class the feed
+   * builds, not as a lookalike — `js/workout-card.js` builds both, and a test
+   * that accepted a second implementation would let them drift apart. */
   {
     const list = await mount(MeRouteView('workouts'));
     await settle();
-    const rows = [...list.querySelectorAll('a.row')];
-    ok(rows.length === 3, `the workouts list shows all three (${rows.length})`);
-    ok(rows[0].getAttribute('href') === '#/day/2026-08-05',
-       `⚠️ newest first, and it opens the DAY rather than an edit form (${rows[0].getAttribute('href')})`);
+    const cards = [...list.querySelectorAll('.feed-card')];
+    ok(cards.length === 3, `the workouts list shows all three (${cards.length})`);
+    ok(!list.querySelector('a.row'),
+       '🔄 and they are CARDS rather than rows — the style Tim pointed at');
+    const first = cards[0].querySelector('a.feed-open');
+    ok(first && first.getAttribute('href') === '#/day/2026-08-05',
+       `⚠️ newest first, and it opens the DAY rather than an edit form (${first && first.getAttribute('href')})`);
+    /* 🚨 THE FIXTURE'S SESSIONS HAVE NO ENTRIES, which is exactly the case that
+       makes a FRIEND's card flat. Your own day screen exists for every date you
+       recorded, so this must stay a link — the vacuity guard on `alwaysOpen`. */
+    ok(cards.every((c) => c.querySelector('a.feed-open')),
+       '🚨 every one is a way in, empty or not — the one place your own list differs from a friend\'s');
+    ok(!list.querySelector('.feed-act'),
+       '🛑 and no Kudos/Comment buttons on your own workout — firestore.rules gates a reaction on '
+       + 'isFriendOf, and nobody is their own friend');
+  }
+
+  /* ---- where a notification lands (2026-09-27) ----
+   *
+   * Tim: *"it's quite hard to know which workout the user is referring to …
+   * allow the user to click on this notification that brings them straight to
+   * the workout details."* The strip on Home links to `#/me/workouts/<id>`;
+   * this is the other end of that link. */
+  {
+    const sessions = await store.getSessions();
+    const wanted = sessions.find((s) => s.date === '2026-08-05');
+    ok(Boolean(wanted && wanted.id), 'the fixture session has an id to address — not vacuous');
+
+    const named = await mount(MeRouteView(`workouts/${encodeURIComponent(wanted.id)}`));
+    await settle();
+    const marked = [...named.querySelectorAll('.feed-card.is-named')];
+    ok(marked.length === 1 && marked[0].getAttribute('data-session') === wanted.id,
+       `🚨 #/me/workouts/<id> marks exactly the card the notification named (${marked.length})`);
+    ok([...named.querySelectorAll('.feed-card')].length === 3,
+       '…without hiding the rest of the list — it is a mark, not a filter');
+
+    const bare = await mount(MeRouteView('workouts'));
+    await settle();
+    ok(!bare.querySelector('.is-named'),
+       '…and the bare route marks nothing, which is the guard that the mark means something');
+
+    /* ⚠️ AN ID THAT NAMES NOTHING IS AN ORDINARY OUTCOME — the workout was
+       deleted, or the account was restored from a backup. The list is still
+       correct; explaining an absence would be worse than showing it. */
+    const gone = await mount(MeRouteView('workouts/not-a-session'));
+    await settle();
+    ok([...gone.querySelectorAll('.feed-card')].length === 3 && !gone.querySelector('.is-named'),
+       '⚠️ an id naming a deleted workout shows the list from the top rather than an error');
   }
 
   /* ---- 🚨 THE ONE THAT MATTERS: no cloud, no invented zeros ---- */

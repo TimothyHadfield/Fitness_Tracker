@@ -81,9 +81,16 @@ import {
   // screen still has to say — that a public account is readable by people who
   // are not friends — changes what the number IS, so it stays on the screen
   // rather than going behind a dot (Rule 9).
-  fmtDateShort, relativeDay,
+  fmtDateShort, relativeDay, fmtClock,
 } from './ui.js';
-import { recordedSetCount } from './session-stats.js';
+/* 🆕 THE SAME CARD THE HOME FEED DRAWS, 2026-09-27 — Tim: *"make the list of
+ * workouts look like the same style of the home page of your workouts from your
+ * friends."* `recordedSetCount` left with the old row: the card counts its own
+ * sets through `sessionStats`, and the call this file used to make was handing
+ * a SESSION to a function that reads `entry.sets` — so every row on this screen
+ * had been reading "0 sets" since it shipped. Deleted rather than fixed, since
+ * nothing here counts sets by hand any more. */
+import { workoutCard, sessionToCard, cardMeta } from './workout-card.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -526,12 +533,27 @@ export async function MePeopleView() {
 /**
  * `#/me/workouts` — your own training, newest first.
  *
- * ⚠️ IT OPENS THE DAY, not an edit form. Tapping a workout here is "show me
- * that session", and `#/day/<date>` is the screen that already answers it —
- * with the edit pencil on it for anybody who wanted the other thing.
+ * ⚠️ IT OPENS THE DAY, not an edit form. Tapping a card here is "show me that
+ * session", and `#/day/<date>` is the screen that already answers it — with the
+ * edit pencil on it for anybody who wanted the other thing.
+ *
+ * 🔄 CARDS SINCE 2026-09-27, not rows. Tim: *"when you click on the workouts
+ * section inside the user's profile, make the list of workouts look like the
+ * same style of the home page of your workouts from your friends."* The card is
+ * `js/workout-card.js` and it is the SAME one, not a copy that resembles it.
+ *
+ * 🚨 THE FOOT OF YOUR OWN CARD IS A READOUT, NOT BUTTONS. A friend's card
+ * carries Kudos/Comment/Share; yours shows who pressed them, because
+ * `firestore.rules` gates a reaction on `isFriendOf` and nobody is their own
+ * friend. It is also what makes the notification land somewhere useful: the
+ * card you arrive at is the one the notification was about, and it says so.
+ *
+ * @param {string|null} named  a session id from `#/me/workouts/<id>` — the
+ *   card to scroll to and mark. Ignored when it names nothing on the list,
+ *   which is the ordinary outcome for a workout since deleted.
  */
-export async function MeWorkoutsView() {
-  const body = el('div', { class: 'list' });
+export async function MeWorkoutsView(named) {
+  const body = el('div', { class: 'feed' });
   const screen = screenShell({
     title: 'Your workouts',
     back: '#/me',
@@ -539,33 +561,72 @@ export async function MeWorkoutsView() {
   });
 
   (async () => {
-    const sessions = await store.getSessions();
+    /* ⚠️ THE SESSIONS ARE THE ONLY READ THAT MAY FAIL THE SCREEN. Settings and
+     * the social state both fall back: a card with no face is the card every
+     * account without a photo draws, and no cloud simply means no reactions
+     * landed — neither is a reason to fail a list of your own training, which
+     * is on this device. */
+    const [sessions, settings, state] = await Promise.all([
+      store.getSessions(),
+      store.getSettings().catch(() => ({})),
+      social.state().catch(() => ({ available: false })),
+    ]);
+
     if (!sessions.length) {
       setChildren(body, emptyState('Nothing recorded yet',
         'Every workout you finish shows up here, newest first.',
         el('a', { class: 'btn primary', href: '#/record', text: 'Record a workout' })));
       return;
     }
+
     // Newest first. `date` is the local day the session belongs to, which is
     // the one a person is looking for — not `startedAt`, which is a UTC instant.
     const rows = [...sessions].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+    /* One read for every reaction on every one of my sessions, and it is
+     * allowed to fail into an empty map. A card with no foot is the normal
+     * case; a list that errored because nobody could count a thumbs-up would
+     * not be. */
+    let reactions = new Map();
+    if (state.available && state.uid) {
+      reactions = await social.reactionsFor(state.uid).catch(() => new Map());
+    }
+    // Names for whoever reacted: my graph first (I named my friends), then the
+    // name they published with, then 'Someone' — the same order the Home strip
+    // resolves in, because it is the same question.
+    const names = new Map(((state.available && state.connections) || []).map((c) => [c.uid, c.name]));
+    const who = (uid) => names.get(uid) || 'Someone';
+
+    const me = state.name || settings.displayName || '';
+
     setChildren(body,
       el('div', { class: 'field-help', text:
         `${rows.length} workout${rows.length === 1 ? '' : 's'}, newest first.` }),
       ...rows.map((s) => {
-        const sets = recordedSetCount(s);
-        const exercises = (s.entries || []).length;
-        return el('a', { class: 'row', href: `#/day/${encodeURIComponent(s.date)}` },
-          el('div', { class: 'row-main' },
-            el('div', { class: 'row-title', text: s.workoutName || 'Workout' }),
-            el('div', { class: 'row-sub', text:
-              `${relativeDay(s.date)} · ${fmtDateShort(s.date)} · ${sets} set${sets === 1 ? '' : 's'}`
-              + (exercises ? ` · ${exercises} exercise${exercises === 1 ? '' : 's'}` : '') }),
+        const a = sessionToCard(s);
+        const slot = (s.id && reactions.get(s.id)) || null;
+        return workoutCard(a, {
+          id: s.id || null,
+          /* ⚠️ NOT A LINK, and that is the one deliberate difference from the
+           * feed's head. On a friend's card the face opens their page; on
+           * yours it would open the screen you are two taps inside already. */
+          head: el('div', { class: 'feed-head' },
+            el('span', { class: 'feed-avatar' }, personFace(settings.avatar, 19)),
+            el('span', { class: 'feed-who' },
+              el('span', { class: 'feed-name', text: me || 'You' }),
+              el('span', { class: 'feed-meta', text: cardMeta(a, fmtClock) }),
+            ),
           ),
-          el('span', { class: 'row-chev' }, chevron()),
-        );
+          href: `#/day/${encodeURIComponent(s.date)}`,
+          // See workoutCard(): your own day screen exists whether or not the
+          // session has anything in it, so every card here is a way in.
+          alwaysOpen: true,
+          foot: reactionFoot(slot, who),
+        });
       }),
     );
+
+    if (named) markNamedCard(body, named);
   })().catch(() => {
     setChildren(body, emptyState('Could not load your workouts',
       'Everything you have recorded is safe. Try again in a moment.'));
@@ -574,12 +635,61 @@ export async function MeWorkoutsView() {
   return screen;
 }
 
+/**
+ * Who reacted to this one — the foot of your own card.
+ *
+ * Every comment, not the last two: the Home strip is a glance and truncates,
+ * and this is the screen that glance points AT. Arriving here to find the
+ * sentence still cut off would make the tap pointless.
+ */
+function reactionFoot(slot, who) {
+  if (!slot) return null;
+  const lines = [];
+  if (slot.kudos && slot.kudos.length) {
+    lines.push(`👍 ${slot.kudos.map(who).join(', ')}`);
+  }
+  for (const c of (slot.comments || [])) {
+    lines.push(`💬 ${c.fromName || who(c.from)}: “${c.text}”`);
+  }
+  if (!lines.length) return null;
+  return el('div', { class: 'feed-rx' },
+    ...lines.map((t) => el('div', { class: 'feed-rx-line', text: t })));
+}
+
+/**
+ * Mark the card a notification named, and put it on screen.
+ *
+ * ⚠️ IT FAILS QUIETLY AND ON PURPOSE. The id can name a session that has since
+ * been deleted, or one belonging to an account that was restored from a backup
+ * — in both cases the list is still correct and the right thing to do is show
+ * it from the top rather than to explain a workout that is not there.
+ */
+function markNamedCard(body, id) {
+  // ⚠️ A SCAN RATHER THAN A SELECTOR. A session id is an opaque string from
+  // whoever wrote the row, so putting it inside a selector needs CSS.escape —
+  // which jsdom implements only partially, and the render suite mounts this
+  // screen. Comparing the attribute needs no escaping at all.
+  const card = [...body.querySelectorAll('[data-session]')]
+    .find((n) => n.getAttribute('data-session') === id);
+  if (!card) return;
+  card.classList.add('is-named');
+  // jsdom has no layout and no scrollIntoView; the render suite mounts this
+  // screen, so the guard is load-bearing rather than defensive.
+  if (typeof card.scrollIntoView === 'function') {
+    card.scrollIntoView({ block: 'center' });
+  }
+}
+
 /** The router hands `#/me/<sub>` here so one route owns the whole section. */
 export async function MeRouteView(param) {
-  const sub = String(param || '').split('/')[0];
+  const parts = String(param || '').split('/');
+  const sub = parts[0];
   // ⚠️ Three names, one list — `followers` and `following` are the old routes and
   // they resolve rather than 404. See MePeopleView.
   if (sub === 'friends' || sub === 'followers' || sub === 'following') return MePeopleView();
-  if (sub === 'workouts') return MeWorkoutsView();
+  // #/me/workouts/<sessionId> names one card. The bare route is unchanged.
+  if (sub === 'workouts') {
+    return MeWorkoutsView(parts[1] ? decodeURIComponent(parts[1]) : null);
+  }
   return MeView();
 }
