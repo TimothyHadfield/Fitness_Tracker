@@ -297,6 +297,53 @@ set should count at SAVE — is untouched and still Tim's.**
 into a STORED workout, where it means two sets (10 then 12). Only a preset's shorthand reads a pair as
 a range. **24 suites, 6,355 assertions, 0 failures, no suite at zero.**
 
+### 🆕 FAMOUS LIFTERS ON THE COMPARE SCREEN
+
+**Tim, mid-session:** *"be able to compare muscles with populare influencers or professionals current
+or past when you hit the compare button. This requires research into knowing what the person's lifts
+were … Pick the most popular ones and try to put them in a list … compare can be against a friend or
+an influencer."*
+
+🟢 **Three research agents** (general-purpose, web access), disjoint groups — fitness creators,
+strength athletes past and present, women — each writing only to its own scratch file. The brief's
+rules are the module's rules: **sourced, raw (no shirts/suits/multi-ply), ≤ 12 reps, bodyweight at the
+time, never guessed.** Most numbers came straight from OpenPowerlifting's data files, which carry the
+weigh-in. ⚠️ **Two agents independently found OpenPowerlifting's web summary garbled columns** (it
+showed Hafþór's bench and deadlift swapped) and read the CSVs instead. **Refused for having no
+published set:** Sam Sulek, David Laid, Noel Deyzel, Jeff Seid, Christian Guzman, Whitney Simmons,
+Stephanie Buttermore, Krissy Cela, Sydney Cummings; **refused for gear:** Ed Coan's records, Coleman's
+800 squat, Eddie Hall's deadlift.
+
+✅ **`js/public-figures.js` is GENERATED** from the three files by a scratchpad script — 27 people
+transcribed by hand is how a wrong digit gets in. Stefi Cohen and Meg Gallagher appeared twice and
+were merged; **Tia-Clair Toomey was dropped after rating her** — Olympic lifts only, which nothing
+here turns into a muscle rating, so she drew an empty body. **26 people, 76 lifts.**
+
+🔒 **NO SECOND MODEL.** Their map is built by `buildStrengthShare(rows, profile)` — the function that
+rates the reader, and the route the demo friends already take — and the compare screen accepts a
+`famous:<id>` token in either slot (a colon, because the route splits on `/` and a Firebase uid never
+contains one). Nothing after the loop knows a side has no account.
+
+🚨 **THE ONE REAL PROBLEM WAS AGE, AND IT WAS MEASURED.** `muscleRatings()` hard-coded `today`, so a
+1968 lift weighs ~2^-176 and draws colourless. `rows.today` fixed Arnold, and then a second
+measurement found it did not fix everyone: **rated as of their LATEST lift, Greg Doucette (2010,
+2013, 2017) came out at 1–6 % confidence on back and legs** — older than his bench, not weaker.
+`figureStrength()` rates each person once per lift date with only the lifts up to that date and takes
+each muscle from the rating where its confidence was highest — the day its freshest evidence was
+set. Lowest confidence across all 26 afterwards: 0.29 (Bumstead's shoulders, a machine-heavy record).
+
+**Sanity, by eye:** Haack, Atwood and the elite women sit at the top; Israetel and Thrall read
+Advanced; the super-heavies (Ray Williams, Hafþór) rank BELOW the small powerlifters, which is right —
+the ranking is by bodyweight. ⚠️ **Most people are on record for the big three only**, so arms and
+shoulders are CONVERTED from bench rather than measured; the panel's own confidence says so.
+
+**On screen:** "Compare with" lists them below Friends, grouped Fitness creators / Strength athletes /
+Legends, and it shows even with no account. A famous column carries *"2014–2015 · 161 lb"* on its face
+(when, not a "?" — it changes what the colours are), and a disclosure per person lists every lift with
+its year, "(reported)" where there is no primary record, and a link to the source.
+
+**24 suites, 6,371 assertions, 0 failures.**
+
 ---
 
 ## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE

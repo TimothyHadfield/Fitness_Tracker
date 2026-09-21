@@ -3047,3 +3047,10 @@ finished or changed are kept.
 He also asked to compare his muscles against famous lifters as well as friends. Three research agents
 sourced lifts, mostly from meet records with the bodyweight on the day, for about 27 people across
 fitness creators, strength athletes past and present, and women.
+
+Built. "Compare with" now lists 26 of them under Friends, and picking one puts their body beside
+yours, rated by exactly the same arithmetic as you. Tia-Clair Toomey came off the list because her
+only recorded lifts are Olympic lifts, which the app doesn't turn into muscle ratings. The one real
+problem was age: rated against today's date, anyone whose record spans years was drawn almost
+colourless, so each muscle is now rated as of the date of its freshest lift, and the screen says
+which years the comparison is from. Every lift is one tap away with a link to its source.

@@ -58,16 +58,9 @@ ANIMATION** — its duration check reads the three `--t*` TOKENS, never a `@keyf
 its own; **a test that pins the tokens does not pin the motion.** Rewritten on `--t-slow`.
 **Render 1,657 · a11y · data-layer all green. Details: `docs/history.md` 2026-09-27.**
 
-🆕 **AND THEN A BUG REPORT: "I added Ultimate Push Pull Legs and it says there are no workouts in that
-system."** ✅ **Fixed and pushed.** 🚨 **THE COPY WAS ALWAYS COMPLETE** — six workouts, 0 unresolved
-names, proved by driving the real Add button and asserting against the STORE. **The Workouts tab
-renders the CURRENT programme and adding deliberately does not make a copy current**, so he was
-reading his old empty one. 🛑 **The rule was not reversed**: `systemBody()`'s empty state now NAMES its
-programme, and Explore says a copy will not appear there until you switch. 🔄 **`add()` no longer
-navigates** — it stays put and `refreshRoute()`s, so *"Added to your systems"* is a standing receipt
-with **Remove from my systems** beside it (one copy only; two copies is a tested feature).
-⚠️ **A failed add could leave HALF a programme and said nothing** — now wrapped. 🚩 **Nothing had ever
-clicked that button.**
+🆕 **Explore's Add stays put** and reads *"Added to your systems"*, with **Remove** beside it (one copy
+only — two is a tested feature); an empty programme names itself; a failed add is caught.
+🚨 ~~"the copy was always complete"~~ **WRONG — true only on the local backend. See below.**
 
 🚨 **AND THAT FIX WAS WRONG — HE PROVED IT, AND THE CAUSE WAS THREE BUGS DEEP.** 🛑 **"Your copy is
 fine" was a claim about the WRONG MACHINE**: the repro that proved it ran on `LocalBackend` and his
@@ -99,6 +92,13 @@ plan** — `addPerson()` builds with `buildEntry()`, which has no prescription c
 split untouched exercises** and SAVED them as done: history-prefilled sets carry no flag (Open work 15),
 so `setIsRecorded` called them done. Swap now keeps only `locked || touched` sets; `touched` is set
 where a person changes a number and dropped at save. 🛑 **Open work 15's save question is untouched.**
+
+🆕 **FAMOUS LIFTERS ON THE COMPARE SCREEN** — *"compare can be against a friend or an influencer."*
+✅ `js/public-figures.js` (GENERATED from three research passes: 26 people, 76 sourced raw lifts, each
+with the bodyweight on the day) rated by the SAME `buildStrengthShare()`; listed below Friends in
+"Compare with", linked as `#/compare/famous:<id>`. 🚨 **Each muscle is rated as of its freshest lift**
+(`rows.today`, `figureStrength()`) — against the calendar, a 1968 bench drew colourless. 🛑 Nothing is
+inferred from appearance; creators who never publish a set (Sulek, Laid) are absent on purpose.
 
 **2026-09-26** — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
 other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim

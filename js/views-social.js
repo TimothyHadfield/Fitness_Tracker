@@ -1867,17 +1867,20 @@ async function friendDoc(uid) {
 
 export async function CompareBodiesView(param) {
   const [leftUid, rightUid] = String(param || '').split('/').map((x) => decodeURIComponent(x || ''));
-  const back = () => {
-    location.hash = leftUid ? `#/friend/${encodeURIComponent(leftUid)}` : '#/graphs';
-  };
 
   const [
     { ratingsFromShared, levelMapFrom, ownSexOf }, { bodySvg, bodyAspect }, muscles,
-    { comparisonLabel, comparePreset }, settings,
+    { comparisonLabel, comparePreset }, settings, figures,
   ] = await Promise.all([
     import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
-    import('./strength-standards.js'), store.getSettings(),
+    import('./strength-standards.js'), store.getSettings(), import('./public-figures.js'),
   ]);
+
+  // A famous lifter has no page to go back to — they were picked from YOUR map.
+  const leftIsFamous = figures.isFigureToken(leftUid);
+  const back = () => {
+    location.hash = leftUid && !leftIsFamous ? `#/friend/${encodeURIComponent(leftUid)}` : '#/graphs';
+  };
 
   /* Whose bodies. ⚠️ ONE uid MEANS "THEM AGAINST ME", which is the case the
    * button on a friend's map produces and the one somebody actually wants; two
@@ -1887,6 +1890,32 @@ export async function CompareBodiesView(param) {
   const missing = [];
   let mine = null;
   for (const uid of [leftUid, rightUid].filter(Boolean)) {
+    /* 🆕 A FAMOUS LIFTER, 2026-09-27 — Tim: *"compare can be against a friend
+     * or an influencer."* Their map is BUILT HERE, by `buildStrengthShare()`
+     * over their recorded lifts — the same function, the same shape and the
+     * same route the demo friends take (see friendDoc's demo branch) — so
+     * nothing after this loop knows or cares that one side has no account.
+     * js/public-figures.js has the rules for what counts as one of their lifts. */
+    if (figures.isFigureToken(uid)) {
+      const fig = figures.figureById(uid.slice(figures.FIGURE_PREFIX.length));
+      let map = null;
+      if (fig) {
+        const { buildStrengthShare } = await import('./store.js');
+        // Each muscle as of the day its evidence was freshest — see
+        // figureStrength() for the measurement that made this necessary.
+        map = await figures.figureStrength(fig, buildStrengthShare).catch(() => null);
+      }
+      if (map && map.muscles && map.muscles.length) {
+        sides.push({ uid, name: fig.name, strength: map, famous: fig, sex: ownSexOf(map) });
+      } else {
+        missing.push({
+          name: fig ? fig.name : 'That lifter',
+          why: fig ? 'none of their recorded lifts rates a muscle this app can place'
+            : 'that name is no longer on the list',
+        });
+      }
+      continue;
+    }
     const r = await friendDoc(uid).catch(() => ({ fail: true }));
     const map = r && r.doc && r.doc.strength;
     if (map && map.muscles && map.muscles.length) {
@@ -1957,7 +1986,9 @@ export async function CompareBodiesView(param) {
           : 'There is only one map to draw here.',
       mineMissing
         ? el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' })
-        : el('a', { class: 'btn', href: `#/friend/${encodeURIComponent(leftUid)}`, text: 'Their page' })));
+        : leftIsFamous
+          ? el('a', { class: 'btn', href: '#/graphs', text: 'Back to your map' })
+          : el('a', { class: 'btn', href: `#/friend/${encodeURIComponent(leftUid)}`, text: 'Their page' })));
     return screen;
   }
 
@@ -2032,6 +2063,12 @@ export async function CompareBodiesView(param) {
       }, { label: `${s.name}'s muscle groups, coloured by strength level`, sex: s.sex });
       return el('div', { class: 'cmp-col' },
         el('div', { class: 'cmp-name', text: s.name }),
+        /* 🚨 A FAMOUS SIDE SAYS WHEN, ON THE FACE OF IT. Their map is them at
+         * the time of the lifts on record — Arnold in 1968, not Arnold now —
+         * and that changes what the colours ARE, so by Rule 9 it stays on
+         * screen rather than going behind a "?". An estimated bodyweight says
+         * "est." for the same reason. */
+        s.famous ? el('div', { class: 'field-help', text: figures.figureSummary(s.famous) }) : null,
         // The shared box shape — see `arMax` above for why it is not this
         // column's own, and why that costs nothing when both sides match.
         el('div', { class: 'cmp-body', style: `--body-ar:${arMax.toFixed(4)}` }, figure),
@@ -2093,6 +2130,24 @@ export async function CompareBodiesView(param) {
           + ', so two people can read the same level at very different weights. The level answers '
           + '"how far along is this person", never "who lifts more" — the estimated one-rep max '
           + 'behind a tap is the number that does.' }),
+        /* 🆕 WHERE A FAMOUS LIFTER'S NUMBERS COME FROM — behind a disclosure,
+         * because it is the WHY of the map rather than the WHAT (Rule 9). Every
+         * lift, its year and its source; "reported" where there is no primary
+         * record. A real person's numbers on somebody else's screen have to be
+         * checkable, or they are a claim about him the app cannot stand behind. */
+        ...read.filter((s) => s.famous).map((s) => el('details', { class: 'vol-details' },
+          el('summary', { text: `Where ${s.famous.name}'s numbers come from` }),
+          el('div', { class: 'field-help', text:
+            'Lifts on public record — mostly meet results, with the weigh-in on the day — rated '
+            + 'by the same arithmetic as yours, as of their most recent one.' }),
+          el('ul', { class: 'vis-list' }, ...s.famous.lifts.map((l) => el('li', {},
+            `${l.exercise} ${Math.round(l.weightLb)} lb × ${l.reps}, ${l.date.slice(0, 4)}`
+              + (l.reported ? ' (reported)' : '') + ' · ',
+            l.source && /^https?:\/\//.test(l.source)
+              ? el('a', { href: l.source, target: '_blank', rel: 'noopener noreferrer', text: 'source' })
+              : (l.source || 'no link'),
+          ))),
+        )),
       ),
     );
   }

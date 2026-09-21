@@ -5904,6 +5904,62 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     await st.clearAll();
   }
 
+  /* ================================================================== *
+   * 🆕 FAMOUS LIFTERS, RATED BY THE SAME ARITHMETIC — 2026-09-27
+   *
+   * Tim: *"compare can be against a friend or an influencer."* Every person in
+   * js/public-figures.js is rated from their recorded lifts by
+   * buildStrengthShare(), the function that rates the reader. These pin that
+   * each one produces a map, that nobody is drawn washed out for being old,
+   * and that every lift is traceable.
+   * ================================================================== */
+  {
+    const { buildStrengthShare } = await import('../js/store.js');
+    const figs = await import('../js/public-figures.js');
+    const { BUILT_IN_EXERCISES: LIB } = await import('../js/exercises.js');
+    const libNames = new Set(LIB.map((e) => e.name));
+
+    ok(figs.PUBLIC_FIGURES.length >= 20, `a real list to choose from (${figs.PUBLIC_FIGURES.length})`);
+    ok(figs.PUBLIC_FIGURES.some((p) => p.sex === 'f') && figs.PUBLIC_FIGURES.some((p) => p.sex === 'm'),
+       'women and men both — the ranking is sex-aware, so a list of men only would leave half the users nobody');
+    const lifts = figs.PUBLIC_FIGURES.flatMap((p) => p.lifts.map((l) => ({ p, l })));
+    ok(lifts.every(({ l }) => libNames.has(l.exercise)),
+       '🔒 every lift names an exercise that exists — an unknown name contributes NOTHING, silently');
+    ok(lifts.every(({ l }) => l.source && l.weightLb > 0 && l.reps >= 1 && l.reps <= 12),
+       '🚨 every lift is sourced, weighted, and in the rep range the estimator reads well');
+    ok(figs.PUBLIC_FIGURES.every((p) => p.bodyweightLb > 0),
+       'every person has a bodyweight — the app cannot place a lift without one');
+    ok(new Set(figs.PUBLIC_FIGURES.map((p) => p.id)).size === figs.PUBLIC_FIGURES.length,
+       'ids are unique — two research passes named two people twice, and the duplicates were merged');
+
+    let worst = { c: 1, who: '' };
+    let blank = [];
+    for (const p of figs.PUBLIC_FIGURES) {
+      const map = await figs.figureStrength(p, buildStrengthShare);
+      if (!map || !map.muscles.length) { blank.push(p.id); continue; }
+      for (const m of map.muscles) {
+        if ((m.confidence || 0) < worst.c) worst = { c: m.confidence || 0, who: `${p.id} ${m.muscle}` };
+      }
+    }
+    ok(blank.length === 0,
+       `🚨 every famous lifter rates at least one muscle — a body with nothing on it is not somebody to `
+       + `compare with (${blank.join(', ') || 'none blank'})`);
+    ok(worst.c >= 0.25,
+       `🚨 NOBODY IS WASHED OUT FOR BEING OLD — each muscle is rated as of its freshest lift. Rated as `
+       + `of the calendar, a 1968 bench drew colourless (lowest: ${worst.who} at ${worst.c.toFixed(2)})`);
+
+    /* 🔒 AND THE MECHANISM, NOT JUST THE OUTCOME: `rows.today` really moves the
+       rating. Without it every one of these would be read against the calendar. */
+    const arnold = figs.figureById('arnold-schwarzenegger');
+    const { rows, profile } = figs.figureRows(arnold);
+    const then = await buildStrengthShare(rows, profile);
+    const { today: _t, ...calendarRows } = rows;
+    const now = await buildStrengthShare(calendarRows, profile);
+    const conf = (m) => Math.max(...m.muscles.map((x) => x.confidence || 0));
+    ok(conf(then) > conf(now) * 5,
+       `rated as of 1968, Arnold's map is confident; rated as of today it is not (${conf(then).toFixed(2)} vs ${conf(now).toFixed(3)})`);
+  }
+
   // A workout the user adds afterwards has no order and lands at the END,
   // rather than wedging itself into someone's split by its initial letter.
   {

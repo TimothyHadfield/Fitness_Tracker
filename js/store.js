@@ -3979,8 +3979,15 @@ export async function muscleRatings(rows) {
 
   // Same walk, same rules, same `today`-passed-in discipline as the rating
   // screen. Two callers, one definition of what a set is worth.
+  /* 🆕 `rows.today` — 2026-09-27, for the famous lifters (js/public-figures.js).
+   * Their lifts are from 2014, from 1968; rated against the calendar, every one
+   * is decades stale and the recency weighting washes the map out to nothing.
+   * Rated as of their own most recent lift, the map is them at the time — which
+   * is what the comparison claims. Everybody else passes no `today` and gets
+   * the calendar, exactly as before. */
   const { byMuscle } = buildObservations({
-    sessions, benchmarks, exMap, bodyWeights, sex, today: todayISO(),
+    sessions, benchmarks, exMap, bodyWeights, sex,
+    today: (rows && rows.today) || todayISO(),
   });
 
   const out = new Map();

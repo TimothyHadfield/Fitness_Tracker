@@ -2823,6 +2823,38 @@ ok(!data.querySelector('.rep-target'),
   }
 }
 
+/* ================= a famous lifter on the compare screen (2026-09-27) =================
+ *
+ * Tim: *"compare can be against a friend or an influencer."* Two famous lifters
+ * side by side needs no account and no network, which is exactly the property
+ * that lets somebody with no friends still use the screen — and it is why this
+ * block can mount it with nothing seeded. */
+{
+  const { CompareBodiesView } = await import(BASE + 'views-social.js');
+  const screen = await mount(CompareBodiesView('famous:jeff-nippard/famous:stefi-cohen'));
+  for (let i = 0; i < 10; i++) await settle();
+  const t = screen.textContent.replace(/\s+/g, ' ');
+
+  const cols = [...screen.querySelectorAll('.cmp-grid .cmp-col')];
+  ok(cols.length === 2, `🚨 two famous lifters draw two bodies (${cols.length})`);
+  ok(/Jeff Nippard/.test(t) && /Stefi Cohen/.test(t), 'each named over their own body');
+  ok(!/Nothing to compare yet/.test(t),
+     '…and neither side is refused — both are rated from their recorded lifts on this device');
+  ok(/2014–2015 · 161 lb/.test(t),
+     '🚨 a famous side says WHEN on its face — them at the time of the lifts, not now (Rule 9: '
+     + 'it changes what the colours are, so it is not behind a "?")');
+  const src = [...screen.querySelectorAll('details summary')]
+    .find((s) => /Where Jeff Nippard's numbers come from/.test(s.textContent));
+  ok(Boolean(src), 'and where the numbers come from is one tap away, per person');
+  ok(Boolean(src && src.parentElement.querySelector('a[href^="http"]')),
+     '…with a link to the source of each lift, because a real person\'s numbers have to be checkable');
+
+  const gone = await mount(CompareBodiesView('famous:nobody-at-all/famous:jeff-nippard'));
+  for (let i = 0; i < 6; i++) await settle();
+  ok(/no longer on the list/.test(gone.textContent),
+     '⚠️ a stale link to somebody removed from the list says so rather than breaking');
+}
+
 
 /* ================= set types in the BUILDER ================= */
 // These controls all write into `draft.exercises`, and the list is rendered

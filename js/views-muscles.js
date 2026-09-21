@@ -540,23 +540,49 @@ async function pickSomebodyToCompare() {
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
 
   const body = el('div', { class: 'pick-list' });
-  if (!state.available || !state.connections.length) {
-    setChildren(body,
-      el('p', { class: 'note', text: state.available
-        ? 'Nobody to compare with yet. Add a friend and their body map appears here.'
-        : 'Comparing needs a friend, and friends need an account you are signed in to.' }),
-      el('a', { class: 'btn primary block', href: '#/social', text: 'Friends' }),
-    );
-  } else {
-    setChildren(body, ...state.connections.map((c) => el('a', {
-      class: 'pick-row', href: `#/compare/${encodeURIComponent(c.uid)}`,
-    },
-      el('div', { style: 'flex:1;min-width:0' },
-        el('div', { class: 'pick-title', text: c.name || 'Friend' }),
-        el('div', { class: 'pick-sub', text: 'Their body beside yours' }),
-      ),
-    )));
-  }
+  const friends = !state.available || !state.connections.length
+    ? [
+        el('p', { class: 'note', text: state.available
+          ? 'No friends to compare with yet.'
+          : 'Comparing with a friend needs an account you are signed in to.' }),
+        el('a', { class: 'btn block', href: '#/social', text: 'Friends' }),
+      ]
+    : state.connections.map((c) => el('a', {
+        class: 'pick-row', href: `#/compare/${encodeURIComponent(c.uid)}`,
+      },
+        el('div', { style: 'flex:1;min-width:0' },
+          el('div', { class: 'pick-title', text: c.name || 'Friend' }),
+          el('div', { class: 'pick-sub', text: 'Their body beside yours' }),
+        ),
+      ));
+
+  /* 🆕 FAMOUS LIFTERS, 2026-09-27 — Tim: *"compare can be against a friend or
+   * an influencer."* ⚠️ OUTSIDE THE NO-FRIENDS BRANCH ON PURPOSE: they need no
+   * account, no network and no friend, so somebody who has none of those still
+   * has somebody to put beside themselves. The list is js/public-figures.js,
+   * and each person there is rated from their recorded lifts by the same
+   * arithmetic that rates you. */
+  const { PUBLIC_FIGURES, FIGURE_GROUPS, FIGURE_PREFIX, figureSummary } =
+    await import('./public-figures.js');
+  const famous = FIGURE_GROUPS.flatMap(([key, label]) => {
+    const people = PUBLIC_FIGURES.filter((p) => p.group === key);
+    return people.length
+      ? [el('div', { class: 'section-label', text: label }),
+         ...people.map((p) => el('a', {
+           class: 'pick-row', href: `#/compare/${encodeURIComponent(FIGURE_PREFIX + p.id)}`,
+         },
+           el('div', { style: 'flex:1;min-width:0' },
+             el('div', { class: 'pick-title', text: p.name }),
+             el('div', { class: 'pick-sub', text: figureSummary(p) }),
+           ),
+         ))]
+      : [];
+  });
+
+  setChildren(body,
+    el('div', { class: 'section-label', text: 'Friends' }),
+    ...friends,
+    ...famous);
   openSheet({ title: 'Compare with', body });
 }
 
