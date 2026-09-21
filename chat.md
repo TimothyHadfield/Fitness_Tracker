@@ -3035,3 +3035,15 @@ Two further real bugs turned up while looking: a migration that could overwrite 
 with an older copy of itself, and a background refresh that could blank a screen for thirty seconds
 by overwriting fresh data with stale. Both fixed, and both honestly untestable here — they only exist
 because the cloud is slow and local storage is instant, which is the same reason the main bug hid.
+
+He then trained a pull day with a partner and came back with three things. His Nippard programme was
+still empty — the fix made new copies work but couldn't bring back workouts that were never saved —
+so an empty copied programme now has a Restore button that refills it in place. The missing numbers
+were two bugs: one mine from the day before (a withheld weight set the reps field to 0), and an older
+one where anybody added to a workout never got the plan's rep targets at all. And swap was keeping
+the old exercise because sets pre-filled from last time looked "done"; now only sets you actually
+finished or changed are kept.
+
+He also asked to compare his muscles against famous lifters as well as friends. Three research agents
+sourced lifts, mostly from meet records with the bodyweight on the day, for about 27 people across
+fitness creators, strength athletes past and present, and women.

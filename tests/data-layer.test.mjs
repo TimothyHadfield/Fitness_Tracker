@@ -5863,6 +5863,47 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     await st.clearAll();
   }
 
+  /* ================================================================== *
+   * 🚨 A COPY THAT ARRIVED EMPTY CAN BE REFILLED IN PLACE — 2026-09-27
+   *
+   * Tim, after a real pull day: *"The jeff nippard ultimate ppl workout still
+   * doesn't have any workouts inside of it … I have it as my main and couldn't
+   * do my pull workout because of it."* Fixing the stored rep shape made new
+   * copies work and left the empty ones empty. The fixture is exactly his
+   * account's state: a system row carrying `presetId`, and nothing in it.
+   * ================================================================== */
+  {
+    await st.clearAll();
+    const nippard = presetById('preset-nippard-ppl-2023');
+    const empty = await st.saveSystem({ name: nippard.name, presetId: nippard.id });
+    ok((await st.getWorkouts(empty.id)).length === 0, 'the fixture is his: a copied programme holding nothing');
+
+    const r = await st.restorePresetWorkouts(empty.id);
+    const back = await st.getWorkouts(empty.id);
+    ok(r.written === nippard.workouts.length && back.length === nippard.workouts.length,
+       `🚨 restoring puts all ${nippard.workouts.length} workouts back (${back.length})`);
+    ok((await st.getSystems()).length === 1,
+       '🔒 into the SAME programme — no second copy, so it stays the one he runs');
+    ok(back.map((w) => w.name).join(',') === nippard.workouts.map((w) => w.name).join(','),
+       'in programme order, the same as a fresh copy');
+
+    /* 🛑 THE ONE THING A RESTORE MUST NEVER DO IS DOUBLE A PROGRAMME. */
+    let refused = null;
+    try { await st.restorePresetWorkouts(empty.id); } catch (e) { refused = e.message; }
+    ok(/already has workouts/.test(refused || ''),
+       `🛑 a second restore is refused rather than copying everything twice (${refused})`);
+    ok((await st.getWorkouts(empty.id)).length === nippard.workouts.length,
+       '…and the count is unchanged by the refusal');
+
+    const mine = await st.saveSystem({ name: 'Built by hand' });
+    let notCopied = null;
+    try { await st.restorePresetWorkouts(mine.id); } catch (e) { notCopied = e.message; }
+    ok(/not copied from a ready-made/.test(notCopied || ''),
+       'and a programme the user built has no original to restore from, so it says so');
+
+    await st.clearAll();
+  }
+
   // A workout the user adds afterwards has no order and lands at the END,
   // rather than wedging itself into someone's split by its initial letter.
   {

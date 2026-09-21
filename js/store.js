@@ -1266,7 +1266,22 @@ export const store = {
       minutes: preset.minutes || null,
     });
 
+    const { skipped } = await this.copyPresetWorkouts(preset, system.id);
+    return { system, skipped };
+  },
+
+  /**
+   * A ready-made programme's workouts, written into one of this account's
+   * systems. Shared by adding a programme and by restoring one whose workouts
+   * never arrived — one loop, so the two cannot disagree about what a copied
+   * exercise carries (the loop below names every field by hand, and a second
+   * copy of it would be a second place to forget one).
+   */
+  async copyPresetWorkouts(preset, systemId) {
+    const exMap = await this.getExerciseMap();
+    const byName = new Map([...exMap.values()].map((e) => [e.name, e]));
     let skipped = 0;
+    let written = 0;
     let order = 0;
     for (const w of preset.workouts) {
       const exercises = [];
@@ -1328,12 +1343,48 @@ export const store = {
        * being named there, which is the difference that function's own header
        * describes: the workout row spreads, its EXERCISES are rebuilt. */
       await this.saveWorkout({
-        name: w.name, systemId: system.id, exercises, order: order++,
+        name: w.name, systemId, exercises, order: order++,
         ...(w.key ? { presetKey: w.key } : {}),
       });
+      written++;
     }
 
-    return { system, skipped };
+    return { skipped, written };
+  },
+
+  /**
+   * Put a copied programme's workouts back, when the copy arrived without them.
+   *
+   * 🚨 WHY THIS EXISTS — Tim, 2026-09-27, after a real pull day: *"The jeff
+   * nippard ultimate ppl workout still doesn't have any workouts inside of it
+   * … I have it as my main and couldn't do my pull workout because of it."*
+   * Until that day a rep prescription was stored as an array of arrays, which
+   * Firestore refuses, so every cloud copy of a programme with prescriptions
+   * landed its system row and none of its workouts (js/set-reps.js). Fixing the
+   * shape made NEW copies work and did nothing for the ones already sitting
+   * empty in people's accounts — including his, set as current.
+   *
+   * ⚠️ IT REFILLS THE SAME SYSTEM rather than making a new one, because that
+   * row is what he chose: it is his current programme, and a fresh copy would
+   * leave a dead namesake behind and move him off it.
+   *
+   * 🛑 IT REFUSES IF THE PROGRAMME HAS ANY WORKOUTS, and it asks the BACKEND,
+   * not the cache. The whole danger of a restore is a second copy of every
+   * workout, and a stale cache reading zero while the server holds six is
+   * exactly the failure `writeGeneration` exists for — so this is the one
+   * question in the store that must never be answered from memory.
+   */
+  async restorePresetWorkouts(systemId) {
+    const system = await this.getSystem(systemId);
+    if (!system || !system.presetId) {
+      throw new Error('This programme was not copied from a ready-made one.');
+    }
+    const inside = (await backend.read('workouts')).filter((w) => w.systemId === systemId);
+    if (inside.length) throw new Error('This programme already has workouts in it.');
+    const { presetById } = await import('./preset-systems.js');
+    const preset = presetById(system.presetId);
+    if (!preset) throw new Error('The ready-made programme it came from no longer exists.');
+    return this.copyPresetWorkouts(preset, systemId);
   },
 
   /**

@@ -3768,6 +3768,27 @@ ok(!data.querySelector('.rep-target'),
   ok(!/No workouts in this system yet/.test(emptyTab.textContent),
      '…and the old unnamed wording is gone rather than sitting beside the new one');
 
+  /* 🚨 AND A COPIED PROGRAMME THAT ARRIVED EMPTY OFFERS ITS WORKOUTS BACK
+     (2026-09-27). Tim's own state: a Nippard copy, set as current, with none
+     of its six workouts — he could not do his pull day. "Add the days" is the
+     wrong instruction when the days exist in the original. Driven by CLICKING,
+     and checked against the store rather than the screen. */
+  {
+    const hollow = await store.saveSystem({
+      name: 'Ultimate Push Pull Legs', presetId: 'preset-nippard-ppl-2023' });
+    const screen = await SystemRouteView(hollow.id);
+    await settle();
+    const restore = [...screen.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === 'Restore its workouts');
+    ok(Boolean(restore), '🚨 an empty copied programme offers to restore its workouts');
+    ok(!/Add the days this programme is made of/.test(screen.textContent),
+       '…instead of telling him to build days that already exist in the original');
+    restore.click();
+    for (let i = 0; i < 12; i++) await settle();
+    ok((await store.getWorkouts(hollow.id)).length === 6,
+       'and tapping it puts all six back into the same programme');
+  }
+
   await store.clearAll();
 
   /* ── 🚨 THE EMPTY ACCOUNT, WHICH NEITHER SCREEN HAD EVER ASSERTED ─────────
@@ -8812,6 +8833,36 @@ ok(!data.querySelector('.rep-target'),
      + 'max is the WHOLE load — body plus what was added — while the weight field holds only the '
      + 'added part, so 75 % of a body-inclusive max is not a number that belongs in it. Two '
      + 'different quantities, which is the mistake D30 was recorded to end');
+
+  /* ---- 🚨 A WITHHELD WEIGHT MUST NOT ZERO THE REPS (2026-09-27) ----
+     A regression shipped by the day's own fix: rep prescriptions started being
+     STORED as {lo, hi}, and the runner's withheld path still read `spec[0]`,
+     which is undefined on a map — so every exercise the app declined to price
+     had its reps field overwritten with nothing and the stepper drew 0, under
+     a sentence reading "Plan asks for 10–12 reps". Tim met it on a real pull
+     day. Curl has no recorded set in this account, so this is the 'no-max'
+     path — the one that broke. */
+  const repNoMax = await store.saveWorkout({
+    name: 'Curl reps', systemId: null,
+    // ⚠️ THE STORED FORM: one prescription per set. A bare `[10, 12]` here would
+    // be read as TWO SETS (10 then 12) — only a PRESET's shorthand treats a
+    // pair as one range, via expandRepSpec(). The first draft of this test
+    // wrote the preset shape into a stored workout and read its own mistake.
+    exercises: [{ exerciseId: tgtCurl.id, sets: 3,
+      reps: [{ lo: 10, hi: 12 }, { lo: 10, hi: 12 }, { lo: 10, hi: 12 }] }],
+  });
+  // The pull-up run above left a live draft behind, and a second workout opens
+  // onto "you already have one open" rather than onto the plan. Put it down.
+  const { clearDraft: dropDraft } = await import(BASE + 'session-draft.js');
+  dropDraft();
+  const repNoMaxRun = await mount(SessionView(repNoMax.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const repSets = draftOf().entries[0].sets;
+  ok(repSets.length === 3 && repSets.every((s) => s.reps === 10),
+     `🚨 the plan's rep count is IN THE FIELD even when the weight is withheld — the bottom of `
+     + `10–12, never 0 (${repSets.map((s) => s.reps).join(',')})`);
+  ok(/10–12 reps/.test(text(repNoMaxRun)),
+     '…and the sentence and the field agree, which is what the bug broke');
 
   await store.clearAll();
 }

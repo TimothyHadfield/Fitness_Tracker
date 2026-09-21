@@ -88,6 +88,18 @@ snapshot and lose the six new rows — neither the zero-guard nor the mass-delet
 and a stale revalidation could blank a screen for 30 s **and then suppress its own re-check.**
 **Details: `docs/history.md` 2026-09-27.**
 
+🆕 **AND A REAL TWO-PERSON PULL DAY FOUND THREE MORE — all fixed, 6,355 assertions green.**
+(1) **His copy was STILL empty** — the fix made new copies work and left old empty ones empty. ✅ An
+empty copied programme now offers **Restore its workouts**, refilling the SAME system (so it stays
+current); it refuses if any workout exists, asking the BACKEND, never the cache. (2) 🚨 **MY OWN
+REGRESSION**: the runner's withheld-weight path still read `spec[0]` on the new `{lo, hi}` shape, so
+every unpriced exercise showed **0 reps** under "Plan asks for 10–12". (3) **A partner NEVER got the
+plan** — `addPerson()` builds with `buildEntry()`, which has no prescription code; it now runs
+`entriesFor()` for THEM and carries the plan across (never onto swapped/added exercises). (4) **Swap
+split untouched exercises** and SAVED them as done: history-prefilled sets carry no flag (Open work 15),
+so `setIsRecorded` called them done. Swap now keeps only `locked || touched` sets; `touched` is set
+where a person changes a number and dropped at save. 🛑 **Open work 15's save question is untouched.**
+
 **2026-09-26** — **THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE.** He asked what
 other apps have that his does not; about twenty research agents covered ten apps and ~350 verbatim
 reviews. 🛑 **NOTHING WAS BUILT, and no code changed.** Then: *"okay forget the improvements from other
@@ -115,24 +127,12 @@ and **the breakpoint lives in two files, with `tests/a11y.test.mjs` failing if t
 *unset*, so later blocks tested an explicit "no" believing they tested the default.
 **Details: `docs/history.md` 2026-09-24.**
 
-**2026-09-23** — **CALVES AND NECK RANK LIKE EVERY OTHER MUSCLE.** Tim: *"make calves
-and neck join the muscle group rankings just like all the other muscles. Just do it no matter what.
-I know the research isn't great, but do whatever you can to make it work with what you have."*
-✅ **Done and pushed. Rows 11 and 12 of the table below are CLOSED.**
-⚠️ **COLLAPSED 2026-09-25** (§0.3) — **the durable halves are `docs/state.md`'s Muscles row and
-`docs/research.md` §17**, which is the neck pull. What a fresh session must not re-derive:
-🔒 **THE MAP HAS ITS OWN REP CEILING, `MAX_MAP_REPS` (25), AND IT IS A SECOND CEILING RATHER THAN A
-RAISED ONE** — `MAX_EVIDENCE_REPS` is still 15 everywhere a single number is printed, because the map
-blends at 1/σ² and can PRICE a long set while a screen has nothing to pay with. 🛑 **25 not 30**: at
-30 σ passes `SIGMA_MAX` and every long set would price identically.
-🛑 **THE NECK'S WOMEN'S ROW IS DERIVED — male × 0.606 — AND SAYS SO ON EVERY RATING**, because the
-published women's table is 55 people and asks a heavier woman for less. **Only the RATIO crosses**
-between a dynamometer and a plate; the absolute newtons never may (§15's near-miss).
-🚩 **The neck reading is FLAT and he accepted that knowingly** — Elite is 38.8× Beginner.
-🚨 **AND A LESSON ABOUT BRIEFS: THE ONE I WROTE HAD THE EXTENSION RATIO UPSIDE DOWN** (0.94 for 1.06,
-a 12.8 % flattery). The agent refused the number, derived it from the file's own convention and
-reported the disagreement — which is what the "read the what-I-decided-NOT-to-do section" rule buys.
-**Details: `docs/history.md` 2026-09-23.**
+**2026-09-23 — COLLAPSED AGAIN 2026-09-27** (§0.3). **Calves and Neck rank like every other
+muscle**; rows 11 and 12 below are closed. 🔒 **Durable halves: `docs/state.md`'s Muscles row and
+`docs/research.md` §17.** Not to re-derive: `MAX_MAP_REPS` (25) is a SECOND ceiling, not a raised one
+— `MAX_EVIDENCE_REPS` stays 15 wherever one number is printed — and 25 not 30 because σ passes
+`SIGMA_MAX` at 30; the neck's women's row is DERIVED (male × 0.606) and says so on every rating; the
+neck reading is flat and he accepted it. **`docs/history.md` 2026-09-23.**
 
 **2026-09-22 — COLLAPSED 2026-09-23** (§0.3). **The muscle map got a female figure**, picked on the
 profile's sex. 🔒 **The durable halves are in `docs/state.md`'s Muscles row and the handbook's

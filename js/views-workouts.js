@@ -937,8 +937,33 @@ async function systemBody(system, workouts) {
        * they just made rather than the one on screen. Tim read it as the copy
        * arriving empty. The copy was complete; the tab was showing something
        * else, and the sentence could not tell him which. */
-      : emptyState(`${system.name} has no workouts yet`,
-          'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+      /* 🚨 A COPIED PROGRAMME THAT ARRIVED EMPTY GETS ITS WORKOUTS BACK, 2026-09-27.
+       * Tim could not do his pull day: his copy of Nippard's PPL was made while
+       * a rep prescription was stored in a shape Firestore refuses, so the
+       * system row landed and its six workouts never did. "Add the days this
+       * programme is made of" is the wrong instruction for that — the days
+       * exist, in the original — so a copy says what happened and offers to
+       * put them back where they belong. store.restorePresetWorkouts(). */
+      : system.presetId
+        ? emptyState(`${system.name} has no workouts in it`,
+            'Its workouts never arrived when it was copied. Restore them from the original.',
+            el('button', { class: 'btn primary', text: 'Restore its workouts',
+              onClick: async (ev) => {
+                const btn = ev.currentTarget;
+                btn.disabled = true;
+                try {
+                  const { written, skipped } = await store.restorePresetWorkouts(system.id);
+                  toast(skipped
+                    ? `${plural(written, 'workout')} restored — ${skipped} exercise(s) skipped`
+                    : `${plural(written, 'workout')} restored`);
+                  refreshRoute();
+                } catch (err) {
+                  btn.disabled = false;
+                  toast('Could not restore them. ' + ((err && err.message) || ''));
+                }
+              } }))
+        : emptyState(`${system.name} has no workouts yet`,
+            'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
     el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
       icon('plus'), 'New workout'),
     // The notes are the author's own words about the programme, so they read

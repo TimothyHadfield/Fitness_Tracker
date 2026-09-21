@@ -249,6 +249,54 @@ effectively zero on `LocalBackend` (it resolves on the next microtask) and secon
 
 **Measured:** `data-layer`, `render` (1,657), `a11y` and `goals` green.
 
+### 🚨 A REAL TWO-PERSON PULL DAY, AND FOUR MORE BUGS
+
+**Tim, after training with a partner:** *"The jeff nippard ultimate ppl workout still doesn't have
+any workouts inside of it … I have it as my main and couldn't do my pull workout because of it. When
+you swap a workout, it really creates a new one instead of adding the new one and then removing the
+old one. Some exercises don't give you the suggested amounts and % of 1RM or rep counts … they should
+both always be showing this number if they are able to base any information off of it."*
+
+**Checked first: the Firestore fix was live** — all three files byte-identical to HEAD on the site.
+So the empty programme was a leftover, not a failed fix. Two read-only agents took swap and the
+missing suggestions; the restore was mine.
+
+**1. The empty copy.** A fix to the stored shape makes NEW copies work and does nothing for a copy
+whose workouts were never written. ✅ `store.restorePresetWorkouts(systemId)` refills the SAME system
+through the same loop as adding (now `copyPresetWorkouts()`, one loop for both so they cannot drift),
+and `systemBody()` offers **Restore its workouts** on an empty copy instead of "add the days". 🛑 **It
+refuses if the programme has ANY workout, and it asks the BACKEND, not the cache** — a doubled
+programme is the one thing a restore must never do, and a stale cache reading zero is exactly the
+failure `writeGeneration` was written for.
+
+**2. 🚨 MY OWN REGRESSION FROM THE SAME DAY.** The rep shape became `{lo, hi}`, and
+`views-session.js`'s withheld path still did `sets[i].reps = spec[0]` — `undefined` on a map. Every
+exercise the app declined to price had its reps overwritten with nothing, drawn as **0**, under a
+sentence reading *"Plan asks for 10–12 reps"*. The header I wrote claimed the runner was untouched by
+the change; it was true of `normalizeRepSpec` and false of `expandRepSpec`, which is what the runner
+calls. 🔒 **The lesson is the one the header itself should have caught: when a function's OUTPUT
+shape changes, grep every caller of it, not of its sibling.**
+
+**3. A partner never got the plan.** `addPerson()` builds each exercise with `buildEntry()`, which
+copies the workout's shape and has never contained the targets/rep-prescription code — that lives in
+`entriesFor()` only. So every partner and guest got no rep target, no "Plan asks for" and no priced
+weight, on 39 of Nippard's 41 exercises. ✅ `entriesFor()` is now run FOR THEM (their sessions, their
+best sets) and its plan results carried onto their entries — **never onto an exercise swapped in or
+added today**, which the plan never prescribed.
+
+**4. Swap split untouched exercises and SAVED them.** `setIsRecorded()` treats any set with numbers
+and no `prefilled` flag as done, and history-prefilled sets carry no flag (Open work 15). So swapping
+an exercise nobody had touched kept the old one with every planned set, then saved it as work. ✅ A
+split now keeps only `locked` (moved past) or `touched` (a person changed a number) sets; `touched` is
+set at the one choke point where a number is changed and dropped at save like `locked`. ⚠️ **The
+first version used `locked` alone and the existing Hack Squat test caught it**: the ordinary case is
+finishing a set and swapping before moving on. 🛑 **Open work 15 — whether an untouched prefilled
+set should count at SAVE — is untouched and still Tim's.**
+
+⚠️ **One test was wrong before the code was**: the reps regression test first wrote `reps: [10, 12]`
+into a STORED workout, where it means two sets (10 then 12). Only a preset's shorthand reads a pair as
+a range. **24 suites, 6,355 assertions, 0 failures, no suite at zero.**
+
 ---
 
 ## 2026-09-26 — THE COMPETITIVE REVIEW (P3) RAN, AND TIM SET IT ASIDE

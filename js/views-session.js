@@ -26,7 +26,7 @@ import {
   normalizeTargets, targetsApply, weightForTarget, summariseTargets,
 } from './set-targets.js';
 import {
-  expandRepSpec, weightRangeForReps, repsAreUsable, summariseReps,
+  expandRepSpec, weightRangeForReps, repsAreUsable, summariseReps, normalizeRepSpec,
 } from './set-reps.js';
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
@@ -585,7 +585,7 @@ export async function SessionView(workoutId) {
               ? (own && own.bodyIncluded ? 'bodyweight' : 'no-max')
               : 'too-many-reps',
           };
-          prescribed.forEach((spec, i) => { if (sets[i]) sets[i].reps = spec[0]; });
+          prescribed.forEach((spec, i) => { const r = normalizeRepSpec(spec); if (sets[i] && r) sets[i].reps = r[0]; });
         }
       }
 
@@ -1161,19 +1161,55 @@ export async function SessionView(workoutId) {
      * missing row would otherwise throw inside `buildEntry` and lose the whole
      * add; a person on the template's list is merely out of date, which is
      * where they used to start anyway. */
+    /* 🚨 THE PLAN, WORKED OUT FOR THEM — 2026-09-27, from a real two-person
+     * pull day. Tim: *"Some exercises don't give you the suggested amounts and
+     * % of 1RM or rep counts … they should both always be showing this number
+     * if they are able to base any information off of it."*
+     *
+     * `buildEntry()` below copies the workout's SHAPE, and it has never known
+     * about the plan: the percentage targets and the rep prescription live in
+     * `entriesFor()` and nowhere else. So everybody added to a workout — every
+     * partner, every guest — got no rep target, no "Plan asks for" line and no
+     * weight priced from one, on every exercise, while the owner beside them
+     * had all three. Nippard's programme is 39 prescriptions out of 41.
+     *
+     * ⚠️ NOT A SECOND COPY OF THE PLAN CODE. `entriesFor()` is run for THEM —
+     * their sessions, their best sets, their name — which is exactly the per-
+     * person reading the owner already gets, and its results are carried onto
+     * the shaped entries. Only onto exercises that came from the plan: one
+     * swapped in or added today was never prescribed, and inventing a
+     * prescription for it would be the app writing the programme. */
+    const fromPlan = entriesFor(sessions, null, state.date, name);
+    const planQueue = new Map();
+    for (const p of fromPlan) {
+      if (!planQueue.has(p.exerciseId)) planQueue.set(p.exerciseId, []);
+      planQueue.get(p.exerciseId).push(p);
+    }
     const shaped = state.entries.map((e) => {
       const ex = exMap.get(e.exerciseId);
-      return ex ? buildEntry(ex, {
+      if (!ex) return null;
+      const built = buildEntry(ex, {
         plannedSets: e.plannedSets,
         group: e.group,
         setType: e.setType,
         plannedMinis: e.plannedMinis,
         ...(e.addedToday ? { addedToday: true } : {}),
-      }, sessions, null, name) : null;
+      }, sessions, null, name);
+      const planned = e.swappedFrom || e.addedToday ? null : (planQueue.get(e.exerciseId) || []).shift();
+      if (planned && (planned.targets || planned.repPlan)) {
+        built.targets = planned.targets;
+        built.repPlan = planned.repPlan;
+        // Set by set, as far as both lists reach — the owner may have added a
+        // set to this exercise before they arrived, and a set the plan never
+        // named keeps what their own history put there.
+        const n = Math.min(built.sets.length, planned.sets.length);
+        for (let i = 0; i < n; i++) built.sets[i] = { ...planned.sets[i] };
+      }
+      return built;
     });
     const theirEntries = state.entries.length && shaped.every(Boolean)
       ? shaped
-      : entriesFor(sessions, null, state.date, name);
+      : fromPlan;
     /* 🚨 THEY JOIN WHERE THE WORKOUT IS, not at the top — 2026-09-10, and it
      * follows from the same instruction as the shared walk. Somebody added at
      * exercise four is doing exercise four; starting them at zero puts the one
@@ -2378,6 +2414,12 @@ export async function SessionView(workoutId) {
           // somebody never did. One nudge, one keystroke, and it is theirs.
           delete target.prefilled;
           delete activeSet.prefilled;
+          // 🆕 2026-09-27: and remember a PERSON changed it. `prefilled` only
+          // exists on numbers the app invented, so its absence cannot tell a
+          // set filled from last time apart from one somebody typed — and a
+          // swap has to know which, or it keeps untouched sets as done work.
+          // Dropped at save like `locked`. See swapExercise().
+          activeSet.touched = true;
           saveDraft(state);
           renderAssist();
           renderCaptions();
@@ -2991,7 +3033,8 @@ export async function SessionView(workoutId) {
   function swapIn(slot, index, newEx, fresh) {
     const entry = slot.entries[index];
     if (!entry) return null;
-    const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
+    // Finished or typed, not `setIsRecorded` — see swapExercise() for why.
+    const recorded = entry.sets.filter((s) => s.locked || s.touched);
     if (!recorded.length) { slot.entries[index] = fresh; return null; }
     entry.sets = recorded;
     entry.active = Math.min(entry.active, recorded.length - 1);
@@ -3041,7 +3084,28 @@ export async function SessionView(workoutId) {
       ? `${what} — ${skipped.join(' and ')} kept theirs`
       : what);
 
-    const recorded = entry.sets.filter((s) => setIsRecorded(s, entry.fields));
+    /* 🚨 A SET YOU DID IS A SET YOU MOVED PAST — `locked` — 2026-09-27.
+     *
+     * Tim, after a real pull day: *"When you swap a workout, it really creates
+     * a new one instead of adding the new one and then removing the old one."*
+     * This used to ask `setIsRecorded()`, and on an exercise WITH history every
+     * planned set arrives carrying last time's numbers and no `prefilled` flag
+     * (Open work 15) — so an exercise nobody had touched looked fully done.
+     * Every swap of it split: the old exercise stayed, with all its untouched
+     * sets, and was then SAVED as though he had lifted it.
+     *
+     * So a set counts as done when a PERSON made it so: `locked` (they moved
+     * past it — the app's existing answer to "was this set really done") or
+     * `touched` (they changed a number on it). The second matters more than it
+     * looks: the ordinary case is finishing a set and swapping straight away,
+     * before moving on, because the machine you wanted just freed up. A
+     * lock-only rule threw that set away, and the existing Hack Squat test
+     * caught it the first time it ran.
+     *
+     * 🛑 OPEN WORK 15 IS UNTOUCHED. Whether an untouched history-prefilled set
+     * should count at SAVE is still Tim's decision; this changes only what a
+     * swap keeps. */
+    const recorded = entry.sets.filter((s) => s.locked || s.touched);
     if (recorded.length) {
       entry.sets = recorded;
       entry.active = Math.min(entry.active, recorded.length - 1);
@@ -3607,6 +3671,7 @@ export async function SessionView(workoutId) {
             // is shut" — not about the training, and a saved session has no
             // rows. Same treatment as `prefilled`, and a test asserts it.
             delete out.locked;
+            delete out.touched;    // same: a fact about this screen, 2026-09-27
             return out;
           }),
       }))
