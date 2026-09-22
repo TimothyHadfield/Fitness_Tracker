@@ -767,3 +767,19 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Open:** Tim to re-test Add + Restore on his phone · the two race fixes are untestable here ·
   Open work 15 still his · partner has no pull-up caption (no bodyweight on this phone) · famous
   lifters' arms/shoulders are converted from bench. Full write-up: `docs/history.md` 2026-09-27.
+
+## 2026-09-21 · famous lifters at their peak
+- **Asked:** "some of the influencers I found aren't being measured by the lifts they were lifting in
+  their prime … really get the lifts they were doing when they were in the peak of their fitness."
+- **Decided:** peak = one window (a meet or ~1–2 years) picked by relative strength; each lift carries
+  its own weigh-in; same rules as before (sourced, raw, ≤12 reps, never guessed).
+- **Built:** four research agents → `js/public-figures.js` regenerated: 26 people, 76 → 109 lifts, real
+  meet dates. Biggest moves: Israetel to 2010–13 (9 lifts), Doucette to 2010–11, Coleman to his
+  2000–03 DVDs (14 lifts), Coan's bench to 1991, Stefi/Gasparyan to Kern 2019, Jen Thompson to 2018.
+  `figureRows()` reads `lift.bodyweightLb`.
+- **Verified how:** 23 no-Chrome suites, 0 failures; old vs new `figureStrength()` run for all 26 —
+  Israetel, Coleman, Arnold now rate 10 muscles, Martyn 6.
+- **Open (Tim's call if he asks):** peak-by-relative-strength left out heavier all-time bests
+  (Haack 2026, Olivares 2025, Doucette's 2017 bench, Jen Thompson's 2022 327 bench); Coan's squat/deadlift
+  and Franco's squat/bench stay outside the peak (nothing raw sourced); JJW's 405 gym bench beats his
+  336 meet bench.

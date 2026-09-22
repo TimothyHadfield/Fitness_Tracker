@@ -183,6 +183,10 @@ caption (their bodyweight isn't on this phone).
 - 2026-09-27 · swap keeps only `locked || touched` sets; Open work 15's save question untouched.
 - 2026-09-27 · famous lifters are rated by `buildStrengthShare()` like anyone, each muscle as of its
   freshest lift (`figureStrength()`); meet singles are benchmarks, gym sets sessions.
+- 2026-09-21 · famous lifters are rated from their PEAK window (Tim: "the lifts they were doing when
+  they were in the peak of their fitness"), each lift with its own weigh-in (`lift.bodyweightLb`) and
+  a `peak` label; the window is chosen by relative strength (Dots), not the heaviest number ever.
+  Research JSON per group was in the session scratchpad; each lift's `note` says why it's in.
 
 ## NOT verified
 _Tim's rule bans device warnings ("not verified on a phone"). This list is only for claims no screen
