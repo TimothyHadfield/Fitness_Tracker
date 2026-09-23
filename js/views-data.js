@@ -1919,28 +1919,12 @@ export async function GraphView(opts = {}) {
         droppedNote
           ? el('div', { class: 'chart-caption' }, el('span', { text: droppedNote }))
           : null,
-        /* ⚠️ THE VERDICT ON THE CHART STAYS; THE PHYSIOLOGY GOES BEHIND THE ?
-         * (Rule 9). "Unreliable above 15 reps" changes what the reader thinks
-         * every point on this chart is, so it can never be something to ask
-         * for. WHY a high-rep set stops measuring strength is the classic case
-         * for the dot.
-         *
-         * ⚠️ NO `.help-line` HERE, DELIBERATELY. `.chart-caption` is already a
-         * baseline flex row with the same 7px gap, and `.help-dot` is
-         * `flex: none` — wrapping it would have meant re-classing the caption
-         * to `.field-help` and changing its size and colour, which is a visual
-         * change nobody asked for. The dot still sits against the words. */
+        /* 🔄 ~~"Estimates above 15 reps are unreliable."~~ and its "?" — deleted
+         * 2026-09-23 (Tim: "whatever you think for all"). It needed a target of 16
+         * and MAX_TARGET_REPS is 15, so it never had a reader. */
         conf !== 'good'
           ? el('div', { class: 'chart-caption warn' },
-              el('span', { text: conf === 'poor'
-                ? 'Estimates above 15 reps are unreliable.'
-                : 'Estimates get looser above 10 reps.' }),
-              conf === 'poor'
-                ? helpDot('Above 15 reps a set is limited by breathing and grip more than by '
-                    + 'strength, so what it converts to says less about a one-rep max.',
-                  { label: 'Why high-rep estimates are unreliable' })
-                : null,
-            )
+              el('span', { text: 'Estimates get looser above 10 reps.' }))
           : null,
       ),
     );

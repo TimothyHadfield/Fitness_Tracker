@@ -868,12 +868,13 @@ const SCALES_WHY = () => figureNote([
 
 function requirementsBlock(goal, req) {
   const a = req.ambition;
-  // Recomputed rather than trusted: a goal written before gainPct was stored
-  // would otherwise render "+NaN%", and the two numbers it is derived from are
-  // both frozen on the goal, so this cannot disagree with what was set.
-  const gainPct = Number.isFinite(goal.gainPct)
-    ? goal.gainPct
-    : (goal.startWeight > 0 ? (goal.targetWeight / goal.startWeight - 1) * 100 : 0);
+  // 🔄 From the start and target the screen SHOWS, not the frozen `gainPct` —
+  // 2026-09-23 (Tim: "whatever you think for all"). A re-freeze moves the target
+  // and not gainPct, which printed "Steady +2%" over a 220 → 244 lb goal. The
+  // ambition name stays frozen; the frozen field is only the fallback.
+  const gainPct = goal.startWeight > 0 && Number.isFinite(goal.targetWeight)
+    ? (goal.targetWeight / goal.startWeight - 1) * 100
+    : (Number.isFinite(goal.gainPct) ? goal.gainPct : 0);
 
   return el('div', { class: 'card' },
     el('div', { class: 'goal-ambition' },

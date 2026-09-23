@@ -4081,6 +4081,18 @@ ok(!data.querySelector('.rep-target'),
      'the matching screen ranks programmes by what the goal muscle actually gets');
   ok(fits.querySelectorAll('.row').length > 3, 'and lists the ready-made systems');
 
+  /* 🔄 THE "+N%" AGREES WITH THE TARGET ON THE SCREEN — 2026-09-23 (Open work 5).
+     It used to print the frozen `gainPct`, so a re-frozen 220 → 244 lb goal read
+     "Steady +2%" over its own numbers. Tim, asked: "whatever you think for all".
+     The ambition NAME stays frozen (it is what the requirements are read from);
+     only the percentage is now worked out from the start and target shown. */
+  const shown = await store.activeGoal();
+  await store.setGoal({ ...shown, startWeight: 220, targetWeight: 244, gainPct: 100 * (225 / 220 - 1) });
+  const refrozenScreen = await mount(GoalsView());
+  const gainText = (refrozenScreen.querySelector('.goal-ambition-gain') || {}).textContent;
+  ok(gainText === '+11%',
+     `🚨 a 220 → 244 goal prints +11%, not the +2% frozen before its target moved (${gainText})`);
+
   await store.clearAll();
 }
 
@@ -9002,15 +9014,7 @@ ok(!data.querySelector('.rep-target'),
      + `(${d.querySelector('.mini-value').textContent})`);
   ok(/Estimates get looser above 10 reps\./.test(maxed),
      `⚠️ and above 10 the chart says so, in the reader's own words (${maxed.slice(-200)})`);
-  /* ⚠️ THE OTHER HALF OF THAT SENTENCE IS UNREACHABLE, AND THIS IS WHERE IT
-     WOULD SHOW UP. `renderNormalized()` also carries "Estimates above 15 reps
-     are unreliable." for `repConfidence(target) === 'poor'`, which needs a
-     target of 16 or more — and `clampReps()` and the stepper both stop at 15.
-     Asserted as the ceiling holding rather than as the branch being dead: if
-     MAX_TARGET_REPS ever goes back to 20, the assertion above fails and this
-     one starts finding the sentence. Reported to Tim, 2026-09-14. */
-  ok(!/above 15 reps are unreliable/.test(maxed),
-     'and it is never the harsher wording, because the target cannot get above 15 to earn it');
+  // The unreachable "above 15 reps are unreliable" branch was deleted 2026-09-23 (Tim: "whatever you think for all").
 
   // Put the target back where it was found: `targetReps` outlives clearAll().
   const stepDown = () => [...d.querySelectorAll('.mini-stepper .mini-btn')][0];
@@ -9102,21 +9106,31 @@ ok(!data.querySelector('.rep-target'),
   ok(!/Elite/.test(chestPanel),
      'and the level with it — one slip used to promote a muscle to the top of the scale');
 
-  /* ---- freshness: the data is there; the SENTENCE is not ----
+  /* ---- freshness: the data is there, and since 2026-09-23 so is the SENTENCE ----
    *
-   * 🚨 A DEFECT IN CODE THIS BLOCK MAY NOT TOUCH, REPORTED TO TIM 2026-09-14.
-   * `freshnessLine()` in views-muscles.js has NO CALLER. `muscleGroupsPane()`
-   * computes `recent` and passes `recent.get(selected)` as a SEVENTH argument
-   * to `detail()` — which declares six parameters — so the note that a muscle
-   * trained inside 24 h (48 h for legs) reads a little low is computed, handed
-   * over, and dropped on the floor. Verified on this fixture: the chest was
-   * trained TODAY and the panel above says nothing about it.
+   * 🔄 WIRED 2026-09-23 (Open work 3). Until then `freshnessLine()` had NO
+   * CALLER: `muscleGroupsPane()` passed `recent.get(selected)` as a seventh
+   * argument to a six-parameter `detail()`, so the note was computed, handed
+   * over and dropped. Tim, asked about the wording: *"whatever you think for
+   * all"* — so the sentence the plan wrote is the one shown.
    *
-   * ⚠️ SO THIS ASSERTS THE HALF THAT IS WIRED, and it is deliberately not an
-   * assertion that the sentence is absent — pinning a bug in place is not the
-   * same as testing it. `recentDirectWork()` is exported, is what the missing
-   * line would read, and carries the whole of the 24 h / 48 h rule. When
-   * somebody joins the wire, the panel assertions are what they should add. */
+   * ⚠️ ONLY ON THE READER'S OWN MAP. A friend's or famous lifter's panel comes
+   * through `musclePanel()`, which has no recent-work data to hand in, so it
+   * says nothing rather than guess. */
+  ok(/Trained today — a reading today usually comes in a little low\./.test(chestPanel),
+     `🚨 the chest was trained TODAY and its panel says so (${chestPanel.slice(0, 240)})`);
+  {
+    const { musclePanel } = await import(BASE + 'views-muscles.js');
+    const { muscleStrength } = await import(BASE + 'store.js');
+    const { muscles } = await muscleStrength();
+    const theirs = text(musclePanel(muscles.get('Chest'), 'Chest',
+      { gender: 'male', whose: 'their' }, null, false));
+    ok(/^Chest/.test(theirs) && !/Trained (today|yesterday|two days ago)/.test(theirs),
+       `🚨 a friend's rated Chest panel has no freshness note — nothing recent is known about them (${theirs.slice(0, 120)})`);
+  }
+  const quadsPanel = text(await tapMuscle('Quads'));
+  ok(/Trained two days ago — /.test(quadsPanel),
+     `⚠️ and the quads, two days ago, are inside the 48 h a leg day gets (${quadsPanel.slice(0, 240)})`);
   const { recentDirectWork } = await import(BASE + 'views-muscles.js');
   const recent = recentDirectWork(await store.getSessions(), await store.getExerciseMap(), todayISO());
   ok(recent.get('Chest') === 0,
