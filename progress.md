@@ -52,6 +52,7 @@ first users stop being new).
 | — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
 | 32 | The app never states its logging conventions where you log (machine weight excluded; a lunge rep = one step per leg) | his word (screen text) |
 | 25 | Demo has no hatched muscle any more (Neck ranks), so "trained but unrankable" is unreachable in the audit account — fixing re-rolls the seeded year | his call |
+| 34 | Famous lifters nobody could source: **Togi, Alex Eubank, Noel Deyzel, Jeff Seid, Joey Swoll, Whitney Simmons, Krissy Cela, Sydney Cummings** — Tim named the first three. Their weights are spoken in videos; YouTube blocked caption downloads for hours on 2026-09-21. Also: the seven existing women never got their accessory pass (weekly usage limit), and Traps/Forearms/Calves/Neck are empty for most people | a rerun when YouTube lets transcripts through |
 | 3a | Activities Phase 2 item 6: which activities his circle logs | ask Tim |
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
 | 0f | His friend's sign-in failure | Tim is investigating it himself |
@@ -185,8 +186,13 @@ caption (their bodyweight isn't on this phone).
   freshest lift (`figureStrength()`); meet singles are benchmarks, gym sets sessions.
 - 2026-09-21 · famous lifters are rated from their PEAK window (Tim: "the lifts they were doing when
   they were in the peak of their fitness"), each lift with its own weigh-in (`lift.bodyweightLb`) and
-  a `peak` label; the window is chosen by relative strength (Dots), not the heaviest number ever.
-  Research JSON per group was in the session scratchpad; each lift's `note` says why it's in.
+  a `peak` label. Each lift's `note` says why it's in.
+- 2026-09-21 (same day, after Tim: *"Jeff Nippard is strongest right now"*) · peak means STRONGEST IN
+  ABSOLUTE TERMS, not strongest for bodyweight — a filmed gym PR counts (`reported: true`) and a
+  stated bodyweight from the period is enough. **47 people, 213 lifts**, one sourced set per muscle
+  group wherever it exists (the estimator converts within a muscle, so one is enough).
+- 2026-09-21 · a test must not pin a real person's researched numbers (render's famous-summary
+  assertion reads `figureSummary()`); re-research would break it every time.
 
 ## NOT verified
 _Tim's rule bans device warnings ("not verified on a phone"). This list is only for claims no screen

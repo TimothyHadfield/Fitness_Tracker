@@ -2840,9 +2840,17 @@ ok(!data.querySelector('.rep-target'),
   ok(/Jeff Nippard/.test(t) && /Stefi Cohen/.test(t), 'each named over their own body');
   ok(!/Nothing to compare yet/.test(t),
      '…and neither side is refused — both are rated from their recorded lifts on this device');
-  ok(/2014–2015 · 161 lb/.test(t),
-     '🚨 a famous side says WHEN on its face — them at the time of the lifts, not now (Rule 9: '
-     + 'it changes what the colours are, so it is not behind a "?")');
+  /* 🔒 The YEARS and the WEIGHT, read off the data rather than typed here — a
+     literal ("2014–2015 · 161 lb") pins the research, not the screen, and every
+     re-research of a real person's lifts then breaks a rendering test. */
+  {
+    const { figureById, figureSummary } = await import(BASE + 'public-figures.js');
+    const line = figureSummary(figureById('jeff-nippard'));
+    ok(/^\d{4}(–\d{4})? · \d+ lb/.test(line), `and the line is years · weight (${line})`);
+    ok(t.includes(line),
+       '🚨 a famous side says WHEN on its face — them at the time of the lifts, not now (Rule 9: '
+       + `it changes what the colours are, so it is not behind a "?") (${line})`);
+  }
   const src = [...screen.querySelectorAll('details summary')]
     .find((s) => /Where Jeff Nippard's numbers come from/.test(s.textContent));
   ok(Boolean(src), 'and where the numbers come from is one tap away, per person');

@@ -783,3 +783,26 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   (Haack 2026, Olivares 2025, Doucette's 2017 bench, Jen Thompson's 2022 327 bench); Coan's squat/deadlift
   and Franco's squat/bench stay outside the peak (nothing raw sourced); JJW's 405 gym bench beats his
   336 meet bench.
+
+## 2026-09-21 (second pass) · "Jeff Nippard is strongest right now"
+- **Asked:** *"I'm skeptical of these numbers because Jeff Nippard is strongest right now, and the
+  durrent dates say 2014-2015 … I also didn't see any other popular lifters like togi, alex eubank,
+  tren twins … if you can try to find excersizes they did for muscle groups that don't have any
+  recordings on, then do that. Remember our estimation calculator can estimate 1RMs for lifts you
+  didn't even do as long as you did something for that muscle group."*
+- **Decided:** peak now means STRONGEST IN ABSOLUTE TERMS (a filmed gym PR counts, `reported: true`),
+  not strongest for bodyweight; a stated bodyweight from the period is enough (`bodyweightEstimated`);
+  hunt one sourced set per muscle group, because the estimator converts within a muscle.
+- **Built:** six research agents → 26 → **47 people, 213 lifts**, average 7.1 muscles each. New:
+  Sulek, Laid, both Tren Twins (surname **Gaiera**, WRPF meet results), O'Hearn, Heria, Guzman,
+  N. Walker, Lunsford, Cutler, Yates, Platz, Hall, Shaw, Hooper, Licis, Toomey, Fisher, Ence,
+  MacDonald, Buttermore. Nippard now 2021–2025, Haack/Atwood/Olivares on their heaviest meets,
+  Coleman 15 lifts, Larry Wheels 8.
+- **Verified how:** 23 suites, 0 failures (render's famous-summary assertion now reads the years off
+  `figureSummary()` instead of pinning "2014–2015 · 161 lb").
+- **Dropped by hand:** Rich Piana (stat-site numbers only, no video, no year) · carries and holds
+  (a distance event has no rep count).
+- **Open:** Togi, Alex Eubank, Noel Deyzel, Jeff Seid, Joey Swoll, Whitney Simmons, Krissy Cela,
+  Sydney Cummings **still unsourced** — their numbers are spoken in videos and YouTube blocked
+  transcript downloads for hours; the existing seven women never got their accessory pass (agent hit
+  the weekly usage limit). Traps/Forearms/Calves/Neck are still empty for most people.
