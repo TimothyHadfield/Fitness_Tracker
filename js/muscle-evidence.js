@@ -65,7 +65,7 @@
 // comment on that function for why asking for the wrong one is silent.
 import { e1rm, isMapRankableSet, MAX_EVIDENCE_REPS, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
-import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues } from './strength-estimate.js';
+import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues, loadFactor } from './strength-estimate.js';
 import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
 import { RATIO_DRIFT } from './ratio-sigma.js';
 import { repSigma } from './rep-sigma.js';
@@ -1856,6 +1856,12 @@ const BENCHMARK_BONUS = 1.25;
 // eleven muscles had all three slots filled by the same exercise on three
 // different days, so the error in that one ratio was never cancelled by
 // anything; it was averaged with itself. See rateMuscle().
+//
+// 🔄 SINCE 2026-09-23 (Open work 10) THIS IS HOW MANY EXERCISES ARE LISTED, NOT
+// HOW MANY SET THE NUMBER. Every exercise now joins the blend at its own
+// precision (`poolExercise()` below); these three are the credibility-ordered
+// rows the panel shows and the confidence term reads, exactly as before, so
+// the table and the confidence label did not move with the estimate.
 const TOP_N = 3;
 
 // The same calendar-day count `dailyValues()` uses, so a quarantine verdict
@@ -2096,6 +2102,134 @@ export function fatigueFactor(priorVolume) {
 // nobody has measured fatigue for, and inventing a discount for it would
 // quietly re-rate every history in the app.
 const fatigueOf = (o) => (Number.isFinite(o.fatigueFactor) ? o.fatigueFactor : 1);
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🆕 EVERY SET COUNTS, AT ITS OWN PRECISION — 2026-09-23, Open work 10.
+ *
+ * Tim, asked whether to rate from every set rather than one set per exercise,
+ * top three: *"Do it."*
+ *
+ * WHAT IT WAS. One seat per exercise, the three most credible exercises, and
+ * nothing else touched the number: a fourth and fifth exercise and every other
+ * day of the three seated ones only moved the confidence label.
+ *
+ * WHAT IT IS. Two levels, and the split is the whole correlation argument:
+ *
+ *   1. PER EXERCISE, `poolExercise()`: the seat (chosen exactly as before) plus
+ *      that exercise's next-best DAYS in the window, up to `DEFAULTS.topN`
+ *      (three), blended at 1/σ² with recency, fatigue and the benchmark bonus
+ *      (`blendPrecision()`, the expression the old blend used), winsorised.
+ *   2. ACROSS EXERCISES: every exercise the muscle has — not the top three —
+ *      joins the winsorised blend at its pooled precision.
+ *
+ * 🚨 WHY FIFTY SETS OF ONE EXERCISE DO NOT COUNT AS FIFTY MEASUREMENTS. Both
+ * doubts σ carries are SHARED by every set of an exercise, not independent per
+ * set: the conversion doubt (`sigmaFor()`) is one ratio, applied identically to
+ * every set of that exercise, and the rep doubt (`repSigma()`) is the seven
+ * published formulas disagreeing about what "10 reps" means — the same
+ * disagreement every time anybody does 10 reps. Repeating a set cannot shrink
+ * either. So an exercise's blend weight is capped at ONE reading's worth — the
+ * best single day it has (`weight` below, a max, never a sum) — however many
+ * days are pooled into its VALUE. Volume buys a steadier value and a deeper
+ * confidence (`depth` already counts every day); it never buys the right to
+ * outvote a different exercise. What DOES cancel across exercises is ratio
+ * error, one independent ratio per exercise, which is the reason every
+ * exercise now has a say.
+ *
+ * 🚨 WHY THE POOL IS AN UPPER ENVELOPE, NOT EVERY DAY AVERAGED. The noise on a
+ * set is ONE-SIDED — strength-estimate.js's header, the one fact that module
+ * rests on: a set can be easier than maximal and never harder, so every
+ * reading is a lower bound and "averaging is wrong… the right family of
+ * estimator is the UPPER ENVELOPE". That module FITTED its envelope against a
+ * simulated lifter with warm-ups, back-offs, RIR 0–4 and light days: best
+ * three daily values (`topN`), bias under 1 %. This reuses that number rather
+ * than inventing one. Three further guards, none new:
+ *
+ *   · BACK-OFF SETS never reach this function's pool. `perDay` above keeps one
+ *     reading per exercise per day (the day's top set, by the existing
+ *     credibility rule after `dominate()`), so twenty back-offs after a top set
+ *     are the same one reading as none. Unchanged, and a test pins it.
+ *   · LIGHT DAYS are priced by `loadFactor()` from strength-estimate.js — the
+ *     fitted f_load, measured against the SEAT (not the biggest number in the
+ *     pool, so a 12-rep extrapolation cannot discount a tested triple): a day
+ *     at 90 % of the seat weighs 0.40 — "not evidence that you got weaker; it
+ *     is simply not evidence". A day below seat / (1 + winsorK) is not pooled
+ *     at all: winsorising would drag it up to the clip line and still pull the
+ *     number down, so it is left out instead. Withhold-only (never above 1),
+ *     and a benchmark bypasses it exactly as it does there. Sets over
+ *     MAX_EVIDENCE_REPS (burnouts) never join a seat.
+ *   · THE SEAT IS ALWAYS IN THE POOL, so decision (d) — the most CREDIBLE set
+ *     speaks for an exercise, not the biggest — still holds: a 12-rep
+ *     extrapolation joins a tested triple, it cannot replace it.
+ *
+ * ⚠️ THE TENSION, AND THE CONSERVATIVE SIDE WAS TAKEN. An envelope falls
+ * reluctantly by design: a genuine decline inside the 84-day window reads a
+ * little high until the heavier days age out (then it steps, exactly as the
+ * seat always did). The alternative — averaging every day — lets a lifter's
+ * light days drag the map down, which is the complaint this project has fixed
+ * three times. Nothing older than the window is pooled, so the fall limit is
+ * where it was.
+ *
+ * 🛑 WHAT DID NOT CHANGE, on purpose: the typo quarantine, `dominate()`, the
+ * per-day collapse, the window, MAX_MAP_REPS, the fatigue term, the seat, and
+ * the credibility order of `used`. `confidence` still reads the three listed
+ * rows, so on any history whose seats are unchanged the confidence figure is
+ * unchanged to the last digit — the check that this reached only the number.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** How much ONE day-reading may move the answer: recency × fatigue × the
+ *  benchmark bonus, over σ² from `readingSigma()`. `quality` and `repFactor`
+ *  are divided back out because σ carries both doubts (the 🔄 note in
+ *  rateMuscle()). The same expression the old three-row blend used. */
+function blendPrecision(o) {
+  const sigma = readingSigma(o);
+  return (o.evidenceWeight / o.quality / repFactor(o.reps)) / (sigma * sigma);
+}
+
+/** One exercise's pooled reading — see the block above.
+ *  @param {object}   seat  the day that holds the seat (always pooled)
+ *  @param {object[]} pool  the exercise's days after the window and dominance
+ *  @returns {{ lead, value, weight, days }} */
+function poolExercise(seat, pool) {
+  /* ⚠️ ONLY D5 EVIDENCE MAY JOIN A SEAT. A set past MAX_EVIDENCE_REPS (15) can
+   * still hold the seat when it is all an exercise has — MAX_MAP_REPS admits it
+   * for exactly that — but it is not averaged into a real set: the formulas
+   * disagree most out there and a burnout set extrapolates ABOVE the top set it
+   * followed (135×25 over 205×5, D5's own case), so pooling it would be the
+   * one-sided noise running the wrong way. */
+  /* 🛑 AND A DAY FAR BELOW THE SEAT IS NOT POOLED AT ALL. `winsorK` is fitted
+   * on exactly this question — the honest spread of one lift's daily bests
+   * around its own median reaches ×1.204 at the 99.99th percentile (DEFAULTS'
+   * comment in strength-estimate.js) — so a day more than ×(1 + winsorK) under
+   * the seat is outside anything a max-effort day produces: a light day, a
+   * technique day, a deload. Pooling it, even at f_load's 0.10, dragged a
+   * 225×5 down 3 % under twenty 135×10 days, measured. Excluded rather than
+   * down-weighted, because a lower bound says nothing about the maximum. */
+  const floor = seat.estimate / (1 + DEFAULTS.winsorK);
+  const others = pool
+    .filter((o) => o !== seat && Number(o.reps) <= MAX_EVIDENCE_REPS && o.estimate >= floor)
+    .sort((a, b) =>
+      (b.estimate - a.estimate)
+      || (a.ageDays - b.ageDays)
+      || String(a.date || '').localeCompare(String(b.date || '')));
+  const envelope = [seat, ...others.slice(0, Math.max(0, DEFAULTS.topN - 1))];
+  /* f_load's reference is the SEAT — "what do we already believe you can do",
+   * dailyValues()'s own phrase, and the seat is the most credible answer to it.
+   * ⚠️ NOT the biggest estimate in the pool: that would let a long set's
+   * extrapolation mark the credible set down as sub-maximal, which is decision
+   * (d)'s credibility inversion arriving through a side door. So a day at or
+   * above the seat pools at its full precision; a day below it is priced as
+   * the light day it may be. */
+  const ref = seat.estimate;
+  const days = envelope.map((o) => ({
+    x: o.estimate,
+    w: blendPrecision(o) * (o.isBenchmark || o === seat ? 1 : loadFactor(o.estimate / ref)),
+  }));
+  const value = robustAggregate(days);
+  // ⚠️ A MAX, NOT A SUM — the correlation cap. See the block above.
+  const weight = Math.max(...days.map((d) => (Number.isFinite(d.w) ? d.w : 0)));
+  return { lead: seat, value: value > 0 ? value : seat.estimate, weight, days: envelope.length };
+}
 
 /**
  * Rate one muscle from its observations.
@@ -2574,6 +2708,9 @@ export function rateMuscle(observations, muscle = null) {
     if (o.ageDays <= windowCut) b.inWindow.push(o);
   }
   const representatives = [];
+  // 🆕 2026-09-23 (Open work 10): every exercise's POOLED reading, one per
+  // exercise, built beside its seat. See `poolExercise()` and the blend below.
+  const pooledOf = new Map();
   for (const b of perExercise.values()) {
     const raw = b.inWindow.length ? b.inWindow : b.all;
     const pool = dominate(raw);
@@ -2592,7 +2729,10 @@ export function rateMuscle(observations, muscle = null) {
     const field = pool;
     let best = null;
     for (const o of field) if (!best || better(o, best) > 0) best = o;
-    if (best) representatives.push(best);
+    if (best) {
+      representatives.push(best);
+      pooledOf.set(best, poolExercise(best, pool));
+    }
   }
 
   // ── ⚠️ RANKED BY CREDIBILITY, NOT BY SIZE ────────────────────────────────
@@ -2700,13 +2840,19 @@ export function rateMuscle(observations, muscle = null) {
    * each contribution bought, and a SECOND copy of the expression below, written
    * out for the display, is the exact fault this file keeps having to undo: the
    * two drift apart, and the screen then explains the rating with a number that
-   * did not produce it. One array, both readers. */
-  const blendWeight = used.map((u) => {
-    const sigma = readingSigma(u);
-    return (u.evidenceWeight / u.quality / repFactor(u.reps)) / (sigma * sigma);
-  });
-
-  const estimate = robustAggregate(used.map((u, i) => ({ x: u.estimate, w: blendWeight[i] })));
+   * did not produce it. One array, both readers. (🔄 2026-09-23: the one array
+   * is `pooled` now, and the expression is `blendPrecision()`.) */
+  /* 🔄 AND SINCE 2026-09-23 THE BLEND IS OVER EVERY EXERCISE, NOT THE THREE
+   * ROWS IN `used` — Open work 10, Tim: *"Do it."* The weight expression above
+   * (recency × fatigue × benchmark bonus ÷ σ²) is unchanged and now lives in
+   * `blendPrecision()`, because it is read per DAY inside `poolExercise()` as
+   * well as per exercise here. What changed is what it is applied to: each
+   * exercise arrives as its pooled reading (its seat plus its next-best days,
+   * `poolExercise()`), and every exercise the muscle has — a fourth and a fifth
+   * included — joins the winsorised blend at its own precision. `used` is now
+   * only the three rows the panel LISTS; see TOP_N. */
+  const pooled = candidates.map((c) => pooledOf.get(c)).filter(Boolean);
+  const estimate = robustAggregate(pooled.map((p) => ({ x: p.value, w: p.weight })));
   if (!(estimate > 0)) return null;
 
   /* ── `share` — WHAT FRACTION OF THE ANSWER EACH ROW BOUGHT ────────────────
@@ -2754,11 +2900,24 @@ export function rateMuscle(observations, muscle = null) {
    * candidate sort, `contributorCount`, `exerciseCount` and `quarantined` are
    * all already decided by this point; this loop only writes a new field onto
    * rows that are about to be returned. */
-  const counted = blendWeight.map((w, i) => (
-    Number.isFinite(w) && w > 0 && used[i].estimate > 0 ? w : 0));
+  /* 🔄 2026-09-23: A ROW'S SHARE IS ITS WHOLE EXERCISE'S SHARE, and the three
+   * listed shares no longer have to add to 1. The row names the exercise's seat
+   * (the set a reader can check), but what bought influence in the blend is the
+   * exercise's pooled reading — the seat plus the days pooled with it — so that
+   * is the share it carries. An exercise past the three listed still moved the
+   * number, and its slice is simply not on the table: the listed shares sum to
+   * what the listed exercises bought, which is the honest statement. Printing
+   * shares rescaled to 100 % across three rows would claim the other exercises
+   * bought nothing. */
+  const counted = pooled.map((p) => (
+    Number.isFinite(p.weight) && p.weight > 0 && p.value > 0 ? p.weight : 0));
   const shareTotal = counted.reduce((a, w) => a + w, 0);
   const shareable = Number.isFinite(shareTotal) && shareTotal > 0;
-  used.forEach((u, i) => { u.share = shareable ? counted[i] / shareTotal : 0; });
+  pooled.forEach((p, i) => { p.share = shareable ? counted[i] / shareTotal : 0; });
+  used.forEach((u) => {
+    const p = pooledOf.get(u);
+    u.share = p && Number.isFinite(p.share) ? p.share : 0;
+  });
 
   return {
     estimate,
@@ -2784,6 +2943,19 @@ export function rateMuscle(observations, muscle = null) {
     // second day to agree with it, and the screen says that rather than
     // implying the lifter mistyped.
     quarantined,
+    // 🆕 2026-09-23: EVERY exercise that moved the number, in credibility
+    // order — `used` is only the first TOP_N of these, for the panel. Each is
+    // `{ exerciseId, exerciseName, value, weight, share, days }`: the pooled
+    // reading, its blend weight, its slice of the answer and how many days were
+    // pooled into it. Additive; nothing published reads it.
+    pooled: pooled.map((p) => ({
+      exerciseId: p.lead.exerciseId,
+      exerciseName: p.lead.exerciseName || null,
+      value: p.value,
+      weight: p.weight,
+      share: p.share,
+      days: p.days,
+    })),
   };
 }
 
