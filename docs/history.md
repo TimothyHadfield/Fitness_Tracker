@@ -17,6 +17,38 @@
 
 ---
 
+## 2026-09-22 — FAMOUS LIFTERS, THE UNSOURCED EIGHT AND THE WOMEN'S ACCESSORY PASS
+
+Tim: *"alright well continue with that project then."* (Open work 34.) Five research agents, one
+brief (sourced, raw, 1–12 reps, a bodyweight, one set per muscle, never guessed).
+
+**Added (50 people, 221 lifts):** Jeff Seid — bench 275×6, overhead press 205×4, squat 365×3, from
+his own 2016–17 description logs · Alex Eubank — bench 365×1, deadlift 545×1 (own video 2025-03-04,
+confirmed in his Oct 2025 video) · Togi (Shane Stoffer) — bench 315×2, stated lifetime best on a
+2024-08-19 podcast · Meg Gallagher — bodyweight chin-up ×7 (2017) and pull-up ×12 (2019, a stated max).
+A test required `weightLb > 0`; it now allows 0 as ADDED load on a body-weight lift, which the app
+has counted since 2026-09-13 (`store.js`).
+
+**Left out:** Whitney Simmons (DB press 35×5, lateral raise 20×8 found; no sourced bodyweight) ·
+Alex's 40 lb lateral raises ("8 to 12", no count) · Togi's 225×18 (over 12) · Seid's 2014 deadlift
+(outside his peak).
+
+**Not found, with retry leads (YouTube IP-blocked captions ~50 min into the wave):**
+- Noel Deyzel — peak 2018–20 (~311 lb), pre-biceps-tear; old clips live on TikTok/Instagram.
+- Joey Swoll — his channel is commentary; only "bodyweight bench for 30+" (over 12).
+- Krissy Cela, Sydney Cummings — no weight × reps (Sydney's sets are 45 s timed).
+- Stefi Cohen — "Powerlifters VS Bodybuilding Workout", "IFBB PRO Teaches Me How To Grow My Back".
+- Heather Connor — BarBend lists accessories with RPE only, no weights.
+- Jessica Buettner — "A Day with Jessica Buettner", "Evolve Strength" vlogs.
+- Amanda Lawrence — kaeA0c5-RYg ("Halloween Vlog & Lifts"), MxFwpZL9DMQ ("Road to Sheffield 2025").
+- Marianna Gasparyan — SoreOC93-TI ("4 weeks to U.S. Open 2019"), 3phJ-WAW_4M.
+- Jen Thompson — AJuc20wzQ7s (pull-up challenge 2018), AzTpezF-3Mc (tricep/shoulder program).
+
+**Verified:** 23 no-Chrome suites, 0 failures (data-layer 2,935). The regenerated array was checked
+byte-identical to the old one before merging; the diff is insertions only.
+
+---
+
 ## 2026-09-27 — A NOTIFICATION BECOMES A WAY IN, AND YOUR OWN WORKOUTS DRAW THE FEED'S CARD
 
 **Tim, opening the session:** *"Never give me messages that long. Always 2-3 paragraphs max unless I

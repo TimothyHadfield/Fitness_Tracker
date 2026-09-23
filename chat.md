@@ -806,3 +806,12 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   Sydney Cummings **still unsourced** — their numbers are spoken in videos and YouTube blocked
   transcript downloads for hours; the existing seven women never got their accessory pass (agent hit
   the weekly usage limit). Traps/Forearms/Calves/Neck are still empty for most people.
+
+## 2026-09-22 (third pass) · the unsourced famous lifters, retried
+- **Asked:** "alright well continue with that project then." (finish Open work 34)
+- **Built:** five research agents → **50 people, 221 lifts**: Jeff Seid (3), Alex Eubank (2), Togi (1),
+  Meg Gallagher +2 back sets. A test's `weightLb > 0` now allows 0 as added load on a body-weight lift.
+- **Verified how:** 23 no-Chrome suites, 0 failures; regenerated array byte-identical before merge.
+- **Open:** Deyzel, Swoll, Cela, Cummings unsourced; Simmons lacks a bodyweight; accessory pass found
+  nothing for six women. YouTube IP-blocked captions mid-wave — retry with ONE paced agent. Leads in
+  `docs/history.md` 2026-09-22.

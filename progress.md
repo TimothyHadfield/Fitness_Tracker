@@ -28,7 +28,7 @@ presets from Explore with update tracking, weekly/cycle plan boxes, restore for 
 Data (muscle map with 13 ranked groups incl. Calves/Neck/Core, Volume, Graph, Bars, Research) ·
 Profile (`#/me`: best lifts, body, goal, calendar, workouts as feed cards) · friends feed with
 kudos/comments, tappable "On your workouts" strip · friend profiles and the compare-bodies screen,
-now also against **47 famous lifters** (213 lifts, re-researched 2026-09-21) · Goals · accounts (anonymous-first, Google, delete) · offline
+now also against **50 famous lifters** (221 lifts; Seid, Eubank, Togi added 2026-09-22) · Goals · accounts (anonymous-first, Google, delete) · offline
 PWA with deploy notice · a temporary note-to-the-developer inbox (`#/notes`, take it out when the
 first users stop being new).
 
@@ -54,7 +54,7 @@ first users stop being new).
 | — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
 | 32 | The app never states its logging conventions where you log (machine weight excluded; a lunge rep = one step per leg) | his word (screen text) |
 | 25 | Demo has no hatched muscle any more (Neck ranks), so "trained but unrankable" is unreachable in the audit account — fixing re-rolls the seeded year | his call |
-| 34 | Famous lifters nobody could source: **Togi, Alex Eubank, Noel Deyzel, Jeff Seid, Joey Swoll, Whitney Simmons, Krissy Cela, Sydney Cummings** — Tim named the first three. Their weights are spoken in videos; YouTube blocked caption downloads for hours on 2026-09-21. Also: the seven existing women never got their accessory pass (weekly usage limit), and Traps/Forearms/Calves/Neck are empty for most people | a rerun when YouTube lets transcripts through |
+| 34 | 2026-09-22 rerun (Tim: "continue with that project"): **added Jeff Seid (3 lifts), Alex Eubank (2), Togi (1, real name Shane Stoffer), Meg Gallagher +2 back sets**. Still unsourced: **Noel Deyzel, Joey Swoll, Krissy Cela, Sydney Cummings** (no weight × reps anywhere), **Whitney Simmons** (2 shoulder sets but no sourced bodyweight). Accessory pass found nothing for Cohen, Connor, Buettner, Lawrence, Gasparyan, Thompson. YouTube IP-blocked captions ~50 min into a 5-agent wave; agents fell back to local Whisper on downloaded audio. Retry leads (video IDs) are in each agent's `notFound` — copied to `docs/history.md` 2026-09-22 | a rerun with ONE agent, paced, when YouTube unblocks |
 | 3a | Activities Phase 2 item 6: which activities his circle logs | ask Tim |
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
 | 0f | His friend's sign-in failure | Tim is investigating it himself |
@@ -168,6 +168,9 @@ caption (their bodyweight isn't on this phone).
   downloads for hours** that same session, which is why Togi, Alex Eubank, Noel Deyzel, Whitney
   Simmons and Krissy Cela are still unsourced (Open work 34) — their numbers are only spoken aloud.
   **A weekly usage limit killed one agent outright**; its people simply kept their old data.
+  **2026-09-22: five parallel transcript-pullers got this IP blocked in ~50 minutes** — run ONE
+  paced agent. `js/public-figures.js` regenerates byte-exactly with
+  `JSON.stringify(arr,null,2).replace(/^(\s*)"(\w+)":/gm,'$1$2:')` — verify the baseline matches first.
 - **Sub-agent rules:** disjoint named file sets (nobody near `css/app.css` or `tests/` unless it's
   theirs; one agent owns `tests/`); agents never commit or run tree-changing git; name the session
   date and a scratch path of their own in every brief; "proposed tests" ≠ run tests; after any agent

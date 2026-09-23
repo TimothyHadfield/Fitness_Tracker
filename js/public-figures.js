@@ -41,9 +41,10 @@
    three and little else, so their maps light up chest, legs and back and
    leave arms and shoulders unrated. Filling those from how they LOOK would be
    the app inventing a number about a real person. People who never publish a
-   weight and a rep count (Sam Sulek, David Laid, Whitney Simmons, Krissy Cela
-   and others) are not here for the same reason — the research that built
-   this file refused to guess, and so does this file.
+   weight and a rep count (Noel Deyzel, Joey Swoll, Krissy Cela, Sydney
+   Cummings, and Whitney Simmons, who never states a bodyweight) are not here
+   for the same reason — the research that built this file refused to guess,
+   and so does this file.
 
    Built 2026-09-27 from three research passes; the per-lift `source` is the
    citation. Re-researched 2026-09-21 for each person's PEAK (Tim: "the lifts
@@ -1918,6 +1919,28 @@ export const PUBLIC_FIGURES = [
         reported: false,
         source: "https://www.openpowerlifting.org/u/megangallagher",
         note: "USAPL Raw Nationals 2018, raw"
+      },
+      {
+        exercise: "Chin-Up",
+        weightLb: 0,
+        reps: 7,
+        date: "2017-11-07",
+        bodyweightLb: 142,
+        bodyweightEstimated: false,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=8ApQW2CBnxo",
+        note: "Own video 'NO BULLSH*T UPPER BODY WORKOUT' (uploaded 2017-11-07). Bodyweight, transcript 1:44: 'last night I weighed myself in I was like pretty light 142 pounds'. Chin-ups, transcript 6:52-7:01: 'for my chin-ups I'm not as efficient ... I tried to hit 7s and then fives when I couldn't'. Bodyweight chin-ups (0 lb added) for sets of 7, inside her 2017-2018 peak window. A working set in a 30-rep circuit, so it is below her max."
+      },
+      {
+        exercise: "Pull-Up",
+        weightLb: 0,
+        reps: 12,
+        date: "2019-05-17",
+        bodyweightLb: 142,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=H-Fxfc38B8U",
+        note: "Own video 'SQUAT + LEG STRENGTH WORKOUT | My Full Squat Lifting Routine' (uploaded 2019-05-17), transcript 6:16-6:25: 'I'm working on getting a few reps into my max pull-up set right now I can do about 12 almost 13 pull-ups and my goal is to get finally 15'. She films 5x6 in the video; 12 is her stated current max, not filmed. About 5 months after the 2017-2018 peak window (inside the allowed ~1 year). She gives no bodyweight in this video, so 142 lb is her own Nov 2017 weigh-in, flagged as estimated. If only one Back set is wanted, keep this one (more reps); the chin-up set is the in-window alternative."
       }
     ]
   },
@@ -3001,6 +3024,108 @@ export const PUBLIC_FIGURES = [
         reported: true,
         source: "https://www.youtube.com/watch?v=8NJZw8cJhBE&t=322s",
         note: "Only Shoulders record, before the peak window: 'lateral raises ... 10 to 12 reps starting with a 10 or 12 lb dumbbell and finish off with 15 lbs while taking that set to failure' — recorded at the low end, 10 reps."
+      }
+    ]
+  },
+  {
+    id: "jeff-seid",
+    name: "Jeff Seid",
+    sex: "m",
+    group: "creator",
+    bodyweightLb: 215,
+    bodyweightEstimated: false,
+    peak: "Jan 2016 – Feb 2017 (~205–215 lb)",
+    blurb: "American aesthetics YouTuber and IFBB Pro Men's Physique competitor (pro card at 18, 2016 Stockholm Pro winner, 2016 Olympia).",
+    lifts: [
+      {
+        exercise: "Barbell Bench Press",
+        weightLb: 275,
+        reps: 6,
+        date: "2016-01-20",
+        bodyweightLb: 215,
+        bodyweightEstimated: false,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=viITmWsP31w",
+        note: "Own video 'Chest Mondays w/ Jeff Seid Commentary'. His own description log: 'Flat BB Bench 135x15, 225x10, 225x10, 255x8, 275x6, 275x5 Drop 185x10'. Transcript 0:50 'fourth set. 275 lbs', 1:38 'just 275, five reps'; 3:51 'right now I'm bulking. I'm weighing about 215 lbs'. Took the 275x6 set from his written log (the next set was 275x5)."
+      },
+      {
+        exercise: "Overhead Press",
+        weightLb: 205,
+        reps: 4,
+        date: "2016-01-25",
+        bodyweightLb: 215,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=bzRfUVcXZAQ",
+        note: "Own video 'Shoulder Workout with Armin van Buuren, Showtek and Jeff Seid'. His own description log: 'Military Press 135x10, 155x10, 185x6, 185x6, 205x4'. Standing barbell military press assumed from the name. Bodyweight is the 215 lb he stated five days earlier (viITmWsP31w)."
+      },
+      {
+        exercise: "Back Squat",
+        weightLb: 365,
+        reps: 3,
+        date: "2017-02-10",
+        bodyweightLb: 205,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=qkqZDNcdaiE",
+        note: "Own video 'MY LAST LEG WORKOUT BEFORE I MOVE TO LOS ANGELES'. His own description log: 'Squats 225x15, 275x6, 315x5, 345x4, 365x3 drop set 225x8'. Transcript 0:36 '315 I'm doing this [for] 5 reps', 1:18 '345 I moved up to 365 ... by 3 reps'. Belted (shows 'the new belt' at 2:10). He was cutting at the time; no weigh-in in this video, so bodyweight is his nearest stated figure, ~205 lb (YYzHDq4rH1E, Sep 2016, 30:14 'Weight wise I'm about like 205 lbs')."
+      }
+    ]
+  },
+  {
+    id: "alex-eubank",
+    name: "Alex Eubank",
+    sex: "m",
+    group: "creator",
+    bodyweightLb: 188,
+    bodyweightEstimated: true,
+    peak: "Dec 2024 – Mar 2025 (~188–195 lb, on TRT)",
+    blurb: "American aesthetics-focused fitness YouTuber and Young LA athlete who trains mostly for physique, not strength.",
+    lifts: [
+      {
+        exercise: "Barbell Bench Press",
+        weightLb: 365,
+        reps: 1,
+        date: "2025-03-04",
+        bodyweightLb: 188,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=5S8is_ukhAs",
+        note: "Own video 'I got a lot stronger | MASSIVE PRs' (transcript 16:14-17:10): 'if I get a 40 lb PR on bench ... that was just 335 ... if I can get 355 ... wait no it be 365 right' then after the lift 'we hit a 50 lb deadlift PR and a what is that 30 lb bench PR'. Confirmed in his own later video 'I Tested The Limits Of My Strength' (S__4PhSTxmk, 2025-10-27, 12:50): 'I hit like 365 with Steve'. Bodyweight: his stated 188 lb morning weigh-in in 'OG Alex is back' (Wpcc35itSIM, 2025-01-12, 6:12); 187 lb in the Jeff Nippard video (RhYF-9bCjOc, 2025-01-01, 4:30). Transcript via local Whisper (YouTube caption API was IP-blocked) plus youtube_transcript_api for 5S8is_ukhAs."
+      },
+      {
+        exercise: "Deadlift",
+        weightLb: 545,
+        reps: 1,
+        date: "2025-03-04",
+        bodyweightLb: 188,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=5S8is_ukhAs",
+        note: "Same video, filmed with Haddy around the Arnold (0:40): 'I'll probably do five plates, Haddie's probably going to do six plates'; (17:05) 'we hit a 50 lb deadlift PR'. His previous PR was five plates (495) per 'Testing My Strength | 3 Months On TRT' (cl5eR81l9Pg, 2024-12-13, 1:41: 'my deadlift was four plates and then I did five plates'), so 495+50 = 545. He confirms the number in S__4PhSTxmk (2025-10-27, 6:53): 'Last time I did a PR with Hattie ... five and a half. Yeah, 545 ... I think that's my PR on deadlift' and (10:32) 'I did have a belt' (belt is allowed). Conventional."
+      }
+    ]
+  },
+  {
+    id: "togi",
+    name: "Togi",
+    sex: "m",
+    group: "creator",
+    bodyweightLb: 225,
+    bodyweightEstimated: true,
+    peak: "up to mid-2023, before his shoulder injury (~225 lb); best stated Aug 2024",
+    blurb: "Togi (real name Shane Stoffer), an American gym-prank, bodybuilding and gambling content creator who is open about steroid use.",
+    lifts: [
+      {
+        exercise: "Barbell Bench Press",
+        weightLb: 315,
+        reps: 2,
+        date: "2024-08-19",
+        bodyweightLb: 225,
+        bodyweightEstimated: true,
+        reported: true,
+        source: "https://www.youtube.com/watch?v=qdliGVlUwWc",
+        note: "Thinking with a Pump 'Chest Day W/ The Goggins of Gambling | Shane \"TOGI\" Stoffer' (Whisper transcript 8:06-8:26), Togi in his own words: 'In my life, the most I've ever benched is 315.' 'Single?' '...for two.' then 'I crunched my shoulder like a year ago ... just stopped [benching] heavy ... like 20 reps on everything now'. So it is his lifetime-best set, done before ~mid-2023; the exact date of the set is unknown, so the date is the upload date. Same clip is reposted as the short 'TOGI MAX BENCH PRESS' (DOtIa8HwHo4, 2024-08-23). A stated best, not a filmed set (same standard as Jeff Nippard's stated squat). Bodyweight: he says 'right now we're like 225' in his own 'PLANET FITNESS ALERT' (PthEOcjygeM, 2024-02-14, 5:13) and '230 pounds' in this video (2:43); 225 used."
       }
     ]
   }

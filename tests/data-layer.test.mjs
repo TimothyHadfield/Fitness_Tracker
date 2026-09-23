@@ -5925,8 +5925,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const lifts = figs.PUBLIC_FIGURES.flatMap((p) => p.lifts.map((l) => ({ p, l })));
     ok(lifts.every(({ l }) => libNames.has(l.exercise)),
        '🔒 every lift names an exercise that exists — an unknown name contributes NOTHING, silently');
-    ok(lifts.every(({ l }) => l.source && l.weightLb > 0 && l.reps >= 1 && l.reps <= 12),
-       '🚨 every lift is sourced, weighted, and in the rep range the estimator reads well');
+    // A body-weight lift may carry 0: the box is the ADDED load (store.js, 2026-09-13).
+    const { bodyWeightFractionFor } = await import('../js/exercises.js');
+    const libByName = new Map(LIB.map((e) => [e.name, e]));
+    ok(lifts.every(({ l }) => l.source && l.reps >= 1 && l.reps <= 12
+         && (l.weightLb > 0 || (l.weightLb === 0 && bodyWeightFractionFor(libByName.get(l.exercise))))),
+       '🚨 every lift is sourced, weighted (0 only as added load on a body-weight lift), and in the rep range the estimator reads well');
     ok(figs.PUBLIC_FIGURES.every((p) => p.bodyweightLb > 0),
        'every person has a bodyweight — the app cannot place a lift without one');
     ok(new Set(figs.PUBLIC_FIGURES.map((p) => p.id)).size === figs.PUBLIC_FIGURES.length,
