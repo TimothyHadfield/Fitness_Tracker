@@ -3016,25 +3016,61 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * guard: this drops rows from a per-exercise SEAT contest, not from the
    * evidence. If a count had moved, dominance would be costing the map real
    * training rather than removing a duplicate. */
+  /* 🔄 RE-BASELINED 2026-09-23 — EVERY SET COUNTS (Open work 10). Tim: "Rate
+   * from every set, not just your top one." The model changing on purpose, so
+   * every move is attributed. The demo year is byte-identical.
+   *
+   * What changed: each exercise's number is now its seat pooled with its other
+   * strong DAYS in the window (best-of-3 envelope, each day at 1/σ², light days
+   * priced by f_load against the seat, days below seat/(1+winsorK) and sets over
+   * 15 reps left out), and EVERY exercise joins the muscle blend, not the top 3
+   * — each capped at ONE reading's weight because its conversion error is
+   * shared by all its sets (see the comment above poolExercise()).
+   *
+   *   Back       179.71 -> 187.02  +4.1 %  Seated Cable Row joins as a 4th
+   *                                        exercise; the deadlift pools its other
+   *                                        heavy days
+   *   Biceps     108.86 -> 109.72  +0.8 %  second curl day pooled
+   *   Calves     257.48 -> 255.51  -0.8 %  a second calf-raise day at ~95 % of
+   *                                        the seat pools BELOW it — the honest
+   *                                        direction: one best day was the top
+   *                                        of the noise
+   *   Chest      224.69 -> 227.95  +1.5 %
+   *   Core       124.19 -> 124.19   0      one exercise, one strong day
+   *   Forearms   104.78 -> 105.23  +0.4 %  4th/5th exercises now count
+   *   Glutes     341.77 -> 353.40  +3.4 %  the real Deadlift 335x3, six weeks
+   *                                        old, pools at its TRUE date and its
+   *                                        own recency — not the fabricated date
+   *                                        the 2026-09-25 fix removed
+   *   Hamstrings 258.52 -> 261.59  +1.2 %
+   *   Neck        46.47 ->  46.47   0      one exercise, one strong day
+   *   Quads      284.77 -> 291.60  +2.4 %  squat pools its other heavy days
+   *   Shoulders  147.02 -> 146.88  -0.1 %  same as Calves, a near-top day below
+   *   Traps      300.79 -> 301.89  +0.4 %
+   *   Triceps    173.23 -> 178.45  +3.0 %  3rd/4th exercises now count
+   *
+   * Every move is under 5 %; ten rise, two fall slightly, two stay. ⚠️ EVERY
+   * CONFIDENCE AND EVERY COUNT IS UNCHANGED, on purpose: confidence still reads
+   * the three listed seats, so this change moves the NUMBER only. */
   const GOLDEN = [
-    ['Back', 720, 179.7075, 0.8078, 212, 4],
-    ['Biceps', 904, 108.8580, 0.7932, 125, 2],
-    ['Calves', 336, 257.4837, 0.9793, 84, 2],
-    ['Chest', 465, 224.6893, 0.9422, 130, 2],
+    ['Back', 720, 187.0230, 0.8078, 212, 4],
+    ['Biceps', 904, 109.7195, 0.7932, 125, 2],
+    ['Calves', 336, 255.5114, 0.9793, 84, 2],
+    ['Chest', 465, 227.9508, 0.9422, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
-    ['Forearms', 904, 104.7764, 0.5777, 273, 5],
-    ['Glutes', 630, 341.7694, 0.8587, 64, 1],
-    ['Hamstrings', 882, 258.5188, 0.8877, 146, 3],
+    ['Forearms', 904, 105.2254, 0.5777, 273, 5],
+    ['Glutes', 630, 353.4013, 0.8587, 64, 1],
+    ['Hamstrings', 882, 261.5929, 0.8877, 146, 3],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is
     // thin, not your training". That is `standardQuality` 0.4 doing exactly what
     // it is for, and it is the honest shape of a page whose Elite is 38.8x its
     // Beginner.
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
-    ['Quads', 571, 284.7679, 0.9456, 171, 4],
-    ['Shoulders', 1093, 147.0226, 0.7825, 192, 4],
-    ['Traps', 529, 300.7915, 0.5618, 148, 3],
-    ['Triceps', 1100, 173.2312, 0.5193, 125, 2],
+    ['Quads', 571, 291.5998, 0.9456, 171, 4],
+    ['Shoulders', 1093, 146.8835, 0.7825, 192, 4],
+    ['Traps', 529, 301.8867, 0.5618, 148, 3],
+    ['Triceps', 1100, 178.4461, 0.5193, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -3091,8 +3127,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      * 🔄 228.6592 → 262.4573 on 2026-09-25, +14.8 %, with the golden table again:
      * dominance stopped reading the seat short, so the calf's own longer sets
      * are worth what they prove. The biggest single move in the table, because
-     * calf work is trained at high reps and was losing the most to truncation. */
-    ok(near(asMan, 262.4573, 0.0001),
+     * calf work is trained at high reps and was losing the most to truncation.
+     * 🔄 262.4573 → 260.4849 on 2026-09-23, −0.75 %, with the golden table (every
+     * set counts): a second calf-raise day just under the seat now pools in. */
+    ok(near(asMan, 260.4849, 0.0001),
        `🚨 the app's own path — the demo lifter walked as the man he is (${asMan.toFixed(4)})`);
     ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
        `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
@@ -4088,6 +4126,95 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'and with a sex it uses that sex\'s medians rather than the mean of the two');
   }
 
+  /* ================= EVERY SET COUNTS — 2026-09-23, Open work 10 =================
+   *
+   * Tim: "Rate from every set, not just your top one." Each exercise used to
+   * speak through ONE seat and only the top three exercises set the number.
+   * Walked through the real pipeline (buildObservations, the app's own path, a
+   * man at 180 lb), because the per-day collapse and the ratios are part of
+   * what is being asserted. Fixture sizes are a real six weeks of training. */
+  {
+    const { buildObservations: walkObs } = await import('../js/strength-observations.js');
+    const exMap = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
+    const NOW = '2026-09-23';
+    const day = (n) => new Date(Date.UTC(2026, 8, 23) - n * 86400000).toISOString().slice(0, 10);
+    const entry = (name, sets) => ({ exerciseId: byName(name).id, exerciseName: name, sets });
+    const rate = (sessions) => me.rateMuscle(walkObs({ sessions, benchmarks: [], exMap,
+      bodyWeights: [{ date: '2026-01-01', weight: 180 }], today: NOW, sex: 'male' })
+      .byMuscle.get('Chest') || [], 'Chest');
+
+    /* A. 🚨 THE ASK: a 4th and 5th exercise, trained hard for six weeks, move the
+     *    rating. On the old code this read identically with or without them —
+     *    only the top three seats ever reached the number. */
+    {
+      const three = [], extra = [];
+      for (let w = 0; w < 6; w++) {
+        three.push({ date: day(3 + w * 7), entries: [
+          entry('Barbell Bench Press', [{ weight: 205, reps: 5 }, { weight: 205, reps: 5 }, { weight: 205, reps: 4 }]),
+          entry('Incline Barbell Bench Press', [{ weight: 165, reps: 6 }, { weight: 165, reps: 6 }]),
+          entry('Incline Dumbbell Bench Press', [{ weight: 70, reps: 8 }, { weight: 70, reps: 7 }]),
+        ] });
+        extra.push({ date: day(5 + w * 7), entries: [
+          entry('Machine Chest Press', [{ weight: 200, reps: 8 }, { weight: 200, reps: 8 }, { weight: 200, reps: 7 }]),
+          entry('Pec Deck', [{ weight: 180, reps: 10 }, { weight: 180, reps: 10 }, { weight: 180, reps: 9 }]),
+        ] });
+      }
+      const r3 = rate(three), r5 = rate([...three, ...extra]);
+      ok(r5.estimate > r3.estimate + 1,
+         `🚨 a 4th and 5th exercise with many strong sets now move the rating `
+         + `(${r3.estimate.toFixed(2)} -> ${r5.estimate.toFixed(2)})`);
+      ok(r5.used.length === 3 && r5.pooled.length === 5,
+         `the panel still lists the top three, while all five count (${r5.used.length} listed, `
+         + `${r5.pooled.length} pooled)`);
+      const listed = r5.used.reduce((a, u) => a + u.share, 0);
+      ok(listed < 0.999 && listed > 0.5,
+         `⚠️ and the listed shares are honest: they sum to less than 100 %, because the rest `
+         + `of the weight is the exercises not listed (${(listed * 100).toFixed(1)} %)`);
+    }
+
+    /* B. BACK-OFF SETS DO NOT DRAG THE RATING DOWN. Twenty lighter sets after
+     *    the top set, every week: the per-day collapse keeps one reading per
+     *    exercise-day, so they never reach the pool at all. */
+    {
+      const top = (d) => ({ date: day(d), entries: [entry('Barbell Bench Press', [{ weight: 225, reps: 5 }])] });
+      const topBack = (d) => ({ date: day(d), entries: [entry('Barbell Bench Press', [{ weight: 225, reps: 5 },
+        ...Array.from({ length: 20 }, (_, i) => ({ weight: 135 + (i % 4) * 10, reps: 10 - (i % 3) }))])] });
+      const alone = rate([top(2), top(9), top(16), top(23)]);
+      const backed = rate([topBack(2), topBack(9), topBack(16), topBack(23)]);
+      ok(near(backed.estimate, alone.estimate, 1e-9),
+         `🚨 twenty back-off sets a day leave the rating exactly where the top sets put it `
+         + `(${alone.estimate.toFixed(2)} both)`);
+    }
+
+    /* C. LIGHT DAYS DO NOT OUTVOTE A HEAVY ONE. One 225x5 a month ago, then
+     *    twenty days of 135x10 since: "not evidence that you got weaker; it is
+     *    simply not evidence". Far below the seat, they are not pooled. */
+    {
+      const heavy = { date: day(30), entries: [entry('Barbell Bench Press', [{ weight: 225, reps: 5 }])] };
+      const light = (d) => ({ date: day(d), entries: [entry('Barbell Bench Press', [{ weight: 135, reps: 10 }])] });
+      const alone = rate([heavy]);
+      const withLight = rate([heavy, ...Array.from({ length: 20 }, (_, i) => light(1 + i))]);
+      ok(near(withLight.estimate, alone.estimate, 1e-9) && withLight.used[0].weight === 225,
+         `🚨 twenty light days do not pull a heavy set down, and it still leads `
+         + `(${alone.estimate.toFixed(2)} -> ${withLight.estimate.toFixed(2)})`);
+    }
+
+    /* D. VOLUME IS NOT CERTAINTY. The ratio error is shared by every set of an
+     *    exercise, so forty days of one exercise weigh as ONE reading beside a
+     *    second exercise, not forty. Without the cap the machine press below
+     *    would own ~97 % of the number. */
+    {
+      const bench = { date: day(10), entries: [entry('Barbell Bench Press', [{ weight: 205, reps: 5 }])] };
+      const mc = (d) => ({ date: day(d), entries: [entry('Machine Chest Press', [{ weight: 200, reps: 8 }])] });
+      const once = rate([bench, mc(12)]);
+      const many = rate([bench, ...Array.from({ length: 40 }, (_, i) => mc(1 + 2 * i))]);
+      const shareOf = (r) => r.pooled.find((p) => p.exerciseName === 'Machine Chest Press').share;
+      ok(Math.abs(shareOf(many) - shareOf(once)) < 0.1,
+         `🚨 forty days of one exercise do not buy it the muscle — its share barely moves `
+         + `(${(shareOf(once) * 100).toFixed(1)} % -> ${(shareOf(many) * 100).toFixed(1)} %)`);
+    }
+  }
+
   /* ================= the 2026-09-13 rating rules =================
    *
    * Four changes to how one exercise's evidence is chosen, each of which used
@@ -4128,8 +4255,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      *    least from them — but a long set still leads when it is all there is. */
     {
       const withLow = me.rateMuscle([mk(2, 185, 12), mk(3, 205, 5)], 'Chest');
-      ok(near(withLow.estimate, e1rm(205, 5), 0.01),
+      /* 🔄 2026-09-23 (Open work 10): the SEAT is still the 5-rep set, and that
+       * is what this pins now. The NUMBER no longer equals the seat, because the
+       * 12-rep day is pooled beside it at its own precision (it sits above the
+       * seat, so f_load does not discount it) — it was asserted equal to the
+       * seat for as long as one set per exercise was all that counted. The
+       * low-rep preference survives as precision: the answer sits nearer the
+       * 5-rep reading than the 12-rep one. */
+      ok(withLow.used[0].reps === 5 && withLow.used[0].weight === 205,
          'a set at 8 reps or fewer takes the seat over a longer one on the same exercise');
+      const lo5 = e1rm(205, 5), hi12 = e1rm(185, 12);
+      ok(withLow.estimate > lo5 && withLow.estimate < hi12
+         && withLow.estimate - lo5 < hi12 - withLow.estimate,
+         `🆕 and the longer day now counts beside it, weighted nearer the 5-rep reading `
+         + `(${lo5.toFixed(1)} < ${withLow.estimate.toFixed(1)} < ${hi12.toFixed(1)})`);
       const longOnly = me.rateMuscle([mk(2, 185, 12)], 'Chest');
       ok(near(longOnly.estimate, e1rm(185, 12), 0.01),
          '⚠️ but a preference is not a gate: with nothing shorter, the long set still rates the muscle');
