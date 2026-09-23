@@ -34,3 +34,6 @@ package-lock.json
 # published, and a cache directory is not part of the app.
 __pycache__/
 *.pyc
+
+# Claude's test-account login and saved browser state. This repo is public.
+.claude/test/
