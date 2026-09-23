@@ -1,8 +1,10 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-27 (a SESSION date — the headings in these notes are a sequence, not the
-calendar; the system clock and git dates will differ). For Claude only; Tim doesn't read this.
+_Last updated 2026-09-21/22 — **the newest work in these files, despite the earlier number**: the
+headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
+system clock now reads 2026-09-22). Read `chat.md` bottom-up when the dates disagree; git is the
+tie-breaker. For Claude only; Tim doesn't read this.
 **Catch-up authorizes nothing**: only "Authorized next steps" below is approved work._
 1. Read this file (short on purpose — the full pre-2026-09-27 version, every essay and dated summary,
    is `docs/archive/progress-2026-09-27.md`; grep it, don't read it whole).
@@ -26,7 +28,7 @@ presets from Explore with update tracking, weekly/cycle plan boxes, restore for 
 Data (muscle map with 13 ranked groups incl. Calves/Neck/Core, Volume, Graph, Bars, Research) ·
 Profile (`#/me`: best lifts, body, goal, calendar, workouts as feed cards) · friends feed with
 kudos/comments, tappable "On your workouts" strip · friend profiles and the compare-bodies screen,
-now also against **26 famous lifters** · Goals · accounts (anonymous-first, Google, delete) · offline
+now also against **47 famous lifters** (213 lifts, re-researched 2026-09-21) · Goals · accounts (anonymous-first, Google, delete) · offline
 PWA with deploy notice · a temporary note-to-the-developer inbox (`#/notes`, take it out when the
 first users stop being new).
 
@@ -160,6 +162,12 @@ caption (their bodyweight isn't on this phone).
   what the real one refuses and assert that against the data.
 - **Doc byte budgets are a test** (data-layer): progress 160 KB, handbook 220 KB, state 160 KB,
   chat 220 KB. **The handbook is at ~219 KB — collapse before adding.** Never raise a number.
+- **A research wave shares ONE web-search budget (200) across the whole session, and it runs out**
+  (2026-09-21: six agents, four of them starved mid-job). Order the groups by what matters most, and
+  expect the last ones to fall back to fetching known sites directly. **YouTube blocked caption
+  downloads for hours** that same session, which is why Togi, Alex Eubank, Noel Deyzel, Whitney
+  Simmons and Krissy Cela are still unsourced (Open work 34) — their numbers are only spoken aloud.
+  **A weekly usage limit killed one agent outright**; its people simply kept their old data.
 - **Sub-agent rules:** disjoint named file sets (nobody near `css/app.css` or `tests/` unless it's
   theirs; one agent owns `tests/`); agents never commit or run tree-changing git; name the session
   date and a scratch path of their own in every brief; "proposed tests" ≠ run tests; after any agent
@@ -236,15 +244,21 @@ can check._
 - `js/views-*.js` · screens; `js/views-session.js` is the runner, `views-social.js` the friends/compare.
 - `js/muscle-evidence.js` · ratios, confidence, the blend (read before touching ranking).
 - `js/set-reps.js` · rep prescriptions — stored `{lo, hi}` (§0.22). `js/set-targets.js` · % of max.
-- `js/workout-card.js` · the shared feed/profile card. `js/public-figures.js` · famous lifters,
-  GENERATED from research — correct a number only against its cited source.
+- `js/workout-card.js` · the shared feed/profile card. `js/public-figures.js` · 47 famous lifters,
+  GENERATED from research — correct a number only against its cited source. Each person is one PEAK
+  window (`peak`), each lift its own weigh-in (`bodyweightLb`) and a `note` saying why it is in;
+  regenerate by merging per-group research JSON, never by hand-editing 213 entries.
 - `tools/live-check.mjs` · the only thing that writes to the LIVE project (`--yes-write-to-live`, §0.16).
 - `docs/handbook.md` · how to work · `docs/state.md` · what the app does · `docs/direction.md` · what
   Tim wants (overrules) · `docs/history.md` · dated log · `docs/archive/` · old progress snapshots ·
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
 - **Tests:** `node tests/<name>.test.mjs` for each of 23 no-Chrome suites (needs `npm i --no-save jsdom
   jsqr`); `rules` needs the emulator + Temurin 21; `sw-update` needs Chrome — 25 files in all. **Last
-  run 2026-09-27: 23 suites, 6,371 assertions, 0 failures** (earlier notes said "24"; that was wrong).
+  run 2026-09-21 (this session): 23 suites, 6,372 assertions, 0 failures** (earlier notes said "24"
+  suites; that was wrong). All of them at once, printing only failures (PowerShell):
+  `Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs' } | % { $o
+  = node $_.FullName 2>&1 | Out-String; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; if($f){
+  "$($_.Name): $f FAIL" } }`
 - **Live:** https://timothyhadfield.github.io/Fitness_Tracker/ · GitHub Pages from `main` (deploy =
   push; ~45 s) · Firebase project `fitness-tracker-th` · run locally `python -m http.server 8765`
   (ES modules don't load over `file://`).
