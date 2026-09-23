@@ -81,6 +81,12 @@ caption (their bodyweight isn't on this phone).
   you've ran out of things then let me know what steps you want to talk to me about before working."*
   Covers fixes that need no decision of his (Open work 11's friend-panel benchmark, `ensureSystems()`
   stamping onto a copied preset). NOT the re-baselines (10, 13) or anything on his "his word" list.
+- **2026-09-23, Tim's answers** (to: untouched sets / every-set rating / level-aware ratios / three
+  wording calls): *"1. last numbers should count, since they might intentionally not touch it if it
+  was the same as last time. 2. Do it. 3. If you think it's good, do it. 4. whatever you think for
+  all"* → Open work 15 + 7: untouched prefilled sets COUNT · Open work 10: blend every set (its own
+  commit, re-baseline) · Open work 13: level-aware ratios (separate later commit) · Open work 3/4/5:
+  my call.
 
 ## Standing instructions (Tim's words)
 - **Message length** (2026-09-27): *"Never give me messages that long. Always 2-3 paragraphs max
