@@ -3674,10 +3674,10 @@ export async function SessionView(workoutId) {
           // numbers should count, since they might intentionally not touch it
           // if it was the same as last time."* A prescribed set accepted as it
           // stands is a set done as prescribed, like last time's numbers
-          // (Open work 15). It still needs a real number: `hasNumbers` below.
-          // The derived opening guess (no `fromPlan`) is still refused.
-          .filter((s) => setIsRecorded(s, e.fields)
-            || (s.prefilled && s.fromPlan && hasNumbers(s, e.fields)))
+          // (Open work 15). `setIsRecorded` carries that exception, so every
+          // count on screen agrees with this filter. The derived opening guess
+          // (no `fromPlan`) is still refused.
+          .filter((s) => setIsRecorded(s, e.fields))
           .map((s) => {
             const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields));
             const out = { ...s };

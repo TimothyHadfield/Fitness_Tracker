@@ -111,9 +111,15 @@ export function hasNumbers(set, fields) {
  * it. Everything else in this app treats "has a number" as "was performed",
  * which is true of a number somebody typed and false of one the app worked out
  * for them.
+ *
+ * 🆕 2026-09-23 — EXCEPT THE PLAN'S NUMBERS (`fromPlan`). Tim: *"last numbers
+ * should count, since they might intentionally not touch it if it was the same
+ * as last time."* A prescribed set accepted as it stands was done as
+ * prescribed. Here rather than only in the save filter, so the save screen's
+ * count and the discard warnings quote the same rule the save keeps.
  */
 export function setIsRecorded(set, fields) {
-  return !set.prefilled
+  return (!set.prefilled || Boolean(set.fromPlan))
     && (hasNumbers(set, fields) || minisOf(set).some((d) => hasNumbers(d, fields)));
 }
 

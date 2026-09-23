@@ -8848,6 +8848,9 @@ ok(!data.querySelector('.rep-target'),
     name: 'Curl percent', systemId: null,
     exercises: [{ exerciseId: tgtCurl.id, sets: 2, targets: [80, 80] }],
   });
+  // Since 2026-09-23 the untouched bench plan above is three RECORDED sets, so opening another
+  // workout over it asks before discarding them. Put it down, as a lifter who moved on would.
+  (await import(BASE + 'session-draft.js')).clearDraft();
   const tgtNoMaxRun = await mount(SessionView(tgtNoMax.id));
   for (let i = 0; i < 6; i++) await settle();
   const tgtNt = text(tgtNoMaxRun);
@@ -8866,6 +8869,7 @@ ok(!data.querySelector('.rep-target'),
   await store.saveSession({ workoutId: tgtBw.id, workoutName: 'Pull percent', date: '2026-08-20',
     entries: [{ exerciseId: tgtPullUp.id, exerciseName: tgtPullUp.name, sets: [{ weight: 25, reps: 5 }] }] });
   await store.logBodyWeight(180, '2026-08-20');
+  (await import(BASE + 'session-draft.js')).clearDraft();
   const tgtBwRun = await mount(SessionView(tgtBw.id));
   for (let i = 0; i < 6; i++) await settle();
   ok(/Plan asks for 75 %/.test(text(tgtBwRun)) && /own body weight is part of/i.test(text(tgtBwRun)),
@@ -9249,6 +9253,23 @@ ok(!data.querySelector('.rep-target'),
      + '"direct" and not a new one');
 
   await store.clearAll();
+}
+
+/* ---- every count quotes the save rule: an untouched PLAN set is recorded (2026-09-23) ----
+ * The save kept it, while the save screen's count and the discard warnings (draftRecordedSets)
+ * still called it nothing — "0 sets" over a workout about to save three. */
+{
+  const { setIsRecorded, draftRecordedSets } = await import(BASE + 'session-draft.js');
+  const F = ['weight', 'reps'];
+  ok(setIsRecorded({ weight: 135, reps: 8, prefilled: true, fromPlan: true }, F),
+     '🚨 an untouched set holding the plan\'s numbers counts as recorded');
+  ok(!setIsRecorded({ weight: 95, reps: 8, prefilled: true }, F),
+     'the app\'s own derived opening guess still does not');
+  ok(!setIsRecorded({ weight: 0, reps: 0, prefilled: true, fromPlan: true }, F),
+     'and a plan set with no numbers in it does not');
+  ok(draftRecordedSets({ entries: [{ fields: F, sets: [
+    { weight: 135, reps: 8, prefilled: true, fromPlan: true }, { weight: 135, reps: 8 }] }] }) === 2,
+     'the discard warning counts both sets the save would keep');
 }
 
 /* ---- a friend's empty muscle does not offer YOU a benchmark (Open work 11, 2026-09-23) ----
