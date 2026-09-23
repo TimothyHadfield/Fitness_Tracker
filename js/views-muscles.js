@@ -1166,7 +1166,7 @@ export function musclePanel(m, muscle, profile, blocked, moreDetails, trained) {
   return detail(m, muscle, profile, blocked, moreDetails, trained);
 }
 
-function detail(m, muscle, profile, blocked, moreDetails, trained) {
+function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
   if (!m) {
     const lift = keyLiftFor(muscle);
     const note = blockedNote(blocked);
@@ -1215,6 +1215,7 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
   }
 
   const pct = Math.round(m.percentile);
+  const freshText = profile?.whose === 'their' ? null : freshnessLine(muscle, recentDays);
 
   /* ================================================================== *
    * WHERE THE NUMBER CAME FROM — a table, since 2026-09-21
@@ -1531,6 +1532,10 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
       : el('div', { class: 'muscle-meta', text: 'Top level reached.' }),
 
     el('div', { class: 'muscle-meta', text: confidenceLine(m) }),
+
+    /* Freshness (wired 2026-09-23; Tim: "whatever you think for all"). Your own map only:
+       `musclePanel()` hands in no recent work, and a friend's body has none to hand. */
+    freshText ? el('div', { class: 'muscle-meta', text: freshText }) : null,
 
     /* The source table, the sentence that says which of its columns are recorded, and the
      * button that opens the two derived ones. All three are built above `return`, because the
