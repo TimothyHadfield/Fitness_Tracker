@@ -815,3 +815,14 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Open:** Deyzel, Swoll, Cela, Cummings unsourced; Simmons lacks a bodyweight; accessory pass found
   nothing for six women. YouTube IP-blocked captions mid-wave — retry with ONE paced agent. Leads in
   `docs/history.md` 2026-09-22.
+
+## 2026-09-23 · "keep working on whatever should definitely be done"
+- **Asked:** *"just keep working on whatever you feel like should definently be done. Once you've ran
+  out of things then let me know what steps you want to talk to me about before working."*
+- **Built:** a friend's/famous lifter's empty muscle no longer offers the reader a benchmark (Open work
+  11) · `ensureSystems()` never files an orphan workout into a copied preset · `tools/live-check.mjs` S4
+  runs the real Delete account on a throwaway live account.
+- **Verified how:** both new tests failed on the unfixed code first; 23 suites 0 failures; live-check
+  45/45 against fitness-tracker-th with SDK 10.12.2 (`--sdk=$TEMP/fbsdk`).
+- **Open:** YouTube still blocked (famous-lifter retry waits) · Tim's decisions: Open work 15 + 7
+  (untouched sets), 10 then 13 (re-baselines), 3/4/5 (screen wording).
