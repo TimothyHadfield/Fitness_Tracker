@@ -38,18 +38,18 @@ first users stop being new).
 |---|---|---|
 | 1 | Typo quarantine is muscle-wide: a genuine first heavy test on a lightly-worked muscle is held one session (kept at 1.99×, set aside at 2.01×) | a decision — the error runs both ways |
 | 2 | Fall limit: the 84-day window shipped; wiring `estimateAt()` would smooth it but moves every rating | a decision + re-baseline |
-| 3 | The muscle panel's freshness note has NEVER rendered — `freshnessLine()` has no caller | his word (new sentence on a screen) |
-| 4 | Data tab's "Estimates above 15 reps are unreliable." is unreachable (`MAX_TARGET_REPS = 15`) | his word: delete or lower |
-| 5 | Goals prints `+N %` from the frozen `gainPct`, can disagree with a re-frozen target | his word |
+| 3 | ✅ closed 2026-09-23 — wired: own rated panel shows "Trained today — a reading today usually comes in a little low." (never on a friend's) | — |
+| 4 | ✅ closed 2026-09-23 — the unreachable 15-rep caption and its ? are deleted | — |
+| 5 | ✅ closed 2026-09-23 — Goals % is derived from the start/target on screen (`gainPct` only a fallback); the ambition name stays frozen, so "Steady +11%" can read | — |
 | 6 | An ordinary lifter flaps MORE than one on a level boundary (0.75 vs 0.19), contrary to the comment | an answer, not a fix |
-| 7 | A set with a prescribed weight is `prefilled`, so accepting weight AND reps untouched drops it at save | his word: leave, warn, or count "moved on from" |
+| 7 | ✅ closed 2026-09-23 — a plan set carries `fromPlan`; `setIsRecorded()` (session-draft.js) counts it untouched, so save, save-screen count and discard warnings agree. Opening another workout over an untouched plan draft now asks first | — |
 | 8 | Benchmark workouts in a separate programme no longer appear on Record; the switcher has no "look without switching" | his word |
 | 9 | Should a high-rep set count as a floor ("at LEAST 131")? Reverses the fatigue-plan §4 refusal | his word — only as a separate "at least X" reading |
-| 10 | The rating rests on ONE set per exercise, top three; blending every set at its own precision is the biggest accuracy lever | his go-ahead (re-baseline) |
+| 10 | ✅ closed 2026-09-23 (f29164f) — every exercise pools its top 3 days (`poolExercise()`), weight capped at one reading per exercise (shared ratio error), days below seat/(1+winsorK) excluded. Demo moves ≤ +4.1 % (Back); Calves −0.8 %. Confidence still reads the 3 listed rows; listed shares can sum < 100 % | — |
 | 11 | ✅ closed 2026-09-23 (a `whose: 'their'` panel offers no benchmark button) | — |
 | 12 | ✅ closed (neck ranks) | — |
 | 13 | Conversion ratios are level-blind (machine press ÷ OHP runs 0.89→1.44 by level; the app uses 1.23). Percentile matching from `tools/strength-level-data.mjs` fixes it | his go-ahead (second re-baseline, never in the same commit as 10) |
-| 15 | **Open work 15** — history-prefilled sets carry no `prefilled` flag, so an untouched exercise with history saves last time's numbers as done. Swap no longer relies on it (2026-09-27), SAVE still does | his decision |
+| 15 | ✅ closed 2026-09-23 — Tim: untouched last-time numbers COUNT (the existing behaviour, now pinned by a test) | — |
 | 0c | Should warm-ups be typed by the lifter (Hevy's `W`)? Every recorded set counts until then | his decision |
 | — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
 | 32 | The app never states its logging conventions where you log (machine weight excluded; a lunge rep = one step per leg) | his word (screen text) |
