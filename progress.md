@@ -216,8 +216,12 @@ can check._
   describe any estimate as accurate.
 - The 2026-09-27 race fixes (`writeGeneration` in `store.js`; `ensureSystems()` re-read) are reasoned,
   not asserted — the window is zero on `LocalBackend` and seconds on Firestore.
-- "Delete account" (`createAccountPurge()`) has never run against real Firestore — the last large
-  network path in that state; it deletes accounts, so not a spare-half-hour job.
+- ~~"Delete account" never ran against real Firestore~~ — **ran 2026-09-23**: `tools/live-check.mjs`
+  S4 deletes a throwaway account through `FirebaseBackend.deleteAccount()` on the live project
+  (45/45: all 10 collections + shared docs gone, the purge's own re-read clean, a second account's
+  session untouched). Not run: an email/password account's re-auth path, or a Google-linked one.
+  A crashed first run's docs under `users/nTwoaNKNBoYweqmYvamBo0ediSA3` were deleted by path (the
+  guard refuses `--recursive`); two orphaned ANONYMOUS auth users may remain (no data; harmless).
 - File import has never parsed a real export from any service.
 - No preset has been version-bumped for real; the stamped update path has only run in tests.
 - The live read pattern (Open work 26) was measured on 3–4 sessions, not a training history.

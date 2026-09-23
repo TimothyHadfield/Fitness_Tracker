@@ -375,20 +375,45 @@ try {
   await denied('dropping them from viewers closes the friends document',
     () => getDoc(sharedRef(uidA, 'friends')));
 
-  section('S4 — cleanup');
-  await FirebaseBackend.unpublishShared('friends');
-  await FirebaseBackend.unpublishShared('public');
-  check('the published documents are gone',
-    (await FirebaseBackend.readShared(uidA, 'friends')) === null
-    && (await FirebaseBackend.readShared(uidA, 'public')) === null);
-  const left = await FirebaseBackend.read('sessions');
-  await FirebaseBackend.write('sessions', [], { wholesale: true });
-  const after = await FirebaseBackend.read('sessions');
-  check('every session document is deleted', after.length === 0, `was ${left.length}`);
+  /* ================================================================
+   * S4 — "DELETE ACCOUNT", THE SHIPPED PATH (2026-09-23). `deleteAccount()`
+   * had only ever run against the in-memory double. Account A still holds its
+   * sessions and both published documents from S1–S3; a legacy whole-list
+   * document and a second account's own training are added so the purge has
+   * every shape to remove, and something it must NOT touch.
+   * ================================================================ */
+  section('S4 — delete account A through FirebaseBackend.deleteAccount()');
+  const fs = await import('node:fs');
+  const COLLECTIONS = [...fs.readFileSync(path.join(ROOT, 'js', 'store.js'), 'utf8')
+    .match(/const COLLECTIONS = \[([^\]]*)\]/)[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  await allowed('a legacy whole-list document (workouts) is written',
+    () => FirebaseBackend.write('workouts', [{ id: 'w1', name: 'Push', exercises: [] }]));
+  await allowed('the public document is republished',
+    () => FirebaseBackend.publishShared('public', publicDoc));
+  const bSession = doc(dbB, 'users', uidB, 'sessions', 'b1');
+  await allowed('account B saves a session of its own',
+    () => setDoc(bSession, { row: session('b1', '2026-09-05'), updatedAt: serverTimestamp() }));
+  check('account A has data in place before the delete',
+    (await FirebaseBackend.read('sessions')).length > 0
+    && (await FirebaseBackend.readShared(uidA, 'public')) !== null);
 
+  const purgedUid = uidA;
+  let delErr = null;
+  try { await FirebaseBackend.deleteAccount(null, COLLECTIONS); } catch (err) { delErr = err; }
+  check('deleteAccount() completes — its own re-read found nothing left behind',
+    delErr === null, delErr ? delErr.message : `${COLLECTIONS.length} collections`);
+  uidA = FirebaseBackend.currentUid();
+  check('it leaves a fresh anonymous account so the app still runs',
+    !!uidA && uidA !== purgedUid, `new uid ${uidA}`);
+  check('the old account\'s public page is gone for everybody',
+    (await FirebaseBackend.readShared(purgedUid, 'public')) === null);
+  check('another account\'s training is untouched', (await getDoc(bSession)).exists());
+
+  section('S5 — cleanup');
+  await deleteDoc(bSession);
   await deleteUser(authB.currentUser);
   await deleteUser(getAuth().currentUser);
-  check('both throwaway accounts are deleted',
+  check('the remaining throwaway accounts are deleted',
     getAuth().currentUser === null && authB.currentUser === null);
 } catch (err) {
   console.log('\n!! live-check threw:', err && err.stack ? err.stack : err);
