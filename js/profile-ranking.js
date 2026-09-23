@@ -169,7 +169,7 @@
 
 import { bestLifts } from './profile-records.js';
 import { estimateOneRM } from './exercise-estimate.js';
-import { contributionsFor, confidenceBand, repFactor } from './muscle-evidence.js';
+import { contributionsFor, confidenceBand, repFactor, toKeyLift } from './muscle-evidence.js';
 import {
   MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, withAssumptions,
 } from './strength-standards.js';
@@ -315,8 +315,14 @@ function rowFor(exercise, rec, ctx, muscle) {
     row.shown = own.value;
     row.source = 'recorded';
     row.from = [name];
+    // ⚠️ A plain lift's `own.bodyWeight` is empty, and since 2026-09-23 the
+    // weigh-in also places a level curve on the right-sized population — so it
+    // borrows the latest one, as the converted branch below always has. A
+    // body-weight lift keeps ONLY its own set's weigh-in: that one is part of
+    // its load, and borrowing today's would re-price last year's pull-ups.
+    const curveBw = own.bodyWeight || (exercise && !bodyWeightFractionFor(exercise) ? bodyWeight : undefined);
     const via = exercise
-      ? ratioFor(exercise, { sex, bodyWeight: own.bodyWeight, bodyWeightQuality: own.bodyWeightQuality })
+      ? ratioFor(exercise, { sex, bodyWeight: curveBw, bodyWeightQuality: own.bodyWeightQuality })
       : null;
     if (via) {
       row.muscle = via.muscle;
@@ -325,7 +331,9 @@ function rowFor(exercise, rec, ctx, muscle) {
       // 1.00 × 1.00; a machine at twelve reps is 0.35 × 0.45. On a pull-up the
       // ratio's quality already carries the fraction's and the weigh-in's.
       row.confidence = Math.max(0, Math.min(1, repFactor(own.reps) * via.quality));
-      row.percentile = percentileFor(own.total / via.ratio, via.muscle, ranked);
+      // 🔄 2026-09-23: `toKeyLift()` — `own.total / via.ratio` unless the lift
+      // has a published level curve (percentile matching, muscle-evidence.js).
+      row.percentile = percentileFor(toKeyLift(via, own.total), via.muscle, ranked);
       row.level = row.percentile === null ? null : levelFor(row.percentile);
       if (row.percentile === null) row.why = 'no-standard';
     } else {

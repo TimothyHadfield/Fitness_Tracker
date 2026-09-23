@@ -29,7 +29,7 @@
 // MAX_MAP_REPS in e1rm.js — read it before adding a second importer.
 import { isMapRankableSet, MAX_EVIDENCE_REPS, MAX_MAP_REPS, e1rm, bodyWeightOn } from './e1rm.js';
 import { setE1rm } from './set-e1rm.js';
-import { contributionsFor, rankBlockedReason, fatigueFactor } from './muscle-evidence.js';
+import { contributionsFor, rankBlockedReason, fatigueFactor, toKeyLift } from './muscle-evidence.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
 import { volumeContributions } from './volume-map.js';
 
@@ -278,7 +278,11 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
       // own session and has nothing in front of it.
       const priorVolume = (priorByMuscle && priorByMuscle.get(c.muscle)) || 0;
       byMuscle.get(c.muscle).push({
-        estimate: raw / c.ratio,
+        // 🔄 2026-09-23: through `toKeyLift()`, which is `raw / c.ratio` exactly
+        // unless the exercise has a published level curve — then the ratio for
+        // THIS lifter's level (percentile matching, muscle-evidence.js).
+        estimate: toKeyLift(c, raw),
+        levelMatched: Boolean(c.level),
         rawE1rm: raw,
         quality: c.quality,
         kind: c.kind,

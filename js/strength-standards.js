@@ -112,7 +112,9 @@ const Z = {
   5: -1.6448536269514722, 20: -0.8416212335729143,
   80: 0.8416212335729143, 95: 1.6448536269514722,
 };
-function fitSigma(anchors) {
+// Exported 2026-09-23 so the level-aware conversions in muscle-evidence.js fit
+// a non-key exercise's published row with THIS function rather than a copy.
+export function fitSigma(anchors) {
   const [p5, p20, p50, p80, p95] = anchors;
   const s = (w, z) => Math.log(w / p50) / z;
   return {

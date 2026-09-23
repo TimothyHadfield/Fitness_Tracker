@@ -3052,25 +3052,56 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * Every move is under 5 %; ten rise, two fall slightly, two stay. ⚠️ EVERY
    * CONFIDENCE AND EVERY COUNT IS UNCHANGED, on purpose: confidence still reads
    * the three listed seats, so this change moves the NUMBER only. */
+  /* 🔄 RE-BASELINED 2026-09-23, SEPARATELY — LEVEL-AWARE CONVERSIONS (Open work
+   * 13). Tim: "How one lift translates to another … changes a lot between
+   * beginners and advanced lifters, and the app uses one fixed number." A
+   * converted reading is now percentile-matched (muscle-evidence.js,
+   * `toKeyLift()`), and a matched reading drops its ratio-drift σ, which was the
+   * price of the fixed ratio. Kept out of the every-set commit on purpose so each
+   * move below has one cause. Split by re-running with each half switched off:
+   *
+   *   Back       187.02 -> 190.45  +1.8 %  conversion: the lat pulldown converts
+   *                                        at 0.96-1.00 where the median's was
+   *                                        1.005 (σ alone is +0.1 %)
+   *   Biceps     109.72 -> 110.75  +0.9 %  conversion: hammer curl 1.04 -> ~1.01
+   *   Calves     255.51 -> 255.59  +0.03 % seated calf's row is nearly flat
+   *   Chest      227.95 -> 228.25  +0.1 %  incline dumbbell press, also flat
+   *   Hamstrings 261.59 -> 261.14  -0.2 %  two leg curls, near the median
+   *   Quads      291.60 -> 287.27  -1.5 %  σ: leg press, split squat and leg
+   *                                        extension shed drifts of 0.08-0.13 and
+   *                                        weigh more; they read under the squat
+   *   Shoulders  146.88 -> 142.32  -3.1 %  σ, the biggest move: lateral raise and
+   *                                        face pull shed drifts of 0.13-0.14; the
+   *                                        conversion alone is -0.3 %
+   *   Triceps    178.45 -> 182.03  +2.0 %  both: pushdown converts at 0.51-0.60
+   *                                        where 0.61 was the median's
+   *   Core, Forearms, Glutes, Neck, Traps   0    nothing matched (key lifts and
+   *                                        cross-muscle fallbacks keep their hop)
+   *
+   * ⚠️ CONFIDENCE MOVES THIS TIME, BECAUSE AGREEMENT DOES: Triceps 0.519 -> 0.576
+   * (its two exercises now agree more), Biceps and Shoulders up, Back and Quads
+   * down slightly. Holding σ fixed moves none of them, so it is the estimates
+   * agreeing, not the σ change. Every observation and contributor count is
+   * unchanged — this converts the same sets differently, it admits none. */
   const GOLDEN = [
-    ['Back', 720, 187.0230, 0.8078, 212, 4],
-    ['Biceps', 904, 109.7195, 0.7932, 125, 2],
-    ['Calves', 336, 255.5114, 0.9793, 84, 2],
-    ['Chest', 465, 227.9508, 0.9422, 130, 2],
+    ['Back', 720, 190.4488, 0.7899, 212, 4],
+    ['Biceps', 904, 110.7546, 0.8049, 125, 2],
+    ['Calves', 336, 255.5901, 0.9793, 84, 2],
+    ['Chest', 465, 228.2494, 0.9450, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
     ['Forearms', 904, 105.2254, 0.5777, 273, 5],
     ['Glutes', 630, 353.4013, 0.8587, 64, 1],
-    ['Hamstrings', 882, 261.5929, 0.8877, 146, 3],
+    ['Hamstrings', 882, 261.1418, 0.8954, 146, 3],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is
     // thin, not your training". That is `standardQuality` 0.4 doing exactly what
     // it is for, and it is the honest shape of a page whose Elite is 38.8x its
     // Beginner.
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
-    ['Quads', 571, 291.5998, 0.9456, 171, 4],
-    ['Shoulders', 1093, 146.8835, 0.7825, 192, 4],
+    ['Quads', 571, 287.2657, 0.9424, 171, 4],
+    ['Shoulders', 1093, 142.3222, 0.7976, 192, 4],
     ['Traps', 529, 301.8867, 0.5618, 148, 3],
-    ['Triceps', 1100, 178.4461, 0.5193, 125, 2],
+    ['Triceps', 1100, 182.0321, 0.5761, 125, 2],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -3129,8 +3160,10 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      * are worth what they prove. The biggest single move in the table, because
      * calf work is trained at high reps and was losing the most to truncation.
      * 🔄 262.4573 → 260.4849 on 2026-09-23, −0.75 %, with the golden table (every
-     * set counts): a second calf-raise day just under the seat now pools in. */
-    ok(near(asMan, 260.4849, 0.0001),
+     * set counts): a second calf-raise day just under the seat now pools in.
+     * 🔄 260.4849 → 261.1037 on 2026-09-23, +0.24 %, with the golden table
+     * (level-aware conversions): the seated calf raise matched on the men's row. */
+    ok(near(asMan, 261.1037, 0.0001),
        `🚨 the app's own path — the demo lifter walked as the man he is (${asMan.toFixed(4)})`);
     ok(!near(asMan, noSex, 0.0001) && !near(asWoman, noSex, 0.0001) && asWoman < noSex,
        `⚠️ and the three paths genuinely differ — male ${asMan.toFixed(2)}, no sex `
@@ -6662,6 +6695,133 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 }
 
 
+/* ============ LEVEL-AWARE CONVERSIONS — PERCENTILE MATCHING (2026-09-23) ============
+ *
+ * Open work 13. Tim: *"How one lift translates to another (like machine press to
+ * overhead press) changes a lot between beginners and advanced lifters, and the
+ * app uses one fixed number."* Machine shoulder press ÷ overhead press is
+ * 0.89 · 1.08 · 1.23 · 1.35 · 1.44 by level on Strength Level's own rows; the app
+ * applied 1.23 to everybody.
+ *
+ * 🚨 WALKED THROUGH `buildObservations()`, THE APP'S OWN PATH, so the first two
+ * assertions fail on the fixed-ratio code rather than on a missing export: before
+ * this change Tim's 55 × 9 read 66 lb of overhead press (under the published
+ * Beginner mark of 75) and a novice and an elite machine press converted at the
+ * identical 1.23.
+ * ================================================================================== */
+{
+  const { buildObservations } = await import('../js/strength-observations.js');
+  const me = await import('../js/muscle-evidence.js');
+  const { MUSCLE_LIFTS, percentileFor } = await import('../js/strength-standards.js');
+  const { EXERCISE_STANDARDS } = await import('../js/exercise-standards.js');
+  const { BUILT_IN_EXERCISES: LIB } = await import('../js/exercises.js');
+  const exMapL = new Map(LIB.map((e) => [e.id, e]));
+  const lib = (n) => LIB.find((e) => e.name === n);
+  const machine = lib('Machine Shoulder Press');
+  const walk = (name, sets, sex = 'male', bodyWeights = []) => {
+    const ex = lib(name);
+    const built = buildObservations({
+      sessions: sets.map(([weight, reps], i) => ({
+        workoutId: 'w', workoutName: 'W', date: `2026-09-${String(10 + i).padStart(2, '0')}`,
+        entries: [{ exerciseId: ex.id, exerciseName: ex.name, sets: [{ weight, reps }] }],
+      })),
+      benchmarks: [], exMap: exMapL, bodyWeights, today: '2026-09-23', sex,
+    });
+    return built.byMuscle;
+  };
+  const ohpBeginner = MUSCLE_LIFTS.Shoulders.anchors.male[0];       // 75
+  const machineBeginner = EXERCISE_STANDARDS.get('Machine Shoulder Press').m[0];  // 67
+
+  /* ---- 🚨 TIM'S OWN SET: the contradiction is gone ---- */
+  {
+    const [o] = walk('Machine Shoulder Press', [[55, 9]]).get('Shoulders');
+    ok(o.rawE1rm > machineBeginner,
+       `(the premise) his 55 × 9 is a ${o.rawE1rm.toFixed(1)} lb machine max, above the published `
+       + `Beginner machine mark of ${machineBeginner}`);
+    ok(o.estimate >= ohpBeginner,
+       `🚨 AND IT NOW CONVERTS TO ${o.estimate.toFixed(1)} lb OF OVERHEAD PRESS — at or above the `
+       + `published Beginner overhead mark (${ohpBeginner}). At the fixed 1.23 it read `
+       + `${(o.rawE1rm / 1.23).toFixed(1)}: above Beginner on one page, below it on the other`);
+    ok(o.levelMatched === true && o.ratio === 1.23,
+       'the observation says it was level-matched, and still carries the table’s own ratio for reference');
+  }
+
+  /* ---- 🚨 a novice and an elite machine press convert at DIFFERENT ratios ---- */
+  {
+    const [nov] = walk('Machine Shoulder Press', [[112, 1]]).get('Shoulders');
+    const [eli] = walk('Machine Shoulder Press', [[325, 1]]).get('Shoulders');
+    const rN = nov.rawE1rm / nov.estimate, rE = eli.rawE1rm / eli.estimate;
+    ok(rE - rN > 0.3,
+       `🚨 the novice mark converts at ${rN.toFixed(3)} and the elite mark at ${rE.toFixed(3)} — the `
+       + 'published 1.08 → 1.44 drift, not one number for both');
+    ok(near(rN, 1.08, 0.03) && near(rE, 1.44, 0.03),
+       'and each lands within 0.03 of the ratio Strength Level’s own rows give at that level');
+  }
+
+  /* ---- the median lifter does not move, and the percentile is the SAME on both pages ---- */
+  {
+    const c = me.contributionsFor(machine, { sex: 'male' }).find((x) => x.muscle === 'Shoulders');
+    const med = MUSCLE_LIFTS.Shoulders.median.male;
+    ok(near(me.toKeyLift(c, 1.23 * med), med, 1e-9),
+       '🔒 at the median the conversion IS the table’s 1.23 — only the tails move');
+    const prof = { gender: 'male', bodyWeight: 180, compare: { age: 'any' } };
+    const pcts = EXERCISE_STANDARDS.get('Machine Shoulder Press').m
+      .map((x) => percentileFor(me.toKeyLift(c, x), 'Shoulders', prof));
+    const want = [5, 20, 50, 80, 95];
+    ok(pcts.every((p, i) => Math.abs(p - want[i]) < 3),
+       `🚨 each published machine anchor converts to an overhead press at that anchor’s own `
+       + `percentile (${pcts.map((p) => p.toFixed(1)).join(' / ')} against 5 / 20 / 50 / 80 / 95) — `
+       + 'one lifter, one verdict on both pages');
+    const r400 = 400 / me.toKeyLift(c, 400), r600 = 600 / me.toKeyLift(c, 600);
+    ok(near(r400, r600, 1e-9),
+       '🛑 past Elite the ratio stops moving: the drift was never measured out there, so it is held, '
+       + 'not extrapolated');
+  }
+
+  /* ---- the inverse is exact, with a sex and without one ---- */
+  {
+    for (const sex of ['male', 'female', undefined]) {
+      for (const bw of [undefined, 150, 230]) {
+        const c = me.contributionsFor(machine, { sex, bodyWeight: bw }).find((x) => x.muscle === 'Shoulders');
+        const bad = [30, 81.4, 172, 325, 700].find((x) => !near(me.fromKeyLift(c, me.toKeyLift(c, x)), x, 1e-6));
+        ok(bad === undefined,
+           `fromKeyLift() undoes toKeyLift() exactly (sex ${sex || 'unknown'}, body weight ${bw || 'none'})`
+           + (bad === undefined ? '' : ` — failed at ${bad}`));
+      }
+    }
+  }
+
+  /* ---- 🔒 WHAT KEEPS TODAY'S FIXED NUMBER ---- */
+  {
+    const noCurve = ['Pull-Up', 'Chest Dip', 'Dumbbell Squeeze Press', 'Single-Leg Romanian Deadlift',
+      'Sumo Squat', 'Cable Lateral Raise'];
+    for (const n of noCurve) {
+      const ex = lib(n);
+      const cs = me.contributionsFor(ex, { sex: 'male', bodyWeight: 180 });
+      ok(cs.length > 0 && cs.every((c) => !c.level && near(me.toKeyLift(c, 200), 200 / c.ratio, 1e-12)),
+         `${n}: no published curve (or a refused one), so it converts at its fixed ratio exactly as before`);
+    }
+    const dl = me.contributionsFor(lib('Deadlift'), { sex: 'male' });
+    ok(dl.filter((c) => c.kind === 'fallback').every((c) => !c.level)
+       && dl.find((c) => c.muscle === 'Glutes' && !c.level) && dl.find((c) => c.muscle === 'Back' && c.level),
+       'a key lift and every cross-muscle fallback keep their fixed hop; only the direct conversion is matched');
+    const [bench] = walk('Barbell Bench Press', [[225, 3]]).get('Chest');
+    ok(bench.levelMatched === false && near(bench.estimate, bench.rawE1rm, 1e-12),
+       'a key lift is its own key lift — nothing converted, nothing matched');
+    ok([...EXERCISE_STANDARDS].every(([n, row]) => lib(n) && lib(n).muscle === row.muscle),
+       'every shipped row names a library exercise, filed under the muscle it converts into');
+  }
+
+  /* ---- σ: the drift it modelled is no longer charged twice ---- */
+  {
+    const base = { exerciseName: 'Machine Shoulder Press', quality: 0.35, kind: 'direct', ratio: 1.23 };
+    ok(me.sigmaFor({ ...base, levelMatched: true }) < me.sigmaFor(base),
+       '🔄 a level-matched reading drops the drift term (it measured exactly the error matching removes)');
+    ok(me.sigmaFor({ ...base, levelMatched: true }) > 0.1,
+       '⚠️ but keeps the gearing and sourcing terms the drift never measured — a machine is still a machine');
+  }
+}
+
 /* ================= DOMINANCE — heavier AND longer is better ================
  *
  * 2026-09-20, and it came out of Tim reading his own Back panel: it was led by
@@ -9253,7 +9413,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   // and reads the library from the store, which is what the app does too.
   const exMap = new Map(await store.getExerciseMap());
   exMap.set(custom.id, custom);
-  const muscles = await muscleRatings({ sessions, benchmarks: [], bodyWeights: [] });
+  /* 🔄 `sex: 'male'` SINCE 2026-09-23 (level-aware conversions). The profile
+   * below is a man, and `muscleRatings()` with no rows reads the sex off the
+   * profile — so the app rates him as a man. This fixture used to rate him
+   * sexless and rank him as a man, which agreed only while every ratio it
+   * touched was one number for both sexes; a level curve is per sex, and the
+   * consistency check further down is exactly the assertion that noticed. */
+  const muscles = await muscleRatings({ sessions, benchmarks: [], bodyWeights: [], sex: 'male' });
   const profile = { gender: 'male', bodyWeight: 180, age: 30, compare: null, missing: [] };
   const before = JSON.stringify(sessions);
 
