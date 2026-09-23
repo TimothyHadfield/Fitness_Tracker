@@ -46,7 +46,7 @@ first users stop being new).
 | 8 | Benchmark workouts in a separate programme no longer appear on Record; the switcher has no "look without switching" | his word |
 | 9 | Should a high-rep set count as a floor ("at LEAST 131")? Reverses the fatigue-plan §4 refusal | his word — only as a separate "at least X" reading |
 | 10 | The rating rests on ONE set per exercise, top three; blending every set at its own precision is the biggest accuracy lever | his go-ahead (re-baseline) |
-| 11 | ✅ closed except one half: a friend's panel offers *"Benchmark Standing Calf Raise"* — the reader's own screen — on their body | open bug, small |
+| 11 | ✅ closed 2026-09-23 (a `whose: 'their'` panel offers no benchmark button) | — |
 | 12 | ✅ closed (neck ranks) | — |
 | 13 | Conversion ratios are level-blind (machine press ÷ OHP runs 0.89→1.44 by level; the app uses 1.23). Percentile matching from `tools/strength-level-data.mjs` fixes it | his go-ahead (second re-baseline, never in the same commit as 10) |
 | 15 | **Open work 15** — history-prefilled sets carry no `prefilled` flag, so an untouched exercise with history saves last time's numbers as done. Swap no longer relies on it (2026-09-27), SAVE still does | his decision |
@@ -73,12 +73,14 @@ snapshot); the calendar does not draw the current month when the last recording 
 famous lifter's arms/shoulders are converted from bench, not measured; a partner gets no pull-up
 caption (their bodyweight isn't on this phone).
 
-**Found, not fixed:** `ensureSystems()` stamps a `systemId`-less legacy workout onto
-`systemsRows[0]`, which can be a programme just copied from Explore (it mutates data; nobody asked).
+**Fixed 2026-09-23:** `ensureSystems()` adopts orphans into the first system WITHOUT a `presetId`
+(or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
-- None open. Everything Tim asked for through 2026-09-27 is built and pushed. Between jobs: report
-  and stop.
+- **2026-09-23, Tim:** *"just keep working on whatever you feel like should definently be done. Once
+  you've ran out of things then let me know what steps you want to talk to me about before working."*
+  Covers fixes that need no decision of his (Open work 11's friend-panel benchmark, `ensureSystems()`
+  stamping onto a copied preset). NOT the re-baselines (10, 13) or anything on his "his word" list.
 
 ## Standing instructions (Tim's words)
 - **Message length** (2026-09-27): *"Never give me messages that long. Always 2-3 paragraphs max
@@ -156,6 +158,8 @@ caption (their bodyweight isn't on this phone).
 - **When Tim reports something broken, check the LIVE site first** (§0.13): hash the deployed file
   against HEAD; a home-screen app resumes on an old build.
 - **The rules emulator dies silently on the Oracle JDK** → `JAVA_HOME` = Temurin 21 (§0.9).
+- **`render`'s "the exercise line chart draws an SVG" + "gridlines" failed once in four runs
+  (2026-09-23)** — a settle-timing flake; rerun before believing it.
 - **`tests/sw-update.test.mjs` is flaky on this machine**; don't report it as reliably passing or
   weaken it. It and `rules` are not in the 23-suite total.
 - **A test double more permissive than the real thing turns a guarantee into an assumption** — ask

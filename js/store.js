@@ -1058,7 +1058,9 @@ export const store = {
       if (!freshWorkouts.some((w) => !w.systemId)) return freshSystems.map(normalizeSystem);
       const systemsRows = freshSystems;
 
-      let home = systemsRows[0];
+      // ⚠️ Never a programme copied from Explore (2026-09-23): an orphan is the user's own
+      // workout, and filing it into somebody else's split is a change nobody asked for.
+      let home = systemsRows.find((s) => !s.presetId);
       if (!home) {
         const now = new Date().toISOString();
         home = { id: uid('sys'), name: DEFAULT_SYSTEM_NAME, notes: '', createdAt: now, updatedAt: now };

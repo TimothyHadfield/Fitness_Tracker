@@ -5236,6 +5236,24 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   await st.getSystems();
   ok((await st.getSystems()).length === 1, 'migrating twice does not create a second system');
 
+  /* ---- an orphan is never filed into a copied programme (2026-09-23) ----
+   * `ensureSystems()` adopted orphans into `systemsRows[0]`, which can be a preset copied
+   * from Explore: a legacy workout would then show up inside somebody else's programme. */
+  await st.clearAll();
+  localStorage.setItem('ftrack:v1:systems', JSON.stringify([
+    { id: 'sysP', name: 'Nippard Fundamentals', presetId: 'nippard', notes: '', createdAt: '2026-01-01' },
+  ]));
+  localStorage.setItem('ftrack:v1:workouts', JSON.stringify([
+    { id: 'w9', name: 'Old Push', exercises: [{ exerciseId: id('Barbell Bench Press'), sets: 3 }], createdAt: '2026-01-01' },
+  ]));
+  clearReadCache();
+  systems = await st.getSystems();
+  const oldPush = (await st.getWorkouts()).find((w) => w.id === 'w9');
+  ok(oldPush && oldPush.systemId !== 'sysP',
+     '🚨 an orphaned workout is not filed into a programme copied from Explore');
+  ok(systems.length === 2 && systems.some((s) => !s.presetId && s.id === oldPush?.systemId),
+     `it gets a system of its own instead (${systems.map((s) => s.name).join(', ')})`);
+
   /* ---- the race that shipped ---- */
   // Read-modify-write across two collections is not atomic. Two callers running
   // the migration at once each saw "no systems", each created one, and the

@@ -1207,7 +1207,8 @@ function detail(m, muscle, profile, blocked, moreDetails, trained) {
          needs a standard to be true. */
       trainedNote(trained),
       note,
-      lift
+      // #/benchmark records the READER's lift, so a friend's or famous lifter's body offers none.
+      lift && profile?.whose !== 'their'
         ? el('a', { class: 'btn primary block', href: '#/benchmark', text: `Benchmark ${lift.name}` })
         : null,
     );

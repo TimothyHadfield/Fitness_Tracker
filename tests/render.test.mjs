@@ -9132,6 +9132,19 @@ ok(!data.querySelector('.rep-target'),
   await store.clearAll();
 }
 
+/* ---- a friend's empty muscle does not offer YOU a benchmark (Open work 11, 2026-09-23) ----
+ * A friend's panel on a muscle they never trained offered "Benchmark Standing Calf Raise",
+ * which opens the READER's benchmark screen — a button about you, on their body. */
+{
+  const { musclePanel } = await import(BASE + 'views-muscles.js');
+  const theirs = musclePanel(null, 'Calves', { gender: 'male', whose: 'their' }, null, false);
+  const mine = musclePanel(null, 'Calves', { gender: 'male' }, null, false);
+  ok(!theirs.querySelector('a[href="#/benchmark"]'),
+     '🚨 a friend\'s empty Calves panel offers no benchmark — that screen records YOUR lift');
+  ok(mine.querySelector('a[href="#/benchmark"]'),
+     'and your own empty Calves panel still does');
+}
+
 /* ====== leaving a workout open, and the way back in (2026-09-07) ======
  *
  * Tim: *"I want the user to be able to leave a workout and interact with the
