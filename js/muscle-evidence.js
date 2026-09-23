@@ -66,8 +66,9 @@
 import { e1rm, isMapRankableSet, MAX_EVIDENCE_REPS, totalResistance } from './e1rm.js';
 import { bodyWeightFractionFor, standInFor } from './exercises.js';
 import { DEFAULTS, robustAggregate, estimateAt, screenDaily, dailyValues, loadFactor } from './strength-estimate.js';
-import { MUSCLE_LIFTS, standardQualityFor } from './strength-standards.js';
+import { MUSCLE_LIFTS, standardQualityFor, fitSigma, medianFor } from './strength-standards.js';
 import { RATIO_DRIFT } from './ratio-sigma.js';
+import { EXERCISE_STANDARDS } from './exercise-standards.js';
 import { repSigma } from './rep-sigma.js';
 
 /* ------------------------------------------------------------------ *
@@ -1585,9 +1586,163 @@ function matchRule(muscle, name, sex) {
   for (const [re, ratio, q] of rules) {
     if (!re.test(name)) continue;
     const r = resolveRatio(ratio, sex);
-    return r === null ? null : { ratio: r, quality: q };
+    return r === null ? null : { ratio: r, quality: q, entry: ratio };
   }
   return null;
+}
+
+/* ── LEVEL-AWARE CONVERSION: PERCENTILE MATCHING — 2026-09-23, Open work 13 ──
+ *
+ * Tim: *"How one lift translates to another (like machine press to overhead
+ * press) changes a lot between beginners and advanced lifters, and the app uses
+ * one fixed number."* Measured on Strength Level's own rows, machine shoulder
+ * press over overhead press is 0.89 · 1.08 · 1.23 · 1.35 · 1.44 from Beginner
+ * to Elite; the table above says 1.23 for everybody.
+ *
+ * 🚨 THE CONTRADICTION THAT PROVED IT, ON HIS OWN SET: 55 × 9 is an 81 lb
+ * machine max — ABOVE the published Beginner machine mark (67) — and at 1.23 it
+ * became a 66 lb overhead press, BELOW the published Beginner overhead mark
+ * (75). Same lifter, same source, opposite verdicts (docs/history.md 2026-09-25).
+ *
+ * THE METHOD, and there is no iteration in it. The reading is placed on its
+ * OWN exercise's distribution — the two-piece lognormal `fitSigma()` fits to
+ * that exercise's five published anchors, the same fit and the same body-weight
+ * scaling (`medianFor()`) the key lift's percentile has always used — and the
+ * key lift's weight is read at the SAME z. Written as a ratio, that is
+ *
+ *     ratio(z) = r · exp(z · (σ_exercise − σ_key))
+ *
+ * with `r` the table's own ratio above and σ the half of each curve z falls in.
+ * At the median (z = 0) it IS the table's ratio, so nothing about an ordinary
+ * lifter's number moves; what moves is the tails, in the direction the
+ * published rows say. His 81 lb now reads ~84 lb of overhead press — above the
+ * beginner OHP mark, as his machine number is above the beginner machine mark.
+ *
+ * ⚠️ THE CURVE IS CENTRED ON THE TABLE'S RATIO, NOT ON THE ROW'S OWN MEDIAN, on
+ * purpose. Every ratio above was divided from these same rows, and where one
+ * departs from its row (a scalar derived on the men's page, a load convention
+ * the table deliberately corrected) the departure is a decision with its own
+ * comment. Re-deriving it here would be a SECOND re-baseline hidden inside
+ * this one. Only the row's SHAPE — its two log-spreads — is new information,
+ * and a shape does not care whether a row is per dumbbell or doubled.
+ *
+ * 🛑 BEYOND THE PUBLISHED RANGE THE RATIO STOPS MOVING. Past Beginner (z <
+ * −1.645) or Elite (z > +1.645) the drift was never measured, so the ratio is
+ * held at its value on that anchor rather than extrapolated. A famous lifter's
+ * 700 lb leg press is converted at the Elite ratio, not at one invented past it.
+ *
+ * WHAT KEEPS TODAY'S FIXED NUMBER EXACTLY: any exercise without a row in
+ * js/exercise-standards.js (see its header for the refusals), every key lift
+ * (ratio 1.00 by construction), and every cross-muscle FALLBACK — a fallback's
+ * second hop is a median-to-median conversion with no row of its own.
+ *
+ * With no sex known both sexes' curves are carried and their ratios averaged,
+ * which is what `resolveRatio()` does with a pair. */
+const Z_EDGE = 1.6448536269514722; // the 5th / 95th percentile — Beginner / Elite
+
+let exerciseSigmaCache = null;
+function exerciseSigma(name, gender) {
+  if (!exerciseSigmaCache) exerciseSigmaCache = new Map();
+  const key = `${name}|${gender}`;
+  if (!exerciseSigmaCache.has(key)) {
+    const row = EXERCISE_STANDARDS.get(name);
+    const anchors = row && row[gender === 'female' ? 'f' : 'm'];
+    exerciseSigmaCache.set(key, Array.isArray(anchors) && anchors.every((v) => v > 0)
+      ? fitSigma(anchors) : null);
+  }
+  return exerciseSigmaCache.get(key);
+}
+
+// The key lift's median for this sex at this body weight, through the ONE
+// function that already answers it for every percentile on the map — no second
+// copy of the bodyweight^0.67 law. No weigh-in → the reference weight, which is
+// what `withAssumptions()` ranks such a lifter as.
+function keyMedianAt(muscle, gender, bodyWeight) {
+  const spec = MUSCLE_LIFTS[muscle];
+  if (!spec) return null;
+  const bw = Number(bodyWeight);
+  if (!(bw > 0)) return spec.median[gender];
+  return medianFor(muscle, { gender, bodyWeight: bw, compare: { weight: 'own', age: 'any' } });
+}
+
+/**
+ * The level curve for one direct conversion, or null when there is none —
+ * `{ curves: [{ ratio, exMedian, keyMedian, ex: σpair, key: σpair }] }`, one
+ * curve per sex it speaks for. Plain data (no functions, no nested arrays), so
+ * a contribution stays safe to copy anywhere a contribution already goes.
+ */
+function levelCurveFor(exerciseName, muscle, entry, sex, bodyWeight) {
+  const row = EXERCISE_STANDARDS.get(exerciseName);
+  if (!row || row.muscle !== muscle || !MUSCLE_LIFTS[muscle]) return null;
+  const genders = sex === 'male' || sex === 'female' ? [sex] : ['male', 'female'];
+  const curves = [];
+  for (const g of genders) {
+    const r = resolveRatio(entry, g);
+    const ex = exerciseSigma(exerciseName, g);
+    const key = MUSCLE_LIFTS[muscle].sigma[g];
+    const keyMedian = keyMedianAt(muscle, g, bodyWeight);
+    if (!(r > 0) || !ex || !key || !(keyMedian > 0)) return null;
+    curves.push({ ratio: r, exMedian: r * keyMedian, keyMedian, ex, key });
+  }
+  return { curves };
+}
+
+// One curve's ratio at a z already known, clamped to the published range.
+function ratioAtZ(curve, z) {
+  const zc = Math.max(-Z_EDGE, Math.min(Z_EDGE, z));
+  const side = zc < 0 ? 'below' : 'above';
+  return curve.ratio * Math.exp(zc * (curve.ex[side] - curve.key[side]));
+}
+function zOnExercise(curve, load) {
+  const l = Math.log(load / curve.exMedian);
+  return l / (l < 0 ? curve.ex.below : curve.ex.above);
+}
+function zOnKey(curve, key) {
+  const l = Math.log(key / curve.keyMedian);
+  return l / (l < 0 ? curve.key.below : curve.key.above);
+}
+function effectiveRatioAtLoad(level, load) {
+  let s = 0;
+  for (const c of level.curves) s += ratioAtZ(c, zOnExercise(c, load));
+  return s / level.curves.length;
+}
+
+/**
+ * This exercise's TOTAL-load one-rep max, converted into the muscle's KEY LIFT.
+ * The one place that conversion is done: `raw / c.ratio` where there is no level
+ * curve (byte-identical to before), percentile-matched where there is.
+ */
+export function toKeyLift(c, load) {
+  const x = Number(load);
+  if (!c || !(x > 0) || !(c.ratio > 0)) return null;
+  if (!c.level) return x / c.ratio;
+  return x / effectiveRatioAtLoad(c.level, x);
+}
+
+/**
+ * And back: the key lift's weight → what this exercise should come to. The exact
+ * inverse of `toKeyLift()`, so a rating converted out to a named lift lands where
+ * that lift's own sets would have put the rating. One curve inverts in closed
+ * form; the no-sex average of two has no closed form and is bisected, which is
+ * safe because `toKeyLift()` is strictly increasing in the load.
+ */
+export function fromKeyLift(c, key) {
+  const y = Number(key);
+  if (!c || !(y > 0) || !(c.ratio > 0)) return null;
+  if (!c.level) return y * c.ratio;
+  const curves = c.level.curves;
+  if (curves.length === 1) return y * ratioAtZ(curves[0], zOnKey(curves[0], y));
+  let lo = Infinity, hi = 0;
+  for (const cv of curves) {
+    lo = Math.min(lo, ratioAtZ(cv, -Z_EDGE), ratioAtZ(cv, Z_EDGE));
+    hi = Math.max(hi, ratioAtZ(cv, -Z_EDGE), ratioAtZ(cv, Z_EDGE));
+  }
+  let a = Math.log(y * lo), b = Math.log(y * hi);
+  for (let i = 0; i < 60; i++) {
+    const m = (a + b) / 2;
+    if (toKeyLift(c, Math.exp(m)) < y) a = m; else b = m;
+  }
+  return Math.exp((a + b) / 2);
 }
 
 // What this exercise says, and about which muscles.
@@ -1690,20 +1845,22 @@ export function contributionsFor(exercise, opts) {
     // is priced here too — see bodyWeightOn() in e1rm.js.
     const bwQuality = Number(opts && opts.bodyWeightQuality);
     const scale = bwSpec.quality * (Number.isFinite(bwQuality) && bwQuality > 0 ? Math.min(1, bwQuality) : 1);
-    return buildContributions(exercise, scale, opts && opts.sex);
+    return buildContributions(exercise, scale, opts && opts.sex, bw);
   }
 
   // Anything bodyweight or assisted WITHOUT a published fraction is refused
   // exactly as before. Equipment is never used to guess one.
   if (exercise.equipment === 'Bodyweight' || /^Assisted /.test(exercise.name)) return [];
   if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return [];
-  return buildContributions(exercise, 1, opts && opts.sex);
+  return buildContributions(exercise, 1, opts && opts.sex, opts && opts.bodyWeight);
 }
 
 // `qualityScale` discounts every contribution this exercise makes — 1 for an
 // ordinary weighted lift, less for a bodyweight one whose fraction or whose
-// body weight is imperfectly known.
-function buildContributions(exercise, qualityScale, sex) {
+// body weight is imperfectly known. `bodyWeight` (the day's weigh-in, or
+// nothing) only places a level curve on the right-sized population; it does
+// not change any ratio.
+function buildContributions(exercise, qualityScale, sex, bodyWeight) {
   // 🚨 THE REFUSAL, AND IT IS AT THE TOP FOR A REASON. Putting it on the muscle
   // branch alone would leave `keyLiftMuscle(exercise.name)` below still matching
   // a custom exercise somebody happened to name "Barbell Bench Press" — and that
@@ -1713,12 +1870,16 @@ function buildContributions(exercise, qualityScale, sex) {
 
   const out = [];
   const seen = new Set();
-  const add = (muscle, ratio, quality, kind, via) => {
+  const add = (muscle, ratio, quality, kind, via, level) => {
     if (!MUSCLE_LIFTS[muscle] || seen.has(muscle)) return;
     const q = quality * qualityScale;
     if (!(ratio > 0) || !(q > 0)) return;
     seen.add(muscle);
-    out.push({ muscle, ratio, quality: q, kind, via: via || null });
+    const c = { muscle, ratio, quality: q, kind, via: via || null };
+    // ⚠️ ONLY WHEN THERE IS ONE: a contribution without `level` is converted
+    // at `ratio` exactly as before, by `toKeyLift()`.
+    if (level) c.level = level;
+    out.push(c);
   };
 
   // 1. A muscle's own key lift is always its best possible evidence, wherever
@@ -1730,7 +1891,13 @@ function buildContributions(exercise, qualityScale, sex) {
 
   // 2. The muscle the library files it under.
   const rule = matchRule(exercise.muscle, exercise.name, sex);
-  if (rule) add(exercise.muscle, rule.ratio, rule.quality, 'direct');
+  //    ⚠️ The level curve rides on THIS contribution only — see the block above
+  //    `toKeyLift()`. The key-lift branch above has nothing to convert, and the
+  //    fallbacks below keep their fixed median-to-median hop.
+  if (rule) {
+    add(exercise.muscle, rule.ratio, rule.quality, 'direct', null,
+      levelCurveFor(exercise.name, exercise.muscle, rule.entry, sex, bodyWeight));
+  }
 
   // 3. Everything this lift can stand in for. Chained off the DIRECT reading it
   //    already produced, so the conversion is (this exercise → its own key
@@ -1933,7 +2100,17 @@ export function sigmaFor(o) {
   if (!o) return SIGMA_MAX;
   const q = Number(o.quality);
   const bridge = q > 0 ? Math.min(SIGMA_MAX, Math.max(SIGMA_SOURCE, -0.25 * Math.log(q))) : SIGMA_MAX;
-  const drift = RATIO_DRIFT.get(o.exerciseName);
+  /* 🔄 2026-09-23 — A LEVEL-MATCHED READING CARRIES NO DRIFT TERM. The drift is
+   * `|ln r80 − ln r20| / 1.68` (js/ratio-sigma.js's header): by its own
+   * definition it is the error of applying ONE ratio across the strength range,
+   * "exactly that uncertain". Percentile matching (`toKeyLift()`) applies the
+   * ratio for the lifter's own level instead, so that doubt has been converted
+   * into arithmetic and counting it again would price a solved error twice.
+   * What stays is everything the drift never measured: the sourcing floor,
+   * machine gearing, the cross-muscle hop. `levelMatched` is set only where the
+   * observation was actually converted by a curve (strength-observations.js),
+   * so a reading built any other way keeps its drift exactly as before. */
+  const drift = o.levelMatched === true ? 0 : RATIO_DRIFT.get(o.exerciseName);
   const geared = GEARED.test(String(o.exerciseName || '')) ? SIGMA_GEARING : 0;
 
   // A stand-in or cross-muscle contribution is two conversions, not one.

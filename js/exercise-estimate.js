@@ -135,7 +135,7 @@
    ========================================================================== */
 
 import {
-  contributionsFor, confidenceBand, CONFIDENCE_BANDS, FALLBACK_MIN_QUALITY,
+  contributionsFor, confidenceBand, CONFIDENCE_BANDS, FALLBACK_MIN_QUALITY, fromKeyLift,
 } from './muscle-evidence.js';
 import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS, bodyWeightOn } from './e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
@@ -236,7 +236,11 @@ export function estimateOneRM(exercise, muscles, bodyWeight, opts) {
    * of the cross-muscle hop itself (muscle-evidence.js's `add(...)` call). */
   const lead = used[0] || null;
 
-  const oneRM = rating.estimate * best.ratio;
+  // 🔄 2026-09-23: `fromKeyLift()` is `rating.estimate * best.ratio` exactly
+  // unless the lift has a published level curve, and then it is the exact
+  // inverse of the level-matched conversion the rating was built with — so a
+  // rating converted back into a lift the person trained lands on that lift.
+  const oneRM = fromKeyLift(best, rating.estimate);
   if (!(oneRM > 0)) return null;
 
   /* ⚠️ TWO CREDENCES MULTIPLIED, NOT A NEW CONSTANT. `rating.confidence` is how
@@ -303,7 +307,9 @@ export function estimateOneRM(exercise, muscles, bodyWeight, opts) {
     confidence,
     band,
     muscle: best.muscle,
-    ratio: best.ratio,
+    // The ratio actually applied at this level (oneRM / rating), so a caller's
+    // `oneRM / ratio` still recovers the rating exactly.
+    ratio: oneRM / rating.estimate,
     ratioQuality: best.quality,
     from: [...new Set(from)],
     exerciseCount: rating.exerciseCount || new Set(from).size,
