@@ -291,7 +291,10 @@ export async function SessionView(workoutId) {
     if (!(best.quality * rating.confidence >= OPENING_MIN_BELIEF)) return decline();
     // `ratio` is this exercise's load as a fraction of the muscle's key lift,
     // and it is in TOTAL load — so a per-side entry halves on the way out.
-    const oneRepTotal = rating.estimate * best.ratio;
+    // 🔄 2026-09-23: through `fromKeyLift()`, the inverse of the level-matched
+    // conversion the rating was built with (same as exercise-estimate.js), so
+    // the opening weight and the ratings agree.
+    const oneRepTotal = ev.fromKeyLift(best, rating.estimate);
     const forTen = e1.weightForReps(oneRepTotal, DEFAULT_REPS);
     if (!(forTen > 0)) return decline();
     const shown = ex.loadType === 'per_side' ? forTen / 2 : forTen;
