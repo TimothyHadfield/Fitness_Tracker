@@ -84,6 +84,29 @@ export function liveDraft(today) {
   return (d.startedOn || d.date) === today ? d : null;
 }
 
+/**
+ * Whole seconds the workout has been RUNNING — paused time taken off — or null
+ * if the draft never said when it started.
+ *
+ * 🆕 2026-09-23, Autumn via Tim: *"she went to the bathroom and it kept
+ * going."* A pause is two fields on the draft: `pausedAt` (ms, set while
+ * paused) and `pausedMs` (every finished pause, added up). While paused the
+ * clock stands at `pausedAt`, so it reads the same on every tick.
+ *
+ * ⚠️ HERE AND NOT IN THE RUNNER, because the bar on every other screen draws
+ * the same clock, and the two disagreeing about a pause would show a workout
+ * ticking on Home that says Paused inside it. Read from timestamps, never
+ * accumulated per tick, for the rest timer's reason: a backgrounded tab
+ * throttles intervals.
+ */
+export function activeSeconds(d, now) {
+  const t = Date.parse(d && d.startedAt);
+  if (!Number.isFinite(t)) return null;
+  const pausedAt = Number(d.pausedAt) || 0;
+  const end = pausedAt || now;
+  return Math.max(0, Math.floor((end - t - (Number(d.pausedMs) || 0)) / 1000));
+}
+
 /* ------------------------------------------------------------------ *
  * What counts as a set somebody actually did
  *

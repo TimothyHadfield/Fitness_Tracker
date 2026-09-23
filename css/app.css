@@ -1294,6 +1294,15 @@ select.input {
   color: var(--accent); font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .06em;
 }
+/* The workout clock (2026-09-23): the date's quiet dashed voice, since it is
+   also a session fact you can tap to change. Tabular digits so it does not
+   jitter each second; accent while paused, like a moved date. */
+.session-clock {
+  font: inherit; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  color: var(--ink-soft); background: none; border: 0;
+  border-bottom: 1px dashed var(--rule); padding: 0 0 1px; cursor: pointer;
+}
+.session-clock.is-paused { color: var(--accent); border-bottom-color: var(--accent); font-weight: 650; }
 
 /* ── Location (0m): a typed label in the session header ────────────────────
    Same quiet dashed-underline voice as the date beside it — both are session
@@ -2170,6 +2179,15 @@ select.input {
   text-transform: uppercase; color: var(--ink-faint);
 }
 .save-stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* Duration is editable (2026-09-23): the same big number, with the date's
+   dashed underline saying it can be changed. 16px+ stops iOS zooming on focus. */
+.save-dur-row { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+.save-dur {
+  width: 3.2em; min-width: 0; padding: 0 0 1px; font-family: inherit; color: var(--ink);
+  background: none; border: 0; border-bottom: 1px dashed var(--rule); -moz-appearance: textfield;
+}
+.save-dur::-webkit-outer-spin-button, .save-dur::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.save-dur-unit { font-size: 13px; font-weight: 650; color: var(--ink-soft); }
 
 /* ⚠️ Below everything, and nowhere near Save. It is the only control on the
    normal recording path that destroys a workout, so it is deliberately not in

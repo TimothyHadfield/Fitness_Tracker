@@ -24,7 +24,7 @@
 // alike, and nothing is ever underneath it.
 
 import { el, icon, fmtTime, confirmSheet, refreshRoute, requestRise } from './ui.js';
-import { liveDraft, clearDraft, draftRecordedSets } from './session-draft.js';
+import { liveDraft, clearDraft, draftRecordedSets, activeSeconds } from './session-draft.js';
 import { stepsFor } from './set-types.js';
 
 /**
@@ -46,11 +46,11 @@ function currentExercise(draft) {
   return entry ? entry.exerciseName || null : null;
 }
 
-/** Whole seconds since the workout was started, or null if it never said. */
-function elapsed(draft, now) {
-  const t = Date.parse(draft.startedAt);
-  if (!Number.isFinite(t)) return null;
-  return Math.max(0, Math.floor((now - t) / 1000));
+/** The clock's text: running time, with "Paused" in front while paused. */
+function clockText(draft, now) {
+  const secs = activeSeconds(draft, now);
+  if (secs === null) return '';
+  return (draft.pausedAt ? 'Paused ' : '') + fmtTime(secs);
 }
 
 /**
@@ -70,8 +70,8 @@ export function liveSessionBar({ route, today, now = Date.now() }) {
   const draft = liveDraft(today);
   if (!draft) return null;
 
-  const secs = elapsed(draft, now);
-  const clock = el('span', { class: 'mini-clock mono', text: secs === null ? '' : fmtTime(secs) });
+  const secs = activeSeconds(draft, now);
+  const clock = el('span', { class: 'mini-clock mono', text: clockText(draft, now) });
   const where = currentExercise(draft);
 
   /* ⚠️ ALL OF THE BAR EXCEPT THE BIN IS THE WAY BACK, not just the arrow. Hevy
@@ -163,7 +163,7 @@ export function liveSessionBar({ route, today, now = Date.now() }) {
   if (secs !== null && typeof setInterval === 'function') {
     const id = setInterval(() => {
       if (!bar.isConnected) { clearInterval(id); return; }
-      clock.textContent = fmtTime(elapsed(draft, Date.now()));
+      clock.textContent = clockText(draft, Date.now());
     }, 1000);
   }
 

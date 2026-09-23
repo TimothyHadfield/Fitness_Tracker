@@ -6,11 +6,11 @@ import { totalResistance, bodyWeightOn } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
-  parkScreen, helpDot,
+  parkScreen, helpDot, fmtTime,
 } from './ui.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
-  hasNumbers, setIsRecorded, draftRecordedSets,
+  hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds,
 } from './session-draft.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
@@ -3793,6 +3793,17 @@ export async function SessionView(workoutId) {
     }
     saveDraft(state);
 
+    /* 🆕 THE END OF THE WORKOUT IS WORKED OUT, NOT READ OFF THE WALL CLOCK —
+     * 2026-09-23. startedAt + the running time (pauses off), or + the minutes
+     * typed on the save screen. `sessionMinutes()` reads finishedAt −
+     * startedAt, so this is the one place the pause and the correction have to
+     * land. Falls back to now for a draft with no start time. */
+    const startMs = Date.parse(state.startedAt);
+    const runSecs = state.durationMin ? state.durationMin * 60 : activeSeconds(state, Date.now());
+    const finishedAt = Number.isFinite(startMs) && runSecs !== null
+      ? new Date(startMs + runSecs * 1000).toISOString()
+      : new Date().toISOString();
+
     try {
       // The owner saves ONLY when they recorded something. A coach who ran the
       // whole session for a guest and lifted nothing has no session of their
@@ -3805,7 +3816,7 @@ export async function SessionView(workoutId) {
           workoutName: state.workoutName,
           date: state.date,
           startedAt: state.startedAt,
-          finishedAt: new Date().toISOString(),
+          finishedAt,
           isBenchmark: Boolean(state.isBenchmark),
           // Absent rather than '' when there is none — one case for every
           // reader, the same contract startedAt set in the projection.
@@ -3839,7 +3850,7 @@ export async function SessionView(workoutId) {
           workoutName: state.workoutName,
           date: state.date,
           startedAt: state.startedAt,
-          finishedAt: new Date().toISOString(),
+          finishedAt,
           entries: g.cleaned,
         });
       }
@@ -3914,17 +3925,29 @@ export async function SessionView(workoutId) {
     const own = cleanedEntriesOf(state.entries);
     const sets = own.reduce((n, e) => n + e.sets.length, 0);
     const guestNames = state.guestNames.slice();
-    const started = Date.parse(state.startedAt);
-    const secs = Number.isFinite(started)
-      ? Math.max(0, Math.round((Date.now() - started) / 1000)) : null;
-    /* ⚠️ SECONDS UNDER A MINUTE, rather than rounding to "0 min". A number that
-     * says nothing happened, on the screen that summarises what did, is the
-     * kind of small wrongness that makes somebody distrust the rest of the
-     * figures — and a workout can genuinely be short. */
-    const duration = secs === null ? '—'
-      : secs < 60 ? `${secs}s`
-      : secs < 3600 ? `${Math.round(secs / 60)} min`
-      : `${Math.floor(secs / 3600)}h ${Math.round((secs % 3600) / 60)}min`;
+    const secs = activeSeconds(state, Date.now());
+    /* 🆕 DURATION IS A BOX, 2026-09-23. Autumn, via Tim: *"she forgot to turn
+     * it off after she finished until long after she finished"* — and she had
+     * started it in her car. One number to correct covers both ends: it is
+     * prefilled from the clock (pauses already off) and whatever it says when
+     * Save is tapped is what gets written. Nothing else changes: `finish()`
+     * writes `finishedAt = startedAt + this`, so every reader of the saved
+     * row (`sessionMinutes`) sees the corrected length with no new field.
+     *
+     * ⚠️ Every time the screen opens it is re-prefilled from the clock, and a
+     * correction is dropped on the way back into the runner — a number typed
+     * before carrying on would be stale by the next Finish. */
+    state.durationMin = null;
+    const durBox = secs === null ? null : el('input', {
+      class: 'save-stat-value save-dur mono', type: 'number', inputmode: 'numeric',
+      min: '1', max: '600', step: '1',
+      'aria-label': 'Workout length in minutes',
+      onInput: (e) => {
+        const n = Math.round(Number(e.target.value));
+        state.durationMin = Number.isFinite(n) && n > 0 ? n : null;
+      },
+    });
+    if (durBox) durBox.value = String(Math.max(1, Math.round(secs / 60)));
 
     /* ⚠️ SETS AND EXERCISES, WHERE HEVY PUTS VOLUME IN POUNDS. Not an oversight
      * and not a shortcut: `js/session-stats.js` already argues it for the feed
@@ -4020,7 +4043,11 @@ export async function SessionView(workoutId) {
       scroll: el('div', { class: 'save-screen' },
         el('h2', { class: 'save-title', text: state.workoutName }),
         el('div', { class: 'save-stats' },
-          stat('Duration', duration),
+          durBox
+            ? el('label', { class: 'save-stat' },
+              el('div', { class: 'save-stat-label', text: 'Duration' }),
+              el('div', { class: 'save-dur-row' }, durBox, el('span', { class: 'save-dur-unit', text: 'min' })))
+            : stat('Duration', '—'),
           stat('Sets', String(sets)),
           stat('Exercises', String(own.length)),
         ),
@@ -4079,6 +4106,7 @@ export async function SessionView(workoutId) {
 
   /** Back out of the save screen into the workout, which never stopped running. */
   function backToRunner() {
+    state.durationMin = null;
     renderDate();
     document.getElementById('app').replaceChildren(screen);
   }
@@ -4440,6 +4468,47 @@ export async function SessionView(workoutId) {
    * `.note-card` on the set screen — is the per-exercise coaching note off the
    * template. Same word, different fields; nothing here touches that one. */
 
+  /* 🆕 THE WORKOUT CLOCK, AND A TAP PAUSES IT — 2026-09-23. Autumn, via Tim:
+   * *"The timer is not able to be paused, edited, started/stoped or anything
+   * … she went to the bathroom and it kept going."* It replaces the words "In
+   * progress" / "Resumed", which were the only thing in that spot. The pause
+   * is written to the draft, so it survives leaving the app, and the bar on
+   * other screens reads the same fields (`activeSeconds`). Correcting the
+   * length after the fact is the save screen's Duration box. */
+  const clockBtn = el('button', {
+    class: 'session-clock mono', type: 'button',
+    onClick: () => {
+      const now = Date.now();
+      if (state.pausedAt) {
+        state.pausedMs = (Number(state.pausedMs) || 0) + Math.max(0, now - state.pausedAt);
+        state.pausedAt = null;
+      } else {
+        state.pausedAt = now;
+      }
+      saveDraft(state);
+      paintClock();
+    },
+  });
+  function paintClock() {
+    const secs = activeSeconds(state, Date.now());
+    const paused = Boolean(state.pausedAt);
+    clockBtn.textContent = (paused ? 'Paused ' : '') + (secs === null ? '0:00' : fmtTime(secs));
+    clockBtn.classList.toggle('is-paused', paused);
+    clockBtn.setAttribute('aria-label', paused ? 'Workout clock paused — tap to resume' : 'Workout clock — tap to pause');
+  }
+  paintClock();
+  // ⚠️ Clears itself once the runner leaves the document, the mini bar's rule —
+  // but the runner is parked and re-attached, so it only stops when the screen
+  // is gone AND this workout's draft is (saved, discarded or replaced).
+  if (typeof setInterval === 'function') {
+    const tick = setInterval(() => {
+      if (!clockBtn.isConnected && (loadDraft() || {}).startedAt !== state.startedAt) {
+        clearInterval(tick); return;
+      }
+      if (clockBtn.isConnected) paintClock();
+    }, 1000);
+  }
+
   renderAll();
 
   const screen = el('div', { class: 'screen no-nav' },
@@ -4452,7 +4521,7 @@ export async function SessionView(workoutId) {
       el('div', { style: 'flex:1;min-width:0' },
         el('h1', { text: workout.name }),
         el('div', { class: 'topbar-sub session-sub' },
-          el('span', { text: existingDraft ? 'Resumed' : 'In progress' }),
+          clockBtn,
           el('span', { class: 'session-sub-dot', text: '·' }),
           // ⚠️ THE DAY STAYS HERE as well as on the save screen, and it is the
           // one thing that did not move: its whole job is to say NOT TODAY the

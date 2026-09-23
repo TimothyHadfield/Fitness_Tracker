@@ -583,7 +583,14 @@ async function pickSomebodyToCompare() {
     el('div', { class: 'section-label', text: 'Friends' }),
     ...friends,
     ...famous);
-  openSheet({ title: 'Compare with', body });
+  const { close } = openSheet({ title: 'Compare with', body });
+  /* 🆕 A PICK CLOSES THE LIST — 2026-09-23, Tim: *"Once you click on an
+   * influencer to compare to, close the list of influencers menu."* The rows
+   * are links, so the comparison drew underneath and the sheet stayed on top.
+   * Any link, friends included: same list, same tap. The link still navigates. */
+  body.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('a[href]')) close();
+  });
 }
 
 /* ------------------------------------------------------------------ *

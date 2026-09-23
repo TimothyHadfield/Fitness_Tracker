@@ -5093,6 +5093,33 @@ ok(!data.querySelector('.rep-target'),
      'and putting the profile back puts the figure back — the pane reads it every render');
 }
 
+/* ---- picking somebody to compare with closes the list (2026-09-23) ----
+ * Tim: *"Once you click on an influencer to compare to, close the list of
+ * influencers menu."* The rows are links, so the page changed underneath and
+ * the sheet stayed on top of it. */
+{
+  const { muscleGroupsPane } = await import(BASE + 'views-muscles.js');
+  const host = window.document.createElement('div');
+  const top = window.document.createElement('div');
+  await muscleGroupsPane(host, top);
+  const cmp = [...host.querySelectorAll('button'), ...top.querySelectorAll('button')]
+    .find((b) => /^Compare$/.test(b.textContent.trim()));
+  ok(Boolean(cmp), 'the Compare button is on your own map');
+  const hashBefore = location.hash;
+  cmp && cmp.click();
+  for (let i = 0; i < 5; i++) await settle();
+  const sheet = [...document.querySelectorAll('.sheet')].pop();
+  ok(sheet && /Compare with/.test(sheet.getAttribute('aria-label') || ''), 'it opens the chooser');
+  const row = sheet && [...sheet.querySelectorAll('a.pick-row')].find((a) => /compare\/famous/.test(a.getAttribute('href')));
+  ok(Boolean(row), 'with famous lifters in it');
+  row && row.click();
+  await settle();
+  ok(sheet && (!sheet.isConnected || sheet.dataset.leaving === '1'),
+     '🚨 AND PICKING ONE CLOSES IT — the list no longer sits over the comparison it opened');
+  location.hash = hashBefore;
+  await settle();
+}
+
 /* ================= the polish sweep (UX review leftovers) ================= */
 {
   // Explore explains its numbers BEFORE the nine cards, not nine cards later.
@@ -9625,6 +9652,88 @@ ok(!data.querySelector('.rep-target'),
        + 'through questions');
     ok(!loadDraft(), 'and it is gone');
   }
+
+  clearDraft();
+  await store.clearAll();
+}
+
+/* ====== the workout clock pauses, and the duration is editable (2026-09-23) ======
+ *
+ * Autumn, via Tim: *"The timer is not able to be paused, edited, started/stoped
+ * or anything. She opened the workout in her car, the timer stoped long before
+ * her workout, she went to the bathroom and it kept going, and she forgot to
+ * turn it off after she finished until long after she finished."* */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { liveSessionBar } = await import(BASE + 'live-session.js');
+  const sd = await import(BASE + 'session-draft.js');
+  const { loadDraft, saveDraft, clearDraft } = sd;
+  const { todayISO } = await import(BASE + 'store.js');
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const app = () => document.getElementById('app');
+  const findBtn = (re) => [...app().querySelectorAll('button')].find((b) => re.test(b.textContent));
+
+  /* ---- the arithmetic, on fixed clocks ---- */
+  const t0 = Date.parse('2026-09-23T10:00:00Z');
+  const base = { startedAt: new Date(t0).toISOString() };
+  ok(typeof sd.activeSeconds === 'function', 'session-draft exports activeSeconds');
+  const act = sd.activeSeconds || (() => NaN);
+  ok(act(base, t0 + 600e3) === 600, 'no pause: ten minutes is ten minutes');
+  ok(act({ ...base, pausedMs: 120e3 }, t0 + 600e3) === 480,
+     'a finished two-minute pause comes off the clock');
+  ok(act({ ...base, pausedAt: t0 + 300e3 }, t0 + 900e3) === 300,
+     '🚨 WHILE PAUSED THE CLOCK STANDS STILL — the bathroom break does not count');
+  ok(act({ ...base, pausedMs: 60e3, pausedAt: t0 + 300e3 }, t0 + 900e3) === 240,
+     'an earlier pause and the current one both come off');
+
+  clearDraft();
+  await store.clearAll();
+  const w = await store.saveWorkout({
+    name: 'Clock day',
+    exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 1, notes: '' }],
+  });
+  const runner = await mount(SessionView(w.id));
+  const clock = runner.querySelector('.session-clock');
+  ok(Boolean(clock) && clock.tagName === 'BUTTON',
+     '🚨 the runner shows the workout clock as something you can tap');
+  clock && clock.click();
+  await settle();
+  ok(Number.isFinite((loadDraft() || {}).pausedAt),
+     'tapping it pauses, and the pause is on the draft so leaving the app keeps it');
+  ok(clock && /Paused/.test(clock.textContent), 'and it says Paused');
+  const bar = liveSessionBar({ route: 'home', today: todayISO() });
+  ok(/Paused/.test(bar.querySelector('.mini-clock').textContent),
+     '⚠️ the bar on other screens reads the same pause');
+  clock && clock.click();
+  await settle();
+  ok(!(loadDraft() || {}).pausedAt && Number((loadDraft() || {}).pausedMs) >= 0,
+     'tapping again resumes');
+
+  /* ---- the save screen: Duration can be corrected ---- */
+  type(runner.querySelectorAll('.step-value')[0], 135);
+  await settle();
+  type(runner.querySelectorAll('.step-value')[1], 5);
+  await settle();
+  // An hour and a half on the clock — the workout she forgot to stop.
+  saveDraft({ ...loadDraft(), startedAt: new Date(Date.now() - 90 * 60e3).toISOString(), pausedMs: 0 });
+  const again = await mount(SessionView(w.id));
+  findBtn(/Finish workout/).click();
+  await settle();
+  const minutes = app().querySelector('[aria-label="Workout length in minutes"]');
+  ok(Boolean(minutes) && minutes.tagName === 'INPUT',
+     '🚨 the save screen\'s Duration is a box you can change');
+  ok(minutes && Number(minutes.value) === 90, `prefilled with the clock (${minutes && minutes.value})`);
+  if (minutes) {
+    minutes.value = '45';
+    minutes.dispatchEvent(new window.Event('input', { bubbles: true }));
+  }
+  await settle();
+  await saveNow();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  const mins = saved ? (Date.parse(saved.finishedAt) - Date.parse(saved.startedAt)) / 60e3 : NaN;
+  ok(Math.round(mins) === 45,
+     `🚨 AND THE SAVED WORKOUT IS 45 MINUTES, not the 90 the clock ran (${mins})`);
+  void again;
 
   clearDraft();
   await store.clearAll();
