@@ -8832,8 +8832,8 @@ ok(!data.querySelector('.rep-target'),
   ok(pctSets.every((s) => s.prefilled === true),
      '🚨 AND EVERY TARGETED SET IS `prefilled`, INCLUDING ON A LIFT WITH HISTORY — a stricter '
      + 'guard than the untargeted path has, because this number is the APP’S and not last '
-     + 'time’s. finish() refusing it is what stands between a prescription and a workout nobody '
-     + 'did being written to disk (the 2026-08-28 defect)');
+     + 'time’s. (Since Tim’s 2026-09-23 decision the set still SAVES untouched, via `fromPlan` — '
+     + 'see the "untouched set counts" block below; the flag stays for fill-on-open)');
   ok(/Plan: 70\/80\/90 %/.test(pt),
      'the screen says the numbers came from the plan — a weight that disagrees with last time '
      + 'for a reason you cannot see reads as broken');
@@ -8904,6 +8904,125 @@ ok(!data.querySelector('.rep-target'),
   ok(/10–12 reps/.test(text(repNoMaxRun)),
      '…and the sentence and the field agree, which is what the bug broke');
 
+  await store.clearAll();
+}
+
+/* ================================================================== *
+ * 🆕 AN UNTOUCHED SET WITH REAL NUMBERS COUNTS AT SAVE — 2026-09-23
+ *
+ * Asked whether last time's numbers should count if you never touch an
+ * exercise, and whether an accepted-unedited prescribed set should, Tim:
+ * *"last numbers should count, since they might intentionally not touch it if
+ * it was the same as last time."*
+ *
+ * Open work 15 (history prefill) already behaved that way — pinned here, not
+ * changed. Open work 7 (a plan's prescribed weight, % or rep-priced) used to
+ * DROP the set at save; it now counts too. What still does NOT count: a set
+ * with no numbers, and the app's own derived opening guess on a lift nobody
+ * here has done (that block is ~3000 lines up and unchanged).
+ * ================================================================== */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const { store } = await import(BASE + 'store.js');
+  const { loadDraft: draftOf, saveDraft: putDraft, clearDraft: dropDraft } = await import(BASE + 'session-draft.js');
+  const savedFor = async (id) => (await store.getSessions()).find((x) => x.workoutId === id);
+
+  await store.clearAll();
+  await store.saveProfile({ gender: 'male', birthYear: 1994 });
+  await store.logBodyWeight(180, '2026-08-01');
+  const bench = byName('Barbell Bench Press');
+  const curl = byName('Barbell Curl');
+  await store.saveSession({ workoutId: 'w-hist', workoutName: 'Push', date: '2026-08-12',
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name,
+      sets: [{ weight: 205, reps: 5 }, { weight: 205, reps: 5 }] }] });
+
+  /* ---- Open work 15: last time's numbers, untouched, save ---- */
+  dropDraft();
+  const plain = await store.saveWorkout({ name: 'Plain bench', systemId: null,
+    exercises: [{ exerciseId: bench.id, sets: 2 }] });
+  const plainRun = await mount(SessionView(plain.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const plainOpened = draftOf().entries[0].sets.map((s) => [s.weight, s.reps]);
+  await finishAndSave(plainRun);
+  await settle(); await settle();
+  const plainSaved = await savedFor(plain.id);
+  ok(plainSaved && plainSaved.entries[0].sets.length === 2
+     && JSON.stringify(plainSaved.entries[0].sets.map((s) => [s.weight, s.reps])) === JSON.stringify(plainOpened),
+     `🚨 OPEN WORK 15, PINNED: an exercise opened on last time's numbers and never touched SAVES them `
+     + `as done — Tim, 2026-09-23: "they might intentionally not touch it if it was the same as last `
+     + `time" (${JSON.stringify(plainSaved && plainSaved.entries[0].sets)})`);
+
+  /* ---- Open work 7: a % prescription, accepted untouched, saves ---- */
+  dropDraft();
+  const pct = await store.saveWorkout({ name: 'Heavy bench', systemId: null,
+    exercises: [{ exerciseId: bench.id, sets: 3, targets: [70, 80, 90] }] });
+  const pctRun = await mount(SessionView(pct.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const pctOpened = draftOf().entries[0].sets.map((s) => [s.weight, s.reps]);
+  ok(pctOpened.every(([w]) => w > 0) && draftOf().entries[0].sets.every((s) => s.prefilled === true),
+     'the % sets open with the plan’s weight and still carry `prefilled` (fill-on-open and the '
+     + 'rep-decrement run still read it)');
+  await finishAndSave(pctRun);
+  await settle(); await settle();
+  const pctSaved = await savedFor(pct.id);
+  ok(pctSaved && pctSaved.entries[0].sets.length === 3
+     && JSON.stringify(pctSaved.entries[0].sets.map((s) => [s.weight, s.reps])) === JSON.stringify(pctOpened),
+     `🚨 OPEN WORK 7: a set carrying the PLAN'S weight, accepted untouched, now COUNTS at save — it `
+     + `used to be dropped (${JSON.stringify(pctSaved && pctSaved.entries[0].sets)})`);
+  ok(pctSaved && pctSaved.entries[0].sets.every((s) => !('prefilled' in s) && !('fromPlan' in s)),
+     'and neither runtime flag reaches storage');
+
+  /* ---- the same for a rep prescription that priced a weight ---- */
+  dropDraft();
+  const repW = await store.saveWorkout({ name: 'Bench reps', systemId: null,
+    exercises: [{ exerciseId: bench.id, sets: 2, reps: [{ lo: 8, hi: 10 }, { lo: 8, hi: 10 }] }] });
+  const repRun = await mount(SessionView(repW.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const repOpened = draftOf().entries[0].sets;
+  ok(repOpened.every((s) => s.weight > 0 && s.reps === 8 && s.prefilled === true),
+     `the rep plan opens priced: a weight and the bottom of 8–10 (${JSON.stringify(repOpened)})`);
+  await finishAndSave(repRun);
+  await settle(); await settle();
+  const repSaved = await savedFor(repW.id);
+  ok(repSaved && repSaved.entries[0].sets.length === 2
+     && repSaved.entries[0].sets.every((s) => s.weight > 0 && s.reps === 8),
+     `and an untouched rep-priced set counts at save too (${JSON.stringify(repSaved && repSaved.entries[0].sets)})`);
+
+  /* ---- 🛑 a plan set emptied of numbers still does NOT save ---- */
+  dropDraft();
+  const pct2 = await store.saveWorkout({ name: 'Heavy bench two', systemId: null,
+    exercises: [{ exerciseId: bench.id, sets: 3, targets: [70, 80, 90] }] });
+  await mount(SessionView(pct2.id));
+  for (let i = 0; i < 6; i++) await settle();
+  const d2 = draftOf();
+  // Keep every flag, empty the numbers: only real numbers may count.
+  d2.entries[0].sets[2].weight = 0;
+  d2.entries[0].sets[2].reps = 0;
+  putDraft(d2);
+  const pct2Run = await mount(SessionView(pct2.id));
+  for (let i = 0; i < 6; i++) await settle();
+  ok(draftOf().entries[0].sets[2].prefilled === true && !(draftOf().entries[0].sets[2].weight > 0),
+     'the emptied plan set is resumed still flagged and still empty');
+  await finishAndSave(pct2Run);
+  await settle(); await settle();
+  const pct2Saved = await savedFor(pct2.id);
+  ok(pct2Saved && pct2Saved.entries[0].sets.length === 2,
+     `🛑 a plan set with NO numbers is still not a record — only the two with numbers save `
+     + `(${JSON.stringify(pct2Saved && pct2Saved.entries[0].sets)})`);
+
+  /* ---- 🛑 and a plan the app could NOT price leaves nothing to count ---- */
+  dropDraft();
+  const curlPct = await store.saveWorkout({ name: 'Curl percent two', systemId: null,
+    exercises: [{ exerciseId: curl.id, sets: 2, targets: [80, 80] }] });
+  const curlRun = await mount(SessionView(curlPct.id));
+  for (let i = 0; i < 6; i++) await settle();
+  await finishAndSave(curlRun);
+  await settle(); await settle();
+  ok(!(await savedFor(curlPct.id)),
+     '🛑 a withheld % (no max on this lift) is NOT a prescribed weight: the empty weight and the '
+     + 'app’s 10-rep opening still record nothing untouched');
+
+  dropDraft();
   await store.clearAll();
 }
 

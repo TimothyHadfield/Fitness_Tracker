@@ -488,13 +488,21 @@ export async function SessionView(workoutId) {
            * defect, and `finish()` refusing it is what stands between a
            * prescription and a workout nobody did being written to disk.
            *
-           * ⚠️ THE COST IS REAL AND THE SCREEN HAS TO CARRY IT: a lifter who
-           * accepts the prescribed weight AND the prefilled reps without
-           * touching either loses the set at save. One nudge on any field
-           * makes it theirs (see the stepper's onChange). This does NOT
-           * change the untargeted path, so Open work 15 — whether history
-           * prefills should be guarded too — is still open and still Tim's. */
-          for (const s of sets) s.prefilled = true;
+           * ⚠️ THE COST WAS REAL: a lifter who accepted the prescribed weight
+           * AND the prefilled reps without touching either lost the set at
+           * save (Open work 7).
+           *
+           * 🆕 2026-09-23, TIM DECIDED IT THE OTHER WAY. Asked whether an
+           * untouched set should count, he said: *"last numbers should count,
+           * since they might intentionally not touch it if it was the same as
+           * last time."* So a set that still holds the PLAN'S numbers now
+           * saves like a history-prefilled one does (Open work 15, which
+           * always saved). `prefilled` STAYS on it, because fill-on-open and
+           * the rep-decrement run still need "the app put this here"; the
+           * extra `fromPlan` flag is what `cleanedEntriesOf()` reads to let it
+           * through. A derived opening guess on a never-done lift carries no
+           * `fromPlan` and is still refused. */
+          for (const s of sets) { s.prefilled = true; s.fromPlan = true; }
           targets = {
             percents: wanted,
             achieved: applied.map((a) => a.achieved),
@@ -557,10 +565,11 @@ export async function SessionView(workoutId) {
             // to it, the same direction every other default here leans.
             sets[i].reps = a.reps[0];
           });
-          // Same guard and same cost as the percentage path above: this number
-          // is the app's rather than last time's, so it must be touched before
-          // it can be recorded.
-          for (const s of sets) s.prefilled = true;
+          // Same flags as the percentage path above. Until 2026-09-23 this had
+          // to be touched before it could be recorded; since Tim's decision
+          // ("last numbers should count…") the plan's numbers count untouched,
+          // via `fromPlan`. See the note there.
+          for (const s of sets) { s.prefilled = true; s.fromPlan = true; }
           repPlan = {
             specs: prescribed,
             range: applied.map((a) => [a.low, a.high]),
@@ -3102,9 +3111,12 @@ export async function SessionView(workoutId) {
      * lock-only rule threw that set away, and the existing Hack Squat test
      * caught it the first time it ran.
      *
-     * 🛑 OPEN WORK 15 IS UNTOUCHED. Whether an untouched history-prefilled set
-     * should count at SAVE is still Tim's decision; this changes only what a
-     * swap keeps. */
+     * 🛑 THIS CHANGES ONLY WHAT A SWAP KEEPS. At SAVE, Tim settled Open work 15
+     * on 2026-09-23 — *"last numbers should count, since they might
+     * intentionally not touch it if it was the same as last time"* — so an
+     * untouched history-prefilled set saves (as it always did), and so does an
+     * untouched plan set (see `cleanedEntriesOf()`). A swap still keeps only
+     * `locked || touched`: leaving an exercise for another is not doing it. */
     const recorded = entry.sets.filter((s) => s.locked || s.touched);
     if (recorded.length) {
       entry.sets = recorded;
@@ -3657,7 +3669,15 @@ export async function SessionView(workoutId) {
           // differ on exactly one case and it is the one that matters: a set
           // still carrying the opening numbers the app DERIVED, which nobody
           // has touched. Numbers in it, and not a record of anything.
-          .filter((s) => setIsRecorded(s, e.fields))
+          //
+          // 🆕 2026-09-23 — EXCEPT the PLAN'S numbers (`fromPlan`). Tim: *"last
+          // numbers should count, since they might intentionally not touch it
+          // if it was the same as last time."* A prescribed set accepted as it
+          // stands is a set done as prescribed, like last time's numbers
+          // (Open work 15). It still needs a real number: `hasNumbers` below.
+          // The derived opening guess (no `fromPlan`) is still refused.
+          .filter((s) => setIsRecorded(s, e.fields)
+            || (s.prefilled && s.fromPlan && hasNumbers(s, e.fields)))
           .map((s) => {
             const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields));
             const out = { ...s };
@@ -3667,6 +3687,7 @@ export async function SessionView(workoutId) {
             if (kept.length) out.minis = kept; else delete out.minis;
             delete out.drops;      // legacy key, never written any more
             delete out.prefilled;  // a runtime flag; storage never sees it
+            delete out.fromPlan;   // same, 2026-09-23
             // The padlock (2026-09-12) is a fact about the screen — "this row
             // is shut" — not about the training, and a saved session has no
             // rows. Same treatment as `prefilled`, and a test asserts it.
