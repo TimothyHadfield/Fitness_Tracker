@@ -826,3 +826,16 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   45/45 against fitness-tracker-th with SDK 10.12.2 (`--sdk=$TEMP/fbsdk`).
 - **Open:** YouTube still blocked (famous-lifter retry waits) · Tim's decisions: Open work 15 + 7
   (untouched sets), 10 then 13 (re-baselines), 3/4/5 (screen wording).
+
+## 2026-09-23 (second pass) · Autumn's feedback
+- **Asked:** timer can't be paused/edited (car, bathroom, forgot to stop) · close the influencer list
+  on pick · glutes only fed by hip abduction, which reads too high · lock is annoying: *"Don't change
+  it yet but maybe brainstorm ideas."*
+- **Built:** tap-to-pause workout clock in the runner subtitle + editable Duration on the save screen
+  (889e005) · Compare sheet closes on any pick · merged level-aware ratios (Open work 13) and moved the
+  opening-weight suggestion onto `fromKeyLift()` (347244e).
+- **Verified how:** new tests seen failing first (13 timer, 1 sheet); render 1705/0; all no-Chrome
+  suites 0 failures after the merge; WebKit screenshots in the demo at iPhone 15 and 1440 px (paused
+  clock in accent, Duration box visible without scrolling on the save screen).
+- **Open:** glutes fix = Open work 35 (reverses "direct decides"; his call) · lock ideas = Open work 36
+  · worktrees still broken by OneDrive (`git worktree add` → "Could not reset index file").

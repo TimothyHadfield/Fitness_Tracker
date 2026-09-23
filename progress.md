@@ -48,7 +48,9 @@ first users stop being new).
 | 10 | ✅ closed 2026-09-23 (f29164f) — every exercise pools its top 3 days (`poolExercise()`), weight capped at one reading per exercise (shared ratio error), days below seat/(1+winsorK) excluded. Demo moves ≤ +4.1 % (Back); Calves −0.8 %. Confidence still reads the 3 listed rows; listed shares can sum < 100 % | — |
 | 11 | ✅ closed 2026-09-23 (a `whose: 'their'` panel offers no benchmark button) | — |
 | 12 | ✅ closed (neck ranks) | — |
-| 13 | Conversion ratios are level-blind (machine press ÷ OHP runs 0.89→1.44 by level; the app uses 1.23). Percentile matching from `tools/strength-level-data.mjs` fixes it | his go-ahead (second re-baseline, never in the same commit as 10) |
+| 13 | ✅ closed 2026-09-23 (9710d9c, merged 5b86069; opening weight 347244e) — level-matched conversion via `js/exercise-standards.js` + `fromKeyLift()`/`toKeyLift()`; demo moves ≤ 3.2 % (Shoulders −3.1). Pull-ups/chin-ups/dips stay fixed-ratio | — |
+| 35 | **Autumn's glutes** (measured 2026-09-23, synthetic 140 lb woman): (a) `rateMuscle` drops fallbacks whenever ANY direct reading exists ("Tim's call", muscle-evidence.js ~2581), so one hip-abduction set shuts out RDL/deadlift-derived glute readings; (b) lunges, split squats, leg press, goblet squat are Quads q 0.35–0.40, under `FALLBACK_MIN_QUALITY` 0.45, so they NEVER reach glutes; (c) abduction 150×12 → 262 lb deadlift → 80th pct (SL's own abduction table agrees she is ~Advanced at abduction; the population/ROM is the problem, not the arithmetic) | his call — it reverses a recorded decision |
+| 36 | **Set lock "annoying or unintuitive"** (Autumn) — Tim: *"Don't change it yet but maybe brainstorm ideas."* Ideas given 2026-09-23: tap the locked row to unlock+open; lock only when leaving the exercise; lock only sets the person touched (plan sets now count, so more lock); Settings switch; undo-toast instead | his pick |
 | 15 | ✅ closed 2026-09-23 — Tim: untouched last-time numbers COUNT (the existing behaviour, now pinned by a test) | — |
 | 0c | Should warm-ups be typed by the lifter (Hevy's `W`)? Every recorded set counts until then | his decision |
 | — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
@@ -73,6 +75,10 @@ snapshot); the calendar does not draw the current month when the last recording 
 famous lifter's arms/shoulders are converted from bench, not measured; a partner gets no pull-up
 caption (their bodyweight isn't on this phone).
 
+**Fixed 2026-09-23 (Autumn's feedback, 889e005):** the runner's subtitle is a **workout clock — tap
+to pause/resume** (`pausedAt`/`pausedMs` on the draft, `activeSeconds()` in session-draft.js, the
+mini bar reads the same); the save screen's **Duration is an editable minutes box**, and save writes
+`finishedAt = startedAt + that`. Picking anyone in the Compare sheet now closes it.
 **Fixed 2026-09-23:** `ensureSystems()` adopts orphans into the first system WITHOUT a `presetId`
 (or a new "My Workouts"), never into a programme copied from Explore.
 
@@ -87,6 +93,10 @@ caption (their bodyweight isn't on this phone).
   all"* → Open work 15 + 7: untouched prefilled sets COUNT · Open work 10: blend every set (its own
   commit, re-baseline) · Open work 13: level-aware ratios (separate later commit) · Open work 3/4/5:
   my call.
+
+- **2026-09-23, Tim (Autumn's feedback):** timer pause/edit and close-the-influencer-list → done.
+  Glutes: *"Could you check it out?"* → investigated, fix awaits his call (Open work 35). Lock:
+  *"Don't change it yet"* → ideas only (Open work 36).
 
 ## Standing instructions (Tim's words)
 - **Message length** (2026-09-27): *"Never give me messages that long. Always 2-3 paragraphs max
