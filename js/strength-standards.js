@@ -569,7 +569,9 @@ export const COMPARE_DEFAULT = { pool: 'lifters', sex: 'own', weight: 'own', age
 export const COMPARE_OPTIONS = {
   pool: [
     { key: 'lifters', name: 'People who lift' },
-    { key: 'everyone', name: 'Everyone' },
+    // "All adults", not "Everyone" (review 2026-09-24): the sheet's preset above
+    // is already called Everyone and does something else — it opens every axis.
+    { key: 'everyone', name: 'All adults' },
   ],
   sex: [
     { key: 'male', name: 'Men' },

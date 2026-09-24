@@ -879,6 +879,50 @@ export function presetById(id) {
   return PRESET_SYSTEMS.find((p) => p.id === id) || null;
 }
 
+/* ------------------------------------------------------------------ *
+ * The plan each programme's OWN TEXT states — 2026-09-24 (review, second pass)
+ *
+ * `addPresetSystem()` copied days-a-week and cycle length but never the plan
+ * boxes, so Bumstead's "three on, one off, twice through" arrived as nothing.
+ * Slots name workouts by `key` (store.js maps them to the copy's new ids) or
+ * 'rest'. Display-only, like every plan (Tim chose that on 2026-09-16).
+ *
+ * 🛑 ONLY WHERE THE TEXT ALREADY SAYS IT. No plan is invented:
+ *   Nippard      "Six days a week, one pass through all six workouts" → the six
+ *                in order, then the seventh day off.
+ *   Golden Six   "Monday, Wednesday, Friday" → a WEEK, the one plan that names days.
+ *   Thurston     "Chest, Back, Shoulders, Legs, Arms, Conditioning, rest."
+ *   Bumstead     "Three days on, one off, then three on and one off again."
+ *   Landmarks    "Upper A, Lower A, rest, Upper B, Lower B, rest, rest."
+ *   Upper/Lower  "Upper, Lower, rest, Upper, Lower, rest, rest".
+ * Left out on purpose: the Floating Split ("there are no days of the week"),
+ * Full Body ("A, B, A one week" names no days), and Push Pull Legs, whose
+ * "Push, Pull, Legs, rest, then repeat" reads as either a 4-day or a 7-day
+ * loop and whose own header says six days a week.
+ *
+ * ⚠️ A SEPARATE TABLE, NOT A FIELD ON THE PRESET, and the version guard in
+ * tests/data-layer.test.mjs is why: it hashes each preset's content, and a new
+ * field would demand a version bump — which tells every existing copy "the
+ * original changed" about a display-only plan the update screen cannot even
+ * describe. A cycle rather than a week wherever the text names no weekdays.
+ * ------------------------------------------------------------------ */
+const R = 'rest';
+const PRESET_PLANS = {
+  'preset-nippard-ppl-2023': { kind: 'cycle', slots: ['push-1', 'pull-1', 'legs-1', 'push-2', 'pull-2', 'legs-2', R] },
+  'preset-arnold-golden-six': { kind: 'week', slots: ['golden-six', R, 'golden-six', R, 'golden-six', R, R] },
+  'preset-thurston-6day': { kind: 'cycle', slots: ['chest', 'back', 'shoulders', 'legs', 'arms', 'conditioning', R] },
+  'preset-bumstead-8day': { kind: 'cycle', slots: ['quads-calves', 'chest-triceps', 'back-biceps', R,
+    'shoulders-chest', 'hamstrings-back', 'arms', R] },
+  'preset-volume-landmarks': { kind: 'cycle', slots: ['upper-a', 'lower-a', R, 'upper-b', 'lower-b', R, R] },
+  'preset-upper-lower': { kind: 'cycle', slots: ['upper', 'lower', R, 'upper', 'lower', R, R] },
+};
+
+/** The plan a preset's own text states, as `{ kind, slots }` of workout keys — or null. */
+export function presetPlan(preset) {
+  const p = preset && PRESET_PLANS[preset.id];
+  return p ? { kind: p.kind, slots: p.slots.slice() } : null;
+}
+
 // Total planned sets, used in the browse list so the size of a programme is
 // visible before you commit to it.
 export function presetSetCount(preset) {

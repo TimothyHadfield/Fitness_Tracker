@@ -219,7 +219,9 @@ const sessionName = (s) => (s && (s.workoutName || s.name)) || 'Workout';
  *   `activeDaysByMonth`. Zero collapses the month to one line — see below.
  */
 function monthBlock(year, month, activity, today, onDay = null, activeDays = null) {
-  const first = new Date(year, month, 1).getDay();
+  // 🆕 MONDAY FIRST — review 2026-09-24, so Months and Years (js/year-grid.js) start
+  // their weeks on the same day. getDay() is Sunday = 0; this makes Monday 0.
+  const first = (new Date(year, month, 1).getDay() + 6) % 7;
   const days = new Date(year, month + 1, 0).getDate();
   const isCurrent = today.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`);
 
@@ -317,7 +319,7 @@ function monthBlock(year, month, activity, today, onDay = null, activeDays = nul
     el('div', { class: 'cal-month-head' },
       el('h2', { class: 'cal-title', text: `${MONTHS[month]} ${year}` }),
       el('div', { class: 'cal-dows' },
-        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => el('div', { class: 'cal-dow', text: d }))),
+        ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => el('div', { class: 'cal-dow', text: d }))),
     ),
     el('div', { class: 'cal-grid' }, cells),
   );
@@ -1491,6 +1493,15 @@ let graphChoice = { exerciseId: null, field: null };
 // value the session STARTS at.
 // 'muscles' | 'volume' | 'trend' | 'compare' | 'research' | 'calendar'
 let graphMode = 'muscles';
+
+/* 🆕 A BEST-LIFT ROW ON PROFILE OPENS THAT LIFT'S GRAPH (review, 2026-09-24).
+ * Sets the same module state the tab and the picker set, then the caller
+ * navigates to `#/graphs`. A lift with too little history to chart falls back
+ * to the first chartable one, exactly as a stale choice already does. */
+export function chartLift(exerciseId) {
+  graphMode = 'trend';
+  graphChoice = { exerciseId, field: null };
+}
 let compareField = null;
 // exerciseId -> rep count everything is compared at. Seeded from the most
 // frequently recorded rep count, then whatever the user steps it to.
@@ -1799,7 +1810,7 @@ export async function GraphView(opts = {}) {
           : null,
       ),
     );
-    fillChart(plot, points, graphChoice.field);
+    fillChart(plot, points, graphChoice.field, null, axisUnit(graphChoice.field));
   }
 
   /* ---------- rep-normalised trend (weight + reps exercises) ---------- */
@@ -1898,8 +1909,8 @@ export async function GraphView(opts = {}) {
           opt.loadType ? loadBadge(opt.loadType) : null,
           el('span', { class: 'pt-key' }),
           el('span', {
-            text: `${SOURCE_LABEL[source]} only · ${measured} measured at ${target} reps · rest estimated`
-              + (opt.loadType ? ` · ${LOAD_LABEL[opt.loadType]}` : ''),
+            // 🔄 ~~` · total`~~ — the badge in front of this line already says it (review 2026-09-24).
+            text: `${SOURCE_LABEL[source]} only · ${measured} measured at ${target} reps · rest estimated`,
           }),
         ),
         /* 🚨 WHAT THE CHART REFUSED TO DRAW IS SAID ON THE CHART — 2026-09-13, plan
@@ -1928,7 +1939,8 @@ export async function GraphView(opts = {}) {
           : null,
       ),
     );
-    fillChart(plot, points, 'weight');
+    // The line is the weight for `target` reps, and the axis now says so (review 2026-09-24).
+    fillChart(plot, points, 'weight', null, `${units.units()} for ${target} reps`);
   }
 
   /* ---------- body weight ---------- */
@@ -1948,14 +1960,15 @@ export async function GraphView(opts = {}) {
         // colouring a gain red would be the app inventing an opinion it has no
         // basis for. Every point is a real weigh-in, so every point keeps a
         // marker (Rule 5); nothing here is estimated.
-        summaryStats(bwPoints, 'weight', false),
+        // Last `false`: a weigh-in keeps its decimal — 0.6 lb is real on a scale.
+        summaryStats(bwPoints, 'weight', false, false),
         el('div', { class: 'chart-caption' }, el('span', {
           text: `${bwPoints.length} weigh-ins over ${days} day${days === 1 ? '' : 's'} · one per day, `
             + 'the last one that day wins',
         })),
       ),
     );
-    fillChart(plot, bwPoints, 'weight', 'Body weight over time');
+    fillChart(plot, bwPoints, 'weight', 'Body weight over time', units.units());
   }
 
   /* ---------- compare (paired bars) ---------- */
@@ -2220,7 +2233,11 @@ let chartObserver = null;
 // measured-SVG chart as yours, gridlines, markers, hover readout and all —
 // rather than by a second, thinner chart that would have to be kept in step
 // with this one forever. Rule 5's marker rule lives inside it.
-export function fillChart(host, points, field, label) {
+/**
+ * @param {string} [axisTitle]  what the y-axis measures, in the reader's unit —
+ *   "lbs for 5 reps" (review 2026-09-24). Printed above the axis; see `lineChart`.
+ */
+export function fillChart(host, points, field, label, axisTitle = null) {
   let lastW = 0, lastH = 0;
 
   const draw = () => {
@@ -2229,7 +2246,7 @@ export function fillChart(host, points, field, label) {
     if (w < 60 || h < 60) return;          // not laid out yet
     if (w === lastW && h === lastH) return; // nothing changed
     lastW = w; lastH = h;
-    setChildren(host, lineChart(points, field, w, h, label));
+    setChildren(host, lineChart(points, field, w, h, label, axisTitle));
   };
 
   // The observer is the reliable trigger — it fires once the element is in the
@@ -2499,8 +2516,31 @@ function barChart(rows, field) {
 
 /* ---- SVG line chart ---- */
 
-function lineChart(points, field, W = 360, H = 220, label = null) {
-  const padL = 44, padR = 12, padT = 12, padB = 26;
+/* 🆕 ROUND TICKS — review 2026-09-24. The gridlines were the data's range cut into
+ * equal parts, so a squat chart read 143 · 174 · 206 · 238 · 269: five numbers
+ * nobody loads on a bar. The step is now a 1 / 2 / 2.5 / 5 × 10ⁿ in the READER'S
+ * unit, and the range is widened out to whole steps, so every line sits on a
+ * round number. Time keeps the old split: its labels are clock times. */
+/** The y-axis's unit for a plain chart of one field; null where the labels carry it. */
+function axisUnit(field) {
+  if (field === 'weight') return units.units();
+  if (field === 'time') return null;
+  return (FIELD_META[field] && FIELD_META[field].unit) || null;
+}
+
+export function niceStep(rough) {
+  if (!(rough > 0) || !Number.isFinite(rough)) return 1;
+  const mag = 10 ** Math.floor(Math.log10(rough));
+  const f = rough / mag;
+  // NEAREST round step, not the next one up: rounding up doubled the empty band
+  // under a squat line (a 143–269 range drew 100–300). lineChart() steps up
+  // again itself if nearest gives too many lines.
+  return (f < 1.5 ? 1 : f < 2.25 ? 2 : f < 3.5 ? 2.5 : f < 7.5 ? 5 : 10) * mag;
+}
+
+function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = null) {
+  // ⚠️ The top pad grows only when there is an axis title to hold.
+  const padL = 44, padR = 12, padT = axisTitle ? 24 : 12, padB = 26;
   const iw = W - padL - padR, ih = H - padT - padB;
 
   const ts = points.map((p) => new Date(p.date + 'T00:00:00').getTime());
@@ -2511,6 +2551,27 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
   const pad = (vMax - vMin) * 0.12;
   vMin -= pad; vMax += pad;
   if (field !== 'time' && vMin < 0) vMin = 0;
+  // More gridlines when there is more height to fill.
+  let steps = ih > 300 ? 5 : ih > 170 ? 4 : 3;
+  // Round ticks, worked out in the unit the labels are printed in (see niceStep).
+  const toShown = (v) => (field === 'weight' ? units.toDisplay(v) : v);
+  const perShown = field === 'weight' ? (units.toDisplay(1000) / 1000) : 1;
+  let niceGap = null;
+  if (field !== 'time') {
+    let shownStep = niceStep((toShown(vMax) - toShown(vMin)) / steps);
+    let lo, hi;
+    for (let guard = 0; guard < 4; guard++) {
+      lo = Math.floor(toShown(vMin) / shownStep + 1e-9) * shownStep;
+      hi = Math.ceil(toShown(vMax) / shownStep - 1e-9) * shownStep;
+      // At most two lines more than the height asked for; otherwise the next round step.
+      if ((hi - lo) / shownStep <= steps + 2) break;
+      shownStep = niceStep(shownStep * 1.6);
+    }
+    vMin = lo / perShown;
+    vMax = hi / perShown;
+    steps = Math.max(1, Math.round((hi - lo) / shownStep));
+    niceGap = shownStep;
+  }
 
   const x = (t) => padL + (tMax === tMin ? iw / 2 : ((t - tMin) / (tMax - tMin)) * iw);
   const y = (v) => padT + ih - ((v - vMin) / (vMax - vMin)) * ih;
@@ -2536,8 +2597,7 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
     return n;
   };
 
-  // More gridlines when there is more height to fill.
-  const steps = ih > 300 ? 5 : ih > 170 ? 4 : 3;
+  // (`steps` — how many gridlines — is decided above, beside the round-tick range.)
 
   // ⚠️ THE AXIS PRECISION FOLLOWS THE GAP BETWEEN GRIDLINES, not a fixed decimal
   // place. The old rule rounded every label to 0.1, which on a squat chart printed
@@ -2570,7 +2630,12 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
   // derivation, run on pounds, would have printed two adjacent gridlines with
   // the same number on them.
   const shownGap = Math.abs(asShown(vMin + gap) - asShown(vMin));
-  const dp = shownGap >= 5 ? 0 : shownGap >= 0.5 ? 1 : 2;
+  // A round step says exactly how many decimals it needs: 2.5 → 1, 0.25 → 2, 50 → 0.
+  const stepDp = (s) => {
+    const e = Math.floor(Math.log10(s));
+    return Math.max(0, -e + (Math.abs(s / 10 ** e - 2.5) < 1e-9 ? 1 : 0));
+  };
+  const dp = niceGap ? stepDp(niceGap) : shownGap >= 5 ? 0 : shownGap >= 0.5 ? 1 : 2;
 
   for (let i = 0; i <= steps; i++) {
     const v = vMin + gap * i;
@@ -2578,6 +2643,13 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
     add('line', { x1: padL, x2: W - padR, y1: yy, y2: yy }, 'grid-line');
     const t = add('text', { x: padL - 7, y: yy + 3.5, 'text-anchor': 'end' }, 'axis-text');
     t.textContent = field === 'time' ? fmtTime(v) : trimNum(Number(asShown(v).toFixed(dp)));
+  }
+  /* 🆕 WHAT THE NUMBERS ON THE LEFT ARE — review 2026-09-24. The ticks had no unit and
+   * nothing said the line is the weight for N reps. Plain text above the axis, in
+   * the tick labels' own style; no box (Rule 2). */
+  if (axisTitle) {
+    const at = add('text', { x: 4, y: 11, 'text-anchor': 'start' }, 'axis-text axis-title');
+    at.textContent = axisTitle;
   }
 
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(ts[i]).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
@@ -2675,7 +2747,7 @@ function lineChart(points, field, W = 360, H = 220, label = null) {
 
 /* ---- summary beside the graph ---- */
 
-function summaryStats(points, field, judged = field !== 'time') {
+function summaryStats(points, field, judged = field !== 'time', whole = field === 'weight') {
   const first = points[0].value;
   const last = points[points.length - 1].value;
   const diff = last - first;
@@ -2688,7 +2760,11 @@ function summaryStats(points, field, judged = field !== 'time') {
   const sign = diff > 0 ? '+' : '';
   // In the reader's unit — see the note above `shownValue`. `pct` is deliberately
   // computed from the stored values: a percentage is the same in either unit.
-  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(shownValue(field, v)));
+  // 🆕 Weights are whole numbers in the reader's unit, the rounding Bars uses
+  // (`barChart`) — Start and Now printed "164.6" beside a Bars row saying 165.
+  const fmt = (v) => (field === 'time' ? fmtTime(v)
+    : whole ? units.fmtRounded(v)
+      : trimNum(shownValue(field, v)));
 
   return el('div', { class: 'summary-grid' },
     stat('Start', fmt(first), '', fmtDateShort(points[0].date)),
@@ -2839,6 +2915,30 @@ export function cloudFullWarning(usage) {
   );
 }
 
+/**
+ * A yes/no setting as a real switch — review 2026-09-24. Tim prefers a switch to a
+ * button for on/off (design taste #7); as two chips, "Off" was a filled amber chip
+ * and read like an active choice. The label and the switch share one row; the
+ * label is the switch's accessible name, and `aria-checked` is its state.
+ * Multi-choice settings (theme, colour, units) keep their chips.
+ */
+export function onOffSwitch(label, on, onChange) {
+  const id = `sw-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`;
+  const sw = el('button', {
+    type: 'button', class: 'switch', role: 'switch', id,
+    'aria-checked': String(Boolean(on)),
+    onClick: () => {
+      const next = sw.getAttribute('aria-checked') !== 'true';
+      sw.setAttribute('aria-checked', String(next));
+      onChange(next);
+    },
+  }, el('span', { class: 'switch-knob', 'aria-hidden': 'true' }));
+  return el('div', { class: 'switch-row' },
+    el('label', { for: id, text: label }),
+    sw,
+  );
+}
+
 export async function SettingsView() {
   // ⚠️ SLIMMED 2026-08-26 on Tim's instruction: the profile row, the backup /
   // restore card and Delete all data moved to the ACCOUNT screen (the profile
@@ -2879,19 +2979,17 @@ export async function SettingsView() {
 
   // Changing this shows or hides a readout. It touches no stored number and no
   // rating: the levels are computed from percentiles either way.
-  function setMoreDetails(on, e) {
+  // 🔄 The three yes/no settings are switches since review 2026-09-24 (`onOffSwitch`),
+  // which flips its own state, so these only save and say so.
+  function setMoreDetails(on) {
     store.saveSettings({ moreDetails: on });
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
     toast(on ? 'Showing percentiles' : 'Showing rankings only');
   }
 
   // Shows or hides the rest bar on the workout screen. Nothing stored changes;
   // a draft's old restStartedAt just stops being painted.
-  function setRestTimer(on, e) {
+  function setRestTimer(on) {
     store.saveSettings({ restTimer: on });
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
     toast(on ? 'Rest timer on' : 'Rest timer off');
   }
 
@@ -2906,9 +3004,7 @@ export async function SettingsView() {
    * Defaults ON by absence, unlike the rest timer, and for the opposite
    * reason: with fewer than five accounts on the site, a directory nobody is
    * in is a search that never finds anybody. */
-  function setListed(on, e) {
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
+  function setListed(on) {
     social.setListed(on)
       .then(() => toast(on ? 'People can find you by name' : 'You are no longer findable'))
       .catch((err) => toast(err.message));
@@ -3004,17 +3100,7 @@ export async function SettingsView() {
        * a scope it does not have yet would be a promise the switch cannot keep.
        */
       el('div', { class: 'field' },
-        el('label', { text: 'More details' }),
-        el('div', { class: 'chips' },
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.moreDetails !== true),
-            text: 'Off', onClick: (e) => setMoreDetails(false, e),
-          }),
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.moreDetails === true),
-            text: 'On', onClick: (e) => setMoreDetails(true, e),
-          }),
-        ),
+        onOffSwitch('More details', settings.moreDetails === true, setMoreDetails),
         /* 🚨 "THE RANKING IS THE SAME EITHER WAY" DOES NOT GO BEHIND THE ?, and
          * that is the whole reason this switch is honest. It changes what the
          * reader thinks the ranking IS — somebody who believes turning this off
@@ -3043,17 +3129,7 @@ export async function SettingsView() {
        * asked for off-by-default is also the app's heaviest user, and anybody
        * who misses the bar has a one-tap way back. */
       el('div', { class: 'field' },
-        el('label', { text: 'Rest timer' }),
-        el('div', { class: 'chips' },
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.restTimer !== true),
-            text: 'Off', onClick: (e) => setRestTimer(false, e),
-          }),
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.restTimer === true),
-            text: 'On', onClick: (e) => setRestTimer(true, e),
-          }),
-        ),
+        onOffSwitch('Rest timer', settings.restTimer === true, setRestTimer),
         // ⚠️ RE-SHAPED, NOT HIDDEN. Every word here is what the switch DOES,
         // and a person deciding whether to turn something on must not have to
         // open a ? to find out what it turns on. One 22-word sentence became two.
@@ -3068,17 +3144,7 @@ export async function SettingsView() {
        * has over it, and the help text is deliberately blunt about what it is
        * and is not. */
       el('div', { class: 'field' },
-        el('label', { text: 'Findable by name' }),
-        el('div', { class: 'chips' },
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.listedInDirectory === false),
-            text: 'Off', onClick: (e) => setListed(false, e),
-          }),
-          el('button', {
-            class: 'chip', 'aria-pressed': String(settings.listedInDirectory !== false),
-            text: 'On', onClick: (e) => setListed(true, e),
-          }),
-        ),
+        onOffSwitch('Findable by name', settings.listedInDirectory !== false, setListed),
         /* ⚠️ WHAT THE SWITCH DOES STAYS ON THE SCREEN; the reassurance about
          * what is listed moved behind the ? (2026-09-07). "You still have to
          * accept" is load-bearing — it is the difference between being findable
@@ -3429,7 +3495,7 @@ export async function renderCalendarPane(host, top, opts = {}) {
 export async function renderVolumePane(host, top, opts = {}) {
   const rows = opts.rows || null;
   const who = opts.subject || null;
-  const data = await weeklyVolumeByMuscle(volDays, null, rows);
+  let data = await weeklyVolumeByMuscle(volDays, null, rows);
 
   const reload = () => renderVolumePane(host, top, opts);
   setChildren(top,
@@ -3482,6 +3548,20 @@ export async function renderVolumePane(host, top, opts = {}) {
    * legend's bands all have to be the same quantity or the parts stop adding up
    * to the whole — the fault `volDetail()`'s header describes. A flag threaded
    * through five call sites is five chances to get that wrong; no flag is none. */
+  /* 🆕 EVERY MUSCLE THE FIGURE PAINTS GETS A ROW — review 2026-09-24. The figure
+   * walks MAPPED_MUSCLES and paints a missing one at zero; the list walked
+   * `data.muscles`, which carries Neck only once somebody trains it — so Neck was
+   * coloured on the body with no row under it. A zero row is a measurement here
+   * (this screen's own rule: "zero sets IS a number"), so it is added, not skipped.
+   * ⚠️ A copy, never a write into `data` — the store's rows stay the store's. */
+  const listed = new Set(data.muscles.map((m) => m.muscle));
+  data = {
+    ...data,
+    muscles: [...data.muscles, ...MAPPED_MUSCLES.filter((mu) => !listed.has(mu)).map((mu) => ({
+      muscle: mu, weeklySets: 0, totalSets: 0, daysTrained: 0, sessionsPerWeek: 0, contributors: [],
+    }))],
+  };
+
   const biggest = Math.max(...data.muscles.map((m) => m.weeklySets), 0);
   // ⚠️ ONE SCALE FOR EVERY ROW, and it is the whole reason the bars are worth
   // drawing: the comparison people actually make on this screen is between their
@@ -3930,7 +4010,8 @@ function basicsSection() {
      * answer and 260 a topic. */
     el('div', { class: 'help-line research-sub' },
       el('span', { class: 'field-help', text:
-        'What the research actually supports — with how sure anyone is.' }),
+        // Review 2026-09-24: it ended in the heading's own words; now it adds something.
+        'What the research actually supports, rated by strength of evidence.' }),
       helpDot('Every topic says how much to believe it and links what it came from. Every one '
         + 'also names its own weak spot: a finding with nothing to admit usually has not been '
         + 'checked.', { label: 'How to read these' })),

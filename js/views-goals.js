@@ -487,7 +487,7 @@ function progressBlock(goal, p, m, stale) {
   }
 
   const gained = p.gained;
-  const needed = p.targetWeight - p.startWeight;
+  const shown = shownFigures(p);
 
   return el('div', { class: 'card goal-progress' },
     // The pounds themselves are real whichever model rated them, so all three
@@ -519,7 +519,8 @@ function progressBlock(goal, p, m, stale) {
 
           el('div', { class: 'to-next-label', text: p.reached
             ? 'Target reached.'
-            : `${ceilUnit(p.remaining)} to go of the ${ceilUnit(needed)} this goal asks for.` }),
+            : `${shown.toGo} ${units.units()} to go of the ${shown.needed} ${units.units()} this `
+              + 'goal asks for.' }),
 
           // Going backwards is a real outcome and the screen has to be able to
           // say it without dressing it up. Rule 6 keeps it factual: no
@@ -552,6 +553,23 @@ function progressBlock(goal, p, m, stale) {
           + `session${m.contributorCount === 1 ? '' : 's'} counted.` })
       : null,
   );
+}
+
+/* 🆕 THE THREE FIGURES ARE ROUNDED ONCE AND THE GAPS DERIVED (review,
+ * 2026-09-24). The screen printed "15 lbs higher", "21 to go" and "the 35 this
+ * goal asks for" — each gap rounded on its own, so they summed to 36. Now the
+ * printed Now, Started at and Target are the only rounded numbers, and every
+ * gap is a subtraction of two of them, so the sentences add up on the page. */
+function shownFigures(p) {
+  const start = Math.round(units.toDisplay(p.startWeight));
+  const now = p.currentWeight === null ? null : Math.round(units.toDisplay(p.currentWeight));
+  const target = Math.ceil(units.toDisplay(p.targetWeight));
+  return {
+    start, now, target,
+    needed: target - start,
+    toGo: now === null ? null : Math.max(0, target - now),
+    step: now === null ? null : Math.abs(now - start),
+  };
 }
 
 function stat(label, value) {
@@ -637,7 +655,10 @@ function verdictBlock(goal, p, m, stale) {
         el('p', { text: 'When a verdict does arrive it will only say you are behind if the goal has '
           + 'genuinely become unlikely — never on one flat week.' }),
       ), { label: 'Why there is no verdict', title: 'Why not' })),
-    el('p', { class: 'goal-verdict-body', text: 'Not yet — every number here is measured, not judged.' }),
+    // 🔄 2026-09-24 (review, second pass): ~~"Not yet — …"~~ read like a
+    // failing grade under "On track?". It means the app does not judge this
+    // yet, so it now says that first.
+    el('p', { class: 'goal-verdict-body', text: 'Not judged yet — every number here is measured.' }),
 
     // What it CAN say: the measured change, and the size a change has to beat.
     ...movedSince(goal, p, m, stale),
@@ -720,8 +741,7 @@ function movedSince(goal, p, m, stale) {
    * to the nearest pound — 0.4 kg apart printed as unchanged, 0.3 kg apart as
    * "1 kg higher". The step is now the gap between the two figures AS PRINTED,
    * so the sentence can never disagree with the numbers beside it (§2.7). */
-  const step = Math.abs(Math.round(units.toDisplay(p.currentWeight))
-    - Math.round(units.toDisplay(p.startWeight)));
+  const step = shownFigures(p).step;
   const unitWord = units.units() === 'kg' ? 'kilo' : 'pound';
   const moved = step === 0
     ? `The ${lift} estimate is where it started, ${from} — unchanged to the nearest ${unitWord}.`
@@ -1103,12 +1123,14 @@ async function GoalMuscleView() {
          * profile gate at the top of this screen. goalSourceRefusal() in
          * goals.js holds the rule; this is only its rendering. */
         const refusal = goalSourceRefusal(m);
+        // 🔄 "now", not "estimated" (review, 2026-09-24): Profile prints the
+        // best-ever figure for the same lift, labelled "Best", and the two differ.
         if (refusal) {
           return el('div', { class: 'row goal-refused' },
             el('div', { class: 'row-main' },
               el('div', { class: 'row-title', text: m.muscle }),
               el('div', { class: 'row-sub wrap', text:
-                `${m.lift.name} · ${units.withUnitRounded(m.estimate)} estimated` }),
+                `${m.lift.name} · ${units.withUnitRounded(m.estimate)} now` }),
               el('div', { class: 'muscle-warn', text: `Not available for a goal. ${refusal}` }),
             ),
             el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
@@ -1119,7 +1141,7 @@ async function GoalMuscleView() {
           el('div', { class: 'row-main' },
             el('div', { class: 'row-title', text: m.muscle }),
             el('div', { class: 'row-sub wrap', text:
-              `${m.lift.name} · ${units.withUnitRounded(m.estimate)} estimated` }),
+              `${m.lift.name} · ${units.withUnitRounded(m.estimate)} now` }),
           ),
           el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
             text: m.level ? m.level.name : 'Below Beginner' }),
@@ -1234,36 +1256,48 @@ function goalOption(o, m, profile, existing) {
 function confirmGoal(o, m, profile, existing) {
   const start = todayISO();
 
+  // Built before the sheet so the sheet prints the goal that will be saved —
+  // its end date and its frozen ambition — rather than a second computation.
+  const goal = buildGoal({
+    muscle: o.muscle,
+    level: o.level,
+    targetWeight: o.targetWeight,
+    startWeight: m.estimate,
+    startPercentile: m.percentile,
+    startLevelKey: m.level ? m.level.key : null,
+    startDate: start,
+    liftName: m.lift.name,
+    comparison: comparisonText(profile),
+  });
+
   const set = async () => {
-    const goal = buildGoal({
-      muscle: o.muscle,
-      level: o.level,
-      targetWeight: o.targetWeight,
-      startWeight: m.estimate,
-      startPercentile: m.percentile,
-      startLevelKey: m.level ? m.level.key : null,
-      startDate: start,
-      liftName: m.lift.name,
-      comparison: comparisonText(profile),
-    });
     await store.setGoal(goal);
     toast('Goal set.');
     refreshRoute('#/goals');
   };
 
+  /* 🔄 ALWAYS A SHEET SINCE 2026-09-24 (review, second pass). One tap on a
+   * level used to set the goal outright unless it replaced another — twelve
+   * weeks agreed to by a stray tap. Now every tap confirms: the target, the
+   * date, and what it asks of you, the same numbers the goal screen shows. */
+  const req = requirementsFor(goal.ambition, { bodyWeight: profile.bodyWeight });
+  const lines = [
+    `${ceilUnit(o.targetWeight)} ${m.lift.name} by ${fmtDateShort(goal.endDate)}.`,
+    `Asks for ${req.sets[0]}–${req.sets[1]} hard sets and `
+      + `${req.sessions[0] === req.sessions[1] ? req.sessions[0] : `${req.sessions[0]}–${req.sessions[1]}`}`
+      + ` sessions a week on ${o.muscle}.`,
+  ];
   if (existing) {
-    confirmSheet({
-      title: 'Replace your goal?',
-      message: `You are already aiming at ${existing.targetLevelName} `
-        + `${existing.liftName || existing.muscle}. Setting this one ends that, and it stays in `
-        + 'your history. One goal at a time — otherwise "how many sets do I need" has two answers.',
-      confirmLabel: 'Replace it',
-      danger: false,
-      onConfirm: set,
-    });
-    return;
+    lines.push(`This ends your ${existing.targetLevelName} `
+      + `${existing.liftName || existing.muscle} goal. It stays in your history.`);
   }
-  set();
+  confirmSheet({
+    title: existing ? 'Replace your goal?' : `Aim for ${o.level.name}?`,
+    message: lines.join('\n'),
+    confirmLabel: 'Set goal',
+    danger: false,
+    onConfirm: set,
+  });
 }
 
 /* ---- why progress stalls ---- */

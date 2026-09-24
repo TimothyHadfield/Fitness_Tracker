@@ -292,6 +292,25 @@ export function describeRepSpec(spec) {
 }
 
 /**
+ * What somebody TYPED into the builder's reps field, as `[lo, hi]` — or null.
+ *
+ * 🆕 2026-09-24 (review, second pass). The builder had Sets, set type, % of max
+ * and notes but no reps, so a hand-built workout could never carry the thing
+ * `summariseReps()` below was written to label, and the update sheet's "now
+ * asks for 10 reps — Yours to do" had no control to do it with.
+ *
+ * "8" is a range of one; "8–10", "8-10" and "8 to 10" are a range. Anything
+ * else — half a range, a word, a zero, past MAX_PRESCRIBED_REPS — is refused
+ * rather than guessed at, because a rep target nobody meant is worse than none.
+ */
+export function parseRepText(text) {
+  const s = String(text == null ? '' : text).trim();
+  const m = /^(\d{1,3})(?:\s*(?:-|–|—|to)\s*(\d{1,3}))?$/i.exec(s);
+  if (!m) return null;
+  return normalizeRepSpec(m[2] === undefined ? Number(m[1]) : [Number(m[1]), Number(m[2])]);
+}
+
+/**
  * The chip label. Same shape as `summariseTargets()` so the builder's two chips
  * read as siblings rather than as two unrelated features.
  */

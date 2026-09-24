@@ -668,6 +668,16 @@ export async function inviteSheet() {
         + 'before it is used. When they open it you will be asked to confirm before anything is '
         + 'shared.' }),
       field,
+      /* 🆕 Share, beside Copy — review 2026-09-24. On a phone the share sheet
+       * is how a link actually gets to somebody. Only drawn where there is
+       * one; a dismissed sheet is not an error and says nothing. */
+      typeof navigator !== 'undefined' && navigator.share
+        ? el('button', {
+            class: 'btn primary block', onClick: async () => {
+              try { await navigator.share({ url: made.link }); } catch (_) { /* cancelled */ }
+            },
+          }, icon('share', 16), 'Share')
+        : null,
       el('button', {
         class: 'btn block', text: 'Copy link',
         onClick: async () => {
@@ -2127,7 +2137,10 @@ export async function CompareBodiesView(param) {
       el('div', { class: 'cmp-grid' }, ...columns),
       muscles.legend(more),
       selected
-        ? el('div', { class: 'cmp-grid' }, ...panels)
+        // `cmp-panels`: stacked one above the other on a phone (review
+        // 2026-09-24 — side by side, dates clipped and names wrapped to three
+        // lines at 393px). Side by side from the 860px laptop split up.
+        ? el('div', { class: 'cmp-grid cmp-panels' }, ...panels)
         /* ⚠️ ONE INVITATION, NOT TWO — 2026-09-08. A second `.field-help` under
          * the caption below opened *"Tap a muscle to see both estimated one-rep
          * maxes … and the recorded sets each was worked out from"*, so with

@@ -65,7 +65,15 @@ function daysBetweenDays(fromISO, toISO) {
  * Session runner
  * ================================================================== */
 
+/* "Save Legs first" on the open-workout screen (2026-09-24, review picks): the
+ * id of the workout whose next open should land on its SAVE screen. In memory
+ * and read-once, so it can never outlive the tap that set it — a reload, or any
+ * other workout opening first, and the runner opens as normal. */
+let saveOnOpen = null;
+
 export async function SessionView(workoutId) {
+  const wantSave = saveOnOpen !== null && saveOnOpen === workoutId;
+  saveOnOpen = null;
   const workout = await store.getWorkout(workoutId);
   if (!workout) {
     return screenShell({
@@ -362,6 +370,18 @@ export async function SessionView(workoutId) {
          * BELOW, deliberately. `.pane-bottom` is where the thumb already is on
          * every other screen in the app, and a Discard sitting in that muscle
          * memory is how somebody deletes a workout they meant to go back to. */
+        el('div', { class: 'conflict-actions' },
+        /* 🆕 THE THIRD ANSWER (2026-09-24, review picks): finish the open one
+         * properly. It opens that workout's own save screen; once it is saved
+         * nothing is open, so starting this one asks nothing. */
+        el('button', {
+          class: 'btn',
+          text: `Save ${name} first`,
+          onClick: () => {
+            saveOnOpen = d.workoutId;
+            go('#/session/' + encodeURIComponent(d.workoutId));
+          },
+        }),
         el('button', {
           class: 'btn ghost',
           text: `Discard it and start ${workout.name}`,
@@ -377,6 +397,7 @@ export async function SessionView(workoutId) {
             onConfirm: () => { clearDraft(); refreshRoute(); },
           }),
         }),
+        ),
       ),
       bottom: el('button', {
         class: 'btn primary block',
@@ -3989,6 +4010,12 @@ export async function SessionView(workoutId) {
    * land in the runner rather than on a form about a session that never saved.
    * ================================================================== */
   function openSaveScreen() {
+    document.getElementById('app').replaceChildren(buildSaveScreen());
+  }
+
+  /* The save screen as a node. Split from `openSaveScreen()` so "Save Legs
+   * first" can hand it to the router as this route's screen (see saveOnOpen). */
+  function buildSaveScreen() {
     /* 🚨 EVERYBODY IN THE WORKOUT, NOT WHOEVER IS SELECTED (review, 2026-09-24).
      * This counted `state.entries` — the ACTIVE person's — so with a guest
      * selected the screen summarised only them, while `finish()` saves the
@@ -4112,7 +4139,7 @@ export async function SessionView(workoutId) {
       },
     }, icon('check'), 'Save workout');
 
-    document.getElementById('app').replaceChildren(screenShell({
+    return screenShell({
       title: 'Save workout',
       /* Back into the RUNNER, not into history. The save screen is drawn by
        * replacing `#app` without touching the hash, so the entry behind it is
@@ -4182,7 +4209,7 @@ export async function SessionView(workoutId) {
         }),
       ),
       bottom: el('div', {}, saveError, saveBtn),
-    }));
+    });
     // A description is the thing this screen exists to ask for, but focusing it
     // would raise the keyboard over the summary somebody just came here to read.
   }
@@ -4626,6 +4653,9 @@ export async function SessionView(workoutId) {
     footer,
   );
 
+  // "Save Legs first": this workout's own save screen, as the route's screen.
+  // Its back arrow still returns to `screen` above, the running workout.
+  if (wantSave && existingDraft) return buildSaveScreen();
   return screen;
 }
 
@@ -4682,6 +4712,8 @@ export async function ActivityLogView(presetName) {
           field: f,
           value: state.values[f] || 0,
           exercise: state.exercise,
+          // A run's time is its whole length: minutes when typed bare, ±1 min.
+          duration: true,
           onChange: (v) => { state.values[f] = v; },
         }).node),
     );

@@ -1269,6 +1269,19 @@ export const store = {
     });
 
     const { skipped } = await this.copyPresetWorkouts(preset, system.id);
+
+    /* 🆕 THE PLAN COMES WITH IT — 2026-09-24. Its slots name workouts by preset
+     * `key`, so it can only be written once the copies exist and have ids. A
+     * key whose workout was skipped becomes an empty slot, never a dangling id.
+     * Display-only, like every plan. */
+    const { presetPlan } = await import('./preset-systems.js');
+    const plan = presetPlan(preset);
+    if (plan) {
+      const idByKey = new Map((await this.getWorkouts(system.id))
+        .filter((w) => w.presetKey).map((w) => [w.presetKey, w.id]));
+      const slots = plan.slots.map((s) => (s === 'rest' ? 'rest' : idByKey.get(s) || null));
+      return { system: await this.saveSystem({ ...system, schedule: { kind: plan.kind, slots } }), skipped };
+    }
     return { system, skipped };
   },
 

@@ -71,6 +71,20 @@ function demoCard() {
   );
 }
 
+/* 🆕 SETTINGS FROM ACCOUNT TOO (review, 2026-09-24). The only way in was the
+ * sliders icon on Home; somebody looking for units or the theme opens the
+ * account first. A door, not a copy — `#/settings` stays the one screen, and
+ * the icon stays where it was. */
+function settingsRow() {
+  return el('a', { class: 'row', href: '#/settings' },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: 'Settings' }),
+      el('div', { class: 'row-sub', text: 'Appearance, units, rest timer' }),
+    ),
+    el('span', { class: 'row-chev' }, chevron()),
+  );
+}
+
 /** What the Account screen becomes while the demo is on. */
 function demoScreen() {
   return screenShell({
@@ -104,6 +118,7 @@ function demoScreen() {
       }),
       el('div', { class: 'field-help', style: 'text-align:center' },
         'Your own account and everything in it is exactly where you left it.'),
+      el('div', { class: 'list' }, settingsRow()),
     ],
   });
 }
@@ -788,6 +803,7 @@ async function personalSections({ mode }) {
       ),
       el('span', { class: 'row-chev' }, chevron()),
     ),
+    settingsRow(),
 
     /* ⚠️ WITH THE PERSON, NOT WITH THE DATA CONTROLS — directly under "Your
      * details" and far from "Delete all data". Who can see you and what they

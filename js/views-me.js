@@ -54,7 +54,9 @@
 import { store, social, demo, activityByDate, todayISO, muscleRatings } from './store.js';
 // ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
 // own header — a second copy is the drift that function exists to prevent.
-import { ownCalendar } from './views-data.js';
+import { ownCalendar, chartLift } from './views-data.js';
+// 🆕 Profile's goal row prints how far along it is (review, 2026-09-24).
+import { goalProgress } from './goals.js';
 // 🆕 "What are my best lifts, ever?" — the question the app could not answer
 // until 2026-09-10 — 🔄 and since 2026-09-12 RANKED: the core eight and the rest,
 // each an estimated 1RM with a level and a confidence. Pure; the screen only
@@ -91,6 +93,9 @@ import {
  * had been reading "0 sets" since it shipped. Deleted rather than fixed, since
  * nothing here counts sets by hand any more. */
 import { workoutCard, sessionToCard, cardMeta } from './workout-card.js';
+// Your own card's Comment/Share row and reaction icons (review 2026-09-24).
+import { ownCardActions, rxBit } from './views-workouts.js';
+import { commentAge } from './social.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -200,7 +205,7 @@ async function fill(body) {
 
     bodySection(profile),
     bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }),
-    goalSection(goal),
+    goalSection(goal, muscles),
     calendarSection(activity),
   );
 }
@@ -255,7 +260,9 @@ function bodySection(profile) {
     // is a known gap (§9) and the honest version of it here is saying when.
     sub: missing
       || (profile.bodyWeightDate
-        ? `Last weighed ${relativeDay(profile.bodyWeightDate)}`
+        // Lower-cased here: `relativeDay` answers "Today"/"Yesterday" for a
+        // line of its own, and this is mid-sentence (review, 2026-09-24).
+        ? `Last weighed ${relativeDay(profile.bodyWeightDate).replace(/^(Today|Yesterday)$/, (w) => w.toLowerCase())}`
         : 'Gender, birth year and body weight'),
     href: '#/profile',
     empty: 'Your body',
@@ -284,8 +291,27 @@ function bodySection(profile) {
  * the goal was set — the level being aimed at and the date it runs to — and
  * nothing computed from where the lifter is now. A "you're behind" here would be
  * the one refusal in this app that the summary screen quietly undid.
+ *
+ * 🔄 2026-09-24 (review, second pass): IT PRINTS HOW FAR ALONG, STILL WITH NO
+ * VERDICT. "228 of 249 lbs" is the Goals screen's own Now and Target, side by
+ * side — two measurements, no judgement. "Reached" and "Ended <date>" are
+ * facts about the goal. The row used to ignore both and read "By Oct 29" for a
+ * goal already reached or already over.
  * ------------------------------------------------------------------ */
-function goalSection(goal) {
+export function goalLine(goal, muscles, today = todayISO()) {
+  const m = muscles && muscles.get ? muscles.get(goal.muscle) : null;
+  const p = goalProgress(goal, m ? m.estimate : null, today);
+  if (p.reached) return 'Reached';
+  if (p.expired) return `Ended ${fmtDateShort(goal.endDate)}`;
+  const by = `by ${fmtDateShort(goal.endDate)}`;
+  if (p.currentWeight === null) return `By ${fmtDateShort(goal.endDate)}`;
+  // The same rounding the Goals screen uses: estimates to nearest, targets UP.
+  const now = Math.round(units.toDisplay(p.currentWeight));
+  const target = Math.ceil(units.toDisplay(p.targetWeight));
+  return `${now} of ${target} ${units.units()} · ${by}`;
+}
+
+function goalSection(goal, muscles) {
   return el('div', { class: 'me-section' },
     el('div', { class: 'section-label', text: 'Your goal' }),
     el('div', { class: 'list' },
@@ -296,7 +322,7 @@ function goalSection(goal) {
                 text: `${goal.targetLevelName} ${goal.liftName || goal.muscle}` })
             : el('div', { class: 'row-title', text: 'Set a goal' }),
           el('div', { class: 'row-sub wrap', text: goal
-            ? `By ${fmtDateShort(goal.endDate)}`
+            ? goalLine(goal, muscles)
             : 'Move a muscle up a strength level' }),
         ),
         el('span', { class: 'row-chev' }, chevron()),
@@ -384,6 +410,14 @@ function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
     // two ways.
     caption: `Estimated one-rep maxes, coloured by level ${label.main} · ${label.sub}.`
       + (label.assumed ? ` ${label.assumed}` : ''),
+  }, {
+    // 🆕 2026-09-24 (review, second pass). "Best": this is the best-ever set's
+    // 1RM, where Goals prints the muscle's estimate NOW — two honest numbers
+    // that differ, so each is labelled. And a tap opens that lift's graph.
+    tag: 'Best',
+    link: (l) => (l.exerciseId
+      ? { href: '#/graphs', onClick: () => chartLift(l.exerciseId) }
+      : null),
   });
 }
 
@@ -542,11 +576,11 @@ export async function MePeopleView() {
  * same style of the home page of your workouts from your friends."* The card is
  * `js/workout-card.js` and it is the SAME one, not a copy that resembles it.
  *
- * 🚨 THE FOOT OF YOUR OWN CARD IS A READOUT, NOT BUTTONS. A friend's card
- * carries Kudos/Comment/Share; yours shows who pressed them, because
- * `firestore.rules` gates a reaction on `isFriendOf` and nobody is their own
- * friend. It is also what makes the notification land somewhere useful: the
- * card you arrive at is the one the notification was about, and it says so.
+ * 🚨 THE FOOT OF YOUR OWN CARD IS A READOUT, THEN COMMENT AND SHARE. A
+ * friend's card carries Kudos/Comment/Share; yours shows who pressed them,
+ * which is what makes the notification land somewhere useful. 🔄 Since the
+ * 2026-09-24 review `firestore.rules` lets the owner COMMENT on their own
+ * workout (to reply), still never kudos it — so there is no Kudos button.
  *
  * @param {string|null} named  a session id from `#/me/workouts/<id>` — the
  *   card to scroll to and mark. Ignored when it names nothing on the list,
@@ -621,7 +655,7 @@ export async function MeWorkoutsView(named) {
           // See workoutCard(): your own day screen exists whether or not the
           // session has anything in it, so every card here is a way in.
           alwaysOpen: true,
-          foot: reactionFoot(slot, who),
+          foot: ownFoot(a, slot, who, { me, state, names }),
         });
       }),
     );
@@ -644,16 +678,39 @@ export async function MeWorkoutsView(named) {
  */
 function reactionFoot(slot, who) {
   if (!slot) return null;
+  // Drawn icons rather than 👍 💬, and each comment says when (review
+  // 2026-09-24). Your own replies read "You".
   const lines = [];
   if (slot.kudos && slot.kudos.length) {
-    lines.push(`👍 ${slot.kudos.map(who).join(', ')}`);
+    lines.push(rxBit('thumb', slot.kudos.map(who).join(', ')));
   }
   for (const c of (slot.comments || [])) {
-    lines.push(`💬 ${c.fromName || who(c.from)}: “${c.text}”`);
+    const name = c.mine ? 'You' : (c.fromName || who(c.from));
+    lines.push(rxBit('comment', `${name}: “${c.text}”`, commentAge(c.at)));
   }
   if (!lines.length) return null;
   return el('div', { class: 'feed-rx' },
-    ...lines.map((t) => el('div', { class: 'feed-rx-line', text: t })));
+    ...lines.map((b) => el('div', { class: 'feed-rx-line' }, b)));
+}
+
+/**
+ * The whole foot of your own card: who reacted, then Comment and Share
+ * buttons (review 2026-09-24). Comment lets you reply — firestore.rules lets
+ * the owner comment on their own workout, never kudos it. Share sends a
+ * picture. A reply repaints the readout above the buttons in place.
+ */
+function ownFoot(a, slot, who, { me, state, names }) {
+  const live = slot || { kudos: [], myKudosId: null, comments: [] };
+  const signedIn = Boolean(state && state.available && state.uid);
+  const rx = signedIn
+    ? { slot: live, myUid: state.uid, names: new Map([...names, [state.uid, 'You']]) }
+    : null;
+  const wrap = el('div', { class: 'own-foot' });
+  const readout = el('div');
+  const paint = () => setChildren(readout, reactionFoot(live, who));
+  paint();
+  wrap.append(readout, ownCardActions({ a, me, rx, demo: demo.active(), onChanged: paint }));
+  return wrap;
 }
 
 /**

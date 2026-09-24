@@ -434,6 +434,20 @@ await denied(setDoc(reaction(asAlex, TIM, 'x_long'), commentDoc(ALEX, 'x'.repeat
 await denied(setDoc(reaction(asAlex, TIM, 'x_nosess'), { ...kudosDoc(ALEX), sessionId: '' }),
   'a reaction must name the session it is about');
 
+// 🆕 2026-09-24 — THE OWNER MAY REPLY ON THEIR OWN WORKOUT. Friends commented and
+// the owner could only read, so a thread was one-sided. A COMMENT only: a kudos
+// on your own workout is a vote for yourself.
+await allowed(setDoc(reaction(asTim, TIM, 'c_sess-1_' + TIM + '_r1'), commentDoc(TIM, 'thanks!')),
+  'the owner can reply with a comment on their own workout');
+await denied(setDoc(reaction(asTim, TIM, 'k_sess-1_' + TIM), kudosDoc(TIM)),
+  '⚠️ but cannot give their own workout kudos');
+await denied(setDoc(reaction(asTim, TIM, 'c_forged_owner'), commentDoc(ALEX, 'forged')),
+  '⚠️ and the owner cannot post a comment in a friend\'s name');
+await denied(setDoc(reaction(asTim, TIM, 'x_owner_extra'), { ...commentDoc(TIM), extra: 1 }),
+  'the owner\'s reply is held to the same shape whitelist');
+await denied(setDoc(reaction(asStranger, TIM, 'c_sess-1_' + STRANGER + '_r1'), commentDoc(STRANGER)),
+  '🚨 and a stranger still cannot comment on anybody\'s workout');
+
 // No update path AT ALL — editing is delete-and-repost.
 await denied(updateDoc(reaction(asAlex, TIM, 'c_sess-1_' + ALEX + '_n1'), { text: 'edited' }),
   'the sender cannot edit a comment in place');

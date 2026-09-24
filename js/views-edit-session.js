@@ -84,6 +84,26 @@ export async function EditSessionView(sessionId) {
   });
   noteInput.value = draft.note || '';
 
+  /* 🆕 THE WORKOUT'S LENGTH, FIXABLE AFTER SAVING (2026-09-24, review picks).
+   * The same minutes box the save screen has, and the same rule: Save writes
+   * `finishedAt = startedAt + minutes`, clamped 1–600. Untouched, the stored
+   * finishedAt is left exactly as it was. No startedAt (old rows), no box —
+   * there is nothing to count the minutes from. */
+  let durationMin = null;
+  const startMs = Date.parse(session.startedAt);
+  const storedMin = Math.round((Date.parse(session.finishedAt) - startMs) / 60000);
+  const durBox = Number.isFinite(startMs) ? el('input', {
+    class: 'input edit-dur', type: 'number', inputmode: 'numeric',
+    min: '1', max: '600', step: '1',
+    'aria-label': 'Workout length in minutes',
+    onInput: (e) => {
+      const n = Math.round(Number(e.target.value));
+      if (Number.isFinite(n) && n > 600) e.target.value = '600';
+      durationMin = Number.isFinite(n) && n > 0 ? Math.min(600, n) : null;
+    },
+  }) : null;
+  if (durBox && storedMin >= 1) durBox.value = String(storedMin);
+
   const benchToggle = el('button', {
     class: 'chip', 'aria-pressed': String(Boolean(draft.isBenchmark)),
     text: draft.isBenchmark ? 'Counts as benchmarks' : 'Normal workout',
@@ -250,6 +270,7 @@ export async function EditSessionView(sessionId) {
     // The description keeps the same contract, at the cap the runner types to.
     const note = String(row.note || '').trim().slice(0, 280);
     if (note) row.note = note; else delete row.note;
+    if (durationMin !== null) row.finishedAt = new Date(startMs + durationMin * 60000).toISOString();
     /* ⚠️ GUARDED, the runner's reason (its finish() note): unguarded, a full
      * storage made the promise reject into nothing, and Save changes did
      * nothing at all (review, 2026-09-24). Disabled while in flight so a
@@ -294,6 +315,12 @@ export async function EditSessionView(sessionId) {
         el('div', { class: 'field-help', text:
           'Moving this changes which day it appears on, and where it sits in your graphs.' }),
       ),
+      durBox
+        ? el('div', { class: 'field' },
+          el('label', { text: 'Duration' }),
+          el('div', { class: 'edit-dur-row' }, durBox, el('span', { class: 'edit-dur-unit', text: 'min' })),
+        )
+        : null,
       el('div', { class: 'field' },
         el('label', { text: 'Location' }),
         locationInput,

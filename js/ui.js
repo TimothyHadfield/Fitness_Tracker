@@ -197,6 +197,12 @@ const PATHS = {
   // and the shackle's legs end there, so closed they meet exactly.
   'lock-body': 'M5.5 11h13a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V12a1 1 0 0 1 1-1z',
   'lock-shackle': 'M8 11V7.5a4 4 0 0 1 8 0V11',
+  // The feed's Kudos / Comment / Share row (review 2026-09-24): drawn in the
+  // tab bar's stroke instead of 👍 💬 ↗, which rendered differently on every
+  // phone and never took the accent colour. `share` is the iOS box-and-arrow.
+  thumb: 'M7.5 10.5v10M7.5 10.5l3.6-6.6a1.9 1.9 0 0 1 3.5 1.3l-.9 4.3h5a2 2 0 0 1 2 2.4l-1.3 6.3a2 2 0 0 1-2 1.3H7.5M3.5 10.5h4v10h-4z',
+  comment: 'M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 4v-4H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z',
+  share: 'M12 15V3.5M8 7.5l4-4 4 4M7 10.5H5.5v10h13v-10H17',
 };
 
 export function icon(name, size) {
@@ -1047,13 +1053,20 @@ export function fmtTime(sec) {
   return m > 0 ? `${m}:${String(r).padStart(2, '0')}` : `${r}s`;
 }
 
-export function parseTime(str) {
+/* Seconds from what somebody typed: "h:mm:ss", "m:ss", or a bare number.
+ *
+ * 🆕 2026-09-24 (review picks): "1:05:00" used to read as 65 seconds — only the
+ * first two parts were looked at. And a bare number is SECONDS on a set (a
+ * 45 s plank) but MINUTES on an activity's duration (`bareMinutes`), where
+ * "30" meaning 30 seconds of running was never what anybody meant. */
+export function parseTime(str, { bareMinutes = false } = {}) {
   const t = String(str).trim();
   if (t.includes(':')) {
-    const [m, s] = t.split(':');
-    return (parseInt(m, 10) || 0) * 60 + (parseInt(s, 10) || 0);
+    const parts = t.split(':').map((p) => parseInt(p, 10) || 0);
+    return Math.max(0, parts.reduce((sum, p) => sum * 60 + p, 0));
   }
-  return Math.max(0, Math.round(parseFloat(t) || 0));
+  const n = parseFloat(t) || 0;
+  return Math.max(0, Math.round(bareMinutes ? n * 60 : n));
 }
 
 /**
@@ -1195,14 +1208,19 @@ export function relativeDay(iso) {
  * ⚠️ OMITTING IT CHANGES NOTHING. No exercise means no breakdown means the hint
  * this control has always shown, and NOTHING outside `field === 'weight'` can
  * reach the new branch at all. */
-export function stepper({ field, value, onChange, suffix, exercise }) {
+/* 🆕 `duration` (2026-09-24, review picks) — the time of a whole ACTIVITY (a
+ * run, a swim), not a timed set. A bare number is then minutes, ± moves a
+ * minute, and the keyboard can type a colon for "1:05:00". Off by default, so
+ * a plank's seconds in the runner read exactly as before. */
+export function stepper({ field, value, onChange, suffix, exercise, duration = false }) {
   const meta = FIELD_META[field];
   // Weight is STORED in pounds and SHOWN in the user's unit, so the stepper
   // works entirely in display units — a nudge is then a clean 2.5 kg rather
   // than whatever 5 lb happens to convert to — and converts back on the way
   // out. Every other field has one unit and passes straight through.
   const isWeight = field === 'weight';
-  const step = isWeight ? units.weightStep() : meta.step;
+  const isDuration = duration && field === 'time';
+  const step = isWeight ? units.weightStep() : isDuration ? 60 : meta.step;
   const inbound = (v) => (isWeight ? units.toDisplay(v) : Number(v));
   const outbound = (v) => (isWeight ? units.fromDisplay(v) : v);
 
@@ -1217,12 +1235,30 @@ export function stepper({ field, value, onChange, suffix, exercise }) {
     // reading "62.5" was handed a keyboard that could not type it, and had to
     // reach for the ± buttons to enter a number the screen was already showing.
     // Found 2026-08-21. Reps stay `numeric`: half a rep is not a thing.
-    inputmode: (field === 'distance' || field === 'weight') ? 'decimal' : 'numeric',
+    //
+    // ⚠️ AN ACTIVITY'S TIME GETS `text`, because it is the only mode iOS offers
+    // whose keyboard has a ':' at all — `numeric` and `decimal` are digit pads
+    // (decimal adds only '.'), and `tel` has * # + but no colon. The letters
+    // open first; "123" on that keyboard has the colon. A bare "30" still
+    // works (it is minutes here), so the colon is only needed for h:mm:ss.
+    inputmode: isDuration ? 'text'
+      : (field === 'distance' || field === 'weight') ? 'decimal' : 'numeric',
+    ...(isDuration ? { autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off' } : {}),
     value: display(current),
     'aria-label': meta.label,
   });
+  // As an attribute: el() would set the property to the truthy string 'false'.
+  if (isDuration) input.setAttribute('spellcheck', 'false');
 
   function display(v) {
+    // A duration always reads m:ss ("0:45", never "45s"), or h:mm:ss from an
+    // hour — the forms its box accepts, so what it shows can be typed back.
+    if (isDuration) {
+      const s = Math.max(0, Math.round(v));
+      const ss = String(s % 60).padStart(2, '0');
+      const m = Math.floor(s / 60);
+      return m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+    }
     if (field === 'time') return fmtTime(v);
     if (field === 'distance') return Number(v).toFixed(2);
     // Kilograms keep a decimal: stored as pounds, a round 60 kg is 132.277 lb
@@ -1245,7 +1281,7 @@ export function stepper({ field, value, onChange, suffix, exercise }) {
   // `plateLoad()` takes POUNDS, like everything else stored here. The inventory
   // is chosen from the CURRENT unit rather than baked in, so a kg user is
   // handed 20 kg and 1.25s instead of pounds with converted numbers.
-  const hint = el('div', { class: 'step-unit', text: stepHint(field, meta) });
+  const hint = el('div', { class: 'step-unit', text: isDuration ? '1 min steps' : stepHint(field, meta) });
   function paintHint() {
     if (!loading) return;
     const label = plateLabel(plateLoad(outbound(current), {
@@ -1262,9 +1298,15 @@ export function stepper({ field, value, onChange, suffix, exercise }) {
   }
   paintHint();
 
+  // "30:00" and "1:05:00" are wider than any number this box was sized for.
+  if (isDuration) input.classList.add('is-duration');
+  const fitDuration = () => { if (isDuration) input.classList.toggle('is-long', input.value.length > 5); };
+  fitDuration();
+
   function set(v, silent) {
     current = Math.max(meta.min, Math.round(v * 100) / 100);
     input.value = display(current);
+    fitDuration();
     paintHint();
     if (!silent) onChange(outbound(current));
   }
@@ -1303,9 +1345,11 @@ export function stepper({ field, value, onChange, suffix, exercise }) {
     return btn;
   }
 
-  input.addEventListener('focus', () => { if (field === 'time') input.value = current; input.select(); });
+  // A set's time shows raw seconds while typing; a duration keeps its "30:00",
+  // since a bare number there would read back as minutes.
+  input.addEventListener('focus', () => { if (field === 'time' && !isDuration) input.value = current; input.select(); });
   input.addEventListener('blur', () => {
-    const raw = field === 'time' ? parseTime(input.value) : parseFloat(input.value);
+    const raw = field === 'time' ? parseTime(input.value, { bareMinutes: isDuration }) : parseFloat(input.value);
     set(Number.isNaN(raw) ? current : raw);
   });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });

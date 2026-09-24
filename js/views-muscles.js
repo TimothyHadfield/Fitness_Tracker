@@ -504,15 +504,25 @@ export async function muscleGroupsPane(host, top) {
   }, { sex: profile.gender });
   const foot = el('div', { class: 'body-foot' });
 
+  // The 8-week change, worked out only for the muscle that is open (review 2026-09-24).
+  const trend = pastTrend(sessions, exMap, profile);
+
   function renderPanel() {
-    setChildren(foot,
-      legend(more, trained.size > 0),
-      selected
-        ? detail(muscles.get(selected), selected, profile,
-                 blocked ? blocked.get(selected) : null, more, trained.get(selected),
-                 recent.get(selected))
-        : summary(muscles, trained),
-    );
+    /* 🆕 A PICKED MUSCLE'S DETAILS COME FIRST ON A PHONE — review 2026-09-24. At 393×659
+     * the panel under the figure is ~169px, and the 76px level key sat on top of it, so
+     * the confidence line and the caveats were below the fold with nothing hinting at
+     * them. `has-pick` lets the stylesheet move the key under the details below the
+     * 860px split (css/app.css, Data block); the laptop column has room and is unchanged.
+     * The scroll goes back to the top so a new muscle always opens at its name. */
+    foot.classList.toggle('has-pick', Boolean(selected));
+    const panel = selected
+      ? detail(muscles.get(selected), selected, profile,
+               blocked ? blocked.get(selected) : null, more, trained.get(selected),
+               recent.get(selected))
+      : summary(muscles, trained);
+    setChildren(foot, legend(more, trained.size > 0), panel);
+    foot.scrollTop = 0;
+    if (selected && muscles.get(selected)) trend.fill(panel, selected, muscles.get(selected));
   }
 
   function render() {
@@ -521,6 +531,91 @@ export async function muscleGroupsPane(host, top) {
   }
 
   render();
+}
+
+/* ------------------------------------------------------------------ *
+ * THE 8-WEEK CHANGE — review 2026-09-24
+ * ------------------------------------------------------------------ *
+ *
+ * One line on a rated muscle: how far its key-lift estimate moved since ~8 weeks
+ * ago. 🛑 NO NEW MATHS. The past number is the SAME two calls `muscleStrength()`
+ * makes (js/store.js) — `buildObservations()` then `rateMuscle()` — run on the
+ * sessions and benchmarks dated on or before that day, with that day as `today`.
+ * Weigh-ins are passed whole, as the live rating gets them, so a set is converted
+ * at the same body weight both times and only the training moves the number.
+ *
+ * ⚠️ LAZY, AND MEASURED INTO BEING SO: rating every muscle as of the past date took
+ * 48 ms (observations) + 123 ms (thirteen ratings) on the demo year in WebKit, over
+ * the 150 ms budget, so it runs after a tap and for the open muscle only. The
+ * observations are cached for the pane's life, each muscle's answer too.
+ *
+ * ⚠️ IT LANDS INSIDE `.muscle-stat`, THE LINE THE BIG NUMBER IS ON, so arriving a
+ * moment after the panel moves nothing below it. No reading 8 weeks ago → no line.
+ */
+export const TREND_DAYS = 56;
+
+/** 'YYYY-MM-DD' `days` before `iso`, at noon so DST cannot round a day away. */
+function isoDaysBefore(iso, days) {
+  const d = new Date(String(iso) + 'T12:00:00');
+  d.setDate(d.getDate() - days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** The words, or null when there is nothing to compare against. Pure. */
+export function trendText(nowEstimate, pastEstimate) {
+  if (!Number.isFinite(nowEstimate) || !Number.isFinite(pastEstimate) || !(pastEstimate > 0)) return null;
+  const delta = Math.round(nowEstimate) - Math.round(pastEstimate);
+  const shown = Number(units.fmtRounded(Math.abs(delta)));
+  const weeks = Math.round(TREND_DAYS / 7);
+  if (!shown) return { text: `No change in ${weeks} weeks`, dir: 0 };
+  return {
+    text: `${delta > 0 ? '+' : '−'}${units.withUnitRounded(Math.abs(delta))} in ${weeks} weeks`,
+    dir: delta > 0 ? 1 : -1,
+  };
+}
+
+function pastTrend(sessions, exMap, profile) {
+  const then = isoDaysBefore(todayISO(), TREND_DAYS);
+  let observations = null;
+  const answers = new Map();
+
+  const pastEstimate = async (muscle) => {
+    if (answers.has(muscle)) return answers.get(muscle);
+    if (!observations) {
+      observations = (async () => {
+        const [{ buildObservations }, benchmarks, bodyWeights] = await Promise.all([
+          import('./strength-observations.js'), store.getBenchmarks(), store.getBodyWeights(),
+        ]);
+        const upTo = (r) => r && typeof r.date === 'string' && r.date <= then;
+        return buildObservations({
+          sessions: (sessions || []).filter(upTo),
+          benchmarks: (benchmarks || []).filter(upTo),
+          exMap, bodyWeights, sex: (profile && profile.gender) || null, today: then,
+        }).byMuscle;
+      })();
+    }
+    const [byMuscle, { rateMuscle }] = await Promise.all([observations, import('./muscle-evidence.js')]);
+    const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);
+    const est = rating ? rating.estimate : null;
+    answers.set(muscle, est);
+    return est;
+  };
+
+  return {
+    pastEstimate,
+    /** Adds the line to a panel that is still on screen for the same muscle. */
+    async fill(panel, muscle, m) {
+      let past;
+      try { past = await pastEstimate(muscle); } catch (_) { return; }
+      const said = trendText(m.estimate, past);
+      const row = panel.querySelector && panel.querySelector('.muscle-stat');
+      if (!said || !row || !panel.isConnected || selected !== muscle) return;
+      row.append(el('span', {
+        class: 'muscle-trend' + (said.dir > 0 ? ' up' : said.dir < 0 ? ' down' : ''),
+        text: said.text,
+      }));
+    },
+  };
 }
 
 /**
@@ -627,6 +722,7 @@ export function legend(moreDetails, anyTrainedUnrankable = false) {
     // "No data" and the fade are not levels, so they stay notes rather than
     // becoming two more chips somebody could try to rank themselves against.
     el('div', { class: 'lv-notes' },
+      // 🆕 The swatch is the figure's own grey (`--body-none`) since review 2026-09-24.
       el('span', { class: 'lv-key-item' },
         el('i', { class: 'lv-sw lv-none' }),
         el('span', { class: 'lv-name', text: 'No data' }),
@@ -654,8 +750,12 @@ export function legend(moreDetails, anyTrainedUnrankable = false) {
         : null,
       // Without this the fade is an unexplained visual, and an unexplained
       // visual reads as a rendering bug rather than as information.
+      /* 🆕 PAINTED THE FIGURE'S WAY — review 2026-09-24. `lv-advanced` supplies the
+         hue through `--lv-mix`, and the stylesheet fades it by the same chroma-only
+         rule `.body-region[style*="--tint"]` uses, at the map's floor. It used to be
+         a see-through blue, which is not what a faded muscle looks like. */
       el('span', { class: 'lv-key-item lv-key-note' },
-        el('i', { class: 'lv-sw lv-faded' }),
+        el('i', { class: 'lv-sw lv-faded lv-advanced' }),
         el('span', { class: 'lv-name', text: 'Faded = less sure' }),
       ),
     ),
@@ -926,6 +1026,17 @@ function confidenceLine(m) {
   return `${word} · ${sources}`;
 }
 
+/** Days after which a reading counts as old — raiseConfidenceHint()'s "nothing recent". */
+const SUMMARY_STALE_DAYS = 42;
+
+/** null for a firm reading; otherwise the one word the summary puts after its name. */
+export function summaryMark(m) {
+  if (!m) return null;
+  if (Number(m.newestAgeDays) > SUMMARY_STALE_DAYS) return 'old';
+  if (m.basis === 'fallback' || !m.band || m.band.key === 'low') return 'guessed';
+  return null;
+}
+
 function summary(muscles, trained = new Map()) {
   /* ⚠️ BELOW BEGINNER IS RANKED TOO — 2026-09-24. Every rating in `muscles` is a
    * placing; a null `level` is the one under Beginner (the figure paints it
@@ -937,8 +1048,17 @@ function summary(muscles, trained = new Map()) {
   // Cardio and Activity are library shelves, not muscles — listing them as
   // "not ranked" beside Core and Neck would imply the map is missing them.
   const unranked = UNRANKABLE.filter((u) => u !== 'Cardio' && u !== 'Activity');
-  const strongest = ranked.slice().sort((a, b) => pct(b) - pct(a))[0];
-  const weakest = ranked.slice().sort((a, b) => pct(a) - pct(b))[0];
+  /* 🆕 ONLY FIRM READINGS ARE NAMED — review 2026-09-24. Sorting every rating by
+   * percentile named Traps (inferred from other lifts) and a Core whose newest set
+   * was 191 days old. A muscle is named plainly only when it is a direct reading,
+   * Fair confidence or better, with a set in the last 6 weeks (the same 42 days
+   * `raiseConfidenceHint()` calls "nothing recent"). Fewer than two of those and
+   * the sentence falls back to every rating, marked "(guessed)" or "(old)". */
+  const firm = ranked.filter((m) => !summaryMark(m));
+  const pool = firm.length >= 2 ? firm : ranked;
+  const strongest = pool.slice().sort((a, b) => pct(b) - pct(a))[0];
+  const weakest = pool.slice().sort((a, b) => pct(a) - pct(b))[0];
+  const named = (m) => `${m.muscle} (${levelName(m)})${summaryMark(m) ? ` (${summaryMark(m)})` : ''}`;
 
   /* ⚠️ TWO SENTENCES SINCE 2026-09-23, BECAUSE THE HATCH IS TWO STATES.
    *
@@ -957,8 +1077,7 @@ function summary(muscles, trained = new Map()) {
     el('div', { class: 'field-help', text: 'Tap a muscle for its numbers.' }),
     strongest && weakest && strongest !== weakest
       ? el('div', { class: 'field-help' },
-          `Strongest: ${strongest.muscle} (${levelName(strongest)}). `
-          + `Furthest behind: ${weakest.muscle} (${levelName(weakest)}).`)
+          `Strongest: ${named(strongest)}. Furthest behind: ${named(weakest)}.`)
       : null,
     /* ⚠️ THIS SENTENCE WAS ALREADY TRUE AND THE COLOUR BESIDE IT WAS NOT. It
        now names which muscles you have actually trained but the app could not
@@ -1179,6 +1298,19 @@ export function musclePanel(m, muscle, profile, blocked, moreDetails, trained) {
   return detail(m, muscle, profile, blocked, moreDetails, trained);
 }
 
+/* The key lift in a word or two, for the source table's derived column head (review
+ * 2026-09-24). A short column cannot hold "Close-Grip Bench Press"; these are the
+ * names people say. Anything not listed falls back to the full name, lower-cased. */
+const KEY_LIFT_SHORT = {
+  Chest: 'bench', Back: 'row', Quads: 'squat', Hamstrings: 'RDL', Glutes: 'deadlift',
+  Shoulders: 'OHP', Biceps: 'curl', Triceps: 'CG bench', Traps: 'shrug',
+  Calves: 'calf raise', Forearms: 'wrist curl', Core: 'crunch', Neck: 'neck curl',
+};
+export function asKeyLiftHead(muscle, lift) {
+  const short = KEY_LIFT_SHORT[muscle] || (lift && lift.name ? lift.name.toLowerCase() : null);
+  return short ? `As ${short}` : 'Est. 1RM';
+}
+
 function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
   if (!m) {
     const lift = keyLiftFor(muscle);
@@ -1228,7 +1360,8 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
   }
 
   const pct = Math.round(m.percentile);
-  const freshText = profile?.whose === 'their' ? null : freshnessLine(muscle, recentDays);
+  const inferredHint = m.basis === 'fallback' && typeof m.hint === 'string' && /\binferred\b/i.test(m.hint);
+  const freshText =profile?.whose === 'their' ? null : freshnessLine(muscle, recentDays);
 
   /* ================================================================== *
    * WHERE THE NUMBER CAME FROM — a table, since 2026-09-21
@@ -1371,7 +1504,12 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
       // ⚠️ "Est." IS NOT AN ABBREVIATION FOR TIDINESS — it is the word that stops this column
       // reading like the measured one two cells to its left. Same word the big number above
       // carries ("Estimated 1-rep max in …"), for the same reason and about the same scale.
-      el('span', { class: 'msrc-est', text: 'Est. 1RM' }),
+      /* 🔄 ~~"Est. 1RM"~~ → "As shrug" — review 2026-09-24. Beside "Barbell Row 135×6" the
+       * old head read as the ROW's own max, when the number is that set converted into
+       * the key lift. Naming the key lift is what says so; the est. is in the cell's
+       * title and in the note under the table ("worked out"). */
+      el('span', { class: 'msrc-est', text: asKeyLiftHead(muscle, m.lift),
+        title: `Estimated 1-rep max in ${(m.lift && m.lift.name) || 'the key lift'}` }),
       /* ⚠️ "Influence", NOT "Confidence". Tim called it *"the confidence multiplier"* and the
        * field is `share`, but what it actually answers is *"how much of the final number did
        * this row get to set"* — a fraction of the blend, summing to 1 across the rows
@@ -1573,9 +1711,14 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
     canShowDerived ? sourceNote : null,
     canShowDerived ? sourceToggle : null,
 
+    /* 🔄 "INFERRED" WAS SAID TWICE — review 2026-09-24. This warning and the hint
+     * below ("This is inferred from other lifts. Any direct … would rate it properly.")
+     * sat on one panel. When the hint says it, the hint takes this warning's place and
+     * style — the caveat keeps its prominence and gains the fix; nothing is softened. */
     m.basis === 'fallback'
-      ? el('div', { class: 'muscle-warn', text:
-          'Inferred from the big lifts that also work it — a rough placing.' })
+      ? el('div', { class: 'muscle-warn', text: inferredHint
+          ? m.hint
+          : 'Inferred from the big lifts that also work it — a rough placing.' })
       : null,
 
     /* ⚠️ AND THIS ONE NAMES THE PERFORMED SET TOO (2026-09-21), or it
@@ -1603,7 +1746,7 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
           'Compared against adults in general, most of whom do not lift — a rough placing.' })
       : null,
 
-    m.hint ? el('div', { class: 'muscle-meta', text: m.hint }) : null,
+    m.hint && !inferredHint ? el('div', { class: 'muscle-meta', text: m.hint }) : null,
 
     blockedNote(blocked),
   );

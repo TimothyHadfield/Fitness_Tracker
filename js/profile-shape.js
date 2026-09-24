@@ -222,6 +222,13 @@ export const NO_NUMBER_THEIRS = {
  * @param {object} [opts.noNumber]  which sentence map to read `why` from
  * @param {string} [opts.unranked]  what to print where the level name goes on a
  *   row that HAS a number and cannot be ranked. Defaults to "not ranked".
+ * @param {string} [opts.tag]  🆕 2026-09-24 (review, second pass): one word
+ *   that leads the confidence line — `#/me` passes "Best". Profile prints the
+ *   best-ever set's 1RM while Goals prints the muscle's estimate NOW, and the
+ *   two genuinely differ (236 vs 228 on the demo bench), so each says which.
+ * @param {Function} [opts.link]  🆕 same day: `(row) => ({ href, onClick })`
+ *   or null. Makes a row a way into that lift's graph. Only `#/me` passes it —
+ *   a friend's lift has no graph on this device to open.
  */
 export function liftRow(l, opts = {}) {
   const noNumber = opts.noNumber || NO_NUMBER;
@@ -231,10 +238,14 @@ export function liftRow(l, opts = {}) {
   const lvKey = l.level ? l.level.key : (l.percentile !== null ? 'below' : null);
   const lvName = l.level ? l.level.name : (l.percentile !== null ? 'Below Beginner' : null);
 
-  return el('div', { class: 'row me-best' + (l.oneRM === null ? ' is-none' : '') },
+  // A row with nothing recorded has no line to show, so it is never a link.
+  const link = opts.link && l.days > 0 ? opts.link(l) : null;
+  const cls = 'row me-best' + (l.oneRM === null ? ' is-none' : '');
+
+  return el(link ? 'a' : 'div', link ? { class: cls, href: link.href, onClick: link.onClick } : { class: cls },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: l.name }),
-      el('div', { class: 'row-sub wrap', text: subText(l) }),
+      subLine(subText(l)),
     ),
     el('div', { class: 'me-best-nums' },
       l.oneRM === null
@@ -246,10 +257,25 @@ export function liftRow(l, opts = {}) {
       // level's NAME beside it so the colour is never the only carrier.
       l.oneRM === null ? null
         : el('span', { class: 'me-best-est', text:
-            (l.band ? `${l.band.name} confidence` : 'Estimated')
+            (opts.tag ? `${opts.tag} · ` : '')
+            + (l.band ? `${l.band.name} confidence` : 'Estimated')
             + (lvName ? ` · ${lvName}` : ` · ${unranked}`) }),
     ),
+    link ? el('span', { class: 'row-chev' }, chevron()) : null,
   );
+}
+
+/* 🆕 THE SUB-LINE IS PIECES, EACH KEPT WHOLE (2026-09-24). At 393px the old
+ * single string broke inside a piece — "last Sep / 22" — so each piece is its
+ * own no-wrap span and the line may only break between them. */
+function subLine(parts) {
+  const list = Array.isArray(parts) ? parts : [parts];
+  const kids = [];
+  list.forEach((p, i) => {
+    if (i) kids.push(' · ');
+    kids.push(el('span', { class: 'me-best-bit', text: p }));
+  });
+  return el('div', { class: 'row-sub wrap' }, ...kids);
 }
 
 /* The sub-line: what the number rests on. A recorded row names the SET it was
@@ -260,6 +286,11 @@ export function liftRow(l, opts = {}) {
  * a truthful provenance line. Their document does not carry "days trained" per
  * lift, and printing "0 days" over a real rating would be a false statement
  * made by a default rather than by anybody's decision. */
+/* 🔄 2026-09-24 (review, second pass): THE DATE IS THE SET'S OWN. The line
+ * read "215 lbs × 3 · 68 days · last Sep 22" for a set lifted on Aug 14 — Sep
+ * 22 was the last bench DAY and "68 days" was days trained, and a reader took
+ * both as facts about the set. Now: "215 lbs × 3 · Aug 14 · trained 68 days".
+ * Returns pieces; `subLine` keeps each one whole. */
 function subText(l) {
   if (typeof l.sub === 'string') return l.sub;
   if (l.source === 'recorded' && l.best) {
@@ -267,19 +298,20 @@ function subText(l) {
       ? `${l.best.reps} reps`
       : `${units.withUnit(l.best.weight)}${l.perSide ? '/side' : ''}${l.best.reps ? ` × ${l.best.reps}` : ''}`
         + (l.bodyIncluded ? ' added' : '');
-    return `${set} · ${daysText(l)}`;
+    return [set, l.best.date ? fmtDateShort(l.best.date) : null, daysText(l)].filter(Boolean);
   }
   if (l.source === 'converted') {
-    return `Estimated from ${l.from.join(', ')}` + (l.days ? ` · ${daysText(l)}` : ' · never recorded')
-      + (l.bodyIncluded ? ' · body weight included' : '');
+    return [`Estimated from ${l.from.join(', ')}`, l.days ? daysText(l) : 'never recorded',
+      l.bodyIncluded ? 'body weight included' : null].filter(Boolean);
   }
-  return l.days ? daysText(l) : 'Not trained yet';
+  return l.days ? cap(daysText(l)) : 'Not trained yet';
 }
 
 export function daysText(l) {
-  return `${l.days} ${l.days === 1 ? 'day' : 'days'}`
-    + (l.lastDate ? ` · last ${fmtDateShort(l.lastDate)}` : '');
+  return `trained ${l.days} ${l.days === 1 ? 'day' : 'days'}`;
 }
+
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * The whole section: the core list, the caption, and "Other lifts" behind a
@@ -322,17 +354,23 @@ export function bestLiftsBlock(model, opts = {}) {
             ...other.map((l) => liftRow(l, opts)),
             // Reps-only work — pull-ups with no weigh-in, push-ups — has a true
             // best and no honest pound figure. Listed plainly, uncoloured.
-            ...repsOnly.map((l) => el('div', { class: 'row me-best' },
-              el('div', { class: 'row-main' },
-                el('div', { class: 'row-title', text: l.name }),
-                el('div', { class: 'row-sub wrap', text:
-                  typeof l.sub === 'string' ? l.sub : daysText(l) }),
-              ),
-              el('div', { class: 'me-best-nums' },
-                el('span', { class: 'me-best-top', text: `${l.reps} reps` }),
-                el('span', { class: 'me-best-est', text: 'measured, not ranked' }),
-              ),
-            )),
+            ...repsOnly.map((l) => {
+              const link = opts.link && l.days > 0 ? opts.link(l) : null;
+              return el(link ? 'a' : 'div',
+                link ? { class: 'row me-best', href: link.href, onClick: link.onClick }
+                  : { class: 'row me-best' },
+                el('div', { class: 'row-main' },
+                  el('div', { class: 'row-title', text: l.name }),
+                  el('div', { class: 'row-sub wrap', text:
+                    typeof l.sub === 'string' ? l.sub : cap(daysText(l)) }),
+                ),
+                el('div', { class: 'me-best-nums' },
+                  el('span', { class: 'me-best-top', text: `${l.reps} reps` }),
+                  el('span', { class: 'me-best-est', text: 'measured, not ranked' }),
+                ),
+                link ? el('span', { class: 'row-chev' }, chevron()) : null,
+              );
+            }),
           ),
         )
       : null,

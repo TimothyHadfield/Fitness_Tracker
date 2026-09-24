@@ -880,7 +880,8 @@ for (const mode of ['Graph', 'Bars']) {
   await settle(); await settle();
 
   const rows = [...data.querySelectorAll('.vol-row')];
-  ok(rows.length === 12, `every volume muscle gets a row (${rows.length})`);
+  // 13 since review 2026-09-24: Neck gets a row like every other mapped muscle.
+  ok(rows.length === 13, `every volume muscle gets a row (${rows.length})`);
   ok(/ \/ wk/.test(rows[0].textContent),
      'with three weeks of history it states a RATE — sets a week, which is the metric');
   ok(/Chest|Quads/.test(rows[0].querySelector('.vol-name').textContent),
@@ -1045,7 +1046,7 @@ for (const mode of ['Graph', 'Bars']) {
   await settle(); await settle();
   ok([...data.querySelectorAll('.chip')].find((c) => c.textContent === '12 weeks')
        .getAttribute('aria-pressed') === 'true', 'the window is switchable');
-  ok(data.querySelectorAll('.vol-row').length === 12, 'and the list redraws over the longer window');
+  ok(data.querySelectorAll('.vol-row').length === 13, 'and the list redraws over the longer window');
 }
 
 /* ================= the sliding segment pill (2026-09-01) =================
@@ -3995,7 +3996,7 @@ ok(!data.querySelector('.rep-target'),
      the REFUSAL stays on the screen, because a reader who does not know the app
      is declining to judge will read the numbers under it as a verdict; the
      reasoning is one tap away. Both are still required to exist. */
-  ok(/measured, not judged/i.test(live),
+  ok(/not judged yet/i.test(live),
      'it states outright on the screen that it will not give an on-track verdict yet');
   goals.querySelector('.goal-verdict .help-dot').click();
   await settle();
@@ -10017,9 +10018,12 @@ ok(!data.querySelector('.rep-target'),
        recorded, so this must stay a link — the vacuity guard on `alwaysOpen`. */
     ok(cards.every((c) => c.querySelector('a.feed-open')),
        '🚨 every one is a way in, empty or not — the one place your own list differs from a friend\'s');
-    ok(!list.querySelector('.feed-act'),
-       '🛑 and no Kudos/Comment buttons on your own workout — firestore.rules gates a reaction on '
-       + 'isFriendOf, and nobody is their own friend');
+    /* 🔄 2026-09-24 review: the owner may COMMENT (reply) on their own workout
+       and share a picture of it; kudos stays friends-only in firestore.rules. */
+    ok(![...list.querySelectorAll('.feed-act')].some((b) => /Kudos/.test(b.textContent)),
+       '🛑 and no Kudos button on your own workout — firestore.rules refuses a kudos for yourself');
+    ok(cards.every((c) => [...c.querySelectorAll('.feed-act')].some((b) => /Comment/.test(b.textContent))),
+       '🆕 but every own card has Comment (reply) and Share');
   }
 
   /* ---- where a notification lands (2026-09-27) ----

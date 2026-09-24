@@ -370,7 +370,12 @@ service cloud.firestore {
       // each other, on a page they are merely allowed to look at.
       allow get, list: if isOwner(userId) || isFriendOf(userId);
 
-      allow create: if isFriendOf(userId) && validReaction();
+      // 🆕 2026-09-24 — THE OWNER MAY REPLY. A COMMENT only: kudos on your
+      // own workout is a vote for yourself. `from` is still proven by
+      // validReaction(), so the owner cannot post in a friend's name.
+      allow create: if (isFriendOf(userId)
+                        || (isOwner(userId) && request.resource.data.kind == 'comment'))
+                    && validReaction();
 
       // No update path AT ALL. Editing is delete-and-repost; a kudos toggle
       // is create/delete of a deterministic id. Every mutation a rule does

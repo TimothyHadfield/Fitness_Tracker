@@ -1,6 +1,9 @@
 // Home, workout list, workout builder, exercise picker.
 
-import { store, social, DEFAULT_SETS, todayISO } from './store.js';
+import { store, social, auth, DEFAULT_SETS, todayISO } from './store.js';
+// Home feed (review 2026-09-24): comment times, and the picture of your own card.
+import { commentAge } from './social.js';
+import { sessionStats } from './session-stats.js';
 import { suggestNext, describeSuggestion, estimateWorkoutMinutes } from './next-workout.js';
 import {
   DROP, MYO, isNested, blocksOf, groupLabel, isLinked, toggleLink, normalizeGroups,
@@ -9,6 +12,12 @@ import {
 import {
   TARGET_STEP, clampTarget, normalizeTargets, targetsApply, summariseTargets,
 } from './set-targets.js';
+import {
+  parseRepText, expandRepSpec, normalizeRepSpec, summariseReps,
+} from './set-reps.js';
+// The workout checker — built and tested in 2026-09, shown since the 2026-09-24
+// review. Its normal answer is `[]`, and then nothing is drawn at all.
+import { lintWorkout, lintProgramme } from './template-lint.js';
 import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
   canStandIn, standInFor, searchExercises,
@@ -32,6 +41,7 @@ import { alternativesFor } from './exercise-families.js';
  * a FRIEND. `sessionStats`/`setsLabel`/`ACTIVITY_NAMES` left with it and are
  * imported here no longer — they had no other caller. */
 import { workoutCard, cardMeta } from './workout-card.js';
+import { liveDraft, draftRecordedSets } from './session-draft.js';
 
 /* A built-in exercise by NAME, for the ready-made-system screens — those list
  * their exercises by name (`preset-systems.js` references them that way on
@@ -65,6 +75,38 @@ const go = (hash) => { location.hash = hash; };
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
+
+/* Sets and the planned reps in one short string — 2026-09-24 review. "1 set"
+ * on Nippard's bench hid the "3–5" stored with it. One rep target for every
+ * set reads "3 × 8" / "1 × 3–5"; targets that differ per set are listed
+ * ("8 / 8 / 6"), which says the count too. No reps stored: "3 sets", as before.
+ * Takes a stored exercise (`reps` per set) or a preset's (`reps` for all). */
+function setsByReps(item) {
+  const per = expandRepSpec(item.reps, item.sets);
+  if (!per) return plural(item.sets, 'set');
+  const words = per.map((r) => {
+    const p = normalizeRepSpec(r);
+    return p[0] === p[1] ? String(p[0]) : `${p[0]}–${p[1]}`;
+  });
+  return new Set(words).size === 1 ? `${item.sets} × ${words[0]}` : words.join(' / ');
+}
+
+/* The workout checker's findings as short lines, or null when there are none —
+ * which is the normal answer and draws nothing. `nameOf` prefixes a per-day
+ * finding with its workout's name on a PROGRAMME screen, where "sets here"
+ * would not say which day. */
+function lintBlock(findings, nameOf = null) {
+  if (!findings || !findings.length) return null;
+  return el('div', { class: 'lint-notes' }, findings.map((f) => {
+    const day = nameOf && f.workoutId ? nameOf(f.workoutId) : null;
+    // "Chest · Chest: 15 sets" says the day twice; the muscle already names it.
+    const prefix = day && !f.message.startsWith(day + ':') ? day + ' · ' : '';
+    return el('div', {
+      class: 'field-help lint-line' + (f.severity === 'warn' ? ' is-warn' : ''),
+      text: prefix + f.message,
+    });
+  }));
+}
 
 /* ================================================================== *
  * Home
@@ -179,10 +221,27 @@ async function fillFeed(body) {
     return;
   }
 
-  if (!state.available || !state.name) {
+  /* 🔄 THE NEWCOMER PATH — review 2026-09-24. Signed out, "Find friends" used
+   * to land on a Friends screen saying "Friends need a real account", which
+   * Home never mentioned. Home now says it and goes straight to account setup.
+   * Offline is its own answer: an account is not what is missing. */
+  if (!state.available) {
+    setChildren(body, state.reason === 'offline'
+      ? emptyState('Not connected', 'Your feed needs a connection.',
+          el('button', { class: 'btn', text: 'Try again', onClick: async () => {
+            try { await auth.retry(); } catch (_) { /* the screen says so again */ }
+            refreshRoute('#/home');
+          } }))
+      : emptyState('Friends need an account',
+          'Set one up and your friends’ workouts show up here.',
+          el('a', { class: 'btn primary', href: '#/account', text: 'Set up account' })));
+    return;
+  }
+  if (!state.name) {
+    // The Friends screen asks for the display name first, so it is the door.
     setChildren(body, emptyState('Your feed lives here',
-      'Connect with someone you train with and their workouts show up here as they log them.',
-      el('a', { class: 'btn primary', href: '#/social', text: 'Find friends' })));
+      'Add someone you train with to see their workouts here.',
+      el('a', { class: 'btn primary', href: '#/social', text: 'Add a friend' })));
     return;
   }
 
@@ -190,19 +249,27 @@ async function fillFeed(body) {
    * 2026-09-24. A request somebody accepted only became a friendship once you
    * opened Friends, so their workouts stayed off this feed until then; and a
    * friend who disconnected stayed on it. Failures change nothing, exactly as
-   * they do over there. If either moved the list, the state is read again. */
-  const [departed, joined] = await Promise.all([
+   * they do over there. If either moved the list, the state is read again.
+   *
+   * 🆕 And what is WAITING for you there (review 2026-09-24) — requests,
+   * workouts recorded for you, used invite links — read in the same breath,
+   * so one line on Home can say so. Failures count as nothing waiting. */
+  const [departed, joined, waiting] = await Promise.all([
     social.processDisconnects().catch(() => 0),
     social.processAcceptedRequests().catch(() => 0),
+    waitingLine(),
   ]);
   if (departed > 0 || joined > 0) {
     try { state = await social.state(); } catch (_) { /* keep the list we had */ }
   }
+  const lead = waiting ? [waiting] : [];
 
   if (!state.connections.length) {
-    setChildren(body, emptyState('Nobody to follow yet',
-      'Send somebody an invite link and their workouts appear here the moment they train.',
-      el('a', { class: 'btn primary', href: '#/social', text: 'Invite a friend' })));
+    // ⚠️ Not "follow": friends are mutual. The button is Add a friend (search,
+    // code or link), not the Friends list it used to open.
+    setChildren(body, ...lead, emptyState('No friends yet',
+      'Add someone you train with to see their workouts here.',
+      el('a', { class: 'btn primary', href: '#/find', text: 'Add a friend' })));
     return;
   }
 
@@ -219,7 +286,7 @@ async function fillFeed(body) {
   const entries = feedEntries(seen.filter(Boolean));
 
   if (!entries.length) {
-    setChildren(body, emptyState('Nothing from anyone yet',
+    setChildren(body, ...lead, emptyState('Nothing from anyone yet',
       'Your friends’ workouts will appear here as they record them.'));
     return;
   }
@@ -283,8 +350,34 @@ async function fillFeed(body) {
   ]);
   shown = first.length;
 
-  setChildren(body, ...(mineBlock ? [mineBlock] : []), ...first.map((e) => feedCard(withRx(e))),
+  setChildren(body, ...lead, ...(mineBlock ? [mineBlock] : []), ...first.map((e) => feedCard(withRx(e))),
     ...(shown < entries.length ? [more] : []));
+}
+
+/**
+ * One line at the top of Home when something waits on the Friends screen —
+ * "2 people asked to connect · 1 workout recorded for you". Null when nothing
+ * does, which is the normal case and draws nothing. Review 2026-09-24: these
+ * were only ever fetched on the Friends screen, so nobody knew to go there.
+ */
+async function waitingLine() {
+  const [requests, offers, invites] = await Promise.all([
+    social.requests().catch(() => []),
+    social.handoffs().catch(() => []),
+    social.invites().catch(() => []),
+  ]);
+  const claims = (invites || []).filter((i) => i && i.claimedBy).length;
+  const people = (n) => (n === 1 ? '1 person' : `${n} people`);
+  const bits = [
+    requests.length ? `${people(requests.length)} asked to connect` : null,
+    offers.length ? `${plural(offers.length, 'workout')} recorded for you` : null,
+    claims ? `${people(claims)} used your invite` : null,
+  ].filter(Boolean);
+  if (!bits.length) return null;
+  return el('a', { class: 'feed-waiting', href: '#/social' },
+    el('span', { class: 'feed-waiting-dot', 'aria-hidden': 'true' }),
+    el('span', { text: bits.join(' · ') }),
+    chevron());
 }
 
 /**
@@ -337,12 +430,16 @@ async function reactionsOnMine(state, names) {
   return el('div', { class: 'feed-mine' },
     el('div', { class: 'section-label', text: 'On your workouts' }),
     ...rows.slice(0, 3).map(({ s, slot, sid }) => {
+      // Drawn icons, not 👍 💬 (review 2026-09-24), and each comment says when.
       const bits = [];
       if (slot.kudos.length) {
-        bits.push(`👍 ${slot.kudos.map(who).join(', ')}`);
+        bits.push(rxBit('thumb', slot.kudos.map(who).join(', ')));
       }
       for (const c of slot.comments.slice(-2)) {
-        bits.push(`💬 ${c.fromName || who(c.from)}: “${c.text.length > 60 ? c.text.slice(0, 57) + '…' : c.text}”`);
+        const age = commentAge(c.at);
+        bits.push(rxBit('comment',
+          `${c.fromName || who(c.from)}: “${c.text.length > 60 ? c.text.slice(0, 57) + '…' : c.text}”`,
+          age));
       }
       /* ⚠️ AN `<a>`, NOT A ROW WITH AN onClick. The whole line is the target,
        * it is keyboard-reachable for free, and it survives the same
@@ -352,10 +449,22 @@ async function reactionsOnMine(state, names) {
         href: `#/me/workouts/${encodeURIComponent(sid)}`,
       },
         el('span', { class: 'feed-mine-what', text: `${s.workoutName || 'Workout'} · ${relativeDay(s.date)}` }),
-        el('span', { class: 'feed-mine-who', text: bits.join('   ') }),
+        el('span', { class: 'feed-mine-who' }, ...bits),
       );
     }),
   );
+}
+
+/**
+ * One reaction as an inline piece: a drawn icon, the words, and for a comment
+ * how long ago it was said. Shared by the Home strip and your own card's foot
+ * (views-me.js), so the two read the same.
+ */
+export function rxBit(glyph, words, age = '') {
+  return el('span', { class: 'rx-bit' },
+    icon(glyph, 14),
+    el('span', { text: words }),
+    age ? el('span', { class: 'rx-age', text: age }) : null);
 }
 
 /**
@@ -458,23 +567,38 @@ export function feedActions(e) {
   // fault this project keeps refusing to ship, so it says why.
   const noAnchor = () => toast('This workout was shared before reactions existed — it cannot take one.');
 
+  /* 🔄 OPTIMISTIC SINCE THE 2026-09-24 REVIEW. A tap waited for the save
+   * before anything moved, so on cellular the button looked dead for a second.
+   * The count and colour change at once and the icon pops; a failed save puts
+   * both back and says why. `busy` still drops taps while one save is out, so
+   * two quick taps cannot race each other to the server. */
+  const setMine = (given) => {
+    if (given) {
+      slot.myKudosId = slot.myKudosId || 'mine';
+      if (!slot.kudos.includes(rx.myUid)) slot.kudos.push(rx.myUid);
+    } else {
+      slot.myKudosId = null;
+      slot.kudos = slot.kudos.filter((u) => u !== rx.myUid);
+    }
+  };
   let busy = false;
   async function onKudos() {
     if (!rx) { refuse(); return; }
     if (!e.act.id) { noAnchor(); return; }
     if (busy) return;
     busy = true;
+    const had = Boolean(slot.myKudosId);
+    const before = { id: slot.myKudosId, kudos: [...slot.kudos] };
+    setMine(!had);
+    paint(!had);
     try {
-      const given = await social.toggleKudos(e.uid, e.act.id, Boolean(slot.myKudosId));
-      if (given) {
-        slot.myKudosId = 'mine';
-        if (!slot.kudos.includes(rx.myUid)) slot.kudos.push(rx.myUid);
-      } else {
-        slot.myKudosId = null;
-        slot.kudos = slot.kudos.filter((u) => u !== rx.myUid);
-      }
-      paint();
+      const given = await social.toggleKudos(e.uid, e.act.id, had);
+      // The server's answer wins if it ever disagrees with the guess.
+      if (given !== !had) { setMine(given); paint(); }
     } catch (err) {
+      slot.myKudosId = before.id;
+      slot.kudos = before.kudos;
+      paint();
       toast((err && err.message) || 'Could not send that.');
     } finally { busy = false; }
   }
@@ -482,10 +606,10 @@ export function feedActions(e) {
   function onComment() {
     if (!rx) { refuse(); return; }
     if (!e.act.id) { noAnchor(); return; }
-    openCommentsSheet(e, rx, paint);
+    openCommentsSheet(e, rx, () => paint());
   }
 
-  function paint() {
+  function paint(pop = false) {
     const mine = Boolean(slot.myKudosId);
     setChildren(row,
       el('button', {
@@ -493,17 +617,73 @@ export function feedActions(e) {
         'aria-pressed': mine ? 'true' : 'false',
         onClick: onKudos,
       },
-        el('span', { class: 'feed-act-glyph', text: '👍' }),
+        el('span', { class: 'feed-act-glyph' + (pop ? ' is-popping' : '') }, icon('thumb', 17)),
         'Kudos' + (slot.kudos.length ? ` · ${slot.kudos.length}` : '')),
       el('button', { class: 'feed-act', onClick: onComment },
-        el('span', { class: 'feed-act-glyph', text: '💬' }),
+        el('span', { class: 'feed-act-glyph' }, icon('comment', 17)),
         'Comment' + (slot.comments.length ? ` · ${slot.comments.length}` : '')),
       el('button', { class: 'feed-act', onClick: () => shareActivity(e) },
-        el('span', { class: 'feed-act-glyph', text: '↗' }), 'Share'),
+        el('span', { class: 'feed-act-glyph' }, icon('share', 17)), 'Share'),
     );
   }
   paint();
   return row;
+}
+
+/**
+ * The foot buttons on YOUR OWN workout card (#/me/workouts) — review
+ * 2026-09-24. Comment opens the same thread a friend sees, so you can reply
+ * (firestore.rules lets the owner comment, and only comment — no kudos for
+ * yourself). Share sends a picture of the workout, the one the friend
+ * workout screen makes.
+ *
+ * @param {object} o
+ *   a        the card shape (sessionToCard)
+ *   me       your display name, for the picture
+ *   rx       { slot, myUid, names } — null when there is no account to write with
+ *   demo     true in the demo, which refuses with a sentence like the feed does
+ *   onChanged called after a comment is added or deleted
+ */
+export function ownCardActions({ a, me, rx, demo = false, onChanged = () => {} }) {
+  const row = el('div', { class: 'feed-actions' });
+  const slot = rx ? rx.slot : { comments: [] };
+  const onComment = () => {
+    if (!rx) {
+      toast(demo ? 'The demo account cannot comment.' : 'Comments need a signed-in account.');
+      return;
+    }
+    if (!a.id) { toast('This workout has no id to hang a comment on.'); return; }
+    openCommentsSheet({ uid: rx.myUid, name: me || 'You', act: a, own: true }, rx,
+      () => { paint(); onChanged(); });
+  };
+  function paint() {
+    setChildren(row,
+      el('button', { class: 'feed-act', onClick: onComment },
+        el('span', { class: 'feed-act-glyph' }, icon('comment', 17)),
+        'Comment' + (slot.comments.length ? ` · ${slot.comments.length}` : '')),
+      el('button', { class: 'feed-act', onClick: () => shareCardPicture(a, me || 'Me') },
+        el('span', { class: 'feed-act-glyph' }, icon('share', 17)), 'Share'),
+    );
+  }
+  paint();
+  return row;
+}
+
+/* A picture of one workout card, through the same module the friend workout
+ * screen uses (share-image.js). No weights on it — that module enforces it. */
+async function shareCardPicture(a, who) {
+  try {
+    const stats = sessionStats(a.entries || []);
+    const { shareWorkoutImage } = await import('./share-image.js');
+    const r = await shareWorkoutImage({
+      title: a.name || 'Workout', who, date: a.date, minutes: a.minutes || null,
+      sets: stats.sets, note: a.note || null, location: a.location || null,
+      exercises: stats.byExercise.map((x) => ({ name: x.name, sets: x.sets })),
+    });
+    if (r && r.downloaded) toast('Saved to your files.');
+  } catch (err) {
+    toast((err && err.message) || 'Could not make that picture.');
+  }
 }
 
 /**
@@ -515,7 +695,8 @@ function openCommentsSheet(e, rx, onChanged) {
   const slot = rx.slot;
   const list = el('div', { class: 'comment-list' });
   const input = el('textarea', {
-    class: 'input', rows: '2', placeholder: `Say something about ${e.name}’s workout`,
+    class: 'input', rows: '2',
+    placeholder: e.own ? 'Write a reply' : `Say something about ${e.name}’s workout`,
     'aria-label': 'Your comment', maxlength: '500',
   });
 
@@ -528,6 +709,8 @@ function openCommentsSheet(e, rx, onChanged) {
             el('div', { class: 'comment-main' },
               el('span', { class: 'comment-who', text: who(c) }),
               el('span', { class: 'comment-text', text: c.text }),
+              // When it was said — stored all along, shown since 2026-09-24.
+              c.at ? el('span', { class: 'comment-age', text: commentAge(c.at) }) : null,
             ),
             c.mine && c.id ? iconBtn('trash', 'Delete your comment', async () => {
               try {
@@ -976,6 +1159,20 @@ function openPresetUpdate({ system, workouts, plan }) {
  * workout rows, the New workout button, the notes and the rating are all here
  * and nowhere else.
  */
+/* "By X · source" — the same line the Explore page draws, for a copy that
+ * carries an author. Null for a programme somebody typed. */
+function systemByline(system) {
+  if (!system.author && !system.sourceUrl && !system.sourceName) return null;
+  return el('div', { class: 'field-help' },
+    'By ', el('b', { text: system.author || 'Unknown' }),
+    system.sourceName || system.sourceUrl ? ' · ' : '',
+    system.sourceUrl
+      ? el('a', { class: 'text-link', href: system.sourceUrl, target: '_blank', rel: 'noopener noreferrer',
+                  text: system.sourceName || 'Source' })
+      : (system.sourceName || null),
+  );
+}
+
 async function systemBody(system, workouts) {
   /* ⚠️ AWAITED HERE RATHER THAN LEFT TO FILL IN LATE, and it is cheap enough to
    * be: for a system the user typed there is no `presetId` and this returns
@@ -983,7 +1180,19 @@ async function systemBody(system, workouts) {
    * compares two integers. A notice that arrives after the screen has painted
    * would push the programme down under the reader's thumb (Rule 3). */
   const update = await store.presetUpdateFor(system, workouts).catch(() => null);
+  /* 🆕 A COPY KEEPS ITS AUTHOR — 2026-09-24 review. `addPresetSystem()` has
+   * stored author and source on every copy since 2026-09-20 and nothing drew
+   * them, so a programme transcribed from somebody's videos read, once copied,
+   * exactly like one you typed. The "Not official" warning comes from the
+   * original (the copy does not store it); an original that is gone takes its
+   * warning with it rather than the app guessing. */
+  const preset = system.presetId
+    ? await import('./preset-systems.js').then((m) => m.presetById(system.presetId)).catch(() => null)
+    : null;
+  const exMap = await store.getExerciseMap().catch(() => null);
+  const nameById = new Map(workouts.map((w) => [w.id, w.name]));
   return [
+    systemByline(system),
     presetUpdateNotice(system, workouts, update),
     // ⚠️ THE PLAN GOES ABOVE THE WORKOUTS, AND ONLY WHEN THERE IS ONE — Tim
     // asked for these boxes "at the top of the workout system", and a plan IS
@@ -995,15 +1204,25 @@ async function systemBody(system, workouts) {
     el('div', { class: 'section-label', text: workouts.length
       ? plural(workouts.length, 'workout') : 'Workouts' }),
     workouts.length
+      /* 🆕 A START ON EVERY ROW — 2026-09-24 review. The row still opens the
+       * workout's page (the chevron's promise); the pill beside it goes straight
+       * into the runner, the same "Start ▶" the Record screen wears. Two sibling
+       * buttons, never one inside the other. */
       ? el('div', { class: 'list' }, workouts.map((w) =>
-          el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
-            el('div', { class: 'row-main' },
-              el('div', { class: 'row-title', text: w.name }),
-              el('div', { class: 'row-sub', text:
-                `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
-                + (w.isBenchmark ? ' · benchmark' : '') }),
+          el('div', { class: 'row-split' },
+            el('button', { class: 'row', onClick: () => go('#/workout/' + w.id) },
+              el('div', { class: 'row-main' },
+                el('div', { class: 'row-title', text: w.name }),
+                el('div', { class: 'row-sub', text:
+                  `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
+                  + (w.isBenchmark ? ' · benchmark' : '') }),
+              ),
+              chevron(),
             ),
-            chevron(),
+            el('button', {
+              class: 'row-go', 'aria-label': `Start ${w.name}`,
+              onClick: () => go('#/session/' + w.id),
+            }, el('span', { class: 'row-start' }, 'Start', icon('play', 12))),
           )))
       /* 🚨 IT NAMES THE PROGRAMME SINCE 2026-09-27, and the bug report is why.
        * This screen is drawn for the CURRENT programme on the Workouts tab and
@@ -1042,6 +1261,11 @@ async function systemBody(system, workouts) {
             'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
     el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
       icon('plus'), 'New workout'),
+    // The workout checker over the whole programme — nothing when it finds nothing.
+    exMap ? lintBlock(lintProgramme(workouts, exMap), (id) => nameById.get(id)) : null,
+    // Below the workouts rather than above them: this screen is opened most days
+    // to start one, and the warning was already read on Explore before adding.
+    preset && preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null,
     // The notes are the author's own words about the programme, so they read
     // here rather than only inside the form that happens to edit them.
     system.notes
@@ -1113,6 +1337,11 @@ export async function StartPickerView({ tab = false } = {}) {
   // recorded durations once any exist — startedAt/finishedAt have been on
   // every session all along — and sets × 3 min before that. Rounded to 5,
   // and "~" carries the honesty either way.
+  /* 🆕 THE WORKOUT ALREADY OPEN SAYS "RESUME" (2026-09-24, review picks). Its
+   * tap resumes it — the runner keeps the draft — so "Start" was promising a
+   * fresh session this row does not give. The same live rule the bar uses. */
+  const open = liveDraft(todayISO());
+  const openId = open ? open.workoutId : null;
   const row = (w) => {
     const est = estimateWorkoutMinutes(w, sessions);
     return el('button', { class: 'row', onClick: () => go('#/session/' + w.id) },
@@ -1122,7 +1351,7 @@ export async function StartPickerView({ tab = false } = {}) {
           `${plural(w.exercises.length, 'exercise')} · ${plural(totalSets(w), 'set')}`
           + (est ? ` · ~${est.minutes} min` : '') }),
       ),
-      el('span', { class: 'row-start' }, 'Start', icon('play', 12)),
+      el('span', { class: 'row-start' }, w.id === openId ? 'Resume' : 'Start', icon('play', 12)),
     );
   };
 
@@ -1145,7 +1374,21 @@ export async function StartPickerView({ tab = false } = {}) {
   // It is one of the workouts below, promoted — so it wears the same clothes,
   // and the sentence under it says what was read to choose it. A distinct
   // treatment would imply it came from somewhere else.
-  const suggestion = next
+  // When the suggestion IS the open workout, it says so instead of offering it
+  // as the next fresh start.
+  const openSets = open ? draftRecordedSets(open) : 0;
+  const suggestion = next && next.workout.id === openId
+    ? [
+        el('div', { class: 'section-label', text: 'Open now' }),
+        el('button', {
+          class: 'btn primary lg block',
+          onClick: () => go('#/session/' + next.workout.id),
+        }, icon('play'), `Resume ${next.workout.name}`),
+        el('div', { class: 'field-help', text: openSets
+          ? `${plural(openSets, 'set')} recorded so far.`
+          : 'Started, nothing recorded yet.' }),
+      ]
+    : next
     ? [
         el('div', { class: 'section-label', text: 'Next in your rotation' }),
         el('button', {
@@ -1475,6 +1718,77 @@ export function openTargetSheet(item, ex, onChange) {
   draw();
 
   openSheet({ title: ex ? ex.name : 'Weight for each set', body });
+}
+
+/* ------------------------------------------------------------------ *
+ * Reps per set — 2026-09-24 (review, second pass)
+ *
+ * The sibling of the % sheet above: an "All sets" field, then one per planned
+ * set. Each takes "8" or "8–10" (parseRepText). A field that does not parse is
+ * marked and changes nothing — the last good value stays. Stored as `{lo, hi}`
+ * per set, never `[lo, hi]` (§0.22: Firestore refuses arrays in arrays).
+ * ------------------------------------------------------------------ */
+export function openRepsSheet(item, ex, onChange) {
+  const body = el('div', { class: 'list' });
+  const toStored = (pair) => ({ lo: pair[0], hi: pair[1] });
+  const shown = (spec) => {
+    const p = normalizeRepSpec(spec);
+    return p ? (p[0] === p[1] ? String(p[0]) : `${p[0]}–${p[1]}`) : '';
+  };
+
+  const repField = (label, aria, value, onGood) => {
+    const input = el('input', {
+      class: 'input rep-input', type: 'text', inputmode: 'text', autocomplete: 'off',
+      maxlength: '7', placeholder: '8 or 8–10', 'aria-label': aria, value,
+      onInput: (e) => {
+        const pair = parseRepText(e.target.value);
+        e.target.setAttribute('aria-invalid', String(!pair && e.target.value.trim() !== ''));
+        if (pair) onGood(pair);
+      },
+    });
+    return el('div', { class: 'builder-controls rep-row' },
+      el('span', { class: 'builder-control-label', text: label }), input);
+  };
+
+  const draw = () => {
+    const per = expandRepSpec(item.reps, item.sets);
+    const perSetInputs = [];
+    const rows = [
+      el('div', { class: 'section-label', text: 'Reps for each set' }),
+      repField('All sets', 'Reps, all sets', per ? shown(per[0]) : '', (pair) => {
+        item.reps = Array.from({ length: item.sets }, () => toStored(pair));
+        perSetInputs.forEach((i) => { i.value = shown(pair); i.removeAttribute('aria-invalid'); });
+        onChange();
+      }),
+    ];
+    for (let i = 0; i < item.sets; i++) {
+      const row = repField(`Set ${i + 1}`, `Reps, set ${i + 1}`, per ? shown(per[i]) : '', (pair) => {
+        // A per-set edit on an exercise with no reps yet fills the others
+        // from it, since half a plan is refused (normalizeReps).
+        const cur = expandRepSpec(item.reps, item.sets)
+          || Array.from({ length: item.sets }, () => toStored(pair));
+        cur[i] = toStored(pair);
+        item.reps = cur;
+        onChange();
+      });
+      perSetInputs.push(row.querySelector('input'));
+      rows.push(row);
+    }
+    if (item.reps) {
+      rows.push(el('button', {
+        class: 'row',
+        onClick: () => { delete item.reps; draw(); onChange(); },
+      },
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: 'No rep target' }),
+        ),
+      ));
+    }
+    setChildren(body, ...rows);
+  };
+  draw();
+
+  openSheet({ title: ex ? ex.name : 'Reps for each set', body });
 }
 
 /* ================================================================== *
@@ -1895,6 +2209,10 @@ export async function ExploreView() {
  * it — and `tests/render.test.mjs` reads the first forty characters of the
  * warning as one string, which straddles that break.
  */
+const DEFAULT_PRESET_WARNING = 'Not official. Transcribed from published write-ups of the free videos, '
+  + 'not from the author or their paid programme. Sets and reps are as reported — '
+  + 'check the source before you trust a number.';
+
 function warningBlock(text) {
   const parts = sentencesOf(text);
   if (parts.length <= 2) return el('div', { class: 'preset-warning' }, el('span', { text }));
@@ -1950,7 +2268,10 @@ export async function ExploreDetailView(id) {
   async function add() {
     try {
       const { skipped } = await store.addPresetSystem(preset);
-      toast(skipped ? `Added — ${skipped} exercise(s) skipped` : 'Added to your systems');
+      // 🔄 2026-09-24: no toast for a plain add — the panel's own "Added to
+      // your systems" line is the receipt, and the toast only repeated it over
+      // the text. A skipped exercise is news the panel does not say, so it stays.
+      if (skipped) toast(`Added — ${skipped} exercise(s) skipped`);
       /* 🔄 IT NO LONGER NAVIGATES, and that is the other half of what he asked
        * for: *"it's very unclear when it's officially added."* The old version
        * toasted and called `go('#/system/<id>')` in the same breath, so the one
@@ -2018,29 +2339,48 @@ export async function ExploreDetailView(id) {
       ];
     }
 
+    /* 🔄 2026-09-24 review: THE PANEL STARTS THE FIRST WORKOUT. A stranger used
+     * to need Add, "Open it", then a workout, then Start — and "Open it" landed
+     * on a programme page with no Start at all. The loudest button is now the
+     * one that begins training; switching programmes is second; everything
+     * else (open, copy again, remove) moved down into the page, so the pinned
+     * foot stops eating the screen. */
     const copy = copies[0];
     const isCurrent = Boolean(current && current.id === copy.id);
+    const firstDay = workouts.find((w) => w.systemId === copy.id) || null;
     return [
       el('div', { class: 'added-note' }, icon('check', 16), 'Added to your systems'),
-      isCurrent
-        ? el('div', { class: 'field-help', text:
-            'It is your current programme, so it is what your Workouts tab shows.' })
-        : el('button', { class: 'btn primary block', text: 'Make it my current programme',
-            onClick: () => makeCurrent(copy) }),
-      // 🚨 THE SENTENCE THAT WOULD HAVE SAVED THE BUG REPORT.
+      firstDay
+        ? el('button', { class: 'btn primary block', onClick: () => go('#/session/' + firstDay.id) },
+            icon('play'), `Start ${firstDay.name}`)
+        : null,
       isCurrent
         ? null
-        : el('div', { class: 'field-help', text:
-            `Your Workouts tab shows ${current ? current.name : 'your current programme'}, so this `
-            + 'one will not appear there until you switch to it. It is on its own screen either way.' }),
-      el('button', { class: 'btn block', text: 'Open it',
-        onClick: () => go('#/system/' + copy.id) }),
-      el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
+        : el('button', { class: 'btn block', text: 'Make it my current programme',
+            onClick: () => makeCurrent(copy) }),
+    ];
+  }
+
+  /* The rest of what the Added panel used to pin, at the end of the page. */
+  function addedTail() {
+    if (copies.length !== 1) return null;
+    const copy = copies[0];
+    const isCurrent = Boolean(current && current.id === copy.id);
+    return el('div', { class: 'added-more' },
+      // 🚨 THE SENTENCE THAT WOULD HAVE SAVED THE 2026-09-27 BUG REPORT.
+      el('div', { class: 'field-help', text: isCurrent
+        ? 'It is your current programme, so it is what your Workouts tab shows.'
+        : `Your Workouts tab shows ${current ? current.name : 'your current programme'}. `
+          + 'This one will not appear there until you switch.' }),
+      el('div', { class: 'btn-row' },
+        el('button', { class: 'btn', text: 'Open it', onClick: () => go('#/system/' + copy.id) }),
+        el('button', { class: 'btn', text: 'Add another copy', onClick: add }),
+      ),
       el('div', { class: 'field-help', text: 'Adding it again makes a second, separate copy.' }),
       el('div', { class: 'danger-zone' },
         el('button', { class: 'btn danger block', text: 'Remove from my systems',
           onClick: () => remove(copy) })),
-    ];
+    );
   }
 
   return screenShell({
@@ -2082,12 +2422,7 @@ export async function ExploreDetailView(id) {
       // person has to know whether that person actually wrote what is on screen.
       // The default assumes a video transcription, which is true of exactly one
       // system here — anything else states its own case.
-      preset.unofficial
-        ? warningBlock(preset.warning
-            || 'Not official. Transcribed from published write-ups of the free videos, '
-               + 'not from the author or their paid programme. Sets and reps are as reported — '
-               + 'check the source before you trust a number.')
-        : null,
+      preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null,
 
       preset.notes
         ? el('div', { class: 'preset-notes' },
@@ -2105,9 +2440,10 @@ export async function ExploreDetailView(id) {
                 tag: 'div', className: 'row-title' }),
               e.notes ? el('div', { class: 'row-sub', text: e.notes }) : null,
             ),
-            el('div', { class: 'row-meta mono', text: plural(e.sets, 'set') }),
+            el('div', { class: 'row-meta mono', text: setsByReps(e) }),
           ))),
       ]),
+      addedTail(),
     ],
     bottom: foot().filter(Boolean),
   });
@@ -2541,8 +2877,11 @@ async function WorkoutDetailView(id) {
            // and is not worth a line.
            isNested(item.setType) ? setTypeLabel(item) : null,
           ].filter(Boolean).join(' · ') }),
+        // 🔄 2026-09-24: the note sits under ITS exercise, as on the Explore
+        // page — it used to pile up with every other note at the foot.
+        item.notes ? el('div', { class: 'row-sub wrap', text: item.notes }) : null,
       ),
-      el('div', { class: 'row-meta', text: plural(item.sets, 'set') }),
+      el('div', { class: 'row-meta', text: setsByReps(item) }),
     );
   };
 
@@ -2569,14 +2908,6 @@ async function WorkoutDetailView(id) {
               el('div', { class: 'builder-group-label', text: groupLabel(b.items.length) })),
             el('div', { class: 'list' }, b.items.map((w) => exerciseRow(w.item))))
         : el('div', { class: 'list' }, b.items.map((w) => exerciseRow(w.item))))),
-      workout.exercises.some((e) => e.notes)
-        ? el('div', { class: 'preset-notes' },
-            el('div', { class: 'section-label', text: 'Notes' }),
-            workout.exercises.filter((e) => e.notes).map((e) => {
-              const ex = exMap.get(e.exerciseId);
-              return el('p', {}, el('b', { text: (ex ? ex.name : 'Exercise') + ' — ' }), e.notes);
-            }))
-        : null,
     ],
     // The reason this screen exists. A workout you are looking at is nearly
     // always one you are about to do.
@@ -2651,6 +2982,16 @@ export async function WorkoutBuilderView(param) {
     const note = exerciseOrderNote(draft.exercises, exMap);
     orderNote.textContent = note ? note.text : '';
     orderNote.hidden = !note;
+    renderLint();
+  }
+
+  // 🆕 2026-09-24: the workout checker, right under the order note. It says
+  // something only when it finds something, and never blocks a save.
+  const lintNotes = el('div', { class: 'lint-notes' });
+  function renderLint() {
+    const block = lintBlock(lintWorkout(draft, exMap));
+    setChildren(lintNotes, ...(block ? [...block.childNodes] : []));
+    lintNotes.hidden = !block;
   }
 
   function renderList() {
@@ -2717,7 +3058,11 @@ export async function WorkoutBuilderView(param) {
             miniStepper({
               value: item.sets, min: 1, max: 20,
               label: 'planned sets',
-              onChange: (v) => { item.sets = v; countLabel.textContent = `Exercises · ${plural(totalSets(draft), 'set')} total`; },
+              onChange: (v) => {
+                item.sets = v;
+                countLabel.textContent = `Exercises · ${plural(totalSets(draft), 'set')} total`;
+                renderLint();
+              },
             }),
             ex && ex.loadType ? loadBadge(ex.loadType) : null,
 
@@ -2744,6 +3089,15 @@ export async function WorkoutBuilderView(param) {
               text: summariseTargets(item.targets) || '% of max',
               onClick: () => openTargetSheet(item, ex, renderList),
             }) : null,
+
+            // 🆕 2026-09-24: how many reps, stored `{lo, hi}` per set (§0.22).
+            el('button', {
+              type: 'button',
+              class: 'chip set-reps' + (item.reps ? ' is-on' : ''),
+              'aria-pressed': String(Boolean(item.reps)),
+              text: summariseReps(item.reps) || 'Reps',
+              onClick: () => openRepsSheet(item, ex, renderList),
+            }),
           ),
 
           el('textarea', {
@@ -2839,6 +3193,7 @@ export async function WorkoutBuilderView(param) {
       countLabel,
       listWrap,
       orderNote,
+      lintNotes,
       el('button', {
         class: 'btn block',
         onClick: () => openExercisePicker({
