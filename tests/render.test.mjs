@@ -6412,6 +6412,79 @@ ok(!data.querySelector('.rep-target'),
   localStorage.removeItem(DRAFT);
 }
 
+/* ============ W. warm-up sets (2026-09-23) ============
+ *
+ * Tim: *"just build the warm up set system and I can change it if I want
+ * afterwards. Just make sure It's clear warm up sets are different than actual
+ * sets."* They live in `entry.warmups`, never in `entry.sets`.
+ */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
+  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
+  const w = await store.saveWorkout({
+    name: 'Warm-up day',
+    exercises: [{ exerciseId: byName('Seal Row').id, sets: 2, notes: '' }],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  const warmRows = () => rows().filter((r) => r.classList.contains('set-warm'));
+  const workRows = () => rows().filter((r) => !r.classList.contains('set-warm'));
+  const addWarm = () => s.querySelector('.sets-head .add-warm');
+
+  ok(Boolean(addWarm()) && /Warm-up/.test(addWarm().textContent),
+     'a "+ Warm-up" button sits in the Sets heading beside "Add set"');
+  ok(warmRows().length === 0, 'and there are no warm-ups until it is tapped');
+  addWarm().click();
+  await settle();
+  ok(warmRows().length === 1 && rows()[0] === warmRows()[0],
+     'tapping it adds a warm-up row ABOVE the working sets');
+  ok(warmRows()[0].querySelector('.set-num').textContent === 'W'
+     && workRows()[0].querySelector('.set-num').textContent === '1',
+     '🚨 the warm-up is marked "W" and the first working set is still set 1 — warm-ups are not numbered');
+  ok(Boolean(warmRows()[0].querySelector('.set-open')) && s.querySelectorAll('.set-open').length === 1,
+     'the new warm-up opens for typing, and it is the only open row');
+  ok(!s.querySelector('.set-open .step-est'),
+     '⚠️ no "% of max" or "to failure" captions on a warm-up — those are about sets that count');
+
+  type(s.querySelector('.set-open .step-value'), 95);
+  await settle();
+  ok(draft().entries[0].warmups[0].weight === 95,
+     'the number typed goes into the warm-up');
+  ok(draft().entries[0].sets.every((x) => x.weight !== 95 && !x.touched),
+     '🚨 and into NO working set — typing a warm-up does not mark set 1 as touched');
+
+  addWarm().click();
+  await settle();
+  ok(warmRows().length === 2 && draft().entries[0].warmups[1].weight === 95,
+     'a second warm-up copies the one above it');
+  click(workRows()[0].querySelector('.set-vals'));
+  await settle();
+  ok(Boolean(workRows()[0].querySelector('.set-open')) && !warmRows().some((r) => r.querySelector('.set-open')),
+     'tapping set 1 opens the working set and closes the warm-up');
+  type(s.querySelector('.set-open .step-value'), 135);
+  await settle();
+  warmRows()[1].querySelector('.set-del').click();
+  await settle();
+  ok(warmRows().length === 1, 'a warm-up can be deleted like a set');
+
+  [...s.querySelectorAll('.session-footer button, button')].find((b) => /Finish workout/.test(b.textContent)).click();
+  await settle();
+  await saveNow();
+  const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
+  const e0 = saved && saved.entries[0];
+  ok(Boolean(e0) && Array.isArray(e0.warmups) && e0.warmups.length === 1 && e0.warmups[0].weight === 95,
+     'the warm-up is SAVED, in its own `warmups` list');
+  ok(Boolean(e0) && e0.sets.every((x) => x.weight !== 95),
+     '🚨 and never among the sets — no rating, volume, PR or set count can mistake it for work');
+  ok(Boolean(e0) && Object.keys(e0.warmups[0]).every((k) => e0.sets.length && ['weight', 'reps'].includes(k)),
+     'a saved warm-up is its numbers only, no screen flags');
+  localStorage.removeItem(DRAFT);
+}
+
 /* ============ D. the row follows the finger (2026-09-12) ============
  *
  * Tim: *"It automatically locks into a valid position in the list, and doesn't

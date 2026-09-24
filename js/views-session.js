@@ -1612,6 +1612,7 @@ export async function SessionView(workoutId) {
           ? Math.min(entry.active || 0, entry.sets.length - 1)
           : Math.min(step.round, entry.sets.length - 1);
         entry.activeDrop = null;
+        entry.activeWarm = null;
       }
     }
     saveDraft(state);
@@ -1817,7 +1818,24 @@ export async function SessionView(workoutId) {
     // What the steppers are pointed at: the set itself, or one of its drops.
     const minis = minisOf(activeSet);
     if (entry.activeDrop != null && entry.activeDrop >= minis.length) entry.activeDrop = null;
-    const target = entry.activeDrop == null ? activeSet : minis[entry.activeDrop];
+    /* WARM-UP SETS (2026-09-23). Tim: *"just build the warm up set system and I
+     * can change it if I want afterwards. Just make sure It's clear warm up sets
+     * are different than actual sets."*
+     *
+     * 🚨 THEY LIVE IN THEIR OWN LIST, `entry.warmups`, NEVER IN `entry.sets` —
+     * in the draft and in storage. Every rating, volume, PR, weekly set count,
+     * progression and suggestion in this app reads `entry.sets`, so a warm-up
+     * cannot be counted as work by any of them, including ones written later.
+     * `entry.activeWarm` (an index, or null) is which warm-up the steppers point
+     * at; while it is set, no working set is open. Hidden inside supersets,
+     * where a set is a round. */
+    const warms = Array.isArray(entry.warmups) ? entry.warmups : [];
+    if (entry.activeWarm != null && !warms[entry.activeWarm]) entry.activeWarm = null;
+    const onWarm = entry.activeWarm != null;
+    const target = onWarm ? warms[entry.activeWarm]
+      : entry.activeDrop == null ? activeSet : minis[entry.activeDrop];
+    // The set whose flags a number typed in the steppers clears.
+    const ownerSet = onWarm ? target : activeSet;
 
     const setList = el('div', { class: 'set-list' });
 
@@ -1887,6 +1905,7 @@ export async function SessionView(workoutId) {
       if (dropIndex == null) fillOnOpen(i);
       entry.active = i;
       entry.activeDrop = dropIndex;
+      entry.activeWarm = null;
       entry.editing = true;
       saveDraft(state);
       // ⚠️ KEEP THE SCROLL. The controls are inside the list now, so a render
@@ -1907,6 +1926,7 @@ export async function SessionView(workoutId) {
     function collapse() {
       entry.editing = false;
       entry.activeDrop = null;
+      entry.activeWarm = null;
       saveDraft(state);
       renderPane({ keepScroll: true });
     }
@@ -2068,8 +2088,40 @@ export async function SessionView(workoutId) {
       // arrived in.
       const editing = entry.editing !== false;
 
+      // Warm-ups sit ABOVE the working sets, marked "W" and never numbered, so
+      // set 1 is still the first set that counts. No Finished button: nothing
+      // is scored from them, so there is nothing to protect.
+      warms.forEach((wu, k) => {
+        const { row, live } = setRow({
+          open: entry.activeWarm === k && editing,
+          locked: false,
+          lock: null,
+          className: 'set-item set-warm',
+          num: () => el('span', { class: 'set-num warm-num', text: 'W' }),
+          label: (t) => `Warm-up ${k + 1}: ${t}`,
+          valueText: () => fmtSet(wu, entry.fields, entry.loadType),
+          onOpen: () => {
+            entry.activeWarm = k;
+            entry.activeDrop = null;
+            entry.editing = true;
+            saveDraft(state);
+            renderPane({ keepScroll: true });
+          },
+          delLabel: `Delete warm-up ${k + 1}`,
+          onDelete: () => {
+            warms.splice(k, 1);
+            if (!warms.length) delete entry.warmups;
+            entry.activeWarm = null;
+            saveDraft(state);
+            renderPane({ keepScroll: true });
+          },
+        });
+        if (live) liveRows.push(live);
+        rows.push(row);
+      });
+
       entry.sets.forEach((s, i) => {
-        const isHere = i === entry.active;
+        const isHere = i === entry.active && !onWarm;
         const locked = isDone(s);
         // ⚠️ `entry.active` can point at a finished set — you finished the
         // last one, or came back with Previous — and then nothing is open.
@@ -2209,7 +2261,9 @@ export async function SessionView(workoutId) {
      * meaningless and a rep guess on a carry is worse. `ex` can be missing for
      * an exercise deleted from the library since the draft was written. */
     const capSlots = {};
-    const wantsCaptions = Boolean(ex) && entry.fields.includes('weight') && entry.fields.includes('reps');
+    // Not on a warm-up: "% of your max" and "maybe 8 to failure" are about a
+    // set that counts, and a warm-up is deliberately far from both.
+    const wantsCaptions = Boolean(ex) && !onWarm && entry.fields.includes('weight') && entry.fields.includes('reps');
     function renderCaptions() {
       if (!wantsCaptions) return;
       const ratings = ratingsReady.get(personKey(state.forName));
@@ -2357,13 +2411,13 @@ export async function SessionView(workoutId) {
           // which is what stops a derived opening weight being saved as a set
           // somebody never did. One nudge, one keystroke, and it is theirs.
           delete target.prefilled;
-          delete activeSet.prefilled;
+          delete ownerSet.prefilled;
           // 🆕 2026-09-27: and remember a PERSON changed it. `prefilled` only
           // exists on numbers the app invented, so its absence cannot tell a
           // set filled from last time apart from one somebody typed — and a
           // swap has to know which, or it keeps untouched sets as done work.
           // Dropped at save like `locked`. See swapExercise().
-          activeSet.touched = true;
+          if (!onWarm) activeSet.touched = true;
           saveDraft(state);
           renderAssist();
           renderCaptions();
@@ -2380,7 +2434,7 @@ export async function SessionView(workoutId) {
           // set is not the end of the set: you strip the weight and carry on,
           // so rest waits for a drop.
           const midGroup = !step.restsAfter;
-          const midNestedSet = nested && entry.activeDrop == null;
+          const midNestedSet = nested && !onWarm && entry.activeDrop == null;
           if (!midGroup && !midNestedSet) startRest();
         },
       });
@@ -2438,7 +2492,7 @@ export async function SessionView(workoutId) {
       // "Strip the weight" and "Rest 10–15 seconds" are things you can act on;
       // "Add drop" and "Add myo-rep" assume you already know what those are,
       // which is the assumption D8 exists to refuse.
-      nested
+      nested && !onWarm
         ? el('div', { class: 'drop-row' },
             el('button', {
               class: 'btn block drop-add',
@@ -2745,12 +2799,34 @@ export async function SessionView(workoutId) {
             // desynchronising the block.
             if (step.group == null) {
               entry.active = entry.sets.length - 1;
+              entry.activeWarm = null;
             }
             entry.activeDrop = null;
             saveDraft(state);
             renderAll();
           },
         }, icon('plus', 15), step.group == null ? 'Add set' : 'Add round'),
+        // Beside "Add set", on any solo lift with a weight — see the warm-up
+        // block at the top of `renderPane`. A new warm-up copies the one above
+        // it (a ramp is usually the same reps at a heavier weight) and the
+        // first one starts blank: the app does not guess a warm-up weight.
+        step.group == null && entry.fields.includes('weight')
+          ? el('button', {
+              class: 'add-set add-warm', 'aria-label': 'Add a warm-up set',
+              onClick: () => {
+                if (!Array.isArray(entry.warmups)) entry.warmups = [];
+                const prev = entry.warmups[entry.warmups.length - 1];
+                entry.warmups.push(prev
+                  ? pickFields(prev, entry.fields)
+                  : Object.fromEntries(entry.fields.map((f) => [f, 0])));
+                entry.activeWarm = entry.warmups.length - 1;
+                entry.activeDrop = null;
+                entry.editing = true;
+                saveDraft(state);
+                renderPane({ keepScroll: true });
+              },
+            }, icon('plus', 15), 'Warm-up')
+          : null,
       ),
       setList,
     );
@@ -2976,7 +3052,12 @@ export async function SessionView(workoutId) {
     if (!entry) return null;
     // Finished or typed, not `setIsRecorded` — see swapExercise() for why.
     const recorded = entry.sets.filter((s) => isDone(s) || s.touched);
-    if (!recorded.length) { slot.entries[index] = fresh; return null; }
+    if (!recorded.length) {
+      // Warm-ups already done ride over to the new lift rather than vanish.
+      if (entry.warmups && entry.warmups.length) fresh.warmups = entry.warmups;
+      slot.entries[index] = fresh;
+      return null;
+    }
     entry.sets = recorded;
     entry.active = Math.min(entry.active, recorded.length - 1);
     entry.activeDrop = null;
@@ -3072,6 +3153,8 @@ export async function SessionView(workoutId) {
       goToStep(at >= 0 ? at : state.index);
       return;
     }
+    // Warm-ups already done ride over to the new lift rather than vanish.
+    if (entry.warmups && entry.warmups.length) fresh.warmups = entry.warmups;
     state.entries[index] = fresh;
     saveDraft(state);
     renderAll();
@@ -3628,7 +3711,13 @@ export async function SessionView(workoutId) {
             delete out.touched;    // same: a fact about this screen, 2026-09-27
             return out;
           }),
+        // Warm-ups (2026-09-23) keep their own list in storage too, so no
+        // reader of `sets` can ever count one. Only ones with a number in them.
+        warmups: (Array.isArray(e.warmups) ? e.warmups : [])
+          .filter((w) => hasNumbers(w, e.fields))
+          .map((w) => pickFields(w, e.fields)),
       }))
+      .map((e) => { if (!e.warmups.length) delete e.warmups; return e; })
       .filter((e) => e.sets.length);
 
     // Dropping the empty entries can leave one half of a superset behind still

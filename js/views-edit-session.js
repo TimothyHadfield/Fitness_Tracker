@@ -211,6 +211,9 @@ export async function EditSessionView(sessionId) {
           exerciseName: e.exerciseName,
           ...(e.group == null ? {} : { group: e.group }),
           ...(e.setType ? { setType: e.setType } : {}),
+          // Warm-ups (2026-09-23) are not edited here, only carried through, so
+          // fixing a typo in a working set never deletes them.
+          ...(Array.isArray(e.warmups) && e.warmups.length ? { warmups: e.warmups } : {}),
           sets: e.sets
             .filter((s) => hasNumbers(s, fields) || minisOf(s).some((d) => hasNumbers(d, fields)))
             .map((s) => {
