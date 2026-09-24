@@ -191,7 +191,14 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **`render`'s "the exercise line chart draws an SVG" + "gridlines" failed once in four runs
   (2026-09-23)** — a settle-timing flake; rerun before believing it.
 - **`tests/sw-update.test.mjs` is flaky on this machine**; don't report it as reliably passing or
-  weaken it. It and `rules` are not in the 23-suite total.
+  weaken it. It and `rules` are not in the 25-suite total.
+- **`git worktree add` fails under OneDrive** ("Could not reset index file") → work in the main
+  checkout, one change per commit; builder agents can't get worktrees here.
+- **Screenshots of logged-in screens use the demo, not an account:** set sessionStorage
+  `ftrack:v1:demo`='1' before load (playwright webkit from `~/.claude/tools/node_modules`), serve with
+  `python -m http.server`; in the runner retry-click Push until `.set-list` exists (it loads late).
+- **Golden table** (data-layer, `GOLDEN`): any rating-maths change re-baselines it in its OWN commit
+  with a per-muscle before→after comment; `GOLDEN_DUMP=1` prints paste-ready rows to stderr.
 - **A test double more permissive than the real thing turns a guarantee into an assumption** — ask
   what the real one refuses and assert that against the data.
 - **Doc byte budgets are a test** (data-layer): progress 160 KB, handbook 220 KB, state 160 KB,
@@ -303,10 +310,10 @@ can check._
 - `docs/handbook.md` · how to work · `docs/state.md` · what the app does · `docs/direction.md` · what
   Tim wants (overrules) · `docs/history.md` · dated log · `docs/archive/` · old progress snapshots ·
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
-- **Tests:** `node tests/<name>.test.mjs` for each of 23 no-Chrome suites (needs `npm i --no-save jsdom
-  jsqr`); `rules` needs the emulator + Temurin 21; `sw-update` needs Chrome — 25 files in all. **Last
-  run 2026-09-21 (this session): 23 suites, 6,372 assertions, 0 failures** (earlier notes said "24"
-  suites; that was wrong). All of them at once, printing only failures (PowerShell):
+- **Tests:** `node tests/<name>.test.mjs` for each of 25 no-Chrome suites (needs `npm i --no-save jsdom
+  jsqr`); `rules` needs the emulator + Temurin 21; `sw-update` needs Chrome — 27 files in all. **Last
+  run 2026-09-24: 25 suites, 6,485 PASS, 0 failures** (render alone 1,721). New this week:
+  `logging-notes`, `at-least`. All of them at once, printing only failures (PowerShell):
   `Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs' } | % { $o
   = node $_.FullName 2>&1 | Out-String; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; if($f){
   "$($_.Name): $f FAIL" } }`
