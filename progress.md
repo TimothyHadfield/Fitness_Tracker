@@ -1,9 +1,9 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-24 (whole-app review: 39 bugs fixed and live; 42 items await Tim's picks on
-https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73 — read `picks` with ArtifactData, see chat.md
-2026-09-24). Older note: the
+_Last updated 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
+40 built and live through 81fada0, 2 skipped; picks page
+https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73, see chat.md 2026-09-24 second half). Older note: the
 headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
 system clock now reads 2026-09-22). Read `chat.md` bottom-up when the dates disagree; git is the
 tie-breaker. For Claude only; Tim doesn't read this.
@@ -62,10 +62,12 @@ first users stop being new).
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
 | 8 | Estimator Phases 1–3 (the Goals verdict waits on it); §6.1 hard constraint, §14 question | his answers |
 
-**Whole-app review 2026-09-24:** 42 Tim-decides items (look, wording, layout, features — incl.
-estimates ignoring sex in `estimateOneRM`, which moves ratings) wait on the picks page above. Do
-"do" picks; raise "talk" picks; never re-raise "skip". Builder choices he hasn't seen are listed in
-chat.md 2026-09-24 "Open".
+**Whole-app review 2026-09-24: done.** Tim said *"you just choose what to do"* for all 42; Claude built
+40 (a7f1bf3, a791c9a, 81fada0) and skipped c-icons and c-levelcolours — never re-raise those. New UI
+words: the body form is **"Body details"**, the field is **"gender"**, and **"program"** (US) replaces
+system/programme in UI text (code identifiers, routes and the hash-guarded preset notes are unchanged).
+CSS now has 5 font-size tokens / 3 weights; use them, not new px values. Choices Tim hasn't seen are in
+chat.md 2026-09-24 entries.
 
 **Flagged to Tim, unchanged:** the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
 the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
@@ -262,6 +264,8 @@ _Tim's rule bans device warnings ("not verified on a phone"). This list is only 
 can check._
 - **No predicted number has ever been checked against a real attempt** (Open work 19 — Tim's). Don't
   describe any estimate as accurate.
+- **Review wave 2 (81fada0):** the checker's "N more" is only test-checked (demo has no checker
+  lines); sheet slide checked by computed style only; reduced motion and light theme not shot.
 - The 2026-09-27 race fixes (`writeGeneration` in `store.js`; `ensureSystems()` re-read) are reasoned,
   not asserted — the window is zero on `LocalBackend` and seconds on Firestore.
 - ~~"Delete account" never ran against real Firestore~~ — **ran 2026-09-23**: `tools/live-check.mjs`
