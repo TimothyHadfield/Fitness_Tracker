@@ -19,7 +19,7 @@ import { cloudFullWarning } from './views-data.js';
  * a second place for the words about who can see somebody's training to drift.
  * `visibilitySheet()` in particular carries the list Rule 9 says must stay in
  * the open; reimplementing it here would be reimplementing that decision. */
-import { visibilitySheet, renameSheet } from './views-social.js';
+import { visibilitySheet, renameSheet, takePendingRoute } from './views-social.js';
 import {
   PUBLIC_ACCOUNT, VISIBILITY_LABEL, VISIBILITY_DETAIL, normalizeVisibility,
 } from './social.js';
@@ -987,6 +987,17 @@ export async function AccountView() {
   if (state.mode === 'local') return offlineScreen(state, await personalSections({ mode: 'local' }), settings);
 
   const user = state.user || {};
+
+  /* 🆕 BACK TO THE CODE THEY SCANNED (review, 2026-09-24). A newcomer who
+   * opened an add or invite link was sent here to set up an account; every way
+   * of finishing that (email, Google popup, Google redirect, signing in to an
+   * existing account) re-renders this screen signed in, so this one check
+   * covers them all. After the render, so the router is not mid-render when
+   * the hash changes. */
+  if (!user.isAnonymous) {
+    const pending = takePendingRoute();
+    if (pending) setTimeout(() => go(pending), 0);
+  }
   return user.isAnonymous
     ? anonymousScreen(await personalSections({ mode: 'anonymous' }), settings)
     : signedInScreen(user, await personalSections({ mode: 'cloud-secured' }), settings);

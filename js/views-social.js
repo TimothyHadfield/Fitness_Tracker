@@ -82,6 +82,33 @@ import { minisOf, miniLabel, groupLabel } from './set-types.js';
  * Shared bits
  * ------------------------------------------------------------------ */
 
+/* 🆕 WHERE A NEWCOMER WAS HEADED — review, 2026-09-24. Somebody who scans a
+ * code or opens an invite link before they have an account is sent to set one
+ * up, and nothing remembered the link: after signing up they landed on the
+ * Account screen with the friend they came for gone. The route is kept for the
+ * tab (sessionStorage, which also survives Google's redirect sign-in), only for
+ * an add or invite link, for an hour, and it is used once — `takePendingRoute()`
+ * on the Account screen, once the account is a real one. */
+const PENDING_ROUTE_KEY = 'ftrack:v1:afterAccount';
+const PENDING_ROUTE_RE = /^#\/(add|invite)\/[^\s]+$/;
+const PENDING_ROUTE_MS = 60 * 60 * 1000;
+
+export function rememberPendingRoute(hash) {
+  if (!PENDING_ROUTE_RE.test(hash || '')) return;
+  try { sessionStorage.setItem(PENDING_ROUTE_KEY, JSON.stringify({ hash, at: Date.now() })); } catch (_) {}
+}
+
+export function takePendingRoute() {
+  let saved = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(PENDING_ROUTE_KEY) || 'null');
+    sessionStorage.removeItem(PENDING_ROUTE_KEY);
+  } catch (_) { return null; }
+  if (!saved || !PENDING_ROUTE_RE.test(saved.hash || '')) return null;
+  if (!(Date.now() - Number(saved.at) < PENDING_ROUTE_MS)) return null;
+  return saved.hash;
+}
+
 // Why social is unavailable, and what to do about it. Three different answers,
 // because "you can't use this" with no route out is the thing this app is not
 // allowed to do.
@@ -104,7 +131,10 @@ function unavailable(reason) {
       'You are signed in anonymously, which lives only in this browser. Add an email or Google '
       + 'sign-in so friends are connecting to an account that will still be here tomorrow. Your '
       + 'training history comes with you.',
-      el('a', { class: 'btn primary', href: '#/account', text: 'Set up my account' }),
+      el('a', {
+        class: 'btn primary', href: '#/account', text: 'Set up my account',
+        onClick: () => rememberPendingRoute(location.hash),
+      }),
     );
   }
   if (reason === 'offline') {
@@ -442,7 +472,9 @@ async function fillSocial(body, state) {
             e.target.disabled = true;
             try {
               await social.acceptClaim(c.token || c.id);
-              toast(`${c.claimedName || 'They'} can now see that you train.`);
+              // ⚠️ Friends see everything since 2026-09-03 (VISIBILITY_DETAIL in
+              // social.js). "That you train" was the old light tier's promise.
+              toast(`${c.claimedName || 'They'} can now see everything you log.`);
               refresh();
             } catch (err) { e.target.disabled = false; toast(err.message); }
           },
@@ -556,8 +588,8 @@ function nameSetupScreen() {
     scroll: el('div', { class: 'form' },
       el('h2', { class: 'section-head', text: 'Pick a display name' }),
       el('p', { class: 'note', text:
-        'This is the only thing your friends see about you by default. Your email address is never '
-        + 'shown to anyone.' }),
+        'This is the name your friends, and anyone who finds your account, see you as. Your email '
+        + 'address is never shown to anyone.' }),
       input,
       el('button', { class: 'btn primary block', text: 'Continue', onClick: save }),
     ),
@@ -617,7 +649,7 @@ export function renameSheet(current, after) {
  * Inviting
  * ------------------------------------------------------------------ */
 
-async function inviteSheet() {
+export async function inviteSheet() {
   let made;
   try {
     made = await social.createInvite();
@@ -644,7 +676,9 @@ async function inviteSheet() {
             toast('Link copied.');
           } catch (_) {
             field.select();
-            toast('Press Ctrl+C to copy.');
+            // A phone has no Ctrl key (review, 2026-09-24).
+            const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+            toast(touch ? 'Tap and hold the link to copy.' : 'Press Ctrl+C to copy.');
           }
         },
       }),
@@ -709,7 +743,7 @@ export async function InviteView(param) {
     e.target.disabled = true;
     try {
       await social.acceptInvite(parsed.ownerUid, parsed.token, 'Friend');
-      toast('Connected. They can see that you train — change it any time.');
+      toast('Connected. You can now see each other\'s training.');
       location.hash = '#/social';
     } catch (err) { e.target.disabled = false; toast(err.message); }
   };
@@ -719,9 +753,12 @@ export async function InviteView(param) {
     scroll: el('div', { class: 'form' },
       el('h2', { class: 'section-head', text: 'Connect' }),
       el('p', { class: 'note', text:
-        `You will appear to them as ${state.name}. To start, they will only be able to see that you `
-        + 'trained and when — not your exercises, weights or anything else. You choose what they see '
-        + 'from your Social screen, and you can disconnect whenever you like.' }),
+        // ⚠️ The truth since 2026-09-03 (VISIBILITY_DETAIL in social.js): a
+        // friend sees everything. Body weight is left out of the list because
+        // it is shared only when its own switch is on (shareBodyWeight). There
+        // is no per-friend choice any more, only disconnecting.
+        `You will appear to them as ${state.name}. Once connected, you each see everything the other `
+        + 'logs: workouts, weights, benchmarks and muscle map. You can disconnect whenever you like.' }),
       el('button', { class: 'btn primary block', text: 'Connect', onClick: accept }),
       el('a', { class: 'btn ghost block', href: '#/social', text: 'Not now' }),
     ),
@@ -2144,7 +2181,7 @@ export async function CompareBodiesView(param) {
             `${l.exercise} ${Math.round(l.weightLb)} lb × ${l.reps}, ${l.date.slice(0, 4)}`
               + (l.reported ? ' (reported)' : '') + ' · ',
             l.source && /^https?:\/\//.test(l.source)
-              ? el('a', { href: l.source, target: '_blank', rel: 'noopener noreferrer', text: 'source' })
+              ? el('a', { class: 'text-link', href: l.source, target: '_blank', rel: 'noopener noreferrer', text: 'source' })
               : (l.source || 'no link'),
           ))),
         )),
@@ -2329,7 +2366,11 @@ export async function FriendSessionView(uid, sessionId) {
     return screen;
   }
 
-  const records = await friendRecords(a, acts, exMap);
+  // Their weigh-ins, when they share them with us (friends only, and only with
+  // their own switch on), so a weighted pull-up or dip can be priced at all.
+  // A public reader has none, and those records simply do not appear.
+  const theirWeights = (seen.doc && Array.isArray(seen.doc.bodyWeight)) ? seen.doc.bodyWeight : [];
+  const records = await friendRecords(a, acts, exMap, theirWeights);
   if (records) parts.push(records);
 
   const split = await muscleSplit(a.entries, exMap);
@@ -2470,7 +2511,7 @@ function fmtDuration(mins) {
  * into a window of workout sets would make a record appear or vanish depending
  * on which tier somebody put you on.
  */
-async function friendRecords(a, acts, exMap) {
+async function friendRecords(a, acts, exMap, bodyWeights = []) {
   if (!a.entries || !a.entries.length) return null;
   const { personalBests, PB_LABEL } = await import('./personal-bests.js');
   const { withUnit, withUnitRounded } = await import('./units.js');
@@ -2488,10 +2529,12 @@ async function friendRecords(a, acts, exMap) {
   // to stop a session being compared against itself.
   const key = (x) => `${x.date}|${x.startedAt || ''}|${x.id || ''}`;
   const here = key(a);
-  const prior = acts.filter((x) => x && key(x) < here).map((x) => ({ entries: asEntries(x.entries) }));
+  // The date rides along so each prior pull-up is priced at THAT day's weigh-in.
+  const prior = acts.filter((x) => x && key(x) < here)
+    .map((x) => ({ date: x.date, entries: asEntries(x.entries) }));
   if (!prior.length) return null;
 
-  const prs = personalBests(asEntries(a.entries), prior, [], exMap);
+  const prs = personalBests(asEntries(a.entries), prior, [], exMap, { bodyWeights, date: a.date });
   if (!prs.length) return null;
 
   const line = (p) => {
@@ -3465,8 +3508,8 @@ export async function AddView(uid) {
             ? 'You are already connected.'
             : person.state === 'asked'
               ? 'You have already asked. They decide whether to add you.'
-              : 'They get a request and decide whether to add you. Nothing of yours is '
-                + 'shared until they do.' }),
+              : 'They get a request and decide whether to add you. Once they do, you each see '
+                + 'everything the other logs.' }),
         ),
       ),
       person.state === 'none'

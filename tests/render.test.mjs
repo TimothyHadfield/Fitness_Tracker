@@ -5788,8 +5788,10 @@ ok(!data.querySelector('.rep-target'),
     await settle(); await settle();
     ok(/Sam Whitfield-Brookes/.test(s.textContent),
        'landing on somebody\'s code shows WHO it is');
-    ok(/Nothing of yours is shared until they do/.test(s.textContent),
-       'and that nothing is shared until they accept');
+    // Reworded 2026-09-24: accounts are public by default and friends see
+    // everything, so "nothing is shared until they do" was no longer true.
+    ok(/Once they do, you each see everything the other logs/.test(s.textContent),
+       'and what accepting shares');
     const ask = [...s.querySelectorAll('button')].find((b) => /Ask to connect/.test(b.textContent));
     ok(Boolean(ask),
        '⚠️ it ASKS rather than connecting on arrival — a code can be scanned by accident or '

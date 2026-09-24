@@ -4141,7 +4141,7 @@ export async function SessionView(workoutId) {
           el('label', { text: 'Description' }),
           noteBox,
           el('div', { class: 'field-help', text:
-            'Friends see this on your card. People who can only see that you trained do not.' }),
+            'Friends see this on your card.' }),
         ),
         el('div', { class: 'field' },
           el('label', { text: 'Gym' }),

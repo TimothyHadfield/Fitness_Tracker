@@ -434,7 +434,7 @@ async function render() {
    * link, and only the first is a panel returning over what you were reading.
    * The route alone cannot tell those apart. `takeRiseRequest()` is a one-shot,
    * so a re-render can never replay it. */
-  const leaving = document.querySelector('#app > .screen');
+  const leaving = document.querySelector('#app > .screen:not(.boot-shell)');
   const asked = takeRiseRequest();
   /* 🆕 AND A FRIEND'S DATA PANEL IS THE THIRD THING THAT RISES — 2026-09-16,
    * Tim: *"a 'view data' button … that pulls up a screen (similar to how the
@@ -578,19 +578,73 @@ function trackKeyboard() {
   });
 }
 
-(async function boot() {
-  trackKeyboard();
-  const settings = await store.getSettings();
-  document.documentElement.setAttribute('data-theme', settings.theme === 'light' ? 'light' : 'dark');
+/* 🆕 THE FIRST PAINT DOES NOT WAIT FOR THE CLOUD — review, 2026-09-24.
+ *
+ * `store.getSettings()` on a cloud account waits for the Firebase SDK to
+ * download and an anonymous sign-in to finish; boot awaited it before drawing
+ * anything, and a first launch was measured blank at 1.8 s. Now the frame (the
+ * tab bar and an empty screen) goes up at once, in the theme this device last
+ * showed, and the real settings replace it when they arrive.
+ *
+ * ⚠️ THE LOOK IS KEPT IN localStorage BY THIS FILE, because the store's read
+ * cache lives in memory and is empty at boot. Only theme and palette — nothing
+ * about the person — and never from the demo, whose look is not theirs. The
+ * observer keeps it current when Settings changes the theme, so a returning
+ * light-theme user does not get a dark flash first. */
+const LOOK_KEY = 'ftrack:v1:look';
+
+function applyLook(look) {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', look && look.theme === 'light' ? 'light' : 'dark');
   // The colour palette (Tim's pick of all three options, 2026-08-26). The
   // attribute is only SET for a non-default choice: the default palette is
   // bare :root, and an unrecognised stored value degrades to it — the same
   // fail-safe shape social's tier normalisation uses.
-  if (['teal', 'indigo', 'ember'].includes(settings.palette)) {
-    document.documentElement.setAttribute('data-palette', settings.palette);
+  if (look && ['teal', 'indigo', 'ember'].includes(look.palette)) {
+    root.setAttribute('data-palette', look.palette);
   } else {
-    document.documentElement.removeAttribute('data-palette');
+    root.removeAttribute('data-palette');
   }
+}
+
+function cachedLook() {
+  try { return JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); } catch (_) { return null; }
+}
+
+function rememberLook() {
+  if (demo.active()) return;
+  const root = document.documentElement;
+  try {
+    localStorage.setItem(LOOK_KEY, JSON.stringify({
+      theme: root.getAttribute('data-theme') || 'dark',
+      palette: root.getAttribute('data-palette') || null,
+    }));
+  } catch (_) { /* private mode: the next boot just starts dark */ }
+}
+
+function paintShell() {
+  const app = document.getElementById('app');
+  if (!app || app.children.length) return;
+  const route = parse(location.hash);
+  // `boot-shell` so render() does not treat it as a screen to rise over.
+  const shell = el('div', { class: 'screen boot-shell' });
+  if (FULLSCREEN.includes(route.name)) shell.classList.add('no-nav');
+  else app.append(navbar(route.name));
+  app.append(shell);
+}
+
+(async function boot() {
+  trackKeyboard();
+  const cached = cachedLook();
+  if (cached) applyLook(cached);
+  paintShell();
+  const settings = await store.getSettings();
+  applyLook(settings);
+  rememberLook();
+  try {
+    new MutationObserver(rememberLook).observe(document.documentElement,
+      { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+  } catch (_) { /* no observer: the look is refreshed at every boot anyway */ }
   // Seeded once, here, because the stepper and the set formatter are synchronous
   // and are called mid-render — they cannot await the store for the unit.
   setUnits(settings.units);
