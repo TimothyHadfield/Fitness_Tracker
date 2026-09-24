@@ -7311,6 +7311,19 @@ ok(!data.querySelector('.rep-target'),
   ok(s.querySelector('.set-open .step-value') === weightInput,
      '⚠️ and the input being typed into survived — the caption repaints, the row does not rebuild');
 
+  /* 🆕 THE TYPO WARNING (2026-09-23, Open work 1): a fat-fingered 1400 on a
+     ~175 lb row says so while it can still be fixed; a real heavy set does not. */
+  weightInput.value = '1400';
+  weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  await settle();
+  ok(/× your estimated max — typo\?/.test(capText()[0]) && Boolean(s.querySelector('.set-open .typo-warn')),
+     `🚨 a weight far past the estimated max reads "typo?" (${capText()[0]})`);
+  weightInput.value = '160';
+  weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  await settle();
+  ok(!/typo/.test(capText()[0]) && /%/.test(capText()[0]),
+     `⚠️ while a real heavy set is just a percentage — no warning on a genuine PR attempt (${capText()[0]})`);
+
   /* ⚠️ NO ARITHMETIC ON NOTHING: an empty field gets an empty caption. */
   weightInput.value = '0';
   weightInput.dispatchEvent(new window.Event('blur', { bubbles: true }));

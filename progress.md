@@ -50,18 +50,15 @@ first users stop being new).
 | 12 | ✅ closed (neck ranks) | — |
 | 13 | ✅ closed 2026-09-23 (9710d9c, merged 5b86069; opening weight 347244e) — level-matched conversion via `js/exercise-standards.js` + `fromKeyLift()`/`toKeyLift()`; demo moves ≤ 3.2 % (Shoulders −3.1). Pull-ups/chin-ups/dips stay fixed-ratio | — |
 | 35 | **Autumn's glutes** (measured 2026-09-23, synthetic 140 lb woman): (a) `rateMuscle` drops fallbacks whenever ANY direct reading exists ("Tim's call", muscle-evidence.js ~2581), so one hip-abduction set shuts out RDL/deadlift-derived glute readings; (b) lunges, split squats, leg press, goblet squat are Quads q 0.35–0.40, under `FALLBACK_MIN_QUALITY` 0.45, so they NEVER reach glutes; (c) abduction 150×12 → 262 lb deadlift → 80th pct (SL's own abduction table agrees she is ~Advanced at abduction; the population/ROM is the problem, not the arithmetic) | ✅ closed 2026-09-23 — Tim chose **"Leave it"** over blending leg work or taming abduction. Don't re-raise |
-| 36 | **Set lock "annoying or unintuitive"** (Autumn) — Tim: *"Don't change it yet but maybe brainstorm ideas."* Ideas given 2026-09-23: tap the locked row to unlock+open; lock only when leaving the exercise; lock only sets the person touched (plan sets now count, so more lock); Settings switch; undo-toast instead | his pick |
+| 36 | ✅ closed 2026-09-23 (5d4ae4c) — the padlock is gone; a **Finished / Edit** button per set (row turns `--good-dim`, +/- disappear, Edit reopens). Nothing finishes on its own. Finishing the open set opens the next unfinished one (my call, flagged). Draft flag `done` (old `locked` read the same), dropped at save | — |
 | 15 | ✅ closed 2026-09-23 — Tim: untouched last-time numbers COUNT (the existing behaviour, now pinned by a test) | — |
-| 0c | Should warm-ups be typed by the lifter (Hevy's `W`)? Every recorded set counts until then | his decision |
+| 0c | ✅ closed 2026-09-23 (250e7f0) — "+ Warm-up" beside Add set; rows marked a dashed **W** above set 1, no Finished, no captions; stored in `entry.warmups` (never `sets`), carried by edit-session and swaps. Solo lifts with a weight only (not supersets). History/day view doesn't show them yet | — |
 | — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
-| 32 | The app never states its logging conventions where you log (machine weight excluded; a lunge rep = one step per leg) | his word (screen text) |
+| 32 | ✅ closed 2026-09-23 (0dc9003) — `loggingNoteFor()` in exercises.js puts ≤4 words in the runner's meta line (Reps per leg/arm, Plates only no sled/bar, No machine weight, Include the bar, Both sides together, Added weight only, Weight = help, Time per side; 89 lifts). Tim chose Smith = plates only, alternating = per arm, sleds = plates only. Pull-up/dip suffix now "added"; assist says "assistance" without a weigh-in | — |
 | 25 | Demo has no hatched muscle any more (Neck ranks), so "trained but unrankable" is unreachable in the audit account — fixing re-rolls the seeded year | his call |
-| 34 | 2026-09-22 rerun (Tim: "continue with that project"): **added Jeff Seid (3 lifts), Alex Eubank (2), Togi (1, real name Shane Stoffer), Meg Gallagher +2 back sets**. Still unsourced: **Noel Deyzel, Joey Swoll, Krissy Cela, Sydney Cummings** (no weight × reps anywhere), **Whitney Simmons** (2 shoulder sets but no sourced bodyweight). Accessory pass found nothing for Cohen, Connor, Buettner, Lawrence, Gasparyan, Thompson. YouTube IP-blocked captions ~50 min into a 5-agent wave; agents fell back to local Whisper on downloaded audio. Retry leads (video IDs) are in each agent's `notFound` — copied to `docs/history.md` 2026-09-22 | a rerun with ONE agent, paced, when YouTube unblocks |
 | 3a | Activities Phase 2 item 6: which activities his circle logs | ask Tim |
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
-| 0f | His friend's sign-in failure | Tim is investigating it himself |
 | 8 | Estimator Phases 1–3 (the Goals verdict waits on it); §6.1 hard constraint, §14 question | his answers |
-| 30 | Strength-accuracy §6.1 backtest needs **Tim's own export**; §6.5 personal ratios not started | his export |
 
 **Flagged to Tim, unchanged:** fill-on-open meets the set lock (a copied set 2 locks when you go back);
 the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
@@ -97,6 +94,23 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **2026-09-23, Tim (Autumn's feedback):** timer pause/edit and close-the-influencer-list → done.
   Glutes: *"Could you check it out?"* → investigated, fix awaits his call (Open work 35). Lock:
   *"Don't change it yet"* → ideas only (Open work 36).
+
+- **2026-09-23, Tim (build all three):** (1) *"instead of doing a lock system, you just click
+  "finished" on the side of that set and then it turns it a different color. Once you click finished,
+  the +/- buttons by the numbers dissapear. Then the finished button toggles into "edit" and if you
+  click it, the color will change and the +/- will show back up."* (2) *"just build the warm up set
+  system and I can change it if I want afterwards. Just make sure It's clear warm up sets are
+  different than actual sets."* (3) *"For excersizes where it's not clear, like … machine weight or if
+  lunge=1 step or 2, you should specify in like 3-4 words or symbols that that's the case. Investigate
+  these potential scenarios."*
+
+- **2026-09-23, Tim (rating tweaks):** *"I think a typo warning or something would be a good
+  improvement to note. Fading smoothly is better. Yes I like the at least X."* → Open work 1: a typo
+  WARNING (tell the lifter, instead of silently holding the set) · Open work 2: wire the smooth fade
+  (`estimateAt()`, re-baseline, own commit) · Open work 9: high-rep sets count as a separate "at least
+  X" reading. Queued after the Finished/warm-up/labels builds. *"Let's leave the famous lifters
+  comparison for now"* → Open work 34 parked. *"stop asking about accuracy check and friend's sign in
+  problem"* → Open work 30 and 0f parked; never raise them again.
 
 ## Standing instructions (Tim's words)
 - **Message length** (2026-09-27): *"Never give me messages that long. Always 2-3 paragraphs max
@@ -243,6 +257,11 @@ can check._
 - The live read pattern (Open work 26) was measured on 3–4 sessions, not a training history.
 
 ## Rejected / parked
+- **Parked 2026-09-23 at Tim's word — DO NOT ASK ABOUT THESE AGAIN:** ~~famous-lifter retry (was Open
+  work 34; Deyzel, Swoll, Cela, Cummings, Simmons unsourced; leads in docs/history.md 2026-09-22)~~
+  *"leave the famous lifters comparison for now"* · ~~strength-accuracy backtest on his export (was
+  30)~~ · ~~his friend's sign-in failure (was 0f)~~ — *"stop asking about accuracy check and friend's
+  sign in problem."*
 - **Pinned P1–P4** (don't offer): P1 activity PRs (crosses D27) · P2 Strava feed exclusion · ~~P3
   competitive review~~ ran 2026-09-26, set aside · P4 effort-size research (likely a written "no").
 - **Parked at Tim's word:** 10 live Strava sync (needs Blaze + card) · 12 AirPods controls ("Wait") ·

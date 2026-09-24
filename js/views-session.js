@@ -33,6 +33,10 @@ import * as units from './units.js';
 
 const go = (hash) => { location.hash = hash; };
 
+// A weight this many times the lifter's estimated max reads "typo?" under the
+// number (Open work 1, 2026-09-23). See the typo block in the captions.
+export const TYPO_WARN_RATIO = 1.5;
+
 /**
  * Whole days between two stored YYYY-MM-DD days.
  *
@@ -2309,7 +2313,20 @@ export async function SessionView(workoutId) {
       // sharper here: every never-done set opens at a derived or blank weight,
       // and "0 % of your estimated max" over a blank field reads as a reading.
       const live = oneRM > 0 && totalW > 0;
-      if (capSlots.weight) {
+      /* 🆕 THE TYPO WARNING (2026-09-23, Open work 1). Tim: *"I think a typo
+       * warning or something would be a good improvement."* The ratings hold a
+       * wildly high set aside until another day agrees (the typo screen in
+       * muscle-evidence.js) — correctly, but silently at the moment it matters.
+       * So the lifter is told HERE, while the number can still be fixed.
+       * 1.5× an estimated max is past anything a real set produces (a genuine
+       * best arrives at ≤ ×1.13 of the standing estimate, strength-estimate.js
+       * PLAUSIBLE_GAIN) and well short of the ×10 slip it exists to catch.
+       * Advisory only: nothing is blocked, nothing is changed. */
+      const typo = live && totalW >= oneRM * TYPO_WARN_RATIO;
+      if (capSlots.weight && typo) {
+        setChildren(capSlots.weight, el('span', { class: 'typo-warn' },
+          el('b', { text: `${(totalW / oneRM).toFixed(1)}×` }), ' your estimated max — typo?'));
+      } else if (capSlots.weight) {
         const pct = live ? percentOfMax(oneRM, totalW) : null;
         // ⚠️ Capped at 100. Above the max the honest words are the rep
         // caption's, and "133 % of your estimated max" is a number pretending

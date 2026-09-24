@@ -1707,6 +1707,9 @@ select.input {
 }
 .add-set svg { display: block; }
 .add-set:active { transform: scale(.96); }
+/* "2.3× your estimated max — typo?" under the weight (Open work 1). */
+.step-est .typo-warn { color: var(--danger); }
+
 /* How to count this exercise ("Reps per leg"), inside the grey meta line. */
 .session-ex-meta .ex-note { color: var(--ink); font-weight: 600; }
 
