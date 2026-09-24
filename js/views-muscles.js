@@ -1475,9 +1475,13 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
      * muscle with no key lift has no published standards, so it cannot be rated
      * and cannot reach here. Guarded anyway, because "estimated 1-rep max in
      * undefined" is the kind of sentence that ships. */
-    el('div', { class: 'muscle-est-note', text: m.lift && m.lift.name
+    el('div', { class: 'muscle-est-note', text: (m.lift && m.lift.name
       ? `Estimated 1-rep max in ${m.lift.name}`
-      : 'Estimated 1-rep max' }),
+      : 'Estimated 1-rep max')
+      // 🆕 2026-09-23 — Tim: *"Yes I like the at least X."* The floor one recent
+      // set supports on its own; shown only when it rounds below the estimate.
+      + (m.atLeast > 0 && Math.round(m.atLeast) < Math.round(m.estimate)
+        ? ` · at least ${units.withUnit(Math.round(m.atLeast))}` : '') }),
 
     /* 🚨 THE MUSCLE'S OWN CAVEAT SITS DIRECTLY UNDER THE NUMBER IT QUALIFIES,
      * AND THE POSITION WAS CHOSEN BY MEASURING RATHER THAN BY TASTE.

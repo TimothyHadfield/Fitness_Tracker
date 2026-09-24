@@ -2169,6 +2169,24 @@ const LOW_REP_PREFERENCE = 8;
 
 function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
 
+/* "AT LEAST X" — THE HIGHEST FLOOR ANY ONE RECENT SET SUPPORTS ON ITS OWN.
+ * Each listed set's reading, lowered by two of its own σ (conversion doubt and
+ * rep doubt, `readingSigma()`), is what that set says the lifter can do with
+ * ~98 % one-sided confidence; the best of those is the floor. Only sets inside
+ * the 84-day window count — a floor from half a year ago is not a statement
+ * about today. Null when nothing recent qualifies, or when the floor would not
+ * sit below the estimate (a floor above the answer would contradict it). */
+const AT_LEAST_SIGMAS = 2;
+export function atLeastOf(used, estimate) {
+  if (!(estimate > 0) || !Array.isArray(used)) return null;
+  let best = 0;
+  for (const u of used) {
+    if (!u || !(u.estimate > 0) || !(Number(u.ageDays) <= WINDOW_DAYS)) continue;
+    best = Math.max(best, u.estimate * Math.exp(-AT_LEAST_SIGMAS * readingSigma(u)));
+  }
+  return best > 0 && best < estimate ? best : null;
+}
+
 // Confidence, 0–1. Four things, combined as a geometric mean so that no single
 // term can be quietly compensated for by the others — a pile of stale evidence
 // stays low-confidence no matter how much of it there is.
@@ -3098,6 +3116,9 @@ export function rateMuscle(observations, muscle = null) {
 
   return {
     estimate,
+    // 🆕 2026-09-23: "AT LEAST X" — Open work 9, Tim: *"Yes I like the at least
+    // X."* A floor beside the estimate rather than a move of it.
+    atLeast: atLeastOf(used, estimate),
     // ⚠️ TWO DOUBTS, MULTIPLIED, AND THEY ARE NOT THE SAME DOUBT. The first term
     // is how good this lifter's evidence is — fixable by logging more. The
     // second is how good the published standard is — fixable by nobody. Keeping

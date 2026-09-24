@@ -461,6 +461,15 @@ ok(/\d+ lbs\b/.test(panelText), 'and the estimate, which is the number the scree
  * set — with nothing to tell the reader which of the two was measured. */
 ok(/Estimated 1-rep max in Barbell Bench Press/.test(panelText),
    '🚨 and it SAYS what the weight is: an estimated 1-rep max in the muscle\'s key lift, named');
+/* 🆕 2026-09-23 — Tim: *"Yes I like the at least X."* A floor beside the estimate,
+ * below it, from the one recent set (225×1 → 225·e^(−2·0.05) ≈ 204). */
+{
+  const least = panelText.match(/at least (\d+) lbs/);
+  const est = panelText.match(/(\d+) lbs/);
+  ok(Boolean(least), '🆕 the panel says "at least N lbs" beside the estimate');
+  ok(Boolean(least) && Number(least[1]) < Number(est[1]),
+     'and that floor sits below the estimate, never above it');
+}
 /* ⚠️ NO PERCENTILE BY DEFAULT — Tim, 2026-08-25: "showing the percentile is a
  * little harsh for some people." What must stay true is that hiding it hides a
  * READOUT and not the reasoning: the level above is still computed from that

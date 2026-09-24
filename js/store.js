@@ -4054,6 +4054,8 @@ async function ratedFromRows(rows, profile) {
       muscle,
       lift: keyLiftFor(muscle),
       estimate: rating.estimate,
+      // The "at least X" floor beside it (rateMuscle → atLeastOf); null = none.
+      atLeast: rating.atLeast || null,
       confidence: rating.confidence,
       band: confidenceBand(rating.confidence),
       tint: tintFor(rating.confidence),
@@ -4340,6 +4342,8 @@ export async function muscleStrength() {
       muscle,
       lift: keyLiftFor(muscle),
       estimate: rating.estimate,
+      // The "at least X" floor beside it (rateMuscle → atLeastOf); null = none.
+      atLeast: rating.atLeast || null,
       confidence: rating.confidence,
       band: confidenceBand(rating.confidence),
       tint: tintFor(rating.confidence),
