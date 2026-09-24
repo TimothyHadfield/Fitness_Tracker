@@ -1,8 +1,9 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-23 (Finished/Edit, warm-ups, notes, typo warning, at-least, smooth fade all
-shipped; Authorized list below is fully done). Older note: the
+_Last updated 2026-09-24 (whole-app review: 39 bugs fixed and live; 42 items await Tim's picks on
+https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73 — read `picks` with ArtifactData, see chat.md
+2026-09-24). Older note: the
 headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
 system clock now reads 2026-09-22). Read `chat.md` bottom-up when the dates disagree; git is the
 tie-breaker. For Claude only; Tim doesn't read this.
@@ -60,6 +61,11 @@ first users stop being new).
 | 3a | Activities Phase 2 item 6: which activities his circle logs | ask Tim |
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
 | 8 | Estimator Phases 1–3 (the Goals verdict waits on it); §6.1 hard constraint, §14 question | his answers |
+
+**Whole-app review 2026-09-24:** 42 Tim-decides items (look, wording, layout, features — incl.
+estimates ignoring sex in `estimateOneRM`, which moves ratings) wait on the picks page above. Do
+"do" picks; raise "talk" picks; never re-raise "skip". Builder choices he hasn't seen are listed in
+chat.md 2026-09-24 "Open".
 
 **Flagged to Tim, unchanged:** the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
 the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
@@ -194,6 +200,11 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   weaken it. It and `rules` are not in the 25-suite total.
 - **`git worktree add` fails under OneDrive** ("Could not reset index file") → work in the main
   checkout, one change per commit; builder agents can't get worktrees here.
+- **Git Bash rewrites a bare `"#/route"` argument into a Windows path** (`#C:/Program Files/Git/...`)
+  → pass `"index.html#/route"`. **A no-demo screenshot signs in anonymously to the LIVE project**
+  unless gstatic/googleapis are blocked in the browser (happened 2026-09-24).
+- **Parallel builders in one checkout work** when each owns named files; the manager runs the suite
+  and commits per builder. Wave files that overlap go in a second wave.
 - **Screenshots of logged-in screens use the demo, not an account:** set sessionStorage
   `ftrack:v1:demo`='1' before load (playwright webkit from `~/.claude/tools/node_modules`), serve with
   `python -m http.server`; in the runner retry-click Push until `.set-list` exists (it loads late).
@@ -312,8 +323,8 @@ can check._
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
 - **Tests:** `node tests/<name>.test.mjs` for each of 25 no-Chrome suites (needs `npm i --no-save jsdom
   jsqr`); `rules` needs the emulator + Temurin 21; `sw-update` needs Chrome — 27 files in all. **Last
-  run 2026-09-24: 25 suites, 6,485 PASS, 0 failures** (render alone 1,721). New this week:
-  `logging-notes`, `at-least`. All of them at once, printing only failures (PowerShell):
+  run 2026-09-24 (after the review fixes): 30 files, 6,635 PASS, 0 failures**. New: five
+  `review-*.test.mjs` suites. All of them at once, printing only failures (PowerShell):
   `Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs' } | % { $o
   = node $_.FullName 2>&1 | Out-String; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; if($f){
   "$($_.Name): $f FAIL" } }`

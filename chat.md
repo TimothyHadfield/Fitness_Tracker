@@ -855,3 +855,20 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Open:** my calls flagged to Tim — finishing the open set opens the next; warm-ups have no
   Finished, hidden in supersets, not in history yet; pull-up/dip weight label "added"; typo at 1.5×;
   after a long break the number slides down 2 %/week.
+
+## 2026-09-24 · Whole-app review (Opus 5.5)
+- **Asked:** *"review the cite and look for improvements (either new features or fixing problems)
+  throughout the whole thing"* — usability, clarity, calculation, design, colours, animation, titles.
+- **Built:** 7 read-only reviewers (record, workouts, data, maths, profile/goals, social, design/first
+  run) → ~80 findings. 39 no-decision bugs fixed by 5 builders in the main checkout (f218774,
+  a391eda, 94f4c62, 1c25467, 163306f). 42 Tim-decides items published as a picks page:
+  https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73 (db: `picks/<id>` {choice do|talk|skip, note};
+  `status/<id>` {live} is mine). Read his picks with ArtifactData list `picks`.
+- **Verified how:** every new test seen failing first (review-runnerA, review-maths, review-screens,
+  review-social, review-workouts); full no-Chrome suite 6,635 PASS / 0 FAIL before each push; golden
+  table byte-identical (GOLDEN_DUMP diff); WebKit shots at 393/1440 in the session scratchpad.
+- **Open:** Tim's picks · builder choices flagged to him (wording of 6 privacy lines, "Marked warm-ups
+  left out", "Started Aug 6 · ended", no-weigh-in assist text, Keep my version as ghost button, shell
+  paints before settings, `ftrack:v1:look` localStorage) · drafts >12 h still cleared · optimal.js
+  days/week still wobbles ~7 % by weekday · set-reps.js has a stale targetsApply comment · a design
+  reviewer's first two no-demo runs signed in anonymously to LIVE (≤2 empty anon users).
