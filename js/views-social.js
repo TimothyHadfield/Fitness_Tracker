@@ -1242,7 +1242,7 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
     profile.gender === 'female' ? 'Female' : profile.gender === 'male' ? 'Male' : null,
     profile.age ? `${profile.age} years` : null,
   ].filter(Boolean);
-  const gaps = [!profile.gender && 'sex', !profile.age && 'age'].filter(Boolean);
+  const gaps = [!profile.gender && 'gender', !profile.age && 'age'].filter(Boolean);
   parts.push(bodyBlock({
     label: `${name}'s body`,
     facts,
@@ -1995,7 +1995,7 @@ export async function CompareBodiesView(param) {
         ? 'their app has not updated since this screen changed — it starts working the next time '
           + 'they open it'
         : (r && r.doc
-          ? 'they have not recorded enough for a map yet, or their profile is missing the sex, body '
+          ? 'they have not recorded enough for a map yet, or their Body details are missing the gender, body '
             + 'weight and age a ranking needs'
           : 'nothing of theirs is readable from here'),
     });
@@ -2026,13 +2026,13 @@ export async function CompareBodiesView(param) {
     setChildren(host, emptyState(
       'Nothing to compare yet',
       mineMissing
-        ? 'Your own muscle map needs your sex, body weight and age before it can be ranked — and at '
+        ? 'Your own muscle map needs your gender, body weight and age before it can be ranked — and at '
           + 'least one recorded set.'
         : missing.length
           ? `${missing.map((m) => `${m.name}: ${m.why}`).join('. ')}.`
           : 'There is only one map to draw here.',
       mineMissing
-        ? el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' })
+        ? el('a', { class: 'btn primary', href: '#/profile', text: 'Open Body details' })
         : leftIsFamous
           ? el('a', { class: 'btn', href: '#/graphs', text: 'Back to your map' })
           : el('a', { class: 'btn', href: `#/friend/${encodeURIComponent(leftUid)}`, text: 'Their page' })));
@@ -2785,17 +2785,20 @@ async function friendEstimates(ex, theirActivity, theirDoc) {
     }));
     const theirWeights = (theirDoc && theirDoc.bodyWeight) || [];
 
-    const [mineRatings, theirRatings, myWeight] = await Promise.all([
+    const [mineRatings, theirRatings, myWeight, myProfile] = await Promise.all([
       muscleRatings(),
       muscleRatings({
         sessions: theirSessions, benchmarks: theirBenchmarks, bodyWeights: theirWeights,
       }),
       s.latestBodyWeight().catch(() => null),
+      s.getProfile().catch(() => null),
     ]);
 
     const theirLatest = theirWeights.length ? theirWeights[theirWeights.length - 1].weight : null;
+    // Only my own gender picks a ratio table; theirs are rated sex-unknown, so both sides match their ratings.
+    const mySex = myProfile && myProfile.gender ? { sex: myProfile.gender } : undefined;
     return {
-      mine: estimateOneRM(ex, mineRatings, myWeight ? myWeight.weight : null),
+      mine: estimateOneRM(ex, mineRatings, myWeight ? myWeight.weight : null, mySex),
       theirs: estimateOneRM(ex, theirRatings, theirLatest),
     };
   } catch (_) {

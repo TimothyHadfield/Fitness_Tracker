@@ -154,7 +154,7 @@ export async function ProfileView() {
   );
 
   return screenShell({
-    title: 'Profile',
+    title: 'Body details',
     /* 🔄 THE FALLBACK IS `#/account` SINCE 2026-09-11, not Settings — where this
      * form has actually been reached from since 2026-08-26, and now also from
      * the Profile tab's "Your body" row (step 2 of the Data/Profile split).

@@ -2877,7 +2877,7 @@ const ROW_NOUN = {
   benchmarks: ['benchmark', 'benchmarks'],
   bodyWeight: ['weigh-in', 'weigh-ins'],
   customExercises: ['custom exercise', 'custom exercises'],
-  systems: ['programme', 'programmes'],
+  systems: ['program', 'programs'],
   goals: ['goal', 'goals'],
   settings: ['setting', 'settings'],
 };
@@ -3179,7 +3179,7 @@ export async function SettingsView() {
       el('a', { class: 'row', href: '#/account' },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: 'Account & profile' }),
-          el('div', { class: 'row-sub', text: 'Photo, your details, backups — now under the profile icon' }),
+          el('div', { class: 'row-sub', text: 'Photo, body details, backups — now under the profile icon' }),
         ),
         el('span', { class: 'row-chev' }, chevron()),
       ),

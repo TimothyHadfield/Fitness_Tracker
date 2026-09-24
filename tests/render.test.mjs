@@ -2277,19 +2277,19 @@ ok(!data.querySelector('.rep-target'),
      this asserts: the door moved, it did not close. */
   {
     const tab = await mount(WorkoutsView());
-    ok(!/New system/.test(tab.textContent),
+    ok(!/New program/.test(tab.textContent),
        'the Workouts tab is one programme, so it no longer offers to make another one inline');
     tab.querySelector('.sys-head').click();
     await settle();
     const sh = document.querySelector('.sheet');
-    ok(sh && /New system/.test(sh.textContent),
+    ok(sh && /New program/.test(sh.textContent),
        'a system can still be created — from the switcher, which is the only door to it now');
     sh.querySelector('.sheet-close, .btn')?.click?.();
     document.querySelectorAll('.sheet, .sheet-backdrop').forEach((n) => n.remove());
     await settle();
   }
   const blank = await mount(SystemRouteView('new'));
-  ok(/Create system/.test(blank.textContent), 'the new-system screen offers to create one');
+  ok(/Create program/.test(blank.textContent), 'the new-system screen offers to create one');
 
   /* ── Reading and editing are two screens, 2026-08-21 ──────────────────────
      ⚠️ These are POSITION tests as much as presence tests, and the bug they
@@ -2299,10 +2299,10 @@ ok(!data.querySelector('.rep-target'),
      to the bottom of the screen. "Is it on the screen" passed the whole time.
      Tim chose the split on 2026-08-21; what follows is what must stay true. */
   const detailText = detail.textContent.replace(/\s+/g, ' ');
-  ok(!/System name|Save changes|Delete system/.test(detailText),
+  ok(!/Program name|Save changes|Delete program/.test(detailText),
      'opening a system is READING it — no name field, no Save, no Delete');
   ok(Boolean([...detail.querySelectorAll('button')]
-       .find((n) => /edit this system/i.test(n.getAttribute('aria-label') || ''))),
+       .find((n) => /edit this program/i.test(n.getAttribute('aria-label') || ''))),
      'and the way to edit it is a pencil in the header');
   // The workouts come FIRST. A phone has one screenful and this is what it is for.
   const firstLabel = detail.querySelector('.pane-scroll .section-label');
@@ -2311,9 +2311,9 @@ ok(!data.querySelector('.rep-target'),
 
   const editor = await mount(SystemRouteView(sys.id + '/edit'));
   const editorText = editor.textContent.replace(/\s+/g, ' ');
-  ok(/System name/.test(editorText) && /Save changes/.test(editorText),
+  ok(/Program name/.test(editorText) && /Save changes/.test(editorText),
      'the pencil route is the form');
-  ok(/Delete system/.test(editorText), 'which is where Delete lives now');
+  ok(/Delete program/.test(editorText), 'which is where Delete lives now');
   ok(!editor.querySelector('.pane-bottom .btn.danger'),
      'and Delete is NOT pinned to the bottom of the screen, under the thumb');
 
@@ -2472,7 +2472,7 @@ ok(!data.querySelector('.rep-target'),
        `🚨 and it lists every programme, not just the current one (${allSystems.length})`);
     ok(/Current/.test(sheetText),
        '⚠️ with the current one marked in WORDS — a stripe of colour alone is not a reading');
-    ok(/New system/.test(sheetText) && /Explore/.test(sheetText),
+    ok(/New program/.test(sheetText) && /Explore/.test(sheetText),
        '🚨 and it carries New system and Explore, which have no other door since the tab stopped being a list');
 
     /* Switching really switches, and the screens follow. */
@@ -2507,13 +2507,13 @@ ok(!data.querySelector('.rep-target'),
     const detail = await mount(SystemRouteView(current.id));
     ok(detail.textContent.includes(current.name),
        '#/system/<id> still opens a programme that is not the current one');
-    ok(/Make this my current programme/.test(detail.textContent),
+    ok(/Make this my current program/.test(detail.textContent),
        '🚨 and offers to make it current — the one thing that screen has which the tab does not need');
     ok(mine.every((w) => detail.textContent.includes(w.name)),
        '⚠️ drawn by the same systemBody() as the tab, so the two cannot drift — same workouts, same wording');
 
     const makeCurrent = [...detail.querySelectorAll('button')]
-      .find((b) => /Make this my current programme/.test(b.textContent));
+      .find((b) => /Make this my current program/.test(b.textContent));
     makeCurrent.click();
     await settle();
     ok((await store.currentSystem()).id === current.id,
@@ -2729,7 +2729,7 @@ ok(!data.querySelector('.rep-target'),
   // Attribution is not optional. A system from somewhere else must never look
   // like one the app wrote.
   ok(detail.textContent.includes(first.author), 'and says who wrote it');
-  ok(/Add to my systems/.test(detail.textContent), 'and offers to add it');
+  ok(/Add to my programs/.test(detail.textContent), 'and offers to add it');
   // The set total must not be presented as a weekly figure: these workouts
   // repeat, so the total across them is not what you do in a week.
   ok(!/sets a week/i.test(detail.textContent),
@@ -2781,7 +2781,7 @@ ok(!data.querySelector('.rep-target'),
     await settle();
 
     const addBtn = [...screen.querySelectorAll('button')]
-      .find((b) => b.textContent.trim() === 'Add to my systems');
+      .find((b) => b.textContent.trim() === 'Add to my programs');
     ok(Boolean(addBtn), 'a fresh account is offered the plain Add button');
 
     addBtn.click();
@@ -2803,24 +2803,24 @@ ok(!data.querySelector('.rep-target'),
     const after = await mount(ExploreDetailView(ppl.id));
     await settle();
     const afterText = after.textContent.replace(/\s+/g, ' ');
-    ok(/Added to your systems/.test(afterText),
+    ok(/Added to your programs/.test(afterText),
        '🚨 the screen SAYS it is added — a receipt that stays, where the old one was a toast '
        + 'destroyed by the navigation that fired with it');
-    ok([...after.querySelectorAll('button')].some((b) => /Remove from my systems/.test(b.textContent)),
+    ok([...after.querySelectorAll('button')].some((b) => /Remove from my programs/.test(b.textContent)),
        'and the button Tim asked for is there');
-    ok(!/^Add to my systems$/m.test(afterText.trim()) || /Add another copy/.test(afterText),
+    ok(!/^Add to my programs$/m.test(afterText.trim()) || /Add another copy/.test(afterText),
        '…while adding a second copy is still possible, because two copies is a tested feature');
 
     /* 🚨 THE SENTENCE THAT EXPLAINS WHAT HE SAW. The copy is not the current
        programme — adding deliberately does not switch you — so the Workouts tab
        still shows the old one. Before today nothing said that anywhere. */
     ok(/will not appear there until you switch/.test(afterText)
-       || /It is your current programme/.test(afterText),
+       || /It is your current program/.test(afterText),
        '🔒 and it states where the copy does and does not show up, which is the whole bug report');
 
     /* ---- remove it again ---- */
     const removeBtn = [...after.querySelectorAll('button')]
-      .find((b) => /Remove from my systems/.test(b.textContent));
+      .find((b) => /Remove from my programs/.test(b.textContent));
     removeBtn.click();
     for (let i = 0; i < 6; i++) await settle();
     const confirm = [...document.querySelectorAll('button')]
@@ -3837,7 +3837,7 @@ ok(!data.querySelector('.rep-target'),
     const restore = [...screen.querySelectorAll('button')]
       .find((b) => b.textContent.trim() === 'Restore its workouts');
     ok(Boolean(restore), '🚨 an empty copied programme offers to restore its workouts');
-    ok(!/Add the days this programme is made of/.test(screen.textContent),
+    ok(!/Add the days this program is made of/.test(screen.textContent),
        '…instead of telling him to build days that already exist in the original');
     restore.click();
     for (let i = 0; i < 12; i++) await settle();
@@ -3861,9 +3861,9 @@ ok(!data.querySelector('.rep-target'),
    */
   {
     const emptyWorkouts = await mount(WorkoutsView());
-    ok(/No systems yet/.test(emptyWorkouts.textContent),
+    ok(/No programs yet/.test(emptyWorkouts.textContent),
        '🚨 a brand-new account gets the Workouts tab\'s empty state, not a blank screen');
-    ok(/New system/.test(emptyWorkouts.textContent)
+    ok(/New program/.test(emptyWorkouts.textContent)
        && /Explore/.test(emptyWorkouts.textContent),
        '⚠️ with BOTH doors on it — the switcher that normally holds them needs a current programme '
        + 'to hang off, so on an empty account they have to be on the screen itself');
@@ -3873,7 +3873,7 @@ ok(!data.querySelector('.rep-target'),
     const emptyStart = await mount(StartPickerView());
     ok(/Nothing to run yet/.test(emptyStart.textContent),
        '🚨 and Record says so rather than rendering an empty list');
-    ok(/Pick a programme/.test(emptyStart.textContent),
+    ok(/Pick a program/.test(emptyStart.textContent),
        '⚠️ offering a ready-made one as the primary action — the 2026-08-21 first-run path, which got '
        + 'install-to-first-logged-set down to five taps by landing exactly here');
   }
@@ -5146,8 +5146,10 @@ ok(!data.querySelector('.rep-target'),
   const explainAt = kids.findIndex((n) => /stimulus the research supports/.test(n.textContent));
   ok(explainAt >= 0 && listAt > explainAt,
      'what the percentages mean is said ABOVE the list, before anyone compares nine of them');
-  ok(/a system is just a programme you own/.test(ex.textContent),
-     'the programme/system word swap is bridged in one sentence where the stranger is standing');
+  // 2026-09-24: one word, "program", so there is no swap left to bridge — the
+  // sentence still says a pick becomes a copy you own.
+  ok(/copied into your programs, as your own/.test(ex.textContent) && !/\bsystems?\b/i.test(ex.textContent),
+     'Explore says a pick is copied and yours, and never says "system"');
   ok(/Nothing real reaches 100/.test(ex.textContent),
      'and the full "what 100 % would mean" statement is still on the screen');
 
@@ -5271,7 +5273,7 @@ ok(!data.querySelector('.rep-target'),
       avatarCrop: before.avatarCrop || null,
     });
   }
-  ok(/Your details/.test(text(acct)), 'the profile row lives on Account now');
+  ok(/Body details/.test(text(acct)), 'the Body details row lives on Account now');
   ok(/Download backup/.test(text(acct)) && /Restore from backup/.test(text(acct)),
      'and so do backup and restore');
   ok(/Delete all data/.test(text(acct)), 'and delete-all');

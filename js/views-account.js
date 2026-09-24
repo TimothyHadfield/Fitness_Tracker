@@ -57,7 +57,7 @@ function demoCard() {
       el('div', { class: 'section-label', text: 'Just looking around' }),
       helpDot(el('div', {},
         el('p', {}, el('b', { text: 'A made-up year. ' }),
-          'Two programmes, a few hundred sessions, benchmarks, body weight and a goal in progress, '
+          'Two programs, a few hundred sessions, benchmarks, body weight and a goal in progress, '
           + 'so every screen has something in it.'),
         el('p', {}, el('b', { text: 'Nothing is saved. ' }),
           'It lives in this tab only, and starts fresh every time. Change anything you like.'),
@@ -103,9 +103,9 @@ function demoScreen() {
           el('div', { class: 'section-label', text: 'You are in the demo account' }),
           helpDot(el('div', {},
             el('p', {}, 'None of this is real — it is a generated year of training, so that the '
-              + 'systems, the calendar, the graphs, the muscle map and the goal all have '
+              + 'programs, the calendar, the graphs, the muscle map and the goal all have '
               + 'something in them.'),
-            el('p', {}, 'Nothing here is saved anywhere. Edit a workout, delete a system, log a '
+            el('p', {}, 'Nothing here is saved anywhere. Edit a workout, delete a program, log a '
               + 'session — it lives in this tab and nowhere else, and reloading the page '
               + 'starts it over from the same beginning.'),
             el('p', {}, 'Social is switched off while you are in here, because publishing '
@@ -798,7 +798,7 @@ async function personalSections({ mode }) {
      * directly above a row that does not go there is worse than no heading. */
     el('a', { class: 'row', href: '#/profile' },
       el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: 'Your details' }),
+        el('div', { class: 'row-title', text: 'Body details' }),
         el('div', { class: 'row-sub', text: profileLine }),
       ),
       el('span', { class: 'row-chev' }, chevron()),
@@ -1399,7 +1399,7 @@ async function signedInScreen(user, sections = [], settings = {}) {
         body: el('div', { class: 'card' },
           el('p', { class: 'field-help' },
             'This erases everything in your account, permanently, on every device — every workout, '
-            + 'weigh-in, benchmark, programme, goal and custom exercise, and what friends can see '
+            + 'weigh-in, benchmark, program, goal and custom exercise, and what friends can see '
             + 'of you. It cannot be undone. Download a backup first if there is any chance you want '
             + 'this data later.'),
           pw ? el('div', { class: 'field' }, el('label', { text: 'Confirm your password' }), pw) : null,

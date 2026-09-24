@@ -252,7 +252,7 @@ function bodySection(profile) {
     : null;
 
   return bodyBlock({
-    label: 'Your body',
+    label: 'Body details',
     facts,
     // ⚠️ The DATE of the last weigh-in, because the number above it is that
     // day's rather than today's — the same distinction `BODY_WEIGHT_FRACTION`
@@ -265,7 +265,7 @@ function bodySection(profile) {
         ? `Last weighed ${relativeDay(profile.bodyWeightDate).replace(/^(Today|Yesterday)$/, (w) => w.toLowerCase())}`
         : 'Gender, birth year and body weight'),
     href: '#/profile',
-    empty: 'Your body',
+    empty: 'Body details',
   });
 }
 

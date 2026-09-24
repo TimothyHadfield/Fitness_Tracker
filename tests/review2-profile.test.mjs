@@ -108,7 +108,7 @@ ok(demo.active(), 'the demo is on, so nothing below passes by having no data');
 
   // 9a. No capital "Today" mid-sentence.
   const body = [...me.querySelectorAll('.me-section')]
-    .find((s) => /Your body/i.test(flat(s.querySelector('.section-label'))));
+    .find((s) => /Body details/i.test(flat(s.querySelector('.section-label'))));
   const bodySub = flat(body && body.querySelector('.row-sub'));
   ok(!/Last weighed (Today|Yesterday)/.test(bodySub), `9. "Last weighed" is lower-case after it (${bodySub})`);
 }

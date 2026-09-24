@@ -335,7 +335,7 @@ export const SOURCES = {
   },
   moesgaard2022: {
     label: 'Moesgaard et al. (2022), periodisation',
-    n: 'meta-analysis of volume-equated programmes, trained and untrained',
+    n: 'meta-analysis of volume-equated programs, trained and untrained',
     url: 'https://pubmed.ncbi.nlm.nih.gov/35044672/',
   },
   ogasawara2013: {
@@ -821,13 +821,13 @@ export const TOPICS = [
       },
       {
         myth: 'Women should train differently from men.',
-        text: 'Same programmes, same relative gains in size — and relative upper-body strength gains actually '
+        text: 'Same programs, same relative gains in size — and relative upper-body strength gains actually '
           + 'came out slightly larger in women.',
         sources: ['roberts2020'],
       },
       {
         myth: 'You have to keep changing things to confuse the muscle.',
-        text: 'Periodised programmes are not consistently better than plain ones. Variety is allowed to be '
+        text: 'Periodised programs are not consistently better than plain ones. Variety is allowed to be '
           + 'for your interest rather than for your muscles.',
         sources: ['acsm2026'],
       },
@@ -853,7 +853,7 @@ export const TOPICS = [
     question: 'What to expect from yourself',
     lead: 'How much of this is programming, and how much is you?',
     confidence: 'strong',
-    hook: 'Your programme explains about a quarter of your result.',
+    hook: 'Your program explains about a quarter of your result.',
     section: 'how-it-works',
     tags: ['method'],
     answer: 'Programming explains roughly a quarter of why two people training the same way get different '
@@ -978,7 +978,7 @@ export const TOPICS = [
     section: 'how-to-train',
     tags: ['periodisation', 'progression'],
     confidence: 'good',
-    answer: 'For size, a periodised programme is not better than one rep range and '
+    answer: 'For size, a periodised program is not better than one rep range and '
       + 'steady progression. For maximal strength it looks better, and the '
       + 'reason may simply be that it included heavier sets.',
     points: [
@@ -1200,7 +1200,7 @@ export const TOPICS = [
   {
     id: 'why-people-differ',
     question: 'Why two people get different results',
-    lead: 'Same programme, different outcomes — how much of that is really individual?',
+    lead: 'Same program, different outcomes — how much of that is really individual?',
     hook: 'A limb that started smaller looks exactly like a low responder.',
     section: 'how-it-works',
     tags: ['method'],

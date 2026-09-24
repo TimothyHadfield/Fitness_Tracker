@@ -818,7 +818,7 @@ function assumptionNote(profile) {
   if (!assumed.length) return null;
   const bits = [];
   if (assumed.includes('sex')) {
-    bits.push('Assumed male — your sex is not on your profile.');
+    bits.push('Assumed male — no Gender in Body details.');
   }
   if (assumed.includes('body weight')) {
     const g = profile.gender === 'female' ? 'female' : 'male';

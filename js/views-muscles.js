@@ -311,7 +311,7 @@ function assumedNote(profile) {
   if (!said) return null;
   return el('div', { class: 'field-help' },
     `${said} `,
-    el('a', { class: 'text-link', href: '#/profile', text: 'Open profile' }),
+    el('a', { class: 'text-link', href: '#/profile', text: 'Open Body details' }),
   );
 }
 

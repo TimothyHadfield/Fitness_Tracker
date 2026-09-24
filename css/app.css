@@ -49,7 +49,22 @@
   --danger:      #D9614A;
 
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  /* Code-like text only (a link to copy, a technical error). Numbers are set in
+     the sans with tabular figures, so columns still line up (2026-09-24). */
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  /* TYPE SCALE — 2026-09-24. Five sizes and three weights; everything under
+     20px uses these. Display figures (21px and up: the big numbers and screen
+     heroes) stay literal, as do the 16px form controls (iOS zooms into any
+     input under 16px) and the year grid's 8.5/9px labels, which sit in 6px rows. */
+  --fs-xs: 10px;
+  --fs-sm: 11.5px;
+  --fs-md: 13px;
+  --fs-lg: 15px;
+  --fs-xl: 19px;
+  --fw-reg:  400;
+  --fw-med:  600;
+  --fw-bold: 700;
 
   --pad: 14px;
   --gap: 10px;
@@ -229,7 +244,7 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15.5px;
+  font-size: var(--fs-lg);
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   touch-action: manipulation;
@@ -260,7 +275,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
  * already had once, in 2026-08-20. */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.mono { font-variant-numeric: tabular-nums; }
 
 /* ==========================================================================
    Shell
@@ -299,8 +314,8 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   min-height: 48px;
 }
 .topbar h1 {
-  font-size: 19px;
-  font-weight: 700;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
   letter-spacing: -0.022em;
   margin: 0;
   flex: 1;
@@ -310,9 +325,9 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   white-space: nowrap;
 }
 .topbar-sub {
-  font-size: 11.5px;
+  font-size: var(--fs-sm);
   color: var(--ink-faint);
-  font-weight: 550;
+  font-weight: var(--fw-med);
   margin-top: 1px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -398,7 +413,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .avatar-glyph {
   position: absolute; inset: 0;
   display: grid; place-items: center;
-  font-size: 14.5px; font-weight: 700; line-height: 1;
+  font-size: var(--fs-lg); font-weight: var(--fw-bold); line-height: 1;
 }
 /* Signed in: filled, and showing the initial. */
 .avatar-btn.secured { background: var(--accent); color: var(--accent-ink); }
@@ -527,8 +542,8 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   gap: 2px;
   text-decoration: none;
   color: var(--ink-faint);
-  font-size: 10px;
-  font-weight: 650;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-med);
 }
 .navbar a svg { width: 21px; height: 21px; }
 .navbar a[aria-current="page"] { color: var(--accent); }
@@ -654,15 +669,15 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .mini-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 .mini-name {
   min-width: 0;
-  font-size: 14.5px; font-weight: 700;
+  font-size: var(--fs-lg); font-weight: var(--fw-bold);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Pushed to the far edge so the elapsed time sits in the same place whatever the
    workout is called — a clock that moves with the length of a name reads as a
    different number each time you glance at it. */
-.mini-clock { flex: none; margin-left: auto; font-size: 13px; font-weight: 650; color: var(--ink-soft); }
+.mini-clock { flex: none; margin-left: auto; font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink-soft); }
 .mini-now {
-  font-size: 12.5px; color: var(--ink-soft);
+  font-size: var(--fs-md); color: var(--ink-soft);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
@@ -670,7 +685,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    Months/Years switch under the Data tabs. Same control, quieter: it is a
    choice WITHIN the screen the row above already chose. */
 .segmented.sub { padding: 2px; }
-.segmented.sub .seg { min-height: 34px; font-size: 12.5px; }
+.segmented.sub .seg { min-height: 34px; font-size: var(--fs-md); }
 
 /* The sidebar brand row exists only on desktop. On mobile the navbar is a
    bottom tab bar, where an app title and an account button would both be
@@ -685,10 +700,8 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .card { display: flex; flex-direction: column; gap: var(--gap); }
 
 .section-label {
-  font-size: 10.5px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
   padding-top: 2px;
 }
@@ -700,8 +713,8 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .section-label.sub {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-soft);
 }
 
@@ -718,8 +731,8 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
    own — so with two systems on screen it was ambiguous which group it headed.
    Extra space above, none below; a heading belongs to what follows it. */
 .sys-head {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--ink);
   margin-top: 8px;
   margin-bottom: -4px;
@@ -746,8 +759,8 @@ button.sys-head { margin-bottom: 0; }
   align-items: center;
   gap: 2px;
   flex: none;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-soft);
 }
 .row-switch svg { opacity: 0.75; }
@@ -772,7 +785,7 @@ button.sys-head { margin-bottom: 0; }
   border-radius: 999px;
   background: var(--raised);
   color: var(--accent);
-  font-size: 12px; font-weight: 750;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
   letter-spacing: 0.01em;
 }
 /* ⚠️ A DARKER GOLD IN THE LIGHT THEME, and the audit is what found it. The
@@ -819,8 +832,8 @@ button.sys-head { margin-bottom: 0; }
 }
 .row:active { background: var(--raised); }
 .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.row-title { font-weight: 600; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row-sub { font-size: 13px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-title { font-weight: var(--fw-med); font-size: var(--fs-lg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { font-size: var(--fs-md); color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* The default row subtitle is one clipped line, which is right for a name but
    wrong for a sentence. `.wrap` is the sentence version. */
 .row-sub.wrap { white-space: normal; overflow: visible; line-height: 1.4; }
@@ -829,7 +842,7 @@ button.sys-head { margin-bottom: 0; }
    Hypertr..." trades the one thing that identifies the programme for the
    ornament beside it. Rule 3 — the name is the content. */
 .row-title.wrap { white-space: normal; overflow: visible; line-height: 1.25; }
-.row-meta { flex: none; font-size: 12.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.row-meta { flex: none; font-size: var(--fs-md); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 /* A row that is information rather than a destination. */
 .row.static { cursor: default; align-items: flex-start; }
 .row.static:active { background: none; }
@@ -850,8 +863,8 @@ button.sys-head { margin-bottom: 0; }
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-faint);
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   letter-spacing: .04em;
   text-transform: uppercase;
   vertical-align: middle;
@@ -861,7 +874,7 @@ button.sys-head { margin-bottom: 0; }
 /* How a ready-made system explains itself. Paragraphs, because these are
    instructions someone has to read, not a caption. */
 .preset-notes { display: flex; flex-direction: column; gap: 8px; }
-.preset-notes p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.preset-notes p { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink-soft); }
 
 /* ── A system's weekly plan, as boxes (2026-09-16) ────────────────────────
    Tim: *"If the workout system does have this daily planner then show it as
@@ -909,16 +922,14 @@ button.sys-head { margin-bottom: 0; }
    is the worst background this app puts small text on, so the day label takes
    the readable step rather than --ink-faint. */
 .plan-dow {
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--ink-soft);
   line-height: 1.2;
 }
 .plan-slot {
-  font-size: 13px;
-  font-weight: 650;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink);
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -927,8 +938,8 @@ button.sys-head { margin-bottom: 0; }
    not the loudest thing in the box. An UNSET day is quieter still and is an em
    dash rather than a word, because there is no word for it that would not be
    the app guessing what somebody meant. */
-.plan-slot.is-rest { font-weight: 550; color: var(--ink-soft); }
-.plan-slot.is-none { font-weight: 550; color: var(--ink-faint); }
+.plan-slot.is-rest { font-weight: var(--fw-med); color: var(--ink-soft); }
+.plan-slot.is-none { font-weight: var(--fw-med); color: var(--ink-faint); }
 
 /* ── and the form behind the pencil that builds one ──────────────────────── */
 .plan-edit { display: flex; flex-direction: column; gap: var(--gap); }
@@ -943,8 +954,8 @@ button.sys-head { margin-bottom: 0; }
 .plan-row-day {
   flex: none;
   width: 52px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-soft);
 }
 .plan-row .input { flex: 1 1 0; min-width: 0; }
@@ -959,7 +970,7 @@ button.sys-head { margin-bottom: 0; }
 .preset-warning {
   border-left: 2px solid var(--danger);
   padding-left: 11px;
-  font-size: 13.5px; line-height: 1.5; color: var(--ink);
+  font-size: var(--fs-md); line-height: 1.5; color: var(--ink);
 }
 
 /* "The original of this programme changed" — 2026-09-20. Deliberately the same
@@ -978,17 +989,17 @@ button.sys-head { margin-bottom: 0; }
   min-height: 44px;
 }
 .preset-update-main { flex: 1 1 auto; min-width: 0; }
-.preset-update-title { font-size: 14.5px; font-weight: 650; color: var(--ink); line-height: 1.35; }
-.preset-update-sub { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; margin-top: 2px; }
+.preset-update-title { font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink); line-height: 1.35; }
+.preset-update-sub { font-size: var(--fs-md); color: var(--ink-faint); line-height: 1.4; margin-top: 2px; }
 
 .update-list { display: flex; flex-direction: column; gap: 14px; }
-.update-note { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.update-note { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink-soft); }
 .update-row { display: flex; flex-direction: column; gap: 3px; }
-.update-what { font-size: 14.5px; line-height: 1.4; color: var(--ink); }
+.update-what { font-size: var(--fs-lg); line-height: 1.4; color: var(--ink); }
 /* The status is the sentence that makes the list trustworthy, so it is words
    rather than a dot: a colour alone cannot say "left alone because you changed
    it" (Rule 5's general form). */
-.update-status { font-size: 12.5px; line-height: 1.35; }
+.update-status { font-size: var(--fs-md); line-height: 1.35; }
 .update-status.ready { color: var(--accent); }
 .update-status.edited,
 .update-status.manual { color: var(--ink-faint); }
@@ -1005,8 +1016,8 @@ button.sys-head { margin-bottom: 0; }
   align-items: center;
   text-align: center;
 }
-.empty-title { font-size: 15.5px; font-weight: 650; color: var(--ink-soft); }
-.empty p { margin: 0; font-size: 13.5px; max-width: 34ch; line-height: 1.45; }
+.empty-title { font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink-soft); }
+.empty p { margin: 0; font-size: var(--fs-md); max-width: 34ch; line-height: 1.45; }
 
 /* ==========================================================================
    Buttons
@@ -1016,8 +1027,8 @@ button.sys-head { margin-bottom: 0; }
   min-height: 46px;
   padding: 0 16px;
   border-radius: var(--r);
-  font-weight: 650;
-  font-size: 15.5px;
+  font-weight: var(--fw-med);
+  font-size: var(--fs-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1039,7 +1050,7 @@ button.sys-head { margin-bottom: 0; }
 .btn.ghost   { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); color: var(--ink-soft); }
 .btn.danger  { background: transparent; box-shadow: inset 0 0 0 1px var(--danger); color: var(--danger); }
 .btn.block   { width: 100%; }
-.btn.lg      { min-height: 52px; font-size: 16.5px; }
+.btn.lg      { min-height: 52px; font-size: var(--fs-lg); }
 .btn:disabled { opacity: .38; pointer-events: none; }
 
 .btn-row { display: flex; gap: 8px; }
@@ -1050,18 +1061,18 @@ button.sys-head { margin-bottom: 0; }
    ========================================================================== */
 
 /* "or" divider between two sign-in routes. Hairline, per Rule 2 — no boxes. */
-.or-rule { display: flex; align-items: center; gap: 10px; color: var(--ink-faint); font-size: 12px; }
+.or-rule { display: flex; align-items: center; gap: 10px; color: var(--ink-faint); font-size: var(--fs-sm); }
 .or-rule::before, .or-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 12px; font-weight: 650; color: var(--ink-faint); letter-spacing: 0.03em; text-transform: uppercase; }
+.field label { font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-faint); }
 /* ⚠️ 13.5px, RAISED FROM 12.5 ON 2026-08-25. This class is the app's prose —
    the caveats, the citations, the explanations — and 12.5px was the single most
    common size in this stylesheet, with 11.5 second. Tim, from the gym: "the
    grey text is really challenging to spot and read". It was not only the
    colour; the app's DEFAULT body text was two steps below its headings and
    there was almost nothing in between. */
-.field-help { font-size: 13.5px; color: var(--ink-faint); line-height: 1.45; }
+.field-help { font-size: var(--fs-md); color: var(--ink-faint); line-height: 1.45; }
 
 /* Inline text link, for when a sentence needs to point somewhere and a button
    would shout. Underlined on the words only — the accent alone is not enough
@@ -1091,7 +1102,7 @@ textarea.input { min-height: 64px; resize: vertical; line-height: 1.45; }
 .note-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 14px; line-height: 1.45;
+  font-size: var(--fs-lg); line-height: 1.45;
   margin: 4px 0 8px;
 }
 
@@ -1128,8 +1139,8 @@ select.input {
   padding: 7px 12px;
   border-radius: 999px;
   background: var(--raised);
-  font-size: 13px;
-  font-weight: 620;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-soft);
   white-space: nowrap;
 }
@@ -1213,10 +1224,8 @@ select.input {
 .stepper { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
 .stepper-label {
-  font-size: 10.5px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
   text-align: center;
 }
@@ -1243,17 +1252,16 @@ select.input {
   min-width: 0;
   width: 100%;
   text-align: center;
-  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: 30px;
-  font-weight: 620;
+  font-weight: var(--fw-med);
   letter-spacing: -0.03em;
   background: transparent;
   border: 0;
   padding: 0;
 }
 .step-value:focus { outline: none; color: var(--accent); }
-.step-unit { font-size: 11px; color: var(--ink-faint); text-align: center; font-weight: 600; }
+.step-unit { font-size: var(--fs-sm); color: var(--ink-faint); text-align: center; font-weight: var(--fw-med); }
 
 /* The plate breakdown, when the same slot is holding one (2026-09-18, js/plates.js).
    ⚠️ --ink-soft rather than --ink-faint, and this is the whole of the styling
@@ -1282,27 +1290,27 @@ select.input {
 .session-sub { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .session-sub-dot { opacity: .5; }
 .session-date {
-  font: inherit; font-family: var(--mono); color: var(--ink-soft);
+  font: inherit; font-variant-numeric: tabular-nums; color: var(--ink-soft);
   background: none; border: 0; border-bottom: 1px dashed var(--rule);
   padding: 0 0 1px; cursor: pointer; min-width: 0;
 }
 .session-date::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
 .session-date.is-moved {
-  color: var(--accent); border-bottom-color: var(--accent); font-weight: 650;
+  color: var(--accent); border-bottom-color: var(--accent); font-weight: var(--fw-med);
 }
 .session-date-note {
-  color: var(--accent); font-size: 10px; font-weight: 700;
+  color: var(--accent); font-size: var(--fs-xs); font-weight: var(--fw-bold);
   text-transform: uppercase; letter-spacing: .06em;
 }
 /* The workout clock (2026-09-23): the date's quiet dashed voice, since it is
    also a session fact you can tap to change. Tabular digits so it does not
    jitter each second; accent while paused, like a moved date. */
 .session-clock {
-  font: inherit; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font: inherit; font-variant-numeric: tabular-nums;
   color: var(--ink-soft); background: none; border: 0;
   border-bottom: 1px dashed var(--rule); padding: 0 0 1px; cursor: pointer;
 }
-.session-clock.is-paused { color: var(--accent); border-bottom-color: var(--accent); font-weight: 650; }
+.session-clock.is-paused { color: var(--accent); border-bottom-color: var(--accent); font-weight: var(--fw-med); }
 
 /* ── Location (0m): a typed label in the session header ────────────────────
    Same quiet dashed-underline voice as the date beside it — both are session
@@ -1310,7 +1318,7 @@ select.input {
    360px header; .session-sub wraps if they still cannot share a line. */
 .session-loc {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11.5px; color: var(--ink-soft);
+  font-size: var(--fs-sm); color: var(--ink-soft);
   border-bottom: 1px dashed var(--rule); padding: 0 0 1px;
   min-width: 0; max-width: 15ch;
 }
@@ -1328,17 +1336,17 @@ select.input {
 /* The browser's own disclosure triangle, rather than a CSS-escaped glyph — an
    escaped one rendered as a missing-character box on Windows. */
 .tech-detail summary {
-  cursor: pointer; font-size: 11.5px; font-weight: 600; color: var(--ink-faint);
+  cursor: pointer; font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-faint);
   padding: 4px 0;
 }
-.tech-detail .mono { word-break: break-all; font-size: 11px; }
+.tech-detail .mono { word-break: break-all; font-size: var(--fs-sm); }
 
 /* A workout whose every exercise counts as a benchmark. The badge is what
    replaces listing those benchmarks a second time under the day. */
 .bench-badge {
   margin-left: 7px; padding: 1px 6px; border-radius: 4px;
   background: var(--accent-dim); color: var(--accent);
-  font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
+  font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .07em;
   text-transform: uppercase; vertical-align: middle;
 }
 
@@ -1352,8 +1360,7 @@ select.input {
 .edit-set:first-of-type { border-top: 0; padding-top: 0; }
 .edit-set-head { display: flex; align-items: center; justify-content: space-between; }
 .edit-set-num {
-  font-size: 10.5px; font-weight: 700; color: var(--ink-faint);
-  text-transform: uppercase; letter-spacing: .05em;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--ink-faint);
 }
 
 /* Rest timer. Counts up from the last set; a target is optional, and only with
@@ -1364,13 +1371,13 @@ select.input {
 }
 .rest-reset {
   background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--ink); font-size: 20px; font-weight: 650; line-height: 1;
+  color: var(--ink); font-size: var(--fs-xl); font-weight: var(--fw-med); line-height: 1;
 }
-.rest-clock { font-family: var(--mono); letter-spacing: -0.02em; }
-.rest-label { flex: 1; min-width: 0; font-size: 11.5px; color: var(--ink-faint); font-weight: 550; }
-.rest-target { flex: none; font-size: 11px; }
+.rest-clock { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.rest-label { flex: 1; min-width: 0; font-size: var(--fs-sm); color: var(--ink-faint); font-weight: var(--fw-med); }
+.rest-target { flex: none; font-size: var(--fs-sm); }
 .rest-bar.is-done .rest-reset { color: var(--good); }
-.rest-bar.is-done .rest-label { color: var(--good); font-weight: 700; }
+.rest-bar.is-done .rest-label { color: var(--good); font-weight: var(--fw-bold); }
 
 /* ── People — who the steppers record for (guests, Open work 0e) ──────────
    One chip per person, above the progress bar. The add control keeps its
@@ -1384,7 +1391,7 @@ select.input {
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 .people-bar::-webkit-scrollbar { display: none; }
-.person-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+.person-chip { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-md); }
 .person-add { background: none; color: var(--ink-soft); }
 
 /* ⚠️ A FRIEND'S CHIP IS MARKED, and it is not decoration (2026-08-29). A saved
@@ -1434,7 +1441,7 @@ select.input {
    the same argument `.person-del` makes about destructive controls and
    mis-taps, applied to a mode switch. */
 .just-for {
-  flex: none; margin-left: auto; font-size: 12.5px;
+  flex: none; margin-left: auto; font-size: var(--fs-md);
   background: none; color: var(--ink-soft);
   border: 1px dashed var(--line);
 }
@@ -1474,17 +1481,17 @@ select.input {
 }
 .group-banner-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
 .group-kind {
-  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--accent);
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--accent);
 }
-.group-round { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.group-round { font-size: var(--fs-sm); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .group-members { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .group-member {
-  font-size: 12.5px; color: var(--ink-faint); text-align: left;
+  font-size: var(--fs-md); color: var(--ink-faint); text-align: left;
   padding: 1px 0; border-radius: 4px;
 }
-.group-member.is-current { color: var(--ink); font-weight: 650; }
-.group-hint { font-size: 11.5px; color: var(--ink-faint); }
+.group-member.is-current { color: var(--ink); font-weight: var(--fw-med); }
+.group-hint { font-size: var(--fs-sm); color: var(--ink-faint); }
 /* The forward button says "straight into X" mid-round, and looks like the
    continuation it is rather than like the end of something. */
 .btn.primary.is-linked { background: var(--accent-dim); color: var(--accent); }
@@ -1492,13 +1499,13 @@ select.input {
 .session-head { display: flex; flex-direction: column; gap: 3px; }
 .session-ex-name {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.028em;
   line-height: 1.14;
   margin: 0;
   text-wrap: balance;
 }
-.session-ex-meta { font-size: 12.5px; color: var(--ink-faint); font-weight: 550; }
+.session-ex-meta { font-size: var(--fs-md); color: var(--ink-faint); font-weight: var(--fw-med); }
 
 /* The exercise name, and the way out of it.
 
@@ -1524,8 +1531,8 @@ select.input {
   margin: -7px -6px -7px 0;
   background: transparent;
   border-radius: 9px;
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-soft);
 }
 .swap-btn svg { flex: none; }
@@ -1552,8 +1559,8 @@ select.input {
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-soft);
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
 }
 .pill-action::before {
   content: '';
@@ -1564,12 +1571,12 @@ select.input {
   transform: translate(-50%, -50%);
 }
 .pill-action:active { transform: scale(.96); background: var(--raised-hi); }
-.session-load { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-faint); }
+.session-load { display: flex; align-items: center; gap: 7px; font-size: var(--fs-md); color: var(--ink-faint); }
 
 .note-card {
   border-left: 2.5px solid var(--accent);
   padding: 2px 0 2px 10px;
-  font-size: 13.5px;
+  font-size: var(--fs-md);
   line-height: 1.4;
   color: var(--ink-soft);
   display: flex;
@@ -1577,21 +1584,19 @@ select.input {
   gap: 1px;
 }
 .note-card b {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--accent);
 }
 
 .prefill-note {
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--ink-faint);
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.prefill-note b { color: var(--accent); font-weight: 650; }
+.prefill-note b { color: var(--accent); font-weight: var(--fw-med); }
 .prefill-note svg { flex: none; color: var(--good); }
 
 /* What an assist machine's number really means, under the steppers that set it.
@@ -1603,13 +1608,13 @@ select.input {
    ordinary set, in the same faint grey as every other explanation on this
    screen — dressing it up would suggest something had gone wrong. Rule 2. */
 .assist-readout {
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--ink-faint);
   line-height: 1.4;
   margin-top: 2px;
 }
-.assist-readout b { color: var(--accent); font-weight: 650; }
-.assist-readout .is-warn { color: var(--danger); font-weight: 600; }
+.assist-readout b { color: var(--accent); font-weight: var(--fw-med); }
+.assist-readout .is-warn { color: var(--danger); font-weight: var(--fw-med); }
 
 /* ── What the app thinks you can do, above the field you are filling in ─────
    2026-09-02. Above the WEIGHT: what percentage of your estimated max this is.
@@ -1626,25 +1631,25 @@ select.input {
    has to be separable by a cue that is not colour: the words do it ("estimated",
    "maybe", "to failure"). */
 .step-est {
-  font-size: 11.5px;
+  font-size: var(--fs-sm);
   color: var(--ink-soft);
   line-height: 1.3;
   text-align: center;
   min-height: 0;
 }
-.step-est b { color: var(--accent); font-weight: 700; }
+.step-est b { color: var(--accent); font-weight: var(--fw-bold); }
 
 /* ── The estimate above the whole benchmark form ─────────────────────────── */
 .bench-body { display: flex; flex-direction: column; gap: 14px; }
 .bench-est { display: flex; flex-direction: column; gap: 3px; }
 .bench-est-head { display: flex; align-items: baseline; gap: 8px; }
 .bench-est-num {
-  font-size: 26px; font-weight: 700; letter-spacing: -.02em;
+  font-size: 26px; font-weight: var(--fw-bold); letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
 }
 /* The line that names what the big number IS. The Muscles panel learned this
    the hard way — Tim, 2026-08-31: "I have no idea what that weight means." */
-.bench-est-note { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.bench-est-note { font-size: var(--fs-md); color: var(--ink-soft); font-weight: var(--fw-med); }
 
 /* What to lift next, and why — js/progression.js.
    No box (Rule 2): the icon and the accent-weighted first line carry it, and
@@ -1660,18 +1665,18 @@ select.input {
 }
 .suggest-note svg { flex: none; color: var(--accent); margin-top: 1px; }
 .suggest-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.suggest-head { font-size: 13px; font-weight: 650; color: var(--accent); }
+.suggest-head { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--accent); }
 /* Kept tight on purpose. This sits between the exercise name and the steppers,
    and on a 360px phone an exercise that also carries a superset banner and a
    note has very little room left — measured, the whole block has to stay around
    three lines or the steppers get pushed to the bottom of the pane. */
-.suggest-why { font-size: 11.5px; line-height: 1.42; color: var(--ink-faint); }
+.suggest-why { font-size: var(--fs-sm); line-height: 1.42; color: var(--ink-faint); }
 /* The one-tap way back. Deliberately quiet — it is the escape hatch on a
    proposal, not a second thing to decide between. */
 .suggest-toggle {
   align-self: flex-start;
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-med);
   color: var(--ink-soft);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -1680,7 +1685,7 @@ select.input {
 .suggest-toggle:active { color: var(--accent); }
 /* Nothing is being proposed, so nothing is highlighted. A lay-off note is an
    explanation of why the numbers are last time's, not a call to act. */
-.suggest-note.is-hold .suggest-head { color: var(--ink-soft); font-weight: 600; }
+.suggest-note.is-hold .suggest-head { color: var(--ink-soft); font-weight: var(--fw-med); }
 .suggest-note.is-hold svg { color: var(--ink-faint); }
 
 /* ⚠️ flex: none is load-bearing. .pane-scroll is a column flex container, so a
@@ -1702,7 +1707,7 @@ select.input {
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-soft);
-  font-size: 12.5px; font-weight: 650;
+  font-size: var(--fs-md); font-weight: var(--fw-med);
   cursor: pointer;
 }
 .add-set svg { display: block; }
@@ -1711,7 +1716,7 @@ select.input {
 .step-est .typo-warn { color: var(--danger); }
 
 /* How to count this exercise ("Reps per leg"), inside the grey meta line. */
-.session-ex-meta .ex-note { color: var(--ink); font-weight: 600; }
+.session-ex-meta .ex-note { color: var(--ink); font-weight: var(--fw-med); }
 
 /* "+ Warm-up" sits to the LEFT of "+ Add set" (warm-ups come first), both on
    the right of the heading. */
@@ -1727,7 +1732,7 @@ select.input {
   background: transparent;
   border: 1.5px dashed var(--ink-faint);
   color: var(--ink-soft);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 .set-warm .set-vals { color: var(--ink-soft); }
 .set-item.set-warm.active .warm-num { border-color: var(--accent); color: var(--accent); background: transparent; }
@@ -1739,8 +1744,8 @@ select.input {
    and set 1 again in a 14px list under it — so the list read as a summary of a
    control that lived somewhere else. It IS the control now, and the type is
    sized to be read at arm's length rather than scanned. */
-.set-item { display: flex; align-items: center; gap: 9px; padding: 0 2px; font-size: 15.5px; }
-.set-item.active .set-vals { color: var(--ink); font-weight: 600; }
+.set-item { display: flex; align-items: center; gap: 9px; padding: 0 2px; font-size: var(--fs-lg); }
+.set-item.active .set-vals { color: var(--ink); font-weight: var(--fw-med); }
 
 /* ⚠️ THE ROW IS THE TARGET. Everything except delete lives inside this button,
    because until 2026-08-25 only the 21px numbered square selected a set and the
@@ -1771,11 +1776,11 @@ select.input {
    its own — it would make a three-drop set taller than the exercise above it.
    The whole row is still live, which is the part Tim asked for. */
 .set-drop .set-pick { min-height: 36px; }
-.set-drop .set-vals { font-size: 13px; }
+.set-drop .set-vals { font-size: var(--fs-md); }
 .set-list > .set-drop { border-top: 0; }
 .drop-num {
   background: transparent; color: var(--ink-faint);
-  font-size: 15px; width: 22px; min-width: 22px;
+  font-size: var(--fs-lg); width: 22px; min-width: 22px;
 }
 .set-item.set-drop.active .drop-num { background: transparent; color: var(--accent); }
 
@@ -1787,12 +1792,12 @@ select.input {
   display: grid; place-items: center;
   border-radius: 6px;
   background: var(--raised);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 .set-item.active .set-num { background: var(--accent); color: var(--accent-ink); }
-.set-vals { flex: 1; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+.set-vals { flex: 1; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 .set-del { color: var(--ink-faint); padding: 3px; display: flex; }
 .set-del svg { width: 15px; height: 15px; display: block; }
 
@@ -1813,7 +1818,7 @@ select.input {
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-soft);
-  font-size: 12px; font-weight: 700;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
 }
 /* 44px of hit on a 32px pill, the icon-button convention. */
 .set-done-btn::before {
@@ -1886,7 +1891,7 @@ select.input {
 .reorder-list > * + * { border-top: 1px solid var(--rule-soft); }
 .reorder-row { display: flex; align-items: center; gap: 8px; padding-block: 8px; background: var(--ground); }
 .reorder-row .row-main { flex: 1; min-width: 0; }
-.reorder-row .row-title { font-size: 15px; }
+.reorder-row .row-title { font-size: var(--fs-lg); }
 /* Which one you are standing on. An accent hairline down the left, the same
    mark the builder uses for a block — not a tinted row, which would read as
    selected-for-an-action rather than as where you are. */
@@ -1954,10 +1959,8 @@ select.input {
 }
 .reorder-row.is-dragging { transition: none; }
 .set-open-label {
-  font-size: 10.5px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 /* ⚠️ A DROP'S CONTROLS ARE NOT INDENTED, and that was tried first. Indenting the
@@ -2006,7 +2009,7 @@ select.input {
   padding-left: 11px;
   border-left: 2px solid var(--danger);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.45;
 }
 .save-error[hidden] { display: none; }
@@ -2044,7 +2047,7 @@ select.input {
      the entire label of a control. --ink-soft is the same quiet register with
      roughly half again the margin. */
   color: var(--ink-soft);
-  font-size: 13px; font-weight: 700; line-height: 1;
+  font-size: var(--fs-md); font-weight: var(--fw-bold); line-height: 1;
   cursor: pointer;
   position: relative;
   vertical-align: middle;
@@ -2078,16 +2081,16 @@ select.input {
   background: var(--raised);
   border: 1px solid var(--rule);
   box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.5;
   color: var(--ink-soft);
 }
 .help-pop:focus { outline: none; }
-.help-pop-title { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.help-pop-title { font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--ink); margin-bottom: 4px; }
 .help-pop-body { margin: 0; }
 .help-pop p { margin: 0 0 7px; }
 .help-pop p:last-child { margin-bottom: 0; }
-.help-pop b, .help-pop strong { color: var(--ink); font-weight: 650; }
+.help-pop b, .help-pop strong { color: var(--ink); font-weight: var(--fw-med); }
 
 /* A chart from a paper inside a ? — figureNote() in js/ui.js. Nothing here is a
    look; it is the four rules that stop a 1,000px journal figure breaking the box
@@ -2103,7 +2106,7 @@ select.input {
   max-height: 34dvh;
   object-fit: contain;
 }
-.help-pop .help-figure-credit { margin-top: 5px; font-size: 11px; line-height: 1.4; }
+.help-pop .help-figure-credit { margin-top: 5px; font-size: var(--fs-sm); line-height: 1.4; }
 
 /* The arrow, so the box is visibly attached to the ? that opened it rather than
    appearing from nowhere — Rule 7's "a thing that moves says where it came
@@ -2167,7 +2170,7 @@ select.input {
    ========================================================================== */
 
 .save-screen { display: flex; flex-direction: column; gap: 16px; }
-.save-title { margin: 2px 0 0; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.save-title { margin: 2px 0 0; font-size: 21px; font-weight: var(--fw-bold); letter-spacing: -0.02em; }
 
 /* Three facts across the top, the shape Hevy uses. ⚠️ Not a bordered card
    (Rule 2) — a hairline under the row is what separates it from the fields. */
@@ -2179,10 +2182,10 @@ select.input {
 }
 .save-stat { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .save-stat-label {
-  font-size: 11px; font-weight: 750; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--ink-faint);
 }
-.save-stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.save-stat-value { font-size: var(--fs-xl); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 /* Duration is editable (2026-09-23): the same big number, with the date's
    dashed underline saying it can be changed. 16px+ stops iOS zooming on focus. */
 .save-dur-row { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
@@ -2191,7 +2194,7 @@ select.input {
   background: none; border: 0; border-bottom: 1px dashed var(--rule); -moz-appearance: textfield;
 }
 .save-dur::-webkit-outer-spin-button, .save-dur::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.save-dur-unit { font-size: 13px; font-weight: 650; color: var(--ink-soft); }
+.save-dur-unit { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink-soft); }
 
 /* ⚠️ Below everything, and nowhere near Save. It is the only control on the
    normal recording path that destroys a workout, so it is deliberately not in
@@ -2210,7 +2213,7 @@ select.input {
   padding-left: 11px;
   border-left: 2px solid var(--danger);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.45;
 }
 .storage-warning b { color: var(--danger); }
@@ -2234,7 +2237,7 @@ select.input {
   gap: 3px;
   border-bottom: 1px solid var(--rule-soft);
 }
-.cal-title { font-size: 15.5px; font-weight: 750; letter-spacing: -0.015em; }
+.cal-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); letter-spacing: -0.015em; }
 .cal-month.is-current .cal-title { color: var(--accent); }
 
 .cal-dows { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
@@ -2242,10 +2245,9 @@ select.input {
 .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 .cal-dow {
   text-align: center;
-  font-size: 9.5px;
-  font-weight: 750;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
-  text-transform: uppercase;
 }
 
 /* ⚠️ 66px, RAISED FROM 52 ON 2026-08-25. The cell has to be tall enough for a
@@ -2279,10 +2281,9 @@ select.input {
    fill is what the number actually sits on. */
 .cal-day {
   color: var(--ink-soft);
-  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 10.5px;
-  font-weight: 650;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-med);
   line-height: 1;
   padding: 1px 2px;
   flex: none;
@@ -2295,7 +2296,7 @@ select.input {
    already carries an accent ring and this number is already weight 800, so
    "today" was never being said by colour alone. Now 15.8:1 light, 16.3:1 dark,
    and it still reads as the strongest number on the grid. */
-.cal-cell.today .cal-day { color: var(--ink); font-weight: 800; }
+.cal-cell.today .cal-day { color: var(--ink); font-weight: var(--fw-bold); }
 
 /* ⚠️ THE TAGS FILL THE CELL — Tim, 2026-08-25: *"in the months display, make the
    items for that day fill up that day's box entirely, besides the number, and
@@ -2324,8 +2325,8 @@ select.input {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: clamp(10px, 3.1vw, 13.5px);
-  font-weight: 750;
+  font-size: clamp(var(--fs-xs), 3.1vw, var(--fs-md));
+  font-weight: var(--fw-bold);
   line-height: 1.15;
   padding: 1px 2px;
   border-radius: 4px;
@@ -2347,7 +2348,7 @@ select.input {
    cell — it sits on one line under whatever it is counting. */
 .cal-tag.more {
   flex: none; background: transparent; color: var(--ink-faint);
-  padding: 0; font-size: 9.5px;
+  padding: 0; font-size: var(--fs-xs);
 }
 :root[data-theme="light"] .cal-tag.b { color: #FFFFFF; }
 
@@ -2374,7 +2375,7 @@ select.input {
 }
 .cal-none {
   flex: none;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--ink-faint);
 }
 
@@ -2426,7 +2427,7 @@ select.input {
   justify-content: space-between;
   align-items: flex-end;
 }
-.mchart-tick { font-size: 9.5px; line-height: 1; color: var(--ink-faint); }
+.mchart-tick { font-size: var(--fs-xs); line-height: 1; color: var(--ink-faint); }
 .mchart-tick:first-child { transform: translateY(-50%); }
 .mchart-tick:last-child  { transform: translateY(50%); }
 
@@ -2492,20 +2493,20 @@ select.input {
    seen reads as a small quantity rather than as none. */
 .mchart-bar.is-zero { height: 0; min-height: 0; }
 
-.mchart-x { font-size: 10px; line-height: 13px; color: var(--ink-faint); }
+.mchart-x { font-size: var(--fs-xs); line-height: 13px; color: var(--ink-faint); }
 /* The year is printed only where it changes, and one step less quiet than the
    month names so a year boundary is findable in a 36-column run. The height is
    fixed so the empty ones still hold their row and the month names stay level
    with the bars above them. */
 .mchart-yr {
   height: 11px;
-  font-size: 9.5px;
+  font-size: var(--fs-xs);
   line-height: 11px;
-  font-weight: 750;
+  font-weight: var(--fw-bold);
   color: var(--ink-soft);
 }
 
-.legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-faint); justify-content: center; }
+.legend { display: flex; gap: 14px; font-size: var(--fs-sm); color: var(--ink-faint); justify-content: center; }
 .legend span { display: flex; align-items: center; gap: 5px; }
 .legend i { width: 8px; height: 8px; border-radius: 2px; display: block; }
 .legend i.w { background: var(--accent); }
@@ -2541,7 +2542,7 @@ select.input {
   display: flex; align-items: center; gap: 8px;
   width: 100%; min-height: 34px; padding: 0 2px;
   background: none; border: 0; text-align: left;
-  font-size: 12.5px; color: var(--ink-faint);
+  font-size: var(--fs-md); color: var(--ink-faint);
   border-top: 1px solid var(--rule-soft);
 }
 .yr-readout:disabled { pointer-events: none; }
@@ -2551,7 +2552,7 @@ select.input {
    Workout/Benchmark legend went on being drawn over a Years view that paints
    neither. Anything in this file toggled by `.hidden = true` needs this. */
 .yr-readout[hidden], .legend[hidden] { display: none; }
-.yr-r-date { flex: none; font-weight: 750; color: var(--ink); }
+.yr-r-date { flex: none; font-weight: var(--fw-bold); color: var(--ink); }
 .yr-r-what {
   flex: 1; min-width: 0; color: var(--ink-soft);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -2560,8 +2561,8 @@ select.input {
 
 .yr { display: flex; flex-direction: column; gap: 3px; }
 .yr-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.yr-title { font-size: 15.5px; font-weight: 750; letter-spacing: -0.015em; }
-.yr-count { font-size: 11.5px; color: var(--ink-soft); }
+.yr-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); letter-spacing: -0.015em; }
+.yr-count { font-size: var(--fs-sm); color: var(--ink-soft); }
 
 /* Two columns — the day-name gutter and the squares — and two rows, with the
    month strip sharing the squares' column track so its labels land on the
@@ -2642,10 +2643,10 @@ select.input {
   min-width: 0;
   min-height: 44px;
   padding: 7px 10px;
-  font-size: 14px;
+  font-size: var(--fs-lg);
 }
 .chips.tight { gap: 4px; flex: none; }
-.chips.tight .chip { padding: 6px 10px; font-size: 12.5px; }
+.chips.tight .chip { padding: 6px 10px; font-size: var(--fs-md); }
 
 .graph-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 
@@ -2656,11 +2657,11 @@ select.input {
 .bests-list > * + * { border-top: 1px solid var(--rule-soft); }
 .best-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; }
 .best-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.best-name { font-size: 14px; font-weight: 620; }
-.best-sub { font-size: 11.5px; color: var(--ink-faint); }
+.best-name { font-size: var(--fs-lg); font-weight: var(--fw-med); }
+.best-sub { font-size: var(--fs-sm); color: var(--ink-faint); }
 .best-nums { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.best-set { font-size: 14px; font-variant-numeric: tabular-nums; }
-.best-e1rm { font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.best-set { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.best-e1rm { font-size: var(--fs-sm); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
 .chart-foot { flex: none; display: flex; flex-direction: column; gap: 5px; }
 
@@ -2710,8 +2711,8 @@ select.input {
      nobody has checked" no longer applies the way it did the day before. */
   min-height: 44px;
   border-radius: 7px;
-  font-size: 13.5px;
-  font-weight: 650;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-faint);
   /* ⚠️ THE 2026-08-17 FIX TURNED A WRAP INTO A CLIP, and the clip was worse.
      "Bar Chart" used to break onto two lines; `white-space: nowrap` with
@@ -2779,7 +2780,7 @@ a.seg {
 .seg[aria-selected="true"]::after,
 .seg[aria-selected="true"] + .seg::after { display: none; }
 
-.bar-legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-faint); }
+.bar-legend { display: flex; gap: 14px; font-size: var(--fs-sm); color: var(--ink-faint); }
 .bar-legend span { display: flex; align-items: center; gap: 5px; }
 .bar-legend i { width: 9px; height: 9px; border-radius: 2px; display: block; }
 .bar-legend i.k-start { background: var(--series-start); }
@@ -2812,26 +2813,24 @@ a.seg {
 .bar-name {
   flex: 1;
   min-width: 0;
-  font-size: 14px;
-  font-weight: 620;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-med);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.bar-delta { font-size: 12.5px; font-weight: 650; color: var(--ink-faint); flex: none; }
+.bar-delta { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink-faint); flex: none; }
 .bar-delta.up { color: var(--good); }
 .bar-delta.down { color: var(--danger); }
 /* The rep count this row's weights were normalised to. */
-.bar-reps { font-size: 11px; color: var(--ink-faint); flex: none; }
+.bar-reps { font-size: var(--fs-sm); color: var(--ink-faint); flex: none; }
 
 .bar-line { display: flex; align-items: center; gap: 7px; }
 .bar-tag {
   width: 34px;
   flex: none;
-  font-size: 9.5px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 .bar-track { flex: 1; min-width: 0; display: flex; align-items: center; }
@@ -2851,21 +2850,21 @@ a.seg {
   width: 54px;
   flex: none;
   text-align: right;
-  font-size: 12.5px;
-  font-weight: 620;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-soft);
 }
 .bar-val.est { color: var(--ink-faint); font-style: italic; }
 
-.chart-caption { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-faint); }
+.chart-caption { display: flex; align-items: center; gap: 7px; font-size: var(--fs-sm); color: var(--ink-faint); }
 .chart-caption.warn { color: var(--ink-soft); }
 
 /* The rep count every point on the chart is compared at. Sits beside the
    exercise name because it is part of reading the y-axis, not a filter. */
 .rep-target { display: flex; align-items: center; gap: 6px; flex: none; }
 .rep-target-label {
-  font-size: 9px; font-weight: 750; letter-spacing: 0.07em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-size: var(--fs-xs); font-weight: var(--fw-bold);
+  color: var(--ink-faint);
 }
 
 /* Legend swatch drawn to match the chart's own marker: a ring means measured. */
@@ -2878,7 +2877,7 @@ a.seg {
 .chart-wrap { flex: 1; min-height: 120px; width: 100%; position: relative; }
 .chart { display: block; }
 .chart .grid-line { stroke: var(--rule); stroke-width: 1; }
-.chart .axis-text { fill: var(--ink-faint); font-size: 10px; font-family: var(--mono); }
+.chart .axis-text { fill: var(--ink-faint); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .chart .series-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .chart .series-area { fill: var(--accent); opacity: .09; }
 .chart .pt { fill: var(--ground); stroke: var(--accent); stroke-width: 2.5; }
@@ -2899,20 +2898,20 @@ a.seg {
    text a halo so it reads over gridlines and the area fill. A tooltip box would
    be the obvious solution and the wrong one — see Rule 2, no boxes. */
 .chart .hover-val, .chart .hover-date {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   paint-order: stroke;
   stroke: var(--ground);
   stroke-width: 3.5px;
   stroke-linejoin: round;
 }
-.chart .hover-val { fill: var(--ink); font-size: 13.5px; font-weight: 700; }
+.chart .hover-val { fill: var(--ink); font-size: var(--fs-md); font-weight: var(--fw-bold); }
 /* --ink-soft, not --ink-faint. ⚠️ This line was the FIRST time this project
    caught --ink-faint failing AA — 3.05:1 against --ground in light theme, for a
    10.5px label somebody is actively reading a number off — and it was fixed here
    and only here, while the same token stayed in 75 other places. The audit on
    2026-08-20 found the rest. Soft is now 7.20:1 light / 7.15:1 dark; faint
    clears AA too, so this line is a hierarchy choice rather than a fix. */
-.chart .hover-date { fill: var(--ink-soft); font-size: 10.5px; font-weight: 600; }
+.chart .hover-date { fill: var(--ink-soft); font-size: var(--fs-xs); font-weight: var(--fw-med); }
 
 .summary-grid {
   display: grid;
@@ -2923,12 +2922,11 @@ a.seg {
   overflow: hidden;
 }
 .stat { background: var(--ground); padding: 6px 8px; display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.stat-label { font-size: 9px; font-weight: 750; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
+.stat-label { font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--ink-faint); }
 .stat-value {
-  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 15.5px;
-  font-weight: 650;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-med);
   letter-spacing: -0.03em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2944,24 +2942,23 @@ a.seg {
 .detail-ex { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
 .detail-ex + .detail-ex { border-top: 1px solid var(--rule-soft); }
 .detail-ex-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.detail-ex-name { font-weight: 620; font-size: 14.5px; }
+.detail-ex-name { font-weight: var(--fw-med); font-size: var(--fs-lg); }
 .detail-sets { display: flex; flex-wrap: wrap; gap: 5px; }
 .detail-set {
   display: flex;
   gap: 6px;
   align-items: baseline;
-  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--ink-soft);
   padding: 4px 8px;
   background: var(--raised);
   border-radius: 5px;
 }
-.detail-set b { color: var(--ink-faint); font-weight: 650; font-size: 10px; }
+.detail-set b { color: var(--ink-faint); font-weight: var(--fw-med); font-size: var(--fs-xs); }
 
 .day-head { display: flex; align-items: center; gap: 8px; }
-.day-title { font-size: 16.5px; font-weight: 700; letter-spacing: -0.015em; }
+.day-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); letter-spacing: -0.015em; }
 
 /* ==========================================================================
    Sheet / toast
@@ -3001,7 +2998,7 @@ a.seg {
   gap: 10px;
   flex: none;
 }
-.sheet-head h2 { margin: 0; font-size: 16px; font-weight: 700; flex: 1; letter-spacing: -0.015em; }
+.sheet-head h2 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-bold); flex: 1; letter-spacing: -0.015em; }
 /* 🚨 `overflow-x: hidden` FOR THE SAME REASON `.pane-scroll` HAS IT — read that
    block first; this is the same fault in the app's other scrolling surface.
    MEASURED, not reasoned about: a real touch drag over the exercise-comparison
@@ -3094,7 +3091,7 @@ a.seg {
 }
 /* ⚠️ On the dim ground, not on a token surface — this line sits over the
    backdrop and its contrast is against that, in both themes. */
-.exview-name { color: #fff; font-size: 14px; font-weight: 600; text-align: center; }
+.exview-name { color: #fff; font-size: var(--fs-lg); font-weight: var(--fw-med); text-align: center; }
 
 /* ⚠️ THE SWAP SHORTLIST (2026-08-30). Five rows and a way onward, so the sheet
    is short enough not to want its own scroller — `.search-results` is written
@@ -3117,8 +3114,8 @@ a.seg {
   color: var(--ink);
   padding: 10px 16px;
   border-radius: 999px;
-  font-size: 14px;
-  font-weight: 620;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-med);
   box-shadow: 0 6px 22px rgba(0,0,0,.45);
   max-width: calc(100vw - 28px);
   text-align: center;
@@ -3140,7 +3137,7 @@ a.seg {
   padding-block: 9px;
 }
 .builder-main { grid-area: main; min-width: 0; }
-.builder-main .row-title { font-size: 15px; }
+.builder-main .row-title { font-size: var(--fs-lg); }
 .move-btns { grid-area: move; display: flex; flex-direction: column; gap: 1px; }
 .move-btns button { width: 28px; height: 21px; display: grid; place-items: center; color: var(--ink-faint); border-radius: 4px; }
 .move-btns button:active { background: var(--raised); }
@@ -3149,7 +3146,7 @@ a.seg {
 .builder-item > .icon-btn { grid-area: del; }
 
 .builder-controls { grid-area: ctl; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.set-type { font-size: 11.5px; padding: 3px 9px; }
+.set-type { font-size: var(--fs-sm); padding: 3px 9px; }
 .set-type.is-on { background: var(--accent-dim); color: var(--accent); border-color: transparent; }
 
 /* ── Supersets in the builder ──────────────────────────────────────────────
@@ -3164,17 +3161,17 @@ a.seg {
 }
 .builder-group-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
 .builder-group-label {
-  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--accent);
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--accent);
 }
-.builder-group-hint { font-size: 11.5px; color: var(--ink-faint); }
+.builder-group-hint { font-size: var(--fs-sm); color: var(--ink-faint); }
 
 /* The join control lives in the GAP between two exercises, because that is
    what a superset is a statement about. Quiet until it is on. */
 .link-gap { display: flex; padding: 2px 0 6px; }
 .link-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11.5px; color: var(--ink-faint);
+  font-size: var(--fs-sm); color: var(--ink-faint);
   padding: 3px 8px 3px 0; border-radius: 5px;
 }
 .link-btn svg { width: 15px; height: 15px; display: block; }
@@ -3182,10 +3179,8 @@ a.seg {
 .link-gap.is-linked .link-btn { color: var(--accent); }
 
 .builder-control-label {
-  font-size: 10.5px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 
@@ -3194,7 +3189,7 @@ a.seg {
   min-height: 34px;
   height: 34px;
   padding: 7px 10px;
-  font-size: 13.5px;
+  font-size: var(--fs-md);
   background: var(--raised);
   border: 0;
   border-radius: 7px;
@@ -3220,14 +3215,14 @@ a.seg {
 .mini-btn { width: 30px; height: 28px; display: grid; place-items: center; border-radius: 5px; color: var(--ink-soft); }
 .mini-btn:active { background: var(--raised-hi); color: var(--ink); }
 .mini-btn svg { width: 14px; height: 14px; }
-.mini-value { min-width: 20px; text-align: center; font-size: 14.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mini-value { min-width: 20px; text-align: center; font-size: var(--fs-lg); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 
 /* ---- load-type badge ---- */
 
 .load-badge {
   display: inline-block;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.08em;
   padding: 2px 5px;
   border-radius: 3px;
@@ -3312,8 +3307,8 @@ a.seg {
   display: grid; place-items: center;
 }
 .finish-check svg { width: 32px; height: 32px; }
-.finish-hero h2 { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -0.025em; }
-.finish-hero p { margin: 0; color: var(--ink-faint); font-size: 14px; }
+.finish-hero h2 { margin: 0; font-size: 23px; font-weight: var(--fw-bold); letter-spacing: -0.025em; }
+.finish-hero p { margin: 0; color: var(--ink-faint); font-size: var(--fs-lg); }
 
 /* ── Personal bests on the finish screen (UX review item 1) ────────────────
    Accent hairline, no box (Rule 2) — the same do-not-skim shape the preset
@@ -3327,10 +3322,9 @@ a.seg {
 }
 .finish-prs-head {
   display: inline-flex; align-items: center; gap: 5px;
-  color: var(--good); font-size: 12px; font-weight: 750;
-  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--good); font-size: var(--fs-sm); font-weight: var(--fw-bold);
 }
-.finish-pr { font-size: 14.5px; font-weight: 620; overflow-wrap: anywhere; }
+.finish-pr { font-size: var(--fs-lg); font-weight: var(--fw-med); overflow-wrap: anywhere; }
 
 /* ==========================================================================
    Desktop
@@ -3366,7 +3360,7 @@ a.seg {
     gap: 11px;
     padding: 10px 12px;
     border-radius: 7px;
-    font-size: 14px;
+    font-size: var(--fs-lg);
   }
   .navbar a[aria-current="page"] { background: var(--accent-dim); }
   /* 🚨 --accent ON --accent-dim, THE SECOND ELEMENT IN THIS SHEET TO PAINT THAT
@@ -3401,10 +3395,10 @@ a.seg {
   }
   .nav-brand .avatar-btn { width: 30px; height: 30px; }
   .nav-brand .avatar-btn svg { width: 17px; height: 17px; }
-  .nav-brand .avatar-glyph { font-size: 13px; }
+  .nav-brand .avatar-glyph { font-size: var(--fs-md); }
   .nav-brand-name {
-    font-size: 14.5px;
-    font-weight: 750;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
     letter-spacing: -0.02em;
     color: var(--ink);
     min-width: 0;
@@ -3437,8 +3431,8 @@ a.seg {
   .step-value { font-size: 34px; }
 
   .cal-cell { min-height: 78px; padding: 4px; }
-  .cal-day { font-size: 12.5px; }
-  .cal-tag { font-size: 10.5px; padding: 2.5px 4px; }
+  .cal-day { font-size: var(--fs-md); }
+  .cal-tag { font-size: var(--fs-xs); padding: 2.5px 4px; }
 
   .sheet-backdrop, .sheet-backdrop-x { align-items: center; }
   .sheet { border-radius: 14px; max-height: min(82dvh, 100%); }
@@ -3448,7 +3442,7 @@ a.seg {
   .session-footer .nav-arrow { max-width: 48px; }
 
   .toast { bottom: 24px; }
-  .stat-value { font-size: 19px; }
+  .stat-value { font-size: var(--fs-xl); }
 
   /* Muscle Groups: the detail sits BESIDE the figures, in the empty space next
      to them, rather than underneath.
@@ -3539,9 +3533,9 @@ a.seg {
      🛑 SCOPED TO THE WIDE STATE ON PURPOSE — the phone keeps 12.5/9.5 exactly,
      which is the half he asked to leave alone, and it has the width for neither. */
   .graph-host.is-muscles .muscle-sources,
-  .map-split .muscle-sources { font-size: 13.5px; }
+  .map-split .muscle-sources { font-size: var(--fs-md); }
   .graph-host.is-muscles .msrc-head > *,
-  .map-split .msrc-head > * { font-size: 11px; letter-spacing: 0.06em; }
+  .map-split .msrc-head > * { font-size: var(--fs-sm); }
 }
 
 /* 🚨 THE MUSCLES PANE IS EXEMPT FROM THE 940px READING WIDTH — 2026-09-25.
@@ -3634,8 +3628,11 @@ a.seg {
 .exview-x { animation: fade-out var(--t) var(--ease-in) forwards; pointer-events: none; }
 @keyframes fade-in  { from { opacity: 0 } }
 @keyframes fade-out { to { opacity: 0 } }
-@keyframes sheet-in { from { transform: translateY(22px) } }
-@keyframes sheet-out { to { transform: translateY(20px); opacity: 0 } }
+/* 2026-09-24: the sheet comes up from the bottom edge by its whole height and
+   goes back down the same way (was a 22px nudge). 240ms in, 170ms out; under
+   reduced motion the blanket below makes both instant, so it just appears. */
+@keyframes sheet-in { from { transform: translateY(100%) } }
+@keyframes sheet-out { to { transform: translateY(100%) } }
 
 /* ---- RECORD COMES UP FROM THE BOTTOM (2026-09-09) ---------------------- */
 /* 🚨 Tim: *"To make the record section feel more like a button that actually
@@ -3970,7 +3967,7 @@ a.seg {
   pointer-events: none;
 }
 .body-caption {
-  fill: var(--ink-faint); font-size: 26px; font-family: var(--mono);
+  fill: var(--ink-faint); font-size: 26px;
   letter-spacing: 0.08em; text-transform: uppercase;
 }
 
@@ -4105,8 +4102,8 @@ a.seg {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.01em;
   white-space: nowrap;
   color: #10161A;
@@ -4126,7 +4123,7 @@ a.seg {
    rankings nobody can reach. */
 .lv-notes { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
 
-.lv-key-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-soft); }
+.lv-key-item { display: flex; align-items: center; gap: 5px; font-size: var(--fs-sm); color: var(--ink-soft); }
 .lv-sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
 .lv-sw.lv-beginner { background: var(--lv-beginner); }
 .lv-sw.lv-novice { background: var(--lv-novice); }
@@ -4135,7 +4132,8 @@ a.seg {
 .lv-sw.lv-advanced { background: var(--lv-advanced); }
 .lv-sw.lv-expert { background: var(--lv-expert); }
 .lv-sw.lv-elite { background: var(--lv-elite); }
-.lv-sw.lv-none { background: var(--lv-none); }
+/* `.lv-none` and `.lv-faded` are painted in the Data review block at the end
+   of this file (the figure's own grey and its own fade). */
 /* The key's own hatch. A repeating-linear-gradient rather than the SVG pattern,
    because this swatch is an ordinary HTML element — but the angle, the pitch and
    both colours are the same numbers body-map.js uses, so the key and the figure
@@ -4146,11 +4144,8 @@ a.seg {
     var(--unranked-ink) 0 2.2px,
     var(--unranked-bg) 2.2px 6px);
 }
-/* The legend's own example of a faded rating, mixed at the same floor the map
-   uses so the two cannot drift apart. */
-.lv-sw.lv-faded { background: var(--lv-advanced); opacity: .42; }
 .lv-key-note { color: var(--ink-faint); }
-.lv-pct { color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+.lv-pct { color: var(--ink-faint); font-variant-numeric: tabular-nums; font-size: var(--fs-xs); }
 
 /* Confidence is one line of .muscle-meta now — the row, the percentage and the
    bar went with the paragraph on 2026-08-21. The muscle's own fade already IS
@@ -4175,10 +4170,10 @@ a.seg {
 /* The answer, big enough to be the answer. */
 .muscle-stat { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .muscle-est {
-  font-size: 21px; font-weight: 700; letter-spacing: -0.02em;
+  font-size: 21px; font-weight: var(--fw-bold); letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.muscle-pct { font-size: 13.5px; color: var(--ink-soft); font-weight: 600; }
+.muscle-pct { font-size: var(--fs-md); color: var(--ink-soft); font-weight: var(--fw-med); }
 
 /* What the big number IS (2026-08-31). Pulled up against it rather than sitting
    in the card's normal rhythm, because it is a CAPTION on that number and not
@@ -4280,7 +4275,7 @@ a.seg {
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
@@ -4321,10 +4316,8 @@ a.seg {
    purpose: five ticks that mark the tracks, not one rule that draws a table
    (Rule 2). */
 .msrc-head > * {
-  font-size: 9.5px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   white-space: nowrap;
   padding-bottom: 3px;
   margin-bottom: 2px;
@@ -4334,7 +4327,7 @@ a.seg {
   border-bottom: 1px solid var(--rule);
 }
 
-.msrc-ex { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.msrc-ex { font-weight: var(--fw-med); min-width: 0; overflow-wrap: anywhere; }
 .msrc-set, .msrc-date, .msrc-est, .msrc-share { white-space: nowrap; }
 /* The two derived numbers are right-aligned so their magnitudes line up; the
    record's own columns stay left, where a unit suffix reads as part of a phrase
@@ -4367,8 +4360,8 @@ a.seg {
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-med);
   white-space: nowrap;
 }
 .msrc-toggle::before {
@@ -4384,7 +4377,7 @@ a.seg {
 
 .muscle-est-note {
   margin-top: -5px;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--ink-faint);
   line-height: 1.35;
 }
@@ -4392,7 +4385,7 @@ a.seg {
 /* One quiet line. Used for where the number came from and how well corroborated
    it is — both of which are Rule 5 obligations and neither of which is worth a
    sentence. */
-.muscle-meta { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
+.muscle-meta { font-size: var(--fs-md); color: var(--ink-faint); line-height: 1.4; }
 
 /* A caveat, compressed to a line. Still full-strength ink and still a hairline
    bracket — these are load-bearing (the whole app rests on them) and shortening
@@ -4400,7 +4393,7 @@ a.seg {
 .muscle-warn {
   border-left: 2px solid var(--accent);
   padding-left: 9px;
-  font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
+  font-size: var(--fs-sm); line-height: 1.35; color: var(--ink-soft);
 }
 
 /* What a muscle with no standards HAS got. Same bracket shape as the caveat
@@ -4411,12 +4404,12 @@ a.seg {
   border-left: 2px solid var(--unranked-ink);
   padding-left: 9px;
   display: flex; flex-direction: column; gap: 4px;
-  font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
+  font-size: var(--fs-sm); line-height: 1.35; color: var(--ink-soft);
 }
 
 .basis { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.basis-main { font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 3px; }
-.basis-sub { font-size: 11.5px; color: var(--ink-faint); }
+.basis-main { font-size: var(--fs-lg); font-weight: var(--fw-med); display: flex; align-items: center; gap: 3px; }
+.basis-sub { font-size: var(--fs-sm); color: var(--ink-faint); }
 /* The caption IS the control: the line that states the comparison group is the
    button that changes it, so nothing extra has to be added to the screen. */
 /* ⚠️ min-height 44, raised 2026-08-24 from an effective 38. It is the ONLY
@@ -4450,12 +4443,12 @@ a.seg {
   align-items: flex-start; justify-content: center;
   padding: 8px 13px;
 }
-.preset-name { font-size: 14.5px; font-weight: 700; }
+.preset-name { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
 .btn.preset[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 .muscle-head { display: flex; align-items: baseline; gap: 8px; }
-.muscle-name { font-size: 16px; font-weight: 700; flex: 1; }
-.muscle-level { font-size: 13px; font-weight: 700; }
+.muscle-name { font-size: var(--fs-lg); font-weight: var(--fw-bold); flex: 1; }
+.muscle-level { font-size: var(--fs-md); font-weight: var(--fw-bold); }
 .field-help.general { font-style: italic; }
 
 /* Progress toward the next level — this is what supplies a near goal when the
@@ -4463,7 +4456,7 @@ a.seg {
 .to-next { display: flex; flex-direction: column; gap: 4px; }
 .to-next-bar { height: 6px; background: var(--raised); border-radius: 3px; overflow: hidden; }
 .to-next-fill { height: 100%; background: var(--accent); border-radius: 3px; }
-.to-next-label { font-size: 12.5px; font-weight: 650; color: var(--ink-soft); }
+.to-next-label { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink-soft); }
 
 /* The seven-row per-level target table was removed on 2026-08-21: six of its
    seven rows are weights for levels somebody is nowhere near, and the seventh
@@ -4493,7 +4486,7 @@ a.seg {
   display: inline-flex; align-items: center;
   padding: 1px 8px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: #10161A;
   white-space: nowrap;
 }
@@ -4518,11 +4511,11 @@ a.seg {
    thing instead. */
 .detail-set-run { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; }
 .detail-set.is-drop { opacity: .8; }
-.detail-set.is-drop b { color: var(--ink-faint); font-weight: 600; }
+.detail-set.is-drop b { color: var(--ink-faint); font-weight: var(--fw-med); }
 .detail-ex.in-group { border-left: 2px solid var(--accent); padding-left: 10px; }
 .detail-group-label {
-  font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--accent); margin-bottom: 2px;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--accent); margin-bottom: 2px;
 }
 .edit-set.is-drop { padding-left: 14px; border-left: 1px solid var(--rule); }
 
@@ -4532,16 +4525,16 @@ a.seg {
    reads as the same app rather than a bolted-on section. */
 
 .section-head {
-  font-size: 11px; font-weight: 750; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--ink-faint);
   margin: 18px 0 2px;
 }
 .section-head:first-child { margin-top: 4px; }
 
-.note { margin: 4px 0 10px; color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+.note { margin: 4px 0 10px; color: var(--ink-soft); font-size: var(--fs-md); line-height: 1.5; }
 
 .form { display: flex; flex-direction: column; gap: 10px; }
-.input.mono { font-family: var(--mono); font-size: 12.5px; }
+.input.mono { font-family: var(--mono); font-size: var(--fs-md); }
 
 .row-icon { display: flex; color: var(--ink-faint); }
 .row-icon svg { width: 20px; height: 20px; }
@@ -4567,7 +4560,7 @@ a.seg {
 .row-icon .face-img { width: 26px; height: 26px; }
 .friend-face { display: flex; align-items: center; gap: 11px; padding-block: 4px; }
 .friend-face .face-img { width: 54px; height: 54px; flex: none; }
-.friend-face .row-title { font-size: 17px; }
+.friend-face .row-title { font-size: var(--fs-xl); }
 
 /* ==========================================================================
    THE PROFILE TAB (2026-09-08) — your own account as a place to look at
@@ -4631,7 +4624,7 @@ a.seg {
 /* Their name, at the size a name deserves on the screen that is about them.
    `overflow-wrap` because a display name is 60 characters of free text and one
    unbroken run of them must wrap rather than push the page sideways. */
-.me-name { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.me-name { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -0.01em; overflow-wrap: anywhere; }
 
 /* ⚠️ `auto-fit` RATHER THAN A NUMBER, SINCE 2026-09-09. It was `repeat(3, 1fr)`
    and there are two tiles now (Followers and Following became one, called
@@ -4639,7 +4632,8 @@ a.seg {
    column count is a second place to remember, and the equal-thirds argument
    below is really an equal-COLUMNS argument: whatever the count, the numbers
    share a baseline and a wide one cannot squeeze a narrow one into its label. */
-.me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
+/* No gap: the hairline between the tiles (review block at the end) sits centred. */
+.me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0; }
 .me-stat {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 12px 4px;
@@ -4649,9 +4643,9 @@ a.seg {
   /* 44px minimum in both directions without saying so in pixels: the padding
      plus two lines of type clears it, and the grid gives it the width. */
 }
-.me-stat-n { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
-.me-stat-l { font-size: 11.5px; font-weight: 650; letter-spacing: 0.04em;
-             text-transform: uppercase; color: var(--ink-faint); }
+.me-stat-n { font-size: 21px; font-weight: var(--fw-bold); letter-spacing: -0.02em; }
+.me-stat-l { font-size: var(--fs-sm); font-weight: var(--fw-med);
+             color: var(--ink-faint); }
 /* ⚠️ A count the app cannot know is a DASH and is not a link — see the comment
    above `countsHelp()` in views-me.js. Off the cloud there is no graph to count,
    and printing 0 would be a claim rather than an absence. */
@@ -4661,9 +4655,9 @@ a.seg {
  * PROFILE'S SECTIONS — 2026-09-10 and -11, the Data/Profile split.
  *
  * 🚨 NO BOXES (Rule 2). Each is a `.section-label` over content, exactly like
- * every other grouped block in the app. `.me-stat` above is the one bordered
- * thing on this screen and it earns it by being a row of tap targets; a
- * bordered card round a calendar would be a box round a box.
+ * every other grouped block in the app. Nothing on this screen is bordered:
+ * `.me-stat` above lost its border on 2026-09-24 and keeps only a hairline
+ * between the two tiles. A bordered card round a calendar would be a box.
  * ================================================================== */
 
 /* Your body and your goal — 2026-09-11, steps 2 and 4. One label over one
@@ -4689,15 +4683,15 @@ a.seg {
   flex: none; display: flex; flex-direction: column; align-items: flex-end;
   gap: 1px; text-align: right;
 }
-.me-best-top { font-weight: 650; font-variant-numeric: tabular-nums; }
-.me-best-est { font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.me-best-top { font-weight: var(--fw-med); font-variant-numeric: tabular-nums; }
+.me-best-est { font-size: var(--fs-sm); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
 /* ── Best lifts, ranked (2026-09-12) ─────────────────────────────────────────
    The number wears the level's chip (`lv-text-<key>`, already validated for
    contrast in both themes) and the words under it carry the band and the
    level, so the colour is never the only carrier. A row with no number puts
    the reason in the number's slot rather than leaving a hole. */
-.me-best-none { font-size: 12px; color: var(--ink-faint); text-align: right; max-width: 15ch; }
+.me-best-none { font-size: var(--fs-sm); color: var(--ink-faint); text-align: right; max-width: 15ch; }
 .me-best.is-none .row-title { color: var(--ink-soft); }
 
 /* "Other lifts" — a real <details>, styled like a row so it reads as part of
@@ -4709,11 +4703,11 @@ a.seg {
 .me-other-sum {
   display: flex; align-items: center; gap: 8px;
   padding: 13px 2px; cursor: pointer; list-style: none;
-  font-weight: 650; color: var(--ink);
+  font-weight: var(--fw-med); color: var(--ink);
 }
 .me-other-sum::-webkit-details-marker { display: none; }
 .me-other-title { flex: 1 1 auto; min-width: 0; }
-.me-other-n { font-size: 12px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.me-other-n { font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .me-other-chev { display: flex; color: var(--ink-faint); transition: transform var(--t-fast) var(--ease-out); }
 .me-other[open] .me-other-chev { transform: rotate(90deg); }
 
@@ -4735,7 +4729,7 @@ a.row { text-decoration: none; }
   .as-button:hover .row-title { color: var(--accent); }
 }
 
-.btn.small { min-height: 34px; padding-inline: 11px; font-size: 13px; }
+.btn.small { min-height: 34px; padding-inline: 11px; font-size: var(--fs-md); }
 
 .danger-zone { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule); }
 
@@ -4749,8 +4743,8 @@ a.row { text-decoration: none; }
 }
 .pick-row:last-of-type { border-bottom: 0; }
 .pick-row svg { color: var(--accent); width: 20px; height: 20px; flex: none; }
-.pick-title { font-size: 15px; font-weight: 650; }
-.pick-sub { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 1px; }
+.pick-title { font-size: var(--fs-lg); font-weight: var(--fw-med); }
+.pick-sub { font-size: var(--fs-md); color: var(--ink-soft); line-height: 1.45; margin-top: 1px; }
 .pick-row.is-on .pick-title { color: var(--accent); }
 
 /* A friend's workout, closed by default and opening in place. */
@@ -4759,17 +4753,17 @@ a.row { text-decoration: none; }
 .act-detail { padding: 2px 0 12px; }
 .act-line {
   display: flex; align-items: baseline; gap: 10px;
-  padding: 5px 0 5px 30px; font-size: 13.5px;
+  padding: 5px 0 5px 30px; font-size: var(--fs-md);
 }
 .act-name { flex: 1; min-width: 0; }
-.act-sets { color: var(--ink-soft); font-family: var(--mono); font-size: 12px; text-align: right; }
+.act-sets { color: var(--ink-soft); font-variant-numeric: tabular-nums; font-size: var(--fs-sm); text-align: right; }
 
 /* The way in, at the bottom of an opened row — the same session, on its own
    screen. Quiet, because the row above it has already answered the question
    most people opened it with. */
 .act-open {
   display: inline-block; margin: 6px 0 0 30px;
-  font-size: 12.5px; font-weight: 650; color: var(--accent); text-decoration: none;
+  font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--accent); text-decoration: none;
 }
 
 /* ⚠️ CAPPED SINCE 2026-09-03, AND THE REASON IS THE TAP RATHER THAN THE SIZE.
@@ -4852,7 +4846,7 @@ a.row { text-decoration: none; }
 }
 .cmp-col { min-width: 0; }
 .cmp-name {
-  font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  font-size: var(--fs-md); font-weight: var(--fw-bold); letter-spacing: .02em;
   color: var(--ink-soft); text-align: center; margin-bottom: 2px;
   /* A name that wraps to two lines on one side and one on the other would put
      the two figures on different baselines, which reads as a rendering fault. */
@@ -4907,12 +4901,12 @@ a.row { text-decoration: none; }
 .ws { display: flex; flex-direction: column; gap: 12px; }
 .ws-who { display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; }
 /* The workout's name is the loudest thing on the screen, as on the card. */
-.ws-title { margin: 0; font-size: 23px; font-weight: 750; line-height: 1.15; }
+.ws-title { margin: 0; font-size: 23px; font-weight: var(--fw-bold); line-height: 1.15; }
 .ws-note {
-  margin: -4px 0 0; font-size: 14.5px; color: var(--ink-soft); line-height: 1.5;
+  margin: -4px 0 0; font-size: var(--fs-lg); color: var(--ink-soft); line-height: 1.5;
   overflow-wrap: anywhere; white-space: pre-line;
 }
-.ws-where { margin: -4px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+.ws-where { margin: -4px 0 0; font-size: var(--fs-md); color: var(--ink-faint); }
 /* Wider gaps than the card's: this screen has the room, and the numbers are
    what somebody stopped to look at. */
 .ws-stats { gap: 4px 28px; }
@@ -4923,43 +4917,43 @@ a.row { text-decoration: none; }
    says good and bad where the app has no opinion (Rule 6). */
 .ws-split { display: flex; flex-direction: column; gap: 7px; }
 .split-row { display: flex; flex-direction: column; gap: 3px; }
-.split-head { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
-.split-name { color: var(--ink); font-weight: 620; }
-.split-pct { color: var(--ink-soft); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.split-head { display: flex; justify-content: space-between; gap: 10px; font-size: var(--fs-md); }
+.split-name { color: var(--ink); font-weight: var(--fw-med); }
+.split-pct { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .split-track { height: 7px; border-radius: 999px; background: var(--rule); overflow: hidden; }
 .split-fill { height: 100%; border-radius: 999px; background: var(--accent); }
 /* ⚠️ Fine print stays --ink-soft rather than dropping to --ink-faint. The
    accessibility audit measured --ink-faint below 4.5:1 on every surface at
    text sizes under 18.66px, and this is 11.5px. Small is allowed; unreadable
    is not. */
-.ws-fine { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-soft); }
+.ws-fine { margin: 2px 0 0; font-size: var(--fs-sm); line-height: 1.45; color: var(--ink-soft); }
 
 /* ── The set tables ───────────────────────────────────────────────────── */
 .ws-ex { padding: 10px 0; border-bottom: 1px solid var(--rule-soft); }
 .ws-ex:last-child { border-bottom: 0; }
 .ws-ex.in-group { border-left: 2px solid var(--rule); padding-left: 10px; }
 .ws-ex-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; }
-.ws-ex-name { font-size: 15px; font-weight: 650; }
+.ws-ex-name { font-size: var(--fs-lg); font-weight: var(--fw-med); }
 .ws-sets { display: flex; flex-direction: column; margin-top: 5px; }
-.ws-set { display: flex; gap: 14px; padding: 4px 0; font-size: 13.5px; }
+.ws-set { display: flex; gap: 14px; padding: 4px 0; font-size: var(--fs-md); }
 .ws-set-n {
   flex: none; width: 34px;
-  font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums; color: var(--ink-faint);
 }
-.ws-set-v { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.ws-set-v { font-variant-numeric: tabular-nums; color: var(--ink); }
 /* The column heads, in the same caption voice as a stat label. */
 .ws-set.is-head { border-bottom: 1px solid var(--rule-soft); padding-bottom: 3px; }
 .ws-set.is-head .ws-set-n,
 .ws-set.is-head .ws-set-v {
   font-family: var(--sans);
-  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  font-size: var(--fs-xs); font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 /* A drop or a mini-set hangs UNDER the set it came off, indented and quieter —
    it is part of that set, not another one (D23). */
 .ws-set.is-mini { padding-top: 0; }
 .ws-set.is-mini .ws-set-n { padding-left: 12px; }
-.ws-set.is-mini .ws-set-v { color: var(--ink-soft); font-size: 12.5px; }
+.ws-set.is-mini .ws-set-v { color: var(--ink-soft); font-size: var(--fs-md); }
 
 /* An exercise name that opens a comparison. Hevy paints these blue; this app
    has no blue and does not need one — the accent it already uses for "this is
@@ -4982,8 +4976,8 @@ a.row { text-decoration: none; }
   border-left: 2px solid var(--good); padding: 2px 0 2px 12px;
 }
 .ws-pr-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
-.ws-pr-name { font-size: 14px; font-weight: 650; }
-.ws-pr-line { font-size: 13px; color: var(--ink-soft); }
+.ws-pr-name { font-size: var(--fs-lg); font-weight: var(--fw-med); }
+.ws-pr-line { font-size: var(--fs-md); color: var(--ink-soft); }
 
 /* What you can do with somebody else's workout, after you have read it. */
 .ws-do { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
@@ -4997,15 +4991,15 @@ a.row { text-decoration: none; }
 .cmp-row { display: flex; flex-direction: column; gap: 3px; }
 .cmp-label {
   display: flex; align-items: baseline; gap: 7px;
-  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 .cmp-pair { display: flex; gap: 18px; flex-wrap: wrap; }
 .cmp-num {
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 15px; font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-lg); font-weight: var(--fw-med);
 }
-.cmp-num b { font-family: var(--sans); font-size: 12px; font-weight: 650; color: var(--ink-faint); }
+.cmp-num b { font-family: var(--sans); font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-faint); }
 /* ⚠️ A CONVERTED FIGURE IS MARKED IN WORDS AND IN WEIGHT, NEVER IN COLOUR
    ALONE — Rule 5's general form. The number itself softens to --ink-soft so it
    does not read as loudly as the measured one beside it, and the word says
@@ -5023,7 +5017,7 @@ a.row { text-decoration: none; }
   border-radius: 999px;
   background: var(--raised);
   color: var(--ink-faint);
-  font-family: var(--sans); font-size: 9.5px; font-weight: 700;
+  font-family: var(--sans); font-size: var(--fs-xs); font-weight: var(--fw-bold);
   letter-spacing: .04em; text-transform: uppercase;
   white-space: nowrap;
 }
@@ -5044,10 +5038,10 @@ a.row { text-decoration: none; }
   flex: none;
   text-align: right;
 }
-.rating-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rating-num { font-size: var(--fs-lg); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 .rating-cap {
-  font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
-  text-transform: uppercase; color: var(--ink-faint); margin-top: 1px;
+  font-size: var(--fs-xs); font-weight: var(--fw-bold);
+  color: var(--ink-faint); margin-top: 1px;
   /* One cap per line, always. "days/wk" breaking after the slash would put a
      stray "wk" under a number and read as a fifth measurement. */
   white-space: nowrap;
@@ -5057,8 +5051,8 @@ a.row { text-decoration: none; }
    than squeezing the title into an ellipsis. */
 @media (max-width: 380px) {
   .rating { gap: 3px 9px; grid-template-columns: repeat(2, minmax(40px, auto)); }
-  .rating-num { font-size: 13.5px; }
-  .rating-cap { font-size: 9px; letter-spacing: 0.04em; }
+  .rating-num { font-size: var(--fs-md); }
+  .rating-cap { font-size: var(--fs-xs); }
 }
 
 /* ⚠️ ON A PHONE THE BADGE STOPS SHARING THE ROW AND TAKES ITS OWN LINE.
@@ -5139,7 +5133,7 @@ a.row { text-decoration: none; }
   background: var(--raised-hi);
   border: 1px solid var(--rule);
   box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
-  font-size: 13.5px;
+  font-size: var(--fs-md);
 }
 .update-bar .icon-btn { margin-right: -4px; }
 /* On desktop the nav is a left sidebar, so there is no bottom bar to clear. */
@@ -5154,23 +5148,23 @@ a.row { text-decoration: none; }
    that is the target itself rather than any of the numbers under it. */
 
 .goal-intro { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
-.goal-intro-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
-.goal-intro-body { margin: 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+.goal-intro-title { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -0.01em; }
+.goal-intro-body { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); line-height: 1.5; }
 
 .goal-screen { display: flex; flex-direction: column; gap: 16px; }
 
 .goal-hero { display: flex; flex-direction: column; gap: 2px; }
 .goal-hero-level {
-  font-size: 11px; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
   /* A chip, not a band: the column would otherwise stretch its fill full width. */
   align-self: flex-start;
 }
-.goal-hero-lift { font-size: 25px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.goal-hero-lift { font-size: 25px; font-weight: var(--fw-bold); letter-spacing: -0.02em; line-height: 1.15; }
 .goal-hero-meta {
   display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
-  font-size: 14px; font-weight: 650; color: var(--ink-soft); margin-top: 2px;
+  font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink-soft); margin-top: 2px;
 }
-.goal-hero-meta .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.goal-hero-meta .mono { font-variant-numeric: tabular-nums; color: var(--ink); }
 .goal-hero-dot { color: var(--ink-faint); }
 
 /* Three numbers side by side rather than in a bordered grid: the start, the
@@ -5181,13 +5175,13 @@ a.row { text-decoration: none; }
 .goal-progress { gap: 7px; }
 
 .goal-verdict { display: flex; flex-direction: column; gap: 6px; }
-.goal-verdict-body { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+.goal-verdict-body { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); line-height: 1.5; }
 
 .goal-ambition { display: flex; align-items: baseline; gap: 9px; }
-.goal-ambition-name { font-size: 16px; font-weight: 700; }
+.goal-ambition-name { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
 .goal-ambition-gain {
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 14px; font-weight: 650; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--accent);
 }
 
 /* A requirement is a statement, not a destination, so it wraps rather than
@@ -5197,18 +5191,18 @@ a.row { text-decoration: none; }
 .req-row .row-title, .stall-row .row-title { white-space: normal; }
 .req-value {
   flex: none; align-self: center;
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 15px; font-weight: 650; text-align: right; min-width: 62px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-lg); font-weight: var(--fw-med); text-align: right; min-width: 62px;
 }
 .req-source {
-  font-size: 10.5px; font-weight: 650; letter-spacing: 0.04em;
+  font-size: var(--fs-xs); font-weight: var(--fw-med); letter-spacing: 0.04em;
   color: var(--ink-faint); margin-top: 3px;
 }
 /* A requirement whose answer is words rather than a number. It sits under the
    label instead of in the tabular column — that column is sized for "7-10", and
    a sentence dropped into it takes 300px and crushes the label beside it into a
    five-word-tall stripe. */
-.req-phrase { font-size: 13.5px; font-weight: 650; color: var(--ink); margin-top: 1px; }
+.req-phrase { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink); margin-top: 1px; }
 
 /* Status is never colour alone — every row already states its number and its
    sentence, and the tint is a second, redundant cue on top of both. */
@@ -5217,10 +5211,10 @@ a.row { text-decoration: none; }
 .stall-row.is-unknown .req-value, .stall-row.is-invisible .req-value { color: var(--ink-faint); }
 .stall-row.is-invisible .row-title { color: var(--ink-soft); }
 
-.goal-option .row-title { font-weight: 700; }
+.goal-option .row-title { font-weight: var(--fw-bold); }
 .goal-option-gain {
-  flex: none; font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 14.5px; font-weight: 650; color: var(--ink-soft);
+  flex: none; font-variant-numeric: tabular-nums;
+  font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink-soft);
 }
 
 /* Six tabs rather than five. Each is still an equal share of the bar, but the
@@ -5254,7 +5248,7 @@ a.row { text-decoration: none; }
   padding: calc(env(safe-area-inset-top, 0px) + 7px) var(--pad) 7px;
   background: var(--accent-dim);
   border-bottom: 1px solid var(--accent);
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   line-height: 1.35;
   color: var(--ink);
 }
@@ -5274,7 +5268,7 @@ a.row { text-decoration: none; }
 
 /* Below ~380px the sentence is what matters and the dot is decoration. */
 @media (max-width: 380px) {
-  .demo-bar { gap: 7px; font-size: 11.5px; }
+  .demo-bar { gap: 7px; font-size: var(--fs-sm); }
   .demo-bar-dot { display: none; }
 }
 
@@ -5306,19 +5300,19 @@ a.row { text-decoration: none; }
   display: grid; place-items: center;
 }
 .feed-who { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.feed-name { font-size: 13.5px; font-weight: 700; }
+.feed-name { font-size: var(--fs-md); font-weight: var(--fw-bold); }
 /* The meta line is the one place a middot separates two different KINDS of
    fact, so it stays on one line and truncates rather than wrapping into
    something that reads like two lines of equal weight. */
 .feed-meta {
-  font-size: 12px; color: var(--ink-faint);
+  font-size: var(--fs-sm); color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* ⚠️ LOUDER THAN THE NAME ABOVE IT, which is Strava's hierarchy and is right:
    you scan a feed for what happened, and whose it is qualifies it. On Strava's
    own web feed the title is the card's <h1> and the athlete's name is a span. */
-.feed-title { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.feed-title { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-bold); line-height: 1.2; }
 
 /* The tappable half of a card: title, description, numbers, exercises. It is a
    link because it goes somewhere (the workout), and it inherits everything —
@@ -5338,7 +5332,7 @@ a.row { text-decoration: none; }
    what the person said, then what the app counted. */
 .feed-note {
   margin: 0;
-  font-size: 13.5px; color: var(--ink-soft); line-height: 1.45;
+  font-size: var(--fs-md); color: var(--ink-soft); line-height: 1.45;
   overflow-wrap: anywhere; white-space: pre-line;
 }
 
@@ -5354,12 +5348,12 @@ a.row { text-decoration: none; }
 .feed-stats { display: flex; flex-wrap: wrap; gap: 3px 22px; }
 .feed-stat { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .feed-stat-label {
-  font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
   color: var(--ink-faint);
 }
 .feed-stat-value {
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 15.5px; font-weight: 650; letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-lg); font-weight: var(--fw-med); letter-spacing: -.03em;
 }
 
 /* ── One row per exercise, set count first ────────────────────────────────
@@ -5367,17 +5361,17 @@ a.row { text-decoration: none; }
    compared; the name is what it applies to. Mono on the count keeps the names
    on a straight left edge without a table. */
 .feed-exs { display: flex; flex-direction: column; gap: 2px; }
-.feed-ex { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.45; min-width: 0; }
+.feed-ex { display: flex; gap: 8px; font-size: var(--fs-md); line-height: 1.45; min-width: 0; }
 .feed-ex-sets {
   flex: none; min-width: 52px;
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 12.5px; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-md); color: var(--ink-faint);
   align-self: center;
 }
 .feed-ex-name { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.feed-ex.is-quiet { color: var(--ink-faint); font-size: 12.5px; }
+.feed-ex.is-quiet { color: var(--ink-faint); font-size: var(--fs-md); }
 
-.feed-did { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
+.feed-did { font-size: var(--fs-md); color: var(--ink-soft); line-height: 1.45; }
 /* The lowest sharing tier publishes that somebody trained and nothing else. The
    card must read as complete rather than broken, so this is a stated fact in
    the app's caption voice, not an empty slot. */
@@ -5393,10 +5387,10 @@ a.row { text-decoration: none; }
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   border-radius: 7px;
   color: var(--ink-soft);
-  font-size: 13px; font-weight: 650;
+  font-size: var(--fs-md); font-weight: var(--fw-med);
 }
 .feed-act:active { background: var(--raised); }
-.feed-act-glyph { font-size: 15px; line-height: 1; }
+.feed-act-glyph { font-size: var(--fs-lg); line-height: 1; }
 /* Your own kudos reads as a state, not a hover: accent text, no fill (Rule 2). */
 .feed-act.is-mine { color: var(--accent); }
 
@@ -5419,8 +5413,8 @@ a.feed-mine-row {
   margin: -4px 0;
 }
 a.feed-mine-row:active { background: var(--raised); }
-.feed-mine-what { font-size: 12px; font-weight: 650; color: var(--ink-soft); }
-.feed-mine-who { font-size: 13px; color: var(--ink); line-height: 1.45; overflow-wrap: anywhere; }
+.feed-mine-what { font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-soft); }
+.feed-mine-who { font-size: var(--fs-md); color: var(--ink); line-height: 1.45; overflow-wrap: anywhere; }
 
 /* "Added to your systems" — the receipt on the Explore detail screen.
    Not a button and not a toast: a toast is gone in 2.4s and the old version
@@ -5429,7 +5423,7 @@ a.feed-mine-row:active { background: var(--raised); }
    copy exists. Accent tick, ordinary ink, no box (Rule 2). */
 .added-note {
   display: flex; align-items: center; gap: 7px;
-  font-size: 13.5px; font-weight: 650;
+  font-size: var(--fs-md); font-weight: var(--fw-med);
   padding: 2px 0 2px;
 }
 .added-note svg { color: var(--accent); flex: none; }
@@ -5451,7 +5445,7 @@ a.feed-mine-row:active { background: var(--raised); }
    list and clears it. A fade that times itself out is motion answering a
    question the reader may not have finished reading. */
 .feed-rx { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; }
-.feed-rx-line { font-size: 13px; color: var(--ink-soft); line-height: 1.45; overflow-wrap: anywhere; }
+.feed-rx-line { font-size: var(--fs-md); color: var(--ink-soft); line-height: 1.45; overflow-wrap: anywhere; }
 .feed-card.is-named {
   background: var(--raised);
   border-radius: var(--r);
@@ -5468,8 +5462,8 @@ a.feed-mine-row:active { background: var(--raised); }
 .comment-list > * + * { border-top: 1px solid var(--rule-soft); }
 .comment-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; }
 .comment-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.comment-who { font-size: 12px; font-weight: 700; }
-.comment-text { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
+.comment-who { font-size: var(--fs-sm); font-weight: var(--fw-bold); }
+.comment-text { font-size: var(--fs-md); color: var(--ink-soft); line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
 
 /* The little kind mark on a feed card's title — a dumbbell for a lifting
    session, a route for an activity. It sits INSIDE the h2 so it shares the
@@ -5579,15 +5573,15 @@ a.feed-mine-row:active { background: var(--raised); }
    beside a 4 / 8 / 12 weeks control, which is a number with no unit next to a
    control that looks like one — and it was misread that way the day it shipped. */
 .vol-legend-unit {
-  font-size: 10.5px; font-weight: 750; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-faint); margin-right: 2px;
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--ink-faint); margin-right: 2px;
 }
 /* Named bands, not swatches — this is the secondary encoding the ramp's own
    CVD numbers oblige, so it is load-bearing and not a key that could be cut. */
 .vol-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 650;
+  font-size: var(--fs-sm); font-weight: var(--fw-med);
   background: var(--raised); color: var(--ink-soft);
 }
 .vol-chip i { width: 11px; height: 11px; border-radius: 3px; display: block; flex: none; }
@@ -5596,9 +5590,9 @@ a.feed-mine-row:active { background: var(--raised); }
 /* What is selected on the figure, above the list. */
 .vol-picked { display: flex; flex-direction: column; gap: 6px; }
 .vol-picked-head { display: flex; align-items: baseline; gap: 8px; }
-.vol-picked-name { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; }
-.vol-picked-num { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.vol-intro-main { font-size: 14.5px; font-weight: 600; margin-bottom: 3px; }
+.vol-picked-name { flex: 1; min-width: 0; font-size: var(--fs-lg); font-weight: var(--fw-bold); }
+.vol-picked-num { font-size: var(--fs-lg); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.vol-intro-main { font-size: var(--fs-lg); font-weight: var(--fw-med); margin-bottom: 3px; }
 
 .vol-list { display: flex; flex-direction: column; }
 .vol-item + .vol-item { border-top: 1px solid var(--rule-soft); }
@@ -5624,11 +5618,11 @@ a.feed-mine-row:active { background: var(--raised); }
 .vol-head { display: flex; align-items: baseline; gap: 8px; }
 .vol-name {
   flex: 1; min-width: 0;
-  font-size: 14.5px; font-weight: 620;
+  font-size: var(--fs-lg); font-weight: var(--fw-med);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.vol-num { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.vol-unit { font-size: 11.5px; font-weight: 600; color: var(--ink-faint); }
+.vol-num { flex: none; font-size: var(--fs-lg); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.vol-unit { font-size: var(--fs-sm); font-weight: var(--fw-med); color: var(--ink-faint); }
 
 .vol-track {
   position: relative;
@@ -5655,28 +5649,28 @@ a.feed-mine-row:active { background: var(--raised); }
   background: var(--ground);
   opacity: .85;
 }
-.vol-sub { font-size: 12px; color: var(--ink-faint); }
+.vol-sub { font-size: var(--fs-sm); color: var(--ink-faint); }
 
 .vol-row.is-none .vol-name { color: var(--ink-soft); }
 
 .vol-detail { padding: 2px 0 12px; display: flex; flex-direction: column; gap: 8px; }
 .vol-tier { display: flex; flex-direction: column; gap: 4px; }
-.vol-tier-line { font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+.vol-tier-line { font-size: var(--fs-md); line-height: 1.45; color: var(--ink-soft); }
 .vol-contrib-head {
-  font-size: 10.5px; font-weight: 750; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  color: var(--ink-faint);
 }
 .vol-contrib { display: flex; flex-direction: column; gap: 4px; }
-.vol-contrib-row { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.vol-contrib-row { display: flex; align-items: baseline; gap: 8px; font-size: var(--fs-md); }
 .vol-contrib-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* "half" is the word, not a symbol — the fractional rule is unusual enough
    that a glyph would need explaining every time. */
-.vol-contrib-kind { flex: none; font-size: 10.5px; letter-spacing: .04em; color: var(--ink-faint); }
+.vol-contrib-kind { flex: none; font-size: var(--fs-xs); letter-spacing: .04em; color: var(--ink-faint); }
 /* Tabular figures so the column lines up, but NOT the mono face — at 12.5px it
    renders "6.2" with enough letter-spacing to read as three separate glyphs. */
 .vol-contrib-sets {
   flex: none; width: 34px; text-align: right;
-  color: var(--ink-soft); font-size: 12.5px; font-variant-numeric: tabular-nums;
+  color: var(--ink-soft); font-size: var(--fs-md); font-variant-numeric: tabular-nums;
 }
 
 .vol-notes { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
@@ -5703,18 +5697,18 @@ a.feed-mine-row:active { background: var(--raised); }
 }
 
 .research-pane { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
-.research-title { font-size: 17px; margin: 2px 0 0; }
+.research-title { font-size: var(--fs-xl); margin: 2px 0 0; }
 .research-sub { margin-top: -4px; }
 
 .research-chart-host { width: 100%; }
 .research-chart { display: block; touch-action: manipulation; }
 .research-chart .chart-grid { stroke: var(--rule); stroke-width: 1; }
-.research-chart .chart-tick { fill: var(--ink-faint); font-size: 10px; font-family: var(--mono); }
+.research-chart .chart-tick { fill: var(--ink-faint); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .research-chart .research-ref { stroke: var(--ink-faint); opacity: .8; }
 .research-chart .research-guide { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 3; }
-.research-chart .research-line-label { font-size: 11px; font-weight: 600; }
+.research-chart .research-line-label { font-size: var(--fs-sm); font-weight: var(--fw-med); }
 
-.research-readout { min-height: 20px; font-size: 12.5px; line-height: 1.45; }
+.research-readout { min-height: 20px; font-size: var(--fs-md); line-height: 1.45; }
 .research-readout-hint { color: var(--ink-faint); }
 
 .research-legend { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -5729,7 +5723,7 @@ a.feed-mine-row:active { background: var(--raised); }
   border-top: 2px dashed var(--ink-faint); width: 14px;
 }
 
-.research-table summary { cursor: pointer; font-size: 13px; color: var(--ink-soft); padding: 4px 0; }
+.research-table summary { cursor: pointer; font-size: var(--fs-md); color: var(--ink-soft); padding: 4px 0; }
 /* 🚨 `min-width: 0` IS WHAT MAKES THE `overflow-x` BESIDE IT DO ANYTHING —
    2026-09-10. This is a flex child of a column flex container, whose default
    `min-width: auto` refuses to shrink below its own content. So the box grew to
@@ -5740,12 +5734,12 @@ a.feed-mine-row:active { background: var(--raised); }
    note: `min-width: auto` on a flex item is the default that surprises people
    both ways. */
 .research-scroll { overflow-x: auto; min-width: 0; }
-.research-table table { border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
+.research-table table { border-collapse: collapse; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
 .research-table th, .research-table td { padding: 4px 8px; text-align: right; white-space: nowrap; }
-.research-table thead th { color: var(--ink-faint); font-weight: 500; border-bottom: 1px solid var(--rule); }
-.research-table tbody th { text-align: left; font-family: var(--sans); font-weight: 600; }
+.research-table thead th { color: var(--ink-faint); font-weight: var(--fw-reg); border-bottom: 1px solid var(--rule); }
+.research-table tbody th { text-align: left; font-family: var(--sans); font-weight: var(--fw-med); }
 
-.research-notes { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); }
+.research-notes { display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-md); line-height: 1.55; color: var(--ink-soft); }
 .research-notes p { margin: 0; }
 .research-notes b { color: var(--ink); }
 .research-notes a { color: var(--accent); }
@@ -5779,14 +5773,14 @@ a.feed-mine-row:active { background: var(--raised); }
   padding: 13px 2px; cursor: pointer; list-style: none;
 }
 .rt-summary::-webkit-details-marker { display: none; }
-.rt-q { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.rt-q { flex: 1 1 auto; min-width: 0; font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink); }
 .rt-topic[open] .rt-q { color: var(--accent); }
 
 .rt-conf {
   /* margin-left:auto so that when a long question pushes the pill onto its own
      line at 360px it right-aligns under the question rather than sitting under
      the first word looking like part of the sentence. */
-  flex: none; margin-left: auto; font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  flex: none; margin-left: auto; font-size: var(--fs-xs); font-weight: var(--fw-med); letter-spacing: .02em;
   padding: 3px 7px; border-radius: 999px; white-space: nowrap;
   border: 1px solid var(--rule); color: var(--ink-soft);
 }
@@ -5795,14 +5789,14 @@ a.feed-mine-row:active { background: var(--raised); }
 
 .rt-body {
   display: flex; flex-direction: column; gap: 9px;
-  padding: 0 2px 15px; font-size: 13px; line-height: 1.55; color: var(--ink-soft);
+  padding: 0 2px 15px; font-size: var(--fs-md); line-height: 1.55; color: var(--ink-soft);
 }
-.rt-lead { font-size: 12.5px; color: var(--ink-faint); margin-top: -4px; }
-.rt-answer { margin: 0; font-size: 13.5px; color: var(--ink); }
+.rt-lead { font-size: var(--fs-md); color: var(--ink-faint); margin-top: -4px; }
+.rt-answer { margin: 0; font-size: var(--fs-md); color: var(--ink); }
 .rt-points { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
 .rt-points li { margin: 0; }
 .rt-myth { color: var(--ink); }
-.rt-caveat { margin: 0; font-size: 12.5px; }
+.rt-caveat { margin: 0; font-size: var(--fs-md); }
 .rt-caveat b { color: var(--ink); }
 /* ── Facets, hooks and groups — 2026-09-07, docs/research-plan.md ───────────
    The collapsed row now carries a hook under the question, so a closed list is
@@ -5810,7 +5804,7 @@ a.feed-mine-row:active { background: var(--raised); }
    holds both; `.rt-flags` holds the badge and the pill so they stay together
    when a long question wraps at 360px. */
 .rt-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.rt-hook { font-size: 12px; line-height: 1.45; color: var(--ink-faint); }
+.rt-hook { font-size: var(--fs-sm); line-height: 1.45; color: var(--ink-faint); }
 .rt-topic[open] .rt-hook { display: none; }
 .rt-flags { flex: none; margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .rt-flags .rt-conf { margin-left: 0; }
@@ -5819,11 +5813,11 @@ a.feed-mine-row:active { background: var(--raised); }
    confidence pill it is not a statement about strength of evidence — it says
    two sources contradict each other, which is either true or it is not. */
 .rt-contested {
-  flex: none; font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  flex: none; font-size: var(--fs-xs); font-weight: var(--fw-med); letter-spacing: .02em;
   padding: 3px 7px; border-radius: 999px; white-space: nowrap;
   border: 1px solid var(--accent); color: var(--accent);
 }
-.rt-verdict { font-size: 12.5px; }
+.rt-verdict { font-size: var(--fs-md); }
 .rt-verdict b { color: var(--ink); }
 .rt-verdict-call { color: var(--ink); }
 
@@ -5831,17 +5825,17 @@ a.feed-mine-row:active { background: var(--raised); }
 .rt-chip { cursor: pointer; }
 /* Pressed state carries a border and a weight change, not colour alone —
    Design Rule 5, the same reason the confidence pill says its level in words. */
-.chip-on { border-color: var(--ink-soft); color: var(--ink); font-weight: 600; }
+.chip-on { border-color: var(--ink-soft); color: var(--ink); font-weight: var(--fw-med); }
 
 .rt-group { display: flex; flex-direction: column; }
 .rt-group-head {
-  margin: 14px 0 0; font-size: 11.5px; font-weight: 600;
-  letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint);
+  margin: 14px 0 0; font-size: var(--fs-sm); font-weight: var(--fw-med);
+  color: var(--ink-faint);
 }
 .rt-group:first-child .rt-group-head { margin-top: 2px; }
 .rt-empty { padding: 10px 2px; }
 
-.rt-src { font-size: 11.5px; line-height: 1.5; color: var(--ink-faint); }
+.rt-src { font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-faint); }
 .rt-src b { color: var(--ink-soft); }
 .rt-src a { color: var(--accent); }
 .rt-src-n { color: var(--ink-faint); }
@@ -5849,12 +5843,12 @@ a.feed-mine-row:active { background: var(--raised); }
 /* Who this screen is currently recording for, and where their suggestion came
    from. Quiet — it is context for the numbers, not a control. */
 .for-note {
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   line-height: 1.45;
   color: var(--ink-soft);
   margin-top: 2px;
 }
-.for-note b { color: var(--ink); font-weight: 650; }
+.for-note b { color: var(--ink); font-weight: var(--fw-med); }
 
 /* ⚠️ A QR CODE PAINTS ITS OWN WHITE GROUND, in both themes (2026-08-29). A
    light-on-dark code is legal and recent iPhones decode one, but plenty of
@@ -5880,14 +5874,14 @@ a.feed-mine-row:active { background: var(--raised); }
 /* Named on the card so somebody holding it up can see it is the right person
    before the other phone is pointed at it. Black on the card's own white,
    never a theme token — the card is not part of the theme. */
-.qr-name { color: #111; font-size: 14px; font-weight: 650; }
+.qr-name { color: #111; font-size: var(--fs-lg); font-weight: var(--fw-med); }
 
 /* "Friends" beside somebody already connected, in a search result. Not a
    button: there is nothing to do, and a disabled button reads as broken. */
 .row-flag {
   flex: none;
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-med);
   color: var(--ink-faint);
   padding: 0 4px;
 }
@@ -5905,12 +5899,11 @@ a.feed-mine-row:active { background: var(--raised); }
 }
 .finish-ex { padding: 9px 0; border-bottom: 1px solid var(--rule-soft); }
 .finish-ex:last-child { border-bottom: 0; }
-.finish-ex-name { font-size: 14.5px; font-weight: 650; color: var(--ink); }
+.finish-ex-name { font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink); }
 .finish-ex-sets {
   margin-top: 2px;
-  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-size: var(--fs-md);
   color: var(--ink-soft);
   display: flex;
   flex-wrap: wrap;
@@ -5927,8 +5920,8 @@ a.feed-mine-row:active { background: var(--raised); }
 /* An activity's time ("30:00", "1:05:00") in the stepper box: smaller type so
    the whole value fits between the ± buttons on a phone. */
 .step-value.is-duration { font-size: 24px; }
-.step-value.is-duration.is-long { font-size: 19px; }
-.edit-dur-unit { font-size: 14px; font-weight: 650; color: var(--ink-soft); }
+.step-value.is-duration.is-long { font-size: var(--fs-xl); }
+.edit-dur-unit { font-size: var(--fs-lg); font-weight: var(--fw-med); color: var(--ink-soft); }
 
 /* === end Record/runner === */
 
@@ -5966,7 +5959,7 @@ a.feed-mine-row:active { background: var(--raised); }
   display: flex; align-items: center; gap: 9px;
   padding: 12px 0; border-bottom: 1px solid var(--rule);
   color: var(--ink); text-decoration: none;
-  font-size: 13.5px; font-weight: 650;
+  font-size: var(--fs-md); font-weight: var(--fw-med);
 }
 .feed-waiting:active { background: var(--raised); }
 .feed-waiting > span:nth-child(2) { flex: 1; min-width: 0; }
@@ -5989,8 +5982,8 @@ a.feed-mine-row:active { background: var(--raised); }
 .feed-mine-who { display: flex; flex-wrap: wrap; gap: 2px 14px; }
 .rx-bit { display: inline-flex; align-items: baseline; gap: 5px; min-width: 0; }
 .rx-bit > svg { flex: none; align-self: center; color: var(--ink-faint); }
-.rx-age { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
-.comment-age { font-size: 11.5px; color: var(--ink-faint); }
+.rx-age { font-size: var(--fs-sm); color: var(--ink-faint); white-space: nowrap; }
+.comment-age { font-size: var(--fs-sm); color: var(--ink-faint); }
 
 /* Compare: with a muscle selected, the two people's panels stack on a phone
    (dates clipped and names wrapped to three lines side by side at 393px).
@@ -6016,11 +6009,11 @@ a.feed-mine-row:active { background: var(--raised); }
    figure's own grey, not the page's near-black. "Faded" is Advanced faded by the
    rule `.body-region[style*="--tint"]` uses — color-mix first, chroma-only where
    supported — at the map's floor, MIN_TINT = 0.38 (js/muscle-evidence.js; a test
-   pins the two numbers together). `opacity` goes: a see-through chip is not what a
-   faded muscle looks like. */
+   pins the two numbers together). No `opacity`: a see-through chip is not what a
+   faded muscle looks like. (The older .lv-sw.lv-none / .lv-faded rules these
+   replaced were deleted 2026-09-24; every swatch sits in a .lv-key-item.) */
 .lv-key-item .lv-sw.lv-none { background: var(--body-none); }
 .lv-key-item .lv-sw.lv-faded {
-  opacity: 1;
   --tint: 38%;
   --tint-n: 0.38;
   background: color-mix(in oklab, var(--lv-mix) var(--tint), var(--body-none));
@@ -6031,7 +6024,7 @@ a.feed-mine-row:active { background: var(--raised); }
 
 /* 9. "+12 lbs in 8 weeks", on the big number's own line so it moves nothing when it
    arrives. Gain green, loss red, no change neutral — the app's up/down colours. */
-.muscle-trend { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+.muscle-trend { font-size: var(--fs-md); font-weight: var(--fw-med); color: var(--ink-soft); }
 .muscle-trend.up { color: var(--good); }
 .muscle-trend.down { color: var(--danger); }
 
@@ -6047,28 +6040,26 @@ a.feed-mine-row:active { background: var(--raised); }
   border: none; border-radius: 999px;
   background: var(--raised-hi);
   cursor: pointer;
-  transition: background-color .18s ease;
+  transition: background-color var(--t) var(--ease-out);
 }
+/* The knob crosses the track while you watch, so it eases both ends (Rule 7).
+   Reduced motion is the blanket in the Motion section; no local override. */
 .switch-knob {
   position: absolute; top: 3px; left: 3px;
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--ink-soft);
-  transition: transform .18s ease, background-color .18s ease;
+  transition: transform var(--t) var(--ease-both), background-color var(--t) var(--ease-out);
 }
 .switch[aria-checked="true"] { background: var(--accent); }
 .switch[aria-checked="true"] .switch-knob { transform: translateX(18px); background: var(--accent-ink); }
 .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  .switch, .switch-knob { transition: none; }
-}
 
 /* === end Data === */
 
 /* === Review 2026-09-24 · Profile/Goals/Account === */
 
 /* The Profile stat tiles: no boxes (Rule 2). One hairline between the two
-   figures does the separating; the grid gap goes so the line sits centred. */
-.me-stats { gap: 0; }
+   figures does the separating (.me-stats has no gap, so it sits centred). */
 .me-stat + .me-stat { border-left: 1px solid var(--rule-soft); }
 
 /* Best-lift rows. A long name wraps instead of ending in "…", and each piece
@@ -6078,3 +6069,38 @@ a.feed-mine-row:active { background: var(--raised); }
 .me-best-bit { white-space: nowrap; }
 
 /* === end Profile/Goals/Account === */
+
+/* === Look pass 2026-09-24 · type, reading width, feed actions === */
+
+/* Running text stops at a comfortable line length on a laptop. The 820–940px
+   column is right for lists and charts and too long for a paragraph. Phone
+   widths never reach 68ch, so this only acts from the laptop split. A
+   `.field-help` centred inline (the account screens) is left alone: a capped
+   centred line would sit off to the left. */
+@media (min-width: 860px) {
+  .preset-notes p, .note, .field-help:not([style*="text-align"]), .feed-note, .ws-note,
+  .goal-intro-body, .goal-verdict-body, .update-note, .preset-warning,
+  .vol-tier-line, .research-notes, .rt-body { max-width: 68ch; }
+  /* ⚠️ A paragraph that is itself a direct child of a pane would be centred by
+     the column's `margin-inline: auto` once it is narrower than the column. It
+     keeps the column's LEFT edge instead: the left margin is half the space the
+     820px column leaves, the right margin takes the rest. */
+  :is(.pane-top, .pane-scroll, .pane-bottom) > :is(.note, .field-help, .update-note,
+    .preset-warning, .goal-intro-body, .goal-verdict-body, .research-notes, .rt-body) {
+    margin-inline: max(0px, (100% - 820px) / 2) auto;
+  }
+
+  /* Kudos / Comment / Share stay together under the card on a laptop, instead
+     of three thirds spread across 940px. A fixed width each, so a count
+     appearing on Kudos moves nothing beside it. */
+  .feed-actions { justify-content: flex-start; }
+  .feed-act { flex: 0 0 120px; }
+}
+@media (min-width: 1200px) {
+  :is(.pane-top, .pane-scroll, .pane-bottom) > :is(.note, .field-help, .update-note,
+    .preset-warning, .goal-intro-body, .goal-verdict-body, .research-notes, .rt-body) {
+    margin-inline: max(0px, (100% - 940px) / 2) auto;
+  }
+}
+
+/* === end Look pass === */

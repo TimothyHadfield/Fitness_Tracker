@@ -94,10 +94,20 @@ function setsByReps(item) {
 /* The workout checker's findings as short lines, or null when there are none —
  * which is the normal answer and draws nothing. `nameOf` prefixes a per-day
  * finding with its workout's name on a PROGRAMME screen, where "sets here"
- * would not say which day. */
+ * would not say which day.
+ *
+ * 2026-09-24 wording pass: five or six lines on one program was too wordy. The
+ * two most important show — a 'warn' before a 'note', otherwise in the
+ * checker's order — and the rest fold into a small "N more" at the END, so
+ * opening it only grows downward and nothing above it moves. */
+const LINT_SHOWN = 2;
 function lintBlock(findings, nameOf = null) {
   if (!findings || !findings.length) return null;
-  return el('div', { class: 'lint-notes' }, findings.map((f) => {
+  const ranked = findings
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => ((b.f.severity === 'warn') - (a.f.severity === 'warn')) || a.i - b.i)
+    .map((x) => x.f);
+  const lines = ranked.map((f) => {
     const day = nameOf && f.workoutId ? nameOf(f.workoutId) : null;
     // "Chest · Chest: 15 sets" says the day twice; the muscle already names it.
     const prefix = day && !f.message.startsWith(day + ':') ? day + ' · ' : '';
@@ -105,7 +115,15 @@ function lintBlock(findings, nameOf = null) {
       class: 'field-help lint-line' + (f.severity === 'warn' ? ' is-warn' : ''),
       text: prefix + f.message,
     });
-  }));
+  });
+  const rest = lines.slice(LINT_SHOWN);
+  return el('div', { class: 'lint-notes' },
+    ...lines.slice(0, LINT_SHOWN),
+    rest.length
+      ? el('details', { class: 'tech-detail' },
+          el('summary', { text: `${rest.length} more` }),
+          el('div', { class: 'lint-notes' }, ...rest))
+      : null);
 }
 
 /* ================================================================== *
@@ -943,7 +961,7 @@ export async function RecordChooserView() {
  */
 function openSystemSwitcher({ systems, workouts, currentId }) {
   const { close } = openSheet({
-    title: 'Your programmes',
+    title: 'Your programs',
     body: el('div', { class: 'list' },
       ...systems.map((sys) => {
         const mine = workouts.filter((w) => w.systemId === sys.id);
@@ -981,12 +999,12 @@ function openSystemSwitcher({ systems, workouts, currentId }) {
       // the whole of "the programme I am running".
       el('button', { class: 'row', onClick: () => { close(); go('#/system/new'); } },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'New system' }),
-          el('div', { class: 'row-sub wrap', text: 'Build a programme of your own' })),
+          el('div', { class: 'row-title', text: 'New program' }),
+          el('div', { class: 'row-sub wrap', text: 'Build a program of your own' })),
         chevron()),
       el('button', { class: 'row', onClick: () => { close(); go('#/explore'); } },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'Explore ready-made programmes' }),
+          el('div', { class: 'row-title', text: 'Explore ready-made programs' }),
           el('div', { class: 'row-sub wrap', text: 'Nine to browse and copy' })),
         chevron()),
     ),
@@ -1023,7 +1041,7 @@ function systemSwitcher({ system, systems, workouts, currentId, always = false }
     onClick: () => openSystemSwitcher({ systems, workouts, currentId }),
   },
     label,
-    el('span', { class: 'row-switch' }, many ? 'Switch' : 'Programmes', chevron()),
+    el('span', { class: 'row-switch' }, many ? 'Switch' : 'Programs', chevron()),
   );
 }
 
@@ -1050,8 +1068,8 @@ function presetUpdateNotice(system, workouts, plan) {
   },
     el('div', { class: 'preset-update-main' },
       el('div', { class: 'preset-update-title', text: n === 1
-        ? 'The original of this programme changed in 1 place'
-        : `The original of this programme changed in ${n} places` }),
+        ? 'The original of this program changed in 1 place'
+        : `The original of this program changed in ${n} places` }),
       el('div', { class: 'preset-update-sub', text: plan.readyCount
         ? `${plural(plan.readyCount, 'change')} can be taken without touching anything you edited`
         : 'Review what is different' }),
@@ -1088,7 +1106,7 @@ function openPresetUpdate({ system, workouts, plan }) {
       ...plan.notes.map((n) => el('p', { class: 'update-note', text: n.summary })),
       !plan.stamped
         ? el('p', { class: 'update-note', text:
-            'You added this programme before the app started recording which version you took, so '
+            'You added this program before the app started recording which version you took, so '
             + 'these are simply the differences between your copy and the original today. Some of '
             + 'them may be changes you made yourself, which is why none of them can be applied for '
             + 'you.' })
@@ -1258,7 +1276,7 @@ async function systemBody(system, workouts) {
                 }
               } }))
         : emptyState(`${system.name} has no workouts yet`,
-            'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+            'Add the days this program is made of — Push, Pull, Legs, or whatever you call them.'),
     el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
       icon('plus'), 'New workout'),
     // The workout checker over the whole programme — nothing when it finds nothing.
@@ -1439,15 +1457,15 @@ export async function StartPickerView({ tab = false } = {}) {
       ? [
           emptyState(`${current.name} has no workouts yet`,
             systems.length > 1
-              ? 'Add the days this programme is made of, or switch to another one.'
-              : 'Add the days this programme is made of — Push, Pull, Legs, or whatever you call them.'),
+              ? 'Add the days this program is made of, or switch to another one.'
+              : 'Add the days this program is made of — Push, Pull, Legs, or whatever you call them.'),
           el('button', { class: 'btn primary block', onClick: () => go('#/workout/new/' + current.id) },
             icon('plus'), 'New workout'),
           systems.length > 1
             ? el('button', {
                 class: 'btn block',
                 onClick: () => openSystemSwitcher({ systems, workouts, currentId: current.id }),
-              }, 'Switch programme')
+              }, 'Switch program')
             : null,
         ]
       : [
@@ -1457,8 +1475,8 @@ export async function StartPickerView({ tab = false } = {}) {
           // brand-new user tapping the biggest button in the app lands HERE — so
           // it has to offer the same route rather than "build a workout first".
           emptyState('Nothing to run yet',
-            'Pick a ready-made programme and its first workout is one tap away, or build your own.',
-            el('button', { class: 'btn primary', text: 'Pick a programme', onClick: () => go('#/explore') })),
+            'Pick a ready-made program and its first workout is one tap away, or build your own.',
+            el('button', { class: 'btn primary', text: 'Pick a program', onClick: () => go('#/explore') })),
           el('button', { class: 'btn block', onClick: () => go('#/system/new') },
             icon('plus'), 'Build my own instead'),
         ];
@@ -1510,12 +1528,12 @@ export async function WorkoutsView() {
       title: 'Workouts',
       top: [
         el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
-          icon('plus'), 'New system'),
+          icon('plus'), 'New program'),
         el('button', { class: 'btn block', onClick: () => go('#/explore') },
-          icon('search'), 'Explore ready-made programmes'),
+          icon('search'), 'Explore ready-made programs'),
       ],
-      scroll: emptyState('No systems yet',
-        'A system is a programme — a named group of workouts. Push Pull Legs, Upper/Lower, '
+      scroll: emptyState('No programs yet',
+        'A program is a named group of workouts. Push Pull Legs, Upper/Lower, '
         + 'whatever you follow. Build one, or start from a ready-made one.'),
     });
   }
@@ -1528,7 +1546,7 @@ export async function WorkoutsView() {
     // ⚠️ The pencil is here as well as on `#/system/<id>`, because this IS that
     // screen for the current programme and a door that exists on one of two
     // identical screens is a door somebody cannot find from the one they use.
-    actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + current.id + '/edit'))],
+    actions: [iconBtn('edit', 'Edit this program', () => go('#/system/' + current.id + '/edit'))],
     top: [
       systemSwitcher({
         system: current, systems, workouts, currentId: current.id, always: true,
@@ -1948,7 +1966,7 @@ function ratingBadge(rating) {
     minutes
       ? cell('~' + minutes, 'min', rating.minutesEstimated
           ? 'Estimated from the set count, at about 3 minutes a set including rest'
-          : 'As stated by the programme')
+          : 'As stated by the program')
       : null,
   );
 }
@@ -2047,7 +2065,7 @@ async function ownSystemRating(systemId, workouts, systemRow) {
   const growth = splitCaveat(explain(rating.hypertrophy), 'that would mean');
   return el('div', { class: 'own-rating' },
     el('div', { class: 'own-rating-head' },
-      el('div', { class: 'section-label', text: 'How this programme rates' }),
+      el('div', { class: 'section-label', text: 'How this program rates' }),
       ratingBadge(rating),
     ),
     // What the number is based on — measured, declared or assumed. WHAT, in
@@ -2110,7 +2128,7 @@ export async function ExploreView() {
   const ratings = await rateAllPresets(PRESET_SYSTEMS);
 
   return screenShell({
-    title: 'Ready-made programmes',
+    title: 'Ready-made programs',
     back: () => go('#/workouts'),
     scroll: [
       // ⚠️ ONE SENTENCE AT THE MOMENT OF THE WORD SWAP (UX review: "programme"
@@ -2122,7 +2140,7 @@ export async function ExploreView() {
       // than part of it.
       el('div', { class: 'help-line' },
         el('span', { class: 'field-help', text:
-          'Pick one and it is copied into your systems — a system is just a programme you own.' }),
+          'Pick one and it is copied into your programs, as your own.' }),
         helpDot('From then on it is yours: rename it, change the exercises, delete what you do '
           + 'not do.', { label: 'What happens when you add one' })),
       // ⚠️ WHAT THE NUMBERS MEAN, BEFORE THE NINE NUMBERS (UX review: "Explore
@@ -2138,7 +2156,7 @@ export async function ExploreView() {
       el('div', { class: 'help-line' },
         el('span', { class: 'field-help', text:
           'Each badge: how much of the growth and strength stimulus the research supports a '
-          + 'programme delivering, plus what it costs in days a week and minutes a session. '
+          + 'program delivering, plus what it costs in days a week and minutes a session. '
           + 'Nothing real reaches 100 %.' }),
         helpDot('That would mean 42 hard sets per muscle every week.',
           { label: 'Why nothing reaches 100 %' })),
@@ -2210,7 +2228,7 @@ export async function ExploreView() {
  * warning as one string, which straddles that break.
  */
 const DEFAULT_PRESET_WARNING = 'Not official. Transcribed from published write-ups of the free videos, '
-  + 'not from the author or their paid programme. Sets and reps are as reported — '
+  + 'not from the author or their paid program. Sets and reps are as reported — '
   + 'check the source before you trust a number.';
 
 function warningBlock(text) {
@@ -2241,7 +2259,7 @@ export async function ExploreDetailView(id) {
   if (!preset) {
     return screenShell({
       title: 'Not found', back: () => go('#/explore'),
-      scroll: emptyState('That system no longer exists', 'It may have been renamed or removed.'),
+      scroll: emptyState('That program no longer exists', 'It may have been renamed or removed.'),
     });
   }
 
@@ -2300,7 +2318,7 @@ export async function ExploreDetailView(id) {
       confirmLabel: 'Remove',
       onConfirm: async () => {
         await store.deleteSystem(copy.id);
-        toast('Removed from your systems');
+        toast('Removed from your programs');
         refreshRoute();
       },
     });
@@ -2308,7 +2326,7 @@ export async function ExploreDetailView(id) {
 
   async function makeCurrent(copy) {
     await store.setCurrentSystem(copy.id);
-    toast('Now your current programme');
+    toast('Now your current program');
     refreshRoute();
   }
 
@@ -2322,14 +2340,14 @@ export async function ExploreDetailView(id) {
   function foot() {
     if (!copies.length) {
       return [
-        el('button', { class: 'btn primary block', text: 'Add to my systems', onClick: add }),
+        el('button', { class: 'btn primary block', text: 'Add to my programs', onClick: add }),
       ];
     }
 
     if (copies.length > 1) {
       return [
         el('div', { class: 'field-help', text:
-          `Added — you have ${copies.length} separate copies of this in your systems.` }),
+          `Added — you have ${copies.length} separate copies of this in your programs.` }),
         el('button', { class: 'btn block', text: 'Open the first one',
           onClick: () => go('#/system/' + copies[0].id) }),
         el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
@@ -2349,14 +2367,14 @@ export async function ExploreDetailView(id) {
     const isCurrent = Boolean(current && current.id === copy.id);
     const firstDay = workouts.find((w) => w.systemId === copy.id) || null;
     return [
-      el('div', { class: 'added-note' }, icon('check', 16), 'Added to your systems'),
+      el('div', { class: 'added-note' }, icon('check', 16), 'Added to your programs'),
       firstDay
         ? el('button', { class: 'btn primary block', onClick: () => go('#/session/' + firstDay.id) },
             icon('play'), `Start ${firstDay.name}`)
         : null,
       isCurrent
         ? null
-        : el('button', { class: 'btn block', text: 'Make it my current programme',
+        : el('button', { class: 'btn block', text: 'Make it my current program',
             onClick: () => makeCurrent(copy) }),
     ];
   }
@@ -2369,8 +2387,8 @@ export async function ExploreDetailView(id) {
     return el('div', { class: 'added-more' },
       // 🚨 THE SENTENCE THAT WOULD HAVE SAVED THE 2026-09-27 BUG REPORT.
       el('div', { class: 'field-help', text: isCurrent
-        ? 'It is your current programme, so it is what your Workouts tab shows.'
-        : `Your Workouts tab shows ${current ? current.name : 'your current programme'}. `
+        ? 'It is your current program, so it is what your Workouts tab shows.'
+        : `Your Workouts tab shows ${current ? current.name : 'your current program'}. `
           + 'This one will not appear there until you switch.' }),
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn', text: 'Open it', onClick: () => go('#/system/' + copy.id) }),
@@ -2378,7 +2396,7 @@ export async function ExploreDetailView(id) {
       ),
       el('div', { class: 'field-help', text: 'Adding it again makes a second, separate copy.' }),
       el('div', { class: 'danger-zone' },
-        el('button', { class: 'btn danger block', text: 'Remove from my systems',
+        el('button', { class: 'btn danger block', text: 'Remove from my programs',
           onClick: () => remove(copy) })),
     );
   }
@@ -2521,7 +2539,7 @@ function planBoxes(schedule, workouts) {
     el('div', { class: 'help-line' },
       el('div', { class: 'section-label', text: heading }),
       helpDot(
-        'A note to yourself about how this programme is meant to run. '
+        'A note to yourself about how this program is meant to run. '
         + 'The app does not use it: Home and Record still offer whichever workout '
         + 'you have gone longest without doing, exactly as they did before, and '
         + 'nothing here checks whether you followed it.',
@@ -2565,7 +2583,7 @@ async function SystemDetailView(id) {
   if (!existing) {
     return screenShell({
       title: 'Not found', back: () => go('#/workouts'),
-      scroll: emptyState('That system no longer exists', 'It may have been deleted.'),
+      scroll: emptyState('That program no longer exists', 'It may have been deleted.'),
     });
   }
 
@@ -2577,7 +2595,7 @@ async function SystemDetailView(id) {
     title: existing.name,
     back: () => go('#/workouts'),
     // The pencil, not a "Settings" or a "…". It names the one thing it does.
-    actions: [iconBtn('edit', 'Edit this system', () => go('#/system/' + id + '/edit'))],
+    actions: [iconBtn('edit', 'Edit this program', () => go('#/system/' + id + '/edit'))],
     /* 🔄 THIS SCREEN IS THE WORKOUTS TAB FOR ONE PROGRAMME SINCE 2026-09-19, and
      * the two are drawn by the same `systemBody()` — see its header for why that
      * is not optional. What lives HERE and not there is this row: the tab always
@@ -2603,15 +2621,15 @@ async function SystemDetailView(id) {
      */
     top: isCurrent
       ? el('div', { class: 'field-help', text:
-          'This is your current programme — it is what the Workouts tab and Record show.' })
+          'This is your current program — it is what the Workouts tab and Record show.' })
       : el('button', {
           class: 'btn block',
           onClick: async () => {
             await store.setCurrentSystem(id);
-            toast('Now your current programme');
+            toast('Now your current program');
             refreshRoute();
           },
-        }, icon('check'), 'Make this my current programme'),
+        }, icon('check'), 'Make this my current program'),
     scroll: await systemBody(existing, workouts),
   });
 }
@@ -2623,7 +2641,7 @@ async function SystemEditorView(id) {
   if (!isNew && !existing) {
     return screenShell({
       title: 'Not found', back: () => go('#/workouts'),
-      scroll: emptyState('That system no longer exists', 'It may have been deleted.'),
+      scroll: emptyState('That program no longer exists', 'It may have been deleted.'),
     });
   }
 
@@ -2637,7 +2655,7 @@ async function SystemEditorView(id) {
   });
   const notesInput = el('textarea', {
     class: 'input', rows: '2', maxlength: '300',
-    placeholder: 'What is this programme for? (optional)',
+    placeholder: 'What is this program for? (optional)',
     onInput: (e) => { draft.notes = e.target.value; },
   });
   notesInput.value = draft.notes || '';
@@ -2689,8 +2707,8 @@ async function SystemEditorView(id) {
     const parts = [el('div', { class: 'field' },
       el('label', { text: 'Plan' }), kindSelect,
       el('div', { class: 'field-help', text: plan
-        ? 'Shown as boxes at the top of this system. It does not change what the app suggests next.'
-        : 'Optional. Lay this programme out over a week, or over a cycle that repeats.' }),
+        ? 'Shown as boxes at the top of this program. It does not change what the app suggests next.'
+        : 'Optional. Lay this program out over a week, or over a cycle that repeats.' }),
     )];
 
     if (plan && plan.kind === CYCLE) {
@@ -2727,7 +2745,7 @@ async function SystemEditorView(id) {
     if (plan) {
       parts.push(!workouts.length
         ? el('div', { class: 'field-help', text:
-            'This system has no workouts yet, so every day can only be Rest. '
+            'This program has no workouts yet, so every day can only be Rest. '
             + 'Add a workout and come back.' })
         : null);
       parts.push(planRows);
@@ -2768,9 +2786,9 @@ async function SystemEditorView(id) {
   if (!isNew) renderPlanEditor();
 
   async function save() {
-    if (!draft.name.trim()) { toast('Give your system a name first'); nameInput.focus(); return; }
+    if (!draft.name.trim()) { toast('Give your program a name first'); nameInput.focus(); return; }
     const saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
-    toast(isNew ? 'System created' : 'System saved');
+    toast(isNew ? 'Program created' : 'Program saved');
     // Both cases now land on the system itself. Saving an EXISTING one used to
     // drop you back on the top-level list, which was the right escape from a
     // screen that was only a form; from an editor reached by a pencil it throws
@@ -2780,13 +2798,13 @@ async function SystemEditorView(id) {
 
   function remove() {
     confirmSheet({
-      title: 'Delete this system?',
+      title: 'Delete this program?',
       message: workouts.length
         ? `${plural(workouts.length, 'workout')} inside it will be deleted too. `
           + 'Workouts you have already recorded stay in your history and on your calendar — '
           + 'only the templates go.'
         : 'It has no workouts in it.',
-      onConfirm: async () => { await store.deleteSystem(draft.id); toast('System deleted'); go('#/workouts'); },
+      onConfirm: async () => { await store.deleteSystem(draft.id); toast('Program deleted'); go('#/workouts'); },
     });
   }
 
@@ -2796,10 +2814,10 @@ async function SystemEditorView(id) {
   // you have to travel to reach it, rather than sitting under the thumb of
   // somebody who came here to rename something.
   return screenShell({
-    title: isNew ? 'New system' : 'Edit system',
+    title: isNew ? 'New program' : 'Edit program',
     back: () => go(isNew ? '#/workouts' : '#/system/' + id),
     scroll: [
-      el('div', { class: 'field' }, el('label', { text: 'System name' }), nameInput),
+      el('div', { class: 'field' }, el('label', { text: 'Program name' }), nameInput),
       el('div', { class: 'field' }, el('label', { text: 'Notes' }), notesInput),
       // Below the name and the notes, above the danger zone. A plan is a thing
       // about the programme rather than a thing that identifies it, and it must
@@ -2808,15 +2826,15 @@ async function SystemEditorView(id) {
       isNew
         ? el('div', { class: 'field-help', text: 'Name it first, then you can add workouts to it.' })
         : el('div', { class: 'danger-zone' },
-            el('button', { class: 'btn danger block', text: 'Delete system', onClick: remove }),
+            el('button', { class: 'btn danger block', text: 'Delete program', onClick: remove }),
             el('div', { class: 'field-help', text: workouts.length
-              ? `Deletes this programme and ${plural(workouts.length, 'workout')} inside it. `
+              ? `Deletes this program and ${plural(workouts.length, 'workout')} inside it. `
                 + 'Workouts you have already recorded stay in your history.'
               : 'It has no workouts in it.' }),
           ),
     ],
     bottom: el('button', {
-      class: 'btn primary block', text: isNew ? 'Create system' : 'Save changes', onClick: save,
+      class: 'btn primary block', text: isNew ? 'Create program' : 'Save changes', onClick: save,
     }),
   });
 }

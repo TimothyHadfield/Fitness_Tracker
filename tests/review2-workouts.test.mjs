@@ -79,9 +79,9 @@ await safe('added panel', async () => {
   await store.setCurrentSystem(mine.id);
 
   let screen = await mount(views.ExploreDetailView(NIPPARD.id));
-  buttons(screen).find((b) => b.textContent.trim() === 'Add to my systems').click();
+  buttons(screen).find((b) => b.textContent.trim() === 'Add to my programs').click();
   for (let i = 0; i < 12; i++) await settle();
-  ok(![...document.querySelectorAll('.toast')].some((t) => /Added to your systems/.test(t.textContent)),
+  ok(![...document.querySelectorAll('.toast')].some((t) => /Added to your programs/.test(t.textContent)),
      '1a: no toast repeating the panel heading');
 
   screen = await mount(views.ExploreDetailView(NIPPARD.id));
@@ -91,12 +91,12 @@ await safe('added panel', async () => {
   const bb = buttons(bottom);
   ok(bb[0] && bb[0].classList.contains('primary') && /^Start Push 1$/.test(txt(bb[0])),
      `1b: the main pinned button is "Start Push 1" (got "${txt(bb[0])}")`);
-  ok(bb.some((b) => /Make it my current programme/.test(b.textContent)),
-     '1c: "Make it my current programme" is still pinned');
-  ok(!/Add another copy|Remove from my systems|Open it/.test(txt(bottom)),
+  ok(bb.some((b) => /Make it my current program/.test(b.textContent)),
+     '1c: "Make it my current program" is still pinned');
+  ok(!/Add another copy|Remove from my programs|Open it/.test(txt(bottom)),
      `1d: Add another copy, Open it and Remove left the pinned bottom (bottom: "${txt(bottom)}")`);
   const scroll = screen.querySelector('.pane-scroll');
-  const remove = buttons(scroll).find((b) => /Remove from my systems/.test(b.textContent));
+  const remove = buttons(scroll).find((b) => /Remove from my programs/.test(b.textContent));
   ok(Boolean(remove) && !remove.classList.contains('primary'),
      '1e: Remove is in the page content and is not a primary button');
   ok(buttons(scroll).some((b) => /Add another copy/.test(b.textContent)), '1f: Add another copy is in the content');
@@ -258,6 +258,36 @@ await safe('plans', async () => {
      `6e: adding Bumstead copies the plan with the new workout ids (got ${JSON.stringify(got)})`);
   const screen = await mount(views.SystemRouteView(system.id));
   ok(Boolean(screen.querySelector('.plan-grid')), '6f: and the boxes show on the copy');
+});
+
+/* ============ 7. the checker shows two lines, then "N more" ============ */
+// 2026-09-24 wording pass: five findings on one program was too wordy. The two
+// most important lines show (a 'warn' before a 'note'); the rest fold into a
+// small "N more" that opens downward, in place.
+await safe('lint cap', async () => {
+  clearSheets();
+  await store.clearAll();
+  const { SESSION_CEILING } = await import(BASE + 'volume-map.js');
+  const sys = await store.saveSystem({ name: 'Wordy' });
+  const days = [
+    ['Barbell Bench Press', 12], ['Back Squat', 12], ['Barbell Curl', 12],
+    ['Overhead Press', 12], ['Barbell Row', SESSION_CEILING + 2],
+  ];
+  for (const [n, sets] of days) {
+    await store.saveWorkout({ name: n, systemId: sys.id, exercises: [{ exerciseId: byName(n).id, sets }] });
+  }
+  const screen = await mount(views.SystemRouteView(sys.id));
+  const box = screen.querySelector('.lint-notes');
+  const all = box ? [...box.querySelectorAll('.lint-line')] : [];
+  const shown = box ? [...box.children].filter((c) => c.classList.contains('lint-line')) : [];
+  ok(all.length >= 5, `7a: the fixture really has 5+ findings (got ${all.length})`);
+  ok(shown.length === 2, `7b: only 2 lines show before "more" (got ${shown.length})`);
+  ok(shown[0] && shown[0].classList.contains('is-warn'), '7c: the warning comes first');
+  const more = box && box.querySelector('details > summary');
+  ok(more && txt(more) === `${all.length - 2} more`, `7d: a "${all.length - 2} more" control (got "${txt(more)}")`);
+  ok(more && !more.parentNode.open, '7e: closed until tapped');
+  ok(more && more.parentNode.parentNode === box && box.lastElementChild === more.parentNode,
+     '7f: it sits at the end of the lines, so opening it only grows downward');
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

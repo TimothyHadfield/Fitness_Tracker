@@ -95,7 +95,7 @@ function needsProfile(profile) {
     // breath. One 28-word sentence became two.
     `A goal is a strength level, and a level needs your ${profile.missing.join(' and ')}. `
     + 'Every standard is a ratio to body weight, and they differ between men and women.',
-    el('a', { class: 'btn primary', href: '#/profile', text: 'Open profile' }),
+    el('a', { class: 'btn primary', href: '#/profile', text: 'Open Body details' }),
   );
 }
 
@@ -448,7 +448,7 @@ function staleNotice(goal, profile) {
           onClick: () => refreezeSheet(goal, next),
         })
       : el('div', { class: 'field-help', text:
-          'The target cannot be recomputed until your profile has a sex and a body weight.' }),
+          'The target cannot be recomputed until Body details has a gender and a body weight.' }),
   );
 }
 
@@ -1041,7 +1041,7 @@ function moreRows() {
     ),
     el('button', { class: 'row', onClick: () => go('#/goal/systems') },
       el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: 'Programmes that fit this goal' }),
+        el('div', { class: 'row-title', text: 'Programs that fit this goal' }),
         el('div', { class: 'row-sub wrap', text:
           'Sorted by what they actually give this muscle, not by their headline rating.' }),
       ),
@@ -1382,7 +1382,7 @@ function noGoal() {
 async function GoalSystemsView() {
   const { profile, goal } = await context();
   if (!goal) {
-    return screenShell({ title: 'Programmes', back: () => go('#/goals'), scroll: noGoal() });
+    return screenShell({ title: 'Programs', back: () => go('#/goals'), scroll: noGoal() });
   }
 
   const req = requirementsFor(goal.ambition, { bodyWeight: profile.bodyWeight });
@@ -1390,7 +1390,7 @@ async function GoalSystemsView() {
   const ranked = rankSystems(rows, req.sets);
 
   return screenShell({
-    title: 'Programmes that fit',
+    title: 'Programs that fit',
     sub: `${goal.muscle} · ${req.sets[0]}–${req.sets[1]} sets a week`,
     back: () => go('#/goals'),
     scroll: [
@@ -1402,7 +1402,7 @@ async function GoalSystemsView() {
         el('span', { class: 'field-help', text:
           `Sorted by hard sets for ${goal.muscle} a week, against the `
           + `${req.sets[0]}–${req.sets[1]} this goal asks for.` }),
-        helpDot('A programme with a high overall rating is the wrong answer if it barely trains '
+        helpDot('A program with a high overall rating is the wrong answer if it barely trains '
           + 'the muscle you care about.', { label: 'Why not the headline rating' })),
 
       el('div', { class: 'list' }, ranked.map((r) => systemRow(r, goal))),
@@ -1417,7 +1417,7 @@ async function GoalSystemsView() {
       el('div', { class: 'field-help', text: INDIRECT_NOTE_SETS }),
       el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
       el('div', { class: 'field-help', text:
-        'Adding a programme copies it into your systems. It never changes a goal, and it never '
+        'Adding a program copies it into your programs. It never changes a goal, and it never '
         + 'changes any weight you have recorded.' }),
     ],
   });

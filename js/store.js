@@ -908,7 +908,7 @@ export function normalizeSystem(sys) {
   const plan = normalizeSchedule(schedule);
   return {
     ...rest,
-    name: (sys.name || '').trim() || 'Untitled system',
+    name: (sys.name || '').trim() || 'Untitled program',
     notes: sys.notes || '',
     ...(plan ? { schedule: plan } : {}),
   };
@@ -1392,13 +1392,13 @@ export const store = {
   async restorePresetWorkouts(systemId) {
     const system = await this.getSystem(systemId);
     if (!system || !system.presetId) {
-      throw new Error('This programme was not copied from a ready-made one.');
+      throw new Error('This program was not copied from a ready-made one.');
     }
     const inside = (await backend.read('workouts')).filter((w) => w.systemId === systemId);
-    if (inside.length) throw new Error('This programme already has workouts in it.');
+    if (inside.length) throw new Error('This program already has workouts in it.');
     const { presetById } = await import('./preset-systems.js');
     const preset = presetById(system.presetId);
-    if (!preset) throw new Error('The ready-made programme it came from no longer exists.');
+    if (!preset) throw new Error('The ready-made program it came from no longer exists.');
     return this.copyPresetWorkouts(preset, systemId);
   },
 
@@ -1439,7 +1439,7 @@ export const store = {
   async applyPresetUpdate(systemId) {
     const [systems, allWorkouts] = await Promise.all([this.getSystems(), this.getWorkouts()]);
     const system = systems.find((s) => s.id === systemId);
-    if (!system) throw new Error('No such system');
+    if (!system) throw new Error('No such program');
     const plan = await this.presetUpdateFor(system, allWorkouts);
     if (!plan) return { changed: 0, created: 0, left: 0 };
 

@@ -67,7 +67,7 @@ export function agoWords(days) {
  */
 export function describeSuggestion(s) {
   if (!s) return '';
-  const where = s.system && s.system.name ? s.system.name : 'your programme';
+  const where = s.system && s.system.name ? s.system.name : 'your program';
 
   if (s.isStart) return `First workout in ${where}.`;
   if (s.trainedToday) return `You already did ${s.lastName} today — this is next when you are ready.`;

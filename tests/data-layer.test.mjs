@@ -5513,7 +5513,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 
   /* ---- names ---- */
   const blank = await st.saveSystem({ name: '   ' });
-  ok((await st.getSystem(blank.id)).name === 'Untitled system',
+  ok((await st.getSystem(blank.id)).name === 'Untitled program',
      'a blank name falls back rather than rendering as an empty row');
 
   /* ---- deleting a system takes its workouts, but never history ---- */
@@ -5835,7 +5835,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * next person to write a system by copying an existing one.
    */
   const DEFAULT_WARNING = 'Not official. Transcribed from published write-ups of the free videos, '
-    + 'not from the author or their paid programme. Sets and reps are as reported — '
+    + 'not from the author or their paid program. Sets and reps are as reported — '
     + 'check the source before you trust a number.';
   const onScreenWarning = (p) => (p.unofficial ? (p.warning || DEFAULT_WARNING) : (p.warning || ''));
 
