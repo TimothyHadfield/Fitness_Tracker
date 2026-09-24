@@ -2808,6 +2808,8 @@ export function rateMuscle(observations, muscle = null) {
    *    What is true and worth keeping: the number STEPS when a set ages out of
    *    the window rather than declining, and `strength-estimate.js` holds the
    *    2 %/week limit fitted and tested against exactly that.
+   *    🔄 2026-09-23: that limit is now applied per exercise on top of this
+   *    seat rule — see `fadedPast()` below. No hysteresis was added.
    *
    * 2. ⚠️ HEAVY SETS FIRST, NOT LONG ONES (decision i). Where an exercise has
    *    any set at LOW_REP_PREFERENCE reps or fewer inside the chosen window,
@@ -2893,6 +2895,41 @@ export function rateMuscle(observations, muscle = null) {
     || (prev.ageDays - o.ageDays)
     || String(prev.date || '').localeCompare(String(o.date || ''));
 
+  /* 🆕 2026-09-23 — THE SMOOTH FADE (Open work 2). Tim: *"Fading smoothly is
+   * better."* The number used to STEP when a strong set aged out of the window
+   * (measured on the demo through a layoff: up to 3.7 % in one day). Now each
+   * exercise's reading may fall no faster than `DEFAULTS.fallLimitPerWeek`
+   * (2 %/week, the limit `estimateAt()` was fitted with): the same seat-and-pool
+   * rule is replayed as it stood `a0` days ago — only the days that existed
+   * then, the window measured from then — and that reading, decayed by
+   * (1 − 2 %)^(a0/7), is a floor under today's. Replayed back to WIDEN_DAYS,
+   * past which the decay has already taken 40 %.
+   *
+   * ⚠️ RECENCY NEEDS NO RE-AGEING. Shifting every day back by a0 multiplies
+   * every recency weight in one exercise by the same 2^(a0/120), which changes
+   * neither the seat comparison's winner nor the pooled weighted average — so
+   * the rows are reused as they are, only filtered. */
+  const fadedPast = (rows, today) => {
+    const keep = 1 - DEFAULTS.fallLimitPerWeek;
+    let best = 0;
+    for (let a0 = 1; a0 <= WIDEN_DAYS; a0++) {
+      const decay = Math.pow(keep, a0 / 7);
+      const then = rows.filter((o) => o.ageDays >= a0);
+      if (!then.length) break;
+      // Past this point even a perfect reading could not beat today's.
+      if (today > 0 && Math.max(...then.map((o) => o.estimate)) * decay <= today) continue;
+      let newestThen = Infinity;
+      for (const o of scored) if (o.ageDays >= a0 && o.ageDays < newestThen) newestThen = o.ageDays;
+      const cut = (newestThen - a0) + WINDOW_DAYS <= WIDEN_DAYS ? WINDOW_DAYS : WIDEN_DAYS;
+      const inWin = then.filter((o) => o.ageDays - a0 <= cut);
+      const pool = dominate(inWin.length ? inWin : then);
+      let seat = null;
+      for (const o of pool) if (!seat || better(o, seat) > 0) seat = o;
+      if (seat) best = Math.max(best, poolExercise(seat, pool).value * decay);
+    }
+    return best;
+  };
+
   const perExercise = new Map();
   for (const o of scored) {
     const key = o.exerciseId;
@@ -2926,7 +2963,9 @@ export function rateMuscle(observations, muscle = null) {
     for (const o of field) if (!best || better(o, best) > 0) best = o;
     if (best) {
       representatives.push(best);
-      pooledOf.set(best, poolExercise(best, pool));
+      const p = poolExercise(best, pool);
+      p.value = Math.max(p.value, fadedPast(b.all, p.value));
+      pooledOf.set(best, p);
     }
   }
 

@@ -3083,6 +3083,19 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * down slightly. Holding σ fixed moves none of them, so it is the estimates
    * agreeing, not the σ change. Every observation and contributor count is
    * unchanged — this converts the same sets differently, it admits none. */
+  /* 🔄 RE-BASELINED 2026-09-23, ON ITS OWN — THE SMOOTH FADE (Open work 2).
+   * Tim: *"Fading smoothly is better."* Each exercise's reading may now fall no
+   * faster than 2 %/week (`fadedPast()` in rateMuscle), so it can only RISE
+   * against the old step rule, and only where a stronger reading aged out:
+   *
+   *   Hamstrings 261.14 -> 262.13  +0.4 %  a stronger stretch of one exercise
+   *                                        left the window and is fading, not gone
+   *   Quads      287.27 -> 287.53  +0.1 %  the same
+   *   every other muscle             0
+   *
+   * Confidence and every count are unchanged: the fade moves the pooled VALUE
+   * only. Measured through a 200-day layoff on the demo: the worst one-day drop
+   * fell from 3.7 % (Shoulders) to 1.7 %, and to ≤ 0.3 % for every other muscle. */
   const GOLDEN = [
     ['Back', 720, 190.4488, 0.7899, 212, 4],
     ['Biceps', 904, 110.7546, 0.8049, 125, 2],
@@ -3091,14 +3104,14 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ['Core', 66, 124.1868, 0.2800, 22, 1],
     ['Forearms', 904, 105.2254, 0.5777, 273, 5],
     ['Glutes', 630, 353.4013, 0.8587, 64, 1],
-    ['Hamstrings', 882, 261.1418, 0.8954, 146, 3],
+    ['Hamstrings', 882, 262.1308, 0.8954, 146, 3],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is
     // thin, not your training". That is `standardQuality` 0.4 doing exactly what
     // it is for, and it is the honest shape of a page whose Elite is 38.8x its
     // Beginner.
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
-    ['Quads', 571, 287.2657, 0.9424, 171, 4],
+    ['Quads', 571, 287.5293, 0.9424, 171, 4],
     ['Shoulders', 1093, 142.3222, 0.7976, 192, 4],
     ['Traps', 529, 301.8867, 0.5618, 148, 3],
     ['Triceps', 1100, 182.0321, 0.5761, 125, 2],
@@ -4541,6 +4554,29 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ]);
   ok(oneDay.contributorCount === 1, 'three sets of one exercise on one day are one observation');
   ok(near(oneDay.estimate, 120, 1e-9), 'and it is the best of them');
+
+  /* 🆕 2026-09-23 — THE SMOOTH FADE. Tim: *"Fading smoothly is better."* A 250
+   * from 88 days ago is outside the 84-day window; the only other day is a 200
+   * from yesterday. It used to vanish outright (200). Two days ago — before
+   * yesterday's set — it was the only reading and counted in full, so it now
+   * fades from there: 250 × 0.98^(2/7). The same rule as `estimateAt()`: rise
+   * readily, fall reluctantly. */
+  {
+    const faded = me.rateMuscle([
+      obs({ estimate: 250, ageDays: 88, date: '2026-05-27', exerciseId: 'f' }),
+      obs({ estimate: 200, ageDays: 1, date: '2026-08-22', exerciseId: 'f' }),
+    ]);
+    ok(near(faded.estimate, 250 * Math.pow(0.98, 2 / 7), 1e-6),
+       `🆕 a strong set that left the window fades at 2 %/week instead of dropping out (${faded.estimate.toFixed(1)})`);
+    // Back for 110 days now, training every month at 200: the 250 has faded below.
+    const later = me.rateMuscle([
+      obs({ estimate: 250, ageDays: 200, date: '2026-02-04', exerciseId: 'f' }),
+      ...[110, 80, 50, 20].map((a) => obs({ estimate: 200, ageDays: a, date: `d${a}`, exerciseId: 'f' })),
+      obs({ estimate: 200, ageDays: 1, date: '2026-08-22', exerciseId: 'f' }),
+    ]);
+    ok(near(later.estimate, 200, 1e-9),
+       `and sixteen weeks after the lighter sets began, they have taken over (${later.estimate.toFixed(1)})`);
+  }
 
   /* ================================================================== *
    * ⚠️ CREDIBILITY, NOT SIZE — the bug the demo account exposed
