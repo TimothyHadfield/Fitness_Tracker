@@ -240,7 +240,11 @@ export async function SessionView(workoutId) {
       import('./e1rm.js'),
     ]);
     const bw = await store.latestBodyWeight().catch(() => null);
-    derivCtx = { muscles, ev, e1, bodyWeight: bw ? bw.weight : undefined };
+    const profile = await store.getProfile().catch(() => null);
+    derivCtx = {
+      muscles, ev, e1, bodyWeight: bw ? bw.weight : undefined,
+      sex: profile && profile.gender ? profile.gender : undefined,
+    };
   } catch (_) { /* no estimate is a quieter screen, never an error */ }
 
   function deriveOpening(ex) {
@@ -248,11 +252,11 @@ export async function SessionView(workoutId) {
     if (derivedWeights.has(ex.id)) return derivedWeights.get(ex.id);
     if (openingWithheld.has(ex.id)) return null;
     if (!Array.isArray(ex.fields) || !ex.fields.includes('weight')) return null;
-    const { muscles, ev, e1, bodyWeight } = derivCtx;
+    const { muscles, ev, e1, bodyWeight, sex } = derivCtx;
     const decline = () => { openingWithheld.add(ex.id); return null; };
     let best;
     try {
-      const contribs = ev.contributionsFor(ex, { bodyWeight });
+      const contribs = ev.contributionsFor(ex, { bodyWeight, sex });
       best = contribs
         .filter((c) => c.kind === 'direct' && c.quality >= ev.FALLBACK_MIN_QUALITY)
         .sort((a, b) => b.quality - a.quality)[0];
@@ -1768,6 +1772,8 @@ export async function SessionView(workoutId) {
   const ratingsByPerson = new Map();   // name (null → '') → Promise<Map|null>
   const ratingsReady = new Map();      // the same key → the resolved Map
   const personKey = (name) => (name == null ? '' : String(name));
+  let ownerSex = null;
+  store.getProfile().then((p) => { ownerSex = (p && p.gender) || null; }).catch(() => {});
   function ratingsFor(name) {
     const key = personKey(name);
     if (!ratingsByPerson.has(key)) {
@@ -2312,7 +2318,11 @@ export async function SessionView(workoutId) {
        * "from your 215 x 3" and "from your other lifts" are never confused. */
       const rows = historyReady.get(personKey(state.forName));
       const own = rows ? ownBestSet(ex, rows, state.date) : null;
-      const est = ratings ? estimateOneRM(ex, ratings, state.bodyWeight) : null;
+      // Only the owner's gender is known; a guest's ratings stay sex-unknown.
+      const est = ratings
+        ? estimateOneRM(ex, ratings, state.bodyWeight,
+          state.forName == null && ownerSex ? { sex: ownerSex } : undefined)
+        : null;
       const oneRM = own && own.e1rm > 0 ? own.e1rm : (est ? est.oneRM : 0);
       const fromOwn = Boolean(own && own.e1rm > 0);
       const w = Number(target.weight) || 0;
@@ -4832,9 +4842,12 @@ export async function BenchmarkView() {
    * nothing about their back, which it plainly did. */
   const ratingsReady = Promise.all([
     muscleRatings(), store.latestBodyWeight().catch(() => null),
-  ]).then(([rated, bw]) => {
+    store.getProfile().catch(() => null),
+  ]).then(([rated, bw, profile]) => {
     muscles = rated;
     bodyWeight = bw ? bw.weight : null;
+    // The profile's gender picks the male or female ratio table; unknown averages the two.
+    if (profile && profile.gender) ESTIMATE_OPTS.sex = profile.gender;
   }).catch(() => { /* no estimate is a quieter screen, never an error */ });
 
   // What the app thinks this lift is worth, before a single number is typed.

@@ -210,5 +210,42 @@ const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
      + 'curve, so a benchmark screen and a session runner cannot disagree about the same lift');
 }
 
+/* ---------- the profile's sex reaches the ratio table ----------
+ *
+ * 🚨 D31 (2026-09-14): about a quarter of the conversion ratios are a { m, f }
+ * pair — a woman's pull-up is 1.64 of her barbell row where a man's is 1.28.
+ * `muscleStrength()` builds the rating with the profile's sex, so converting it
+ * back out without the sex used the no-sex MEAN of the pair and landed a woman's
+ * pull-up estimate low and a man's high. `opts.sex` must reach contributionsFor().
+ */
+{
+  const { contributionsFor, fromKeyLift } = await import('../js/muscle-evidence.js');
+  const back = new Map([['Back', {
+    estimate: 150, confidence: 0.8, kind: 'direct',
+    contributors: [{ exerciseName: 'Barbell Row' }], exerciseCount: 1,
+  }]]);
+  const expected = (name, bw, sex) => {
+    const c = contributionsFor(byName(name), sex ? { bodyWeight: bw, sex } : { bodyWeight: bw })
+      .filter((x) => x.kind === 'direct' && x.ratio > 0 && x.quality > 0)
+      .sort((a, b) => b.quality - a.quality)[0];
+    return fromKeyLift(c, 150);
+  };
+  const m = estimateOneRM(byName('Pull-Up'), back, 180, { sex: 'male' });
+  const f = estimateOneRM(byName('Pull-Up'), back, 180, { sex: 'female' });
+  const u = estimateOneRM(byName('Pull-Up'), back, 180);
+  ok(m && near(m.oneRM, expected('Pull-Up', 180, 'male'), 0.5),
+     `a man's pull-up converts through the male ratio (${m && m.oneRM.toFixed(1)} vs `
+     + `${expected('Pull-Up', 180, 'male').toFixed(1)})`);
+  ok(f && near(f.oneRM, expected('Pull-Up', 180, 'female'), 0.5),
+     `🚨 a woman's pull-up converts through the female ratio (${f && f.oneRM.toFixed(1)} vs `
+     + `${expected('Pull-Up', 180, 'female').toFixed(1)})`);
+  ok(m && f && f.oneRM > m.oneRM,
+     'and the two differ in the direction the table says (1.64 against 1.28)');
+  ok(u && near(u.oneRM, expected('Pull-Up', 180, null), 0.5),
+     'an unknown sex keeps the old behaviour — the mean of the pair');
+  ok(estimateOneRM(byName('Barbell Row'), back, undefined, { sex: 'female' }).oneRM === 150,
+     'a sex-neutral key lift is untouched by it');
+}
+
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

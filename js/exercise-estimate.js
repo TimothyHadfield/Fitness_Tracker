@@ -153,6 +153,8 @@ import { typoQuarantine } from './personal-bests.js';
  *   itself a stand-in convert outward. ⚠️ OPT-IN, BY ONE CALLER, ON A READ-ONLY
  *   SCREEN — see the header. Anything that puts a weight in a field somebody
  *   loads must leave this alone.
+ * @param {string} [opts.sex]  'male' | 'female' — the profile's; picks the
+ *   sex's side of a paired ratio. Anything else → the mean of the pair.
  *
  * @returns {null | {
  *   oneRM: number,        // TOTAL load, pounds — both dumbbells, body included
@@ -174,9 +176,17 @@ export function estimateOneRM(exercise, muscles, bodyWeight, opts) {
   if (!exercise || !muscles) return null;
   if (!Array.isArray(exercise.fields) || !exercise.fields.includes('weight')) return null;
 
+  /* ⚠️ THE SEX GOES THROUGH (2026-09-24). About a quarter of the ratios are a
+   * { m, f } pair (D31) and `muscleStrength()` built the rating with the
+   * profile's sex, so converting back without it used the no-sex mean — a
+   * woman's pull-up came out low, a man's high. Unknown sex → the mean, as before. */
+  const sex = opts && (opts.sex === 'male' || opts.sex === 'female') ? opts.sex : null;
+  const copts = {};
+  if (bodyWeight > 0) copts.bodyWeight = bodyWeight;
+  if (sex) copts.sex = sex;
   const contribs = contributionsFor(
     exercise,
-    bodyWeight > 0 ? { bodyWeight } : undefined,
+    Object.keys(copts).length ? copts : undefined,
   );
 
   /* ⚠️ DIRECT ONLY, AND THE BEST-QUALITY DIRECT ONE. An exercise can train two
