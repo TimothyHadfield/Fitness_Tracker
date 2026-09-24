@@ -1,7 +1,8 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-21/22 — **the newest work in these files, despite the earlier number**: the
+_Last updated 2026-09-23 (Finished/Edit, warm-ups, notes, typo warning, at-least, smooth fade all
+shipped; Authorized list below is fully done). Older note: the
 headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
 system clock now reads 2026-09-22). Read `chat.md` bottom-up when the dates disagree; git is the
 tie-breaker. For Claude only; Tim doesn't read this.
@@ -22,8 +23,8 @@ he hits in real training and building what he names (lately Home/notifications a
 
 ## Status
 
-**Live and working** (details per screen in `docs/state.md`): logging runner with set types, set
-lock, per-person joint workouts, rep prescriptions and % targets · programmes (current system,
+**Live and working** (details per screen in `docs/state.md`): logging runner with set types,
+Finished/Edit per set, warm-up sets, how-to-count notes, a live typo warning, per-person joint workouts, rep prescriptions and % targets · programmes (current system,
 presets from Explore with update tracking, weekly/cycle plan boxes, restore for an empty copy) ·
 Data (muscle map with 13 ranked groups incl. Calves/Neck/Core, Volume, Graph, Bars, Research) ·
 Profile (`#/me`: best lifts, body, goal, calendar, workouts as feed cards) · friends feed with
@@ -36,15 +37,15 @@ first users stop being new).
 
 | # | What | Needs from Tim |
 |---|---|---|
-| 1 | Typo quarantine is muscle-wide: a genuine first heavy test on a lightly-worked muscle is held one session (kept at 1.99×, set aside at 2.01×) | a decision — the error runs both ways |
-| 2 | Fall limit: the 84-day window shipped; wiring `estimateAt()` would smooth it but moves every rating | a decision + re-baseline |
+| 1 | ✅ closed 2026-09-23 (28a0b94) — the quarantine stays; the runner now WARNS live: weight ≥ 1.5× the estimated max shows "N× your estimated max — typo?" in red under the weight (`TYPO_WARN_RATIO`, views-session.js) | — |
+| 2 | ✅ closed 2026-09-23 (40da5bc) — `fadedPast()` in rateMuscle: each exercise's pooled value is floored by its own replay a0 days ago × 0.98^(a0/7) (estimateAt's fall limit). Demo: worst one-day layoff drop 3.7 % → 1.7 % (Shoulders; blend-weight shifts, not per-exercise), ≤0.3 % elsewhere; golden Hamstrings +0.4 %, Quads +0.1 %. No hysteresis | — |
 | 3 | ✅ closed 2026-09-23 — wired: own rated panel shows "Trained today — a reading today usually comes in a little low." (never on a friend's) | — |
 | 4 | ✅ closed 2026-09-23 — the unreachable 15-rep caption and its ? are deleted | — |
 | 5 | ✅ closed 2026-09-23 — Goals % is derived from the start/target on screen (`gainPct` only a fallback); the ambition name stays frozen, so "Steady +11%" can read | — |
 | 6 | An ordinary lifter flaps MORE than one on a level boundary (0.75 vs 0.19), contrary to the comment | an answer, not a fix |
 | 7 | ✅ closed 2026-09-23 — a plan set carries `fromPlan`; `setIsRecorded()` (session-draft.js) counts it untouched, so save, save-screen count and discard warnings agree. Opening another workout over an untouched plan draft now asks first | — |
 | 8 | Benchmark workouts in a separate programme no longer appear on Record; the switcher has no "look without switching" | his word |
-| 9 | Should a high-rep set count as a floor ("at LEAST 131")? Reverses the fatigue-plan §4 refusal | his word — only as a separate "at least X" reading |
+| 9 | ✅ closed 2026-09-23 (6ad7b6c) — `atLeastOf()` → `rating.atLeast` → store → panel note "Estimated 1-rep max in X · at least N lbs". Best recent (≤84 d) listed set × e^(−2·readingSigma); hidden unless it rounds below the estimate. Estimate itself unchanged | — |
 | 10 | ✅ closed 2026-09-23 (f29164f) — every exercise pools its top 3 days (`poolExercise()`), weight capped at one reading per exercise (shared ratio error), days below seat/(1+winsorK) excluded. Demo moves ≤ +4.1 % (Back); Calves −0.8 %. Confidence still reads the 3 listed rows; listed shares can sum < 100 % | — |
 | 11 | ✅ closed 2026-09-23 (a `whose: 'their'` panel offers no benchmark button) | — |
 | 12 | ✅ closed (neck ranks) | — |
@@ -60,8 +61,7 @@ first users stop being new).
 | 0i | Body-map touch targets under 44 px land on his illustration | his call |
 | 8 | Estimator Phases 1–3 (the Goals verdict waits on it); §6.1 hard constraint, §14 question | his answers |
 
-**Flagged to Tim, unchanged:** fill-on-open meets the set lock (a copied set 2 locks when you go back);
-the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
+**Flagged to Tim, unchanged:** the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
 the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
 "Nothing to rank yet" and no figure; a neck panel runs 70 words against the 40-word cap; `.body-wrap`
 letterboxes the two figures differently on a phone.
@@ -255,6 +255,11 @@ can check._
 - File import has never parsed a real export from any service.
 - No preset has been version-bumped for real; the stamped update path has only run in tests.
 - The live read pattern (Open work 26) was measured on 3–4 sessions, not a training history.
+- Smooth fade (2026-09-23): measured only on the demo year + a synthetic layoff. Reasoned, untested
+  on real data: after a break of more than 84 days the old number slides 2 %/week instead of dropping
+  at the first lighter session (same as `estimateAt()`); no hysteresis, so level-boundary flapping is
+  unmeasured under it.
+- "At least X" uses 2σ of `readingSigma()` (~98 % one-sided) — never checked against real attempts.
 
 ## Rejected / parked
 - **Parked 2026-09-23 at Tim's word — DO NOT ASK ABOUT THESE AGAIN:** ~~famous-lifter retry (was Open

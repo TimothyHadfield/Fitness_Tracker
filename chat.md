@@ -839,3 +839,19 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   clock in accent, Duration box visible without scrolling on the save screen).
 - **Open:** glutes fix = Open work 35 (reverses "direct decides"; his call) · lock ideas = Open work 36
   · worktrees still broken by OneDrive (`git worktree add` → "Could not reset index file").
+
+## 2026-09-23 (third pass) · Finished/Edit, warm-ups, notes, rating tweaks
+- **Asked:** replace the lock with a Finished/Edit button · build warm-up sets, clearly different ·
+  3–4-word notes where counting is unclear · typo warning · smooth fade · "at least X" · park famous
+  lifters, accuracy check, friend's sign-in for good. Glutes: "Leave it".
+- **Decided (question box):** Smith = plates only · alternating curls = reps per arm · sleds = plates only.
+- **Built:** Finished/Edit (5d4ae4c) · warm-ups (250e7f0) · how-to-count notes (0dc9003) · live typo
+  warning at ≥1.5× max (28a0b94) · "at least X" in the muscle panel note (6ad7b6c) · smooth fade,
+  2 %/week per exercise, golden re-baselined Hamstrings +0.4 % / Quads +0.1 % (40da5bc).
+- **Verified how:** each new test seen failing against the unfixed code; full no-Chrome suite 0
+  failures before every commit; WebKit screenshots at 393 px and 1440 px (runner rows, warm-ups,
+  notes, panel "· at least 202 lbs" on one line, no overflow); fade measured with a 200-day layoff
+  replay on the demo (worst one-day drop 3.7 % → 1.7 %).
+- **Open:** my calls flagged to Tim — finishing the open set opens the next; warm-ups have no
+  Finished, hidden in supersets, not in history yet; pull-up/dip weight label "added"; typo at 1.5×;
+  after a long break the number slides down 2 %/week.
