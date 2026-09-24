@@ -1269,8 +1269,23 @@ export function stepper({ field, value, onChange, suffix, exercise }) {
     if (!silent) onChange(outbound(current));
   }
 
+  /* ⚠️ A WEIGHT OFF THE STEP GRID SNAPS BACK ONTO IT FIRST — 2026-09-24. Adding
+   * the step to 111.1 kg gave 113.6, 116.1… and never a loadable number again,
+   * so the plate line vanished for good. The first press now goes to the next
+   * multiple of the step in the direction pressed (111.1 → 112.5), and later
+   * presses step from there. A typed value is untouched until ± is pressed. */
   function bump(dir) {
-    set(current + dir * step);
+    if (isWeight) {
+      // "On the grid" within half a display decimal, because kilograms come
+      // back from pounds as 59.9999… and must not read as off it.
+      const q = current / step;
+      const r = Math.round(q);
+      set(Math.abs(current - r * step) < 0.05
+        ? (r + dir) * step
+        : (dir > 0 ? Math.ceil(q) : Math.floor(q)) * step);
+    } else {
+      set(current + dir * step);
+    }
     if (navigator.vibrate) navigator.vibrate(8);
   }
 

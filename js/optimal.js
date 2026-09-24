@@ -447,13 +447,13 @@ export function explain(score) {
  * ------------------------------------------------------------------ */
 
 export const STRENGTH_CAVEAT_SHORT =
-  'How much work a programme does, not how heavy it is. This app stores a set count, not a weight '
-  + 'or a rep range — so 3 sets of 20 and 3 sets of 5 score the same here, and for strength they '
+  'How much work a programme does, not how heavy it is. The score counts sets and does not read '
+  + 'their rep targets — so 3 sets of 20 and 3 sets of 5 score the same here, and for strength they '
   + 'are not the same.';
 
 export const STRENGTH_CAVEAT =
-  'What the strength score cannot see: how heavy the sets are. A workout here stores a number of '
-  + 'sets, not a weight or a rep range, so a programme of 3 sets of 20 and a programme of 3 sets '
+  'What the strength score cannot see: how heavy the sets are. The score counts sets and does not '
+  + 'read their rep targets, so a programme of 3 sets of 20 and a programme of 3 sets '
   + 'of 5 get the same strength percentage. They are not the same — training at about 8 reps or '
   + 'fewer builds clearly more strength than lighter work does, and that difference is bigger than '
   + 'anything this score does measure. The growth percentage is not affected: for muscle size, how '

@@ -135,13 +135,21 @@ function sameReps(a, b) {
   const x = Array.isArray(a) ? a : null;
   const y = Array.isArray(b) ? b : null;
   if (!x && !y) return true;
-  if (!x || !y || x.length !== y.length) return false;
-  return x.every((spec, i) => {
-    const mine = normalizeRepSpec(spec);
-    const other = normalizeRepSpec(y[i]);
+  if (!x || !y || !x.length || !y.length) return false;
+  /* ⚠️ DIFFERENT LENGTHS ARE A SET-COUNT CHANGE, NOT A REP CHANGE — 2026-09-24.
+   * The list is one entry per set, so Larsen Press going from 2 sets to 4 made
+   * the lists 2 and 4 long, and the notice said "now asks for 10 reps" about a
+   * rep target that had not moved. Both sides are stretched to the longer
+   * length the way `normalizeReps` does it — the last prescription repeats —
+   * and then compared set by set. The set count is reported by its own row. */
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) {
+    const mine = normalizeRepSpec(x[Math.min(i, x.length - 1)]);
+    const other = normalizeRepSpec(y[Math.min(i, y.length - 1)]);
     if (!mine || !other) return false;
-    return mine[0] === other[0] && mine[1] === other[1];
-  });
+    if (mine[0] !== other[0] || mine[1] !== other[1]) return false;
+  }
+  return true;
 }
 
 function sameText(a, b) {

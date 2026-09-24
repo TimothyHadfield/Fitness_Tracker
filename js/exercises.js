@@ -1099,6 +1099,97 @@ export function makeCustomExercise({ name, muscle, equipment, fields, loadType, 
   };
 }
 
+/* ================================================================== *
+ * Exercise search (the picker's search box)
+ * ================================================================== */
+
+/* Everyday spellings the library does not use. Each maps to one or more
+ * alternative phrases; a query word is satisfied by its own spelling or by any
+ * one of these. Until 2026-09-24 the search was one substring check, so
+ * "pullup", "db bench" and "rdl" found nothing and "run" listed five crunches
+ * before Treadmill Run. */
+const SEARCH_ALIASES = {
+  db: ['dumbbell'],
+  bb: ['barbell'],
+  rdl: ['romanian deadlift'],
+  ohp: ['overhead press'],
+  pullup: ['pull up'],
+  chinup: ['chin up'],
+  pushup: ['push up'],
+  abs: ['core', 'abdominal'],
+  bicep: ['biceps'],
+  tbar: ['t bar'],
+};
+
+const searchTokens = (s) => String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+// Simple plural: "dips" → "dip", "curls" → "curl". "press" keeps its s.
+const searchStem = (w) => (w.length >= 4 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w);
+
+/* One exercise, flattened: every word of name + equipment + muscle run
+ * together with separators removed ("Pull-Up" → "pullup"), plus where each word
+ * starts. A query word that begins at one of those starts is a word-start match,
+ * which is what lets "pullup", "tbar" and "chinup" find their lifts. */
+function searchHaystack(ex) {
+  const name = searchTokens(ex.name);
+  const rest = [...searchTokens(ex.equipment), ...searchTokens(ex.muscle)];
+  const starts = new Set();
+  let compact = '';
+  for (const t of [...name, ...rest]) { starts.add(compact.length); compact += t; }
+  return { compact, starts, nameLen: name.join('').length };
+}
+
+// 3 = starts a word of the name, 2 = starts a word of equipment/muscle,
+// 1 = somewhere inside a word, 0 = absent. A one- or two-letter word ("up",
+// "t") must start a word: inside one it matches almost everything ("sUPported").
+function wordScore(h, w) {
+  let best = 0;
+  for (let i = h.compact.indexOf(w); i !== -1; i = h.compact.indexOf(w, i + 1)) {
+    const s = h.starts.has(i) ? (i < h.nameLen ? 3 : 2) : (w.length < 3 ? 0 : 1);
+    if (s > best) best = s;
+    if (best === 3) break;
+  }
+  return best;
+}
+
+/**
+ * Filter and rank exercises for a search box. Every query word must match (in
+ * any order) somewhere in the name, equipment or muscle; word-start matches
+ * rank above mid-word ones, so "run" puts Treadmill Run above Crunch. Ties keep
+ * the list's own order.
+ */
+export function searchExercises(list, query) {
+  const words = searchTokens(query);
+  if (!words.length) return list;
+  const joined = words.join('');
+  const alternativesFor = (w) => {
+    const alts = [[searchStem(w)]];
+    for (const phrase of SEARCH_ALIASES[w] || SEARCH_ALIASES[searchStem(w)] || []) alts.push(searchTokens(phrase));
+    return alts;
+  };
+  const wordAlts = words.map(alternativesFor);
+  const scored = [];
+  list.forEach((ex, idx) => {
+    const h = searchHaystack(ex);
+    let total = 0;
+    for (const alts of wordAlts) {
+      let best = 0;
+      for (const alt of alts) {
+        const s = Math.min(...alt.map((w) => wordScore(h, w)));
+        if (s > best) best = s;
+      }
+      if (!best) return;
+      total += best;
+    }
+    // The whole query run together, starting a word of the name ("t bar" in
+    // T-Bar Row), and a name that BEGINS with it, rank first.
+    const at = h.compact.indexOf(joined);
+    if (at !== -1 && at < h.nameLen && h.starts.has(at)) total += at === 0 ? 4 : 3;
+    scored.push({ ex, total, idx });
+  });
+  scored.sort((a, b) => b.total - a.total || a.idx - b.idx);
+  return scored.map((s) => s.ex);
+}
+
 export const FIELD_META = {
   weight:   { label: 'Weight',   unit: 'lbs', step: 5,   min: 0,  decimals: 1 },
   reps:     { label: 'Reps',     unit: 'reps', step: 1,  min: 0,  decimals: 0 },

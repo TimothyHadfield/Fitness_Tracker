@@ -11,7 +11,7 @@ import {
 } from './set-targets.js';
 import {
   MUSCLE_GROUPS, EQUIPMENT, makeCustomExercise, LOAD_HELP, BUILT_IN_EXERCISES,
-  canStandIn, standInFor,
+  canStandIn, standInFor, searchExercises,
 } from './exercises.js';
 /* ⚠️ Statically imported, and it costs nothing: `store.js` above already pulls
  * muscle-evidence.js in through strength-observations.js, so this names a module
@@ -58,7 +58,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
-  personFace, helpDot, parkScreen, refreshRoute, fmtClock,
+  personFace, helpDot, parkScreen, refreshRoute, fmtClock, fmtDateShort,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -186,6 +186,19 @@ async function fillFeed(body) {
     return;
   }
 
+  /* ⚠️ THE SAME TWO CHECKS THE FRIENDS SCREEN RUNS, BEFORE THE LIST IS READ —
+   * 2026-09-24. A request somebody accepted only became a friendship once you
+   * opened Friends, so their workouts stayed off this feed until then; and a
+   * friend who disconnected stayed on it. Failures change nothing, exactly as
+   * they do over there. If either moved the list, the state is read again. */
+  const [departed, joined] = await Promise.all([
+    social.processDisconnects().catch(() => 0),
+    social.processAcceptedRequests().catch(() => 0),
+  ]);
+  if (departed > 0 || joined > 0) {
+    try { state = await social.state(); } catch (_) { /* keep the list we had */ }
+  }
+
   if (!state.connections.length) {
     setChildren(body, emptyState('Nobody to follow yet',
       'Send somebody an invite link and their workouts appear here the moment they train.',
@@ -207,8 +220,7 @@ async function fillFeed(body) {
 
   if (!entries.length) {
     setChildren(body, emptyState('Nothing from anyone yet',
-      'Your friends’ workouts will appear here as they record them. What each person shares is '
-      + 'their choice, so some may only show that they trained.'));
+      'Your friends’ workouts will appear here as they record them.'));
     return;
   }
 
@@ -226,26 +238,53 @@ async function fillFeed(body) {
     if (s && s.doc && s.doc.profile && s.doc.profile.name) names.set(s.conn.uid, s.doc.profile.name);
   }
   names.set(state.uid, 'You');
-  const uids = [...new Set(entries.map((e) => e.uid))];
+  // Reactions are one read per FRIEND, and only for friends whose cards are
+  // about to be drawn — a friend whose workouts are all below "Show more" costs
+  // nothing until somebody asks for them.
   const reactionMaps = new Map();
-  await Promise.all(uids.map(async (uid) => {
-    try { reactionMaps.set(uid, await social.reactionsFor(uid)); }
-    catch (_) { reactionMaps.set(uid, new Map()); }
-  }));
+  async function loadReactions(slice) {
+    const need = [...new Set(slice.map((e) => e.uid))].filter((uid) => !reactionMaps.has(uid));
+    await Promise.all(need.map(async (uid) => {
+      try { reactionMaps.set(uid, await social.reactionsFor(uid)); }
+      catch (_) { reactionMaps.set(uid, new Map()); }
+    }));
+  }
 
-  const withRx = entries.map((e) => {
+  const withRx = (e) => {
     const perSession = reactionMaps.get(e.uid) || new Map();
     const slot = (e.act.id && perSession.get(e.act.id))
       || { kudos: [], myKudosId: null, comments: [] };
     return { ...e, rx: { slot, myUid: state.uid, names } };
-  });
+  };
 
+  /* ⚠️ THIRTY CARDS AT A TIME — 2026-09-24. The feed drew every friend's whole
+   * published history at once (up to 60 cards each), so a handful of friends was
+   * hundreds of cards built before the first one could be read. Newest first
+   * is unchanged; "Show more" draws the next thirty. */
+  const PAGE = 30;
+  let shown = 0;
+  const more = el('button', { class: 'btn block', text: 'Show more', onClick: async () => {
+    more.disabled = true;
+    const slice = entries.slice(shown, shown + PAGE);
+    await loadReactions(slice);
+    shown += slice.length;
+    more.before(...slice.map((e) => feedCard(withRx(e))));
+    more.disabled = false;
+    if (shown >= entries.length) more.remove();
+  } });
+
+  const first = entries.slice(0, PAGE);
   // What landed on MY workouts — the receiving half. Without it a kudos
   // would be write-only and the feature would be pointless for the person it
   // exists to encourage.
-  const mineBlock = await reactionsOnMine(state, names).catch(() => null);
+  const [mineBlock] = await Promise.all([
+    reactionsOnMine(state, names).catch(() => null),
+    loadReactions(first),
+  ]);
+  shown = first.length;
 
-  setChildren(body, ...(mineBlock ? [mineBlock] : []), ...withRx.map(feedCard));
+  setChildren(body, ...(mineBlock ? [mineBlock] : []), ...first.map((e) => feedCard(withRx(e))),
+    ...(shown < entries.length ? [more] : []));
 }
 
 /**
@@ -281,7 +320,18 @@ async function reactionsOnMine(state, names) {
     rows.push({ s, slot, sid });
   }
   if (!rows.length) return null;
-  rows.sort((a, b) => b.s.date.localeCompare(a.s.date));
+  /* ⚠️ NEWEST REACTION FIRST, not newest workout — 2026-09-24. Sorted by the
+   * workout's date, a comment today on last month's session sat below three
+   * newer sessions and never made the top three. A comment carries its time; a
+   * kudos does not (groupReactions keeps only who gave it), so a kudos-only
+   * session falls back to when the workout itself happened — the earliest the
+   * kudos could have been. */
+  const localDay = (iso) => { const [y, m, d] = String(iso || '').split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1).getTime() || 0; };
+  const heardAt = ({ s, slot }) => Math.max(
+    ...slot.comments.map((c) => Number(c.at) || 0),
+    Date.parse(s.startedAt || '') || localDay(s.date),
+  );
+  rows.sort((a, b) => heardAt(b) - heardAt(a) || b.s.date.localeCompare(a.s.date));
 
   const who = (uid) => names.get(uid) || 'Someone';
   return el('div', { class: 'feed-mine' },
@@ -517,7 +567,9 @@ function openCommentsSheet(e, rx, onChanged) {
 
 async function shareActivity(e) {
   const names = (e.act.entries || []).map((x) => x && x.name).filter(Boolean);
-  const text = `${e.name} did ${e.act.name || 'a workout'} on ${e.act.date}`
+  // The date the way the card writes an older one ("Sep 24"), not the raw
+  // 2026-09-24. Not "Today": a shared line is read later, by somebody else.
+  const text = `${e.name} did ${e.act.name || 'a workout'} on ${fmtDateShort(e.act.date)}`
     + (names.length ? ` — ${names.join(', ')}` : '');
   try {
     if (navigator.share) { await navigator.share({ text }); return; }
@@ -860,9 +912,33 @@ function openPresetUpdate({ system, workouts, plan }) {
         : null,
       ...plan.changes.map(line),
     ),
-    footer: plan.readyCount
+    /* ⚠️ "KEEP MY VERSION" IS ALWAYS HERE — 2026-09-24. Until then the only way
+     * the version moved was taking changes, so a notice with nothing that could
+     * be taken (an unstamped copy, or only edited/manual rows) could never be
+     * cleared and sat above the programme for ever. It stamps the version
+     * forward and writes no workout — the same stamp `applyPresetUpdate()`
+     * leaves, minus the writes. */
+    footer: el('div', { class: 'btn-row' },
+      el('button', {
+        class: 'btn ghost',
+        text: 'Keep my version',
+        onClick: async (e) => {
+          const btn = e.currentTarget;
+          btn.disabled = true;
+          try {
+            const fresh = (await store.getSystem(system.id)) || system;
+            await store.saveSystem({ ...fresh, presetVersion: plan.toVersion });
+            close();
+            refreshRoute();
+          } catch (err) {
+            btn.disabled = false;
+            toast('That could not be saved. ' + (err && err.message ? err.message : ''));
+          }
+        },
+      }),
+      plan.readyCount
       ? el('button', {
-          class: 'btn primary block',
+          class: 'btn primary',
           onClick: async (e) => {
             const btn = e.currentTarget;
             btn.disabled = true;
@@ -884,7 +960,7 @@ function openPresetUpdate({ system, workouts, plan }) {
             }
           },
         }, `Take ${plural(plan.readyCount, 'change')}`)
-      : null,
+      : null),
   });
 }
 
@@ -971,7 +1047,8 @@ async function systemBody(system, workouts) {
     system.notes
       ? el('div', { class: 'preset-notes' },
           el('div', { class: 'section-label', text: 'Notes' }),
-          el('p', { text: system.notes }))
+          // Paragraph breaks are real paragraphs, as on the programme's Explore page.
+          ...String(system.notes).split(/\n{2,}/).map((para) => el('p', { text: para })))
       : null,
     await ownSystemRating(system.id, workouts, system),
   ];
@@ -1985,7 +2062,7 @@ export async function ExploreDetailView(id) {
         'By ', el('b', { text: preset.author || 'Unknown' }),
         preset.sourceName ? ' · ' : '',
         preset.sourceUrl
-          ? el('a', { href: preset.sourceUrl, target: '_blank', rel: 'noopener noreferrer',
+          ? el('a', { class: 'text-link', href: preset.sourceUrl, target: '_blank', rel: 'noopener noreferrer',
                       text: preset.sourceName || 'Source' })
           : (preset.sourceName || null),
       ),
@@ -2907,7 +2984,8 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
   function render() {
     let list = all;
     if (filterMuscle) list = list.filter((e) => e.muscle === filterMuscle);
-    if (query) list = list.filter((e) => e.name.toLowerCase().includes(query) || e.equipment.toLowerCase().includes(query));
+    // Every word, any order, everyday spellings, word-start matches first.
+    if (query) list = searchExercises(list, query);
     list = list.slice(0, 150);
 
     results.replaceChildren();
