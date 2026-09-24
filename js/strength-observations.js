@@ -32,6 +32,7 @@ import { setE1rm } from './set-e1rm.js';
 import { contributionsFor, rankBlockedReason, fatigueFactor, toKeyLift } from './muscle-evidence.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
 import { volumeContributions } from './volume-map.js';
+import { recordedSetCount } from './session-stats.js';
 
 /**
  * Every set worth rating, grouped by the muscle it is evidence for.
@@ -349,7 +350,10 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
       const ex = exMap.get(entry.exerciseId);
       if (!ex) continue;
       for (const c of volumeContributions(ex)) {
-        priorByMuscle.set(c.muscle, (priorByMuscle.get(c.muscle) || 0) + sets.length * c.weight);
+        // Sets that were really done — `recordedSetCount()`, the one rule the
+        // feed, the volume screen and this share. A blank row is not fatigue
+        // (2026-09-24; it was `sets.length`, blanks included).
+        priorByMuscle.set(c.muscle, (priorByMuscle.get(c.muscle) || 0) + recordedSetCount(entry) * c.weight);
       }
     }
   }

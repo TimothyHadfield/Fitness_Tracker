@@ -38,7 +38,12 @@
  * assisting) weight, so 75 % of a 250 lb body-inclusive pull-up max is not 187
  * lb of added weight; it is not a number at all. Two different quantities, and
  * putting one in the other's field is exactly the class of mistake D30 was
- * recorded to end. `targetsApply()` refuses them.
+ * recorded to end. ⚠️ `targetsApply()` does NOT refuse them — it only asks for
+ * a weight field, so the editor still offers the chip on a pull-up. The refusal
+ * is the caller's: views-session.js reads `ownBestSet()` and withholds the
+ * number when `bodyIncluded` is true, saying so on screen ('bodyweight').
+ * (Corrected 2026-09-24; moving the check in here would hide the chip and
+ * change that on-screen reason, which is a screen decision, not a fix.)
  *
  * ------------------------------------------------------------------
  * ⚠️ ROUNDING GOES DOWN, NEVER UP, and it is the rule `startingSet()` already
@@ -107,9 +112,10 @@ export function normalizeTargets(targets, sets) {
 /**
  * Does a percentage prescription mean anything for this exercise?
  *
- * Both halves are refusals rather than gates: an exercise with no weight field
- * has nothing to fill in, and a body-weight or assisted lift's max is a
- * different quantity from its weight field (see the header).
+ * A refusal rather than a gate: an exercise with no weight field has nothing to
+ * fill in. ⚠️ A body-weight or assisted lift passes here — its max is a
+ * different quantity from its weight field, and the RUNNER refuses it off
+ * `ownBestSet().bodyIncluded` (see the header).
  */
 export function targetsApply(exercise) {
   if (!exercise || !Array.isArray(exercise.fields)) return false;

@@ -140,6 +140,7 @@ import {
 import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS, bodyWeightOn } from './e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
 import { setE1rm } from './set-e1rm.js';
+import { typoQuarantine } from './personal-bests.js';
 
 /**
  * An estimated one-rep max for one exercise.
@@ -516,6 +517,10 @@ export const OWN_SET_LOW_REPS = 8;
  *      unknown reps in reserve.
  *   3. Then the largest e1RM, and on a tie the newer set.
  *
+ * Before those rules (2026-09-24): a set held by the typo quarantine is not a
+ * candidate, and a set matched or beaten on BOTH weight and reps by another in
+ * the same pool is dropped — see the notes at the bottom of the function.
+ *
  * Drops and myo-reps nested under a set (`minis`) are not sets and are not
  * read. A set above 15 reps is refused by `setE1rm()` (D5) and never a
  * candidate. The rep count travels back so the caption can say "rougher" of a
@@ -536,8 +541,7 @@ export function ownBestSet(exercise, rows, forDate) {
     if (!bwCache.has(date)) bwCache.set(date, bodyWeightOn(bws, date));
     return bwCache.get(date);
   };
-  let bestRecent = null;
-  let bestEver = null;
+  const cands = [];
   const consider = (weight, reps, date, source) => {
     const bw = bwOn(date);
     const r = setE1rm(exercise, weight, reps,
@@ -553,12 +557,7 @@ export function ownBestSet(exercise, rows, forDate) {
       // Lower is more credible: low reps first, then a benchmark over a workout set.
       tier: (r.reps <= OWN_SET_LOW_REPS ? 0 : 2) + (source === 'benchmark' ? 0 : 1),
     };
-    // Ties go to the newer set: it is the one that says what you can do now.
-    const beats = (a, b) => !b || a.tier < b.tier
-      || (a.tier === b.tier && (a.e1rm > b.e1rm
-        || (a.e1rm === b.e1rm && String(a.date) > String(b.date))));
-    if (recent && beats(cand, bestRecent)) bestRecent = cand;
-    if (beats(cand, bestEver)) bestEver = cand;
+    cands.push(cand);
   };
   for (const b of Array.isArray(rows.benchmarks) ? rows.benchmarks : []) {
     if (!b || b.exerciseId !== exercise.id) continue;
@@ -574,7 +573,42 @@ export function ownBestSet(exercise, rows, forDate) {
       }
     }
   }
-  return bestRecent || bestEver;
+
+  /* ⚠️ A MISTYPED SET IS NEVER THE SEAT (2026-09-24). Bench 225×5 then a slip
+   * to 2250×5 made this return the slip, and a 75 % target prefilled 1,875 lb.
+   * `typoQuarantine()` is the muscle map's rule, shared through
+   * personal-bests.js. It runs BEFORE dominance, as it does on the map: a slip
+   * dominates every real set, so the other order would delete them all. */
+  const held = typoQuarantine(cands.map((c) => ({
+    cand: c, date: c.date, weight: c.weight, reps: c.reps, estimate: c.e1rm,
+    isBenchmark: c.source === 'benchmark',
+  })));
+  const heldCands = new Set([...held].map((r) => r.cand));
+  const kept = cands.filter((c) => !heldCands.has(c));
+
+  /* ⚠️ A SET BEATEN ON BOTH WEIGHT AND REPS IS NOT A CANDIDATE (2026-09-24) —
+   * the dominance rule `dominate()` applies on the muscle panel. Rule 2 above
+   * put any ≤8-rep set ahead of every longer one, so a fatigued last set of
+   * 170×8 took the seat from the 170×13 it followed, and "your estimated max"
+   * came off the tired set. Same comparison as the panel's: `>=` on both, an
+   * exact tie kept, heavier-but-shorter left to the rules above. Compared on
+   * `load` — the whole resistance, so less help on an assist machine is more. */
+  const dominate = (list) => {
+    const out = list.filter((b) => !list.some((a) => a !== b
+      && a.load >= b.load && a.reps >= b.reps
+      && !(a.load === b.load && a.reps === b.reps)));
+    return out.length ? out : list;
+  };
+  // Ties go to the newer set: it is the one that says what you can do now.
+  const beats = (a, b) => !b || a.tier < b.tier
+    || (a.tier === b.tier && (a.e1rm > b.e1rm
+      || (a.e1rm === b.e1rm && String(a.date) > String(b.date))));
+  const pick = (list) => {
+    let best = null;
+    for (const c of dominate(list)) if (beats(c, best)) best = c;
+    return best;
+  };
+  return pick(kept.filter((c) => c.recent)) || pick(kept);
 }
 
 /** Re-exported so a caller needs one import to convert the other way too. */

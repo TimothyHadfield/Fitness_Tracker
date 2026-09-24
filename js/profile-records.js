@@ -111,7 +111,7 @@
    history always produces the same list.
    ========================================================================== */
 
-import { allSetsOf, kindsFor, measure, contextFor } from './personal-bests.js';
+import { allSetsOf, kindsFor, measure, contextFor, typoQuarantine } from './personal-bests.js';
 
 /** How many lifts a profile shows before it stops being a readout. */
 export const DEFAULT_LIMIT = 6;
@@ -314,13 +314,27 @@ export function bestLifts(sessions, opts = {}) {
     const ctxOn = contextFor(ex, bodyWeights);
     const factor = ctxOn(null).factor;
 
+    // ⚠️ A MISTYPED SET IS NOT A BEST LIFT (2026-09-24). The muscle map's typo
+    // quarantine, through `typoQuarantine()` in personal-bests.js, so a 2250×5
+    // slip stops reading as the profile's bench for ever. Held, not deleted:
+    // `sets` below still counts it, and a second day that agrees releases it.
+    const screen = b.rows.map((row) => {
+      const m = measure('e1rm', row.set, ctxOn(row.date));
+      return {
+        row, date: row.date, weight: Number(row.set.weight), reps: Number(row.set.reps),
+        estimate: m ? m.total : null, isBenchmark: row.source === 'benchmark',
+      };
+    });
+    const held = new Set([...typoQuarantine(screen)].map((r) => r.row));
+    const rows = held.size ? b.rows.filter((r) => !held.has(r)) : b.rows;
+
     // 'weight' and 'reps' are mutually exclusive upstream, so exactly one of
     // them is in `kinds` and it is the headline. Neither is modelled.
     const headKind = kinds.includes('weight') ? 'weight' : 'reps';
-    const best = bestOf(b.rows, headKind, ctxOn);
+    const best = bestOf(rows, headKind, ctxOn);
     if (!best) continue;
 
-    const estimatedMax = kinds.includes('e1rm') ? bestOf(b.rows, 'e1rm', ctxOn) : null;
+    const estimatedMax = kinds.includes('e1rm') ? bestOf(rows, 'e1rm', ctxOn) : null;
 
     const dates = [...b.days].sort();
     lifts.push({

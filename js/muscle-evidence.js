@@ -2045,7 +2045,9 @@ function dayNumberOf(iso) {
 // ever withhold: a mistyped number is a factor of ten out, a hard PR is a
 // fraction. Nothing between 1.0 and 2.0 is touched, which is the winsoriser's
 // territory and always was.
-const QUARANTINE_MIN_RATIO = 2.0;
+// Exported (2026-09-24) so personal-bests.js's `typoQuarantine()` applies the
+// same line to records, best lifts and % targets rather than a second number.
+export const QUARANTINE_MIN_RATIO = 2.0;
 
 /* ── σ PER RATIO ENTRY (2026-09-15, plan §6.4) ────────────────────────────────
  *

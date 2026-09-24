@@ -3,7 +3,8 @@
 
    Pure: no DOM, no store, no clock. Imports `set-e1rm.js` (the one place a set
    becomes a 1RM), `e1rm.js` (the weigh-in lookup), `exercises.js` (which lifts
-   carry a body) and `set-types.js`. It lived as a private closure inside
+   carry a body) and `set-types.js`, plus the typo screen from
+   `strength-estimate.js` and its threshold from `muscle-evidence.js`. It lived as a private closure inside
    `js/views-session.js` from 2026-08-26 until now, which meant this project's
    most opinionated piece of arithmetic was the one piece with no test of its
    own. Extracted for §13 Step 5.
@@ -93,6 +94,67 @@ import { bodyWeightOn } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
 import { minisOf } from './set-types.js';
+import { screenDaily, dailyValues } from './strength-estimate.js';
+import { QUARANTINE_MIN_RATIO } from './muscle-evidence.js';
+
+// A bare 'YYYY-MM-DD' as a whole day number — the same count rateMuscle()'s
+// `dayNumberOf()` uses, so a verdict keyed on `dailyValues()`'s day matches.
+function dayNumberOf(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return null;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000;
+}
+
+/**
+ * 🆕 THE MUSCLE MAP'S TYPO QUARANTINE, FOR ONE EXERCISE'S OWN HISTORY — 2026-09-24.
+ *
+ * The whole-site review found one mistyped set broke three screens for good:
+ * bench 225×5 then a slip to 2250×5, and a real 245×5 later was no record,
+ * the profile's best lift read 2250, and a 75 % target prefilled 1,875 lb. The
+ * muscle map had been setting that set aside since 2026-09-13; nothing else was.
+ *
+ * 🔒 THE SAME RULE, NOT A SECOND ONE. `screenDaily(dailyValues(...))` flags a
+ * day no training could have produced since the last one, and a flagged day is
+ * only held back if its best reading is ALSO `QUARANTINE_MIN_RATIO` times the
+ * best reading on every unflagged day — both imported from where rateMuscle()
+ * uses them. A hard PR is one-point-something; a slip is ten. Only the flagged
+ * day's TOP reading is held; lighter sets that day stay. Another day inside
+ * three weeks reaching 90 % of it releases it. Nothing is ever deleted, and if
+ * every reading looks implausible nothing is held (one bad day out of one is
+ * the only thing the app knows).
+ *
+ * @param {Array} rows  [{ date, weight, reps, estimate, isBenchmark? }] for ONE
+ *   exercise — `weight` the number typed (what the map screens on), `estimate`
+ *   any 1RM on one consistent scale (a row without one is never held)
+ * @returns {Set} the row objects to leave out
+ */
+export function typoQuarantine(rows) {
+  const out = new Set();
+  const live = (rows || []).filter((r) => r && Number(r.estimate) > 0 && dayNumberOf(r.date) !== null);
+  if (live.length < 2) return out;
+  let screened;
+  try {
+    screened = screenDaily(dailyValues(live.map((r) => ({
+      day: dayNumberOf(r.date), exerciseId: 'x', weight: r.weight, reps: r.reps,
+      isBenchmark: Boolean(r.isBenchmark),
+    }))));
+  } catch (_) { return out; }
+  const flagged = new Set(screened.filter((r) => r && r.quarantined).map((r) => r.day));
+  if (!flagged.size) return out;
+  const reference = live
+    .filter((r) => !flagged.has(dayNumberOf(r.date)))
+    .reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
+  if (!(reference > 0)) return out;
+  for (const day of flagged) {
+    const onDay = live.filter((r) => dayNumberOf(r.date) === day);
+    const worst = onDay.reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
+    if (worst < reference * QUARANTINE_MIN_RATIO) continue;
+    for (const r of onDay) if (Number(r.estimate) >= worst - 1e-9) out.add(r);
+  }
+  // 🛑 Never empty the pool — the map's rule, for the map's reason.
+  if (out.size >= live.length) out.clear();
+  return out;
+}
 
 /** What each kind is called on screen. The word is the Rule 5 cue. */
 export const PB_LABEL = {
@@ -372,8 +434,20 @@ export function personalBests(cleaned, priorSessions, priorBenchmarks, exMap, op
     }
     for (const b of priorBenchmarks || []) {
       if (!b || b.exerciseId !== e.exerciseId || !b.values) continue;
-      priorSets.push({ set: b.values, date: b.date || null });
+      priorSets.push({ set: b.values, date: b.date || null, isBenchmark: true });
     }
+
+    // ⚠️ A MISTYPED SET IN THE HISTORY IS NOT SOMETHING TO BEAT (2026-09-24) —
+    // `typoQuarantine()` above, the muscle map's rule. Today's sets are screened
+    // alongside so a real repeat of a big day releases it, but only the history
+    // is ever held back: a slip typed today is the runner's "typo?" warning's job.
+    const screenRow = (set, date, extra) => {
+      const m = measure('e1rm', set, ctxOn(date));
+      return { date, weight: Number(set.weight), reps: Number(set.reps), estimate: m ? m.total : null, ...extra };
+    };
+    const screenRows = priorSets.map((p) => screenRow(p.set, p.date, { isBenchmark: Boolean(p.isBenchmark), prior: p }));
+    if (todayDate) for (const s of nowSets) screenRows.push(screenRow(s, todayDate));
+    const held = new Set([...typoQuarantine(screenRows)].map((r) => r.prior).filter(Boolean));
 
     for (const kind of kinds) {
       // `was` is what stops a first-ever log being a trophy, and it is per
@@ -381,8 +455,9 @@ export function personalBests(cleaned, priorSessions, priorBenchmarks, exMap, op
       // of THIS kind of record. It is the whole measure, not a number, because
       // an inverted record prints the help it beat, not the key it beat it on.
       let was = null;
-      for (const { set, date } of priorSets) {
-        const m = measure(kind, set, ctxOn(date));
+      for (const p of priorSets) {
+        if (held.has(p)) continue;
+        const m = measure(kind, p.set, ctxOn(p.date));
         if (m && (!was || m.value > was.value)) was = m;
       }
       if (!was) continue;

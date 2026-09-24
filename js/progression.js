@@ -83,6 +83,7 @@
 
 import { volumeContributions } from './volume-map.js';
 import { totalResistance, MAX_EVIDENCE_REPS } from './e1rm.js';
+import { bodyWeightFractionFor } from './exercises.js';
 
 /* ------------------------------------------------------------------ *
  * The published numbers
@@ -446,7 +447,16 @@ export function suggestProgression({
   // that reads like defensive code — and it stopped anybody looking, twice. If a
   // guard's own note says "nothing hits this today", that is the moment to check
   // whether something should.
-  const assisted = Boolean(res && res.assist);
+  //
+  // 🚨 AND THE SAME HOLE AGAIN, ONE LEVEL DOWN — 2026-09-24. `res` is null with
+  // no weigh-in on file, so `assisted` was false for every assisted lift of a
+  // lifter who had never weighed in, and 70 help × 12 twice read "+5 lbs". The
+  // machine is an assist machine whatever the lifter weighs, so the flag comes
+  // from the exercise. `unpriced` is that case: the direction is known, the
+  // resistance is not, so the step is the plate step and no percentage is quoted.
+  const bwSpec = bodyWeightFractionFor(exercise);
+  const assisted = res ? Boolean(res.assist) : Boolean(bwSpec && bwSpec.assist);
+  const unpriced = assisted && !res;
   const resistance = res ? res.load : last.topWeight;
   const bodyBase = res ? res.base : 0;
 
@@ -528,7 +538,8 @@ export function suggestProgression({
   const couldLoad = !assisted && last.weightless
     && fields.includes('weight') && !(bodyBase > 0);
 
-  if (atCeiling && (weightless || smallestHonestIncrement(resistance, step, loadCeiling(exercise)) === null)) {
+  if (atCeiling && (weightless
+    || (!unpriced && smallestHonestIncrement(resistance, step, loadCeiling(exercise)) === null))) {
     return {
       fromWeight: weightless ? null : last.topWeight,
       fromReps: last.repsAtTop,
@@ -653,7 +664,11 @@ export function suggestProgression({
   // ⚠️ Against the RESISTANCE, not against the number typed into the box. On a
   // barbell they are the same; on a dip belt they are not, and the band is a
   // statement about load lifted.
-  const inc = smallestHonestIncrement(resistance, step, ceiling);
+  // With no weigh-in on an assist machine there is no resistance to size a
+  // band against — `resistance` would be the HELP — so the step is one plate.
+  const inc = unpriced
+    ? (Number(step) > 0 ? Number(step) : null)
+    : smallestHonestIncrement(resistance, step, ceiling);
 
   if (inc === null) {
     // ⚠️ §8.2 rule 4. The plates in the room cannot make an honest step, and
@@ -699,7 +714,25 @@ export function suggestProgression({
   // SMALLER step than the band asks for, which is the one direction this module
   // is willing to be wrong in (see ISOLATION_MAX).
   const drop = assisted ? Math.min(inc, last.topWeight) : inc;
-  const pct = Math.round(((assisted ? drop : inc) / resistance) * 1000) / 10;
+  const pct = unpriced ? null : Math.round(((assisted ? drop : inc) / resistance) * 1000) / 10;
+
+  if (unpriced) {
+    const nextAssist = last.topWeight - drop;
+    return {
+      ...base,
+      kind: 'load',
+      weight: nextAssist,
+      reps: range[0],
+      addedWeight: -drop,
+      pct,
+      headline: nextAssist > 0
+        ? `less help — ${fmt(nextAssist)} and back to ${range[0]} reps`
+        : `no help — ${range[0]} unassisted reps`,
+      why: `Top of ${rangeText} twice in a row, so ${fmt(drop)} comes off the stack. Reps back to `
+        + `${range[0]}${nextAssist > 0 ? '.' : ', and these are pull-ups now.'} Log a weigh-in and `
+        + 'this can size the step against your own weight.',
+    };
+  }
 
   if (assisted) {
     const nextAssist = last.topWeight - drop;

@@ -50,8 +50,23 @@
  * would inflate every total the moment somebody used a set type.
  */
 export function recordedSetCount(entry) {
-  return ((entry && entry.sets) || [])
-    .filter((set) => set && Object.values(set).some((v) => Number(v) > 0)).length;
+  return ((entry && entry.sets) || []).filter(setHasNumbers).length;
+}
+
+/* 🚨 THE MEASURED FIELDS, NOT EVERY VALUE ON THE SET — 2026-09-24. This read
+ * `Object.values(set)`, and `Number(true)` is 1, so `{ done: true }` and a
+ * zeroed plan row `{ weight: 0, reps: 0, fromPlan: true }` each counted as a
+ * set. Now a set counts when weight, reps, time or distance is above zero, on
+ * the set or on one of its drops (one set either way, as above).
+ *
+ * ⚠️ A PREFILLED SET WITH NUMBERS STILL COUNTS. Tim, 2026-09-23: *"last numbers
+ * should count"*, and the save path keeps them (`setIsRecorded()` in
+ * session-draft.js). Only a set with nothing in it stops counting. */
+const MEASURED = ['weight', 'reps', 'time', 'distance'];
+const hasMeasure = (s) => Boolean(s) && typeof s === 'object' && MEASURED.some((f) => Number(s[f]) > 0);
+function setHasNumbers(set) {
+  if (!set) return false;
+  return hasMeasure(set) || (Array.isArray(set.minis) && set.minis.some(hasMeasure));
 }
 
 /**

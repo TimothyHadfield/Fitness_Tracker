@@ -4753,7 +4753,7 @@ function volumeDayNum(iso) {
  * The trailing window of recorded sessions, and how much of it holds training.
  *
  * ⚠️ `spanDays` is measured from the FIRST session in the window to today, not
- * from the window's own edge — a 28-day window over an account that started
+ * from the window's own edge, WHEN NOTHING OLDER EXISTS — a 28-day window over an account that started
  * training nine days ago spans nine days, and dividing by four weeks would
  * report a quarter of the truth. `enough` is the two-week floor: a rate per week
  * measured over four days is noise, and reporting it as a fact would be worse
@@ -4769,8 +4769,18 @@ function volumeWindow(sessions, windowDays, today) {
   });
   if (!inWindow.length) return null;
 
+  /* 🚨 THE SHORT SPAN IS FOR A NEW ACCOUNT ONLY — 2026-09-24. It used to apply
+   * to everybody, so a lifter with six months behind them who trains chest
+   * every Monday was divided by the gap back to the first Monday INSIDE the
+   * window: 10 sets a week read 12.7 on a Monday and 10.0 on a Sunday, a 27 %
+   * swing by day of the week. If anything was logged before the window opened,
+   * the whole window is history and the whole window is the divisor. */
   const first = Math.min(...inWindow.map((s) => volumeDayNum(s.date)));
-  const spanDays = todayNum - first + 1;
+  const olderExists = (sessions || []).some((s) => {
+    const n = volumeDayNum(s.date);
+    return n !== null && n <= todayNum - windowDays;
+  });
+  const spanDays = olderExists ? windowDays : todayNum - first + 1;
   return { inWindow, spanDays, weeks: spanDays / 7, enough: spanDays >= 14, windowDays };
 }
 
