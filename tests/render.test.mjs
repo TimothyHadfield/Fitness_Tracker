@@ -1366,16 +1366,14 @@ ok(!data.querySelector('.rep-target'),
     await settle();
     ok(openAt() === 2, '⚠️ opening set 3 moves the controls into SET 3 — one set of numbers per set');
     ok(screen.querySelectorAll('.steppers').length === 1, 'and there is still only one of them');
-    /* 🔄 ROW 1 IS COMPARED, NOT ROW 0, SINCE 2026-09-12: set 1 held last time's
-       numbers, so it was RECORDED, so opening set 3 LOCKED it — and a locked
-       row's text is a <div>, not a disclosure. The lock is asserted beside it. */
     ok(rows()[2].querySelector('.set-pick').getAttribute('aria-expanded') === 'true'
        && rows()[1].querySelector('.set-pick').getAttribute('aria-expanded') === 'false',
        'the row is a disclosure, and says so — a screen reader is told which set is open');
-    ok(rows()[0].classList.contains('is-locked')
-       && rows()[0].querySelector('.set-lock').getAttribute('aria-label') === 'Unlock set 1',
-       '🔒 and set 1, which held last time\'s numbers, LOCKED when set 3 was opened — a set you '
-       + 'moved on from is shut until its padlock is tapped');
+    /* 🔄 2026-09-23: the padlock that shut set 1 here by itself is gone. Nothing
+       finishes a set but its own Finished button. */
+    ok(!rows()[0].classList.contains('is-done')
+       && rows()[0].querySelector('.set-done-btn').getAttribute('aria-label') === 'Finish set 1',
+       '✅ and set 1 is NOT finished by moving on — only its Finished button does that');
 
     /* ⚠️ A NUDGE MUST NOT REBUILD THE LIST, and this is the assertion that keeps
      * it that way. The old code re-rendered every row on every `onChange`, which
@@ -6220,17 +6218,16 @@ ok(!data.querySelector('.rep-target'),
   killSheets();
 }
 
-/* ============ A. a set locks when you move on from it (2026-09-12) ============
+/* ============ A. Finished / Edit on a set (2026-09-23) ============
  *
- * Tim: *"when a user moves on from a set, automatically 'lock' the set they
- * just finished which doesn't allow the user to change any measurements for
- * that set until they unlock it. The lock adjustments will be a visual lock on
- * the right side of the set which animates being locked and unlocked when you
- * click on it."*
+ * Tim: *"instead of doing a lock system, you just click "finished" on the side
+ * of that set and then it turns it a different color. Once you click finished,
+ * the +/- buttons by the numbers dissapear. Then the finished button toggles
+ * into "edit" and if you click it, the color will change and the +/- will show
+ * back up."* Replaced the 2026-09-12 padlock that shut on its own.
  *
  * ⚠️ TWO LIFTS NOTHING ELSE IN THE SUITE TOUCHES (Pendlay Row, Meadows Row),
- * so every set opens PREFILLED and the first assertion — a suggestion never
- * locks — is about the feature rather than the fixture.
+ * so every set opens PREFILLED with the app's suggestion, not with a record.
  */
 {
   const { SessionView } = await import(BASE + 'views-session.js');
@@ -6239,7 +6236,7 @@ ok(!data.querySelector('.rep-target'),
   const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
   const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
   const w = await store.saveWorkout({
-    name: 'Lock day',
+    name: 'Finish day',
     exercises: [
       { exerciseId: byName('Pendlay Row').id, sets: 3, notes: '' },
       { exerciseId: byName('Meadows Row').id, sets: 2, notes: '' },
@@ -6248,131 +6245,107 @@ ok(!data.querySelector('.rep-target'),
   localStorage.removeItem(DRAFT);
   let s = await mount(SessionView(w.id));
   const rows = () => [...s.querySelectorAll('.set-list .set-item')];
-  const lockOf = (i) => rows()[i].querySelector('.set-lock');
+  const btnOf = (i) => rows()[i].querySelector('.set-done-btn');
   const openAt = () => { const o = s.querySelector('.set-open'); return o ? rows().indexOf(o.closest('.set-item')) : -1; };
   const footer = (re) => [...s.querySelectorAll('.session-footer button')]
     .find((b) => re.test(b.textContent) || re.test(b.getAttribute('aria-label') || ''));
 
-  /* ---- 1. a set nobody did never locks ---- */
+  /* ---- 1. a blank set offers no Finished; moving on finishes nothing ---- */
   ok(openAt() === 0, 'set 1 opens first, as it always has');
-  ok(Boolean(lockOf(0)) && lockOf(0).classList.contains('is-idle'),
-     '⚠️ the open row carries a padlock, INVISIBLE while nothing has been typed — a lock offered on '
-     + 'a set with nothing in it would be a control that does nothing');
+  ok(Boolean(btnOf(0)) && btnOf(0).classList.contains('is-idle'),
+     '⚠️ the open row carries a Finished button, INVISIBLE while nothing has been typed');
   click(rows()[1].querySelector('.set-vals'));
   await settle();
-  ok(openAt() === 1 && !rows()[0].classList.contains('is-locked'),
-     '🚨 moving on from an UNTOUCHED set locks nothing — its 10 reps are the app\'s suggestion, and '
-     + 'locking that would put a padlock on a number nobody typed');
+  ok(openAt() === 1 && !rows()[0].classList.contains('is-done'),
+     '🚨 moving on from a set finishes nothing — nothing finishes on its own any more');
 
-  /* ---- 2. the first number reveals the padlock in place ---- */
+  /* ---- 2. the first number reveals Finished in place ---- */
   click(rows()[0].querySelector('.set-vals'));
   await settle();
   const row0 = rows()[0];
   type(s.querySelector('.set-open .step-value'), 185);
   await settle();
-  ok(rows()[0] === row0 && !lockOf(0).classList.contains('is-idle'),
-     '⚠️ the first number typed reveals the padlock IN PLACE — same node, no rebuild, nothing torn '
-     + 'down under the finger');
-  ok(lockOf(0).getAttribute('aria-label') === 'Lock set 1',
-     'and while the set is open its padlock is the way to lock it by hand, and says so');
-
-  /* ---- 3. moving on locks ---- */
-  click(rows()[1].querySelector('.set-vals'));
+  ok(rows()[0] === row0 && !btnOf(0).classList.contains('is-idle'),
+     '⚠️ the first number typed reveals Finished IN PLACE — same node, nothing torn down under the finger');
+  ok(btnOf(0).textContent === 'Finished' && btnOf(0).getAttribute('aria-label') === 'Finish set 1',
+     'the button says "Finished" (Tim\'s word) and is named for what it does');
+  click(rows()[2].querySelector('.set-vals'));
   await settle();
-  ok(rows()[0].classList.contains('is-locked') && openAt() === 1,
-     '🚨 moving on from a RECORDED set LOCKS it, and the set you moved to is open');
-  ok(lockOf(0).classList.contains('is-locked') && lockOf(0).getAttribute('aria-label') === 'Unlock set 1',
-     'the padlock is shut and named for what tapping it does');
-  ok(lockOf(0).classList.contains('lock-shuts'),
-     '⚠️ and it was rebuilt wearing the one-shot class that plays the shackle closing (Rule 7 — the '
-     + 'one movement, on the row you LEFT, beside the logging path rather than on it)');
-  ok(rows()[0].querySelector('.set-pick').tagName !== 'BUTTON',
-     '🔒 a locked row is NOT a control — not a disabled button, not aria-disabled: its text is text');
-  ok(!rows()[0].querySelector('.set-del'),
-     'and it cannot be deleted — delete is not rendered rather than rendered refusing');
-  ok(lockOf(0).parentElement === rows()[0].querySelector('.set-pick').parentElement,
-     '⚠️ the padlock is a SIBLING of .set-pick, never its child (a button in a button is invalid HTML)');
-  ok(lockOf(0).querySelectorAll('svg').length === 2 && Boolean(lockOf(0).querySelector('svg.lock-shackle')),
-     '⚠️ two <svg>s, one glyph — the shackle is its own path so CSS can swing it');
-  ok(draft().entries[0].sets[0].locked === true,
-     '🔒 the lock lives on the DRAFT set, so a workout put down and picked up keeps it');
+  ok(openAt() === 2 && !rows()[0].classList.contains('is-done'),
+     '🚨 moving on from a RECORDED set still finishes nothing — the padlock\'s auto-shut is gone');
 
-  /* ---- 4. the flash is a one-shot; a locked row ignores taps ---- */
-  click(rows()[1].querySelector('.set-pick'));       // collapse set 2 → a re-render
+  /* ---- 3. Finished: the colour, no +/-, the button becomes Edit ---- */
+  click(rows()[0].querySelector('.set-vals'));
   await settle();
-  ok(rows()[0].classList.contains('is-locked') && !lockOf(0).classList.contains('lock-shuts'),
-     '⚠️ the next render does NOT replay the closing — the one-shot was spent by the render that '
-     + 'painted it');
+  ok(openAt() === 0 && Boolean(rows()[0].querySelector('.step-value')), 'set 1 is open with its +/-');
+  btnOf(0).click();
+  await settle();
+  ok(rows()[0].classList.contains('is-done'),
+     '🚨 tapping Finished turns the row the "done" colour (the is-done class)');
+  ok(!rows()[0].querySelector('.step-value') && !rows()[0].querySelector('.set-open'),
+     '🚨 and the +/- are gone from it — "the +/- buttons by the numbers dissapear"');
+  ok(btnOf(0).textContent === 'Edit' && btnOf(0).getAttribute('aria-label') === 'Edit set 1'
+     && btnOf(0).classList.contains('is-done'),
+     '🚨 "the finished button toggles into edit"');
+  ok(/185/.test(rows()[0].querySelector('.set-vals').textContent),
+     'the finished row still shows its numbers — it is a set you did');
+  ok(openAt() === 1,
+     '⚠️ finishing the open set opens the next unfinished one of the exercise');
+  ok(rows()[0].querySelector('.set-pick').tagName !== 'BUTTON' && !rows()[0].querySelector('.set-del'),
+     'a finished row is not a control and cannot be deleted');
+  ok(btnOf(0).parentElement === rows()[0].querySelector('.set-pick').parentElement,
+     '⚠️ the button is a SIBLING of .set-pick, never its child (a button in a button is invalid HTML)');
+  ok(draft().entries[0].sets[0].done === true,
+     'the finish lives on the DRAFT set, so a workout put down and picked up keeps it');
   click(rows()[0].querySelector('.set-pick'));
   await settle();
-  ok(openAt() === -1 && rows()[0].classList.contains('is-locked'),
-     'tapping a locked row opens nothing — the padlock is the one way in');
+  ok(openAt() === 1, 'tapping a finished row opens nothing — Edit is the one way in');
 
-  /* ---- 5. the padlock unlocks AND opens; and locks again by hand ---- */
-  lockOf(0).click();
+  /* ---- 4. Edit: colour back, +/- back, button back to Finished ---- */
+  btnOf(0).click();
   await settle();
-  ok(openAt() === 0 && !rows()[0].classList.contains('is-locked'),
-     '🚨 tapping the padlock UNLOCKS the set and OPENS it — the only reason to unlock is to change it');
-  ok(lockOf(0).getAttribute('aria-label') === 'Lock set 1' && lockOf(0).classList.contains('lock-opens'),
-     'the open padlock is named for locking, and plays the shackle opening');
-  ok(draft().entries[0].sets[0].locked === undefined, 'and the draft no longer carries the lock');
-  lockOf(0).click();
-  await settle();
-  ok(rows()[0].classList.contains('is-locked') && openAt() === -1,
-     'tapping the open padlock locks by hand and shuts the row');
+  ok(openAt() === 0 && !rows()[0].classList.contains('is-done') && Boolean(rows()[0].querySelector('.step-value')),
+     '🚨 Edit takes the colour off, OPENS the set and brings its +/- back');
+  ok(btnOf(0).textContent === 'Finished' && draft().entries[0].sets[0].done === undefined,
+     'the button is Finished again and the draft no longer carries the finish');
 
-  /* ---- 6. leaving the exercise locks the set you were on, and only it ---- */
-  /* ⚠️ SET 2 IS ALREADY LOCKED, and that is fill-on-open (2026-08-24) meeting
-   * the padlock: opening set 2 in step 3 copied set 1's 185 into it, a filled
-   * set is a recorded one everywhere in this app, and unlocking set 1 in step
-   * 5 was moving on from it. Nothing new is being saved that was not saved
-   * before — the padlock makes the copy VISIBLE where it used to be silent. */
-  ok(rows()[1].classList.contains('is-locked'),
-     '⚠️ set 2, filled from set 1 the moment it was opened, locked when set 1 was unlocked — a '
-     + 'filled set is a recorded set, and the padlock shows the copy that used to be saved silently');
-  lockOf(1).click();
-  await settle();
-  ok(openAt() === 1, 'its padlock opens it');
-  type(s.querySelector('.set-open .step-value'), 135);
+  /* ---- 5. Next exercise finishes nothing; finishes survive a reopen ---- */
+  btnOf(0).click();
   await settle();
   footer(/Next exercise/).click();
   await settle();
-  ok(draft().entries[0].sets[1].locked === true && draft().entries[0].sets[2].locked !== true,
-     '🚨 Next locks the set you were ON and nothing else — set 3 was never done and stays free');
+  ok(draft().entries[0].sets[0].done === true && draft().entries[0].sets.slice(1).every((x) => !x.done),
+     '🚨 Next exercise finishes nothing by itself — only set 1, finished by hand, is finished');
+  // A draft from before today carries the padlock's `locked` — it reads as finished.
+  const d = draft(); d.entries[0].sets[1].locked = true; localStorage.setItem(DRAFT, JSON.stringify(d));
+  s = await mount(SessionView(w.id));
   footer(/Previous/).click();
   await settle();
-  ok(openAt() === -1 && rows()[1].classList.contains('is-locked') && rows()[0].classList.contains('is-locked'),
-     '⚠️ coming back with Previous finds both shut and NOTHING open — the one state in which "exactly '
-     + 'one set is always open" is false, and it is honest');
+  ok(rows()[0].classList.contains('is-done') && rows()[1].classList.contains('is-done')
+     && !rows()[2].classList.contains('is-done'),
+     '⚠️ re-opening the runner keeps the finish, and an old draft\'s `locked` set reads as finished');
 
-  /* ---- 7. the locks survive leaving the workout open ---- */
-  s = await mount(SessionView(w.id));
-  ok(rows()[0].classList.contains('is-locked') && rows()[1].classList.contains('is-locked')
-     && !rows()[2].classList.contains('is-locked'),
-     '🔒 re-opening the runner from the draft keeps every lock exactly where it was');
-
-  /* ---- 8. `locked` never reaches storage ---- */
+  /* ---- 6. `done` and `locked` never reach storage ---- */
   footer(/Next exercise/).click();
   await settle();
   [...s.querySelectorAll('button')].find((b) => /Finish workout/.test(b.textContent)).click();
   await settle();
   await saveNow();
   const saved = (await store.getSessions()).find((x) => x.workoutId === w.id);
-  ok(Boolean(saved) && saved.entries[0].sets.length === 2,
-     `the session saves with the two recorded sets (${saved && saved.entries[0].sets.length})`);
-  ok(Boolean(saved) && saved.entries.every((e) => e.sets.every((st) => !('locked' in st))),
-     '🔒 and `locked` is DROPPED at save, like `prefilled` — it is a fact about the screen, not the training');
+  ok(Boolean(saved) && saved.entries[0].sets.length === 3,
+     `the session saves with its recorded sets (${saved && saved.entries[0].sets.length})`);
+  ok(Boolean(saved) && saved.entries.every((e) => e.sets.every((st) => !('done' in st) && !('locked' in st))),
+     '✅ `done` (and the old `locked`) are DROPPED at save — facts about the screen, not the training');
   localStorage.removeItem(DRAFT);
 }
 
-/* ============ B. a drop locks with its set — one hard set (2026-09-12) ============ */
+/* ============ B. a drop is finished with its set — one hard set (2026-09-23) ============ */
 {
   const { SessionView } = await import(BASE + 'views-session.js');
   const DRAFT = 'ftrack:v1:draftSession';
   const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
-  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
   const w = await store.saveWorkout({
-    name: 'Lock drop day',
+    name: 'Finish drop day',
     exercises: [{ exerciseId: byName('Belt Squat').id, sets: 2, notes: '', setType: 'drop', minis: 1 }],
   });
   localStorage.removeItem(DRAFT);
@@ -6384,35 +6357,32 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   ok(rows().length === 3 && rows()[1].classList.contains('set-drop') && Boolean(rows()[1].querySelector('.set-open')),
      'set 1 has a drop under it, and the drop is open');
-  ok(Boolean(rows()[1].querySelector('.set-lock-gap')) && !rows()[1].querySelector('.set-lock'),
-     '⚠️ a drop has no padlock of its own — a spacer keeps delete in its column');
-  ok(!rows()[0].classList.contains('is-locked'),
-     '⚠️ opening a DROP of the set you are on is not moving on — the set stays unlocked');
+  ok(Boolean(rows()[1].querySelector('.set-done-gap')) && !rows()[1].querySelector('.set-done-btn'),
+     '⚠️ a drop has no Finished of its own — a spacer keeps delete in its column');
   type(s.querySelector('.set-open .step-value'), 160);
   await settle();
-  click(rows()[2].querySelector('.set-vals'));          // set 2
+  rows()[0].querySelector('.set-done-btn').click();
   await settle();
-  ok(rows()[0].classList.contains('is-locked') && rows()[1].classList.contains('is-locked'),
-     '🚨 moving to set 2 locks set 1 AND its drop — one hard set, one lock (D23)');
+  ok(rows()[0].classList.contains('is-done') && rows()[1].classList.contains('is-done'),
+     '🚨 finishing set 1 finishes its drop too — one hard set, one Finished');
   ok(!rows()[1].querySelector('.set-del') && rows()[1].querySelector('.set-pick').tagName !== 'BUTTON',
-     'and the locked drop can be neither opened nor deleted');
-  rows()[0].querySelector('.set-lock').click();
+     'and the finished drop can be neither opened nor deleted');
+  rows()[0].querySelector('.set-done-btn').click();
   await settle();
-  ok(!rows()[1].classList.contains('is-locked') && Boolean(rows()[1].querySelector('.set-pick').tagName === 'BUTTON'),
-     'unlocking the set frees its drop with it');
+  ok(!rows()[1].classList.contains('is-done') && rows()[1].querySelector('.set-pick').tagName === 'BUTTON',
+     'Edit on the set frees its drop with it');
   localStorage.removeItem(DRAFT);
 }
 
-/* ============ C. locks are per person and never broadcast (2026-09-12) ============ */
+/* ============ C. Finished is per person and never broadcast (2026-09-23) ============ */
 {
   const { SessionView } = await import(BASE + 'views-session.js');
   const DRAFT = 'ftrack:v1:draftSession';
   const type = (n, v) => { n.value = String(v); n.dispatchEvent(new window.Event('blur', { bubbles: false })); };
-  const click = (n) => n.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
   const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
   const killSheets = () => document.querySelectorAll('.sheet-backdrop').forEach((n) => n.remove());
   const w = await store.saveWorkout({
-    name: 'Lock joint day',
+    name: 'Finish joint day',
     exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 2, notes: '' }],
   });
   killSheets();
@@ -6431,14 +6401,13 @@ ok(!data.querySelector('.rep-target'),
   const rows = () => [...s.querySelectorAll('.set-list .set-item')];
   type(s.querySelector('.set-open .step-value'), 155);
   await settle();
-  click(rows()[1].querySelector('.set-vals'));
+  rows()[0].querySelector('.set-done-btn').click();
   await settle();
   const rae = (draft().others || []).find((o) => o.name === 'Rae');
-  ok(draft().forName === null && draft().entries[0].sets[0].locked === true,
-     'the owner\'s set 1 locked when the owner moved on');
-  ok(Boolean(rae) && rae.entries[0].sets[0].locked !== true,
-     '🚨 and Rae\'s did NOT — a lock is per person\'s own sets and is never broadcast: the app knows '
-     + 'whose steppers moved on and knows nothing about whether Rae has finished');
+  ok(draft().forName === null && draft().entries[0].sets[0].done === true,
+     'the owner\'s set 1 is finished when the owner taps Finished');
+  ok(Boolean(rae) && !rae.entries[0].sets[0].done,
+     '🚨 and Rae\'s is NOT — a finish is per person\'s own sets and is never broadcast');
   killSheets();
   localStorage.removeItem(DRAFT);
 }
@@ -7276,13 +7245,10 @@ ok(!data.querySelector('.rep-target'),
   // owner is always the FIRST chip on the bar (`forName === null` renders first).
   [...s.querySelectorAll('.person-chip')][0].click();
   for (let i = 0; i < 20; i++) await settle();
-  /* 🔒 SINCE 2026-09-12 THE OWNER'S SET 1 IS LOCKED HERE — Next/Previous above
-     moved on from it — so nothing is open until its padlock is tapped. That is
-     the lock feature doing its job in the middle of another feature's test. */
-  ok(Boolean(s.querySelector('.set-list .set-item.is-locked')),
-     '🔒 the owner\'s set 1 is locked after Next/Previous, so nothing is open until it is unlocked');
-  s.querySelector('.set-lock.is-locked').click();
-  await settle();
+  /* 🔄 2026-09-23: the padlock used to shut set 1 here on Next/Previous. Nothing
+     finishes by itself now, so set 1 is still open. */
+  ok(!s.querySelector('.set-list .set-item.is-done'),
+     '✅ Next/Previous finished nothing — the owner\'s set 1 is still open');
   const ownerWeight = s.querySelector('.set-open .step-value');
   ownerWeight.value = '135';
   ownerWeight.dispatchEvent(new window.Event('blur', { bubbles: true }));

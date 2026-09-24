@@ -646,16 +646,15 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      + 'and where it is now is lag, which is the thing Tim reported');
   ok(!/\.reorder-row \.move-btns/.test(CSS), 'the runner\'s ▲▼ rules are gone with the buttons');
   ok(/\.move-btns\s*\{/.test(CSS), '⚠️ while the builder\'s .move-btns is untouched');
-  ok(/@keyframes lock-shut/.test(CSS) && /@keyframes lock-open/.test(CSS),
-     'the padlock has a closing and an opening keyframe');
-  ok(/\.set-lock\.lock-shuts \.lock-shackle\s*\{\s*animation:\s*lock-shut var\(--t\) var\(--ease-both\)/.test(CSS),
-     '⚠️ and it runs on the shared --t with --ease-both — an object with weight, under the 250ms cap the '
-     + 'duration check above already pins');
-  ok(/\.set-lock\.is-idle\s*\{[^}]*visibility:\s*hidden/.test(CSS) && !/\.set-lock\.is-idle\s*\{[^}]*display:\s*none/.test(CSS),
-     '⚠️ an idle padlock is `visibility: hidden`, never `display: none` — the slot keeps its width so '
+  // 🔄 2026-09-23: the padlock became a Finished / Edit button.
+  ok(!/\.set-lock/.test(CSS) && !/@keyframes lock-shut/.test(CSS), 'the padlock\'s rules are gone with it');
+  ok(/\.set-done-btn\.is-idle\s*\{[^}]*visibility:\s*hidden/.test(CSS) && !/\.set-done-btn\.is-idle\s*\{[^}]*display:\s*none/.test(CSS),
+     '⚠️ an idle Finished is `visibility: hidden`, never `display: none` — the slot keeps its width so '
      + 'delete stays in one column down the list');
-  ok(/\.set-lock::before\s*\{[^}]*width:\s*44px;\s*height:\s*44px/.test(CSS),
-     'the padlock has the 44px hit halo the icon buttons carry');
+  ok(/\.set-done-btn::before\s*\{[^}]*height:\s*44px/.test(CSS),
+     'Finished has the 44px hit halo the icon buttons carry');
+  ok(/\.set-item\.is-done\s*\{[^}]*background:\s*var\(--good-dim\)/.test(CSS),
+     '🚨 a finished row turns a different colour — Tim: "it turns it a different color"');
 }
 
 /* ============ a system's plan boxes — the CSS half (2026-09-16) ============

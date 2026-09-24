@@ -1560,78 +1560,44 @@ export async function SessionView(workoutId) {
   }
 
   /* ================================================================== *
-   * 🆕 A SET LOCKS WHEN YOU MOVE ON FROM IT — 2026-09-12, Tim:
+   * 🔄 "FINISHED" / "EDIT" REPLACED THE PADLOCK — 2026-09-23. Tim, after
+   * Autumn found the lock annoying: *"instead of doing a lock system, you just
+   * click "finished" on the side of that set and then it turns it a different
+   * color. Once you click finished, the +/- buttons by the numbers dissapear.
+   * Then the finished button toggles into "edit" and if you click it, the color
+   * will change and the +/- will show back up."*
    *
-   * *"Sometimes a user mixes up sets and adjusts something that doesn't need
-   * to be adjusted for a past set or something. To fix this, when a user moves
-   * on from a set, automatically 'lock' the set they just finished which
-   * doesn't allow the user to change any measurements for that set until they
-   * unlock it. The lock adjustments will be a visual lock on the right side of
-   * the set which animates being locked and unlocked when you click on it."*
+   * (The padlock it replaced, 2026-09-12, shut BY ITSELF whenever you moved on
+   * from a set. That was the unintuitive half: a set locked that nobody had
+   * told to. Nothing locks on its own now — only the button does.)
    *
-   * WHAT "MOVES ON" MEANS, decided here and nowhere else:
-   *   • opening a DIFFERENT set of the same exercise (`select`);
-   *   • leaving the exercise — next, previous, a banner member, a swap's split,
-   *     a remove — which all go through `goToStep`; inside a superset a new
-   *     ROUND on the same exercise counts too, because round 1's set is done;
-   *   • "Add set" on a solo exercise, which moves the steppers to the new set.
-   *   NOT: collapsing the open row, or tapping off it. `collapse()` leaves
-   *   `entry.active` where it was — its own header says closing is about what
-   *   is on screen, not about losing your place — and a set you have merely
-   *   stopped looking at is not a set you have finished. NOT switching person:
-   *   `switchTo` parks the whole state and you come back to the same set.
+   * 🚨 ONLY A SET THAT IS ACTUALLY RECORDED CAN BE FINISHED — `setIsRecorded`,
+   * the one copy of that rule. On a blank set the button is not shown.
    *
-   * 🚨 ONLY A SET THAT IS ACTUALLY RECORDED LOCKS — `setIsRecorded`, the one
-   * copy of that rule. A blank set, or one still carrying the app's `prefilled`
-   * opening numbers, was never finished; locking it would lock a suggestion the
-   * lifter never made and put a padlock on a number nobody typed.
+   * ⚠️ A DROP IS FINISHED WITH ITS SET. `done` lives on the parent set object
+   * and covers every mini-set under it (D23: one drop set is one hard set).
    *
-   * ⚠️ A DROP LOCKS WITH ITS SET. `locked` lives on the parent set object and
-   * covers every mini-set under it, for the reason the whole data model gives
-   * (D23): one drop set is one hard set. Opening a drop of the set you are on
-   * is not moving on; opening the next set is, and the padlock shuts on all of
-   * it at once.
+   * ⚠️ WHAT FINISHED MEANS ON SCREEN: the row turns the "done" colour, shows its
+   * numbers with no +/-, cannot be opened or deleted, and its one live control
+   * is Edit — which un-finishes it AND opens it, because the only reason to
+   * edit is to change something.
    *
-   * ⚠️ WHAT LOCKED MEANS ON SCREEN: the row cannot be opened and cannot be
-   * deleted — its text is not a control at all, and the padlock on the right is
-   * the one live thing on it. Tapping the padlock unlocks the set AND opens it,
-   * because the only reason to unlock is to change something.
+   * ⚠️ FINISHING THE OPEN SET OPENS THE NEXT UNFINISHED ONE of the same
+   * exercise, if there is one — the flow "moving on" had before. A design call
+   * Tim did not spell out; flagged to him.
    *
-   * ⚠️ THE STATE IS `locked: true` ON THE DRAFT SET, so a workout you put down
-   * and pick up keeps its locks — and it is DROPPED AT SAVE the way `prefilled`
-   * is (`cleanedEntriesOf`), because it is a fact about the screen, not about
-   * the training. In a joint workout it is therefore per person by
-   * construction, and it is deliberately NOT broadcast the way a walk is: the
-   * app knows the person whose steppers these are has moved on, and knows
-   * nothing about whether Rae has.
-   *
-   * ⚠️ THE ANIMATION IS A ONE-SHOT, CONSUMED BY THE NEXT RENDER — the same
-   * shape as `requestRise()`. A lock is applied by a mutation and the row is
-   * REBUILT by the render that follows, so the movement cannot be a transition
-   * on a node that is about to be thrown away; instead the rebuilt padlock
-   * plays a keyframe from the state it left (`lock-shuts` / `lock-opens`,
-   * `--t`, `--ease-both`), and the list of sets owed one is emptied by the
-   * render that paints them so nothing replays on the render after.
+   * ⚠️ THE STATE IS `done: true` ON THE DRAFT SET (drafts written before this
+   * carry `locked`, read as the same thing), so a workout you put down and pick
+   * up keeps it; DROPPED AT SAVE like `prefilled`. Per person by construction.
    * ================================================================== */
-  let lockFlashes = [];   // [{ set, to: 'shut' | 'open' }] — see above
 
-  /** Lock `entry.sets[i]` if it is a set somebody actually did. */
-  function lockSet(entry, i) {
-    const s = entry && entry.sets[i];
-    if (!s || s.locked || !setIsRecorded(s, entry.fields)) return false;
-    s.locked = true;
-    lockFlashes.push({ set: s, to: 'shut' });
-    return true;
-  }
+  /** Is this draft set marked finished? (`locked` = a draft from before 2026-09-23.) */
+  const isDone = (s) => Boolean(s && (s.done || s.locked));
 
   // Moving between steps re-points the steppers at the round you are on. Inside
   // a step you can still tap any set to fix a typo from round one.
   function goToStep(i) {
     const all = steps();
-    // Who is being LEFT — read before the index moves, so the set that locks
-    // is the one the steppers were on and not whatever the walk lands on.
-    const leaving = entryHere();
-    const leavingAt = leaving ? leaving.active : -1;
     state.index = Math.max(0, Math.min(i, all.length - 1));
     // 🚨 EVERYBODY MOVES — Tim, 2026-09-10: "when the user clicks 'next
     // exercise', it should move to the next exercise for both users, not just
@@ -1639,7 +1605,6 @@ export async function SessionView(workoutId) {
     // their own list and the whole point is that they move alone.
     syncWalk(state.index);
     const step = all[state.index];
-    let landed = null;
     if (step) {
       const entry = state.entries[step.entryIndex];
       if (entry) {
@@ -1647,17 +1612,7 @@ export async function SessionView(workoutId) {
           ? Math.min(entry.active || 0, entry.sets.length - 1)
           : Math.min(step.round, entry.sets.length - 1);
         entry.activeDrop = null;
-        landed = entry;
       }
-    }
-    // ⚠️ A different exercise, OR the same one on a different set (a superset
-    // round). Landing back on the very set you were on — a reorder's
-    // `repointOn`, a re-render — is not moving on and locks nothing. And an
-    // entry that has just been REMOVED is not in the list any more; its sets
-    // are gone with it and there is nothing to lock.
-    if (leaving && state.entries.includes(leaving)
-        && (landed !== leaving || leaving.active !== leavingAt)) {
-      lockSet(leaving, leavingAt);
     }
     saveDraft(state);
     renderAll();
@@ -1925,13 +1880,10 @@ export async function SessionView(workoutId) {
     }
 
     function select(i, dropIndex) {
-      // A locked set has no way in but its padlock — see the lock block above
-      // `goToStep`. Its row is not a control, so this is belt and braces for a
-      // caller that reaches it another way.
-      if (!entry.sets[i] || entry.sets[i].locked) return;
-      // Opening a DIFFERENT set is moving on from this one. A drop of the same
-      // set is not: it is the same hard set, continued.
-      if (i !== entry.active) lockSet(entry, entry.active);
+      // A finished set has no way in but its Edit button — see the Finished
+      // block above `goToStep`. Belt and braces for a caller that reaches it
+      // another way.
+      if (!entry.sets[i] || isDone(entry.sets[i])) return;
       if (dropIndex == null) fillOnOpen(i);
       entry.active = i;
       entry.activeDrop = dropIndex;
@@ -1998,55 +1950,39 @@ export async function SessionView(workoutId) {
           r.vals.textContent = t;
           r.pick.setAttribute('aria-label', r.name(t));
         }
-        // The padlock is only offered on a set somebody has actually done, and
+        // Finished is only offered on a set somebody has actually done, and
         // the first number typed into a fresh set is what makes it one — so the
-        // open row's padlock appears IN PLACE on that keystroke, the same way
+        // open row's button appears IN PLACE on that keystroke, the same way
         // the values do, rather than waiting for a rebuild.
         if (r.lock) r.lock.classList.toggle('is-idle', !setIsRecorded(r.set, entry.fields));
       }
     }
 
     /**
-     * The padlock on the right of a set row — see the lock block above
-     * `goToStep` for what it means and when it shuts by itself.
+     * "Finished" / "Edit" on the right of a set row — see the Finished block
+     * above `goToStep`.
      *
      * ⚠️ A SIBLING OF `.set-pick`, NEVER ITS CHILD, for the reason `.set-del`
-     * gives: a button inside a button is invalid HTML and would need a
-     * stopPropagation that holds until the next control is added. Delete and
-     * the padlock share the right of the row like this: the padlock is the
-     * OUTERMOST thing on every row, in a slot every row reserves (so delete
-     * never walks sideways between one row and the next), and delete sits to
-     * its left — until the set is locked, when delete is not rendered at all,
-     * because a locked set cannot be deleted and a control that refuses is
-     * worse than one that is absent.
+     * gives: a button inside a button is invalid HTML. It is the OUTERMOST
+     * thing on every row, in a slot every row reserves (so delete never walks
+     * sideways between rows), and delete sits to its left — until the set is
+     * finished, when delete is not rendered at all.
      *
-     * ⚠️ TWO <svg>s, ONE GLYPH. `icon()` draws one path per call and the
-     * shackle has to move on its own, so the body and the shackle are drawn
-     * over each other in the same viewBox and CSS rotates the second about its
-     * right leg. See the `lock-body` / `lock-shackle` note in ui.js.
+     * ⚠️ `is-idle` IS `visibility: hidden`, NOT `display: none` — the slot keeps
+     * its width for that alignment, and a hidden button leaves the
+     * accessibility tree either way.
      *
-     * ⚠️ `is-idle` IS `visibility: hidden`, NOT `display: none` — the slot has
-     * to keep its width for the alignment argument above, and a hidden button
-     * leaves the accessibility tree either way.
-     *
-     * `null` draws the spacer a drop row uses: a drop has no padlock of its
-     * own because its parent's covers it (one hard set), but its delete still
-     * has to sit in delete's column.
+     * `null` draws the spacer a drop row uses: a drop is finished with its set.
      */
     function lockButton(lock) {
-      if (!lock) return el('span', { class: 'set-lock-gap' });
-      const shackle = icon('lock-shackle', 17);
-      shackle.classList.add('lock-shackle');
-      const flash = lockFlashes.find((f) => f.set === lock.set);
+      if (!lock) return el('span', { class: 'set-done-gap' });
       return el('button', {
-        class: 'set-lock'
-          + (lock.locked ? ' is-locked' : '')
-          + (setIsRecorded(lock.set, entry.fields) ? '' : ' is-idle')
-          + (flash ? (flash.to === 'shut' ? ' lock-shuts' : ' lock-opens') : ''),
-        'aria-label': (lock.locked ? 'Unlock ' : 'Lock ') + lock.name,
-        title: lock.locked ? 'Unlock this set to change it' : 'Lock this set so it cannot be changed',
+        class: 'set-done-btn'
+          + (lock.locked ? ' is-done' : '')
+          + (setIsRecorded(lock.set, entry.fields) ? '' : ' is-idle'),
+        'aria-label': (lock.locked ? 'Edit ' : 'Finish ') + lock.name,
         onClick: lock.onToggle,
-      }, icon('lock-body', 17), shackle);
+      }, lock.locked ? 'Edit' : 'Finished');
     }
 
     /* ⚠️ THE ROW BECOMES THE CONTROLS. IT DOES NOT GROW A SECOND ONE.
@@ -2069,16 +2005,14 @@ export async function SessionView(workoutId) {
      * sibling, so the row keeps its identity while it is open and `.set-del`
      * keeps the position it has had since it was pulled out of `.set-pick`.
      */
-    /* ⚠️ A LOCKED ROW IS NOT A CONTROL (2026-09-12). Its `.set-pick` is a
-     * <div> carrying the same number and values, not a disabled <button>: a
-     * button that is on screen and does nothing is the fault the five inert
-     * back buttons taught this project, and `aria-disabled` is the same fault
-     * with a label on it. The padlock beside it is the row's one live thing,
-     * and its name says what tapping it does. Nothing on a locked row is
+    /* ⚠️ A FINISHED ROW IS NOT A CONTROL. Its `.set-pick` is a <div> carrying
+     * the same number and values, not a disabled <button> — a button that does
+     * nothing is the fault the inert back buttons taught this project. Edit
+     * beside it is the row's one live thing. Nothing on a finished row is
      * registered in `liveRows`, because nothing on it can change. */
     function setRow({ open, locked, lock, className, num, label, onOpen, onDelete, delLabel, valueText }) {
       if (locked) {
-        const row = el('div', { class: `${className} is-locked` },
+        const row = el('div', { class: `${className} is-done` },
           el('div', { class: 'set-pick' }, num(), el('span', { class: 'set-vals', text: valueText() })),
           lockButton(lock),
         );
@@ -2136,12 +2070,9 @@ export async function SessionView(workoutId) {
 
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active;
-        const locked = Boolean(s.locked);
-        // ⚠️ `entry.active` can point at a locked set — you came back to this
-        // exercise with Previous, or you locked the open row by hand — and then
-        // nothing is open. That is the one state in which "exactly one set is
-        // always open" is false, and it is honest: the steppers stay pointed
-        // at a set that refuses them until it is unlocked or another is tapped.
+        const locked = isDone(s);
+        // ⚠️ `entry.active` can point at a finished set — you finished the
+        // last one, or came back with Previous — and then nothing is open.
         const open = isHere && entry.activeDrop == null && editing && !locked;
         const lock = {
           set: s,
@@ -2149,19 +2080,24 @@ export async function SessionView(workoutId) {
           name: `set ${i + 1}`,
           onToggle: locked
             ? () => {
-                // Unlocking is opening: the only reason to unlock a set is to
-                // change it. Goes through `select` so the set you were on
-                // locks behind you like any other move.
+                // Edit is opening: the only reason to edit is to change it.
+                delete s.done;
                 delete s.locked;
-                lockFlashes.push({ set: s, to: 'open' });
                 select(i, null);
               }
             : () => {
-                // Locking by hand. `lockSet` refuses a set with nothing in it,
-                // and the padlock is not visible on one, so this cannot be a
-                // tap that silently does nothing.
-                if (!lockSet(entry, i)) return;
-                if (entry.active === i) entry.activeDrop = null;
+                // The button is hidden on a set with nothing in it, so this
+                // cannot be a tap that silently does nothing.
+                if (!setIsRecorded(s, entry.fields)) return;
+                s.done = true;
+                delete s.locked;
+                // Finishing the OPEN set moves on to the next unfinished one
+                // of this exercise, if any (see the block above `goToStep`).
+                if (entry.active === i) {
+                  entry.activeDrop = null;
+                  const next = entry.sets.findIndex((x, j) => j > i && !isDone(x));
+                  if (next !== -1) { select(next, null); return; }
+                }
                 saveDraft(state);
                 renderPane({ keepScroll: true });
               },
@@ -2195,8 +2131,8 @@ export async function SessionView(workoutId) {
           const dOpen = isHere && entry.activeDrop === di && editing && !locked;
           const { row: dRow, live: dLive } = setRow({
             open: dOpen,
-            // A drop is locked by its parent and has no padlock of its own —
-            // one hard set, one lock. `lock: null` draws the spacer.
+            // A drop is finished with its parent and has no button of its own —
+            // one hard set, one Finished. `lock: null` draws the spacer.
             locked,
             lock: null,
             className: 'set-item set-drop',
@@ -2219,10 +2155,6 @@ export async function SessionView(workoutId) {
           rows.push(dRow);
         });
       });
-      // The one-shot is spent by the render that painted it — every padlock
-      // owed a movement has been built by now, and one that was not (a set on
-      // an exercise that has since been removed) is owed nothing.
-      lockFlashes = [];
       setChildren(setList, ...rows);
     }
 
@@ -2811,10 +2743,7 @@ export async function SessionView(workoutId) {
             // the next numbers you typed landed in a different round from the
             // one the banner said you were on — for that member only, silently
             // desynchronising the block.
-            // And following it is moving on from the set you were on, which
-            // locks it (if it was done) — see the lock block above `goToStep`.
             if (step.group == null) {
-              lockSet(entry, entry.active);
               entry.active = entry.sets.length - 1;
             }
             entry.activeDrop = null;
@@ -3046,7 +2975,7 @@ export async function SessionView(workoutId) {
     const entry = slot.entries[index];
     if (!entry) return null;
     // Finished or typed, not `setIsRecorded` — see swapExercise() for why.
-    const recorded = entry.sets.filter((s) => s.locked || s.touched);
+    const recorded = entry.sets.filter((s) => isDone(s) || s.touched);
     if (!recorded.length) { slot.entries[index] = fresh; return null; }
     entry.sets = recorded;
     entry.active = Math.min(entry.active, recorded.length - 1);
@@ -3119,8 +3048,9 @@ export async function SessionView(workoutId) {
      * intentionally not touch it if it was the same as last time"* — so an
      * untouched history-prefilled set saves (as it always did), and so does an
      * untouched plan set (see `cleanedEntriesOf()`). A swap still keeps only
-     * `locked || touched`: leaving an exercise for another is not doing it. */
-    const recorded = entry.sets.filter((s) => s.locked || s.touched);
+     * `locked || touched`: leaving an exercise for another is not doing it.
+     * 🔄 2026-09-23: `locked` is now "Finished" (`isDone`), set by the button. */
+    const recorded = entry.sets.filter((s) => isDone(s) || s.touched);
     if (recorded.length) {
       entry.sets = recorded;
       entry.active = Math.min(entry.active, recorded.length - 1);
@@ -3691,9 +3621,9 @@ export async function SessionView(workoutId) {
             delete out.drops;      // legacy key, never written any more
             delete out.prefilled;  // a runtime flag; storage never sees it
             delete out.fromPlan;   // same, 2026-09-23
-            // The padlock (2026-09-12) is a fact about the screen — "this row
-            // is shut" — not about the training, and a saved session has no
-            // rows. Same treatment as `prefilled`, and a test asserts it.
+            // Finished (2026-09-23; `locked` before it) is a fact about the
+            // screen, not the training. Same treatment as `prefilled`.
+            delete out.done;
             delete out.locked;
             delete out.touched;    // same: a fact about this screen, 2026-09-27
             return out;

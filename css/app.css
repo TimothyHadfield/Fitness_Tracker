@@ -1772,62 +1772,42 @@ select.input {
 .set-del { color: var(--ink-faint); padding: 3px; display: flex; }
 .set-del svg { width: 15px; height: 15px; display: block; }
 
-/* ── THE PADLOCK ON A SET (2026-09-12) ─────────────────────────────────────
-   Tim: *"when a user moves on from a set, automatically 'lock' the set they
-   just finished … a visual lock on the right side of the set which animates
-   being locked and unlocked when you click on it."* The rule for when it shuts
-   is in views-session.js above `goToStep`; this is only how it looks and moves.
+/* ── FINISHED / EDIT ON A SET (2026-09-23) ─────────────────────────────────
+   Tim: *"click "finished" on the side of that set and then it turns it a
+   different color. Once you click finished, the +/- buttons … dissapear. Then
+   the finished button toggles into "edit"."* Replaced the 2026-09-12 padlock.
 
    ⚠️ THE OUTERMOST THING ON EVERY ROW, in a slot every row reserves — a set with
    nothing in it carries the button invisibly (`.is-idle`) and a drop row carries
-   an empty `.set-lock-gap` of the same width — so delete, which sits to its
-   left, is in the same column on every line of the list. `visibility`, not
-   `display`, for exactly that reason.
-
-   ⚠️ 30px OF PAINT, 44px OF HIT, the icon-button convention. Unlike `.set-del`
-   this is a control you aim at on purpose and often (a typo in set 2 is the
-   whole reason it exists), and it sits at the edge of the row where the halo
-   costs nothing. The halo reaches ~7px over delete's right edge and that is the
-   intended tie-break: delete is deliberately hard to hit by accident, and a
-   near-miss between the two should unlock rather than delete. */
-.set-lock {
+   an empty `.set-done-gap` of the same width — so delete sits in the same column
+   on every line. `visibility`, not `display`, for exactly that reason.
+   Fixed width so "Finished" → "Edit" never moves anything (design rule 9). */
+.set-done-btn {
   position: relative;
   flex: none;
-  width: 30px; height: 30px;
-  display: grid; place-items: center;
-  border-radius: 6px;
-  color: var(--ink-faint);
+  width: 72px; min-height: 32px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--ink-soft);
+  font-size: 12px; font-weight: 700;
 }
-.set-lock::before {
+/* 44px of hit on a 32px pill, the icon-button convention. */
+.set-done-btn::before {
   content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 44px; height: 44px;
-  transform: translate(-50%, -50%);
+  position: absolute; left: 0; right: 0; top: 50%;
+  height: 44px; transform: translateY(-50%);
 }
-.set-lock:active { background: var(--raised); }
-/* Shut reads darker than open, so the column of padlocks says which rows are
-   done at a glance without a second colour. */
-.set-lock.is-locked { color: var(--ink-soft); }
-.set-lock.is-idle { visibility: hidden; pointer-events: none; }
-.set-lock-gap { flex: none; width: 30px; }
-/* ⚠️ TWO <svg>s, ONE GLYPH: the body and the shackle are drawn over each other
-   in the same 24-unit viewBox (see `lock-body` / `lock-shackle` in ui.js), so
-   the shackle can move on its own. */
-.set-lock svg { position: absolute; inset: 0; margin: auto; width: 17px; height: 17px; }
-/* The shackle swings about the base of its RIGHT leg — (16, 11) in the viewBox,
-   which is 66.7% across and 45.8% down the 17px box — so the left leg lifts
-   clear of the body. 35° is the smallest angle that reads as open at 17px;
-   rotate, never translate, because a lifted-straight shackle looks like a lock
-   drawn slightly wrong rather than a lock that is open. */
-.set-lock .lock-shackle { transform-origin: 66.7% 45.8%; }
-.set-lock:not(.is-locked) .lock-shackle { transform: rotate(35deg); }
+.set-done-btn:active { opacity: .7; }
+.set-done-btn.is-done { background: transparent; color: var(--good); border: 1px solid var(--good); }
+.set-done-btn.is-idle { visibility: hidden; pointer-events: none; }
+.set-done-gap { flex: none; width: 72px; }
 
-/* A locked row is text, not a control — no press feedback, no pointer. What
-   says "locked" is the shut padlock and nothing else: the numbers stay legible,
-   because a locked set is still a set you did. */
-.set-item.is-locked .set-pick { cursor: default; }
-.set-item.is-locked .set-pick:active { opacity: 1; }
+/* A finished row is the "done" colour and is text, not a control — no press
+   feedback, no pointer. Its numbers stay legible: it is still a set you did. */
+.set-item.is-done { background: var(--good-dim); }
+.set-item.is-done .set-num { color: var(--good); }
+.set-item.is-done .set-pick { cursor: default; }
+.set-item.is-done .set-pick:active { opacity: 1; }
 
 /* ⚠️ THE OPEN SET'S CONTROLS, INSIDE THE LIST. It is a sibling of its row rather
    than a child, because `.set-del` has to stay a sibling of `.set-pick` (nesting
@@ -3821,29 +3801,8 @@ a.seg {
 .vol-fill { animation: vol-grow var(--t-slow) var(--ease-out); }
 @keyframes vol-grow { from { width: 0 } }
 
-/* ---- a set locks behind you (2026-09-12) ------------------------------ */
-/* Tim asked for a padlock that *"animates being locked and unlocked"*, and it
-   passes rule 1 on its own terms: the shackle swinging shut is the one thing on
-   the screen that says "the set you just left is now closed to you", and it is
-   the same object moving from open to shut rather than two pictures swapped.
-
-   ⚠️ IT IS BESIDE THE LOGGING PATH, NOT ON IT (rule 2). It plays on the row you
-   have just LEFT, while the row you tapped is already open with its steppers —
-   nothing between a tap and a number waits for it, and there is no transition
-   on the open row at all. Chosen against the alternative of a transition on a
-   live node, which would have meant holding the old row on screen for 170ms
-   before the new one could be built.
-
-   ⚠️ KEYFRAMES WITH A `from` ONLY: the padlock is rebuilt by the render that
-   locked it, so it is born in its final state and animates FROM the state it
-   left. The class is put on by that one render and never again (views-session
-   empties `lockFlashes` as it paints), so a re-render cannot replay it.
-   `--ease-both` because a shackle is a thing with weight going from one place
-   to another while you watch. Covered by the reduced-motion blanket below. */
-.set-lock.lock-shuts .lock-shackle { animation: lock-shut var(--t) var(--ease-both); }
-.set-lock.lock-opens .lock-shackle { animation: lock-open var(--t) var(--ease-both); }
-@keyframes lock-shut { from { transform: rotate(35deg) } }
-@keyframes lock-open { from { transform: none } }
+/* ~~---- a set locks behind you (2026-09-12) ----~~ DELETED 2026-09-23: the
+   padlock became a Finished / Edit button (see `.set-done-btn`). */
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
