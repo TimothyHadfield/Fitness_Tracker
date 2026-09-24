@@ -1,7 +1,7 @@
 // The in-workout recording flow, plus the benchmark form.
 
 import { store, social, muscleStrength, muscleRatings, todayISO, uid, DEFAULT_SETS } from './store.js';
-import { LOAD_LABEL, bodyWeightFractionFor } from './exercises.js';
+import { LOAD_LABEL, bodyWeightFractionFor, loggingNoteFor } from './exercises.js';
 import { totalResistance, bodyWeightOn } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
@@ -2401,8 +2401,14 @@ export async function SessionView(workoutId) {
         // sits directly after the field name — the slot exists to say what KIND
         // of weight this is ("total", "per side"), and a prepositional phrase
         // does not fit it. Caught in a screenshot at 360px.
+        // 🔄 2026-09-23: a weighted pull-up or dip said "total" here while the
+        // number is ADDED weight only (body weight is added inside), and an
+        // assist machine said "total" without a weigh-in though it is help.
+        // Both now say what the number is, weigh-in or not.
         suffix: f === 'weight' && entry.loadType
-          ? (showsAssist ? 'assistance' : LOAD_LABEL[entry.loadType])
+          ? (assistSpec && assistSpec.assist ? 'assistance'
+            : assistSpec ? 'added'
+            : LOAD_LABEL[entry.loadType])
           : null,
         onChange: (v) => {
           target[f] = v;
@@ -2559,7 +2565,13 @@ export async function SessionView(workoutId) {
             tag: 'h2', className: 'session-ex-name' }),
         ),
         el('div', { class: 'session-ex-meta' },
-          `${ex ? ex.muscle + ' · ' + ex.equipment + ' · ' : ''}Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
+          ex ? `${ex.muscle} · ${ex.equipment} · ` : '',
+          // How to count it, where that is not obvious — "Reps per leg",
+          // "Plates only, no sled" (see `loggingNoteFor`). Brighter than the
+          // rest of the line because it changes what you type.
+          loggingNoteFor(ex) ? el('b', { class: 'ex-note', text: loggingNoteFor(ex) }) : null,
+          loggingNoteFor(ex) ? ' · ' : '',
+          `Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
         ),
 
         /* ⚠️ THESE THREE ARE LOUD NOW, AND THAT REVERSES A DECISION THIS FILE

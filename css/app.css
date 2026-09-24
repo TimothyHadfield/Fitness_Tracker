@@ -1707,6 +1707,9 @@ select.input {
 }
 .add-set svg { display: block; }
 .add-set:active { transform: scale(.96); }
+/* How to count this exercise ("Reps per leg"), inside the grey meta line. */
+.session-ex-meta .ex-note { color: var(--ink); font-weight: 600; }
+
 /* "+ Warm-up" sits to the LEFT of "+ Add set" (warm-ups come first), both on
    the right of the heading. */
 .sets-head > .section-label { order: -2; margin-right: auto; }

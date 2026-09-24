@@ -907,6 +907,82 @@ export const LOAD_HELP = {
   total: 'Enter the whole load — the bar plus plates, or the full stack.',
 };
 
+/* ------------------------------------------------------------------ *
+ * HOW TO COUNT IT — a few words under the exercise name (2026-09-23)
+ * ------------------------------------------------------------------ *
+ *
+ * Tim: *"For excersizes where it's not clear, like … machine weight or if
+ * lunge=1 step or 2, you should specify in like 3-4 words or symbols that
+ * that's the case."*
+ *
+ * ⚠️ THESE STATE CONVENTIONS THE RATINGS ALREADY ASSUME — they do not create
+ * new ones. Per leg / per arm: the lunge and one-arm-row ratios came from
+ * sources counting per limb (docs/history.md 2085-2100). Plates only: the sled
+ * and landmine sets above. Include the bar: UNWEIGHED_BAR above. Added weight /
+ * help: BODY_WEIGHT_FRACTION. Three were undecided until Tim chose on
+ * 2026-09-23: Smith machine = plates only, no bar; alternating curls = reps per
+ * arm; sled push/drag = plates only, no sled.
+ *
+ * ⚠️ PER SIDE / TOTAL IS NOT REPEATED HERE — the weight label already says it
+ * ("WEIGHT · PER SIDE"). These cover only what that label cannot.
+ */
+const PER_LEG = [
+  'Walking Lunge', 'Forward Lunge', 'Reverse Lunge', 'Curtsy Lunge', 'Barbell Lunge',
+  'Split Squat', 'Bulgarian Split Squat', 'Barbell Bulgarian Split Squat', 'Step-Up',
+  'Single-Leg Romanian Deadlift', 'Single-Leg Extension', 'Standing Leg Curl',
+  'Cable Leg Curl', 'Machine Glute Kickback',
+];
+const PER_ARM = [
+  'Dumbbell Row', 'Kroc Row', 'Concentration Curl', 'Single-Arm Lat Pulldown',
+  'Single-Arm Cable Row', 'Single-Arm Cable Pushdown', 'Cable Lateral Raise',
+  'Bayesian Cable Curl', 'Cross-Body Cable Y-Raise', 'Cross-Body Cable Triceps Extension',
+  'Triceps Kickback', 'Turkish Get-Up', 'Kettlebell Snatch',
+  'Alternating Dumbbell Curl', 'Hammer Curl', 'Cross-Body Hammer Curl',
+];
+const LOGGING_NOTES = {
+  ...Object.fromEntries(PER_LEG.map((n) => [n, 'Reps per leg'])),
+  ...Object.fromEntries(PER_ARM.map((n) => [n, 'Reps per arm'])),
+  // Shared by the glute and the triceps exercise, so "side", not leg or arm.
+  'Cable Kickback': 'Reps per side',
+  'Side Plank': 'Time per side', 'Copenhagen Plank': 'Time per side', 'Suitcase Carry': 'Time per side',
+  // Both conventions at once.
+  'Single-Leg Press': 'Reps per leg · plates only',
+  'Meadows Row': 'Reps per arm · plates only',
+  'Landmine Press': 'Reps per arm · plates only',
+  'Single-Leg Hip Thrust': 'Reps per leg · added weight',
+  'Single-Leg Calf Raise': 'Reps per leg · added weight',
+  'Cossack Squat': 'Reps per leg · added weight',
+  // Machine and bar weight.
+  ...Object.fromEntries(['Leg Press', 'Leg Press Calf Raise', 'Hack Squat', 'Pendulum Squat']
+    .map((n) => [n, 'Plates only, no sled'])),
+  'Sled Push': 'Plates only, no sled', 'Sled Drag': 'Plates only, no sled',
+  ...Object.fromEntries(['Seated Leg Press', 'Belt Squat', 'Standing Calf Raise',
+    'Seated Calf Raise', 'Donkey Calf Raise'].map((n) => [n, 'No machine weight'])),
+  ...Object.fromEntries(['T-Bar Row', 'Landmine Row', 'Landmine Squat', 'Landmine Twist']
+    .map((n) => [n, 'Plates only, no bar'])),
+  ...Object.fromEntries([...UNWEIGHED_BAR].map((n) => [n, 'Include the bar'])),
+  ...Object.fromEntries(['Hammer Strength Row', 'Machine Row', 'Machine Chest Press',
+    'Incline Machine Press', 'Machine Shoulder Press'].map((n) => [n, 'Both sides together'])),
+  // Weighted bodyweight moves the fraction table does not rate.
+  ...Object.fromEntries(['Back Extension', '45-Degree Hyperextension', 'Glute-Ham Raise',
+    'Decline Sit-Up'].map((n) => [n, 'Added weight only'])),
+};
+
+/** The few words that say how to count this exercise, or null when it is clear. */
+export function loggingNoteFor(exercise) {
+  if (!exercise || !exercise.name || exercise.isCustom) return null;
+  const name = exercise.name;
+  if (LOGGING_NOTES[name]) return LOGGING_NOTES[name];
+  if (/^Smith Machine /.test(name)) return 'Plates only, no bar';
+  const fields = Array.isArray(exercise.fields) ? exercise.fields : [];
+  const bw = bodyWeightFractionFor(exercise);
+  if (bw && fields.includes('weight')) return bw.assist ? 'Weight = help' : 'Added weight only';
+  return null;
+}
+
+/** Every name the table above names — for the test that each is a real exercise. */
+export const LOGGING_NOTE_NAMES = Object.keys(LOGGING_NOTES);
+
 export const BUILT_IN_EXERCISES = RAW.map(([name, muscle, equipment, code]) => ({
   id: slugify(name) + '--' + slugify(muscle),
   name,

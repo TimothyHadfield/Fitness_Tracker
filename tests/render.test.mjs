@@ -6485,6 +6485,33 @@ ok(!data.querySelector('.rep-target'),
   localStorage.removeItem(DRAFT);
 }
 
+/* ============ N. how to count it, under the name (2026-09-23) ============
+ * Tim: *"specify in like 3-4 words or symbols"* for lunges and machine weight. */
+{
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const w = await store.saveWorkout({
+    name: 'Note day',
+    exercises: [
+      { exerciseId: byName('Walking Lunge').id, sets: 1, notes: '' },
+      { exerciseId: byName('Chin-Up').id, sets: 1, notes: '' },
+    ],
+  });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const note = () => s.querySelector('.session-ex-meta .ex-note');
+  ok(Boolean(note()) && note().textContent === 'Reps per leg',
+     '🚨 a lunge says "Reps per leg" in the line under its name');
+  [...s.querySelectorAll('.session-footer button')].find((b) => /Next exercise/.test(b.textContent)).click();
+  await settle();
+  ok(Boolean(note()) && note().textContent === 'Added weight only',
+     'a chin-up says the number is added weight only');
+  const suffix = s.querySelector('.set-open .stepper-suffix');
+  ok(Boolean(suffix) && suffix.textContent === 'added',
+     '🔄 and its weight label says "added", not "total" — the number was never the total');
+  localStorage.removeItem(DRAFT);
+}
+
 /* ============ D. the row follows the finger (2026-09-12) ============
  *
  * Tim: *"It automatically locks into a valid position in the list, and doesn't
