@@ -927,12 +927,18 @@ function confidenceLine(m) {
 }
 
 function summary(muscles, trained = new Map()) {
-  const ranked = [...muscles.values()].filter((m) => m.level);
+  /* ⚠️ BELOW BEGINNER IS RANKED TOO — 2026-09-24. Every rating in `muscles` is a
+   * placing; a null `level` is the one under Beginner (the figure paints it
+   * `below`), not a missing one. Filtering on `level` dropped exactly the
+   * weakest muscle, so "Furthest behind" named another one or vanished. */
+  const ranked = [...muscles.values()];
+  const pct = (m) => (Number.isFinite(m.percentile) ? m.percentile : -Infinity);
+  const levelName = (m) => (m.level ? m.level.name : 'Below Beginner');
   // Cardio and Activity are library shelves, not muscles — listing them as
   // "not ranked" beside Core and Neck would imply the map is missing them.
   const unranked = UNRANKABLE.filter((u) => u !== 'Cardio' && u !== 'Activity');
-  const strongest = ranked.slice().sort((a, b) => b.percentile - a.percentile)[0];
-  const weakest = ranked.slice().sort((a, b) => a.percentile - b.percentile)[0];
+  const strongest = ranked.slice().sort((a, b) => pct(b) - pct(a))[0];
+  const weakest = ranked.slice().sort((a, b) => pct(a) - pct(b))[0];
 
   /* ⚠️ TWO SENTENCES SINCE 2026-09-23, BECAUSE THE HATCH IS TWO STATES.
    *
@@ -951,8 +957,8 @@ function summary(muscles, trained = new Map()) {
     el('div', { class: 'field-help', text: 'Tap a muscle for its numbers.' }),
     strongest && weakest && strongest !== weakest
       ? el('div', { class: 'field-help' },
-          `Strongest: ${strongest.muscle} (${strongest.level.name}). `
-          + `Furthest behind: ${weakest.muscle} (${weakest.level.name}).`)
+          `Strongest: ${strongest.muscle} (${levelName(strongest)}). `
+          + `Furthest behind: ${weakest.muscle} (${levelName(weakest)}).`)
       : null,
     /* ⚠️ THIS SENTENCE WAS ALREADY TRUE AND THE COLOUR BESIDE IT WAS NOT. It
        now names which muscles you have actually trained but the app could not
@@ -1293,6 +1299,13 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
   const canShowDerived = sourceRows.some(
     (c) => Number.isFinite(c.estimate) || Number.isFinite(c.share));
 
+  // The row the rep-count warning speaks for — see the note at that warning.
+  // A sorted COPY: the table keeps its own order.
+  const byInfluence = sourceRows.filter((c) => Number.isFinite(c.share))
+    .sort((a, b) => b.share - a.share)[0];
+  const lead = byInfluence || m.best;
+  const leadConfident = byInfluence ? byInfluence.reps <= 5 : m.confident;
+
   const sourceId = `msrc-${++sourceSeq}`;
   const sources = el('div', { class: 'muscle-sources', id: sourceId });
 
@@ -1571,9 +1584,15 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
      * caveat is unchanged in force — `m.confident` is still `reps <= 5` on the
      * rep count the model READ, which is the conservative test — only the
      * sentence names the set that was actually done. */
-    !m.confident
+    /* 🔄 AND IT READS THE ROW WITH THE MOST INFLUENCE, not `m.best` — 2026-09-24.
+     * `m.best` is `contributors[0]`, first by credibility, and that can be a row
+     * that set 5% of the number while two 9–10-rep rows set 95% — so the warning
+     * named a 6-rep set that barely mattered. Same test (`reps <= 5` on the
+     * rep count the model read); only the row it asks changed. A friend's rows
+     * carry no `share`, so their panel keeps `m.best` and `m.confident`. */
+    !leadConfident
       ? el('div', { class: 'muscle-warn', text:
-          `From a ${m.best.performedReps || m.best.reps}-rep set. `
+          `From a ${lead.performedReps || lead.reps}-rep set. `
           + 'Benchmark heavier for a firmer placing.' })
       : null,
 

@@ -752,7 +752,7 @@ export function ownCalendar(activity, today, opts = {}) {
     // This is the one view in the app showing several years at once, and
     // "Jul 14" over a grid holding four different July 14ths names nothing.
     setChildren(readout,
-      el('span', { class: 'yr-r-date', text: `${fmtDateShort(isoDate)}, ${isoDate.slice(0, 4)}` }),
+      el('span', { class: 'yr-r-date', text: fmtDateShort(isoDate, { year: true }) }),
       el('span', { class: 'yr-r-what', text: names.length ? names.join(' · ') : 'Nothing recorded' }),
       friend ? null : chevron(),
     );
@@ -2452,7 +2452,11 @@ function barChart(rows, field) {
   }
 
   const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
-  const fmt = (v) => (field === 'time' ? fmtTime(v) : trimNum(shownValue(field, v)));
+  // Weights are whole numbers in the reader's unit, like every other estimate in
+  // the app (`units.fmtRounded`) — the bars printed "374.45" and "+144.45".
+  const fmt = (v) => (field === 'time' ? fmtTime(v)
+    : field === 'weight' ? units.fmtRounded(v)
+      : trimNum(shownValue(field, v)));
   const judged = field !== 'time';
 
   const bar = (kind, value, label, estimated) =>
@@ -3512,7 +3516,27 @@ export async function renderVolumePane(host, top, opts = {}) {
     m, scale, volOpen === m.muscle, () => select(m.muscle),
   )));
 
-  const figure = volumeFigure(data, volOpen, select, opts.sex);
+  /* ⚠️ A PICK ON THE FIGURE BRINGS ITS DETAILS INTO VIEW — 2026-09-24. On a
+   * 659px-tall phone the panel opened at y≈687, below the fold, and nothing
+   * moved, so the tap looked like it did nothing. Only the figure does this: a
+   * row opens where the finger already is. It waits for the slide-open to end
+   * (the timer covers reduced motion, where no transition runs) and jumps
+   * rather than glides when the reader asked for less motion. */
+  const pickFromFigure = (muscle) => {
+    select(muscle);
+    if (!volOpen || typeof pickedWrap.scrollIntoView !== 'function') return;
+    const still = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let done = false;
+    const reveal = () => {
+      if (done || !pickedWrap.isConnected || !pickedWrap.classList.contains('is-open')) return;
+      done = true;
+      pickedWrap.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
+    };
+    pickedWrap.addEventListener('transitionend', reveal, { once: true });
+    setTimeout(reveal, still ? 0 : 400);
+  };
+  const figure = volumeFigure(data, volOpen, pickFromFigure, opts.sex);
   const picked = el('div', { class: 'vol-picked' });
   // ⚠️ The panel is inside the collapsing wrapper the motion pass built, so
   // picking a muscle SLIDES the list down rather than jolting it. Same class,
@@ -3617,7 +3641,8 @@ export async function renderVolumePane(host, top, opts = {}) {
        * numbers were the thing that changed.
        *
        * The line that stays is the four facts a reader needs to READ the
-       * screen: the unit, that warm-ups are in, that indirect work is halved,
+       * screen: the unit, that marked warm-ups are out (since 2026-09-23 they
+       * are stored apart; unmarked ones still count), that indirect work is halved,
        * and where the tick is. Everything behind the ? is WHY — why the bands
        * do not move with the window, why there is no target line, why warm-ups
        * cannot be separated, why Core is understated. That is the split the
@@ -3625,7 +3650,7 @@ export async function renderVolumePane(host, top, opts = {}) {
       el('div', { class: 'vol-notes' },
         el('div', { class: 'help-line'},
           el('span', { class: 'field-help', text:
-            'Sets a week per muscle. Warm-ups counted, indirect work counts half, '
+            'Sets a week per muscle. Marked warm-ups left out, indirect work counts half, '
             + `the tick is 4 a week.` }),
           helpDot(el('div', {},
             el('p', {}, el('b', { text: 'Always a rate. ' }),
@@ -3635,8 +3660,9 @@ export async function renderVolumePane(host, top, opts = {}) {
               `The tick at 4 is where change starts being detectable. Above it the `
               + 'labels say what another set buys, not what you ought to do.'),
             el('p', {}, el('b', { text: 'Warm-ups. ' }),
-              'The app cannot tell a warm-up from a back-off set, and dropping the light ones would '
-              + 'drop real work too — so these run a little high if you log warm-ups.'),
+              'Sets marked as warm-ups are left out. A warm-up logged as a normal set still counts — '
+              + 'the app cannot tell it from a back-off set — so these run a little high if you log '
+              + 'warm-ups that way.'),
             el('p', {}, el('b', { text: 'Half a set. ' }), INDIRECT_NOTE_WEEKLY),
             el('p', {}, el('b', { text: 'Core. ' }),
               'Understated for everyone — squats, deadlifts, carries and overhead work all train it '
@@ -3812,7 +3838,7 @@ function sourceLine(topic) {
       // A source with no verified link is named rather than linked — a wrong
       // link on screen is worse than no link.
       s.url
-        ? el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.label })
+        ? el('a', { class: 'text-link', href: s.url, target: '_blank', rel: 'noopener', text: s.label })
         : el('span', { text: s.label }),
       s.n ? el('span', { class: 'rt-src-n', text: ` (${s.n})` }) : null,
     ]),
@@ -4136,7 +4162,7 @@ async function renderResearchPane(host, top) {
           + 'average (peak turning force at the joint, not a one-rep max), plotted at that group’s '
           + 'average age. Groups of different people, not the same people ageing — so treat the '
           + 'shapes as the finding, not any single percent. ',
-          el('a', { href: AGE_SOURCE.url, target: '_blank', rel: 'noopener', text: 'Harbo, Brincks & Andersen (2012)' }), '.'),
+          el('a', { class: 'text-link', href: AGE_SOURCE.url, target: '_blank', rel: 'noopener', text: 'Harbo, Brincks & Andersen (2012)' }), '.'),
         el('p', {}, el('b', { text: `Why ${NOT_COVERED.join(', ').replace(/, ([^,]+)$/, ' and $1')} are missing. ` }),
           'No study measures pressing, rowing or shrugging strength across ages in a general '
           + 'population. This tab shows sources — inventing three curves to complete the set would '

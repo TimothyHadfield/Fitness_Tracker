@@ -619,8 +619,12 @@ export function stallReasons({ requirements, measured, muscle }) {
   // project, so it is not one this file may quietly make. This is the same call
   // the rating makes when it says out loud that a workout stores a set count and
   // not a rep range: name what cannot be seen, on screen, in words.
-  const MEASURED_SETS_CAVEAT = ' This counts every set you logged, warm-ups included — '
-    + 'so if you log warm-ups, your real hard-set count is lower.';
+  //
+  // 🔄 TRUE ONLY IN PART SINCE 2026-09-23, so the sentence changed. Warm-ups
+  // marked as warm-ups live in `entry.warmups` and are never counted. The note
+  // above still holds for a warm-up logged as an ordinary set.
+  const MEASURED_SETS_CAVEAT = ' Sets marked as warm-ups are left out; warm-ups logged as '
+    + 'normal sets still count, so then your real hard-set count is lower.';
 
   /* ── THE SHORT WINDOW ────────────────────────────────────────────────────────
    *
@@ -775,6 +779,10 @@ export function stallReasons({ requirements, measured, muscle }) {
   const heading = (status, { ok, short, unknown }) =>
     (status === 'ok' ? ok : status === 'unknown' ? unknown : short);
 
+  /* ⚠️ `source: null` ON THE FIVE BELOW SINCE 2026-09-24, not deleted evidence.
+   * They read "research.md §6.2" and so on, and that string was printed under the
+   * row on the stalls screen — a file name in this repo, which no reader can open.
+   * The section each one comes from stays here, in the comment beside it. */
   return [
     {
       key: 'volume',
@@ -785,7 +793,7 @@ export function stallReasons({ requirements, measured, muscle }) {
         unknown: 'Sets on this muscle',
       }),
       visible: true,
-      source: 'research.md §6.2',
+      source: null, // docs/research.md §6.2
       ...volume,
     },
     {
@@ -797,7 +805,7 @@ export function stallReasons({ requirements, measured, muscle }) {
         unknown: 'How often you train it',
       }),
       visible: true,
-      source: 'research.md §6.3',
+      source: null, // docs/research.md §6.3
       ...frequency,
     },
     {
@@ -806,8 +814,8 @@ export function stallReasons({ requirements, measured, muscle }) {
       visible: false,
       status: 'invisible',
       value: null,
-      source: 'research.md §6.7',
-      detail: 'The app has no reps-in-reserve field and is not getting one (D28), so it cannot see '
+      source: null, // docs/research.md §6.7; "not getting one" is decision D28
+      detail: 'The app has no reps-in-reserve field and is not getting one, so it cannot see '
         + 'how hard your sets are. This is the variable that most decides whether a set grows '
         + 'anything.',
     },
@@ -817,7 +825,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       visible: false,
       status: 'invisible',
       value: null,
-      source: 'research.md §6.9',
+      source: null, // docs/research.md §6.9
       detail: 'The app does not track food and will not — it recommends a number and never '
         + 'asks what you ate. So a shortfall here is invisible to it.',
     },
@@ -827,7 +835,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       visible: false,
       status: 'invisible',
       value: null,
-      source: 'research.md §6.10',
+      source: null, // docs/research.md §6.10
       detail: 'Invisible to the app. One night without sleep cuts muscle protein synthesis about '
         + '18 %, and nobody has measured what habitual hours do over a training block.',
     },

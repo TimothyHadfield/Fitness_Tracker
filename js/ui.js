@@ -1157,9 +1157,14 @@ export function fmtClock(iso) {
   } catch (_) { return null; }
 }
 
-export function fmtDateShort(iso) {
+/* "Sep 24" this year, "Sep 25, 2025" in any other — 2026-09-24. It never said a
+ * year, so a body-weight trend across a year read "172.5 on Sep 25 → 184.8 on
+ * Sep 24", which looks like one day apart. `{ year: true }` forces it. */
+export function fmtDateShort(iso, { year = false } = {}) {
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const opts = { month: 'short', day: 'numeric' };
+  if (year || y !== new Date().getFullYear()) opts.year = 'numeric';
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, opts);
 }
 
 export function relativeDay(iso) {

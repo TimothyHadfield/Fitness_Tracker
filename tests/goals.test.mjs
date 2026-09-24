@@ -564,8 +564,11 @@ ok(/close to failure/.test(req.rows.find((r) => r.key === 'sets').detail)
    && /[Ww]arm-ups do not count/.test(req.rows.find((r) => r.key === 'sets').detail),
    '⚠️ the requirement DEFINES a hard set — close to failure, warm-ups excluded');
 for (const [label, rs] of [['short', shortReasons]]) {
-  ok(/every set you logged/.test(rs.find((r) => r.key === 'volume').detail),
-     `and the ${label} measured row admits the app counts every logged set, warm-ups included`);
+  // 🔄 2026-09-24: marked warm-ups are stored apart and never counted; an
+  // unmarked one still is, and that is the part the row must still admit.
+  ok(/marked as warm-ups are left out/.test(rs.find((r) => r.key === 'volume').detail)
+     && /logged as normal sets still count/.test(rs.find((r) => r.key === 'volume').detail),
+     `and the ${label} measured row says marked warm-ups are left out and unmarked ones still count`);
 }
 
 // ⚠️ VACUITY GUARD, the same one tests/social.test.mjs leans on. If "short"
@@ -581,7 +584,7 @@ const fineReasons = stallReasons({
 // saying the work IS being done, so warm-ups padding the number would be an
 // unearned positive verdict — the same fault the headline fix on this screen
 // corrected from the other side on 2026-08-22.
-ok(/every set you logged/.test(fineReasons.find((r) => r.key === 'volume').detail),
+ok(/logged as normal sets still count/.test(fineReasons.find((r) => r.key === 'volume').detail),
    '⚠️ the OK branch carries the caveat too — an inflated count there is an unearned verdict');
 ok(fineReasons.find((r) => r.key === 'volume').status === 'ok'
    && fineReasons.find((r) => r.key === 'frequency').status === 'ok',

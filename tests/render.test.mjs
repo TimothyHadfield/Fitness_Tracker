@@ -673,10 +673,17 @@ ok(selectedNow.length >= 1, `tapped muscle is highlighted (${selectedNow.length}
      * it, so the seat is the real ten-rep set and the caveat is PRESENT. Same
      * discriminator, opposite expectation, and it still fails loudly if a
      * truncation ever comes back. */
-    ok(/-rep set/.test(heavyText),
-       '🚨 the seat is the REAL 225 × 10 — the "From a N-rep set" caveat is printed, which only a '
-       + 'reading above five reps produces, so the arithmetic is running on the set he did rather '
-       + 'than on a truncation of it');
+    /* 🔄 AND ON 2026-09-24 THE CAVEAT STOPPED BEING THE DISCRIMINATOR. It now
+     * speaks for the row with the most INFLUENCE (review fix: it had named a 5%
+     * row), and here that is a 5-rep row — so the caveat is rightly absent and
+     * says nothing about the bench seat. The same question is asked of the model
+     * directly: the rep count it READ on the bench row. 10 is the real set; a
+     * truncation would read 5. */
+    const benchSeat = ((await (await import(BASE + 'store.js')).muscleStrength()).muscles.get('Chest').contributors || [])
+      .find((c) => c.exerciseName === 'Barbell Bench Press');
+    ok(benchSeat && benchSeat.reps === 10,
+       '🚨 the seat is the REAL 225 × 10 — the model read ten reps on it, not a truncation to five '
+       + `(${benchSeat && benchSeat.reps}), so the arithmetic is running on the set he did`);
     ok(/^225 lbs×10$/.test(benchSet || ''),
        `🚨 and the panel names that same set — "${benchSet}". It used to name it while the model `
        + 'read a different one; now the two agree because there is only one');
@@ -1012,16 +1019,17 @@ for (const mode of ['Graph', 'Bars']) {
      ⚠️ The four facts that stayed on the screen are asserted unopened, first,
      because the split between them is the whole design. */
   const paneText = () => data.querySelector('.vol-pane').textContent;
-  ok(/Warm-ups counted/.test(paneText()),
-     '⚠️ the screen itself still says warm-ups are counted — the open question, said rather than '
-     + 'silently resolved, and short enough to read at a glance');
+  // 🔄 2026-09-24: marked warm-ups are stored apart since 2026-09-23 and never
+  // counted, so "Warm-ups counted" became false and the line says what is true.
+  ok(/Marked warm-ups left out/.test(paneText()),
+     '⚠️ the screen itself says marked warm-ups are left out — short enough to read at a glance');
   ok(/indirect work counts half/.test(paneText()),
      'and that indirect work counts half');
   data.querySelector('.vol-notes .help-dot').click();
   await settle();
   const helpText = document.querySelector('.help-pop').textContent;
-  ok(/warm-up from a back-off set/.test(helpText),
-     '⚠️ and the ? explains WHY a warm-up cannot be told apart');
+  ok(/cannot tell it from a back-off set/.test(helpText) && /marked as warm-ups are left out/.test(helpText),
+     '⚠️ and the ? says marked warm-ups are left out, and why an unmarked one cannot be told apart');
   ok(/not a measured fact/.test(helpText),
      'the half-a-set rule is named as a modelling choice, in the words that ship beside the constant');
   ok(/No target line/.test(helpText),

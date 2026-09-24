@@ -2796,7 +2796,9 @@ a.seg {
   flex-direction: column;
 }
 .bar-row {
-  flex: 1 1 auto;
+  /* Grows into spare height, never shrinks below its content: at 1440×900 a
+     66px row was squeezed to 62px and the rows overlapped. */
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -4583,7 +4585,15 @@ a.seg {
    others into their own labels.
    ========================================================================== */
 
-.me-body { display: flex; flex-direction: column; gap: 16px; padding-inline: var(--pad); }
+/* No padding of its own: the pane already gives the --pad gutter, and a second
+   one put Profile's text 14px right of every other tab's (2026-09-24). */
+.me-body { display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 860px) {
+  /* Rows drop their inner gutter at this width (`.list > *`), and only a list
+     that is a direct child of the pane gets its full-bleed margin cancelled —
+     these are nested, so without this their rows sat 22px left of the labels. */
+  .me-body .list { margin-inline: 0; }
+}
 
 .me-head { display: flex; align-items: center; gap: 14px; }
 .me-face {
@@ -5152,6 +5162,8 @@ a.row { text-decoration: none; }
 .goal-hero { display: flex; flex-direction: column; gap: 2px; }
 .goal-hero-level {
   font-size: 11px; font-weight: 750; letter-spacing: 0.09em; text-transform: uppercase;
+  /* A chip, not a band: the column would otherwise stretch its fill full width. */
+  align-self: flex-start;
 }
 .goal-hero-lift { font-size: 25px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
 .goal-hero-meta {

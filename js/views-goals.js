@@ -72,7 +72,7 @@ import { PROGRESSION_EXPLAINER, PROGRESSION_WHY } from './progression.js';
 import { INDIRECT_NOTE_SETS } from './volume-map.js';
 import { STRENGTH_CAVEAT } from './optimal.js';
 import {
-  el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, trimNum,
+  el, icon, screenShell, emptyState, chevron, confirmSheet, toast, fmtDateLong, fmtDateShort, trimNum,
   refreshRoute, helpDot, figureNote,
 } from './ui.js';
 import * as units from './units.js';
@@ -306,15 +306,32 @@ async function noGoalScreen(muscles) {
   });
 }
 
+/* ⚠️ THE END IS THE DAY IT ENDED, `endedAt`, NOT THE DEADLINE — 2026-09-24. It
+ * printed `endDate`, the planned twelve-week deadline, so a goal ended on 24 Sep
+ * read "2026-08-06 to 2026-10-29 · ended": a date still in the future, in raw ISO.
+ * `endedAt` is a UTC timestamp (store.endGoal / setGoal stamp it), so it is read
+ * back as the LOCAL day. A row with no stamp names its start and no end at all
+ * rather than a date that would be false. */
 function pastRow(g) {
+  const endedOn = localDay(g.endedAt);
+  const span = endedOn
+    ? `${fmtDateShort(g.startDate)} to ${fmtDateShort(endedOn)}`
+    : `Started ${fmtDateShort(g.startDate)}`;
   return el('div', { class: 'row' },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: `${g.targetLevelName} ${g.liftName || g.muscle}` }),
       el('div', { class: 'row-sub wrap', text:
-        `${g.startDate} to ${g.endDate} · ${g.endedReason === 'replaced' ? 'replaced by a new goal'
+        `${span} · ${g.endedReason === 'replaced' ? 'replaced by a new goal'
           : g.endedReason === 'reached' ? 'reached' : 'ended'}` }),
     ),
   );
+}
+
+function localDay(stamp) {
+  if (typeof stamp !== 'string' || !stamp) return null;
+  const d = new Date(stamp);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /* ---- a goal is running ---- */
@@ -356,7 +373,9 @@ async function activeGoalScreen(goal, profile, muscles) {
     // ⚠️ ABOVE the figures, not below them. A reader meets the numbers first
     // and the notice is what changes what those numbers are (Rule 9: WHAT on
     // the screen, in front of the thing it qualifies).
-    stale ? staleNotice(goal, profile) : null,
+    // ⚠️ SPREAD, NOT `: null` — this is the native `append`, which prints a null
+    // as the word "null" (only `el()` drops them). It did, on every goal screen.
+    ...(stale ? [staleNotice(goal, profile)] : []),
     progressBlock(goal, p, m, stale),
     requirementsBlock(goal, req),
   );
@@ -760,8 +779,7 @@ function movedSince(goal, p, m, stale) {
     // Rule 5 — the yardstick names what it came from, and says it is not a
     // measurement of this reader. Same pattern as progressionBlock's citation.
     el('div', { class: 'req-source', text:
-      `the ±${ESTIMATE_NOISE_PCT} % is modelled, not measured on you · `
-      + 'strength-estimate-plan.md §6.1' }),
+      `the ±${ESTIMATE_NOISE_PCT} % is modelled, not measured on you` }),
 
     /* ⚠️ THE DATE IS THE POINT OF THIS LINE, and it is why it is not a repeat of
      * the source line progressBlock() already prints further up. That one says
@@ -818,7 +836,7 @@ function progressionBlock() {
         { label: 'How the weight suggestion works', title: 'How a step is chosen' }),
     ),
     ...PROGRESSION_EXPLAINER.map((t) => el('p', { class: 'goal-verdict-body', text: t })),
-    el('div', { class: 'req-source', text: 'ACSM position stand 2009 · research.md §12' }),
+    el('div', { class: 'req-source', text: 'ACSM position stand 2009' }),
   );
 }
 
