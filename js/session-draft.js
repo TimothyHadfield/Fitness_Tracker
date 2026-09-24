@@ -60,11 +60,15 @@ export function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
 }
 
+/** How long past midnight a workout started yesterday stays open (see below). */
+export const LIVE_DRAFT_MS = 12 * 3600 * 1000;
+
 /**
  * The draft if a workout is genuinely still open, otherwise null.
  *
- * A draft only lives for the day it was started. Yesterday's abandoned session
- * must not silently reappear and get saved with today's date.
+ * A draft lives for the day it was started (and, since 2026-09-24, up to
+ * twelve hours past it — below). Yesterday's abandoned session must not
+ * silently reappear.
  *
  * ⚠️ The check is against `startedOn` — the day the draft was CREATED — and not
  * against `date`, which is the day the session is recorded FOR and which the
@@ -76,12 +80,30 @@ export function clearDraft() {
  * `next-workout.js` and `strength-observations.js` take theirs, so a test can
  * put a draft on either side of midnight without waiting for one.
  *
+ * 🆕 2026-09-24 (review): **A WORKOUT OPEN PAST MIDNIGHT IS STILL LIVE.** The
+ * day rule alone threw away a session started at 23:00 the moment the clock
+ * rolled over — the runner then `clearDraft()`ed it on the next open, sets and
+ * all. So a draft started YESTERDAY also counts while `startedAt` is under
+ * `LIVE_DRAFT_MS` old. It keeps its own `date`, so it still saves to the day
+ * it was started. The start day has to be yesterday as well as the instant
+ * being recent, so a draft whose two fields disagree is not rescued by either.
+ * No `startedAt` (an old draft) is the day rule, exactly as before.
+ *
  * @param {string} today  todayISO()
+ * @param {number} [now]  ms; defaults to the clock, passed in by tests
  */
-export function liveDraft(today) {
+export function liveDraft(today, now = Date.now()) {
   const d = loadDraft();
   if (!d || !d.workoutId) return null;
-  return (d.startedOn || d.date) === today ? d : null;
+  const day = d.startedOn || d.date;
+  if (day === today) return d;
+  const t = Date.parse(d.startedAt);
+  if (!Number.isFinite(t) || !(now - t >= 0 && now - t < LIVE_DRAFT_MS)) return null;
+  const [y, m, dd] = String(today).split('-').map(Number);
+  const prev = new Date(y, m - 1, dd - 1);
+  const yesterday = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-`
+    + String(prev.getDate()).padStart(2, '0');
+  return day === yesterday ? d : null;
 }
 
 /**

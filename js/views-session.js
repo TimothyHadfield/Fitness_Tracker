@@ -308,7 +308,8 @@ export async function SessionView(workoutId) {
   }
   for (const { ex } of planned) deriveOpening(ex);
 
-  /* A draft only resumes on the same day, and that rule now lives in
+  /* A draft only resumes on the same day (or within twelve hours of a start
+   * late yesterday, since 2026-09-24), and that rule now lives in
    * session-draft.js because the bar above the nav applies exactly the same
    * one — the two disagreeing would put a workout on the screen that opening it
    * then throws away. */
@@ -2323,6 +2324,15 @@ export async function SessionView(workoutId) {
        * PLAUSIBLE_GAIN) and well short of the ×10 slip it exists to catch.
        * Advisory only: nothing is blocked, nothing is changed. */
       const typo = live && totalW >= oneRM * TYPO_WARN_RATIO;
+      /* ⚠️ AND THE PLATE LIST GOES WHILE IT SHOWS (review, 2026-09-24). A ×10
+       * slip is a weight that wraps to four lines of plates under the number,
+       * explaining in detail how to load a bar nobody is going to load. The
+       * stepper repaints its hint before calling back here, so hiding it on
+       * every pass is enough; only a plate list is hidden, never the hint. */
+      if (capSlots.weight && capSlots.weight.parentNode) {
+        const hint = capSlots.weight.parentNode.querySelector('.step-unit');
+        if (hint) hint.hidden = Boolean(typo) && hint.classList.contains('is-plates');
+      }
       if (capSlots.weight && typo) {
         setChildren(capSlots.weight, el('span', { class: 'typo-warn' },
           el('b', { text: `${(totalW / oneRM).toFixed(1)}×` }), ' your estimated max — typo?'));
@@ -2342,7 +2352,9 @@ export async function SessionView(workoutId) {
                 : (fromOwn ? '' : ' (from your other lifts)')));
       }
       if (capSlots.reps) {
-        const p = live ? repPrediction(oneRM, totalW) : null;
+        // `{ exercise }` so a bench or leg press reads its own column of the
+        // table, not the pooled one (review, 2026-09-24).
+        const p = live ? repPrediction(oneRM, totalW, { exercise: ex }) : null;
         /* ⚠️ AND THE PREDICTION FALLS ACROSS A RUN OF SETS (2026-09-13, plan
          * §5.1-5.2). "maybe 8 to failure" was printed identically on set 1 and
          * set 4, and the literature is unambiguous that it should not be: at
@@ -3796,8 +3808,8 @@ export async function SessionView(workoutId) {
     // own history and beat itself. Both reads are served from the cache.
     let prs = [];
     try {
-      const [priorSessions, priorBenchmarks] = await Promise.all([
-        store.getSessions(), store.getBenchmarks(),
+      const [priorSessions, priorBenchmarks, bodyWeights] = await Promise.all([
+        store.getSessions(), store.getBenchmarks(), store.getBodyWeights().catch(() => []),
       ]);
       // On a RETRY after a mid-save failure this session is already stored,
       // and a session must not be its own history and beat itself.
@@ -3808,7 +3820,11 @@ export async function SessionView(workoutId) {
       prs = personalBests(cleaned,
         priorSessions.filter((s) => !ownId || s.id !== ownId),
         priorBenchmarks.filter((b) => !ownId || b.sourceSessionId !== ownId),
-        exMap);
+        exMap,
+        // The weigh-in series and the day, so a weighted pull-up or dip — body
+        // weight plus what was added — can be priced at all (review,
+        // 2026-09-24). Without them its estimated-max record never appeared.
+        { bodyWeights: bodyWeights || [], date: state.date });
     } catch (_) { /* a PR readout must never block a save */ }
 
     /* ⚠️ THE ONE PLACE IN THIS APP WHERE A FAILURE COSTS SOMEBODY THEIR WORK.
@@ -3973,8 +3989,16 @@ export async function SessionView(workoutId) {
    * land in the runner rather than on a form about a session that never saved.
    * ================================================================== */
   function openSaveScreen() {
-    const own = cleanedEntriesOf(state.entries);
-    const sets = own.reduce((n, e) => n + e.sets.length, 0);
+    /* 🚨 EVERYBODY IN THE WORKOUT, NOT WHOEVER IS SELECTED (review, 2026-09-24).
+     * This counted `state.entries` — the ACTIVE person's — so with a guest
+     * selected the screen summarised only them, while `finish()` saves the
+     * owner and every guest and Discard deletes all of it. Sets are summed
+     * over the same people `finish()` walks; exercises are counted once each,
+     * because a joint workout is one workout. */
+    const everyone = [state.entries, ...state.others.map((o) => o.entries)]
+      .map((es) => cleanedEntriesOf(es || []));
+    const sets = everyone.reduce((n, es) => n + es.reduce((m, e) => m + e.sets.length, 0), 0);
+    const exerciseCount = new Set(everyone.flatMap((es) => es.map((e) => e.exerciseId))).size;
     const guestNames = state.guestNames.slice();
     const secs = activeSeconds(state, Date.now());
     /* 🆕 DURATION IS A BOX, 2026-09-23. Autumn, via Tim: *"she forgot to turn
@@ -3995,7 +4019,13 @@ export async function SessionView(workoutId) {
       'aria-label': 'Workout length in minutes',
       onInput: (e) => {
         const n = Math.round(Number(e.target.value));
-        state.durationMin = Number.isFinite(n) && n > 0 ? n : null;
+        // ⚠️ `max` on the box is a hint the keyboard ignores, so 6000 typed
+        // was 6000 saved (review, 2026-09-24). Clamped to 1–600 here, and the
+        // box is rewritten when over so what it shows is what gets saved.
+        // Below 1 (a cleared box, a 0 on the way to "45") stays null — the
+        // clock — rather than rewriting the box under somebody's thumb.
+        if (Number.isFinite(n) && n > 600) e.target.value = '600';
+        state.durationMin = Number.isFinite(n) && n > 0 ? Math.min(600, n) : null;
       },
     });
     if (durBox) durBox.value = String(Math.max(1, Math.round(secs / 60)));
@@ -4100,7 +4130,7 @@ export async function SessionView(workoutId) {
               el('div', { class: 'save-dur-row' }, durBox, el('span', { class: 'save-dur-unit', text: 'min' })))
             : stat('Duration', '—'),
           stat('Sets', String(sets)),
-          stat('Exercises', String(own.length)),
+          stat('Exercises', String(exerciseCount)),
         ),
         /* ⚠️ NOTHING IS SAID HERE ABOUT WHO WILL SEE IT. Hevy's screen carries a
          * per-workout Visibility row; ours cannot, because visibility is a
@@ -4138,15 +4168,17 @@ export async function SessionView(workoutId) {
         el('button', {
           class: 'btn danger save-discard',
           text: 'Discard workout',
-          onClick: () => confirmSheet({
+          // `draftRecordedSets` — everyone's, guests included — because
+          // `clearDraft()` below deletes everyone's.
+          onClick: () => { const lost = draftRecordedSets(state); confirmSheet({
             title: 'Discard this workout?',
-            message: sets
-              ? `${sets} recorded set${sets === 1 ? '' : 's'} will be deleted. This cannot be undone.`
+            message: lost
+              ? `${lost} recorded set${lost === 1 ? '' : 's'} will be deleted. This cannot be undone.`
               : 'Nothing was recorded in it, so nothing is lost.',
             confirmLabel: 'Discard',
             danger: true,
             onConfirm: () => { clearDraft(); go('#/home'); },
-          }),
+          }); },
         }),
       ),
       bottom: el('div', {}, saveError, saveBtn),
@@ -4168,7 +4200,9 @@ export async function SessionView(workoutId) {
     setChildren(saveError,
       el('strong', { text: 'Not saved. ' }),
       el('span', { text: `${msg} Your numbers are still here — nothing has been thrown away. `
-        + 'Tap Finish again, or free up some space and then tap it.' }),
+        // "Save workout", the button this message sits above — it said "Finish"
+        // from before the save screen existed (review, 2026-09-24).
+        + 'Tap Save workout again, or free up some space and then tap it.' }),
     );
     saveError.hidden = false;
     // ⚠️ Guarded, and not as politeness to jsdom. An exception thrown INSIDE the
@@ -4206,8 +4240,10 @@ export async function SessionView(workoutId) {
        * the Rule 5 answer: the "estimated" tag says it is modelled, and this
        * names the real set the model was fed, so the inference can be checked
        * against a measurement rather than simply believed. */
-      e1rm: (p) => `${units.withUnit(Math.round(p.now))} from ${units.withUnit(p.weight)} × ${p.reps}`
-        + `, up from ${units.withUnit(Math.round(p.was))}`,
+      // ⚠️ `withUnitRounded` — rounded in the READER'S unit. Rounding pounds
+      // and converting printed "114.8 kg" (review, 2026-09-24; plan §2.7).
+      e1rm: (p) => `${units.withUnitRounded(p.now)} from ${units.withUnit(p.weight)} × ${p.reps}`
+        + `, up from ${units.withUnitRounded(p.was)}`,
     };
 
     // One block per exercise, its records listed under the name — Hevy hangs
@@ -4947,7 +4983,7 @@ export async function BenchmarkView() {
           : el('span', {}, el('b', { text: `${Math.round(pct)}%` }), ' of your estimated max'));
       }
       if (caps.reps) {
-        const p = oneRM > 0 && totalW > 0 ? repPrediction(oneRM, totalW) : null;
+        const p = oneRM > 0 && totalW > 0 ? repPrediction(oneRM, totalW, { exercise: state.exercise }) : null;
         setChildren(caps.reps, !p
           ? ''
           : p.over

@@ -239,7 +239,9 @@ export async function EditSessionView(sessionId) {
     const row = {
       ...draft,
       workoutName: (draft.workoutName || '').trim() || 'Workout',
-      entries,
+      // `cleaned`, not `entries` — it was worked out above and then not saved,
+      // so a half-removed superset kept its bracket (review, 2026-09-24).
+      entries: cleaned,
     };
     // Absent rather than '' when cleared — the same one-case contract the
     // runner and the projection keep for this key.
@@ -248,7 +250,19 @@ export async function EditSessionView(sessionId) {
     // The description keeps the same contract, at the cap the runner types to.
     const note = String(row.note || '').trim().slice(0, 280);
     if (note) row.note = note; else delete row.note;
-    await store.saveSession(row);
+    /* ⚠️ GUARDED, the runner's reason (its finish() note): unguarded, a full
+     * storage made the promise reject into nothing, and Save changes did
+     * nothing at all (review, 2026-09-24). Disabled while in flight so a
+     * second tap is not a second write; the form keeps every edit on failure. */
+    saveBtn.disabled = true;
+    try {
+      await store.saveSession(row);
+    } catch (err) {
+      toast(`Not saved. ${(err && err.message) || 'Could not save this record.'}`);
+      return;
+    } finally {
+      saveBtn.disabled = false;
+    }
     toast('Record updated');
     go('#/day/' + draft.date);
   }
@@ -265,6 +279,8 @@ export async function EditSessionView(sessionId) {
       },
     });
   }
+
+  const saveBtn = el('button', { class: 'btn primary block', onClick: save }, 'Save changes');
 
   return screenShell({
     title: 'Edit record',
@@ -325,6 +341,6 @@ export async function EditSessionView(sessionId) {
       el('button', { class: 'btn danger block', onClick: removeRecord },
         icon('trash'), 'Delete this record'),
     ],
-    bottom: el('button', { class: 'btn primary block', onClick: save }, 'Save changes'),
+    bottom: saveBtn,
   });
 }
