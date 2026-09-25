@@ -7284,7 +7284,10 @@ body.nav-card { background: #000; }
 /* Reduced motion: nothing moves by itself. A screen under a finger (the edge
    swipe, Record's drag-down) still follows it — phone review 3. */
 @media (prefers-reduced-motion: reduce) {
-  .screen.nav-moving:not(.nav-k-edge):not(.nav-k-card), .nav-ghost, .nav-snap, .nav-ind { transform: none !important; }
+  .screen.nav-moving:not(.nav-k-edge):not(.nav-k-card), .nav-ghost, .nav-snap { transform: none !important; }
+  /* ⚠️ NOT .nav-ind: its transform IS its place (gestures.js drawInd jumps it
+     there without animating). Pinning it put the selection on Home / the
+     sidebar's title on every screen — sign-off review 2026-09-25. */
 }
 /* === end Motion 2 · Navigation === */
 

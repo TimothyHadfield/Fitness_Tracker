@@ -324,6 +324,8 @@ const S = await import(new URL('js/spring.js', root).href);
   ok(/\.nav-moving[^{]*\{[^}]*animation:\s*none/.test(sec), 'a screen a spring is moving does not also play the CSS arrival');
   ok(/\.nav-fall[^{]*\{[^}]*animation:\s*none/.test(sec), 'the dropped card is spring-driven, not the old keyframe');
   ok(!/transition:[^;]*transform/.test(sec), '🚨 no CSS transition on transform in this section — springs write it');
+  const rm = (sec.match(/prefers-reduced-motion[^{]*\{([\s\S]*?)\n\}/) || [])[1] || '';
+  ok(rm && !/\.nav-ind/.test(rm), '🚨 reduced motion does not pin the tab indicator (its transform is its place)');
   const g = read('js/gestures.js');
   ok(/passive:\s*false/.test(g) && /preventDefault\(\)/.test(g), 'the swipe listens non-passively so it can stop the page scrolling under it');
   ok(/'session'/.test(g), 'the edge swipe knows the runner is off limits');
