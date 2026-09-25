@@ -2365,7 +2365,10 @@ export async function FriendSessionView(uid, sessionId) {
       };
     } catch (_) { /* unreadable reactions must not take the screen down with them */ }
   }
-  const { feedActions } = await import('./views-workouts.js');
+  const { feedActions, cardPhotoBox } = await import('./views-workouts.js');
+  // The workout's photo (2026-09-25), the same box its feed card draws.
+  const pic = cardPhotoBox(a, uid);
+  if (pic) parts.push(pic);
   parts.push(feedActions({ uid, name, act: a, rx, demo: Boolean(demoEntry) }));
 
   /* ⚠️ THE TIER CHECK IS GONE AND THE EMPTY CASE IS NOT (2026-09-03). Nobody

@@ -44,9 +44,12 @@ important part: **donations or slight ad revenue, and never more than it costs t
 want to make the cost or ad revenue higher than the cost to maintain the servers and other
 base-costs."* ~~🛑 **He asked for the analysis ONLY IF HE ASKS.** Do not spend a session on it.~~
 
-🛑 **AND PHOTOS ARE PAUSED BY HIM, 2026-09-10** — *"lets keep a pause on the photos for now. I don't
+✅ **PAUSE LIFTED BY TIM 2026-09-25:** *"start deploying the 'take a picture' feature … after a
+workout"*; he chose **free, no card** (shrunk photo in Firestore, no Cloud Storage/Blaze) and **same
+audience as the workout**. See `docs/onboarding-plan.md` §C. The old pause, for history:
+~~🛑 **AND PHOTOS ARE PAUSED BY HIM, 2026-09-10** — *"lets keep a pause on the photos for now. I don't
 think it's necessary yet."* He asked twice what they cost, at 1,000 users and then at the ten he
-actually expects before launch, and paused them on the answer. **Do not raise it again; he will.**
+actually expects before launch, and paused them on the answer. **Do not raise it again; he will.**~~
 The numbers are in `progress.md`'s START HERE block, including the one that changed: **Cloud Storage
 now needs a billing account as a PLAN GATE rather than a quota** (3 February 2026), and the Firebase
 pricing page still says otherwise.

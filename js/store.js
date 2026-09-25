@@ -28,6 +28,8 @@ import { normalizeSchedule, pruneSchedule } from './schedule.js';
 import { presetVersionOf, presetUpdatePlan, applyPresetPlan } from './preset-updates.js';
 import { recordedSetCount } from './session-stats.js';
 import { IS_CONFIGURED } from './firebase-config.js';
+// Workout photos (2026-09-25) — the validators only; see the photos section.
+import { safePhoto, safePhotoSize } from './photo.js';
 
 const BACKEND = 'auto'; // 'auto' | 'local' | 'firebase'
 const NS = 'ftrack:v1:';
@@ -541,6 +543,9 @@ export function clearReadCache() {
   // has to be remembered separately is a thing that gets forgotten, and the way
   // it would fail is one account being shown the previous account's friends.
   clearSocialCache();
+  // Workout photos too — "me" means a different person after a sign-in.
+  photoCache.clear();
+  photoKnown.clear();
 }
 
 /**
@@ -980,6 +985,106 @@ export function normalizeWorkout(w) {
     isBenchmark: Boolean(w.isBenchmark),
     exercises: ids.map((id) => ({ exerciseId: id, sets: DEFAULT_SETS, notes: '' })),
   };
+}
+
+/* ------------------------------------------------------------------ *
+ * Workout photos — 2026-09-25, docs/onboarding-plan.md part C
+ *
+ * One picture per session, kept OUT of the session row: the row carries only
+ * `photo: {w, h}` (js/photo.js says why), and the picture lives wherever this
+ * account's data lives —
+ *
+ *   cloud  users/{uid}/photos/{sessionId}, readable by exactly the people who
+ *          can read the published workout (firestore.rules, `photos`)
+ *   local  this browser's IndexedDB. ⚠️ NOT localStorage: at ~200 KB a photo,
+ *          two dozen of them would fill the ~5 MB localStorage holds, and a
+ *          full localStorage is the one thing that can lose a workout at
+ *          Finish (views-session.js finish()).
+ *   demo   a Map, gone on reload like the rest of the demo. Nothing uploaded.
+ *
+ * Reads are cached in memory per page load, keyed by owner and session, so a
+ * card scrolled past twice costs one read.
+ * ------------------------------------------------------------------ */
+
+const photoCache = new Map();     // 'owner/sid' -> Promise<{url,w,h}|null>
+const photoKnown = new Map();     // 'owner/sid' -> {url,w,h}   (resolved, non-null)
+const demoPhotos = new Map();     // 'owner/sid' -> {url,w,h}
+const localPhotoFallback = new Map();
+const photoKey = (sid, owner) => `${owner || 'me'}/${sid}`;
+
+let photoDbPromise = null;
+function photoDb() {
+  if (photoDbPromise) return photoDbPromise;
+  photoDbPromise = new Promise((resolve) => {
+    try {
+      if (typeof indexedDB === 'undefined' || !indexedDB) { resolve(null); return; }
+      const req = indexedDB.open('ftrack-photos', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('photos');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+      req.onblocked = () => resolve(null);
+    } catch (_) { resolve(null); }
+  });
+  return photoDbPromise;
+}
+
+/* ⚠️ WITHOUT IndexedDB (a locked-down private window, Node) the photo is held
+ * in memory and is gone on reload. The workout itself is unaffected. */
+const localPhotos = {
+  async run(mode, fn) {
+    const db = await photoDb();
+    if (!db) return undefined;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('photos', mode);
+      const req = fn(tx.objectStore('photos'));
+      tx.oncomplete = () => resolve(req ? req.result : undefined);
+      tx.onerror = () => reject(tx.error || new Error('Could not save the photo on this device.'));
+      tx.onabort = () => reject(tx.error || new Error('Could not save the photo on this device.'));
+    });
+  },
+  async get(sid) {
+    const db = await photoDb();
+    if (!db) return localPhotoFallback.get(sid) || null;
+    return (await this.run('readonly', (s) => s.get(sid))) || null;
+  },
+  async put(sid, rec) {
+    const db = await photoDb();
+    if (!db) { localPhotoFallback.set(sid, rec); return; }
+    await this.run('readwrite', (s) => s.put(rec, sid));
+  },
+  async del(sid) {
+    const db = await photoDb();
+    if (!db) { localPhotoFallback.delete(sid); return; }
+    await this.run('readwrite', (s) => s.delete(sid));
+  },
+};
+
+/** A stored/received record → `{url, w, h}` or null. Both ends validate. */
+function cleanPhoto(rec) {
+  if (!rec) return null;
+  const url = safePhoto(rec.url || rec.image);
+  const size = safePhotoSize(rec);
+  return url && size ? { url, ...size } : null;
+}
+
+/**
+ * Put a picture in the read cache without a read — for a screen that already
+ * holds it (the one just picked). Also how a screenshot script shows a photo
+ * on a demo friend's card, since the demo cannot upload anything.
+ */
+export function primePhoto(sessionId, ownerUid, rec) {
+  const clean = cleanPhoto(rec);
+  if (!sessionId || !clean) return null;
+  const key = photoKey(sessionId, ownerUid);
+  photoKnown.set(key, clean);
+  photoCache.set(key, Promise.resolve(clean));
+  if (demo.active() && ownerUid) demoPhotos.set(key, clean);
+  return clean;
+}
+
+/** The cached picture, if one has already arrived — synchronous, no read. */
+export function knownPhoto(sessionId, ownerUid = null) {
+  return photoKnown.get(photoKey(sessionId, ownerUid)) || null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1604,7 +1709,77 @@ export const store = {
     const rows = await backend.read('sessions');
     await backend.write('sessions', rows.filter((r) => r.id !== id));
     await dropSessionBenchmarks(id);
+    // Its photo goes with it (2026-09-25). Best-effort: the workout is already
+    // gone, and a photo that failed to delete is unreachable from any card.
+    await this.deletePhoto(id).catch(() => {});
     schedulePublish();
+  },
+
+  /* --- workout photos (see "Workout photos" above the store) --- */
+
+  /**
+   * Store the one picture for one of MY sessions. `photo` is `{url, w, h}` as
+   * js/photo.js shrinkPhoto() returns it. The session row's `photo: {w, h}` is
+   * the caller's to write — this stores the picture only.
+   */
+  async savePhoto(sessionId, photo) {
+    const rec = cleanPhoto(photo);
+    if (!sessionId || typeof sessionId !== 'string' || sessionId.length > 80 || !rec) {
+      throw new Error('That photo cannot be saved.');
+    }
+    const key = photoKey(sessionId, null);
+    const impl = await active();
+    if (impl === MemoryBackend) demoPhotos.set(key, rec);
+    else if (impl === LocalBackend) await localPhotos.put(sessionId, rec);
+    else await impl.writePhoto(sessionId, { image: rec.url, w: rec.w, h: rec.h });
+    photoKnown.set(key, rec);
+    photoCache.set(key, Promise.resolve(rec));
+    return rec;
+  },
+
+  /**
+   * The picture for a session, or null. `ownerUid` null means mine. Cached per
+   * page load; a refused or missing read is null, never an error.
+   */
+  photoFor(sessionId, ownerUid = null) {
+    if (!sessionId) return Promise.resolve(null);
+    const key = photoKey(sessionId, ownerUid);
+    if (photoCache.has(key)) return photoCache.get(key);
+    const p = (async () => {
+      const impl = await active();
+      let rec = null;
+      if (impl === MemoryBackend) {
+        rec = demoPhotos.get(key) || null;
+      } else if (impl === LocalBackend) {
+        // No cloud: only my own pictures exist on this device.
+        if (!ownerUid) rec = await localPhotos.get(sessionId);
+      } else {
+        const owner = ownerUid || impl.currentUid();
+        if (owner) rec = await impl.readPhoto(owner, sessionId);
+        // A photo taken while this account was on this device only (before
+        // sign-up, or while the cloud was unreachable) is still here.
+        if (!rec && !ownerUid) rec = await localPhotos.get(sessionId).catch(() => null);
+      }
+      const clean = cleanPhoto(rec);
+      if (clean) photoKnown.set(key, clean);
+      return clean;
+    })().catch(() => null);
+    photoCache.set(key, p);
+    // A failed read is not remembered as "no photo" for the whole visit.
+    p.then((v) => { if (!v && photoCache.get(key) === p) photoCache.delete(key); });
+    return p;
+  },
+
+  /** Remove the picture for one of MY sessions. Missing is fine. */
+  async deletePhoto(sessionId) {
+    if (!sessionId) return;
+    const key = photoKey(sessionId, null);
+    photoKnown.delete(key);
+    photoCache.set(key, Promise.resolve(null));
+    const impl = await active();
+    if (impl === MemoryBackend) { demoPhotos.delete(key); return; }
+    await localPhotos.del(sessionId).catch(() => {});
+    if (impl !== LocalBackend) await impl.deletePhoto(sessionId);
   },
 
   /* --- guest sessions ---

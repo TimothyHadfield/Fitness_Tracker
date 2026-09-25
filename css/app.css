@@ -6104,3 +6104,172 @@ a.feed-mine-row:active { background: var(--raised); }
 }
 
 /* === end Look pass === */
+
+/* === Tour === */
+
+/* The first-run tour (js/tour.js), 2026-09-25. One fixed layer over the whole
+   app, so opening it moves and resizes nothing on the page. The dim IS the
+   hole's shadow: one element, so the hole can glide without the full dim ever
+   flashing between stops. The whole layer fades in and out (--t); the hole
+   glides at --t-slow with --ease-both (an object crossing the screen, Rule 7);
+   the bubble fades and slides 8px toward its target. Reduced motion is the
+   blanket in the Motion section. */
+.tour {
+  position: fixed; inset: 0; z-index: 95;
+  opacity: 0;
+  transition: opacity var(--t) var(--ease-out);
+}
+.tour.is-on { opacity: 1; }
+.tour.is-leaving { opacity: 0; transition-timing-function: var(--ease-in); pointer-events: none; }
+.tour-block { position: absolute; inset: 0; }
+.tour-spot {
+  position: absolute; left: 0; top: 0;
+  border-radius: var(--r);
+  box-shadow: 0 0 0 150vmax rgba(0, 0, 0, .55);
+  pointer-events: none;
+  transition: transform var(--t-slow) var(--ease-both),
+              width var(--t-slow) var(--ease-both),
+              height var(--t-slow) var(--ease-both);
+}
+.tour-bubble {
+  --slide: 8px;
+  position: absolute; left: 0; top: 0;
+  padding: 12px 13px 10px;
+  border-radius: var(--r);
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(var(--slide));
+  pointer-events: none;
+  transition: opacity var(--t) var(--ease-out), transform var(--t) var(--ease-out);
+}
+.tour-bubble[data-side="above"] { --slide: -8px; }
+.tour-bubble.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+.tour-instant .tour-spot, .tour-instant .tour-bubble { transition: none; }
+.tour-arrow {
+  position: absolute; width: 12px; height: 12px; margin-left: -6px;
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  transform: rotate(45deg);
+}
+.tour-bubble[data-side="below"] .tour-arrow { top: -7px; border-right: 0; border-bottom: 0; }
+.tour-bubble[data-side="above"] .tour-arrow { bottom: -7px; border-left: 0; border-top: 0; }
+.tour-bubble[data-side="over"] .tour-arrow,
+.tour-bubble[data-side="center"] .tour-arrow { display: none; }
+.tour-title { font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: 4px; }
+.tour-text { margin: 0 0 10px; font-size: var(--fs-lg); line-height: 1.4; }
+.tour-foot { display: flex; align-items: center; gap: 8px; }
+.tour-count { flex: 1; font-size: var(--fs-sm); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.tour-skip {
+  min-height: 34px; padding: 0 6px;
+  background: none; border: 0;
+  color: var(--ink-soft); font-size: var(--fs-md);
+  cursor: pointer;
+}
+.tour-foot .btn { min-width: 64px; }
+.tour-bubble[data-side="center"] .tour-foot .btn.primary { margin-left: auto; }
+.tour button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tour [hidden] { display: none; }   /* `.btn` is inline-flex, which beats the UA's [hidden] */
+
+/* === end Tour === */
+
+/* === Onboarding === */
+/* The first-run questions (js/onboarding.js, 2026-09-25). Phone: the whole
+   screen. Laptop: a centred panel over the dimmed app. One question per screen;
+   screens slide sideways because this is a numbered sequence and the direction
+   is known (Rule 7 forbids it for routes, where it is not). The two screens
+   cross at once, so --ease-both. The reduced-motion blanket makes it instant.
+   Above sheets (60), under toasts (90) and the tour (95). */
+.ob-overlay {
+  position: fixed; inset: 0 0 var(--kb, 0px) 0; z-index: 80;
+  background: var(--ground);
+  display: flex; justify-content: center; align-items: stretch;
+  animation: fade-in var(--t) var(--ease-out);
+}
+.ob-overlay.is-leaving { animation: fade-out var(--t) var(--ease-in) forwards; pointer-events: none; }
+.ob-panel {
+  width: 100%; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) 0 var(--safe-b);
+  background: var(--ground);
+}
+.ob-head { flex: none; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 6px; }
+.ob-progress { flex: 1; display: flex; gap: 4px; }
+.ob-seg { flex: 1; height: 4px; border-radius: 2px; background: var(--raised-hi); transition: background-color var(--t) var(--ease-out); }
+.ob-seg.is-done { background: var(--accent); }
+.ob-skip { flex: none; }
+/* Screens are stacked absolutely in a clipped stage, so the one arriving and
+   the one leaving share the space and nothing below them moves. */
+.ob-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.ob-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px var(--pad) var(--pad);
+  overflow-x: hidden; overflow-y: auto;
+  background: var(--ground);
+}
+.ob-q { margin: 8px 0 6px; font-size: 24px; font-weight: var(--fw-bold); letter-spacing: -0.02em; line-height: 1.2; outline: none; }
+.ob-sub { margin: -6px 0 4px; font-size: var(--fs-md); color: var(--ink-faint); }
+.ob-choices { display: flex; flex-direction: column; gap: 10px; }
+.ob-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.ob-choice[aria-pressed="true"] { background: var(--accent-dim); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.ob-foot { margin-top: auto; padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.ob-building { align-items: center; justify-content: center; }
+.ob-building-text { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-med); color: var(--ink-soft); animation: fade-in var(--t) var(--ease-out); }
+.ob-days { list-style: none; margin: 0; padding: 0; }
+.ob-day { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); font-size: var(--fs-lg); }
+.ob-day:last-child { border-bottom: 1px solid var(--rule); }
+.ob-day-name { font-weight: var(--fw-med); }
+.ob-day-count { font-size: var(--fs-md); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.ob-alt { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
+.ob-alt a { color: var(--accent); }
+.ob-in-fwd  { animation: ob-in-fwd  var(--t-slow) var(--ease-both); }
+.ob-in-back { animation: ob-in-back var(--t-slow) var(--ease-both); }
+.ob-out-fwd  { animation: ob-out-fwd  var(--t-slow) var(--ease-both) forwards; pointer-events: none; }
+.ob-out-back { animation: ob-out-back var(--t-slow) var(--ease-both) forwards; pointer-events: none; }
+@keyframes ob-in-fwd   { from { transform: translateX(100%) } }
+@keyframes ob-in-back  { from { transform: translateX(-100%) } }
+@keyframes ob-out-fwd  { to { transform: translateX(-100%) } }
+@keyframes ob-out-back { to { transform: translateX(100%) } }
+@media (min-width: 860px) {
+  .ob-overlay { background: rgba(0,0,0,.55); align-items: center; padding: 24px; }
+  .ob-panel { max-width: 520px; height: min(680px, 100%); border-radius: 16px; overflow: hidden; padding: 6px 8px 10px; }
+}
+/* === end Onboarding === */
+
+/* === Photos === */
+/* The workout photo on a card or detail screen. The box has the photo's own
+   shape (set inline from its {w,h}, clamped 4:5..1.91:1) before the picture
+   arrives, so nothing below it moves when it lands. */
+.card-photo {
+  width: 100%;
+  max-height: min(72dvh, 620px);
+  overflow: hidden;
+  border-radius: var(--r);
+  background: var(--raised);
+}
+.card-photo[hidden] { display: none; }
+.card-photo-img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease-out);
+}
+.card-photo.is-loaded .card-photo-img { opacity: 1; }
+.card .card-photo { margin-top: 10px; }
+
+/* The Photo field on the save and edit screens. */
+.photo-field-body { display: flex; align-items: center; gap: 12px; }
+.photo-thumb {
+  width: 96px; height: 96px; flex: none;
+  border-radius: var(--r); overflow: hidden; background: var(--raised);
+}
+.photo-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-field-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo-field-busy { margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .card-photo-img { transition: none; }
+}
+/* === end Photos === */

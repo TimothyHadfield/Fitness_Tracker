@@ -709,7 +709,9 @@ function shards(c) {
  * ten documents are emptied instead, below.
  */
 export const PURGED_SUBCOLLECTIONS = [
-  'shared', 'reactions',
+  // `photos` (2026-09-25) is readable by the same people as `shared`, so it
+  // goes in the first, revocation-order group.
+  'shared', 'reactions', 'photos',
   'sessions', 'guestSessions',
   'social', 'invites', 'handoffs', 'disconnects', 'requests', 'backups',
 ];
@@ -910,6 +912,39 @@ export const FirebaseBackend = {
       if (err && err.code === 'permission-denied') return null;
       throw err;
     }
+  },
+
+  /* --- workout photos, users/{uid}/photos/{sessionId} (2026-09-25) ---
+   *
+   * One document per photo, `{ image, w, h, updatedAt }`. Written and deleted
+   * by the owner only; readable by whoever can read the published workout —
+   * see the `photos` block in firestore.rules. */
+
+  async writePhoto(sessionId, { image, w, h }) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.setDoc(c.fs.doc(c.db, 'users', user.uid, 'photos', String(sessionId)),
+      { image, w, h, updatedAt: c.fs.serverTimestamp() });
+    return true;
+  },
+
+  // permission-denied and missing are both just "no photo", like readShared.
+  async readPhoto(ownerUid, sessionId) {
+    const c = await init();
+    try {
+      const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', ownerUid, 'photos', String(sessionId)));
+      return snap.exists() ? snap.data() : null;
+    } catch (err) {
+      if (err && err.code === 'permission-denied') return null;
+      throw err;
+    }
+  },
+
+  async deletePhoto(sessionId) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'photos', String(sessionId)));
+    return true;
   },
 
   /* --- reactions: kudos + comments on published workouts --- */

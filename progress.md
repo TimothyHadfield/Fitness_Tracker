@@ -161,8 +161,9 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **The app icon is closed** (2026-08-30). Don't reopen.
 - **Accessibility work is deferred** (2026-09-17): *"Let's not work on the accessibility for a
   while."* Don't offer it again; he'll raise it.
-- **Photos are paused** (2026-09-10): *"lets keep a pause on the photos for now. I don't think it's
-  necessary yet."* Don't raise it.
+- **Photos are ON** (2026-09-25, lifting the 09-10 pause): *"start deploying the 'take a picture'
+  feature … after a workout"* — free, no card (Firestore, not Storage), same audience as the workout.
+- **Onboarding questions + first-run tour** (2026-09-25): building per `docs/onboarding-plan.md`.
 - **He took these himself** — don't start or offer: checking the estimator against a real attempt
   (Open work 19: *"I'll do 4 myself sometime this week, but I'll come to you about it"*); asking about
   public/private on first sign-in (*"I'll work on #2 along with some other things later"*).

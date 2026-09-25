@@ -42,6 +42,9 @@ import { alternativesFor } from './exercise-families.js';
  * imported here no longer — they had no other caller. */
 import { workoutCard, cardMeta } from './workout-card.js';
 import { liveDraft, draftRecordedSets } from './session-draft.js';
+// Workout photos (2026-09-25) — the box, and the store's cached read.
+import { photoBox } from './photo.js';
+import { knownPhoto } from './store.js';
 
 /* A built-in exercise by NAME, for the ready-made-system screens — those list
  * their exercises by name (`preset-systems.js` references them that way on
@@ -540,7 +543,7 @@ function feedCard(e) {
     ? `#/friend/${encodeURIComponent(e.uid)}/${encodeURIComponent(a.id)}`
     : `#/friend/${encodeURIComponent(e.uid)}`;
 
-  return workoutCard(a, {
+  return attachCardPhoto(workoutCard(a, {
     head: el('a', { class: 'feed-head', href: `#/friend/${encodeURIComponent(e.uid)}` },
       el('span', { class: 'feed-avatar' }, personFace(e.avatar, 19)),
       el('span', { class: 'feed-who' },
@@ -550,7 +553,42 @@ function feedCard(e) {
     ),
     href,
     foot: feedActions(e),
+  }), a, e.uid);
+}
+
+/**
+ * The workout's photo, as a box — or null when it has none (2026-09-25).
+ *
+ * `a.photo` is the `{w, h}` the session row / projection carries; the box is
+ * drawn at that shape at once and the picture is read only when the box nears
+ * the screen (js/photo.js photoBox), through the store's per-visit cache — so
+ * a card with a photo costs one read, once, and a card without one costs none.
+ * A picture already in the cache (just saved, or primed) shows even before the
+ * size has reached the row.
+ *
+ * @param {object} a         card shape (projection, or sessionToCard + photo)
+ * @param {string|null} ownerUid  whose workout; null = mine
+ */
+export function cardPhotoBox(a, ownerUid = null) {
+  if (!a || !a.id) return null;
+  const known = knownPhoto(a.id, ownerUid);
+  if (!a.photo && !known) return null;
+  return photoBox({
+    size: a.photo || known,
+    load: () => store.photoFor(a.id, ownerUid).then((r) => (r ? r.url : null)),
   });
+}
+
+/**
+ * Put the photo on a card: full width, UNDER the stats and exercise lines and
+ * above the actions — the order Hevy's workout screen uses (social-plan
+ * §12.15), so the words you scan come first and the picture does not push
+ * them down the feed. Inside the card's link, so tapping it opens the workout.
+ */
+export function attachCardPhoto(card, a, ownerUid = null) {
+  const box = cardPhotoBox(a, ownerUid);
+  if (box) (card.querySelector('.feed-open') || card).append(box);
+  return card;
 }
 
 /**

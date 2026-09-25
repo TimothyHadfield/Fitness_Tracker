@@ -94,7 +94,7 @@ import {
  * nothing here counts sets by hand any more. */
 import { workoutCard, sessionToCard, cardMeta } from './workout-card.js';
 // Your own card's Comment/Share row and reaction icons (review 2026-09-24).
-import { ownCardActions, rxBit } from './views-workouts.js';
+import { ownCardActions, rxBit, attachCardPhoto } from './views-workouts.js';
 import { commentAge } from './social.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -639,7 +639,8 @@ export async function MeWorkoutsView(named) {
       ...rows.map((s) => {
         const a = sessionToCard(s);
         const slot = (s.id && reactions.get(s.id)) || null;
-        return workoutCard(a, {
+        // The workout's photo, if it has one (2026-09-25): same box as the feed.
+        return attachCardPhoto(workoutCard(a, {
           id: s.id || null,
           /* ⚠️ NOT A LINK, and that is the one deliberate difference from the
            * feed's head. On a friend's card the face opens their page; on
@@ -656,7 +657,7 @@ export async function MeWorkoutsView(named) {
           // session has anything in it, so every card here is a way in.
           alwaysOpen: true,
           foot: ownFoot(a, slot, who, { me, state, names }),
-        });
+        }), { ...a, id: s.id, photo: s.photo }, null);
       }),
     );
 

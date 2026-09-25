@@ -26,6 +26,7 @@ import {
 // ⚠️ `units` LEFT WITH THE PROFILE READOUT on 2026-09-11 — this screen prints no
 // weight of its own any more. The one on Profile does the converting.
 import * as crop from './image-crop.js';
+import { startTour } from './tour.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -85,6 +86,28 @@ function settingsRow() {
   );
 }
 
+/* 🆕 THE TOUR AND THE QUESTIONS, AGAIN — 2026-09-25 (docs/onboarding-plan.md).
+ * Both run once on a new account; these are the way back to them, under the
+ * Settings row. ⚠️ `onboarding.js` is loaded only when tapped, and a failed load
+ * says so rather than doing nothing. */
+function guideRows() {
+  const row = (title, sub, onClick) => el('button', { class: 'row as-button', onClick },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: title }),
+      el('div', { class: 'row-sub', text: sub }),
+    ),
+    chevron(),
+  );
+  return [
+    row('Take the tour', 'A quick look around the app', () => startTour()),
+    row('Find me a program', 'A few questions, then a plan', () => {
+      import('./onboarding.js')
+        .then((m) => m.openOnboarding({}))
+        .catch(() => toast('Could not open that just now'));
+    }),
+  ];
+}
+
 /** What the Account screen becomes while the demo is on. */
 function demoScreen() {
   return screenShell({
@@ -118,7 +141,7 @@ function demoScreen() {
       }),
       el('div', { class: 'field-help', style: 'text-align:center' },
         'Your own account and everything in it is exactly where you left it.'),
-      el('div', { class: 'list' }, settingsRow()),
+      el('div', { class: 'list' }, settingsRow(), ...guideRows()),
     ],
   });
 }
@@ -804,6 +827,7 @@ async function personalSections({ mode }) {
       el('span', { class: 'row-chev' }, chevron()),
     ),
     settingsRow(),
+    ...guideRows(),
 
     /* ⚠️ WITH THE PERSON, NOT WITH THE DATA CONTROLS — directly under "Your
      * details" and far from "Delete all data". Who can see you and what they

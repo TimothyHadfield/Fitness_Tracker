@@ -664,7 +664,26 @@ function paintShell() {
   // is published is older than what is recorded. Never awaited, cannot fail
   // loudly; see social.healStalePublish().
   social.healStalePublish().catch(() => {});
+  firstRun();
 })();
+
+/* 🆕 A BRAND-NEW ACCOUNT GETS THE QUESTIONS, THEN THE TOUR — 2026-09-25
+ * (docs/onboarding-plan.md). Never awaited and cannot fail loudly: the app is
+ * already on screen and works without either. `shouldOnboard()` holds the whole
+ * gate (a real cloud connection, nothing recorded, not the demo, not seen
+ * before, on Home) — see js/onboarding.js for why each part is there. Both
+ * modules load only on this path, so every other boot pays nothing for them.
+ * The tour is optional here on purpose: if js/tour.js is missing or throws,
+ * the questions still ran and the app carries on. */
+async function firstRun() {
+  try {
+    const m = await import('./onboarding.js');
+    if (!(await m.shouldOnboard())) return;
+    m.openOnboarding({
+      onDone: () => import('./tour.js').then((t) => t.startTour && t.startTour()).catch(() => {}),
+    });
+  } catch (_) { /* the questions are a welcome, never a wall */ }
+}
 
 // Registered AFTER the first render, and never awaited. D6 says a gym with no
 // signal must not stop anyone logging a set, and a service worker that fails to

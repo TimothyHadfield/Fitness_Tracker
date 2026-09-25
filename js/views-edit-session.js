@@ -20,6 +20,7 @@ import {
   confirmSheet, fmtDateLong, exerciseLabel,
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
+import { photoField } from './photo.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -83,6 +84,18 @@ export async function EditSessionView(sessionId) {
     onInput: (e) => { draft.note = e.target.value; },
   });
   noteInput.value = draft.note || '';
+
+  /* 🆕 THE WORKOUT'S PHOTO (2026-09-25). `photoChange` stays undefined while
+   * untouched, becomes null on Remove and `{url, w, h}` on Add/Replace; Save
+   * acts on it. The stored picture is fetched after the screen is drawn. */
+  let photoChange;
+  const photoInput = photoField({
+    loadInitial: session.photo ? () => store.photoFor(session.id) : null,
+    onChange: (next) => { photoChange = next; },
+    onError: (msg) => toast(msg),
+  });
+  photoInput.append(el('div', { class: 'field-help', text:
+    'Optional. Whoever can see this workout sees the photo.' }));
 
   /* 🆕 THE WORKOUT'S LENGTH, FIXABLE AFTER SAVING (2026-09-24, review picks).
    * The same minutes box the save screen has, and the same rule: Save writes
@@ -271,13 +284,21 @@ export async function EditSessionView(sessionId) {
     const note = String(row.note || '').trim().slice(0, 280);
     if (note) row.note = note; else delete row.note;
     if (durationMin !== null) row.finishedAt = new Date(startMs + durationMin * 60000).toISOString();
+    // The row says whether there is a photo, and its shape; the picture has its
+    // own doc. A NEW picture is written first, so the row never promises one
+    // that failed to land; a removed one is deleted after the row stops
+    // mentioning it.
+    if (photoChange) row.photo = { w: photoChange.w, h: photoChange.h };
+    else if (photoChange === null) delete row.photo;
     /* ⚠️ GUARDED, the runner's reason (its finish() note): unguarded, a full
      * storage made the promise reject into nothing, and Save changes did
      * nothing at all (review, 2026-09-24). Disabled while in flight so a
      * second tap is not a second write; the form keeps every edit on failure. */
     saveBtn.disabled = true;
     try {
+      if (photoChange) await store.savePhoto(row.id, photoChange);
       await store.saveSession(row);
+      if (photoChange === null && session.photo) await store.deletePhoto(row.id).catch(() => {});
     } catch (err) {
       toast(`Not saved. ${(err && err.message) || 'Could not save this record.'}`);
       return;
@@ -335,6 +356,7 @@ export async function EditSessionView(sessionId) {
           'Optional — a line about how this workout went. '
           + 'Shown to friends you share your workouts with.' }),
       ),
+      photoInput,
       el('div', { class: 'field' },
         el('label', { text: 'Kind' }),
         el('div', { class: 'chips' }, benchToggle),

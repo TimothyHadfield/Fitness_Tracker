@@ -622,6 +622,23 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Verified how:** full no-Chrome suite 6,843 PASS / 0 FAIL before the wave-2 push; rules suite 226
   pass; new tests seen failing first (estimate 3/5, lint cap 5/6); WebKit shots of every tab at
   393/1440 in scratchpad/look/after.
-- **Open:** "N more" never seen on screen (demo program has no checker lines); sheet slide not seen
+- **Open (see also 2026-09-25 below):** "N more" never seen on screen (demo program has no checker lines); sheet slide not seen
   mid-motion, reduced motion and light theme not checked; preset notes still say "programme" (a
   content-hash test guards them).
+
+## 2026-09-25 · New-user questions, first-run tour, workout photos
+- **Asked:** a question-based guide at first login that *"will set the user up with everything they
+  need. For now, this will just be giving them a workout"*; a skippable tour with pop-ups and Next,
+  *"annimations … clean"*; *"start deploying the 'take a picture' feature … after a workout"*.
+- **Decided (Tim, question box):** photos free, no card (Firestore, not Storage); same audience as
+  the workout. Photo pause lifted in direction.md/progress.md.
+- **Built:** `js/program-builder.js` + `js/onboarding.js` (6 questions → own program, made current;
+  first run on a new cloud account only); `js/tour.js` (8 stops, gliding spotlight; Account screen rows
+  "Take the tour", "Find me a program"); `js/photo.js` + photo docs `users/{uid}/photos/{sessionId}`,
+  rules DEPLOYED. Plan and as-built notes: `docs/onboarding-plan.md`.
+- **Verified how:** full no-Chrome suite 7,010 PASS / 0 FAIL; rules emulator 260/0; generator checked
+  over all 12,800 answer combos; WebKit shots at 393/1440 in scratchpad/shots and photo-shots.
+- **Choices Tim hasn't seen:** all question/tour/photo wording; "Or try X or Y" only for Full gym;
+  flags set on open not finish; tour rows on Account not Settings; 240 ms glide (handbook 250 ms cap);
+  photo below exercises above Kudos, box 4:5–1.91:1 capped at 72 % of the screen.
+- **Open:** see `docs/onboarding-plan.md` NOT verified.

@@ -30,8 +30,17 @@ import {
 } from './set-reps.js';
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
+// Workout photo on the save screen (2026-09-25, onboarding-plan part C).
+import { photoField } from './photo.js';
+import { primePhoto } from './store.js';
 
 const go = (hash) => { location.hash = hash; };
+
+/* The photo field with the same kind of help line its neighbours carry. */
+function photoWithHelp(field, help) {
+  field.append(el('div', { class: 'field-help', text: help }));
+  return field;
+}
 
 // A weight this many times the lifter's estimated max reads "typo?" under the
 // number (Open work 1, 2026-09-23). See the typo block in the captions.
@@ -412,6 +421,12 @@ export async function SessionView(workoutId) {
   }
 
   let state;
+  /* The photo picked on the save screen, `{url, w, h}` or null (2026-09-25).
+   * ⚠️ Held here, NOT in the draft: the draft lives in localStorage, and a
+   * 150 KB picture in it is a third of the way to the quota that loses a
+   * workout at Finish. The cost is that a reload on the save screen forgets
+   * the photo (not the workout) — pick it again. */
+  let pickedPhoto = null;
 
   /**
    * Everything one PERSON's copy of this workout needs: their sets, their
@@ -3921,6 +3936,9 @@ export async function SessionView(workoutId) {
           ...(state.location ? { location: state.location } : {}),
           // The description, on the same absent-rather-than-empty contract.
           ...(state.note ? { note: state.note } : {}),
+          // The photo's SIZE only — the picture itself goes to its own doc
+          // just below, once this row has landed.
+          ...(pickedPhoto ? { photo: { w: pickedPhoto.w, h: pickedPhoto.h } } : {}),
           entries: cleaned,
         });
       }
@@ -3955,6 +3973,28 @@ export async function SessionView(workoutId) {
     } catch (err) {
       saveFailed(err);
       return;
+    }
+
+    /* THE PHOTO GOES AFTER THE WORKOUT HAS LANDED, AND IT CANNOT UNDO IT
+     * (2026-09-25). Same argument as the guest offer below: the workout is the
+     * thing that must not be lost, so the picture is written only once it is
+     * safe, and a failed picture is a toast — never "Not saved". The row
+     * already says it has a photo, so on failure it is saved again without
+     * one; otherwise every card would reserve a box for a picture that is not
+     * there. Primed first so the finish screen and Profile show it at once. */
+    if (cleaned.length && pickedPhoto) {
+      const pic = pickedPhoto;
+      const sid = state.saveIds.you;
+      const row = (await store.getSessions().catch(() => [])).find((s) => s.id === sid);
+      primePhoto(sid, null, pic);
+      store.savePhoto(sid, pic).catch(async (err) => {
+        toast(`The workout is saved, but its photo is not: ${(err && err.message) || 'it could not be uploaded.'}`);
+        if (row) {
+          const { photo, ...rest } = row;
+          await store.saveSession(rest).catch(() => {});
+        }
+      });
+      pickedPhoto = null;
     }
 
     /* ⚠️ SENDING HAPPENS AFTER EVERYTHING IS SAFELY SAVED, AND IT MAY NEVER
@@ -4169,6 +4209,14 @@ export async function SessionView(workoutId) {
           stat('Sets', String(sets)),
           stat('Exercises', String(exerciseCount)),
         ),
+        // 🆕 One photo per workout (Tim, 2026-09-25). Written on Save, after
+        // the workout itself — see finish().
+        // It goes on YOUR workout; a guest row never carries one.
+        photoWithHelp(photoField({
+          initial: pickedPhoto,
+          onChange: (next) => { pickedPhoto = next; },
+          onError: (msg) => toast(msg),
+        }), 'Whoever can see this workout sees the photo.'),
         /* ⚠️ NOTHING IS SAID HERE ABOUT WHO WILL SEE IT. Hevy's screen carries a
          * per-workout Visibility row; ours cannot, because visibility is a
          * property of the ACCOUNT (D29) and a per-workout flag is an open

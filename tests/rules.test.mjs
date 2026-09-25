@@ -758,6 +758,105 @@ await allowed(deleteDoc(doc(asDev, 'feedback', 'n2')),
   'while the developer can clear one they have dealt with');
 
 /* ================================================================
+ * WORKOUT PHOTOS — users/{uid}/photos/{sessionId}, 2026-09-25.
+ *
+ * Tim: the photo is *"visible to whoever can see the workout"*. So the read
+ * rule is the published document's audience, looked up rather than copied:
+ * an accepted friend (on `shared/friends` viewers) or anybody signed in while
+ * the account is public. Owner-only writes, strictly shaped, capped in size.
+ *
+ * The fixture is a REAL-SIZED photo: ~150 KB of JPEG is ~204,800 base64
+ * characters, and the regex and the size check both run over all of it.
+ * ================================================================ */
+console.log('\n--- Workout photos: the workout’s audience, and nobody else ---\n');
+
+{
+  const photo = (db, uid, sid) => doc(db, 'users', uid, 'photos', sid);
+  const b64 = (n) => Buffer.alloc(n, 0x5a).toString('base64');
+  const JPEG = 'data:image/jpeg;base64,' + b64(150 * 1024);          // at the cap: 204,823 chars
+  const good = (extra = {}) => ({ image: JPEG, w: 1080, h: 810, updatedAt: serverTimestamp(), ...extra });
+
+  // Known state for this section: Tim private with Alex as a friend, Sam public.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(shared(db, TIM, 'friends'), projection('friends', [ALEX]));
+    await deleteDoc(shared(db, TIM, 'public'));
+    await setDoc(shared(db, SAM, 'public'), projection('public', []));
+    await setDoc(shared(db, SAM, 'friends'), projection('friends', [ALEX]));
+    await setDoc(photo(db, SAM, 's9'), { image: JPEG, w: 810, h: 1080, updatedAt: new Date() });
+  });
+
+  // ---- writes ----
+  await allowed(setDoc(photo(asTim, TIM, 's1'), good()), 'the owner saves a real-sized photo (204,823 chars)');
+  await allowed(setDoc(photo(asTim, TIM, 's1'), good({ w: 810, h: 1080 })), 'and replaces it');
+  await denied(setDoc(photo(asAlex, TIM, 's2'), good()), '🚨 a FRIEND cannot put a photo on somebody else’s workout');
+  await denied(setDoc(photo(asStranger, SAM, 's2'), good()), 'nor can a stranger on a public account');
+  await denied(setDoc(photo(asNobody, TIM, 's2'), good()), 'nor anybody signed out');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ image: 'data:image/jpeg;base64,' + b64(160 * 1024) })),
+    '🚨 an OVERSIZE photo is refused on the wire (218,480 chars), not trusted to the client');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ caption: 'hi' })), 'an extra field is refused');
+  await denied(setDoc(photo(asTim, TIM, 's2'), { image: JPEG, w: 1080, updatedAt: serverTimestamp() }),
+    'a missing field is refused');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ image: 'data:image/png;base64,' + b64(900) })),
+    'a PNG is refused — the app only writes JPEG');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ image: 'data:image/svg+xml;base64,PHN2Zz4=' })),
+    'an SVG is refused — a document that can carry script');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ image: 'https://evil.example/pixel.jpg' })),
+    'a remote URL is refused — it would make every reader fetch a URL of the writer’s choosing');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ w: 4032 })), 'a side over 1080 is refused');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ w: '1080' })), 'a size that is not a number is refused');
+  await denied(setDoc(photo(asTim, TIM, 's2'), good({ updatedAt: 'now' })), 'updatedAt must be a timestamp');
+  await denied(setDoc(photo(asTim, TIM, 'x'.repeat(81)), good()), 'a document id longer than a session id is refused');
+
+  // ---- reads: private account ----
+  await allowed(getDoc(photo(asTim, TIM, 's1')), 'the owner reads their own');
+  await allowed(getDoc(photo(asAlex, TIM, 's1')), 'an accepted friend reads it — they can see the workout');
+  await denied(getDoc(photo(asSam, TIM, 's1')), '🚨 somebody who is not on the friends list cannot');
+  await denied(getDoc(photo(asStranger, TIM, 's1')), '🚨 a STRANGER cannot read a private account’s photo');
+  await denied(getDoc(photo(asNobody, TIM, 's1')), 'nor can anybody signed out');
+  await denied(getDocs(collection(asAlex, 'users', TIM, 'photos')),
+    'even a friend cannot LIST the photos — the feed asks for one it was told about');
+
+  // ---- reads: public account ----
+  await allowed(getDoc(photo(asStranger, SAM, 's9')), 'anybody signed in reads a PUBLIC account’s photo');
+  await denied(getDoc(photo(asNobody, SAM, 's9')), 'but not signed out — the same line the published read draws');
+
+  // ---- the audience changes, and the photo follows it with no rewrite ----
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(shared(ctx.firestore(), TIM, 'friends'), projection('friends', [SAM]));
+  });
+  await denied(getDoc(photo(asAlex, TIM, 's1')), '🚨 a friend REMOVED from the list loses the photo at once');
+  await allowed(getDoc(photo(asSam, TIM, 's1')), 'and one added gains it');
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await deleteDoc(shared(ctx.firestore(), SAM, 'public'));
+  });
+  await denied(getDoc(photo(asStranger, SAM, 's9')), '🚨 an account that goes PRIVATE takes its photos with it');
+  await allowed(getDoc(photo(asAlex, SAM, 's9')), 'while its friends keep them');
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(shared(ctx.firestore(), SAM, 'friends'),
+      projection('friends', [ALEX], { isPublic: true, audience: 'friends' }));
+    await setDoc(shared(ctx.firestore(), TIM, 'public'), projection('friends', [], { audience: 'friends' }));
+  });
+  await denied(getDoc(photo(asStranger, SAM, 's9')),
+    'a friends document wrongly carrying isPublic does not open photos to strangers');
+  await denied(getDoc(photo(asStranger, TIM, 's1')),
+    'nor does a `public` document whose isPublic is false');
+
+  // ---- deletes ----
+  await denied(deleteDoc(photo(asAlex, SAM, 's9')), 'a friend cannot delete somebody’s photo');
+  await allowed(deleteDoc(photo(asTim, TIM, 's1')), 'the owner deletes theirs (Remove, or deleting the workout)');
+
+  // Put the shared fixtures back the way the sections below expect them.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(shared(db, TIM, 'friends'), projection('friends', [ALEX]));
+    await deleteDoc(shared(db, TIM, 'public'));
+    await setDoc(shared(db, SAM, 'public'), projection('public', []));
+    await setDoc(shared(db, SAM, 'friends'), projection('friends', [ALEX]));
+  });
+}
+
+/* ================================================================
  * 🚨 DELETING AN ACCOUNT — every path the purge has to reach. 2026-09-10.
  *
  * Open work 27. "Delete everything permanently" left most of the account in
@@ -786,7 +885,7 @@ const storeSrc = readFileSync(join(here, '..', 'js', 'store.js'), 'utf8');
 const COLLECTIONS = [...storeSrc.match(/const COLLECTIONS = \[([^\]]*)\]/)[1]
   .matchAll(/'([^']+)'/g)].map((m) => m[1]);
 
-ok(PURGED_SUBCOLLECTIONS.length === 10,
+ok(PURGED_SUBCOLLECTIONS.length === 11,
   `the purge walks ${PURGED_SUBCOLLECTIONS.length} subcollections`);
 ok(PURGED_SUBCOLLECTIONS[0] === 'shared',
   '🚨 starting with `shared`, the only one anybody else can read — if a purge is interrupted, '

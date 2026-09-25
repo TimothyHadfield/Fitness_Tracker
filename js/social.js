@@ -82,6 +82,9 @@
 // can be asserted headlessly, and a module that reaches for Date.now() or
 // localStorage cannot be.
 
+// The workout photo's size check (2026-09-25). photo.js imports nothing.
+import { safePhotoSize } from './photo.js';
+
 /* ------------------------------------------------------------------ *
  * Audiences and the account setting
  * ------------------------------------------------------------------ */
@@ -624,6 +627,17 @@ export function projectSession(session) {
   if (typeof session.note === 'string' && session.note.trim()) {
     out.note = session.note.trim().slice(0, 280);
   }
+
+  // ── THE PHOTO'S SIZE, NEVER THE PHOTO (2026-09-25) ────────────────────────
+  //
+  // `{w, h}` says "this workout has a picture, and this is its shape", so a
+  // reader's card can hold a box of the right size and fetch the picture only
+  // when it scrolls near. The picture is its own document
+  // (users/{uid}/photos/{sessionId}) under a rule that admits the same people
+  // who can read THIS document — one photo is up to a fifth of the 1 MiB this
+  // document shares with sixty sessions, so it never rides in here.
+  const photo = safePhotoSize(session.photo);
+  if (photo) out.photo = photo;
 
   out.entries = (Array.isArray(session.entries) ? session.entries : []).map((entry) => {
     const e = {

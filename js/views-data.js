@@ -37,6 +37,7 @@ import { ageCoefficient } from './strength-standards.js';
 import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, publishedDaysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
+import { photoBox } from './photo.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -1384,6 +1385,11 @@ export async function DayView(date) {
         })),
       ),
       ...entryNodes(s),
+      // The workout's photo (2026-09-25), under what was done, as on its card.
+      s.photo ? photoBox({
+        size: s.photo,
+        load: () => store.photoFor(s.id).then((r) => (r ? r.url : null)),
+      }) : null,
     ));
   }
 

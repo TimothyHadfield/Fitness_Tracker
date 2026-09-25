@@ -393,6 +393,68 @@ service cloud.firestore {
     }
 
     // ================================================================
+    // WORKOUT PHOTOS — users/{uid}/photos/{sessionId}, 2026-09-25.
+    //
+    // Tim: free, no card (the picture is a shrunk JPEG stored as a string, the
+    // way the profile photo is — no Cloud Storage), and *"visible to whoever
+    // can see the workout"*.
+    //
+    // ⚠️ ITS OWN DOCUMENT, NEVER A FIELD OF shared/{audience}. That document
+    // has a 1 MiB ceiling shared with sixty sessions, and one photo is up to a
+    // fifth of it. The published session carries only `photo: {w, h}`.
+    //
+    // 🚨 THE READ IS THE PUBLISHED WORKOUT'S AUDIENCE, LOOKED UP RATHER THAN
+    // COPIED: an accepted friend (isFriendOf — the viewers list on
+    // shared/friends) or, while the account is public, anybody signed in (the
+    // shared/public document exists and says isPublic). Copying `viewers` onto
+    // every photo would be free to read and wrong the moment somebody is
+    // removed; looking it up means a removed friend, or an account going
+    // private, closes every photo at once with nothing rewritten. The price is
+    // one or two billed lookups per photo read.
+    //
+    // ⚠️ THE HONEST LIMIT: the rule admits the ACCOUNT's audience, not "this
+    // session is among the sixty published". A session older than the
+    // published window has no card anywhere, so nobody is told its id — but a
+    // reader who kept an id from earlier could still ask for its photo.
+    // `list` is owner-only, so ids cannot be discovered here.
+    //
+    // Writes: owner only, every field checked. MAX_PHOTO_CHARS in js/photo.js
+    // is the 210000 below — change both or neither.
+    // ================================================================
+
+    function isPublicAccount(userId) {
+      return signedIn()
+          && exists(/databases/$(database)/documents/users/$(userId)/shared/public)
+          && get(/databases/$(database)/documents/users/$(userId)/shared/public).data.isPublic == true;
+    }
+
+    function validPhoto(sessionId) {
+      return sessionId.size() >= 1
+          && sessionId.size() <= 80
+          && request.resource.data.keys().hasOnly(['image', 'w', 'h', 'updatedAt'])
+          && request.resource.data.keys().hasAll(['image', 'w', 'h', 'updatedAt'])
+          && request.resource.data.image is string
+          && request.resource.data.image.size() <= 210000
+          // JPEG and nothing else — never an SVG (a document that can carry
+          // script) and never a URL (every reader would fetch it for the writer).
+          && request.resource.data.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/]+={0,2}$')
+          && request.resource.data.w is int
+          && request.resource.data.w >= 1 && request.resource.data.w <= 1080
+          && request.resource.data.h is int
+          && request.resource.data.h >= 1 && request.resource.data.h <= 1080
+          && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/photos/{sessionId} {
+      allow get: if isOwner(userId) || isFriendOf(userId) || isPublicAccount(userId);
+      // Owner only: the purge lists to delete, and nobody else gets to learn
+      // which sessions have pictures.
+      allow list: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validPhoto(sessionId);
+      allow delete: if isOwner(userId);
+    }
+
+    // ================================================================
     // HANDOFFS — a session one friend recorded FOR another, offered for
     // them to accept. Open work 0e, the friend half.
     //
