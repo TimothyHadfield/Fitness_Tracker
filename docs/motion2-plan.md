@@ -1,6 +1,7 @@
 # Motion, physics and layout — pass 2 (2026-09-25)
 
-**Status: BUILDING** (audits done 2026-09-25; waves below).
+**Status: BUILT, IN REVIEW** — A+F 503e15d · D+E e12f3ae · B 901c3b6 · C + review-1 fixes (13
+defects) a1855bb. Review round 2 (phone + laptop reviewers) running; fixes land after it.
 
 ## Tim's words
 > "I notice the rows slide up when a screen opens but that's it, and there are some problems with the
@@ -93,5 +94,23 @@ router cannot know" (written 09-01) is out of date since 09-02.
 - NOT built (his call): iOS haptic hack on set done, the runner's layout jump when a set finishes
   (logging path), two-column desktop Home, footnote wording cuts, rest timer.
 
+## Choices builders made (Tim hasn't seen; one line each)
+- Save shine = white band over a brief green wash; pop 1.06 bounce. Rows rise 12px, 35ms apart.
+- Sidebar selected = fill + highlight line, no outline/glow; phone tab line at the bar's TOP edge,
+  hidden when Record is selected. All three rising screens (Record, resumed runner, friend data) use
+  the card rise; drag-down on Record lands on Home.
+- Laptop Profile two columns from 1200px; calendar route 1180px wide; laptop steppers capped 340px,
+  centred; ? dots sit right after their sentence app-wide.
+- Crowded graph markers are HIDDEN (not shrunk) — overrides the earlier "smaller, never removed".
+- Years rows stretch ≤1.5×; 393px Years still leaves ~135px empty (full fill = cells 3× tall).
+- Theme change = circle reveal 240ms. Home pull-to-refresh; native overscroll off on Home's pane.
+- New photo viewer (black, ✕, tap closes); grab handle 36×5; Tab trapped in sheets; ? box grows
+  from 55%. Minimise: card text fades in 130ms, card squashes into the bar.
+- Shimmer/spinner loops use `--m-loop` (outside the 250ms cap — loading indicators).
+
 ## NOT verified
-Filled in as it lands.
+- Real iPhone: :active via the touchstart listener, spring feel at 60/120Hz, edge swipe vs Safari's
+  own, pull-to-refresh vs iOS overscroll, pinch in the photo viewer, theme reveal in iOS Safari.
+- Best-lift shine on the finish screen and Goals celebration (demo produced no PB during runs).
+- Phone back into Profile waits ~260ms for the screen to build (render cost, not motion).
+- Profile best-lift rows on phone still 3 lines (needs wording/placement — Tim's call).

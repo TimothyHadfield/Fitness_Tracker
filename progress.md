@@ -1,7 +1,8 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
+_Last updated 2026-09-25 night (motion pass 2 IN PROGRESS: waves 1–3 live 503e15d…a1855bb; review
+rounds + fixes continue — status in `docs/motion2-plan.md`). Before that 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
 40 built and live through 81fada0, 2 skipped; picks page
 https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73, see chat.md 2026-09-24 second half). Older note: the
 headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
@@ -69,7 +70,7 @@ system/programme in UI text (code identifiers, routes and the hash-guarded prese
 CSS now has 5 font-size tokens / 3 weights; use them, not new px values. Choices Tim hasn't seen are in
 chat.md 2026-09-24 entries.
 
-**Flagged to Tim, unchanged:** the Profile Months/Years pill repaints instead of sliding; `pointercancel` on the exercises drag commits
+**Flagged to Tim, unchanged:** ~~Months/Years pill repaints~~ (slides since a1855bb); `pointercancel` on the exercises drag commits
 the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
 "Nothing to rank yet" and no figure; a neck panel runs 70 words against the 40-word cap; `.body-wrap`
 letterboxes the two figures differently on a phone.
