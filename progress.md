@@ -161,7 +161,7 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **App icon = "Rise · Black Ember"** (Tim picked it 2026-09-25 from 10 Rise variants; plate-sun
   eclipse on black). Files: `icon.svg` (tab), `apple-touch-icon.png`, `icon-192/512.png` (full-bleed,
   from `docs/logos/rise-v4-square.svg`). *"I still like the dusk mirror one, so just save it for now"*
-  → `docs/logos/rise-v2-*.svg`. He likes **"Rise"** as the app name (asked how crowded it is; not
+  → `docs/logos/rise-v2-*.svg`. Name ideas + what he thought of them: `docs/name-ideas.md` (not
   decided — don't rename until he says).
 - **Accessibility work is deferred** (2026-09-17): *"Let's not work on the accessibility for a
   while."* Don't offer it again; he'll raise it.
