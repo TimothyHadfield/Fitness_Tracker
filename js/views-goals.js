@@ -76,6 +76,7 @@ import {
   refreshRoute, helpDot, figureNote,
 } from './ui.js';
 import * as units from './units.js';
+import { celebrate } from './motion.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -489,7 +490,7 @@ function progressBlock(goal, p, m, stale) {
   const gained = p.gained;
   const shown = shownFigures(p);
 
-  return el('div', { class: 'card goal-progress' },
+  const card = el('div', { class: 'card goal-progress' },
     // The pounds themselves are real whichever model rated them, so all three
     // stay on the screen even when the goal is stale. It is the SUBTRACTIONS
     // between them that stop meaning anything, and those are below.
@@ -553,6 +554,10 @@ function progressBlock(goal, p, m, stale) {
           + `session${m.contributorCount === 1 ? '' : 's'} counted.` })
       : null,
   );
+  // 🆕 A reached target is one of the three wins the celebration tier is for
+  // (js/motion.js) — once per goal, never while the figures are stale.
+  if (p.reached && !stale) celebrate(card, `goal:${goal.id || goal.muscle}`);
+  return card;
 }
 
 /* 🆕 THE THREE FIGURES ARE ROUNDED ONCE AND THE GAPS DERIVED (review,

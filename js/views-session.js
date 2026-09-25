@@ -21,6 +21,7 @@ import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
+import { celebrate } from './motion.js';
 import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exercise-estimate.js';
 import {
   normalizeTargets, targetsApply, weightForTarget, summariseTargets,
@@ -4360,6 +4361,26 @@ export async function SessionView(workoutId) {
      * thing for somebody else has no session of their own, and a back button
      * pointing at nothing is worse than no back button. */
     const ownId = state.saveIds && state.saveIds.you;
+    const check = el('div', { class: 'finish-check' }, icon('check'));
+    const prsBlock = prGroups.length
+      ? el('div', { class: 'finish-prs' },
+          el('div', { class: 'finish-prs-head' }, icon('up', 15),
+            `Personal best${prs.length === 1 ? '' : 's'}`),
+          ...prGroups.map((g) => el('div', { class: 'finish-pr' },
+            el('div', { text: g.name }),
+            ...g.items.map((p) => el('div', {},
+              el('span', { class: 'tag', text: PB_LABEL[p.kind] }),
+              p.estimated ? el('span', { class: 'tag', text: 'estimated' }) : null,
+              ` ${prDetail[p.kind](p)}`)),
+          )),
+        )
+      : null;
+    /* 🆕 THE CELEBRATION TIER (2026-09-25, js/motion.js): the saved check and a
+     * new personal best are two of the three real wins it is allowed on. Keyed
+     * by the saved session, so this screen can never replay it. */
+    const winKey = `saved:${ownId || `${state.date}:${state.workoutName}`}`;
+    celebrate(check, winKey);
+    if (prsBlock) celebrate(prsBlock, `${winKey}:pb`);
     document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
       // ⚠️ A FUNCTION, not a hash. `screenShell` hands `back` straight to
@@ -4378,7 +4399,7 @@ export async function SessionView(workoutId) {
       backExact: true,
       noNav: true,
       scroll: el('div', { class: 'finish-hero' },
-        el('div', { class: 'finish-check' }, icon('check')),
+        check,
         el('h2', { text: 'Nice work' }),
         /* ⚠️ Personal bests lead, because they are the one thing on this
          * screen that is not the same every time.
@@ -4394,19 +4415,7 @@ export async function SessionView(workoutId) {
          *
          * Calm, not a scoreboard: no medals, no counts, no colour beyond the
          * one accent hairline `.finish-prs` already draws. */
-        prGroups.length
-          ? el('div', { class: 'finish-prs' },
-              el('div', { class: 'finish-prs-head' }, icon('up', 15),
-                `Personal best${prs.length === 1 ? '' : 's'}`),
-              ...prGroups.map((g) => el('div', { class: 'finish-pr' },
-                el('div', { text: g.name }),
-                ...g.items.map((p) => el('div', {},
-                  el('span', { class: 'tag', text: PB_LABEL[p.kind] }),
-                  p.estimated ? el('span', { class: 'tag', text: 'estimated' }) : null,
-                  ` ${prDetail[p.kind](p)}`)),
-              )),
-            )
-          : null,
+        prsBlock,
         // The owner's line only describes the owner's training. When they
         // recorded nothing and coached a guest through the whole thing, saying
         // "0 sets" would read as a failed save — the guests' lines are the

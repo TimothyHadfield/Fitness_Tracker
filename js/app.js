@@ -25,6 +25,8 @@ import {
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { MeRouteView } from './views-me.js';
 import { setUnits } from './units.js';
+// 🆕 First-paint motion and the tab pop (2026-09-25, docs/polish-plan.md M).
+import { arriveScreen, tabPop } from './motion.js';
 
 /**
  * FIVE TABS, AND THE MIDDLE ONE IS THE POINT.
@@ -363,6 +365,9 @@ let rendering = false;
  * one answers "is this an arrival or a repaint", which is what decides whether
  * the Record panel plays its rise. A re-render in place must not replay it. */
 let prevHash = '';
+/* Which TAB the last navbar lit. The icon pops only when this changes — a
+ * re-render, or a sub-screen of the same tab, is not a tab becoming selected. */
+let lastNavKey = null;
 
 async function render() {
   if (rendering) return;
@@ -501,6 +506,19 @@ async function render() {
     // movement. Must run AFTER the screen is in the document, because it
     // measures the selected segment.
     wireSegmented(screen);
+    /* 🆕 FIRST-PAINT MOTION (2026-09-25): rows stagger in, headline numbers
+     * count up, bars fill. `arriveScreen()` decides whether this render is an
+     * arrival (a new hash) and stays still for a repaint, the logging path and
+     * a screen that is already rising as a whole — see js/motion.js. */
+    arriveScreen(screen, { key: location.hash, route: route.name, rising });
+    const nav = NAV.find((n) => n.match.includes(route.name));
+    const navKey = nav ? nav.hash : null;
+    if (!FULLSCREEN.includes(route.name) && navKey) {
+      if (lastNavKey !== null && navKey !== lastNavKey) {
+        tabPop(app.querySelector('.navbar a[aria-current="page"]'));
+      }
+      lastNavKey = navKey;
+    }
   } catch (err) {
     console.error(err);
     clear(app);

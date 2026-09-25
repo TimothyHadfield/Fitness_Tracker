@@ -89,6 +89,32 @@
      This is the one that reads as a real object — it has to start and stop. */
   --ease-both: cubic-bezier(.4, 0, .2, 1);
 
+  /* DEPTH AND LIGHT — 2026-09-25, polish pass V. The components that use these
+     are in the "Polish · depth and colour" section near the end of this file;
+     the reasoning is written there. In short: light comes from above, depth
+     replaces borders, and a tint only ever moves a surface AWAY from the text
+     on it (darker under light text, lighter under dark text), so no contrast
+     measured in tests/a11y.test.mjs can go down.
+     ⚠️ Not hex values on purpose: the a11y parser reads `--x: #RRGGBB;` pairs
+     as text/surface colours, and none of these is one. */
+  --shadow-rgb: 6 4 0;                         /* shadow tint — warm, for the gold */
+  --hl:     rgb(255 255 255 / .055);           /* 1px top "reflection" on a panel */
+  --gloss:  rgb(255 255 255 / .30);            /* the same line on a filled accent */
+  --glow-a: 22%;                               /* accent share of a selected state's inner glow */
+  --lit:    linear-gradient(180deg, rgb(0 0 0 / 0), rgb(var(--shadow-rgb) / .14));
+  --recess: inset 0 1px 2px rgb(var(--shadow-rgb) / .35);
+  --elev-1: inset 0 1px 0 var(--hl), 0 1px 2px rgb(var(--shadow-rgb) / .35);
+  --elev-2: inset 0 1px 0 var(--hl), 0 1px 2px rgb(var(--shadow-rgb) / .40),
+            0 6px 14px -4px rgb(var(--shadow-rgb) / .45);
+  --elev-3: inset 0 1px 0 var(--hl), 0 2px 6px rgb(var(--shadow-rgb) / .30),
+            0 16px 36px -8px rgb(var(--shadow-rgb) / .60);
+  /* The accent as two stops. Dark themes put DARK ink on the accent, so the
+     second stop is lighter (top); light themes put WHITE ink on it, so it is
+     darker (bottom). Either way every stop reads at or above the flat accent. */
+  --accent-top:   color-mix(in srgb, var(--accent) 86%, #fff);
+  --accent-bot:   var(--accent);
+  --accent-press: var(--accent);
+
   color-scheme: dark;
 }
 
@@ -159,6 +185,23 @@
   --good-dim:    #DCEBE2;
   --danger:      #AF3B26;
 
+  /* Depth and light, light theme — see the note in the dark block. */
+  --shadow-rgb: 64 46 18;
+  --lit-rgb:    255 252 244;
+  --hl:     rgb(255 255 255 / .70);
+  --gloss:  rgb(255 255 255 / .24);
+  --glow-a: 40%;
+  --lit:    linear-gradient(180deg, rgb(var(--lit-rgb) / .55), rgb(var(--lit-rgb) / 0) 75%);
+  --recess: inset 0 1px 2px rgb(var(--shadow-rgb) / .10);
+  --elev-1: inset 0 1px 0 var(--hl), 0 1px 2px rgb(var(--shadow-rgb) / .12);
+  --elev-2: inset 0 1px 0 var(--hl), 0 1px 2px rgb(var(--shadow-rgb) / .14),
+            0 6px 14px -4px rgb(var(--shadow-rgb) / .18);
+  --elev-3: inset 0 1px 0 var(--hl), 0 2px 6px rgb(var(--shadow-rgb) / .08),
+            0 16px 36px -8px rgb(var(--shadow-rgb) / .24);
+  --accent-top:   var(--accent);
+  --accent-bot:   color-mix(in srgb, var(--accent) 86%, #000);
+  --accent-press: color-mix(in srgb, var(--accent) 84%, #000);
+
   color-scheme: light;
 }
 
@@ -190,12 +233,14 @@
   --rule: #24312D; --rule-soft: #1B2622;
   --accent: #3BC0AB; --accent-ink: #062019; --accent-dim: #123129;
   --good: #55BC86; --good-dim: #14291F;
+  --shadow-rgb: 0 8 7;
 }
 :root[data-palette="teal"][data-theme="light"] {
   --ground: #EFF4F2; --surface: #FFFFFF; --raised: #E1EAE6; --raised-hi: #D4E0DB;
   --rule: #D1DAD5; --rule-soft: #E0E7E3;
   --accent: #0E7264; --accent-ink: #FFFFFF; --accent-dim: #D6EAE4;
   --good: #2A7551; --good-dim: #DCEBE2;
+  --shadow-rgb: 14 56 48; --lit-rgb: 246 255 252;
 }
 
 /* ── Indigo — night-sky field, periwinkle accent ────────────────────────── */
@@ -204,12 +249,14 @@
   --rule: #262E3F; --rule-soft: #1C2331;
   --accent: #93A5FF; --accent-ink: #10142E; --accent-dim: #202741;
   --good: #57BB8A; --good-dim: #142A20;
+  --shadow-rgb: 3 5 20;
 }
 :root[data-palette="indigo"][data-theme="light"] {
   --ground: #F0F1F7; --surface: #FFFFFF; --raised: #E2E5F1; --raised-hi: #D5D9EA;
   --rule: #D3D6E4; --rule-soft: #E3E5F0;
   --accent: #4451C8; --accent-ink: #FFFFFF; --accent-dim: #DEE2F8;
   --good: #2A7551; --good-dim: #DCEBE2;
+  --shadow-rgb: 28 34 92; --lit-rgb: 248 249 255;
 }
 
 /* ── Ember — the gold kept, the whole field warmed around it ────────────── */
@@ -219,6 +266,7 @@
   --ink: #F0ECE5; --ink-soft: #CFC7BA; --ink-faint: #B3AA9B;
   --accent: #D99A3E; --accent-ink: #1A1206; --accent-dim: #33270F;
   --good: #63B573; --good-dim: #1C2A18;
+  --shadow-rgb: 10 5 0;
 }
 :root[data-palette="ember"][data-theme="light"] {
   --ground: #F4F0E7; --surface: #FFFDF8; --raised: #EAE3D4; --raised-hi: #DED6C3;
@@ -228,6 +276,7 @@
      ground — below AA). #8A5D0C clears 5.06 on ground and 5.75 under white. */
   --accent: #8A5D0C; --accent-ink: #FFFFFF; --accent-dim: #F0E4CB;
   --good: #2A7551; --good-dim: #DFEADC;
+  --shadow-rgb: 72 46 12; --lit-rgb: 255 250 238;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -6273,3 +6322,218 @@ a.feed-mine-row:active { background: var(--raised); }
   .card-photo-img { transition: none; }
 }
 /* === end Photos === */
+
+/* === Polish · depth and colour === */
+/* Pass V of docs/polish-plan.md, 2026-09-25. Tim: *"Some cites have really good
+   shading, reflection graphics, shining … good coloring."* Layout, wording and
+   the level colours are untouched; only light and depth are added.
+
+   THE RULES THIS SECTION KEEPS
+   - No bordered cards (Rule 2). Depth comes from shadow plus a 1px lighter top
+     edge — the "reflection" — from the --elev-* tokens at the top of the file:
+       3  sheets, popovers, toasts, the laptop questions panel
+       2  primary buttons and the Record button
+       1  ordinary raised buttons, the workout-in-progress strip
+     Rows in a list stay flat: a shadow per row is a phone cost for nothing.
+   - A tint only ever moves a surface AWAY from the text on it, so every
+     contrast pair tests/a11y.test.mjs pins can only go up. Dark themes darken
+     toward the bottom; light themes lighten toward the top. Same for the accent:
+     --accent-top / --accent-bot never read below the flat accent.
+   - No backdrop-filter anywhere. The tab bar and the sidebar are siblings of
+     the screen, not layers over it — nothing scrolls under them — so a blur
+     would blur the plain ground and cost a composited layer for nothing.
+   - Nothing here animates; motion belongs to the Motion section.
+   - `:where()` on the broad rules, so specificity is zero and every existing
+     variant (.ghost, .danger, .is-linked, a focus ring…) still wins over them. */
+
+/* ── Raised surfaces: lit from above, a hairline of light on the top edge ── */
+:where(.btn) { background-image: var(--lit); box-shadow: var(--elev-1); }
+:where(.chip) { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
+:where(.input) { box-shadow: var(--recess); }
+.session-mini { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
+
+/* ── Primary buttons: the accent as two stops, a gloss line, pressed = flat ── */
+.btn.primary,
+.btn.preset[aria-pressed="true"],
+.chip[aria-pressed="true"],
+.mini-arrow {
+  background-color: var(--accent);
+  background-image: linear-gradient(180deg, var(--accent-top), var(--accent-bot));
+}
+.btn.primary {
+  box-shadow: inset 0 1px 0 var(--gloss),
+              0 1px 2px rgb(var(--shadow-rgb) / .30),
+              0 6px 16px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.btn.preset[aria-pressed="true"],
+.chip[aria-pressed="true"],
+.mini-arrow { box-shadow: inset 0 1px 0 var(--gloss); }
+/* Pressed: the gloss goes and the top edge shades in — darker, never smaller. */
+.btn.primary:active,
+.btn.preset[aria-pressed="true"]:active,
+.chip[aria-pressed="true"]:active {
+  background-image: none;
+  background-color: var(--accent-press);
+  box-shadow: inset 0 2px 4px rgb(var(--shadow-rgb) / .35);
+}
+/* The green Finish button is the other filled call to action. Its ink is dark
+   in both themes, so its second stop is lighter in both. */
+.btn.good {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--good) 88%, #fff), var(--good));
+  box-shadow: inset 0 1px 0 var(--gloss),
+              0 1px 2px rgb(var(--shadow-rgb) / .30),
+              0 6px 16px -8px color-mix(in srgb, var(--good) 60%, transparent);
+}
+.btn.good:active { background-image: none; box-shadow: inset 0 2px 4px rgb(var(--shadow-rgb) / .35); }
+/* Linked is a quiet, not a filled, state — no gloss, no lift. */
+.btn.primary.is-linked { box-shadow: none; }
+
+/* ── The Record button: a warm ring and a sheen. Static — no loop. ── */
+.navbar a.nav-primary svg,
+.navbar a.nav-primary[aria-current="page"] svg {
+  background-color: var(--accent);
+  background-image:
+    radial-gradient(90% 70% at 32% 18%, rgb(255 255 255 / .22), rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, var(--accent-top), var(--accent-bot));
+  box-shadow: inset 0 1px 0 var(--gloss),
+              0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent),
+              0 3px 10px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* ── Tab bar (phone) / sidebar (laptop) ── */
+.navbar { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
+@media (min-width: 860px) {
+  .navbar { box-shadow: inset -1px 0 0 var(--hl); }
+  .navbar a[aria-current="page"] {
+    box-shadow: inset 0 1px 0 var(--hl),
+                inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+                inset 0 0 14px -6px color-mix(in srgb, var(--accent) var(--glow-a), transparent);
+  }
+}
+
+/* ── Selected states: a raised pill in a recessed track, with a faint glow ── */
+.segmented { box-shadow: var(--recess); }
+.seg-ind,
+.segmented:not(.has-ind) .seg[aria-selected="true"] {
+  box-shadow: inset 0 1px 0 var(--hl),
+              inset 0 0 10px -5px color-mix(in srgb, var(--accent) var(--glow-a), transparent),
+              0 1px 3px rgb(var(--shadow-rgb) / .35);
+}
+.ob-choice[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--accent),
+              inset 0 0 18px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* ── Floating surfaces: the highest lift ── */
+.sheet, .sheet-x {
+  background-image: var(--lit);
+  box-shadow: inset 0 1px 0 var(--hl), 0 -12px 36px -12px rgb(var(--shadow-rgb) / .55);
+}
+.help-pop, .tour-bubble, .toast, .toast-x { box-shadow: var(--elev-3); }
+@media (min-width: 860px) {
+  .ob-panel { box-shadow: var(--elev-3); }
+}
+
+/* ── The line chart: the area under the line fades out downward ── */
+/* The markup draws one flat-filled path; a mask turns it into a gradient
+   without touching the chart code. ⚠️ MEASURED 2026-09-25: WebKit (so every
+   iPhone) computes the mask and does not paint it on an SVG shape, so there
+   the fill stays exactly the flat .09 it always was — which is why the opacity
+   is NOT raised here. A real gradient on the phone needs a <linearGradient> in
+   the chart's own markup (views-data.js). */
+.chart .series-area {
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+/* === end Polish · depth and colour === */
+
+/* === Motion === */
+/* 2026-09-25, docs/polish-plan.md part M. Tim: "…shining, smooth and creative
+   annimation…". js/motion.js decides WHEN (first paint of a visit only, never
+   the logging path); this says HOW. Rule 7 holds: everyday motion is on the
+   three tokens; the one longer duration is the celebration tier below, pinned
+   by name in tests/a11y.test.mjs. */
+:root {
+  /* A real win only — a new personal best, a workout saved, a goal reached. */
+  --t-celebrate: 640ms;
+}
+
+/* ---- rows arrive, 30ms apart (inline animation-delay from motion.js) ---- */
+.m-stagger { animation: m-rise var(--t) var(--ease-out) both; }
+@keyframes m-rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---- a bar fills to its number on first paint (Rule 7's width exception) ---- */
+.m-fill { animation: m-grow var(--t-slow) var(--ease-out) both; }
+@keyframes m-grow { from { width: 0; } }
+
+/* Onboarding's progress: the next segment fills left to right rather than
+   fading. A cover in the empty colour shrinks toward the right edge and
+   reveals the segment's own done colour, so the colour stays the section
+   that owns it. */
+.ob-seg { position: relative; overflow: hidden; transition: none; }
+.ob-seg::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--raised-hi);
+  transform-origin: right center;
+  transition: transform var(--t) var(--ease-out);
+}
+.ob-seg.is-done::after { transform: scaleX(0); }
+
+/* ---- counted numbers keep one width while they count ---- */
+.me-stat-n, .feed-stat-value, .summary-grid .stat-value { font-variant-numeric: tabular-nums; }
+
+/* ---- a press answers back: a little smaller, a little brighter ---- */
+.btn { transition: transform var(--t-fast) var(--ease-out), filter var(--t-fast) linear; }
+.btn:active { transform: scale(.97); filter: brightness(1.12); }
+/* Filled buttons already press darker (Polish · depth): shrink, don't brighten. */
+.btn.primary:active, .btn.good:active,
+.btn.preset[aria-pressed="true"]:active { filter: none; }
+.row, .chip, .vol-row {
+  transition: background-color var(--t-fast) linear, color var(--t-fast) linear,
+              transform var(--t-fast) var(--ease-out), filter var(--t-fast) linear;
+}
+.row:active, .vol-row:active { transform: scale(.98); filter: brightness(1.12); }
+.row.static:active { transform: none; filter: none; }
+
+/* ---- the tab you just chose gives a small pop ---- */
+.navbar a.m-tabbed svg { animation: m-tab-pop var(--t) var(--ease-out); }
+@keyframes m-tab-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* ---- the celebration tier: a shine sweeps across, the thing pops ---- */
+.m-celebrate {
+  position: relative; overflow: hidden;
+  animation: m-pop var(--t-celebrate) var(--ease-out);
+}
+.m-celebrate::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 28%, rgb(255 255 255 / .10) 42%,
+    rgb(255 255 255 / .34) 50%, rgb(255 255 255 / .10) 58%, transparent 72%);
+  transform: translateX(-110%);
+  animation: m-shine var(--t-celebrate) var(--ease-both) forwards;
+}
+:root[data-theme="light"] .m-celebrate::after {
+  background: linear-gradient(105deg, transparent 28%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 42%,
+    color-mix(in srgb, var(--accent) 32%, transparent) 50%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 58%, transparent 72%);
+}
+@keyframes m-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes m-shine { to { transform: translateX(110%); } }
+
+/* The blanket at the end of the Motion rules cuts durations; a DELAY it
+   leaves alone, and a staggered row with `both` fill would sit invisible for
+   it. So under reduced motion these are off outright, not just fast. */
+@media (prefers-reduced-motion: reduce) {
+  .m-stagger, .m-fill, .m-celebrate, .m-celebrate::after, .navbar a.m-tabbed svg { animation: none !important; }
+  .m-celebrate::after { display: none; }
+}
+/* === end Motion === */

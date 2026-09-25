@@ -1579,6 +1579,9 @@ in** — which is also the whole of "only when appropriate".
   the screen underneath it. One `z-index` for both means one of them plays entirely behind the other,
   and the direction that happens to look right hides the bug. `.screen-ghost` 40, `.is-falling` 50,
   `.screen.rises` 45.
+- 🆕 **ONE NAMED EXCEPTION, `--t-celebrate` ≤700ms (2026-09-25)** — Tim: *"shining, smooth and creative
+  annimation"*. A shine + 1.04 pop for a real win only: a new PB, a saved workout, a goal reached,
+  once per win (`celebrate()`, `js/motion.js`). First-paint stagger/count-up/fill: arrivals only.
 
 ### Colour — validate, never eyeball
 

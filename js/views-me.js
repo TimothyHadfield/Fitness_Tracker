@@ -96,6 +96,7 @@ import { workoutCard, sessionToCard, cardMeta } from './workout-card.js';
 // Your own card's Comment/Share row and reaction icons (review 2026-09-24).
 import { ownCardActions, rxBit, attachCardPhoto } from './views-workouts.js';
 import { commentAge } from './social.js';
+import { celebrate } from './motion.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -312,22 +313,25 @@ export function goalLine(goal, muscles, today = todayISO()) {
 }
 
 function goalSection(goal, muscles) {
+  const line = goal ? goalLine(goal, muscles) : null;
+  const row = el('a', { class: 'row', href: '#/goals' },
+    el('div', { class: 'row-main' },
+      goal
+        ? el('div', { class: 'row-title',
+            text: `${goal.targetLevelName} ${goal.liftName || goal.muscle}` })
+        : el('div', { class: 'row-title', text: 'Set a goal' }),
+      el('div', { class: 'row-sub wrap', text: goal
+        ? line
+        : 'Move a muscle up a strength level' }),
+    ),
+    el('span', { class: 'row-chev' }, chevron()),
+  );
+  // 🆕 A reached goal shines once (js/motion.js) — the same key Goals uses, so
+  // whichever screen shows it first is the one that celebrates.
+  if (line === 'Reached') celebrate(row, `goal:${goal.id || goal.muscle}`);
   return el('div', { class: 'me-section' },
     el('div', { class: 'section-label', text: 'Your goal' }),
-    el('div', { class: 'list' },
-      el('a', { class: 'row', href: '#/goals' },
-        el('div', { class: 'row-main' },
-          goal
-            ? el('div', { class: 'row-title',
-                text: `${goal.targetLevelName} ${goal.liftName || goal.muscle}` })
-            : el('div', { class: 'row-title', text: 'Set a goal' }),
-          el('div', { class: 'row-sub wrap', text: goal
-            ? goalLine(goal, muscles)
-            : 'Move a muscle up a strength level' }),
-        ),
-        el('span', { class: 'row-chev' }, chevron()),
-      ),
-    ),
+    el('div', { class: 'list' }, row),
   );
 }
 
@@ -398,7 +402,7 @@ function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
   // built, and the label reads what it assumed off it.
   const label = comparisonLabel(r.profile);
 
-  return bestLiftsBlock({
+  const block = bestLiftsBlock({
     label: 'Your best lifts',
     core: r.core,
     other: r.other,
@@ -419,6 +423,20 @@ function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
       ? { href: '#/graphs', onClick: () => chartLift(l.exerciseId) }
       : null),
   });
+
+  /* 🆕 A BEST SET LIFTED TODAY IS A NEW PERSONAL BEST, and that row shines once
+   * (the celebration tier, js/motion.js). Core rows only: "Other lifts" sits
+   * in a closed disclosure, and a shine nobody can see would spend the win.
+   * The core list's rows are in model order, so the index maps each row back
+   * to its lift without profile-shape.js knowing. */
+  const today = todayISO();
+  const coreRows = block.querySelectorAll(':scope > .list > .me-best');
+  r.core.forEach((l, i) => {
+    if (l.best && l.best.date === today && l.oneRM !== null && coreRows[i]) {
+      celebrate(coreRows[i], `pb:${l.name}:${today}:${Math.round(l.shown)}`);
+    }
+  });
+  return block;
 }
 
 /* ------------------------------------------------------------------ *

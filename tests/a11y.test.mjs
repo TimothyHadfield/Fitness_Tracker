@@ -482,6 +482,34 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      `⚠️ and none of them is over a quarter of a second (${Math.max(...durations)}ms) — "keep it quick, `
      + 'I don\'t want it to be distracting or slow"');
 
+  /* 🆕 THE CELEBRATION TIER — 2026-09-25, and the ONE named exception. Tim asked
+     for "shining, smooth and creative annimation", and a shine sweep across a new
+     personal best, a saved workout or a reached goal cannot read in 250ms. So
+     `--t-celebrate` (≤700ms) is allowed BY NAME, only on `.m-celebrate`, and
+     everything else is now checked too: every `--t*` duration token AND every
+     hand-written duration in a transition or animation, comments stripped. The
+     token check above could not see a keyframe written in milliseconds — the
+     1600ms feed highlight passed it for exactly that reason. */
+  const live = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+  const tokens = [...live.matchAll(/(--t[\w-]*):\s*(\d*\.?\d+)(ms|s)\b/g)]
+    .map((m) => ({ name: m[1], ms: Number(m[2]) * (m[3] === 's' ? 1000 : 1) }));
+  const celebrateTok = tokens.filter((t) => t.name === '--t-celebrate');
+  ok(celebrateTok.length === 1 && celebrateTok[0].ms <= 700,
+     `the celebration tier is defined once and is ≤700ms (${celebrateTok.map((t) => t.ms).join(', ')}ms)`);
+  const longTokens = tokens.filter((t) => t.name !== '--t-celebrate' && t.ms > 250);
+  ok(longTokens.length === 0,
+     `🚨 no OTHER duration token is over 250ms (${longTokens.map((t) => `${t.name} ${t.ms}ms`).join(', ') || 'none'})`);
+  const literal = [...live.matchAll(/(?:animation|transition)(?:-duration|-delay)?\s*:\s*([^;}]*)/g)]
+    .flatMap((m) => [...m[1].matchAll(/(?<![\w-])(\d*\.?\d+)(ms|s)\b/g)]
+      .map((d) => ({ decl: m[0].trim().slice(0, 60), ms: Number(d[1]) * (d[2] === 's' ? 1000 : 1) })));
+  const longLiteral = literal.filter((d) => d.ms > 250);
+  ok(literal.length > 0 && longLiteral.length === 0,
+     `🚨 and no hand-written transition/animation duration is over 250ms (${literal.length} checked; `
+     + `${longLiteral.map((d) => `${d.ms}ms in "${d.decl}"`).join(', ') || 'none over'})`);
+  const users = [...live.matchAll(/([^{}]+)\{[^{}]*var\(--t-celebrate\)[^{}]*\}/g)].map((m) => m[1].trim());
+  ok(users.length > 0 && users.every((sel) => /^\.m-celebrate(::after)?$/.test(sel)),
+     `⚠️ and --t-celebrate is used ONLY by the celebration (${users.join(' | ')})`);
+
   /* 🚨 THE SLIDING PILL IS AN ENHANCEMENT AND THE PAINTED ONE IS THE FLOOR. The
      indicator is drawn by JS; if that never runs — an old engine, a thrown
      module, a test harness — this rule is the only thing telling anybody which

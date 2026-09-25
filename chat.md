@@ -642,3 +642,18 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   flags set on open not finish; tour rows on Account not Settings; 240 ms glide (handbook 250 ms cap);
   photo below exercises above Kudos, box 4:5–1.91:1 capped at 72 % of the screen.
 - **Open:** see `docs/onboarding-plan.md` NOT verified.
+
+## 2026-09-25 (second pass) · Shading, shine, motion, logos
+- **Asked:** *"really work on design and annimation improvements throughout the cite? … shading,
+  reflection graphics, shining, smooth and creative annimation, new and eye-catching logos, good
+  coloring"*.
+- **Built:** depth pass (CSS "Polish · depth and colour") and motion (`js/motion.js` + CSS "Motion",
+  handbook Rule 7 gains a celebration tier ≤700 ms, 640 used). Filled buttons shrink and press darker,
+  not brighter (manager's call between the two builders). Logos: 6 concepts on a picks page; Tim
+  rejected all (note on the page: go off the image, ignore the name) → round 2, marks only.
+- **Verified how:** full no-Chrome suite 7,074 PASS / 0 FAIL; WebKit demo frames at 393/1440 in
+  scratchpad/polish (before/after/motion).
+- **Choices Tim hasn't seen:** shadows tinted per palette; pressed filled buttons darker with a
+  shaded top edge; Record ring 3px 14% + sheen; selection glow; celebration 640 ms, once per device;
+  rows stagger 30 ms; row press .98.
+- **Open:** `docs/polish-plan.md` NOT verified.

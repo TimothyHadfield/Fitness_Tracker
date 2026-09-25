@@ -103,6 +103,7 @@ const SHELL = [
   './js/onboarding.js',
   './js/program-builder.js',
   './js/tour.js',
+  './js/motion.js',
   './js/volume-map.js',
   './js/year-grid.js',
   './js/views-social.js',

@@ -163,7 +163,13 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   while."* Don't offer it again; he'll raise it.
 - **Photos are ON** (2026-09-25, lifting the 09-10 pause): *"start deploying the 'take a picture'
   feature … after a workout"* — free, no card (Firestore, not Storage), same audience as the workout.
-- **Onboarding questions + first-run tour** (2026-09-25): building per `docs/onboarding-plan.md`.
+- **Onboarding questions + first-run tour** (2026-09-25): BUILT and live, `docs/onboarding-plan.md`.
+- **Look and motion polish** (2026-09-25): *"really work on design and annimation improvements …
+  shading, reflection graphics, shining … eye-catching logos, good coloring"*. Depth + motion BUILT and
+  live (`docs/polish-plan.md`, `js/motion.js`, `--t-celebrate` 640ms for wins only). **App icon reopened
+  by that ask**: round 1 of 6 logos rejected (*"None of these feel quite right… ignore the name…
+  just go off the image"*); round 2 (marks only) goes on the same picks page
+  https://claude.ai/artifact/5dQgjHSQr8A1H6kTbZ8Lvw (db doc `pick/logo`). Install only what he picks.
 - **He took these himself** — don't start or offer: checking the estimator against a real attempt
   (Open work 19: *"I'll do 4 myself sometime this week, but I'll come to you about it"*); asking about
   public/private on first sign-in (*"I'll work on #2 along with some other things later"*).
