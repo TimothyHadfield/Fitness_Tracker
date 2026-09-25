@@ -233,14 +233,14 @@ const G = await import(new URL('js/views-goals.js', root).href);
      'onboarding lights the tapped answer for PICK_MS before its screen leaves');
   ok(/isSpringing\(old\)/.test(ob), 'the leaving screen\'s safety timer waits for its spring (no empty stage)');
 
-  // The demo strip: the save and finish screens replace #app directly, so
+  // The demo strip: the save and finish screens swap #app's screen directly, so
   // they carry the live strip over rather than dropping it.
   const vs = read('js/views-session.js');
   ok((vs.match(/carryDemoBar\((next|finishScreen|screen)\)/g) || []).length === 3,
      'the demo strip is carried onto the save screen, the finish screen, and back to the runner');
   const finSrc = vs.slice(vs.indexOf("title: 'Workout complete'"));
   ok(finSrc.indexOf('carryDemoBar(finishScreen)') >= 0
-     && finSrc.indexOf('carryDemoBar(finishScreen)') < finSrc.indexOf('replaceChildren(finishScreen)'),
+     && finSrc.indexOf('carryDemoBar(finishScreen)') < finSrc.indexOf('putScreen(finishScreen)'),
      'the finish screen gets the strip before it is shown');
 }
 

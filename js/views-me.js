@@ -51,7 +51,9 @@
 // section below is a READOUT with a door beside it. Nothing on this screen
 // writes anything, still.
 
-import { store, social, demo, activityByDate, todayISO, muscleRatings } from './store.js';
+import {
+  store, social, demo, activityByDate, todayISO, muscleRatings, cachedDataKey, sameCachedDataKey,
+} from './store.js';
 // ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
 // own header — a second copy is the drift that function exists to prevent.
 import { ownCalendar, chartLift } from './views-data.js';
@@ -168,6 +170,11 @@ function profileSkeleton() {
 }
 
 async function fill(body) {
+  // Taken BEFORE the reads, so a write landing mid-fill can only ever cause a
+  // recompute, never a kept answer built from the older rows (see rankedLiftsKept).
+  let dataKey = cachedDataKey(LIFT_READS);
+  // A read that failed into its fallback is not an answer worth keeping.
+  const failed = (fallback) => () => { dataKey = null; return fallback; };
   const [settings, sessions, state, activity, profile, goal] = await Promise.all([
     store.getSettings(),
     store.getSessions(),
@@ -178,7 +185,7 @@ async function fill(body) {
     // are allowed to fail into "nothing to show": a profile that cannot be
     // read is the same screen as a profile nobody has filled in, and this
     // screen has no business erroring over a section.
-    store.getProfile().catch(() => null),
+    store.getProfile().catch(failed(null)),
     store.activeGoal().catch(() => null),
   ]);
 
@@ -186,11 +193,11 @@ async function fill(body) {
   // muscle map does, handed the rows by hand so it cannot disagree with it.
   // Every one of these fails into "no section" rather than into an error.
   const [benchmarks, exMap, bodyWeights] = await Promise.all([
-    store.getBenchmarks().catch(() => []),
-    store.getExerciseMap().catch(() => new Map()),
-    store.getBodyWeights().catch(() => []),
+    store.getBenchmarks().catch(failed([])),
+    store.getExerciseMap().catch(failed(new Map())),
+    store.getBodyWeights().catch(failed([])),
   ]);
-  const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights }).catch(() => new Map());
+  const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights }).catch(failed(new Map()));
 
   const workouts = sessions.length;
   // ⚠️ `connections` only exists on an available state. Off the cloud there is
@@ -229,7 +236,7 @@ async function fill(body) {
         : null,
 
     bodySection(profile),
-    bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }),
+    bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }, dataKey),
     goalSection(goal, muscles),
     calendarSection(activity),
   );
@@ -431,8 +438,32 @@ function goalSection(goal, muscles) {
  * the core eight are fixed and Other holds everything else, so the count is
  * on the summary instead.
  */
-function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }) {
-  const r = rankedLifts({ sessions, benchmarks, exMap, muscles, profile });
+/* 🆕 2026-09-25 (review round 4): THE RANKED LIFTS ARE KEPT while nothing they
+ * were ranked from has changed. Measured: ~190ms of every Profile open (Chrome,
+ * 4× CPU throttle) re-ranking the same history, after the ratings themselves
+ * stopped being recomputed (store.js `muscleRatings`).
+ *
+ * ⚠️ The key is the store's own cached arrays for every collection this reads
+ * (sessions, benchmarks, the custom exercises, settings and weigh-ins behind
+ * the profile) plus the day — any write, or a revalidation with news, is a
+ * miss. It is taken before `fill()` reads anything and must still hold after
+ * the ranking, or nothing is kept. Handed out as a structuredClone both ways,
+ * and an answer that cannot be cloned is simply not kept. */
+const LIFT_READS = ['sessions', 'benchmarks', 'customExercises', 'settings', 'bodyWeight'];
+let liftsKept = null;
+function rankedLiftsKept(args, key) {
+  if (key && liftsKept && sameCachedDataKey(key, liftsKept.key)) {
+    try { return structuredClone(liftsKept.value); } catch (_) { liftsKept = null; }
+  }
+  const value = rankedLifts(args);
+  if (key && sameCachedDataKey(key, cachedDataKey(LIFT_READS))) {
+    try { liftsKept = { key, value: structuredClone(value) }; } catch (_) { liftsKept = null; }
+  }
+  return value;
+}
+
+function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }, dataKey = null) {
+  const r = rankedLiftsKept({ sessions, benchmarks, exMap, muscles, profile }, dataKey);
   // Nothing trained at all: no section, as before. A core row with no number
   // on an account WITH history is a different case and stays, saying why.
   const trained = r.core.some((l) => l.days > 0 || l.oneRM !== null)

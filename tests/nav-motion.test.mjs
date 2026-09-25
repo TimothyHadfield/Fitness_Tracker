@@ -245,8 +245,10 @@ const S = await import(new URL('js/spring.js', root).href);
     ok(html.getAttribute('data-nav-moving') === kind,
        `${kind}: <html data-nav-moving> is set while it moves (motion.js keeps its row cascade off it)`);
     const pins = document.querySelectorAll('.nav-banner-pin').length;
-    ok(kind === 'rise' ? pins === 1 && document.body.classList.contains('nav-pinned') : pins === 0,
-       `${kind}: ${kind === 'rise' ? 'ONE demo strip pinned while the card moves' : 'arrives in place, so the strip needs no copy'} (${pins})`);
+    // Review 4: a card keeps its own strip and so does the screen behind it —
+    // the pinned copy sat above the rising card and doubled its strip.
+    ok(pins === 0 && !document.body.classList.contains('nav-pinned'),
+       `${kind}: ${kind === 'rise' ? 'a card pins no copy of the strip (each sheet keeps its own)' : 'arrives in place, so the strip needs no copy'} (${pins})`);
     ok(kind === 'rise' ? true : Boolean(t.lead && typeof t.lead.then === 'function'),
        `${kind}: hands the router a lead to await, so the old content starts going before a heavy view builds`);
     const fresh = withBar();
@@ -256,6 +258,32 @@ const S = await import(new URL('js/spring.js', root).href);
        `${kind}: at rest the flag, the pinned strip and its class are gone`);
     ok([...fresh.children].every((c) => !c.getAttribute('style')), `${kind}: and the content carries no inline style`);
     ok(fresh.classList.contains('landed'), `${kind}: the landed screen is marked so .screen's CSS arrival does not start after it`);
+  }
+  // …and on a phone: a sideways slide still pins ONE strip; a card pins none.
+  {
+    const realW = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { value: 393, configurable: true });
+    for (const kind of ['push', 'rise']) {
+      const old = withBar();
+      app.replaceChildren(old);
+      const t = G.beginNav({ dir: 'push', from: 'home', to: kind === 'rise' ? 'record' : 'workout',
+        rising: kind === 'rise', leaving: old, app, parkNav: true, fromIndex: 11, fromHash: '#/home' });
+      const pins = document.querySelectorAll('.nav-banner-pin').length;
+      ok(kind === 'push' ? pins === 1 : pins === 0 && !document.body.classList.contains('nav-pinned'),
+         `phone ${kind}: ${kind === 'push' ? 'ONE strip pinned while two screens slide' : 'no pinned copy over the rising card (it doubled the card\'s strip)'} (${pins})`);
+      const fresh = withBar();
+      app.replaceChildren(fresh);
+      t.play(fresh);
+      ok(!document.querySelector('.nav-banner-pin'), `phone ${kind}: and none at rest`);
+      ok(!old.querySelector('.demo-bar').getAttribute('style'),
+         `phone ${kind}: the strip of the screen left behind carries no inline opacity at rest (its picture is whole)`);
+    }
+    // The strip BEHIND a card fades as the card's top comes within a strip's
+    // height of it, so the laptop never shows the two stacked (review 4).
+    const bo = G.behindStripOpacity;
+    ok(typeof bo === 'function' && bo(120, 40) === 1 && bo(80, 40) === 1 && bo(60, 40) === 0.5 && bo(40, 40) === 0 && bo(0, 40) === 0,
+       'behind strip: whole while the card is 2 strips away, gone by the time the card reaches it');
+    Object.defineProperty(window, 'innerWidth', { value: realW, configurable: true });
   }
   // Reduced motion: nothing again.
   S.__setReducedMotionForTest(true);
@@ -335,7 +363,34 @@ const S = await import(new URL('js/spring.js', root).href);
      'and at rest nothing is left: no inline style on the old picture or the new screen');
   const css = read('css/app.css');
   ok(/\.screen\.nav-moving\.nav-xfade\s*\{\s*background:\s*transparent/.test(css), 'the stylesheet drops its ground for that');
-  ok(G.XFADE_OUT > 0 && G.XFADE_OUT <= 0.6, `the old content is gone by ${G.XFADE_OUT} of the way — legible together only for a moment`);
+  /* Review 4: at ~60ms both screens stood at about half strength and their text
+   * overlapped (measured per frame in WebKit: old 0.52 / new 0.24 on a laptop
+   * push, 0.41 / 0.25 on a phone tab). The handoff is checked over the real
+   * springs, from wherever the tap's dim had got the old content to: the old
+   * is ≤ 0.15 before the new passes 0.4, and the two are never both above 0.12.
+   * (Before the fix there was no `oldOpacityAt`; the fallback models the old
+   * rule — old gone by XFADE_OUT of the way, new = progress — so this fails on it.) */
+  const oldAt = (t, x, from) => (typeof G.oldOpacityAt === 'function'
+    ? G.oldOpacityAt(t, from) : from * Math.max(0, 1 - x / G.XFADE_OUT));
+  for (const [kind, preset, dims] of [['tab', G.NAV_SPRINGS.tab, { W: 393, H: 659, phone: true }],
+    ['tab', G.NAV_SPRINGS.tab, { W: 1240, H: 900, phone: false }],
+    ['push', G.NAV_SPRINGS.push, { W: 1240, H: 900, phone: false }],
+    ['back', G.NAV_SPRINGS.back, { W: 1240, H: 900, phone: false }]]) {
+    for (const from of [1, 0.8, 0.4]) {
+      let worst = 0; let oldWhenNew40 = null; let gone = null; let t90 = null;
+      for (const q of S.simulate({ from: 0, to: 1, preset, ms: 600 })) {
+        const o = oldAt(q.t, q.x, from);
+        const n = G.frameFor(kind, q.x, dims).inOpacity;
+        worst = Math.max(worst, Math.min(o, n));
+        if (oldWhenNew40 === null && n > 0.4) oldWhenNew40 = o;
+        if (gone === null && o <= 0.001) gone = q.t;
+        if (t90 === null && n >= 0.9) t90 = q.t;
+      }
+      ok(oldWhenNew40 !== null && oldWhenNew40 <= 0.15 && worst <= 0.12 && gone !== null && gone <= 90 && t90 !== null && t90 <= 250,
+         `${kind} (${dims.phone ? 'phone' : 'laptop'}, old from ${from}): old ${oldWhenNew40 === null ? '?' : oldWhenNew40.toFixed(2)} when the new passes 0.4, `
+         + `never both above ${worst.toFixed(2)}, old gone by ${gone === null ? '∞' : gone.toFixed(0)}ms, new at 90% by ${t90 === null ? '∞' : t90.toFixed(0)}ms`);
+    }
+  }
   const g = read('js/gestures.js');
   ok(/if \(inPlace && playOnCompositor\(p, v\)\) return;/.test(g),
      'the crossfade is sampled into WAAPI keyframes: a heavy view building after it cannot freeze it half way');
@@ -363,8 +418,10 @@ const S = await import(new URL('js/spring.js', root).href);
      'the router awaits it before building the next view');
 
   // The falling Record card had an empty band where its hidden strip was.
-  ok(/body\.nav-pinned :is\(\.nav-ghost\.nav-g-fall, \.screen\.nav-k-rise, \.screen\.nav-k-card\) \.demo-bar:not\(\.nav-banner-pin\) \{ visibility: visible; \}/.test(css),
-     'a card carries its own demo strip (no empty band at its top as it falls)');
+  // Since review 4 a card pins no strip at all, so nothing hides its own.
+  const startCardSrc = g.slice(g.indexOf('function startCard('), g.indexOf('function paintCard('));
+  ok(startCardSrc.length > 0 && !/pinBanner\(/.test(startCardSrc),
+     'a card carries its own demo strip — dragging Record down pins no copy (no empty band, no double)');
 
   // A route change puts away what was open over the old screen.
   ok(/if \(prevHash && location\.hash !== prevHash\) closeSurfaces\(\);/.test(r)

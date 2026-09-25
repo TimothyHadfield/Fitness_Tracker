@@ -67,11 +67,25 @@ export const EARLY_DIM = 0.35;
  * tab, longest on the heavy ones. Now the tap only dims the old content to
  * EARLY_KEEP (it still answers at once), the arriving screen's ground is
  * see-through while it moves (`nav-xfade`), and on one spring the old content
- * goes the rest of the way while the new comes in. The old is gone by
- * XFADE_OUT of the way, so the two are legible together for a moment, not the
- * whole movement. */
+ * goes the rest of the way while the new comes in.
+ * 🔄 REVIEW 4: …but "a moment" was ~60ms with both at about half strength, and
+ * their text overlapped (measured per frame, WebKit: old 0.52 / new 0.24 on a
+ * laptop push). It is a HANDOFF now, not a mix: once the new screen is in, the
+ * old content leaves in OLD_OUT_MS on an ease-in (`oldOpacityAt`), and the new
+ * content stays clear until its spring is IN_GATE of the way (`inPlaceOpacity`)
+ * — by then the old is under 0.1. Never two readable screens (tests/nav-motion). */
 export const EARLY_KEEP = 0.4;
-export const XFADE_OUT = 0.5;
+export const OLD_OUT_MS = 65;
+export const IN_GATE = 0.5;
+/** The old content's opacity `ms` after the new screen went in, from `from`. */
+export function oldOpacityAt(ms, from = 1) {
+  const q = clamp01(ms / OLD_OUT_MS);
+  return from * (1 - q * q);
+}
+/** An in-place arrival's content opacity at spring progress p: clear until IN_GATE, then in. */
+export function inPlaceOpacity(p) {
+  return clamp01((clamp01(p) - IN_GATE) / (1 - IN_GATE));
+}
 export const PARALLAX = 0.3;      // the covered screen slips 30% of the width
 export const DESK_SHIFT = 40;     // laptop: a short slide and a fade, not the whole width
 export const TAB_SCALE = 0.985;
@@ -127,18 +141,18 @@ export function frameFor(kind, p, { W = 0, H = 0, phone = true } = {}) {
       // 🔄 Laptop (review, 2026-09-25): the arriving screen is OPAQUE from its
       // first frame and only its CONTENT slides 40px and fades — the old screen
       // is covered, never seen through it, and nothing else moves.
-      else { f.inX = DESK_SHIFT * (1 - p); f.inOpacity = p; }
+      else { f.inX = DESK_SHIFT * (1 - p); f.inOpacity = inPlaceOpacity(p); }
       return f;
     case 'back': {
       // Laptop: the same arrival, coming from the other side.
-      if (!phone) { f.inX = -DESK_SHIFT * (1 - p); f.inOpacity = p; return f; }
+      if (!phone) { f.inX = -DESK_SHIFT * (1 - p); f.inOpacity = inPlaceOpacity(p); return f; }
       // The exact reverse: back at p is push at 1−p with the roles swapped.
       const q = frameFor('push', 1 - p, { W, H, phone });
       return { ...f, inX: q.outX, outX: q.inX, outOpacity: q.inOpacity, dim: q.dim };
     }
     case 'tab':
       // Applied to the arriving screen's CONTENT; its ground is opaque at once.
-      f.inOpacity = p;
+      f.inOpacity = inPlaceOpacity(p);
       f.inScale = TAB_SCALE + (1 - TAB_SCALE) * p;
       return f;
     case 'rise':
@@ -269,9 +283,10 @@ function afterPaint() {
 
 /* ---- the demo strip stays where it is ----
  * Every screen carries its own `.demo-bar`, so any movement of two screens
- * showed two strips, sliding. While a movement or a drag is in flight ONE
- * copy is pinned on <body> at the strip's resting place and the real ones are
- * hidden (visibility, so no layout moves). */
+ * showed two strips, sliding. While a sideways slide or the edge swipe is in
+ * flight (phone) ONE copy is pinned on <body> at the strip's resting place and
+ * the real ones are hidden (visibility, so no layout moves). A card pins
+ * nothing: each sheet keeps its own strip (review 4, see movement()). */
 let pin = null;
 function pinBanner(from) {
   if (pin) return;
@@ -366,7 +381,29 @@ function blankUnder(rect) {
 function dropUnder(n) {
   if (!n) return;
   clearStyle(n);
+  barReset(n);          // a kept picture is shown again later, strip and all
   n.remove();
+}
+
+/* ---- the strip of the screen BEHIND a card ----
+ * 🆕 Review 4: with each sheet keeping its own strip, the laptop still showed
+ * two for a moment — the card's arriving just under the dimmed one behind it.
+ * The one behind fades as the card's top comes within a strip's height of it,
+ * and is gone before the card starts to cover it: one strip is ever readable. */
+/** The behind strip's opacity when the card's top is `y` px below its rest, strip `h` tall. */
+export function behindStripOpacity(y, h) { return h > 0 ? clamp01((y - h) / h) : 1; }
+function barFade(bar, h, y) {
+  if (!bar || !(h > 0)) return;
+  const o = behindStripOpacity(y, h);
+  bar.style.opacity = o >= 0.999 ? '' : o.toFixed(3);
+}
+function barReset(root) {
+  if (!root || !root.querySelectorAll) return;
+  const bars = root.classList && root.classList.contains('demo-bar') ? [root] : [...root.querySelectorAll('.demo-bar')];
+  for (const b of bars) {
+    b.style.opacity = '';
+    if (b.getAttribute('style') === '') b.removeAttribute('style');
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -463,13 +500,19 @@ function movement(kind, ghost, app, h, ctx) {
   const gScreens = [...ghost.children].filter((n) => n.classList && n.classList.contains('screen'));
   // A dragged screen arrives with the finger's offset on it; the ghost carries it from here.
   for (const s of gScreens) { clearStyle(s); stripNav(s); }
-  // One demo strip, pinned where it rests, while two screens move (phone, and cards).
-  if (!inPlace && (phone || card)) pinBanner(gScreens[0] || ghost);
+  // One demo strip, pinned where it rests, while two screens slide side by side (phone).
+  /* 🔄 NOT FOR A CARD (review 4, 2026-09-25). Each sheet keeps its own strip:
+   * the card's travels with the card and the screen behind keeps its own,
+   * stepping back and dimming with it. The pinned copy stood ABOVE everything,
+   * so the rising card's strip slid up UNDER it and for ~100ms two strips sat
+   * stacked at the top (measured, rise-0200, phone + laptop). */
+  if (!inPlace && phone && !card) pinBanner(gScreens[0] || ghost);
   document.documentElement.setAttribute('data-nav-moving', kind);
   const oldContent = inPlace ? gScreens.flatMap(contentOf) : [];
   const early = inPlace ? fadeOutEarly(oldContent, EARLY_KEEP) : [];
   const tapAt = now();
   let oldFrom = 1;
+  let playAt = 0;       // when the new screen went in: the old content's OLD_OUT_MS runs from here
   const dims = { W: ghost.offsetWidth || window.innerWidth, H: ghost.offsetHeight || window.innerHeight, phone };
   const dimMax = readDim(card);
   let gDim = null;
@@ -498,6 +541,10 @@ function movement(kind, ghost, app, h, ctx) {
   let done = false;
   let played = false;
   if (card && phone) document.body.classList.add('nav-card');
+  // The strip of the screen behind the card (`barFade`): the parked one for a
+  // rise; for a fall, the arriving screen's, found in play().
+  let behindBar = kind === 'rise' ? ghost.querySelector('.demo-bar') : null;
+  let barH = behindBar ? behindBar.offsetHeight : 0;
 
   const paint = (x) => {
     const f = frameFor(kind, clamp01(x), dims);
@@ -508,7 +555,7 @@ function movement(kind, ghost, app, h, ctx) {
       ].filter(Boolean).join(' ');
       for (const c of content) setT(c, tf, f.inOpacity);
       if (screen) {
-        const o = (oldFrom * clamp01(1 - clamp01(x) / XFADE_OUT)).toFixed(3);
+        const o = oldOpacityAt(x >= 1 ? OLD_OUT_MS : now() - playAt, oldFrom).toFixed(3);
         for (const c of oldContent) c.style.opacity = o;
       }
       return;
@@ -535,10 +582,12 @@ function movement(kind, ghost, app, h, ctx) {
         setT(ghost, f.outScale < 0.9999 ? `scale(${f.outScale.toFixed(4)})` : '');
         ghost.style.borderRadius = radiusAll(f.outRadius);
         if (gDim) gDim.style.opacity = (Math.max(dimFloor, f.dim) * dimMax).toFixed(3);
+        barFade(behindBar, barH, f.inY);
         break;
       case 'fall':
         setT(ghost, f.inY > 0.05 ? `translate3d(0,${f.inY.toFixed(2)}px,0)` : '');
         ghost.style.borderRadius = radiusTop(f.inRadius);
+        barFade(behindBar, barH, f.inY);
         if (under) {
           setT(under, f.outScale < 0.9999 ? `scale(${f.outScale.toFixed(4)})` : '');
           under.style.borderRadius = radiusAll(f.outRadius);
@@ -565,7 +614,7 @@ function movement(kind, ghost, app, h, ctx) {
       const f = frameFor(kind, clamp01(q.x), dims);
       const tf = `translate3d(${f.inX.toFixed(2)}px,0,0) scale(${f.inScale.toFixed(4)})`;
       inF.push({ offset: q.t / dur, opacity: f.inOpacity, transform: tf });
-      outF.push({ offset: q.t / dur, opacity: oldFrom * clamp01(1 - clamp01(q.x) / XFADE_OUT) });
+      outF.push({ offset: q.t / dur, opacity: oldOpacityAt(q.t, oldFrom) });
     }
     try {
       for (const c of content) comp.push(c.animate(inF, { duration: dur, easing: 'linear', fill: 'forwards' }));
@@ -611,6 +660,7 @@ function movement(kind, ghost, app, h, ctx) {
     if (gDim) gDim.remove();
     if (under && under !== screen && under !== app) dropUnder(under);
     for (const s of gScreens) clearStyle(s);
+    barReset(behindBar);   // the picture kept for a back swipe shows its strip again
     if (ctx.keep && ctx.fromIndex != null && ctx.fromIndex >= 0 && ghost.isConnected) {
       keepSnap(ctx.fromIndex, ctx.fromHash, ghost);
     } else {
@@ -662,7 +712,10 @@ function movement(kind, ghost, app, h, ctx) {
         if (phone) app.classList.add('nav-card-app');
         const r = app.getBoundingClientRect();
         if (!uDim) { uDim = dimLayer(r); document.body.append(uDim); } else place(uDim, r);
+        behindBar = screen.querySelector(':scope > .demo-bar');
+        barH = behindBar ? behindBar.offsetHeight : 0;
       }
+      playAt = now();
       paint(p);
       /* 🔄 IN PLACE RIDES THE COMPOSITOR (phone review 3, 2026-09-25). The
        * arriving view often keeps the main thread busy for 200–400ms AFTER it
@@ -1067,14 +1120,15 @@ function startCard(dy) {
   const app = s.parentElement;
   const snap = homeSnap(app);
   const r = app.getBoundingClientRect();
-  pinBanner(s);
+  // No pinned strip: the card's own goes down with it (see movement()).
   const under = snap ? showSnap({ ...snap, withNav: true }, app, s) : blankUnder(r);
   const dim = dimLayer(r);
   dim.classList.add('nav-dim-swipe');
   document.body.append(dim);
   document.body.classList.add('nav-card');
   s.classList.add('nav-moving', 'nav-high', 'nav-k-card');
-  track.g = { H: app.offsetHeight || window.innerHeight, under, dim, dimMax: readDim(true) };
+  const bar = under.querySelector('.demo-bar');
+  track.g = { H: app.offsetHeight || window.innerHeight, under, dim, dimMax: readDim(true), bar, barH: bar ? bar.offsetHeight : 0 };
   track.started = true;
   track.slop = dy;        // the card starts from where the finger was when it was taken
   paintCard(track, 0);
@@ -1090,6 +1144,7 @@ function paintCard(tr, y) {
   setT(under, `scale(${f.outScale.toFixed(4)})`);
   under.style.borderRadius = radiusAll(f.outRadius);
   dim.style.opacity = (f.dim * dimMax).toFixed(3);
+  barFade(tr.g.bar, tr.g.barH, Math.max(0, shown));
 }
 
 function moveCard(dy) { paintCard(track, dy); }

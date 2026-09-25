@@ -6914,6 +6914,14 @@ a.pick-row { text-decoration: none; }
   .pane-scroll > .sys-side { grid-column: 2; grid-row: 1 / -1; margin-top: 0; }
   .sys-side > .own-rating { max-width: none; margin-inline: 0; }
   .pane-top:has(+ .pane-scroll > .sys-side) > * { max-width: 1180px; }
+  /* The program's note keeps the reading cap and the column's left edge (review
+     4: at 1440 it started at x350 and ran 1180 wide past the window). The Look
+     pass margin assumed an 820/940 column; this one is 1180, and the pane's
+     22px padding is already in 100%, so half the leftover lands on x230. */
+  .pane-top:has(+ .pane-scroll > .sys-side) > .field-help {
+    max-width: 68ch;
+    margin-inline: max(0px, (100% - 1180px) / 2) auto;
+  }
 }
 @media (min-width: 1200px) {
   .pane-scroll:has(> .sys-side) { column-gap: 48px; }
@@ -6990,6 +6998,17 @@ a.pick-row { text-decoration: none; }
 .m2-dragging { -webkit-user-select: none; user-select: none; }
 /* Years stretched to fill its pane: the rows are sized in JS (≤1.5× the square). */
 .m2-yr-fit .yr-cell { aspect-ratio: auto; }
+/* A day's label never splits inside a word (review round 4): "Benchmark" broke
+   into "Bench / mark" and its second line was clipped in a 393px cell. Lines
+   still break between words (two at most); a word wider than the cell ends in
+   an ellipsis on its own line. */
+.cal-tag { overflow-wrap: normal; word-break: normal; min-width: 0; }
+.cal-tag > span { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+/* Two labels sharing a day have one line each (~23px tall): a second line
+   was cut through the middle ("Lower B" drawn as half of two lines). */
+.cal-tags:has(> .cal-tag:not(.more) + .cal-tag:not(.more)) > .cal-tag > span {
+  -webkit-line-clamp: 1; line-clamp: 1;
+}
 
 /* ---- Settings ---- */
 /* The knob's position is a spring while it moves; its colour still eases. */
@@ -7212,9 +7231,9 @@ a.pick-row { text-decoration: none; }
 .screen.nav-in-place { box-shadow: none; }
 /* 🔄 Phone review 3: …and that covering made a blank frame between the old
    content going and the new arriving. The ground is see-through while it
-   moves, so the two CROSSFADE (js/gestures.js XFADE_OUT: the old is gone by
-   half way). Both screens stand on the same ground, so nothing shows but
-   content. */
+   moves, so the old content shows under it until it has gone (js/gestures.js
+   OLD_OUT_MS / IN_GATE: a handoff, never two readable screens — review 4).
+   Both screens stand on the same ground, so nothing shows but content. */
 .screen.nav-moving.nav-xfade { background: transparent; }
 
 /* One demo strip while screens move: a copy pinned at the strip's resting
@@ -7226,11 +7245,11 @@ a.pick-row { text-decoration: none; }
   background: linear-gradient(var(--accent-dim), var(--accent-dim)), var(--ground);
 }
 body.nav-pinned .demo-bar:not(.nav-banner-pin) { visibility: hidden; }
-/* …except on a CARD (Record rising or falling, or dragged down): the card is
-   one sheet, and its strip travels with it — hidden, it left an empty band at
-   the card's top edge the whole way down (phone review 3). The pinned copy
-   still stands for the screen underneath. */
-body.nav-pinned :is(.nav-ghost.nav-g-fall, .screen.nav-k-rise, .screen.nav-k-card) .demo-bar:not(.nav-banner-pin) { visibility: visible; }
+/* 🔄 Only for a sideways slide on a phone. A CARD (Record rising or falling,
+   or dragged down) pins nothing since review 4: the card is one sheet and its
+   strip travels with it, and the screen behind keeps its own, stepping back
+   with it. The pinned copy sat above the card, so the card's strip slid up
+   under it and two strips stood stacked for ~100ms. */
 
 /* A card is up: behind the screen that stepped back is black, like iOS. */
 body.nav-card { background: #000; }
@@ -7395,8 +7414,15 @@ body.nav-card { background: #000; }
   .btn:not(.primary):not(.good):not(.ghost):not(.danger):not([aria-pressed="true"]):not(:disabled):hover:not(:active),
   .chip:not([aria-pressed="true"]):hover:not(:active),
   .nav-arrow:not(:disabled):hover:not(:active) { background-color: var(--raised-hi); }
+  /* 🔄 Review 4: a 7% darken on the dark theme's gold read as no hover at all
+     (both engines). Filled buttons now go the way the calendar's days do: up a
+     step on dark (the raised buttons' --raised-hi lifts too), down on light —
+     each also keeps its ink's contrast. */
   :is(.btn.primary, .btn.good, .btn.preset[aria-pressed="true"], .chip[aria-pressed="true"], .mini-arrow):not(:disabled):hover:not(:active) {
-    filter: brightness(.93);
+    filter: brightness(1.1);
+  }
+  :root[data-theme="light"] :is(.btn.primary, .btn.good, .btn.preset[aria-pressed="true"], .chip[aria-pressed="true"], .mini-arrow):not(:disabled):hover:not(:active) {
+    filter: brightness(.9);
   }
   :is(.btn.ghost, .btn.danger):not(:disabled):hover:not(:active),
   .icon-btn:hover:not(:active) { background-color: var(--hover-tint); }

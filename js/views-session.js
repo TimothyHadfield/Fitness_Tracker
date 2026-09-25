@@ -4066,7 +4066,20 @@ export async function SessionView(workoutId) {
   function openSaveScreen() {
     const next = buildSaveScreen();
     carryDemoBar(next);
-    document.getElementById('app').replaceChildren(next);
+    putScreen(next);
+  }
+
+  /* 🔄 INTO THE SCREEN SLOT, NOT OVER ALL OF `#app` (review 4, 2026-09-25).
+   * These screens used to `replaceChildren` the whole of `#app`, which on a
+   * laptop took the sidebar with them (app.js `sidebarAlways`): Save workout
+   * and Workout complete filled 0–1440 while the runner beside them sat at
+   * 200–1440. Only the screen is swapped now; whatever else `#app` holds (the
+   * sidebar) stays. A phone's runner has no tab bar, so nothing changes there. */
+  function putScreen(next) {
+    const app = document.getElementById('app');
+    const cur = app.querySelector(':scope > .screen');
+    if (cur) cur.replaceWith(next);
+    else app.append(next);
   }
 
   /* 🆕 THE DEMO STRIP COMES ALONG (2026-09-25, motion review). The router
@@ -4295,7 +4308,7 @@ export async function SessionView(workoutId) {
     state.durationMin = null;
     renderDate();
     carryDemoBar(screen);
-    document.getElementById('app').replaceChildren(screen);
+    putScreen(screen);
   }
 
   // Said on the screen, not in a toast, and it stays until the save works.
@@ -4497,7 +4510,7 @@ export async function SessionView(workoutId) {
     });
     // The demo strip, as on every other screen (see carryDemoBar()).
     carryDemoBar(finishScreen);
-    document.getElementById('app').replaceChildren(finishScreen);
+    putScreen(finishScreen);
     playFinish({
       check, nums, winKey,
       prRows: prsBlock ? [...prsBlock.querySelectorAll('.finish-pr')] : [],

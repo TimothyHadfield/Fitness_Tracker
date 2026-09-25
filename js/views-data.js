@@ -1050,10 +1050,8 @@ function landOnCurrentMonth(container) {
     // subtracting one from the other only works by coincidence of layout.
     // 🆕 2026-09-25: minus a stuck Months/Years switch (phone Profile), so the
     // month's heading lands just under the switch rather than beneath it.
-    const modes = container.closest('.me-cal')?.querySelector(':scope > .cal-modes');
-    let cover = 0;
-    try { if (modes && getComputedStyle(modes).position === 'sticky') cover = modes.getBoundingClientRect().height; } catch (_) {}
-    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top - cover;
+    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top
+      - stuckCover(container, pane);
 
     // ⚠️ THE MONTH THE SCROLLER WAS AIMED AT, STAMPED ON THE MONTH. jsdom lays
     // nothing out — every rect above is zero and `scrollTop` stays 0 — so a test
@@ -1067,6 +1065,21 @@ function landOnCurrentMonth(container) {
     // stale claim behind.
     current.dataset.landed = 'true';
   }, 0);
+}
+
+/* 🔄 2026-09-25 (review round 4): HOW MUCH OF THE PANE'S TOP A STUCK SWITCH
+ * COVERS — phone Profile only, where the Months/Years switch sticks (Motion 2 ·
+ * Layout). It sticks at the pane's PADDING edge, not its border edge, so the
+ * cover is the pane's top padding plus the switch: measured 11 + 68 at 393, and
+ * counting only the 68 left September's first week 7px under its own heading on
+ * open. Zero wherever the switch does not stick (the Calendar screen, a laptop),
+ * so those land exactly as before. */
+function stuckCover(container, pane) {
+  const modes = container.closest('.me-cal')?.querySelector(':scope > .cal-modes');
+  try {
+    if (!modes || getComputedStyle(modes).position !== 'sticky') return 0;
+    return (parseFloat(getComputedStyle(pane).paddingTop) || 0) + modes.getBoundingClientRect().height;
+  } catch (_) { return 0; }
 }
 
 /* 🆕 2026-09-25 (review): THE NEAREST SCROLLER, NOT ALWAYS THE PANE. On the
@@ -1260,11 +1273,19 @@ function dataTabs(active, onChartMode, tabs = DATA_TABS, setMode = null) {
         // feel empty.
         disabled: false,
         text: label,
-        onClick: () => {
+        onClick: (e) => {
           if (setMode) setMode(key);
           else graphMode = key;
-          if (onChartMode) onChartMode();
-          else go('#/graphs');
+          if (!onChartMode) { go('#/graphs'); return; }
+          /* 🔄 2026-09-25 (review round 4): THE TAB LIGHTS NOW, THE PANE BUILDS
+           * AFTER THAT FRAME. Building Bars inside the tap held the old tab lit
+           * for ~150ms (measured, 4× throttle); now the tap's own frame shows the
+           * choice, and the pane (and its slide) follows in the next task.
+           * Reduced motion (and jsdom) build in the tap, exactly as before. */
+          if (!motionAllowed()) { onChartMode(); return; }
+          const bar = e && e.currentTarget && e.currentTarget.parentElement;
+          if (bar) bar.querySelectorAll('.seg').forEach((b) => b.setAttribute('aria-selected', String(b === e.currentTarget)));
+          afterPaint(onChartMode);
         },
       })),
   );
@@ -2629,6 +2650,13 @@ function inViewport(n) {
     && (r.width > 0 || r.height > 0);
 }
 
+/** Run `fn` in a fresh task once the current frame has been painted. */
+function afterPaint(fn) {
+  const later = () => setTimeout(fn, 0);
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(later);
+  else later();
+}
+
 /** Run `fn` on the first frame `node` is in the document (a view builds detached). */
 function whenShown(node, fn, tries = 30) {
   const step = () => {
@@ -2714,6 +2742,27 @@ function growBars(root, sel, key) {
   whenShown(root, () => {
     if (!motionAllowed() || !firstShow(key)) return;
     const all = [...root.querySelectorAll(sel)].slice(0, 30);
+    /* 🔄 2026-09-25 (review round 4): NO LAYOUT READ IN THE SLIDE'S FIRST FRAME.
+     * Asking each bar for its rect here forced the whole new pane to lay out
+     * inside this callback (~77ms at 4× throttle, Volume). Every bar is held at
+     * zero with writes only, and the browser's own intersection pass — run after
+     * its layout — says which are on screen: those grow, the rest go back to
+     * full width off screen and grow as they scroll in, as before. */
+    if (typeof IntersectionObserver === 'function') {
+      all.forEach((b) => { b.classList.add('m2-growing'); b.style.transform = 'scaleX(0)'; });
+      const held = new Set(all);
+      const io = new IntersectionObserver((entries) => {
+        if (!root.isConnected) { io.disconnect(); return; }
+        const arrived = [];
+        for (const en of entries) {
+          if (en.isIntersecting) { arrived.push(en.target); io.unobserve(en.target); held.delete(en.target); }
+          else if (held.delete(en.target)) { en.target.style.transform = ''; en.target.classList.remove('m2-growing'); }
+        }
+        grow(arrived);
+      }, { rootMargin: '0px 0px 24px 0px' });
+      all.forEach((b) => io.observe(b));
+      return;
+    }
     grow(all.filter(inViewport));
     /* Bars below the fold (Volume's rows sit under the figure on a phone) grow
      * as they scroll in, once each, in the batches they arrive in. Until then
@@ -2926,8 +2975,11 @@ function goToMonth(host, month, dir, fling = {}) {
   const pane = host.closest('.pane-scroll');
   if (!pane) return;
   const max = Math.max(0, pane.scrollHeight - pane.clientHeight);
+  // Minus the stuck switch on phone Profile (see stuckCover): it put the month's
+  // top at the pane's top, ~75px of its first week under the switch and heading.
   pane.scrollTop = Math.max(0, Math.min(max,
-    pane.scrollTop + month.getBoundingClientRect().top - pane.getBoundingClientRect().top));
+    pane.scrollTop + month.getBoundingClientRect().top - pane.getBoundingClientRect().top
+      - stuckCover(host, pane)));
   const arriving = month.querySelector('.cal-grid') || month;
   const w = arriving.offsetWidth || pane.clientWidth;
   month.classList.add('m2-cal-moving');

@@ -139,6 +139,14 @@ const S = await import(new URL('js/spring.js', root).href);
   const ui = read('js/ui.js');
   ok(/const keepBar = isLaptop\(\);/.test(ui) && /ghost\.append\(\.\.\.parked\)/.test(ui),
      'parkScreen (down arrow, minimise) leaves the laptop sidebar in place');
+  // Review 4: Save workout and Workout complete took the sidebar away (0–1440
+  // at 1440 while the runner sat at 200–1440) — they replaced all of #app.
+  const vs = read('js/views-session.js');
+  ok(!/getElementById\('app'\)\.replaceChildren\(/.test(vs),
+     'the save/finish screens never replace the whole of #app (that dropped the laptop sidebar)');
+  ok(/function putScreen\(next\) \{[^}]*querySelector\(':scope > \.screen'\)[^}]*cur\.replaceWith\(next\)/.test(vs)
+     && ['putScreen(next)', 'putScreen(screen)', 'putScreen(finishScreen)'].every((s) => vs.includes(s)),
+     'save screen, back to the runner and the finish screen swap only #app\'s screen slot');
 }
 
 /* ---------- 4. the stylesheet ---------- */
@@ -150,6 +158,13 @@ const S = await import(new URL('js/spring.js', root).href);
     ok(hover.includes(sel) && new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^{]*:hover').test(hover),
        `hover answers on ${sel}`);
   }
+  // Review 4: the gold button's hover was a 7% darken, which on the dark
+  // theme read as no hover at all. Dark lifts it, light darkens it.
+  const fill = /:is\(\.btn\.primary, \.btn\.good[^)]*\)[^{]*:hover:not\(:active\) \{\s*filter: brightness\(([\d.]+)\)/;
+  const fillLight = /:root\[data-theme="light"\] :is\(\.btn\.primary, \.btn\.good[^)]*\)[^{]*:hover:not\(:active\) \{\s*filter: brightness\(([\d.]+)\)/;
+  const fd = hover.match(fill); const fl = hover.match(fillLight);
+  ok(fd && +fd[1] >= 1.08 && fl && +fl[1] <= 0.92,
+     `the gold button answers the mouse: brightness ${fd && fd[1]} on dark (was .93), ${fl && fl[1]} on light`);
   ok(!/:hover[^{]*\{[^}]*\b(transform|width|height|margin|padding|font-size)\s*:/.test(hover),
      'hover changes colour only — nothing moves or resizes');
   ok(/\.sheet-body \.list > \*\s*\{\s*padding-inline:\s*var\(--pad\)/.test(LAP),
@@ -168,6 +183,12 @@ const S = await import(new URL('js/spring.js', root).href);
   ok(!/font-size:\s*\d/.test(LAP), 'no new px font sizes in the section');
   ok(/\.pane-scroll:has\(\.switch-row\) > \*\s*\{\s*max-width:\s*510px/.test(LAP),
      'Settings: every row keeps the switches\' measure, so they share one right edge');
+  // Review 4: the program's note started x350 and ran 1180 wide (to x1530) at
+  // 1440 — the 1180 column cap beat the 68ch reading cap, and the Look pass
+  // margin assumed an 820/940 column. Measured after: x222–699 at 860–1280, x230–707 at 1440.
+  ok(/\.pane-top:has\(\+ \.pane-scroll > \.sys-side\) > \.field-help \{\s*max-width: 68ch;\s*margin-inline: max\(0px, \(100% - 1180px\) \/ 2\) auto;/
+    .test(section('Motion 2 · Layout')),
+     'the program page note keeps 68ch and the 1180 column\'s left edge');
   ok(/\.sheet:focus \{ outline: none; \}/.test(section('Motion 2 · Surfaces')),
      'the dialog that takes focus draws no ring of its own');
 }

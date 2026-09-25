@@ -402,6 +402,15 @@ export function calendarBlock(cal, label = 'Training history') {
   // here, because this block is built after its screen — the shell's own
   // wireSegmented() never saw it, and Profile's switch was the one segmented
   // control in the app with no sliding pill (measured in WebKit). Idempotent.
-  queueMicrotask(() => { cal.paint(host); wireSegmented(block); });
+  // 🔄 2026-09-25 (review round 4): the pill is placed in the next frame, not in
+  // this microtask. Placing it reads a layout, and here that forced the whole
+  // new Profile to lay out mid-build and then again for its first frame
+  // (~170ms at 4× CPU throttle, measured). In the frame's own callback it is
+  // the one layout that frame needs anyway, and the pill is there when it paints.
+  queueMicrotask(() => {
+    cal.paint(host);
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => wireSegmented(block));
+    else wireSegmented(block);
+  });
   return block;
 }

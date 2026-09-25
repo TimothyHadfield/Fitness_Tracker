@@ -565,7 +565,7 @@ export function clearReadCache() {
  */
 export function warmReadCache() {
   return Promise.all(COLLECTIONS.map((c) => readCached(c).catch(() => null)))
-    .then(() => undefined)
+    .then(() => { warmStrengthWhenIdle(); })
     .catch(() => undefined);
 }
 
@@ -583,6 +583,12 @@ async function readCached(collection) {
   readCache.set(collection, rows.slice());
   lastRead.set(collection, Date.now());
   return rows;
+}
+
+/** Same rows, same order, same content? Cheap length test first; any doubt is "no". */
+function sameRows(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  try { return JSON.stringify(a) === JSON.stringify(b); } catch (_) { return false; }
 }
 
 function maybeRevalidate(collection) {
@@ -604,7 +610,14 @@ function maybeRevalidate(collection) {
        * screen that stayed wrong. Leaving it alone means the next getter
        * re-checks immediately. */
       if ((writeGeneration.get(collection) || 0) !== issuedAt) return;
-      readCache.set(collection, rows.slice());
+      /* 🆕 2026-09-25 (review round 4): NOTHING CHANGED, SO THE CACHE KEEPS ITS
+       * OWN ARRAY. The strength memos below are keyed on these arrays by
+       * identity; replacing them with an identical fresh read every 30 seconds
+       * threw a correct answer away and cost Profile a ~500ms recompute (4×
+       * throttle) on its next open. Equal content is the same rows, so keeping
+       * the old ones changes nothing anybody reads. */
+      const known = readCache.get(collection);
+      if (!sameRows(known, rows)) readCache.set(collection, rows.slice());
       lastRead.set(collection, Date.now());
     })
     // ⚠️ Silent. This runs while somebody is using the app, very often in a gym
@@ -4154,6 +4167,10 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
  * @returns {Promise<Map<string, object>>} muscle -> rateMuscle() result
  */
 export async function muscleRatings(rows) {
+  return memoized('ratings', () => ratingsKey(rows), () => computeMuscleRatings(rows));
+}
+
+async function computeMuscleRatings(rows) {
   const [benchmarks, sessions, exMap, bodyWeights, sex] = rows
     ? [rows.benchmarks || [], rows.sessions || [], await store.getExerciseMap(), rows.bodyWeights || [],
       rows.sex || null]
@@ -4475,6 +4492,129 @@ export async function muscleStrength() {
     try { strengthMemo = { key, value: structuredClone(value) }; } catch (_) { strengthMemo = null; }
   }
   return value;
+}
+
+/* 🆕 2026-09-25 (review round 4): THE SAME KEEP-THE-LAST-ANSWER, FOR
+ * `muscleRatings()` AND `weeklyVolumeByMuscle()`. Measured (Chrome, iPhone
+ * size, 4× CPU throttle): Profile froze 450–600ms on every open recomputing
+ * ratings from unchanged rows, and the first open of Data spent ~80ms on the
+ * volume walk, both inside the screen's crossfade.
+ *
+ * ⚠️ SAME RULES AS `strengthMemo`, and the key is a superset of what the
+ * computation reads: the day, every cached collection in STRENGTH_READS by
+ * identity (any write, revalidation with news, or account switch is a miss),
+ * then the arguments. Rows handed in by a caller are memoised ONLY when every
+ * one of them is a row this device's cache holds right now, and they go into
+ * the key one by one, in order — a friend's rows, the famous lifters (who pass
+ * their own `today`), or a list somebody filtered all simply compute, as
+ * before. Handed out as a structuredClone both ways; kept only if nothing moved
+ * while it was worked out. A few entries per function, so Profile's call and
+ * the runner's (no rows) do not evict each other. */
+const memoSlots = new Map();
+const MEMO_KEEP = 4;
+
+async function memoized(name, keyOf, compute) {
+  const key = keyOf();
+  const slots = memoSlots.get(name) || [];  if (key) {
+    const hit = slots.find((s) => sameKey(key, s.key));
+    if (hit) {
+      try { return structuredClone(hit.value); } catch (_) { slots.splice(slots.indexOf(hit), 1); }
+    }
+  }
+  const value = await compute();
+  if (key && sameKey(key, keyOf())) {
+    try {
+      const kept = { key, value: structuredClone(value) };
+      memoSlots.set(name, [kept, ...slots.filter((s) => !sameKey(key, s.key))].slice(0, MEMO_KEEP));
+    } catch (_) { /* not cloneable: simply not kept */ }
+  }
+  return value;
+}
+
+/** Tests only: forget every kept answer. */
+export function __clearStrengthMemosForTest() { memoSlots.clear(); strengthMemo = null; }
+
+/** Is every row in `list` one the cache holds for `collection` right now? */
+function allCached(list, collection) {
+  const cached = readCache.get(collection);
+  if (!Array.isArray(list) || !Array.isArray(cached)) return false;
+  const known = new Set(cached);
+  return list.every((r) => known.has(r));
+}
+
+/* The day plus the cached arrays of exactly the collections a computation reads.
+ * ⚠️ Narrower than STRENGTH_READS on purpose where the rows are handed in: a
+ * settings write (a remembered tab, a theme) must not throw away Profile's
+ * ratings, which never read settings. */
+function readsKey(collections) {
+  if (!collections.every((c) => readCache.has(c))) return null;
+  return [todayISO(), ...collections.map((c) => readCache.get(c))];
+}
+
+/** For a screen keeping its own derived answer the same way: null = do not keep. */
+export const cachedDataKey = readsKey;
+export const sameCachedDataKey = (a, b) => Boolean(sameKey(a, b));
+
+function ratingsKey(rows) {
+  // No rows: every getter below, including the profile (sex) — the full set.
+  if (!rows) { const base = strengthKey(); return base ? [...base, 'own'] : null; }
+  if (rows.today) return null;
+  // Rows handed in: only the exercise map is read from the store.
+  const base = readsKey(['customExercises', 'sessions', 'benchmarks', 'bodyWeight']);
+  if (!base) return null;
+  const parts = [['sessions', 'sessions'], ['benchmarks', 'benchmarks'], ['bodyWeights', 'bodyWeight']];
+  const key = [...base, 'rows', rows.sex || null];
+  for (const [field, collection] of parts) {
+    const list = rows[field] || [];
+    if (!allCached(list, collection)) return null;
+    key.push(field, list.length, ...list);
+  }
+  return key;
+}
+
+function volumeKey(windowDays, today, rows) {
+  if (rows) return null;
+  const base = readsKey(['sessions', 'customExercises']);
+  if (!base) return null;
+  return [...base, windowDays, today || null];
+}
+
+/* 🆕 2026-09-25 (review round 4): WORKED OUT ONCE IN IDLE TIME AFTER BOOT, so
+ * the first open of Data or Profile is a memo hit instead of 400–600ms (4×)
+ * inside its transition. The same calls, with the same arguments, those
+ * screens make — nothing is computed that they would not compute themselves.
+ * Each is its own idle task. No idle callback (Safari): a timer, later. Never
+ * under jsdom or node, and never an error. */
+function warmStrengthWhenIdle() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  try { if (/jsdom/i.test(navigator.userAgent || '')) return; } catch (_) { return; }
+  // Never inside a screen transition (js/motion.js navMoving's attribute): an
+  // idle gap between two of its frames is no place for a 400ms walk.
+  const moving = () => { try { return document.documentElement.hasAttribute('data-nav-moving'); } catch (_) { return false; } };
+  const idle = (fn, tries = 8) => {
+    const run = () => (moving() && tries > 0 ? setTimeout(() => idle(fn, tries - 1), 300) : fn());
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 4000 });
+    else setTimeout(run, 1200);
+  };
+  const jobs = [
+    () => muscleStrength(),
+    // Data › Muscles asks for a year (views-muscles.js TRAINED_WINDOW_DAYS);
+    // Volume opens on four weeks (views-data.js volDays).
+    // Exactly Profile's call (views-me.js fill): the getters' own copies, no sex.
+    async () => {
+      const [sessions, benchmarks, bodyWeights] = await Promise.all([
+        store.getSessions(), store.getBenchmarks(), store.getBodyWeights()]);
+      return muscleRatings({ sessions, benchmarks, bodyWeights });
+    },
+    () => weeklyVolumeByMuscle(365),
+    () => weeklyVolumeByMuscle(28),
+  ];
+  const next = () => {
+    const job = jobs.shift();
+    if (!job) return;
+    idle(() => { Promise.resolve().then(job).catch(() => {}).finally(next); });
+  };
+  next();
 }
 
 async function computeMuscleStrength() {
@@ -5104,6 +5244,12 @@ export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
  * }>}
  */
 export async function weeklyVolumeByMuscle(windowDays = 28, today = null, rows = null) {
+  // Kept while nothing it reads has changed — see `memoized`. A friend's rows compute.
+  return memoized('volume', () => volumeKey(windowDays, today, rows),
+    () => computeWeeklyVolumeByMuscle(windowDays, today, rows));
+}
+
+async function computeWeeklyVolumeByMuscle(windowDays, today, rows) {
   /* ⚠️ `rows` IS HOW A FRIEND'S VOLUME IS COMPUTED (2026-09-03), and it is the
    * same trick `muscleRatings(rows)` used on 2026-09-02 for the same reason: the
    * arithmetic must not be written twice. Their published sessions carry every
