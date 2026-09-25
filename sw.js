@@ -108,6 +108,7 @@ const SHELL = [
   './js/tour.js',
   './js/motion.js',
   './js/spring.js',
+  './js/gestures.js',
   './js/volume-map.js',
   './js/year-grid.js',
   './js/views-social.js',

@@ -1,0 +1,245 @@
+// Navigation motion (docs/motion2-plan.md, package B). jsdom + the real modules.
+//   node tests/nav-motion.test.mjs
+//
+// Tim, 2026-09-25: *"Put professional level annimation and physics into this
+// cite."* Package B is the navigation half: a pushed screen slides in from the
+// right over the one it came from, back is the exact reverse, a tab switch
+// crossfades, Record rises as a card over the screen behind it, the left edge
+// swipes back, and the tab bar's selection slides.
+//
+// What is pinned here is what a screenshot cannot see: which movement each
+// navigation gets (push / back / tab / rise / fall / none), the geometry of
+// every frame as a function of progress, the release decision of a drag, that
+// every movement is a spring inside Rule 7's physics tier, that nothing is built
+// where nothing can move (jsdom, reduced motion), and that a finished movement
+// leaves no inline style or stray layer behind. Frames themselves are checked
+// in WebKit (scratchpad strips), not here.
+import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+
+const dom = new JSDOM('<!doctype html><html><body><div id="app"></div></body></html>', {
+  url: 'http://localhost/#/home', pretendToBeVisual: true,
+});
+const { window } = dom;
+globalThis.window = window;
+globalThis.document = window.document;
+globalThis.Node = window.Node;
+globalThis.Element = window.Element;
+globalThis.HTMLElement = window.HTMLElement;
+globalThis.MutationObserver = window.MutationObserver;
+globalThis.getComputedStyle = window.getComputedStyle.bind(window);
+globalThis.location = window.location;
+globalThis.localStorage = window.localStorage;
+globalThis.sessionStorage = window.sessionStorage;
+Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true });
+
+let fails = 0;
+const ok = (c, m) => { console.log((c ? 'PASS  ' : 'FAIL  ') + m); if (!c) fails++; };
+const root = new URL('../', import.meta.url);
+const read = (f) => readFileSync(new URL(f, root), 'utf8');
+
+const UI = await import(new URL('js/ui.js', root).href);
+const G = await import(new URL('js/gestures.js', root).href);
+const S = await import(new URL('js/spring.js', root).href);
+
+/* ---------- 1. the router knows which way you went ---------- */
+{
+  const d = UI.navDirectionFor;
+  ok(typeof d === 'function' && typeof UI.navDirection === 'function', 'ui.js exports navDirection() and its pure core');
+  ok(d({ fresh: true, tab: false }) === 'push', 'a new history entry is a push');
+  ok(d({ fresh: true, tab: true }) === 'tab', 'a new entry made by the tab bar is a tab switch');
+  ok(d({ from: 4, to: 3 }) === 'back', 'an older entry is back');
+  ok(d({ from: 3, to: 4 }) === 'forward', 'a newer entry is forward');
+  ok(d({ from: 3, to: 3 }) === 'replace', 'the same entry is a re-render (replace)');
+  ok(d({ from: 4, to: 3, fromVia: 'tab' }) === 'tab',
+     'backing out of an entry the TAB BAR made is a tab switch, not a slide — tabs are not a stack');
+  ok(d({ from: 3, to: 4, toVia: 'tab' }) === 'tab', 'and so is going forward into one');
+
+  // markRoute() stamps, navDirection() reads — in jsdom's real history.
+  const h = window.history;
+  h.replaceState(null, '', '#/home');
+  UI.markRoute();
+  const i0 = h.state.navIndex;
+  h.pushState(null, '', '#/workouts');
+  UI.markTabNav();
+  UI.markRoute();
+  ok(UI.navDirection() === 'tab' && h.state.navVia === 'tab' && h.state.navIndex === i0 + 1,
+     `a tab tap stamps its entry (navVia=${h.state.navVia}, dir=${UI.navDirection()})`);
+  h.pushState(null, '', '#/workout/x');
+  UI.markRoute();
+  ok(UI.navDirection() === 'push' && !h.state.navVia, `a link inside it is a push (${UI.navDirection()})`);
+  ok(UI.currentNavIndex() === i0 + 2, 'currentNavIndex() is the entry on screen');
+  // A back: the entry being returned to already carries its index.
+  h.replaceState({ navIndex: i0 + 1, navVia: 'tab' }, '', '#/workouts');
+  UI.markRoute();
+  ok(UI.navDirection() === 'back' && UI.navRevisit() === true, `returning to an older entry is back, and a revisit (${UI.navDirection()})`);
+  h.replaceState({ navIndex: i0 + 1, navVia: 'tab' }, '', '#/workouts');
+  UI.markRoute();
+  ok(UI.navDirection() === 'replace', 'rendering the same entry again is a replace');
+  // A tab intent that never became a navigation must not leak into the next one.
+  UI.markTabNav();
+  h.pushState(null, '', '#/workout/y');
+  const realNow = Date.now;
+  Date.now = () => realNow() + 5000;
+  UI.markRoute();
+  Date.now = realNow;
+  ok(UI.navDirection() === 'push', `a stale tab intent (>1.5s old) is ignored (${UI.navDirection()})`);
+}
+
+/* ---------- 2. which movement each navigation gets ---------- */
+{
+  const pick = G.pickTransition;
+  const base = { hasLeaving: true, from: 'home', to: 'workout' };
+  ok(pick({ ...base, dir: 'push' }) === 'push', 'push → slide in from the right');
+  ok(pick({ ...base, dir: 'forward' }) === 'push', 'forward → the same slide');
+  ok(pick({ ...base, dir: 'back' }) === 'back', 'back → the exact reverse');
+  ok(pick({ ...base, dir: 'tab' }) === 'tab', 'tab → crossfade');
+  ok(pick({ ...base, dir: 'replace' }) === 'none', 'a re-render in place does not move');
+  ok(pick({ ...base, dir: 'push', hasLeaving: false }) === 'none', 'a cold open has nothing to move from');
+  ok(pick({ ...base, dir: 'push', rising: true }) === 'rise', 'Record (and a resumed workout) rise as a card');
+  ok(pick({ ...base, dir: 'push', falling: true, hasLeaving: false }) === 'fall', 'the down arrow drops the card');
+  ok(pick({ ...base, dir: 'back', from: 'record', to: 'home' }) === 'fall',
+     'the OS back button on Record drops the card too, rather than sliding it sideways');
+  ok(pick({ ...base, dir: 'push', from: 'session', to: 'session' }) === 'none',
+     '🚨 nothing slides INSIDE the runner (the logging path)');
+  ok(pick({ ...base, dir: 'push', from: 'record', to: 'session' }) === 'push', 'entering the runner may move');
+  ok(pick({ ...base, dir: 'tab', hint: 'back' }) === 'back', 'an edge swipe finishes as a back whatever the entry says');
+}
+
+/* ---------- 3. the frames ---------- */
+{
+  const f = G.frameFor;
+  const W = 393, H = 659;
+  const near = (a, b, e = 0.01) => Math.abs(a - b) <= e;
+  let a = f('push', 0, { W, H, phone: true });
+  let b = f('push', 1, { W, H, phone: true });
+  ok(near(a.inX, W) && near(a.outX, 0) && near(b.inX, 0) && near(b.outX, -0.3 * W),
+     `push (phone): new screen from x=${a.inX} to ${b.inX}, old parallaxes 0 → ${b.outX.toFixed(1)} (30%)`);
+  ok(a.dim === 0 && b.dim > 0 && b.dim <= 1, 'the screen being covered dims as it goes');
+  const back = f('back', 0.25, { W, H, phone: true }), push = f('push', 0.75, { W, H, phone: true });
+  ok(near(back.inX, push.outX) && near(back.outX, push.inX) && near(back.dim, push.dim),
+     'back at p is push at 1−p, frame for frame — the exact reverse');
+  a = f('push', 0, { W: 1240, H: 900, phone: false });
+  b = f('push', 1, { W: 1240, H: 900, phone: false });
+  ok(near(a.inX, 40) && near(a.inOpacity, 0) && near(b.inX, 0) && near(b.inOpacity, 1),
+     `push (laptop): a short 40px slide and a fade (${a.inX}px)`);
+  a = f('tab', 0, { W, H, phone: true });
+  b = f('tab', 1, { W, H, phone: true });
+  ok(near(a.inOpacity, 0) && near(a.inScale, 0.985, 1e-4) && near(b.inScale, 1) && near(b.inOpacity, 1) && a.inX === 0,
+     `tab: crossfade with a tiny scale ${a.inScale} → 1, and no direction`);
+  a = f('rise', 0, { W, H, phone: true });
+  b = f('rise', 1, { W, H, phone: true });
+  ok(near(a.inY, H) && near(b.inY, 0) && near(b.outScale, 0.94) && b.outRadius > 0 && near(a.outScale, 1),
+     `rise (phone): the card comes up ${H}px and the screen behind goes back to ${b.outScale}`);
+  ok(b.inRadius === 0 && a.inRadius > 0, 'and the card squares off as it lands — at rest Record is the full screen it always was');
+  const lr = f('rise', 1, { W: 1440, H: 900, phone: false });
+  ok(near(lr.outScale, 1), 'rise (laptop): the screen behind is not scaled');
+  const fa = f('fall', 0.3, { W, H, phone: true }), ri = f('rise', 0.7, { W, H, phone: true });
+  ok(near(fa.outScale, ri.outScale) && near(fa.dim, ri.dim), 'fall at p is rise at 1−p for the screen behind');
+}
+
+/* ---------- 4. every movement is a spring inside Rule 7's physics tier ---------- */
+{
+  const P = G.NAV_SPRINGS;
+  ok(P && P.push === 'glide' && P.back === 'glide' && P.tab === 'snap' && P.rise === 'sheet' && P.fall === 'sheet',
+     `push/back glide, tab snap, rise/fall sheet (${JSON.stringify(P)})`);
+  for (const [kind, preset] of Object.entries(P)) {
+    const s = S.simulate({ from: 0, to: 1, preset, ms: 600 });
+    const t90 = s.find((x) => x.x >= 0.9).t;
+    const rest = [...s].reverse().find((x) => Math.abs(x.x - 1) > 0.01);
+    ok(t90 <= 250 && (rest ? rest.t : 0) <= 400, `${kind}: 90% of the way in ${t90.toFixed(0)}ms, within 1% by ${(rest ? rest.t : 0).toFixed(0)}ms`);
+  }
+}
+
+/* ---------- 5. letting go of a drag ---------- */
+{
+  const r = G.releaseDecision;
+  ok(r({ offset: 40, velocity: 0, size: 393 }) === false, 'a short slow drag springs back');
+  ok(r({ offset: 220, velocity: 0, size: 393 }) === true, 'past half way and let go: it completes');
+  ok(r({ offset: 60, velocity: 1200, size: 393 }) === true, 'a flick completes from anywhere');
+  ok(r({ offset: 260, velocity: -900, size: 393 }) === false, 'a flick back the other way cancels even past half');
+  ok(G.rubber(-100) < 0 && G.rubber(-100) > -40 && G.rubber(-1000) > -40, 'dragging the card up resists and never passes its limit');
+  ok(G.edgeZone(10, true) && !G.edgeZone(30, true), 'home-screen app: the back swipe starts within 24px of the edge');
+  ok(!G.edgeZone(10, false) && G.edgeZone(30, false) && !G.edgeZone(60, false),
+     'in Safari: 20–44px, so Safari keeps its own swipe from the very edge');
+}
+
+/* ---------- 6. nothing is built where nothing can move ---------- */
+{
+  ok(G.canMove() === false, 'jsdom: no Element.animate, so no movement');
+  const app = document.getElementById('app');
+  const old = document.createElement('div');
+  old.className = 'screen';
+  app.replaceChildren(old);
+  const t = G.beginNav({ dir: 'push', from: 'home', to: 'workout', leaving: old, app, fromIndex: 0, fromHash: '#/home' });
+  ok(t === null && !document.querySelector('.screen-ghost, .nav-snap, .nav-dim') && old.parentNode === app,
+     '🔒 no ghost, no layer and the screen left where it was — every other suite sees one screen');
+  G.syncTabIndicator(document.createElement('nav'));
+  ok(!document.querySelector('.nav-ind'), 'no tab indicator is drawn without layout');
+}
+
+/* ---------- 7. a finished movement leaves nothing behind ---------- */
+{
+  // Pretend to be a browser with no animation frames: springs land at once
+  // (spring.js lands synchronously without requestAnimationFrame), so each
+  // transition runs to completion inside play() and can be inspected.
+  window.Element.prototype.animate = function () {};
+  window.matchMedia = () => ({ matches: false });
+  S.__setReducedMotionForTest(false);
+  ok(G.canMove() === true, 'with Element.animate and no reduced motion, movement is allowed');
+  const app = document.getElementById('app');
+  const nav = document.createElement('nav'); nav.className = 'navbar';
+  for (const kind of ['push', 'back', 'tab', 'rise']) {
+    const old = document.createElement('div'); old.className = 'screen';
+    old.innerHTML = '<div class="pane-scroll"><p>old</p></div>';
+    app.replaceChildren(nav, old);
+    const dir = kind === 'rise' ? 'push' : kind;
+    const t = G.beginNav({ dir, from: 'home', to: kind === 'rise' ? 'record' : 'workout', rising: kind === 'rise',
+      leaving: old, app, parkNav: kind === 'rise', fromIndex: 7, fromHash: '#/home' });
+    ok(t && t.kind === kind && old.parentNode !== app, `${kind}: the old screen is parked out of #app before the new one is built`);
+    const fresh = document.createElement('div'); fresh.className = 'screen';
+    app.replaceChildren(fresh);
+    t.play(fresh);
+    const stray = document.querySelectorAll('.screen-ghost, .nav-dim, .nav-snap');
+    ok(!stray.length && !fresh.getAttribute('style') && !app.getAttribute('style')
+       && !/nav-/.test(fresh.className) && !document.body.classList.contains('nav-card'),
+       `${kind}: at rest there is no ghost, no dim, no inline style and no nav- class (${stray.length} stray, style="${fresh.getAttribute('style') || ''}")`);
+  }
+  ok(G.__snapshotCount() >= 1, `the screens it left are kept as pictures for the back swipe (${G.__snapshotCount()})`);
+  // Reduced motion: nothing again.
+  S.__setReducedMotionForTest(true);
+  const old = document.createElement('div'); old.className = 'screen';
+  app.replaceChildren(old);
+  ok(G.beginNav({ dir: 'push', from: 'home', to: 'workout', leaving: old, app, fromIndex: 1 }) === null,
+     '🚨 prefers-reduced-motion: no movement at all');
+  S.__setReducedMotionForTest(false);
+}
+
+/* ---------- 8. the wiring ---------- */
+{
+  const app = read('js/app.js');
+  const r = app.slice(app.indexOf('async function render()'));
+  ok(r.indexOf('settleNavigation()') > 0 && r.indexOf('settleNavigation()') < r.indexOf('markRoute()'),
+     'a movement still running lands BEFORE the next navigation is read');
+  ok(/beginNav\(/.test(r) && r.indexOf('beginNav(') < r.indexOf('await resolve(route)'),
+     'the old screen is parked before the next view is awaited (it stays on screen while the store reads)');
+  ok(/\.play\(screen\)/.test(r), 'and the movement plays once the new screen is in #app');
+  ok(/syncTabIndicator\(/.test(r) && /initGestures\(/.test(app), 'the tab indicator and the gestures are wired');
+  ok(/markTabNav\(\)/.test(app), 'a tab-bar tap marks its navigation as a tab switch');
+  ok(!/parkScreen\(leaving\)/.test(app), 'Record no longer rises on the CSS keyframe path');
+  ok(read('sw.js').includes("'./js/gestures.js'"), 'gestures.js is precached for offline');
+  const css = read('css/app.css');
+  const a = css.indexOf('/* === Motion 2 · Navigation === */');
+  const b = css.indexOf('/* === end Motion 2 · Navigation === */');
+  ok(a > 0 && b > a, 'app.css has the Motion 2 · Navigation section');
+  const sec = css.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, '');
+  ok(/\.nav-moving[^{]*\{[^}]*animation:\s*none/.test(sec), 'a screen a spring is moving does not also play the CSS arrival');
+  ok(/\.nav-fall[^{]*\{[^}]*animation:\s*none/.test(sec), 'the dropped card is spring-driven, not the old keyframe');
+  ok(!/transition:[^;]*transform/.test(sec), '🚨 no CSS transition on transform in this section — springs write it');
+  const g = read('js/gestures.js');
+  ok(/passive:\s*false/.test(g) && /preventDefault\(\)/.test(g), 'the swipe listens non-passively so it can stop the page scrolling under it');
+  ok(/'session'/.test(g), 'the edge swipe knows the runner is off limits');
+}
+
+console.log(`\n${fails ? fails + ' FAILED' : 'all passed'}`);
+process.exit(fails ? 1 : 0);

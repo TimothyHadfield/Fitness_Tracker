@@ -547,14 +547,30 @@ export function parkScreen(node, { falls = false } = {}) {
    * four times the duration, for a screen whose animation never fires (a tab
    * hidden mid-navigation does not paint, and an `animationend` that never
    * comes must not leave a second screen in the document for ever). */
-  const done = () => ghost.remove();
+  const done = () => { if (!ghost.dataset.navOwned) ghost.remove(); };
   if (falls) {
     ghost.addEventListener('animationend', (e) => {
       if (e.target === ghost && e.animationName === 'screen-down') done();
     });
+    /* 🔄 THE DROP IS A SPRING SINCE 2026-09-25 (motion2 package B): `nav-fall`
+     * switches the `screen-down` keyframe off, and the router hands this ghost
+     * to js/gestures.js (`takeFall()`), which drops it while the screen under
+     * it comes forward from 0.94 — the same card a drag-down lets go of. Once
+     * owned there, this file's backstop leaves it alone; unowned (no render
+     * followed) it still goes on the timer. */
+    ghost.classList.add('nav-fall');
+    pendingFall = ghost;
   }
   setTimeout(done, SCREEN_MS * 4);
   return ghost;
+}
+
+let pendingFall = null;
+/** The ghost the last `parkScreen({ falls: true })` left for the router, once. */
+export function takeFall() {
+  const g = pendingFall;
+  pendingFall = null;
+  return g && g.isConnected ? g : null;
 }
 
 /**
@@ -1474,16 +1490,66 @@ let lastIndex = -1;
  * anywhere near the cause. In a browser the two are the same object. */
 const hist = () => (typeof window !== 'undefined' && window.history) || null;
 
+/* 🆕 WHICH WAY YOU WENT — 2026-09-25, docs/motion2-plan.md package B. Tim:
+ * *"Put professional level annimation and physics into this cite."* A pushed
+ * screen slides in from the right and back is the exact reverse, which is only
+ * honest (Rule 7) because the stamp above tells the two apart. `navDirection()`
+ * is what the last `markRoute()` found:
+ *   'push'    a new entry          'back' / 'forward'  an older / newer one
+ *   'tab'     an entry the TAB BAR made, entered or left — tabs are not a stack,
+ *             so leaving one by the back gesture crossfades rather than slides
+ *   'replace' the same entry again (a re-render, `refreshRoute()`)
+ * The tab bar says so itself (`markTabNav()`, a one-shot that expires, so a tap
+ * that went nowhere cannot colour the next navigation). */
+let lastVia = null;
+let direction = 'replace';
+let revisit = false;
+let tabIntentAt = 0;
+const TAB_INTENT_MS = 1500;
+
+/** The tab bar was tapped: the navigation it causes is a tab switch. */
+export function markTabNav() { tabIntentAt = Date.now(); }
+
+/** Pure core of navDirection(), for the tests. */
+export function navDirectionFor({ fresh = false, tab = false, from = -1, to = -1, fromVia = null, toVia = null } = {}) {
+  if (fresh) return tab ? 'tab' : 'push';
+  if (to === from) return 'replace';
+  if (to < from) return fromVia === 'tab' ? 'tab' : 'back';
+  return toVia === 'tab' ? 'tab' : 'forward';
+}
+
+/** What the last markRoute() found — see navDirectionFor(). */
+export function navDirection() { return direction; }
+/** True when the entry on screen had been visited before (back / forward). */
+export function navRevisit() { return revisit; }
+/** The history position of the entry on screen (-1 before the first render). */
+export function currentNavIndex() { return lastIndex; }
+
 /** Stamp the current history entry with its position. Called once per render. */
 export function markRoute() {
   const h = hist();
   if (!h) return;
   const state = h.state;
-  if (state && typeof state.navIndex === 'number') { lastIndex = state.navIndex; return; }
+  const from = lastIndex;
+  const fromVia = lastVia;
+  const tab = tabIntentAt > 0 && Date.now() - tabIntentAt < TAB_INTENT_MS;
+  tabIntentAt = 0;
+  if (state && typeof state.navIndex === 'number') {
+    lastIndex = state.navIndex;
+    lastVia = state.navVia || null;
+    direction = navDirectionFor({ from, to: lastIndex, fromVia, toVia: lastVia });
+    revisit = direction !== 'replace';
+    return;
+  }
   lastIndex += 1;
+  lastVia = tab ? 'tab' : null;
+  direction = navDirectionFor({ fresh: true, tab });
+  revisit = false;
   // `replaceState` rather than `pushState`: the entry already exists — the hash
   // change made it — and this only writes what it is.
-  try { h.replaceState({ ...(state || {}), navIndex: lastIndex }, ''); } catch (_) {}
+  try {
+    h.replaceState({ ...(state || {}), navIndex: lastIndex, ...(tab ? { navVia: 'tab' } : {}) }, '');
+  } catch (_) {}
 }
 
 /* 🔄 ~~HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS READER HAS WALKED~~ **DELETED

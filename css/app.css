@@ -6955,3 +6955,71 @@ svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; st
   .m-skel-bar::after { display: none; }
 }
 /* === end Motion 2 · Moments === */
+
+/* === Motion 2 · Navigation === */
+/* Screens that move like objects (js/gestures.js, 2026-09-25). Every position
+   here is written per frame by a spring from JS; this section only owes the
+   layers, the grounds and the shadows. ⚠️ No `transition` on a transform in
+   here: a CSS transition under a spring's per-frame writes would lag the finger. */
+:root { --nav-dim: .32; --nav-card-dim: .38; }
+:root[data-theme="light"] { --nav-dim: .14; --nav-card-dim: .22; }
+
+/* The screen in motion, the parked one and a kept picture each own their
+   ground, so two screens never show through each other. */
+.screen.nav-moving{animation:none}
+.screen.nav-moving { background: var(--ground); will-change: transform, opacity; }
+.screen.nav-still { animation: none; }
+.screen.nav-high { z-index: 45; }
+.nav-ghost.nav-under { z-index: 40; }
+.nav-ghost.nav-over { z-index: 50; }
+.screen-ghost.nav-fall{animation:none}
+.nav-ghost { will-change: transform; transform-origin: 50% 50%; }
+.nav-ghost > .screen, .nav-snap > .screen { flex: 1; min-width: 0; min-height: 0; animation: none; }
+.nav-ghost > .navbar, .nav-snap > .navbar { flex: none; animation: none; }
+.nav-snap {
+  position: fixed; z-index: 40; display: flex; overflow: hidden;
+  background: var(--ground); pointer-events: none; transform-origin: 50% 50%;
+}
+
+/* The edge a sliding screen leads with: a soft shadow on the page that is on
+   top, so it reads as a sheet of paper over another rather than a wipe. */
+.screen.nav-k-push, .screen.nav-k-edge, .nav-ghost.nav-g-back {
+  box-shadow: -10px 0 28px rgb(0 0 0 / .22);
+}
+.screen.nav-k-rise, .screen.nav-k-card, .nav-ghost.nav-g-fall { box-shadow: 0 -8px 30px rgb(0 0 0 / .28); }
+.nav-dim {
+  position: absolute; inset: 0; z-index: 5; background: #000; opacity: 0;
+  pointer-events: none;
+}
+.nav-dim.nav-dim-fixed { position: fixed; inset: auto; z-index: 46; }
+.nav-dim.nav-dim-swipe { z-index: 41; }
+/* The tab bar is not part of the stack: it stays put, above what moves. */
+.navbar.nav-bar-top { z-index: 46; }
+
+/* A card is up: behind the screen that stepped back is black, like iOS. */
+body.nav-card { background: #000; }
+#app.nav-card-app { background: var(--ground); overflow: hidden; transform-origin: 50% 50%; }
+
+/* ── The tab bar's selection, one element that slides ─────────────────── */
+.navbar.has-ind { position: relative; }
+.navbar.has-ind > a { position: relative; z-index: 1; }
+.nav-ind {
+  position: absolute; left: 0; top: -1px; z-index: 2;
+  width: 28px; height: 3px; border-radius: 0 0 3px 3px;
+  background: var(--accent);
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+@media (min-width: 860px) {
+  /* The sidebar's selected fill IS the indicator, so the link's own goes. */
+  .nav-ind {
+    top: 0; z-index: 0; border-radius: 7px;
+    background: var(--accent-dim); box-shadow: inset 0 1px 0 var(--hl);
+  }
+  .navbar.has-ind > a[aria-current="page"] { background: transparent; box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen.nav-moving, .nav-ghost, .nav-snap, .nav-ind { transform: none !important; }
+}
+/* === end Motion 2 · Navigation === */

@@ -6,7 +6,7 @@ import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
   // 🔄 `markFriendTrail` was imported here until 2026-09-16 — see the note where
   // it used to be called, in `render()`.
-  markRoute, parkScreen, releaseGhost, takeRiseRequest,
+  markRoute, takeRiseRequest, navDirection, navRevisit, currentNavIndex, markTabNav, takeFall,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -27,6 +27,11 @@ import { MeRouteView } from './views-me.js';
 import { setUnits } from './units.js';
 // 🆕 First-paint motion and the tab pop (2026-09-25, docs/polish-plan.md M).
 import { arriveScreen, tabPop } from './motion.js';
+// 🆕 Screens that move like objects: push, back, tabs, the Record card, the
+// back swipe, the tab bar's sliding selection (2026-09-25, motion2 package B).
+import {
+  beginNav, settleNavigation, syncTabIndicator, initGestures, rememberScroll, restoreScroll, canMove,
+} from './gestures.js';
 
 /**
  * FIVE TABS, AND THE MIDDLE ONE IS THE POINT.
@@ -224,6 +229,30 @@ function navbar(active) {
   );
 }
 
+/**
+ * The same tab bar, re-lit for `active` — what `navbar()` would build, without
+ * rebuilding it, so the selection can slide from the old tab to the new one.
+ * The account button IS rebuilt: it paints the person's state when made.
+ */
+function refreshNavbar(nav, active) {
+  const links = nav.querySelectorAll(':scope > a');
+  NAV.forEach((n, i) => {
+    const a = links[i];
+    if (!a) return;
+    if (n.match.includes(active)) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
+  const old = nav.querySelector('.nav-brand .avatar-btn');
+  if (old) old.replaceWith(profileButton());
+  return nav;
+}
+
+/** Is this hash a tab's own root — a screen with nowhere to go back to? */
+function isTabRoot(hash) {
+  const h = (hash || '').replace(/\/$/, '') || '#/home';
+  return NAV.some((n) => n.hash === h);
+}
+
 async function resolve(route) {
   switch (route.name) {
     case 'home':      return HomeView();
@@ -383,9 +412,16 @@ async function render() {
    * one, and rendering nothing is better than falling through to Home. */
   if (route.name === 'blank') { rendering = false; return; }
 
+  // A screen still sliding from the last navigation lands now, before anything
+  // is measured or parked — two movements never stack (js/gestures.js).
+  settleNavigation();
+  const fromIndex = currentNavIndex();
+
   // Where this screen sits in the visit, so the back arrow can go BACK rather
   // than to a hard-coded parent. See markRoute() in ui.js.
   markRoute();
+  // …and which way this is: 'push' | 'back' | 'forward' | 'tab' | 'replace'.
+  const dir = navDirection();
 
   /* 🔄 ~~AND HOW DEEP INTO SOMEBODY ELSE'S FRIENDS THIS IS — `markFriendTrail()`
    * on every route, for Tim's override of Rule 8~~ — THE CALL IS GONE, LATER THE
@@ -452,23 +488,41 @@ async function render() {
    * inferred because arriving at `#/record` from anywhere else is unambiguous;
    * this cannot, so the DOOR asks (`requestRise()` in views-social.js) and the
    * other two behave exactly as any other screen does. */
-  const rising = Boolean(leaving)
+  /* 🔄 A BACK INTO RECORD IS NOT A RISE (2026-09-25): the card rises when you
+   * open it, and coming back to it from a screen above it is the ordinary back
+   * slide. */
+  const rising = Boolean(leaving) && dir !== 'back'
     && ((route.name === 'record' && parse(prevHash).name !== 'record')
         || (asked && (route.name === 'session' || route.name === 'friend')));
+  const fromHash = prevHash;
   prevHash = location.hash;
-  // 🔄 Held, since 2026-09-12: the ghost is released when the rise ENDS rather
-  // than on a clock that started before the store was read — see parkScreen().
-  const ghost = rising ? parkScreen(leaving) : null;
+  if (leaving) rememberScroll(fromIndex, leaving);
+  /* 🔄 THE OUTGOING SCREEN IS PARKED HERE, BEFORE `resolve()`, FOR EVERY
+   * MOVEMENT NOW (2026-09-25, js/gestures.js) — not just the rises. Same trick,
+   * same reason as above: it stays on screen while the store reads, and then
+   * the new screen moves against it on one spring. `beginNav()` returns null in
+   * jsdom and under reduced motion, and then nothing here is any different from
+   * before. A down arrow's falling card (`parkScreen({ falls: true })` in the
+   * view) is handed over here too, so the drop is the same spring. */
+  const move = beginNav({
+    dir, from: parse(fromHash).name, to: route.name, rising, falling: takeFall(), leaving, app,
+    parkNav: FULLSCREEN.includes(route.name), fromIndex, fromHash,
+  });
 
   try {
     const screen = await resolve(route);
+    // The tab bar is not part of what moves: when one is on screen it is KEPT
+    // across the render, so its selection can slide to the new tab.
+    const keptNav = canMove() ? app.querySelector(':scope > .navbar') : null;
+    if (keptNav) keptNav.remove();
     clear(app);
-    if (rising) screen.classList.add('rises');
+    let nav = null;
     if (FULLSCREEN.includes(route.name)) {
       // No bottom nav on these, so the screen itself owes the safe-area padding.
       screen.classList.add('no-nav');
     } else {
-      app.append(navbar(route.name));
+      nav = keptNav ? refreshNavbar(keptNav, route.name) : navbar(route.name);
+      app.append(nav);
     }
     // ⚠️ Prepended to EVERY screen, here rather than in screenShell, so that no
     // route can be reached without it — including the fullscreen ones and the
@@ -492,8 +546,10 @@ async function render() {
     const mini = liveSessionBar({ route: route.name, today: todayISO() });
     if (mini) { screen.classList.add('has-mini'); screen.append(mini); }
     app.append(screen);
-    // The still picture underneath goes when this screen's rise has ended.
-    if (ghost) releaseGhost(ghost, screen);
+    // The new screen moves against the parked one; both tidy up when it lands.
+    if (move) move.play(screen);
+    // Back (or forward) to a list you scrolled: it is where you left it.
+    if (navRevisit()) restoreScroll(screen, currentNavIndex());
     // ⚠️ Every screen, here rather than in screenShell, for the same reason the
     // demo bar is: no route may be reached without it. See associateLabels()
     // and autoGrowTextareas().
@@ -510,11 +566,19 @@ async function render() {
      * count up, bars fill. `arriveScreen()` decides whether this render is an
      * arrival (a new hash) and stays still for a repaint, the logging path and
      * a screen that is already rising as a whole — see js/motion.js. */
-    arriveScreen(screen, { key: location.hash, route: route.name, rising });
-    const nav = NAV.find((n) => n.match.includes(route.name));
-    const navKey = nav ? nav.hash : null;
+    // A screen that slides or rises in as a whole does not ALSO stagger its
+    // rows up — one movement per arrival. A tab crossfade is quiet enough that
+    // the rows still come in under it.
+    arriveScreen(screen, {
+      key: location.hash, route: route.name, rising: rising || Boolean(move && move.kind !== 'tab'),
+    });
+    if (nav) syncTabIndicator(nav);
+    const navItem = NAV.find((n) => n.match.includes(route.name));
+    const navKey = navItem ? navItem.hash : null;
     if (!FULLSCREEN.includes(route.name) && navKey) {
-      if (lastNavKey !== null && navKey !== lastNavKey) {
+      // The icon already popped under the finger (js/gestures.js) when the tab
+      // was tapped; this pop is for a tab lit some other way (a link, back).
+      if (lastNavKey !== null && navKey !== lastNavKey && !(canMove() && dir === 'tab')) {
         tabPop(app.querySelector('.navbar a[aria-current="page"]'));
       }
       lastNavKey = navKey;
@@ -522,7 +586,7 @@ async function render() {
   } catch (err) {
     console.error(err);
     clear(app);
-    app.append(el('div', { class: 'screen no-nav' },
+    const screen = el('div', { class: 'screen no-nav' },
       demo.active() ? demoBar() : null,
       el('div', { class: 'pane-scroll' },
         el('div', { class: 'empty' },
@@ -531,7 +595,9 @@ async function render() {
           el('a', { class: 'btn primary', href: '#/home', text: 'Back to home' }),
         ),
       ),
-    ));
+    );
+    app.append(screen);
+    if (move) move.play(screen);
   }
 
   rendering = false;
@@ -656,6 +722,14 @@ function paintShell() {
   // touchstart listener — without this no press in the app answers back on the
   // iPhone. Passive and empty: it only switches :active on (motion pass 2).
   document.addEventListener('touchstart', () => {}, { passive: true });
+  // A tap on a tab is a TAB change (a crossfade), not a push — the router is
+  // told before the hash moves. Only when it goes somewhere new.
+  document.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest && e.target.closest('.navbar > a');
+    if (a && a.getAttribute('href') !== location.hash) markTabNav();
+  }, true);
+  // The back swipe and Record's drag-down (phone), and the tab icon's pop.
+  initGestures({ isTabRoot, route: () => parse(location.hash).name });
   trackKeyboard();
   const cached = cachedLook();
   if (cached) applyLook(cached);

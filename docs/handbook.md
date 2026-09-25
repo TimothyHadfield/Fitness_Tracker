@@ -1556,8 +1556,8 @@ in** — which is also the whole of "only when appropriate".
   moving. The browser audit can never catch its removal, so a test pins it.
 - ⚠️ **A movement must not claim something the app does not know.** The router DOES know direction
   since 09-02 (`markRoute()` stamps `history.state.navIndex`), so push/back may slide.
-- 🆕 **TWO WHOLE SCREENS MOVE, AND ONLY TWO — Record since 2026-09-09, the session runner since
-  2026-09-10.** Tim: *"to make the record section feel more like a button that actually activates
+- 🆕 **TWO SCREENS RISE — Record since 2026-09-09, the runner since 2026-09-10** (since 09-25
+  pushes slide too, `gestures.js`). Tim: *"to make the record section feel more like a button that actually activates
   something."* Record earns the exception on this rule's own test: the big middle **+** is the one
   control in the app that is an **action** rather than a destination (D4), and a tab swap said
   nothing about that. It rises from the edge its own button sits on. ⚠️ **The same clause that
