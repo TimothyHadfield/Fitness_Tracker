@@ -4442,7 +4442,42 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
   };
 }
 
+/* 🆕 2026-09-25 (laptop review, sub-tab speed): THE LAST ANSWER IS KEPT while
+ * nothing it was computed from has changed. Measured: every tap on Data ›
+ * Muscles recomputed every rating (~170ms of a ~260ms switch in WebKit), from
+ * the same rows as the tap before.
+ *
+ * ⚠️ THE KEY IS THE READ CACHE'S OWN ARRAYS, by identity, plus the day. Every
+ * write, revalidation and account switch replaces or clears those arrays, so
+ * any change anywhere is a miss; an uncached collection is never a hit. And the
+ * answer is handed out as a structuredClone, both ways, so a caller that edits
+ * what it was given cannot edit the next caller's copy. A value that cannot be
+ * cloned is simply not kept. The result is the same computation, not a new one. */
+let strengthMemo = null;
+// Every collection the getters below read (getProfile reads settings and the
+// weigh-ins; getExerciseMap reads the custom exercises). A getter that starts
+// reading another collection must add it here.
+const STRENGTH_READS = ['sessions', 'benchmarks', 'settings', 'bodyWeight', 'customExercises'];
+function strengthKey() {
+  if (!STRENGTH_READS.every((c) => readCache.has(c))) return null;
+  return [todayISO(), ...STRENGTH_READS.map((c) => readCache.get(c))];
+}
+const sameKey = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
+
 export async function muscleStrength() {
+  const key = strengthKey();
+  if (key && strengthMemo && sameKey(key, strengthMemo.key)) {
+    try { return structuredClone(strengthMemo.value); } catch (_) { strengthMemo = null; }
+  }
+  const value = await computeMuscleStrength();
+  // Kept only if nothing moved while it was being worked out.
+  if (key && sameKey(key, strengthKey())) {
+    try { strengthMemo = { key, value: structuredClone(value) }; } catch (_) { strengthMemo = null; }
+  }
+  return value;
+}
+
+async function computeMuscleStrength() {
   const [profile, benchmarks, sessions, exMap, bodyWeights] = await Promise.all([
     store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getExerciseMap(),
     store.getBodyWeights(),

@@ -224,5 +224,76 @@ const S = await import(new URL('js/spring.js', root).href);
   }
 }
 
+/* ---------- 9. phone review 3 (2026-09-25, WebKit 393×659) ---------- */
+{
+  // A fast drag released over its segment carried on to the next one.
+  const pick = UI.pickSegment;
+  const c5 = [40, 120, 200, 280, 360];
+  ok(pick({ centers: c5, x: 200, velocity: 1500, from: 0 }) === 2,
+     'a fast drag from the first segment let go over the third lands on the THIRD (was the fifth)');
+  ok(pick({ centers: c5, x: 150, velocity: 300 }) === 1, 'a slow release is not a flick: the nearest segment');
+  ok(pick({ centers: c5, x: 40, velocity: 6000, from: 0 }) === 1, 'a real flick carries on ONE segment at most');
+  ok(pick({ centers: c5, x: 130, velocity: 900, from: 1 }) === 2, 'a flick off the selected segment still goes to the next');
+
+  // Reduced motion: a sheet is still dragged down (the finger moves it), and
+  // what follows the release is instant.
+  const ow = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+  Object.defineProperty(window, 'innerWidth', { value: 393, configurable: true });
+  const oh = Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'offsetHeight');
+  Object.defineProperty(window.HTMLElement.prototype, 'offsetHeight', { get() { return 400; }, configurable: true });
+  window.Element.prototype.animate = function () {};
+  window.matchMedia = (q) => ({ matches: /reduce/.test(q) });
+  S.__setReducedMotionForTest(true);
+  const { sheet } = UI.openSheet({ title: 'T', body: UI.el('p', { text: 'x' }) });
+  ok(Boolean(sheet.querySelector('.sheet-grab')), 'reduced motion: the sheet still has its grab handle');
+  ok(!sheet.classList.contains('s2-live'), 'but no spring owns it (nothing moves by itself)');
+  const head = sheet.querySelector('.sheet-head');
+  const touch = (type, y) => {
+    const e = new window.Event(type, { bubbles: true, cancelable: true });
+    const t = { clientX: 200, clientY: y, identifier: 1, target: head };
+    Object.defineProperty(e, 'touches', { value: type === 'touchend' ? [] : [t] });
+    Object.defineProperty(e, 'changedTouches', { value: [t] });
+    head.dispatchEvent(e);
+  };
+  touch('touchstart', 100);
+  touch('touchmove', 140);
+  touch('touchmove', 380);
+  ok(/translate3d\(0, 2\d\d/.test(sheet.style.transform || ''), `it follows the finger (${sheet.style.transform})`);
+  touch('touchend', 380);
+  ok(!sheet.isConnected && !document.querySelector('.sheet-backdrop'), 'and let go past the line it closes, at once');
+  S.__setReducedMotionForTest(null);
+  delete window.Element.prototype.animate;
+  window.matchMedia = undefined;
+  if (oh) Object.defineProperty(window.HTMLElement.prototype, 'offsetHeight', oh); else delete window.HTMLElement.prototype.offsetHeight;
+  if (ow) Object.defineProperty(window, 'innerWidth', ow);
+  const css = read('css/app.css');
+  const sec = css.slice(css.indexOf('/* === Motion 2 · Surfaces === */'), css.indexOf('/* === end Motion 2 · Surfaces === */'));
+  ok(!/\.sheet-grab\s*\{\s*display:\s*none/.test(sec), 'the grab handle is not hidden under reduced motion');
+  ok(/const canDrag = \(\) =>/.test(read('js/ui.js')) && /if \(!canDrag\(\) \|\| \(e\.button/.test(read('js/ui.js')),
+     'the pill drag is wired under reduced motion too');
+
+  // Focus went to <body> after the photo viewer closed from a tap.
+  const btn = UI.el('button', { text: 'photo' });
+  document.body.append(btn);
+  btn.focus();
+  const pv = UI.openPhotoViewer({ src: 'data:,', byKey: false });
+  pv.close();
+  ok(document.activeElement === btn, `the photo viewer hands focus back to what opened it (on ${document.activeElement.tagName})`);
+  btn.remove();
+
+  // Sheets and popovers left open over a screen they no longer belonged to.
+  UI.openSheet({ title: 'A', body: UI.el('p', { text: 'a' }) });
+  UI.openSheet({ title: 'B', body: UI.el('p', { text: 'b' }) });
+  ok(typeof UI.closeSurfaces === 'function', 'ui.js exports closeSurfaces() for the router');
+  UI.closeSurfaces();
+  ok(!document.querySelector('.sheet, .sheet-backdrop'), 'closeSurfaces() puts every open sheet away');
+
+  // Light theme: the toast was ~1.2:1 against the page, the "off" knob dark.
+  ok(/:root\[data-theme="light"\] :is\(\.toast, \.toast-x\) \{ background: var\(--ink\); color: var\(--ground\); \}/.test(sec),
+     'light theme: the toast is inverted (ink ground, page-coloured words)');
+  ok(/:root\[data-theme="light"\] \.switch:not\(\[aria-checked="true"\]\) \.switch-knob \{\s*background: var\(--surface\)/.test(sec),
+     'light theme: an OFF switch has a light knob; the track shows the state');
+}
+
 console.log(fails === 0 ? '\nAll surfaces-motion checks passed.' : `\n${fails} surfaces-motion check(s) FAILED.`);
 process.exit(fails === 0 ? 0 : 1);

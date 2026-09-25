@@ -1341,19 +1341,32 @@ async function systemBody(system, workouts) {
       icon('plus'), 'New workout'),
     // The workout checker over the whole programme — nothing when it finds nothing.
     exMap ? lintBlock(lintProgramme(workouts, exMap), (id) => nameById.get(id)) : null,
-    // Below the workouts rather than above them: this screen is opened most days
-    // to start one, and the warning was already read on Explore before adding.
-    preset && preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null,
-    // The notes are the author's own words about the programme, so they read
-    // here rather than only inside the form that happens to edit them.
-    system.notes
-      ? el('div', { class: 'preset-notes' },
-          el('div', { class: 'section-label', text: 'Notes' }),
-          // Paragraph breaks are real paragraphs, as on the programme's Explore page.
-          ...String(system.notes).split(/\n{2,}/).map((para) => el('p', { text: para })))
-      : null,
-    await ownSystemRating(system.id, workouts, system),
+    sideColumn(
+      // Below the workouts rather than above them: this screen is opened most days
+      // to start one, and the warning was already read on Explore before adding.
+      preset && preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null,
+      // The notes are the author's own words about the programme, so they read
+      // here rather than only inside the form that happens to edit them.
+      system.notes
+        ? el('div', { class: 'preset-notes' },
+            el('div', { class: 'section-label', text: 'Notes' }),
+            // Paragraph breaks are real paragraphs, as on the programme's Explore page.
+            ...String(system.notes).split(/\n{2,}/).map((para) => el('p', { text: para })))
+        : null,
+      await ownSystemRating(system.id, workouts, system),
+    ),
   ];
+}
+
+/* 🆕 THE PROGRAMME'S WORDS ARE ONE COLUMN — layout pass 2026-09-25. From 1024px
+ * the workouts sit left and the warning, notes and rating right (css, Motion 2 ·
+ * Layout), so the rating's numbers share the list's right edge and a 1024px
+ * laptop no longer scrolls to reach "Indirect work counts half a set". On a
+ * phone it is a column with the pane's own gap, and nothing moves. Nothing in
+ * it → no column at all, so an empty one cannot leave a gap. */
+function sideColumn(...parts) {
+  const kids = parts.filter(Boolean);
+  return kids.length ? el('div', { class: 'sys-side' }, ...kids) : null;
 }
 
 export async function StartPickerView({ tab = false } = {}) {

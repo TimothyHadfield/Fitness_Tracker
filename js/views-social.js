@@ -2392,14 +2392,20 @@ export async function FriendSessionView(uid, sessionId) {
   const split = await muscleSplit(a.entries, exMap);
   if (split) parts.push(split);
 
-  parts.push(el('h2', { class: 'section-head', text: 'Workout' }));
-  parts.push(...workoutEntries(a.entries, exMap, { uid, who: name, demo: Boolean(demoEntry) }));
+  /* 🆕 THE SETS ARE ONE COLUMN — layout pass 2026-09-25. From 1200px the
+   * summary (who, stats, split) sits left and the workout right, instead of one
+   * 940px column scrolling 1,366px. On a phone `.ws-sets-col` is
+   * `display: contents`, so the order and spacing are exactly as before. */
+  const setsCol = el('div', { class: 'ws-sets-col' });
+  parts.push(setsCol);
+  setsCol.append(el('h2', { class: 'section-head', text: 'Workout' }));
+  setsCol.append(...workoutEntries(a.entries, exMap, { uid, who: name, demo: Boolean(demoEntry) }));
 
   /* What you can do with somebody else's workout — copy the plan, or send a
    * picture of it. ⚠️ Both are at the BOTTOM, after the workout itself: the
    * reason to open this screen is to read what they did, and a row of buttons
    * above that would make the app's suggestions louder than their training. */
-  parts.push(el('div', { class: 'ws-do' },
+  setsCol.append(el('div', { class: 'ws-do' },
     el('button', {
       class: 'btn block', text: 'Save as my workout',
       onClick: () => saveAsRoutineSheet(a, exMap, name),

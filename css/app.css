@@ -6699,26 +6699,30 @@ a.pick-row { text-decoration: none; }
 
 /* ── Profile (laptop): two columns ────────────────────────────────────────
    One 940px column ran 1500px down: the best lifts, the goal and the calendar
-   stacked under each other with 500px of empty width beside every one. Now:
-   face | figures on top; body details over best lifts on the left, goal over
-   calendar on the right. `dense` lets the goal climb beside body details. A
-   friend's profile (same classes, no body/goal) gets best lifts | calendar. */
-@media (min-width: 1200px) {
+   stacked under each other with 500px of empty width beside every one.
+   🔄 Layout pass 2, 2026-09-25: from 1024 (was 1200 — at 1024 it was one 780px
+   column scrolling 661/1474), and the two columns are two STACKS rather than
+   shared rows: face over best lifts on the left; the figures, the note about
+   them, body details, the goal and the calendar on the right. Shared rows left
+   a friend's profile with a 130px empty band (their stats row sat beside their
+   face and the notes under both), and put the Close-Grip row 49px under the
+   fold at 1440. The best lifts span down to a last `1fr` row — the Goals trick
+   (see "Goals and a friend's workout") — so the right column's rows are only as
+   tall as their own contents. Spacing is margins, as there. */
+@media (min-width: 1024px) {
   .pane-scroll > .me-body { max-width: 1180px; }
   .me-body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-auto-flow: row dense;
-    column-gap: 48px; row-gap: 16px;
+    grid-template-rows: repeat(12, auto) 1fr;
+    column-gap: 48px; row-gap: 0;
     align-items: start;
   }
-  .me-body > * { grid-column: 1 / -1; }
-  .me-body > .me-head { grid-column: 1; align-self: center; }
-  .me-body > .me-stats { grid-column: 2; align-self: center; }
-  .me-body > .me-section, .me-body > .me-bests,
-  .me-body > .me-slot > .me-bests { grid-column: 1; }
-  .me-body > .me-bests ~ .me-section,
-  .me-body > .me-cal, .me-body > .me-slot > .me-cal { grid-column: 2; }
+  .me-body > *, .me-body > .me-slot > * { grid-column: 2; margin-top: 14px; }
+  .me-body > .me-slot { margin-top: 0; }
+  .me-body > .me-head { grid-column: 1; grid-row: 1; align-self: center; margin-top: 0; }
+  .me-body > .me-stats { grid-column: 2; grid-row: 1; align-self: center; margin-top: 0; }
+  .me-body > .me-bests, .me-body > .me-slot > .me-bests { grid-column: 1; grid-row: 2 / -1; }
   /* 🆕 2026-09-25: the calendar column scrolls on its own. Months lands on the
      current month (Tim, 09-12); with the whole pane as the scroller that
      landing took the left column 6,000px out of view and left ~600px empty
@@ -6728,6 +6732,16 @@ a.pick-row { text-decoration: none; }
     overflow-y: auto;
     overflow-x: hidden;
   }
+}
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .me-body { column-gap: 32px; }
+}
+/* A best lift that opens nothing (an estimate never recorded) has no chevron,
+   so its badge sat 27px right of every other one in the list (x796 vs x769 at
+   1440). It keeps the chevron's width, empty — only in a list that has
+   chevrons, so a friend's list (none open) stays flush. Both widths. */
+.list:has(> .me-best > .row-chev) > .me-best:not(:has(> .row-chev))::after {
+  content: ''; flex: none; width: 17px;
 }
 
 /* ── Calendar (laptop): use the width ─────────────────────────────────────
@@ -6790,6 +6804,146 @@ a.pick-row { text-decoration: none; }
   .builder-group > .list { margin-inline: 0; }
 }
 
+/* ══ Layout pass 2 (2026-09-25, laptop review) ══════════════════════════════
+   Measured at 1440/1280/1024 in WebKit and Chrome, demo account. The rule for
+   widths from here: a single-column reading screen is 940 centred in the
+   content area; a two-pane screen is 1180 centred (Muscles and Volume keep
+   their 1280 cap — Tim asked for that panel to reach the wall); and everything
+   on one screen shares one right edge. */
+
+/* ── Volume (laptop): the list beside the figure, like Muscles ────────────
+   The per-muscle list started 1,081px down at 1440 — under the fold — with
+   250px of nothing either side of the bodies. `.vol-side` (views-data.js) is
+   the same column the Muscles panel is: same widths at the same breakpoints,
+   the same hairline, and it scrolls on its own so the page does not. The
+   figure takes the rest of the height, so it is the size it was. On a phone
+   the column does not exist (`display: contents`) and nothing moves. */
+.vol-side { display: contents; }
+@media (min-width: 860px) {
+  .graph-host.is-volume > .vol-pane {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(260px, 32%, 340px);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 18px; row-gap: 12px;
+    padding-bottom: 0;
+  }
+  .is-volume > .vol-pane > .vol-intro { grid-column: 1; grid-row: 1; }
+  .is-volume > .vol-pane > .vol-figure {
+    grid-column: 1; grid-row: 2;
+    width: 100%; height: 100%; min-height: 0;
+    max-width: none; max-height: none; aspect-ratio: auto;
+  }
+  .is-volume > .vol-pane > .vol-figure + div { grid-column: 1; grid-row: 3; }
+  .is-volume > .vol-pane > .vol-side {
+    grid-column: 2; grid-row: 1 / -1;
+    display: flex; flex-direction: column; gap: 12px;
+    min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding: 0 0 12px 18px;
+    border-left: 1px solid var(--rule-soft);
+  }
+  .vol-side > .vol-hint { margin-top: 2px; }
+}
+@media (min-width: 1024px) {
+  .graph-host.is-volume > .vol-pane { grid-template-columns: minmax(0, 1fr) clamp(340px, 40%, 460px); }
+}
+@media (min-width: 1200px) {
+  .pane-scroll > .graph-host.is-volume { max-width: 1280px; }
+  /* Muscles and Volume: the controls above share the panes' edges. The
+     picker sat at x350 and Compare ended at x1290 over a panel reaching x1418. */
+  .pane-top:has(+ .pane-scroll > .graph-host:is(.is-muscles, .is-volume)) > * { max-width: 1280px; }
+}
+
+/* ── Goals and a friend's workout (≥1200): two columns ────────────────────
+   Goals scrolled 1,904px in one 940px column with sentences ~150 characters
+   long; a friend's workout 1,366px. Now the summary is on the left and the
+   long part on the right: "What this asks of you" on Goals, the sets (and the
+   two buttons that follow them) on a workout.
+   ⚠️ HOW THE RIGHT COLUMN STAYS ONE PIECE WITHOUT STRETCHING THE LEFT: it spans
+   every row down to a last `1fr` track. A grid item that spans a flexible track
+   is left out of the auto tracks' sizing, so the left column's rows are only as
+   tall as their own content and the fr row absorbs whatever the right column
+   has left over. The left items carry their spacing as margins (row-gap 0),
+   because the unused auto tracks would each add a gap. */
+/* The wrapper is the same flex column the screen is (12px gaps), so a phone
+   lays out exactly as before; its heading is the wrapper's first child but not
+   the screen's, so it keeps the 18px a mid-screen heading has. */
+.ws-sets-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ws-sets-col > .section-head:first-child { margin-top: 18px; }
+@media (min-width: 1200px) {
+  .pane-scroll > .goal-screen:has(> .goal-reqs),
+  .pane-scroll > .ws:has(> .ws-sets-col) { max-width: 1180px; }
+  .goal-screen:has(> .goal-reqs), .ws:has(> .ws-sets-col) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(12, auto) 1fr;
+    column-gap: 48px; row-gap: 0;
+    align-items: start;
+  }
+  .goal-screen:has(> .goal-reqs) > * { grid-column: 1; margin-top: 16px; }
+  .ws:has(> .ws-sets-col) > * { grid-column: 1; margin-top: 12px; }
+  .goal-screen:has(> .goal-reqs) > :first-child,
+  .ws:has(> .ws-sets-col) > :first-child { margin-top: 0; }
+  .goal-screen > .goal-reqs, .ws > .ws-sets-col { grid-column: 2; grid-row: 1 / -1; margin-top: 0; }
+  .goal-screen > .goal-reqs > .goal-ambition { margin-top: 0; }
+  .ws-sets-col > .section-head:first-child { margin-top: 0; }
+  /* The bottom button keeps the screen's one right edge. */
+  .pane-scroll:has(> .goal-screen > .goal-reqs) ~ .pane-bottom > * { max-width: 1180px; }
+}
+/* ── Workouts (≥1024): the workouts | the programme's words ─────────────
+   `.sys-side` (views-workouts.js) holds the warning, the notes and "How this
+   program rates". At 1440 the rating block ended at x860 while the list above
+   it ran to x1290; at 1024 the screen scrolled 22px and cut "Indirect work
+   counts half a set" off at the fold. As a right-hand column the rating's
+   numbers sit on the list's right edge and everything fits. Same fr-row trick
+   as Goals. On a phone the column is a plain flex column with the pane's gap. */
+.sys-side { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+@media (min-width: 1024px) {
+  .pane-scroll:has(> .sys-side) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(12, auto) 1fr;
+    column-gap: 32px; row-gap: 0;
+    align-items: start;
+    padding-inline: max(var(--pad), (100% - 1180px) / 2);
+  }
+  .pane-scroll:has(> .sys-side) > * { grid-column: 1; max-width: none; margin-inline: 0; margin-top: var(--gap); }
+  .pane-scroll:has(> .sys-side) > :first-child { margin-top: 0; }
+  .pane-scroll > .sys-side { grid-column: 2; grid-row: 1 / -1; margin-top: 0; }
+  .sys-side > .own-rating { max-width: none; margin-inline: 0; }
+  .pane-top:has(+ .pane-scroll > .sys-side) > * { max-width: 1180px; }
+}
+@media (min-width: 1200px) {
+  .pane-scroll:has(> .sys-side) { column-gap: 48px; }
+}
+
+/* Reading measure: a requirement's sentence stops at ~72 characters at every
+   laptop width (it ran ~150 in one 940px column). */
+@media (min-width: 860px) {
+  .goal-screen .row-sub { max-width: 72ch; }
+}
+
+/* Profile's Months/Years switch stays in view (phone review, 2026-09-25): a
+   tap on Months lands the pane on the current month, thousands of px below the
+   switch just tapped. In Months the switch sticks to the top of the pane for as
+   long as the calendar is on screen, and each month's heading sticks just under
+   it instead of sliding beneath it. --cal-modes-h is measured by ownCalendar.
+   Below 1024 only: from there the calendar is a column that scrolls on its own
+   and the switch sits above it anyway. Years is short and is left alone. */
+@media (max-width: 1023px) {
+  .me-cal:has(.cal-month) > .cal-modes {
+    position: sticky; top: 0; z-index: 4;
+    background: var(--ground);
+    padding-block: 4px;
+    /* Covers the pane's top padding too, where the month scrolling past
+       otherwise shows through above the switch. The pane clips the rest. */
+    box-shadow: 0 -24px 0 var(--ground);
+  }
+  .me-cal:has(> .cal-modes) .cal-month-head { top: var(--cal-modes-h, 0px); }
+}
+
 /* === end Motion 2 · Layout === */
 
 /* === Motion 2 · Data === */
@@ -6827,6 +6981,12 @@ a.pick-row { text-decoration: none; }
 /* Vertical drags stay the browser's (the months scroll); a sideways one is the
    month swipe. */
 .cal-grid { touch-action: pan-y; }
+/* While a month's grid is being dragged or is arriving, it is clipped to the
+   month's own column: it poked out into the gutter left of the month header
+   (phone review, 2026-09-25). `clip`, not `hidden` — no scroll container, so
+   the sticky month header still sticks to the pane. Only while moving, so a
+   resting grid's today ring is never trimmed. */
+.cal-month.m2-cal-moving { overflow-x: clip; overflow-y: visible; }
 .m2-dragging { -webkit-user-select: none; user-select: none; }
 /* Years stretched to fill its pane: the rows are sized in JS (≤1.5× the square). */
 .m2-yr-fit .yr-cell { aspect-ratio: auto; }
@@ -6850,6 +7010,19 @@ a.pick-row { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .m2-sliding, .m2-growing, .m2-panel-in { transform: none !important; opacity: 1 !important; }
 }
+/* Graph's rep target: "reps" was 10px faint text floating outside its
+   stepper. The stepper's own pill now holds the word too, at the size of the
+   chips beside it, so "− 10 + reps" reads as one control. */
+.rep-target {
+  gap: 0; padding-right: 10px;
+  background: var(--raised); border-radius: 7px;
+}
+.rep-target > .mini-stepper { background: transparent; }
+.rep-target > .rep-target-label {
+  font-size: var(--fs-md); font-weight: var(--fw-med);
+  color: var(--ink-soft);
+}
+
 /* === end Motion 2 · Data === */
 
 /* === Motion 2 · Moments === */
@@ -7037,6 +7210,12 @@ a.pick-row { text-decoration: none; }
    PLACE: the new screen's ground covers the old one from its first frame and
    only its content fades, so two screens are never legible together. */
 .screen.nav-in-place { box-shadow: none; }
+/* 🔄 Phone review 3: …and that covering made a blank frame between the old
+   content going and the new arriving. The ground is see-through while it
+   moves, so the two CROSSFADE (js/gestures.js XFADE_OUT: the old is gone by
+   half way). Both screens stand on the same ground, so nothing shows but
+   content. */
+.screen.nav-moving.nav-xfade { background: transparent; }
 
 /* One demo strip while screens move: a copy pinned at the strip's resting
    place, the real ones hidden (visibility — nothing below them shifts). The
@@ -7047,6 +7226,11 @@ a.pick-row { text-decoration: none; }
   background: linear-gradient(var(--accent-dim), var(--accent-dim)), var(--ground);
 }
 body.nav-pinned .demo-bar:not(.nav-banner-pin) { visibility: hidden; }
+/* …except on a CARD (Record rising or falling, or dragged down): the card is
+   one sheet, and its strip travels with it — hidden, it left an empty band at
+   the card's top edge the whole way down (phone review 3). The pinned copy
+   still stands for the screen underneath. */
+body.nav-pinned :is(.nav-ghost.nav-g-fall, .screen.nav-k-rise, .screen.nav-k-card) .demo-bar:not(.nav-banner-pin) { visibility: visible; }
 
 /* A card is up: behind the screen that stepped back is black, like iOS. */
 body.nav-card { background: #000; }
@@ -7069,10 +7253,19 @@ body.nav-card { background: #000; }
     background: var(--accent-dim); box-shadow: inset 0 1px 0 var(--hl);
   }
   .navbar.has-ind > a[aria-current="page"] { background: transparent; box-shadow: none; }
+  /* The gold label waits for the fill (js/gestures.js `litFollows`): while it
+     slides, only the link it is on is gold, and the colour crossfades across
+     as it arrives. `:root` matches the light-gold rule's weight (above). */
+  .navbar.has-ind > a { transition: color var(--t-fast) var(--ease-out); }
+  :root .navbar.ind-moving > a[aria-current="page"]:not(.ind-lit) { color: var(--ink-faint); }
+  .navbar.ind-moving > a.ind-lit { color: var(--accent); }
+  :root[data-theme="light"]:not([data-palette]) .navbar.ind-moving > a.ind-lit { color: #82570B; }
 }
 
+/* Reduced motion: nothing moves by itself. A screen under a finger (the edge
+   swipe, Record's drag-down) still follows it — phone review 3. */
 @media (prefers-reduced-motion: reduce) {
-  .screen.nav-moving, .nav-ghost, .nav-snap, .nav-ind { transform: none !important; }
+  .screen.nav-moving:not(.nav-k-edge):not(.nav-k-card), .nav-ghost, .nav-snap, .nav-ind { transform: none !important; }
 }
 /* === end Motion 2 · Navigation === */
 
@@ -7118,6 +7311,19 @@ body.nav-card { background: #000; }
   transform: none; animation: none; touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
+/* Light theme: `--raised-hi` on the light ground was ~1.2:1 — a grey pill that
+   barely stood off the page (phone review 3). The toast is inverted there, ink
+   for its ground and the page's ground for its words, as a note laid over the
+   page rather than part of it. Dark keeps its raised pill. */
+:root[data-theme="light"] :is(.toast, .toast-x) { background: var(--ink); color: var(--ground); }
+
+/* Light theme, a switch that is OFF: its knob was `--ink-soft`, a dark disc
+   that read as "on" (phone review 3). Off, the knob is light, lifted off the
+   grey track by a shadow; the TRACK says which state it is in — grey off,
+   accent on (on is unchanged). */
+:root[data-theme="light"] .switch:not([aria-checked="true"]) .switch-knob {
+  background: var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / .28);
+}
 
 /* ── The runner's ±: the spring is the press (.94); no CSS scale under it ── */
 .step-btn { transition: background .1s ease; }
@@ -7146,10 +7352,140 @@ body.nav-card { background: #000; }
 .card-photo.s2-src-hidden .card-photo-img { visibility: hidden; }
 
 /* Reduced motion: the JS starts none of these springs; this is the backstop
-   for a setting changed while something was moving. The grab handle goes —
-   nothing can be dragged. */
+   for a setting changed while something was moving. 🔄 Phone review 3: the
+   grab handle STAYS — a sheet is still dragged down under reduced motion (a
+   drag is the finger moving it, js/ui.js canDrag); only what follows the
+   release is instant. A sheet opened then is not `.s2-live`, so its drag's
+   transform is not caught by the rule below. */
 @media (prefers-reduced-motion: reduce) {
-  .sheet-grab { display: none; }
   .sheet.s2-live, .toast.s2-live, .help-pop.s2-live { transform: none !important; }
 }
+/* Focus is moved onto the dialog itself when it opens (openSheet), as the ?
+   box does; the dialog is not a control, so it draws no ring. */
+.sheet:focus { outline: none; }
 /* === end Motion 2 · Surfaces === */
+
+/* === Motion 2 · Laptop === */
+/* Laptop review, 2026-09-25 (motion pass 2). Tim: "Put professional level
+   annimation and physics into this cite … Impress me." + his taste: a laptop
+   uses its width, content never moves on tap, hover is feedback and never
+   extra detail. Measured at 1440/1280/1024 (WebKit + Chrome) and 393. */
+
+/* ── Hover: the mouse gets an answer (it had 2 rules) ─────────────────────
+   Only where a mouse is the pointer — on a touch screen :hover sticks after a
+   tap. Colour and tint only: nothing moves or resizes. --t-fast. */
+:root { --hover-tint: rgb(255 255 255 / .05); }
+:root[data-theme="light"] { --hover-tint: rgb(0 0 0 / .045); }
+@media (hover: hover) and (pointer: fine) {
+  .navbar a, button.row, a.row, .row.as-button, .seg, .chip, .btn, .feed-act,
+  .feed-open, .feed-head, button.cal-cell, .yr-grid .yr-cell, .set-pick, .nav-arrow,
+  .icon-btn, .help-dot { cursor: pointer; }
+  .row.static, .set-item.is-done .set-pick { cursor: default; }
+  .btn {
+    transition: transform var(--t-fast) var(--ease-out), background-color var(--t-fast) linear,
+                box-shadow var(--t-fast) linear, filter var(--t-fast) linear;
+  }
+  .feed-title, .feed-name { transition: color var(--t-fast) linear; }
+
+  /* Rows you can open: a faint tint. */
+  :is(button.row, a.row, .row.as-button):not(.static):not(:disabled):hover:not(:active) {
+    background-color: var(--hover-tint);
+  }
+  /* Raised buttons and chips lift a step; filled ones darken a little. */
+  .btn:not(.primary):not(.good):not(.ghost):not(.danger):not([aria-pressed="true"]):not(:disabled):hover:not(:active),
+  .chip:not([aria-pressed="true"]):hover:not(:active),
+  .nav-arrow:not(:disabled):hover:not(:active) { background-color: var(--raised-hi); }
+  :is(.btn.primary, .btn.good, .btn.preset[aria-pressed="true"], .chip[aria-pressed="true"], .mini-arrow):not(:disabled):hover:not(:active) {
+    filter: brightness(.93);
+  }
+  :is(.btn.ghost, .btn.danger):not(:disabled):hover:not(:active),
+  .icon-btn:hover:not(:active) { background-color: var(--hover-tint); }
+  /* A segment you are not on: its word comes up to full ink. */
+  .seg:not([aria-selected="true"]):not(:disabled):hover { color: var(--ink); }
+  /* The feed: the action tints, the card's title and the name take the accent
+     (the same answer `.as-button:hover .row-title` already gives). */
+  .feed-act:hover:not(:active) { background-color: var(--hover-tint); color: var(--ink); }
+  .feed-act.is-mine:hover { color: var(--accent); }
+  .feed-open:hover .feed-title, .feed-head:hover .feed-name { color: var(--accent); }
+  /* Calendar: a day you can open brightens; a square gets a ring. */
+  button.cal-cell:not(.blank):hover:not(:active) { filter: brightness(1.14); }
+  :root[data-theme="light"] button.cal-cell:not(.blank):hover:not(:active) { filter: brightness(.95); }
+  .yr-grid .yr-cell:not(.sel):hover { box-shadow: 0 0 0 1px var(--ink-faint); position: relative; z-index: 1; }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 860px) {
+  /* Sidebar: an item you are not on tints and comes up to full ink. */
+  .navbar > a:not([aria-current="page"]):not(.ind-lit):hover { background-color: var(--hover-tint); color: var(--ink); }
+  /* A list row on a laptop has no side padding (its text IS the column edge),
+     so its tint reaches 10px past each side instead of stopping at the words. */
+  .pane-scroll .list > :is(button.row, a.row, .row.as-button):not(.static):not(.is-current):hover:not(:active) {
+    box-shadow: -10px 0 0 var(--hover-tint), 10px 0 0 var(--hover-tint);
+  }
+}
+
+/* ── Dialogs (laptop): rows keep the dialog's side padding; centred over the
+   content area, right of the 200px sidebar, not over the window ─────────── */
+@media (min-width: 860px) {
+  .sheet-body .list > * { padding-inline: var(--pad); }
+  body:has(> #app > .navbar) :is(.sheet-backdrop, .sheet-backdrop-x) { padding-left: 200px; }
+}
+
+/* ── Feed actions: the icons start on the card's text edge ────────────────
+   They were centred in their boxes, so the Kudos thumb sat 30px in from the
+   words above it (x380 vs x350 at 1440; x44 vs x14 at 393). Phone keeps its
+   three equal thirds — Kudos left, Comment middle, Share right, as Tim set
+   them — with Kudos on the left edge and Share on the right one; the boxes
+   (the tap targets) do not change. Laptop's three 120px boxes start left. */
+/* The row reaches 10px into the gutter on each side and the outer boxes pad
+   those 10px back, so a press or hover fill has a margin round the icon while
+   the icon itself sits on the text edge. */
+.feed-actions { margin-inline: -10px; }
+.feed-actions > .feed-act:first-child { justify-content: flex-start; padding-left: 10px; }
+.feed-actions > .feed-act:last-child { justify-content: flex-end; padding-right: 10px; }
+@media (min-width: 860px) {
+  .feed-actions { margin-inline: -10px 0; }
+  .feed-actions > .feed-act, .feed-actions > .feed-act:last-child {
+    justify-content: flex-start; padding-inline: 10px 0; flex-basis: 130px;
+  }
+}
+
+/* ── Words: no orphans ────────────────────────────────────────────────────
+   "%." alone on a line. Longhands only: the `text-wrap` shorthand also resets
+   text-wrap-mode and would undo every `white-space: nowrap` title. */
+p, .note, .field-help, .row-sub, .feed-note, .ws-note, .help-pop-body, .goal-verdict-body,
+.goal-intro-body, .update-note, .preset-warning, .research-notes, .rt-body, figcaption,
+.empty p, .toast { text-wrap-style: pretty; }
+h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wrap-style: balance; }
+
+/* ── Runner ───────────────────────────────────────────────────────────────
+   Finished → Edit moved the row's contents 3px down (both widths): the open
+   set's head was 44px and a closed row 50px, each centring its button and
+   numbers. The open head now matches the closed row. No motion added. */
+.set-item:not(.set-drop) > .set-open-head, .set-item:not(.set-drop) > .set-open-head .set-pick { min-height: 50px; }
+/* Laptop: the bottom bar's ← and Next share the content column's edges. */
+@media (min-width: 860px) {
+  .session-footer { justify-content: flex-start; padding-inline: max(var(--pad), (100% - 820px) / 2); }
+  .session-footer > * { max-width: none; }
+}
+@media (min-width: 1200px) {
+  .session-footer { padding-inline: max(var(--pad), (100% - 940px) / 2); }
+}
+
+/* ── Calendar (laptop): the small labels at the small reading size ────────
+   Weekday letters, the workout names in a day, the year grid's months and
+   days were 10px (--fs-xs) on a 1440 screen; --fs-sm is the smallest size the
+   app reads text at. */
+@media (min-width: 860px) {
+  .cal-dow, .cal-tag, .yr-month, .yr-dow, .yr-dows { font-size: var(--fs-sm); }
+}
+
+/* ── Settings (laptop): one right edge ────────────────────────────────────
+   The switches stop at the 510px text measure (Motion 2 · Layout); the
+   Account row ran on to the column's edge, 430px further right. Everything in
+   Settings now keeps that measure, so the chevron and the switches line up. */
+@media (min-width: 860px) {
+  .pane-scroll:has(.switch-row) > * { max-width: 510px; margin-inline: max(0px, (100% - 820px) / 2) auto; }
+}
+@media (min-width: 1200px) {
+  .pane-scroll:has(.switch-row) > * { margin-inline: max(0px, (100% - 940px) / 2) auto; }
+}
+/* === end Motion 2 · Laptop === */

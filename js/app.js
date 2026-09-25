@@ -7,6 +7,7 @@ import {
   // 🔄 `markFriendTrail` was imported here until 2026-09-16 — see the note where
   // it used to be called, in `render()`.
   markRoute, takeRiseRequest, navDirection, navRevisit, currentNavIndex, markTabNav, takeFall,
+  closeSurfaces,
 } from './ui.js';
 import {
   HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
@@ -30,7 +31,7 @@ import { arriveScreen, tabPop } from './motion.js';
 // 🆕 Screens that move like objects: push, back, tabs, the Record card, the
 // back swipe, the tab bar's sliding selection (2026-09-25, motion2 package B).
 import {
-  beginNav, settleNavigation, syncTabIndicator, initGestures, rememberScroll, restoreScroll, canMove,
+  beginNav, settleNavigation, flightLead, syncTabIndicator, initGestures, rememberScroll, restoreScroll, canMove,
 } from './gestures.js';
 
 /**
@@ -168,6 +169,23 @@ const NAV = [
  * (`parkScreen()` parks everything in `#app`), so the bar is covered by the
  * panel rather than vanishing a frame before it arrives. */
 const FULLSCREEN = ['record', 'session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare', 'notes'];
+
+/* 🆕 ON A LAPTOP THE SIDEBAR NEVER LEAVES — motion pass 2, laptop review
+ * (2026-09-25). FULLSCREEN is a PHONE idea: a bottom tab bar under a pushed
+ * screen is taken away so the screen can have the whole height. On a laptop
+ * the bar is a 200px sidebar, and dropping it on Settings, Goals, a workout, a
+ * friend… moved every one of those screens' content 200px left and back again
+ * (measured: column x250 → x350 at 1440). So at the stylesheet's laptop line
+ * (860px, `@media (min-width: 860px)`) every route keeps it; the screen still
+ * gets `no-nav` (its own safe-area padding — zero on a laptop anyway). Record
+ * still rises: over the content area, beside the sidebar that stays put.
+ * `matchMedia`, not innerWidth, so jsdom (no matchMedia) keeps the phone shape
+ * every existing test was written against. */
+const SIDEBAR_MQ = '(min-width: 860px)';
+function sidebarAlways() {
+  try { return Boolean(window.matchMedia && window.matchMedia(SIDEBAR_MQ).matches); } catch (_) { return false; }
+}
+const wantsNav = (name) => !FULLSCREEN.includes(name) || sidebarAlways();
 
 /* The second segments of `#/friend/<uid>/…` that open their DATA panel, and
  * which tab each opens it on. `data` is the button's own address and opens the
@@ -415,6 +433,10 @@ async function render() {
    * one, and rendering nothing is better than falling through to Home. */
   if (route.name === 'blank') { rendering = false; return; }
 
+  // A sheet, ? box or photo belongs to the screen it was opened on: a new
+  // route puts them away (phone review 3). A repaint of the same one does not.
+  if (prevHash && location.hash !== prevHash) closeSurfaces();
+
   // A screen still sliding from the last navigation lands now, before anything
   // is measured or parked — two movements never stack (js/gestures.js).
   settleNavigation();
@@ -520,13 +542,16 @@ async function render() {
    * view) is handed over here too, so the drop is the same spring. */
   const move = beginNav({
     dir, from: parse(fromHash).name, to: route.name, rising, falling: takeFall(), leaving, app,
-    parkNav: FULLSCREEN.includes(route.name), fromIndex, fromHash,
+    parkNav: !wantsNav(route.name), fromIndex, fromHash,
   });
 
   try {
     // A crossfade starts from the tap: let its first frame reach the screen
     // before a heavy view holds the main thread (js/gestures.js, `lead`).
     if (move && move.lead) await move.lead;
+    // …and so does a flight the view started itself (the runner's minimise).
+    const flying = move ? null : flightLead();
+    if (flying) await flying;
     const screen = await resolve(route);
     // The tab bar is not part of what moves: when one is on screen it is KEPT
     // across the render, so its selection can slide to the new tab.
@@ -534,10 +559,9 @@ async function render() {
     if (keptNav) keptNav.remove();
     clear(app);
     let nav = null;
-    if (FULLSCREEN.includes(route.name)) {
-      // No bottom nav on these, so the screen itself owes the safe-area padding.
-      screen.classList.add('no-nav');
-    } else {
+    // No bottom nav on these (phone), so the screen itself owes the safe-area padding.
+    if (FULLSCREEN.includes(route.name)) screen.classList.add('no-nav');
+    if (wantsNav(route.name)) {
       nav = keptNav ? refreshNavbar(keptNav, route.name) : navbar(route.name);
       app.append(nav);
     }
@@ -733,8 +757,32 @@ function paintShell() {
   // `boot-shell` so render() does not treat it as a screen to rise over.
   const shell = el('div', { class: 'screen boot-shell' });
   if (FULLSCREEN.includes(route.name)) shell.classList.add('no-nav');
-  else app.append(navbar(route.name));
+  if (wantsNav(route.name)) app.append(navbar(route.name));
   app.append(shell);
+}
+
+/* A window dragged across the laptop line on a sub-page: the sidebar comes or
+ * goes with it, without re-rendering the screen (a half-typed field survives). */
+function followSidebarLine() {
+  let mq = null;
+  try { mq = window.matchMedia && window.matchMedia(SIDEBAR_MQ); } catch (_) { mq = null; }
+  if (!mq) return;
+  const onChange = () => {
+    const app = document.getElementById('app');
+    if (!app) return;
+    const name = parse(location.hash).name;
+    if (!FULLSCREEN.includes(name)) return;
+    const bar = app.querySelector(':scope > .navbar');
+    if (mq.matches && !bar) {
+      const nav = navbar(name);
+      app.prepend(nav);
+      syncTabIndicator(nav);
+    } else if (!mq.matches && bar) {
+      bar.remove();
+    }
+  };
+  if (mq.addEventListener) mq.addEventListener('change', onChange);
+  else if (mq.addListener) mq.addListener(onChange);
 }
 
 (async function boot() {
@@ -754,6 +802,7 @@ function paintShell() {
   const cached = cachedLook();
   if (cached) applyLook(cached);
   paintShell();
+  followSidebarLine();
   const settings = await store.getSettings();
   applyLook(settings);
   rememberLook();

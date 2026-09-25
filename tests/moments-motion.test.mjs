@@ -216,5 +216,33 @@ const G = await import(new URL('js/views-goals.js', root).href);
   }
 }
 
+/* ---------- 8. review fixes (2026-09-25, phone review, WebKit 393px) ---------- */
+{
+  // The tour: a stop on another screen shuts the hole BEFORE the hash changes
+  // (it sat lit over the rising Record card for 150–300ms), and reopens it.
+  const tour = read('js/tour.js');
+  const go = tour.slice(tour.indexOf('async function go('), tour.indexOf('let remeasureTimer'));
+  const shutAt = go.indexOf('shutHole()'), hashAt = go.indexOf('location.hash = stop.route');
+  ok(shutAt > 0 && hashAt > shutAt, 'the tour shuts its hole before it changes screen');
+  ok(/if \(crossed && !reduced\(\)\) openHole\(hole\)/.test(go), 'and springs it open on the new stop once it has settled');
+
+  // Onboarding: the tapped answer lights, then the push; the old screen is
+  // never dropped while its spring is still carrying it.
+  const ob = read('js/onboarding.js');
+  ok(/b\.setAttribute\('aria-pressed', b === e\.currentTarget/.test(ob) && /setTimeout\(\(\) => \{[^}]*go\(i \+ 1, 1\); \}, PICK_MS\)/.test(ob),
+     'onboarding lights the tapped answer for PICK_MS before its screen leaves');
+  ok(/isSpringing\(old\)/.test(ob), 'the leaving screen\'s safety timer waits for its spring (no empty stage)');
+
+  // The demo strip: the save and finish screens replace #app directly, so
+  // they carry the live strip over rather than dropping it.
+  const vs = read('js/views-session.js');
+  ok((vs.match(/carryDemoBar\((next|finishScreen|screen)\)/g) || []).length === 3,
+     'the demo strip is carried onto the save screen, the finish screen, and back to the runner');
+  const finSrc = vs.slice(vs.indexOf("title: 'Workout complete'"));
+  ok(finSrc.indexOf('carryDemoBar(finishScreen)') >= 0
+     && finSrc.indexOf('carryDemoBar(finishScreen)') < finSrc.indexOf('replaceChildren(finishScreen)'),
+     'the finish screen gets the strip before it is shown');
+}
+
 console.log(fails ? `\n${fails} FAIL` : '\nall pass');
 process.exit(fails ? 1 : 0);

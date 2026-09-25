@@ -61,6 +61,17 @@ export const NAV_SPRINGS = { push: NAV_GLIDE, back: NAV_GLIDE, tab: NAV_FADE, ri
 export const EARLY_FADE_MS = 90;
 /** …and a screen about to be covered by a slide dims this far (of its full dim) meanwhile. */
 export const EARLY_DIM = 0.35;
+/* 🔄 A TAB SWITCH IS A REAL CROSSFADE (phone review 3, 2026-09-25). The old
+ * content used to fade all the way out in 90ms and the new content in from 0
+ * once built, so between the two the screen was EMPTY — a blank flash on every
+ * tab, longest on the heavy ones. Now the tap only dims the old content to
+ * EARLY_KEEP (it still answers at once), the arriving screen's ground is
+ * see-through while it moves (`nav-xfade`), and on one spring the old content
+ * goes the rest of the way while the new comes in. The old is gone by
+ * XFADE_OUT of the way, so the two are legible together for a moment, not the
+ * whole movement. */
+export const EARLY_KEEP = 0.4;
+export const XFADE_OUT = 0.5;
 export const PARALLAX = 0.3;      // the covered screen slips 30% of the width
 export const DESK_SHIFT = 40;     // laptop: a short slide and a fade, not the whole width
 export const TAB_SCALE = 0.985;
@@ -232,12 +243,12 @@ function easeIn() {
  * this still can. Returns the animations, so the picture kept for the back
  * swipe can be put back to full strength.
  */
-function fadeOutEarly(nodes) {
+function fadeOutEarly(nodes, to = 0) {
   const out = [];
   const easing = easeIn();
   for (const n of nodes) {
     try {
-      const a = n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: EARLY_FADE_MS, easing, fill: 'forwards' });
+      const a = n.animate([{ opacity: 1 }, { opacity: to }], { duration: EARLY_FADE_MS, easing, fill: 'forwards' });
       if (a) out.push(a);
     } catch (_) {}
   }
@@ -368,6 +379,18 @@ let hint = null;     // a drag that was let go of, waiting for its render
 /** Land whatever is moving, now. The router calls this before every render. */
 export function settleNavigation() { if (active) active.finish(); }
 
+/**
+ * Something is already flying that the router did not start — the runner's
+ * minimise, going into its bar (views-session.js minimizeFlight). Resolves
+ * once a frame of it has been painted, so the compositor has it before the
+ * next view is built (phone review 3: the shrink's start was lost under the
+ * build). Null when nothing is flying.
+ */
+export function flightLead() {
+  if (!inBrowser() || !document.querySelector('.screen-ghost.m-flying')) return null;
+  return afterPaint();
+}
+
 function dropHint(h) {
   if (!h) return;
   clearTimeout(h.timer);
@@ -411,7 +434,11 @@ export function beginNav({
     return { kind: 'still', play(s) { if (s) s.classList.add('nav-still'); }, finish() {} };
   }
   if (kind === 'none' || (!hasLeaving && !falling)) { dropHint(h); return null; }
-  const ghost = falling || park(app, leaving, parkNav || kind === 'rise' || kind === 'fall');
+  // On a laptop the sidebar stays in #app for every route (app.js
+  // `sidebarAlways`), so only the screen is parked: the card rises and falls
+  // over the content area, and the sidebar beside it never moves.
+  const withNav = isPhone() ? (parkNav || kind === 'rise' || kind === 'fall') : parkNav;
+  const ghost = falling || park(app, leaving, withNav);
   ghost.dataset.navOwned = '1';
   const t = movement(kind, ghost, app, h, {
     fromIndex, fromHash, keep: kind === 'push' || kind === 'tab' || kind === 'rise',
@@ -439,7 +466,10 @@ function movement(kind, ghost, app, h, ctx) {
   // One demo strip, pinned where it rests, while two screens move (phone, and cards).
   if (!inPlace && (phone || card)) pinBanner(gScreens[0] || ghost);
   document.documentElement.setAttribute('data-nav-moving', kind);
-  const early = inPlace ? fadeOutEarly(gScreens.flatMap(contentOf)) : [];
+  const oldContent = inPlace ? gScreens.flatMap(contentOf) : [];
+  const early = inPlace ? fadeOutEarly(oldContent, EARLY_KEEP) : [];
+  const tapAt = now();
+  let oldFrom = 1;
   const dims = { W: ghost.offsetWidth || window.innerWidth, H: ghost.offsetHeight || window.innerHeight, phone };
   const dimMax = readDim(card);
   let gDim = null;
@@ -477,6 +507,10 @@ function movement(kind, ghost, app, h, ctx) {
         f.inScale < 0.9999 ? `scale(${f.inScale.toFixed(4)})` : '',
       ].filter(Boolean).join(' ');
       for (const c of content) setT(c, tf, f.inOpacity);
+      if (screen) {
+        const o = (oldFrom * clamp01(1 - clamp01(x) / XFADE_OUT)).toFixed(3);
+        for (const c of oldContent) c.style.opacity = o;
+      }
       return;
     }
     switch (kind) {
@@ -515,11 +549,46 @@ function movement(kind, ghost, app, h, ctx) {
     }
   };
 
+  /** The in-place movement as keyframes: every frame `paint` would write,
+   *  sampled from the spring. False when WAAPI will not take it. */
+  let comp = [];
+  let compTimer = null;
+  const playOnCompositor = (from, vel) => {
+    const sim = simulate({ from, to: 1, velocity: vel, preset: NAV_SPRINGS[kind], ms: 1200 });
+    let end = sim.findIndex((q) => Math.abs(q.x - 1) < NAV_PRECISION && Math.abs(q.v) < NAV_PRECISION * 10);
+    if (end < 1) end = sim.length - 1;
+    const path = sim.slice(0, end + 1).filter((_, i, a) => i % 3 === 0 || i === a.length - 1);
+    const dur = path[path.length - 1].t;
+    if (!(dur > 0)) return false;
+    const inF = []; const outF = [];
+    for (const q of path) {
+      const f = frameFor(kind, clamp01(q.x), dims);
+      const tf = `translate3d(${f.inX.toFixed(2)}px,0,0) scale(${f.inScale.toFixed(4)})`;
+      inF.push({ offset: q.t / dur, opacity: f.inOpacity, transform: tf });
+      outF.push({ offset: q.t / dur, opacity: oldFrom * clamp01(1 - clamp01(q.x) / XFADE_OUT) });
+    }
+    try {
+      for (const c of content) comp.push(c.animate(inF, { duration: dur, easing: 'linear', fill: 'forwards' }));
+      for (const c of oldContent) comp.push(c.animate(outF, { duration: dur, easing: 'linear', fill: 'forwards' }));
+    } catch (_) { for (const a of comp) { try { a.cancel(); } catch (__) {} } comp = []; return false; }
+    if (comp.some((a) => !a)) { for (const a of comp) { try { a && a.cancel(); } catch (_) {} } comp = []; return false; }
+    // Lands by the clock (plus a frame), whatever the main thread was doing.
+    const at = now();
+    const settle = () => {
+      if (done) return;
+      if (now() - at >= dur) { paint(1); cleanup(); } else compTimer = setTimeout(settle, 16);
+    };
+    compTimer = setTimeout(settle, dur + 16);
+    return true;
+  };
+
   const cleanup = () => {
     if (done) return;
     done = true;
     if (active === t) active = null;
     if (ctl && ctl.active) ctl.stop();
+    clearTimeout(compTimer);
+    for (const a of comp) { try { a.cancel(); } catch (_) {} }
     if (screen) {
       clearStyle(screen);
       stripNav(screen);
@@ -529,6 +598,7 @@ function movement(kind, ghost, app, h, ctx) {
       screen.classList.add('landed');
     }
     for (const c of content) clearStyle(c);
+    for (const c of oldContent) clearStyle(c);   // the picture kept for a back swipe is whole
     for (const a of early) { try { a.cancel(); } catch (_) {} }
     unpinBanner();
     document.documentElement.removeAttribute('data-nav-moving');
@@ -562,14 +632,24 @@ function movement(kind, ghost, app, h, ctx) {
       }
       screen.classList.add('nav-moving', `nav-k-${kind}`);
       if (inPlace) {
-        screen.classList.add('nav-in-place');
+        screen.classList.add('nav-in-place', 'nav-xfade');
         content = contentOf(screen);
+        // The old content carries on from wherever the tap's dim got to.
+        // ⚠️ By the wall clock, not getComputedStyle: the page's animation clock
+        // only advances between frames, so after a heavy build it still reads
+        // the tap's frame (opacity 1) while the compositor shows EARLY_KEEP —
+        // reading it made the old content jump back up (measured, WebKit 393).
+        if (oldContent.length) {
+          const q = clamp01((now() - tapAt) / EARLY_FADE_MS);
+          oldFrom = 1 - (1 - EARLY_KEEP) * q * q;   // ≈ the ease-in the fade runs on
+          for (const a of early) { try { a.cancel(); } catch (_) {} }
+        }
       }
       if (!over) screen.classList.add('nav-high');
       // The tab bar is not part of the stack: it stays put, above the move.
       // (On a laptop that is the sidebar, and it never moves or fades.)
       const bar = app.querySelector(':scope > .navbar');
-      if (bar && (kind === 'push' || kind === 'tab' || inPlace)) bar.classList.add('nav-bar-top');
+      if (bar && (kind === 'push' || kind === 'tab' || inPlace || !phone)) bar.classList.add('nav-bar-top');
       if (kind === 'back') {
         if (under && under !== screen) dropUnder(under);
         under = screen;
@@ -584,6 +664,13 @@ function movement(kind, ghost, app, h, ctx) {
         if (!uDim) { uDim = dimLayer(r); document.body.append(uDim); } else place(uDim, r);
       }
       paint(p);
+      /* 🔄 IN PLACE RIDES THE COMPOSITOR (phone review 3, 2026-09-25). The
+       * arriving view often keeps the main thread busy for 200–400ms AFTER it
+       * is in the document (Profile, Data: charts, counts), and a spring
+       * written per frame from JS froze for exactly that long, half faded. The
+       * same spring is sampled into keyframes (as the tab indicator is) and
+       * handed to WAAPI, which keeps playing through a busy main thread. */
+      if (inPlace && playOnCompositor(p, v)) return;
       ctl = spring({
         from: p, to: 1, velocity: v, preset: NAV_SPRINGS[kind], precision: NAV_PRECISION,
         onUpdate: (x) => { p = x; paint(x); },
@@ -699,6 +786,59 @@ function slideInd(s, target) {
     s.anim = s.ind.animate(frames, { duration: dur, easing: 'linear' });
     s.path = path;
   } catch (_) { s.anim = null; }
+  if (s.mode === 'desk' && s.anim) litFollows(s, from, target, path, dur);
+  else unlit(s);
+}
+
+/* 🆕 THE SIDEBAR'S GOLD LABEL WAITS FOR ITS FILL (laptop review, 2026-09-25).
+ * The label went gold with `aria-current`, ~30ms after the tap, while the
+ * sliding fill was still on the old item. Now, while the fill travels, the bar
+ * carries `ind-moving` and the stylesheet colours only the `ind-lit` link
+ * ("Motion 2 · Navigation"): the one the fill is on, handed to the new link
+ * when the fill has covered most of it, and crossfaded there. On a phone the
+ * line is 3px and the label change is the signal, so nothing waits there. */
+function linkNear(nav, y) {
+  let best = null; let d = Infinity;
+  for (const a of nav.querySelectorAll(':scope > a')) {
+    const dd = Math.abs(a.offsetTop - y);
+    if (dd < d) { d = dd; best = a; }
+  }
+  return best;
+}
+function unlit(s) {
+  s.litRun = null;
+  const nav = s.ind.parentElement;
+  if (!nav) return;
+  nav.classList.remove('ind-moving');
+  for (const a of nav.querySelectorAll(':scope > a.ind-lit')) a.classList.remove('ind-lit');
+}
+function litFollows(s, from, target, path, dur) {
+  const nav = s.ind.parentElement;
+  if (!nav) return;
+  const was = linkNear(nav, from);
+  const to = linkNear(nav, target);
+  if (!was || !to || was === to) { unlit(s); return; }
+  for (const a of nav.querySelectorAll(':scope > a.ind-lit')) if (a !== was) a.classList.remove('ind-lit');
+  was.classList.add('ind-lit');
+  nav.classList.add('ind-moving');
+  const near = Math.max(4, (to.offsetHeight || 40) * 0.3);
+  const q = path.find((x) => Math.abs(x.x - target) < near);
+  const handAt = q ? q.t : dur;
+  // Read off the fill's own clock (the compositor's), not a timer: the
+  // label changes when the fill is there, however busy the page is.
+  const anim = s.anim;
+  const run = {};
+  s.litRun = run;
+  let handed = false;
+  const step = () => {
+    if (s.litRun !== run) return;
+    const t = anim && anim.playState === 'running' ? Number(anim.currentTime) || 0 : Infinity;
+    if (!handed && t >= handAt) { handed = true; was.classList.remove('ind-lit'); to.classList.add('ind-lit'); }
+    // Handed back to aria-current once it rests (by then they agree).
+    if (t === Infinity) { unlit(s); return; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 /**
@@ -744,6 +884,7 @@ export function syncTabIndicator(nav, link = null) {
   s.shown = show;
   if (jump) {
     if (s.anim) { try { s.anim.cancel(); } catch (_) {} s.anim = null; }
+    unlit(s);
     s.x = target;
     s.target = target;
     drawInd(s, 1);
@@ -807,7 +948,11 @@ function onStart(e) {
   }
   if (track && track.started) return;          // a second finger does not restart it
   track = null;
-  if (!t || (e.touches && e.touches.length !== 1) || !canMove() || active || hint || !isPhone()) return;
+  // 🔄 inBrowser(), not canMove() (phone review 3): under reduced motion the
+  // swipe still follows the finger and completes — you are moving it — and
+  // only what follows the release is instant (beginNav lands at once, and
+  // springHome's spring lands at once there).
+  if (!t || (e.touches && e.touches.length !== 1) || !inBrowser() || active || hint || !isPhone()) return;
   const screen = e.target && e.target.closest && e.target.closest('#app > .screen');
   if (!screen || e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
   const route = opts.route();

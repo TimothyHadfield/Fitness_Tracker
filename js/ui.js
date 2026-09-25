@@ -447,6 +447,16 @@ const canAnimate = () => typeof document !== 'undefined'
   && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function'
   && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+/* 🔄 A DRAG IS NOT DECORATION (phone review 3, 2026-09-25). Under reduced
+ * motion the sheet's flick and grab handle and the pill's drag were switched
+ * off with the springs — but a thing that follows your finger is you moving
+ * it, not the app moving by itself. So a drag is wired wherever there are
+ * fingers and layout (not jsdom); under reduced motion it still follows the
+ * finger and completes, and only the springs after it are instant (spring.js
+ * lands at once there). */
+const canDrag = () => typeof document !== 'undefined'
+  && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+
 export function leave(node, ms = LEAVE_MS) {
   if (!node || !node.isConnected || node.dataset.leaving) return;
   if (!canAnimate()) { node.remove(); return; }
@@ -505,17 +515,28 @@ function tidyStyle(node) {
 }
 
 /**
- * Where a dragged segmented pill lands: the segment nearest to where its
- * centre is heading. `velocity` (px/s) carries a flick on by ~0.12s of travel.
+ * Where a dragged segmented pill lands: the segment nearest to where it was
+ * LET GO. 🔄 Phone review 3 (2026-09-25): a fast drag released right over its
+ * segment carried on to the next one, because the whole release speed was
+ * projected ahead. Now only a real flick carries on (≥ SEG_FLICK px/s), only
+ * one segment, and only when the drag has not already reached another one
+ * (`from`, the segment it started on) — a drag that got there lands there.
  */
-export function pickSegment({ centers = [], x = 0, velocity = 0 } = {}) {
+export const SEG_FLICK = 500;
+export function pickSegment({ centers = [], x = 0, velocity = 0, from = null } = {}) {
   if (!centers.length) return -1;
-  const at = x + velocity * 0.12;
-  let best = 0;
-  for (let i = 1; i < centers.length; i++) {
-    if (Math.abs(centers[i] - at) < Math.abs(centers[best] - at)) best = i;
-  }
-  return best;
+  const nearest = (at) => {
+    let best = 0;
+    for (let i = 1; i < centers.length; i++) {
+      if (Math.abs(centers[i] - at) < Math.abs(centers[best] - at)) best = i;
+    }
+    return best;
+  };
+  const base = nearest(x);
+  if (Math.abs(velocity) < SEG_FLICK) return base;
+  if (from != null && from >= 0 && base !== from) return base;
+  const ahead = nearest(x + velocity * 0.12);
+  return Math.max(base - 1, Math.min(base + 1, ahead));
 }
 
 /** The pill stretches along its path in proportion to its speed, ≤15%. */
@@ -665,12 +686,18 @@ export function parkScreen(node, { falls = false } = {}) {
    * ⚠️ MEASURED, NOT `inset: 0`, still: `#app` is `100dvh - --kb`, and a
    * full-viewport ghost would relayout under a raised keyboard. */
   const app = node.closest('#app') || node.parentElement;
-  const r = app.getBoundingClientRect();
+  /* 🆕 A LAPTOP KEEPS ITS SIDEBAR (2026-09-25, app.js `sidebarAlways`): the
+   * sidebar is on every route there, so it is not part of the picture — only
+   * what is beside it is parked, boxed on the screen's own rect, and the card
+   * falls (or flies to the mini bar) over the content area alone. */
+  const keepBar = isLaptop();
+  const parked = [...app.children].filter((n) => !(keepBar && n.classList && n.classList.contains('navbar')));
+  const r = (keepBar && parked.length < app.children.length ? node : app).getBoundingClientRect();
   const ghost = el('div', { class: 'screen-ghost' + (falls ? ' is-falling' : '') });
   ghost.setAttribute('aria-hidden', 'true');
   ghost.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;`
     + `flex-direction:${getComputedStyle(app).flexDirection || 'column-reverse'}`;
-  ghost.append(...app.children);
+  ghost.append(...parked);
   document.body.append(ghost);
 
   /* 🔄 REMOVED WHEN THE MOVEMENT ENDS, NOT ON A CLOCK — 2026-09-12, found by an
@@ -989,7 +1016,11 @@ function wireSegDrag(bar, segs, st, draw, stopSprings, selected, place) {
     const { vx } = d.vt.get();
     st.fling = cancelled ? 0 : vx;
     const centers = segs.map((s) => s.offsetLeft + s.offsetWidth / 2);
-    const i = cancelled ? segs.indexOf(d.seg) : pickSegment({ centers, x: st.x + st.w / 2, velocity: vx });
+    // Where the FINGER let go, carried from where it took the pill: the drawn
+    // pill trails it by the few px the drag needed to start (a whole segment
+    // on a fast fling, measured: it landed one short).
+    const fx = e && typeof e.clientX === 'number' ? d.pill0 + (e.clientX - d.downX) + st.w / 2 : st.x + st.w / 2;
+    const i = cancelled ? segs.indexOf(d.seg) : pickSegment({ centers, x: fx, velocity: vx, from: segs.indexOf(d.seg) });
     const target = segs[i];
     if (target && target !== selected() && !target.disabled) {
       target.click();
@@ -1001,13 +1032,14 @@ function wireSegDrag(bar, segs, st, draw, stopSprings, selected, place) {
     }
   };
   bar.addEventListener('pointerdown', (e) => {
-    if (!canAnimate() || (e.button != null && e.button > 0) || st.drag) return;
+    if (!canDrag() || (e.button != null && e.button > 0) || st.drag) return;
     const on = selected();
     const seg = e.target && e.target.closest ? e.target.closest('.seg') : null;
     // Only the selected segment is the thumb; within 26px of the screen's edge
     // the edge swipe (js/gestures.js) has it.
     if (!on || seg !== on || on.disabled || e.clientX < 26) return;
-    st.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, from: st.x, started: false, v: 0, seg: on, vt: velocityTracker() };
+    st.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, from: st.x, started: false, v: 0, seg: on, vt: velocityTracker(),
+      downX: e.clientX, pill0: st.x };
     st.drag.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
   });
   bar.addEventListener('pointermove', (e) => {
@@ -1119,6 +1151,9 @@ export function openImageViewer({ src, name }) {
  * ------------------------------------------------------------------ */
 export function openPhotoViewer({ src, from = null, alt = 'Workout photo', byKey = false } = {}) {
   const motion = canAnimate();
+  // What to hand focus back to (Safari never focuses a tapped control).
+  const opener = document.activeElement && document.activeElement !== document.body
+    ? document.activeElement : recentPress();
   const back = el('div', { class: 'pview-back', 'aria-hidden': 'true' });
   const img = el('img', { class: 'pview-img', src, alt, draggable: 'false' });
   const xBtn = iconBtn('x', 'Close photo', () => close(), 'icon-btn pview-close');
@@ -1188,15 +1223,23 @@ export function openPhotoViewer({ src, from = null, alt = 'Workout photo', byKey
 
   let closing = false;
   const finish = () => {
+    const had = root.contains(document.activeElement) || document.activeElement === document.body
+      || !document.activeElement;
     root.remove();
     if (srcBox) srcBox.classList.remove('s2-src-hidden');
-    // Focus goes back only where it came from a key (a tap would be left with
-    // a focus ring on the photo).
-    if (byKey && srcBox && srcBox.isConnected && typeof srcBox.focus === 'function') srcBox.focus({ preventScroll: true });
+    /* 🔄 Focus goes back to what opened it, after a tap too (phone review 3:
+     * it was left on <body>, so VoiceOver and a keyboard started again from
+     * the top of the page). A tap draws no ring on it — a focus moved by
+     * script after a pointer does not match :focus-visible. */
+    const to = opener && opener.isConnected ? opener : (srcBox && srcBox.isConnected ? srcBox : null);
+    if (had && to && typeof to.focus === 'function') {
+      try { to.focus({ preventScroll: true }); } catch (_) { /* not focusable */ }
+    }
   };
   const close = (v = 0) => {
     if (closing) return;
     closing = true;
+    openSurfaces.delete(closeNow);
     clearTimeout(tapTimer);
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
@@ -1208,9 +1251,11 @@ export function openPhotoViewer({ src, from = null, alt = 'Workout photo', byKey
     setTimeout(() => { if (root.isConnected) finish(); }, 1500);
   };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const closeNow = () => close();
   const onResize = () => { layout(); cur = { ...REST }; paint(); };
 
   document.body.append(root);
+  openSurfaces.add(closeNow);
   layout();
   if (motion) {
     const start = thumbState();
@@ -1392,6 +1437,34 @@ export function exerciseLabel({
  * Bottom sheet
  * ------------------------------------------------------------------ */
 
+/* The control a pointer last pressed, for a sheet to hand focus back to on
+ * close. Safari (and macOS) never focus a clicked <button>, so
+ * `document.activeElement` is <body> by the time a sheet opens from a click. */
+let lastPress = null;
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('pointerdown', (e) => {
+    const t = e.target && e.target.closest
+      // Not text fields: focusing one again would raise a phone's keyboard.
+      && e.target.closest('button, a[href], [tabindex]:not([tabindex="-1"])');
+    lastPress = t ? { node: t, at: nowMs() } : null;
+  }, true);
+}
+/* 🆕 Every open surface, so a route change can put them away (phone review 3:
+ * a back swipe or a link left a sheet or a ? box open over a screen it no
+ * longer belonged to). */
+const openSurfaces = new Set();
+/** Close every open sheet, ? box and photo. The router calls this when the
+ *  hash changes — never on a repaint of the same screen. */
+export function closeSurfaces() {
+  for (const c of [...openSurfaces]) { try { c(); } catch (_) { /* already gone */ } }
+  openSurfaces.clear();
+  if (openHelp) { try { openHelp.close(); } catch (_) { /* already gone */ } }
+}
+
+function recentPress() {
+  return lastPress && lastPress.node.isConnected && nowMs() - lastPress.at < 2000 ? lastPress.node : null;
+}
+
 export function openSheet({ title, body, footer, onClose }) {
   /* 🆕 MOTION 2 · SURFACES (2026-09-25). On a phone the sheet is a physical
    * card: it springs up from the bottom edge, carries a grab handle, and can be
@@ -1403,6 +1476,10 @@ export function openSheet({ title, body, footer, onClose }) {
    * close that starts mid-rise turns round with the speed it had. */
   const motion = canAnimate();
   const phone = !isLaptop();
+  // Whatever had focus when this opened — usually the row or button tapped.
+  // Safari never focuses a clicked button, so the last thing pressed stands in.
+  const opener = typeof document !== 'undefined' && document.activeElement && document.activeElement !== document.body
+    ? document.activeElement : recentPress();
   let closed = false;
   let p = motion ? 0 : 1;
   let H = 0;
@@ -1411,6 +1488,7 @@ export function openSheet({ title, body, footer, onClose }) {
   const close = (arg) => {
     if (closed) return;
     closed = true;
+    openSurfaces.delete(close);
     const v = typeof arg === 'number' ? arg : 0;
     // ⚠️ BOTH halves leave, and they leave differently: the sheet drops back
     // towards the edge it came from, the dark behind it fades. One movement
@@ -1428,6 +1506,13 @@ export function openSheet({ title, body, footer, onClose }) {
       leave(backdrop);
     }
     document.removeEventListener('keydown', onKey);
+    // Focus goes back to what opened it, as the ? box does (showHelp) —
+    // Escape used to leave a keyboard user on <body>, at the top of the page.
+    if (sheet.contains(document.activeElement) || document.activeElement === document.body
+        || !document.activeElement) {
+      if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus({ preventScroll: true });
+      else if (document.activeElement && sheet.contains(document.activeElement)) document.activeElement.blur();
+    }
     if (onClose) onClose();
   };
   const onKey = (e) => {
@@ -1445,7 +1530,7 @@ export function openSheet({ title, body, footer, onClose }) {
     if (!items.length) return;
     const first = items[0]; const last = items[items.length - 1];
     const at = document.activeElement;
-    if (!sheet.contains(at)) { e.preventDefault(); first.focus(); return; }
+    if (!sheet.contains(at) || at === sheet) { e.preventDefault(); (e.shiftKey ? last : first).focus(); return; }
     if (e.shiftKey && at === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && at === last) { e.preventDefault(); first.focus(); }
   };
@@ -1490,14 +1575,21 @@ export function openSheet({ title, body, footer, onClose }) {
   }, sheet);
 
   document.body.append(backdrop);
+  openSurfaces.add(close);
   // A sheet is mounted outside the router, so it needs the passes of its own.
   associateLabels(sheet);
   autoGrowTextareas(sheet);
   document.addEventListener('keydown', onKey);
 
-  if (motion) {
-    sheet.classList.add('s2-live', phone ? 's2-phone' : 's2-dialog');
-    backdrop.classList.add('s2-live');
+  // A phone sheet can be dragged down wherever there are fingers — under
+  // reduced motion too (canDrag): it follows the finger, and what follows the
+  // release is instant.
+  if (motion || (phone && canDrag())) {
+    sheet.classList.add(phone ? 's2-phone' : 's2-dialog');
+    if (motion) {
+      sheet.classList.add('s2-live');
+      backdrop.classList.add('s2-live');
+    }
     if (phone) {
       sheet.prepend(el('div', { class: 'sheet-grab', 'aria-hidden': 'true' }));
       wireSheetDrag(sheet, {
@@ -1515,6 +1607,15 @@ export function openSheet({ title, body, footer, onClose }) {
     H = sheet.offsetHeight || window.innerHeight || 600;
     paint();
     drive(1, 0, phone ? SURFACE_SPRINGS.sheet : SURFACE_SPRINGS.dialog);
+  }
+  /* Focus moves INTO the dialog (the ? box's pattern, showHelp): the dialog
+   * itself, not its ✕ — a ring parked on the ✕ for the whole visit reads as a
+   * selection. Tab then walks its controls (trapTab); Escape and close hand
+   * focus back to `opener`. A caller that focuses a field of its own after
+   * this (a search box) simply takes it. */
+  if (typeof sheet.focus === 'function') {
+    sheet.tabIndex = -1;
+    try { sheet.focus({ preventScroll: true }); } catch (_) { sheet.focus(); }
   }
   return { close, sheet };
 }

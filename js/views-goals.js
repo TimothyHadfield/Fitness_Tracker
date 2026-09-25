@@ -939,7 +939,8 @@ function requirementsBlock(goal, req) {
     ? (goal.targetWeight / goal.startWeight - 1) * 100
     : (Number.isFinite(goal.gainPct) ? goal.gainPct : 0);
 
-  return el('div', { class: 'card' },
+  // `goal-reqs`: the right-hand column from 1200px (css, Motion 2 · Layout).
+  return el('div', { class: 'card goal-reqs' },
     el('div', { class: 'goal-ambition' },
       el('span', { class: 'goal-ambition-name', text: a.name }),
       el('span', { class: 'goal-ambition-gain mono', text: `+${Math.round(gainPct)}%` }),

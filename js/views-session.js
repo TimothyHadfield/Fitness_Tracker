@@ -4064,7 +4064,21 @@ export async function SessionView(workoutId) {
    * land in the runner rather than on a form about a session that never saved.
    * ================================================================== */
   function openSaveScreen() {
-    document.getElementById('app').replaceChildren(buildSaveScreen());
+    const next = buildSaveScreen();
+    carryDemoBar(next);
+    document.getElementById('app').replaceChildren(next);
+  }
+
+  /* 🆕 THE DEMO STRIP COMES ALONG (2026-09-25, motion review). The router
+   * prepends `.demo-bar` to every screen it draws, but the save and finish
+   * screens are drawn by replacing `#app` directly, so they had none — and
+   * the strip vanished on Finish and popped back on "Back to home". The live
+   * strip (its Leave button wired) is MOVED from the screen being replaced
+   * into the new one; `backToRunner()` moves it back the same way. Nothing
+   * happens outside the demo, where there is no strip to find. */
+  function carryDemoBar(into) {
+    const bar = document.querySelector('#app > .screen > .demo-bar');
+    if (bar && into && !into.querySelector(':scope > .demo-bar')) into.prepend(bar);
   }
 
   /* The save screen as a node. Split from `openSaveScreen()` so "Save Legs
@@ -4280,6 +4294,7 @@ export async function SessionView(workoutId) {
   function backToRunner() {
     state.durationMin = null;
     renderDate();
+    carryDemoBar(screen);
     document.getElementById('app').replaceChildren(screen);
   }
 
@@ -4388,7 +4403,7 @@ export async function SessionView(workoutId) {
     // line's text is exactly what it was.
     const nums = [];
     const num = (n) => { const s = el('span', { class: 'finish-n', text: String(n) }); nums.push(s); return s; };
-    document.getElementById('app').replaceChildren(screenShell({
+    const finishScreen = screenShell({
       title: 'Workout complete',
       // ⚠️ A FUNCTION, not a hash. `screenShell` hands `back` straight to
       // iconBtn as its onClick, and el() silently ignores a non-function `onX`
@@ -4479,7 +4494,10 @@ export async function SessionView(workoutId) {
           : null,
       ),
       bottom: el('button', { class: 'btn primary block', text: 'Back to home', onClick: () => go('#/home') }),
-    }));
+    });
+    // The demo strip, as on every other screen (see carryDemoBar()).
+    carryDemoBar(finishScreen);
+    document.getElementById('app').replaceChildren(finishScreen);
     playFinish({
       check, nums, winKey,
       prRows: prsBlock ? [...prsBlock.querySelectorAll('.finish-pr')] : [],

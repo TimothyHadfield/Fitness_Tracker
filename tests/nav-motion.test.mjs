@@ -301,5 +301,77 @@ const S = await import(new URL('js/spring.js', root).href);
   ok(/'session'/.test(g), 'the edge swipe knows the runner is off limits');
 }
 
+/* ---------- 9. phone review 3 (2026-09-25, WebKit 393×659) ---------- */
+{
+  // A tab switch flashed BLANK: the old content went all the way out in 90ms
+  // and the new came in from 0 once built, with nothing on screen between.
+  // Now the tap only dims the old content, and the two crossfade.
+  const calls = [];
+  window.Element.prototype.animate = function (frames) { calls.push({ node: this, frames }); };
+  window.matchMedia = () => ({ matches: false });
+  S.__setReducedMotionForTest(false);
+  const app = document.getElementById('app');
+  const nav = document.createElement('nav'); nav.className = 'navbar';
+  const old = document.createElement('div'); old.className = 'screen';
+  old.innerHTML = '<div class="demo-bar">Demo</div><div class="pane-scroll"><p>old</p></div>';
+  const oldPane = old.querySelector('.pane-scroll');
+  app.replaceChildren(nav, old);
+  const t = G.beginNav({ dir: 'tab', from: 'home', to: 'graphs', leaving: old, app, fromIndex: 11, fromHash: '#/home' });
+  const fade = calls.find((c) => c.node === oldPane);
+  const endsAt = fade && fade.frames[fade.frames.length - 1].opacity;
+  ok(Boolean(fade) && endsAt > 0.2 && endsAt < 0.8,
+     `the tap DIMS the old content (to ${endsAt}), it does not empty the screen (was 0: a blank frame on every tab)`);
+  ok(!calls.some((c) => c.node === old.querySelector('.demo-bar')), 'the demo strip is not faded with it');
+  const fresh = document.createElement('div'); fresh.className = 'screen';
+  fresh.innerHTML = '<div class="pane-scroll"><p>new</p></div>';
+  app.replaceChildren(nav, fresh);
+  // The spring lands inside play() here (no frames), so the class is watched as it is added.
+  let seeThrough = false;
+  const add = fresh.classList.add.bind(fresh.classList);
+  fresh.classList.add = (...c) => { if (c.includes('nav-xfade')) seeThrough = true; return add(...c); };
+  t.play(fresh);
+  ok(seeThrough, 'the arriving screen is see-through while it moves (nav-xfade), so the old content shows under it');
+  ok(!oldPane.getAttribute('style') && !/nav-/.test(fresh.className) && !fresh.getAttribute('style'),
+     'and at rest nothing is left: no inline style on the old picture or the new screen');
+  const css = read('css/app.css');
+  ok(/\.screen\.nav-moving\.nav-xfade\s*\{\s*background:\s*transparent/.test(css), 'the stylesheet drops its ground for that');
+  ok(G.XFADE_OUT > 0 && G.XFADE_OUT <= 0.6, `the old content is gone by ${G.XFADE_OUT} of the way — legible together only for a moment`);
+  const g = read('js/gestures.js');
+  ok(/if \(inPlace && playOnCompositor\(p, v\)\) return;/.test(g),
+     'the crossfade is sampled into WAAPI keyframes: a heavy view building after it cannot freeze it half way');
+  ok(/const q = clamp01\(\(now\(\) - tapAt\) \/ EARLY_FADE_MS\)/.test(g),
+     'it carries on from the tap\'s dim by the wall clock (getComputedStyle read the frame before a heavy build: opacity 1)');
+
+  // Reduced motion switched the GESTURES off with the springs. A drag is the
+  // finger moving it: it is wired wherever there are fingers.
+  ok(/!inBrowser\(\) \|\| active \|\| hint \|\| !isPhone\(\)\) return;/.test(g),
+     'the edge swipe and Record\'s drag-down are wired under reduced motion too (inBrowser, not canMove)');
+  const nsec = css.slice(css.indexOf('/* === Motion 2 · Navigation === */'), css.indexOf('/* === end Motion 2 · Navigation === */'));
+  ok(/\.screen\.nav-moving:not\(\.nav-k-edge\):not\(\.nav-k-card\)/.test(nsec),
+     'and the reduced-motion rule lets a screen under a finger follow it');
+
+  // The runner's minimise flies into its bar; the router lets it paint first.
+  ok(typeof G.flightLead === 'function' && G.flightLead() === null, 'flightLead(): null when nothing is flying');
+  const ghost = document.createElement('div'); ghost.className = 'screen-ghost m-flying';
+  document.body.append(ghost);
+  const lead = G.flightLead();
+  ok(Boolean(lead && typeof lead.then === 'function'), 'and a promise to await when the minimise is in the air');
+  ghost.remove();
+  const r = read('js/app.js').slice(read('js/app.js').indexOf('async function render()'));
+  ok(/const flying = move \? null : flightLead\(\);\s*if \(flying\) await flying;/.test(r)
+     && r.indexOf('await flying') < r.indexOf('await resolve(route)'),
+     'the router awaits it before building the next view');
+
+  // The falling Record card had an empty band where its hidden strip was.
+  ok(/body\.nav-pinned :is\(\.nav-ghost\.nav-g-fall, \.screen\.nav-k-rise, \.screen\.nav-k-card\) \.demo-bar:not\(\.nav-banner-pin\) \{ visibility: visible; \}/.test(css),
+     'a card carries its own demo strip (no empty band at its top as it falls)');
+
+  // A route change puts away what was open over the old screen.
+  ok(/if \(prevHash && location\.hash !== prevHash\) closeSurfaces\(\);/.test(r)
+     && r.indexOf('closeSurfaces()') < r.indexOf('settleNavigation()'),
+     'a NEW hash closes open sheets, ? boxes and photos (a repaint of the same one does not)');
+  delete window.Element.prototype.animate;
+}
+
 console.log(`\n${fails ? fails + ' FAILED' : 'all passed'}`);
 process.exit(fails ? 1 : 0);

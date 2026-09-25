@@ -21,7 +21,7 @@
 import { el, iconBtn, toast, refreshRoute } from './ui.js';
 import { store, demo, auth } from './store.js';
 import { buildProgram, matchingPresets } from './program-builder.js';
-import { springTransform } from './spring.js';
+import { springTransform, isSpringing } from './spring.js';
 import { motionAllowed } from './motion.js';
 import { expandRepSpec } from './set-reps.js';
 
@@ -29,6 +29,7 @@ export const ONBOARDED_KEY = 'ftrack:v1:onboarded';
 
 const SLIDE_MS = 240;  // = --t-slow
 const BUILD_MS = 550;  // the "Building your program" moment; brief caps it at 600
+const PICK_MS = 100;   // a tapped answer shows lit this long before its screen leaves
 
 const QUESTIONS = [
   { key: 'goal', q: 'What’s your main goal?', choices: [
@@ -236,7 +237,11 @@ export function openOnboarding({ onDone } = {}) {
       if (sprung) {
         old.classList.add('ob-leaving');
         springTransform(old, { x: -dir * (stage.clientWidth || 360) }, 'sheet').done.then(drop);
-        setTimeout(drop, 700);
+        // 🔄 The safety net waits for the spring (review, 2026-09-25): a flat
+        // 700ms could take the old screen away while it was still sliding on a
+        // slow frame, leaving the new one to arrive over an empty stage.
+        const net = () => { if (isSpringing(old)) setTimeout(net, 200); else drop(); };
+        setTimeout(net, 700);
       } else if (dir) {
         old.addEventListener('animationend', drop, { once: true });
         setTimeout(drop, SLIDE_MS + 60);
@@ -257,10 +262,18 @@ export function openOnboarding({ onDone } = {}) {
           class: 'btn block lg ob-choice',
           'aria-pressed': answers[Q.key] === value ? 'true' : 'false',
           text: label,
-          onClick: () => {
-            if (!screen.classList.contains('is-current')) return;
+          onClick: (e) => {
+            if (!screen.classList.contains('is-current') || screen.dataset.picked) return;
             answers[Q.key] = value;
-            go(i + 1, 1);
+            /* 🆕 THE TAP LANDS BEFORE THE SCREEN LEAVES (2026-09-25, motion
+             * review): the answer lights for PICK_MS, then the push starts and
+             * carries it out still lit. `picked` stops a second tap choosing
+             * twice in that window; Skip in it wins (`finished`). */
+            screen.dataset.picked = '1';
+            for (const b of screen.querySelectorAll('.ob-choice')) {
+              b.setAttribute('aria-pressed', b === e.currentTarget ? 'true' : 'false');
+            }
+            setTimeout(() => { if (!finished && screen.classList.contains('is-current')) go(i + 1, 1); }, PICK_MS);
           },
         })));
       screen.append(heading, list);

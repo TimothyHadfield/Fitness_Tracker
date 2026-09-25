@@ -275,7 +275,7 @@ export function startTour() {
     spot.style.width = `${Math.max(0, spotNow.w).toFixed(1)}px`;
     spot.style.height = `${Math.max(0, spotNow.h).toFixed(1)}px`;
   }
-  function placeSpot(rect, animate = false) {
+  function placeSpot(rect, animate = false, preset = 'glide') {
     for (const k of SPOT_KEYS) {
       const s = spotSprings[k];
       if (!animate) {
@@ -285,11 +285,33 @@ export function startTour() {
       }
       if (s && s.active) { s.set(rect[k]); continue; }
       spotSprings[k] = spring({
-        from: spotNow[k], to: rect[k], preset: 'glide', precision: 0.3,
+        from: spotNow[k], to: rect[k], preset, precision: 0.3,
         onUpdate: (v) => { spotNow[k] = v; writeSpot(); },
       });
     }
     writeSpot();
+  }
+
+  /* 🆕 A STOP ON ANOTHER SCREEN: THE HOLE SHUTS, THEN OPENS THERE (2026-09-25,
+   * motion review). Gliding across a route change left the old hole — a
+   * lit cut-out over the old tab — sitting on the new screen while it rose
+   * (150–300ms, WebKit 393px). Now the hole closes to a point on its own
+   * centre (full dim) BEFORE the hash changes, and springs open from the new
+   * thing's centre once that has held still. Waits until the hole is too
+   * small to see, not for the spring's last half-pixel. */
+  async function shutHole() {
+    const c = { x: spotNow.x + spotNow.w / 2, y: spotNow.y + spotNow.h / 2, w: 0, h: 0 };
+    if (reduced()) { placeSpot(c); return; }
+    placeSpot(c, true, 'snap');
+    const t0 = Date.now();
+    while (!token.dead && (spotNow.w > 3 || spotNow.h > 3)
+        && SPOT_KEYS.some((k) => spotSprings[k] && spotSprings[k].active) && Date.now() - t0 < 600) {
+      await frame();
+    }
+  }
+  function openHole(hole) {
+    placeSpot({ x: hole.x + hole.w / 2, y: hole.y + hole.h / 2, w: 0, h: 0 });
+    placeSpot(hole, true);
   }
 
   // The hole over the target, measured now.
@@ -357,6 +379,7 @@ export function startTour() {
     if (busy || token.dead) return;
     busy = true;
     try {
+      let crossed = false;   // this Next changed screen, so the hole is shut
       for (;;) {
         const final = i >= STOPS.length;
         const hiding = hideBubble();
@@ -381,8 +404,12 @@ export function startTour() {
         if (stop.route && !sameHash(location.hash, stop.route)) {
           // The words leave BEFORE the screen changes: a heavy screen can hold
           // the main thread for a few hundred ms, and the old bubble would sit
-          // frozen over the new page for all of it (measured on Data).
-          await hiding;
+          // frozen over the new page for all of it (measured on Data). The
+          // hole shuts with them (shutHole), so nothing of the old stop is
+          // left drawn over the screen arriving.
+          await Promise.all([hiding, crossed || first ? null : shutHole()]);
+          if (token.dead) return;
+          crossed = true;
           location.hash = stop.route;
         }
         const node = await findTarget(stop, token);
@@ -393,7 +420,19 @@ export function startTour() {
           if (nextI < 0) {
             // Going back and nothing before it appeared: stay where we were.
             await hiding;
-            if (target) location.hash = STOPS[index].route;
+            if (target) {
+              location.hash = STOPS[index].route;
+              // The hole was shut for the trip: open it on the stop we stayed on.
+              const back = crossed ? await findTarget(target.stop, token) : null;
+              if (token.dead) return;
+              if (back) {
+                await settle(back, token);
+                target.node = back;
+                const h = holeFor(back);
+                openHole(h);
+                placeBubbleAt(h, false);
+              }
+            }
             showBubble();
             return;
           }
@@ -414,7 +453,7 @@ export function startTour() {
           root.classList.add('is-on');
           if (!reduced()) await sleep(cssMs('--t', 170));
         } else {
-          placeSpot(hole, true);
+          if (crossed && !reduced()) openHole(hole); else placeSpot(hole, true);
           placeBubbleAt(hole, false);
           if (!reduced()) await sleep(cssMs('--t-slow', 240));
         }

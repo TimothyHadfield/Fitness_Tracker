@@ -933,6 +933,12 @@ export function ownCalendar(activity, today, opts = {}) {
       // reader's memory hands it Months (`calMode` is shared with the Calendar
       // screen): the page they just opened does not move under them. A tap
       // does — see the note above `arriving`.
+      // 🆕 2026-09-25 (phone review): on Profile the switch sticks above the
+      // months (Motion 2 · Layout), so each heading sticks under it at its
+      // measured height. Measured, not a constant: the friend variant carries
+      // the caveat sentence and wraps to a different height.
+      const box = host.closest('.me-cal');
+      if (box) requestAnimationFrame(() => box.style.setProperty('--cal-modes-h', `${top.offsetHeight}px`));
       if (land || !arriving) landOnCurrentMonth(host);
       wireMonthSwipe(host);
     }
@@ -1042,7 +1048,12 @@ function landOnCurrentMonth(container) {
     // Measured against the pane rather than through offsetTop: the two elements
     // do not share an offsetParent (the pane's is #app, a month's is body), so
     // subtracting one from the other only works by coincidence of layout.
-    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+    // 🆕 2026-09-25: minus a stuck Months/Years switch (phone Profile), so the
+    // month's heading lands just under the switch rather than beneath it.
+    const modes = container.closest('.me-cal')?.querySelector(':scope > .cal-modes');
+    let cover = 0;
+    try { if (modes && getComputedStyle(modes).position === 'sticky') cover = modes.getBoundingClientRect().height; } catch (_) {}
+    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top - cover;
 
     // ⚠️ THE MONTH THE SCROLLER WAS AIMED AT, STAMPED ON THE MONTH. jsdom lays
     // nothing out — every rect above is zero and `scrollTop` stays 0 — so a test
@@ -2217,6 +2228,8 @@ export async function GraphView(opts = {}) {
      * page of stacked sections has always wanted. */
     host.classList.toggle('is-muscles', mode === 'muscles' && !opts.musclesPane);
     host.classList.toggle('is-shared-muscles', mode === 'muscles' && Boolean(opts.musclesPane));
+    // Volume lays out like Muscles on a laptop (figure | list); the CSS decides the width.
+    host.classList.toggle('is-volume', mode === 'volume');
     if (mode === 'muscles') {
       /* 🚨 A FRIEND'S MAP IS NOT `muscleGroupsPane` WITH ROWS, AND CANNOT BE.
        * Their percentile was computed on THEIR device against their body weight
@@ -2753,26 +2766,43 @@ function fitYears(host, pane) {
     if (!grids.length) return;
     host.classList.remove('m2-yr-fit');
     grids.forEach((g) => { g.style.gridTemplateRows = ''; });
+    // 🚨 LAYOUT SIZES, NEVER PAINTED ONES — review 2026-09-25. The squares light
+    // up from `scale(.3)` (lightUpYears) and the screen itself can arrive on a
+    // transform, so a getBoundingClientRect() taken in that frame read a 20px
+    // square as 6px and set every row to 9px (measured at 1440, opened directly
+    // or from Home). The computed width is the layout width whatever is drawn,
+    // and the vertical gap is divided by the pane's own drawn/layout ratio.
     const cell = grids[0].querySelector('.yr-cell');
-    const w = cell ? cell.getBoundingClientRect().width : 0;
-    if (!(w > 0)) return;
+    // Through the node's own window: the jsdom tests have no global one.
+    const view = cell && cell.ownerDocument.defaultView;
+    const gcs = view && view.getComputedStyle ? (el) => view.getComputedStyle(el) : null;
+    const w = gcs ? parseFloat(gcs(cell).width) : 0;
+    if (!(w > 0) || !pane.offsetHeight) return;
     const paneBox = pane.getBoundingClientRect();
-    const padB = parseFloat(getComputedStyle(pane).paddingBottom) || 0;
+    const k = paneBox.height / pane.offsetHeight || 1;
+    const padB = parseFloat(gcs(pane).paddingBottom) || 0;
     const lastYear = grids[grids.length - 1].closest('.yr') || grids[grids.length - 1];
-    const free = paneBox.bottom - padB - lastYear.getBoundingClientRect().bottom - 2;
+    const free = (paneBox.bottom - lastYear.getBoundingClientRect().bottom) / k - padB - 2;
     if (free < 8) return;
-    const row = Math.min(w * YEAR_ROW_CAP, w + free / (7 * grids.length));
+    // Never below the square: stretching is the only thing this may do.
+    const row = Math.max(w, Math.min(w * YEAR_ROW_CAP, w + free / (7 * grids.length)));
     host.classList.add('m2-yr-fit');
     grids.forEach((g) => { g.style.gridTemplateRows = `repeat(7, ${row.toFixed(2)}px)`; });
   };
   whenShown(host, run);
   if (typeof ResizeObserver !== 'undefined' && !fitWatch.has(host)) {
+    // The pane's size AND the first grid's width: a grid can change width with
+    // the pane unchanged (a scrollbar, a font arriving). Its HEIGHT is ours to
+    // set, so a height-only change is ignored — that would loop.
     let last = '';
     const ro = new ResizeObserver(() => {
-      const size = `${pane.clientWidth}x${pane.clientHeight}`;
+      const g = host.querySelector('.yr-grid');
+      const size = `${pane.clientWidth}x${pane.clientHeight}|${g ? g.clientWidth : 0}`;
       if (size !== last) { last = size; run(); }
     });
     ro.observe(pane);
+    const g0 = host.querySelector('.yr-grid');
+    if (g0) ro.observe(g0);
     fitWatch.set(host, ro);
   }
 }
@@ -2821,9 +2851,14 @@ function monthBeside(month, dir) {
  * month, scroll up for earlier ones); the swipe is a second way along it. The
  * grid follows the finger, rubber-bands at the first and last month, and on
  * release the finger's speed decides: left = the later month, right = the
- * earlier one. The pane glides there and the month arrives from the side the
- * finger sent it. `touch-action: pan-y` on the grid leaves vertical scrolling to
+ * earlier one. `touch-action: pan-y` on the grid leaves vertical scrolling to
  * the browser; a swipe never becomes a tap on a day.
+ * 🔄 2026-09-25 (phone review): ONE MOTION. The release used to run three at
+ * once — the pane gliding, the old grid springing back from +180px and the new
+ * one entering from 40px — and mid-way the grids poked out past the month
+ * header. Now the list lands on the new month in the release frame and only its
+ * grid moves: it arrives from where the finger left the old one plus one grid
+ * width (the pair, carried on), at the finger's speed, clipped to the month.
  */
 function wireMonthSwipe(host) {
   if (swipeWired.has(host)) return;
@@ -2848,6 +2883,7 @@ function wireMonthSwipe(host) {
       g.earlier = g.month && monthBeside(g.month, -1);
       g.later = g.month && monthBeside(g.month, 1);
       g.grid.classList.add('m2-dragging');
+      if (g.month) g.month.classList.add('m2-cal-moving');
       try { g.grid.setPointerCapture(e.pointerId); } catch (_) { /* not capturable: fine */ }
     }
     const room = dx < 0 ? g.later : g.earlier;
@@ -2867,35 +2903,38 @@ function wireMonthSwipe(host) {
     const flung = s.off + vx * 0.18;
     const dir = e.type === 'pointercancel' ? 0 : flung < -MONTH_SWIPE_PX ? 1 : flung > MONTH_SWIPE_PX ? -1 : 0;
     const target = dir > 0 ? s.later : dir < 0 ? s.earlier : null;
-    springTransform(s.grid, { x: 0 }, 'glide', { from: { x: s.off }, velocity: { x: target ? 0 : vx } })
-      .done.then(() => s.grid.classList.remove('m2-dragging'));
-    if (target) goToMonth(host, target, dir);
+    const settle = () => {
+      s.grid.classList.remove('m2-dragging');
+      if (s.month) s.month.classList.remove('m2-cal-moving');
+    };
+    if (!target) {
+      springTransform(s.grid, { x: 0 }, 'glide', { from: { x: s.off }, velocity: { x: vx } }).done.then(settle);
+      return;
+    }
+    // The old grid leaves with the scroll: it is put back at rest in the same
+    // frame the list jumps, so it never springs anywhere on screen.
+    springTransform(s.grid, { x: 0 }, 'glide', { from: { x: 0 } });
+    settle();
+    goToMonth(host, target, dir, { from: s.off, vx });
   };
   host.addEventListener('pointerup', end);
   host.addEventListener('pointercancel', end);
 }
 
 /** Glide the pane to `month` and bring it in from the side the swipe sent it. */
-function goToMonth(host, month, dir) {
+function goToMonth(host, month, dir, fling = {}) {
   const pane = host.closest('.pane-scroll');
   if (!pane) return;
   const max = Math.max(0, pane.scrollHeight - pane.clientHeight);
-  const to = Math.max(0, Math.min(max,
+  pane.scrollTop = Math.max(0, Math.min(max,
     pane.scrollTop + month.getBoundingClientRect().top - pane.getBoundingClientRect().top));
-  const glide = spring({
-    from: pane.scrollTop, to, preset: 'glide', precision: 0.5,
-    onUpdate: (v) => { pane.scrollTop = v; },
-  });
-  // A finger on the pane takes the scroll back at once.
-  const grab = () => glide.stop();
-  pane.addEventListener('pointerdown', grab, { once: true });
-  pane.addEventListener('wheel', grab, { once: true, passive: true });
-  glide.done.then(() => {
-    pane.removeEventListener('pointerdown', grab);
-    pane.removeEventListener('wheel', grab);
-  });
   const arriving = month.querySelector('.cal-grid') || month;
-  springTransform(arriving, { x: 0, opacity: 1 }, 'glide', { from: { x: 40 * dir, opacity: 0.25 } });
+  const w = arriving.offsetWidth || pane.clientWidth;
+  month.classList.add('m2-cal-moving');
+  springTransform(arriving, { x: 0 }, 'glide', {
+    from: { x: (fling.from || 0) + dir * w },
+    velocity: { x: fling.vx || 0 },
+  }).done.then(() => month.classList.remove('m2-cal-moving'));
 }
 
 /* ---- the line chart: draw-in, and a scrub dot that travels ---- */
@@ -3138,18 +3177,35 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
   });
 
   // Roughly one date label per 90px of width.
+  // 🔄 2026-09-25: EVENLY SPACED IN TIME, not by session count. The x axis is
+  // time (`x(t)` above), so labels picked every Nth session bunched where the
+  // sessions did and left a gap where training paused. Now the first and last
+  // sessions anchor the ends and the ones between sit at equal steps of time,
+  // each naming the day it stands on.
   const maxLabels = Math.max(2, Math.min(points.length, Math.floor(iw / 90)));
-  const labelIdx = points.length <= 2
-    ? [0, points.length - 1]
-    : Array.from({ length: maxLabels }, (_, i) =>
-        Math.round((i * (points.length - 1)) / (maxLabels - 1)));
-  [...new Set(labelIdx)].forEach((i) => {
+  const isoOf = (t) => {
+    const d = new Date(t);
+    // Rounded to the nearest local midnight: a step between two midnights can
+    // land at 13:00, and a label names a day.
+    const r = new Date(d.getFullYear(), d.getMonth(), d.getDate() + (d.getHours() >= 12 ? 1 : 0));
+    return `${r.getFullYear()}-${String(r.getMonth() + 1).padStart(2, '0')}-${String(r.getDate()).padStart(2, '0')}`;
+  };
+  const span = tMax - tMin;
+  const labels = span <= 0 || points.length <= 2
+    ? [...new Set([0, points.length - 1])].map((i) => ({ t: ts[i], iso: points[i].date }))
+    : Array.from({ length: maxLabels }, (_, k) => {
+        if (k === 0) return { t: tMin, iso: points[ts.indexOf(tMin)].date };
+        if (k === maxLabels - 1) return { t: tMax, iso: points[ts.indexOf(tMax)].date };
+        const iso = isoOf(tMin + (span * k) / (maxLabels - 1));
+        return { t: new Date(iso + 'T00:00:00').getTime(), iso };
+      });
+  labels.forEach(({ t: at, iso }, k) => {
     const t = add('text', {
-      x: x(ts[i]).toFixed(1),
+      x: x(at).toFixed(1),
       y: H - 9,
-      'text-anchor': i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle',
+      'text-anchor': labels.length > 1 && k === 0 ? 'start' : labels.length > 1 && k === labels.length - 1 ? 'end' : 'middle',
     }, 'axis-text');
-    t.textContent = fmtDateShort(points[i].date);
+    t.textContent = fmtDateShort(iso);
   });
 
   /* ---- hover crosshair ---- */
@@ -3273,7 +3329,11 @@ function summaryStats(points, field, judged = field !== 'time', whole = field ==
 function stat(label, value, cls = '', sub) {
   return el('div', { class: 'stat' },
     el('div', { class: 'stat-label', text: label }),
-    el('div', { class: 'stat-value' + cls, text: value }),
+    // 🆕 2026-09-25 (phone review): STATIC, never counted up. motion.js counts
+    // `.summary-grid .stat-value` from zero on arrival and on every change, so
+    // picking a lift read "Start 0 → 165" — a glitch, not a reading. Marked
+    // seen, which is motion.js's own "already handled" flag.
+    el('div', { class: 'stat-value' + cls, text: value, 'data-m-seen': '1' }),
     sub ? el('div', { style: 'font-size:11.5px;color:var(--ink-faint)', text: sub }) : null,
   );
 }
@@ -4267,6 +4327,12 @@ export async function renderVolumePane(host, top, opts = {}) {
 
       el('div', { class: 'vol-figure', style: `--body-ar:${bodyAspect(opts.sex).toFixed(4)}` }, figure),
       legendHost,
+      /* 🆕 THE LIST BESIDE THE FIGURE ON A LAPTOP — layout pass 2026-09-25. At
+       * 1440 the per-muscle list began 1,081px down, under the fold, with 250px
+       * of empty width either side of the bodies. `.vol-side` is the column the
+       * Muscles tab's panel is (same widths, same hairline), scrolling on its
+       * own; on a phone it is `display: contents` and nothing moves. */
+      el('div', { class: 'vol-side' },
       hint,
       pickedWrap,
 
@@ -4314,6 +4380,7 @@ export async function renderVolumePane(host, top, opts = {}) {
               : null,
           ), { label: 'How these numbers are counted', title: 'How this is counted' }),
         ),
+      ),
       ),
     ));
 }
