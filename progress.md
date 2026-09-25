@@ -88,6 +88,12 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 (or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
+- **2026-09-25 (night), Tim:** motion/physics/layout pass 2 per `docs/motion2-plan.md` — *"Put
+  professional level annimation and physics into this cite. Really analyze all the design layouts …
+  Think about the potential for any additions … Impress me. When you're done make sure that everything
+  still looks good on every single page"* + *"keep working for a long time. You have full permissions
+  and don't ask me any questions … If you think you're done, you're probably not so just keep going.
+  You're free to deploy as many sub-agents as you want."* Commit + push as pieces land.
 - **2026-09-23, Tim:** *"just keep working on whatever you feel like should definently be done. Once
   you've ran out of things then let me know what steps you want to talk to me about before working."*
   Covers fixes that need no decision of his (Open work 11's friend-panel benchmark, `ensureSystems()`

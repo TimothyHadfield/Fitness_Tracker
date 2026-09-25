@@ -6347,8 +6347,17 @@ a.feed-mine-row:active { background: var(--raised); }
      variant (.ghost, .danger, .is-linked, a focus ring…) still wins over them. */
 
 /* ── Raised surfaces: lit from above, a hairline of light on the top edge ── */
-:where(.btn) { background-image: var(--lit); box-shadow: var(--elev-1); }
-:where(.chip) { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
+:where(.btn) { box-shadow: var(--elev-1); }
+:where(.chip) { box-shadow: inset 0 1px 0 var(--hl); }
+/* 🚨 NOT `:where()` FOR THE IMAGE (fixed 2026-09-25, motion pass 2). `.btn` and
+   `.chip` set their colour with the `background:` SHORTHAND, which resets
+   background-image to none — and at zero specificity the gradient lost, so it
+   never rendered anywhere (computed background-image: none, measured). At one
+   class, later in the file, it wins over the shorthand; every variant that
+   paints its own background (.ghost, .danger, .primary, .is-linked, a pressed
+   chip) is two classes and still wins over this. */
+.btn { background-image: var(--lit); }
+.chip { background-image: var(--lit); }
 :where(.input) { box-shadow: var(--recess); }
 .session-mini { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
 
@@ -6385,10 +6394,25 @@ a.feed-mine-row:active { background: var(--raised); }
               0 6px 16px -8px color-mix(in srgb, var(--good) 60%, transparent);
 }
 .btn.good:active { background-image: none; box-shadow: inset 0 2px 4px rgb(var(--shadow-rgb) / .35); }
+/* ⚠️ LIGHT: the dark ink measured 3.39:1 on this green (AA wants 4.5). The
+   green stays; the ink goes white (5.6:1 on --good) and, like the light accent,
+   the second stop goes DARKER so no part of the button reads below that. */
+:root[data-theme="light"] .btn.good {
+  color: #FFFFFF;
+  background-image: linear-gradient(180deg, var(--good), color-mix(in srgb, var(--good) 86%, #000));
+}
+:root[data-theme="light"] .btn.good:active {
+  background-image: none;
+  background-color: color-mix(in srgb, var(--good) 84%, #000);
+}
 /* Linked is a quiet, not a filled, state — no gloss, no lift. */
 .btn.primary.is-linked { box-shadow: none; }
 
-/* ── The Record button: a warm ring and a sheen. Static — no loop. ── */
+/* ── The Record button: a crisp ring and a sheen. Static — no loop. ── */
+/* Pass 2: the 3px 14% accent wash plus an accent-tinted blur read as a beige
+   smudge in light and a muddy ring in dark (measured on screenshots). Now a
+   hairline gap in the bar's own colour, one crisp 1px accent ring, and a small
+   neutral shadow underneath — a halo with an edge. */
 .navbar a.nav-primary svg,
 .navbar a.nav-primary[aria-current="page"] svg {
   background-color: var(--accent);
@@ -6396,19 +6420,25 @@ a.feed-mine-row:active { background: var(--raised); }
     radial-gradient(90% 70% at 32% 18%, rgb(255 255 255 / .22), rgb(255 255 255 / 0) 60%),
     linear-gradient(180deg, var(--accent-top), var(--accent-bot));
   box-shadow: inset 0 1px 0 var(--gloss),
-              0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent),
-              0 3px 10px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+              0 0 0 2px var(--surface),
+              0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent),
+              0 2px 5px 1px rgb(var(--shadow-rgb) / .30);
+}
+:root[data-theme="light"] .navbar a.nav-primary svg {
+  box-shadow: inset 0 1px 0 var(--gloss),
+              0 0 0 2px var(--surface),
+              0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent),
+              0 2px 4px 1px rgb(var(--shadow-rgb) / .14);
 }
 
 /* ── Tab bar (phone) / sidebar (laptop) ── */
 .navbar { background-image: var(--lit); box-shadow: inset 0 1px 0 var(--hl); }
 @media (min-width: 860px) {
-  .navbar { box-shadow: inset -1px 0 0 var(--hl); }
-  .navbar a[aria-current="page"] {
-    box-shadow: inset 0 1px 0 var(--hl),
-                inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
-                inset 0 0 14px -6px color-mix(in srgb, var(--accent) var(--glow-a), transparent);
-  }
+  /* The sidebar keeps the plain --surface it had before pass 1: lit, it went
+     cream in light for no gain. The selected item is its --accent-dim fill and
+     a hairline of light — no outline, no glow. */
+  .navbar { background-image: none; box-shadow: none; }
+  .navbar a[aria-current="page"] { box-shadow: inset 0 1px 0 var(--hl); }
 }
 
 /* ── Selected states: a raised pill in a recessed track, with a faint glow ── */
@@ -6418,6 +6448,17 @@ a.feed-mine-row:active { background: var(--raised); }
   box-shadow: inset 0 1px 0 var(--hl),
               inset 0 0 10px -5px color-mix(in srgb, var(--accent) var(--glow-a), transparent),
               0 1px 3px rgb(var(--shadow-rgb) / .35);
+}
+/* ⚠️ DARK: the pill is painted --ground, which in the dark themes is DARKER
+   than the --raised track — with a drop shadow that read as a hole, not a
+   raised pill. Dark gets the step above the track and a real top highlight;
+   light is untouched (its --ground is already lighter than its track). */
+:root:not([data-theme="light"]) .seg-ind,
+:root:not([data-theme="light"]) .segmented:not(.has-ind) .seg[aria-selected="true"] {
+  background-color: var(--raised-hi);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .09),
+              0 1px 2px rgb(var(--shadow-rgb) / .45),
+              0 2px 6px -2px rgb(var(--shadow-rgb) / .40);
 }
 .ob-choice[aria-pressed="true"] {
   box-shadow: inset 0 0 0 1.5px var(--accent),
@@ -6445,6 +6486,10 @@ a.feed-mine-row:active { background: var(--raised); }
   -webkit-mask-image: linear-gradient(180deg, #000, transparent);
   mask-image: linear-gradient(180deg, #000, transparent);
 }
+
+/* The Compare sheet's people are links (a pick navigates), and the UA was
+   underlining every name and summary line. They are rows, not prose links. */
+a.pick-row { text-decoration: none; }
 /* === end Polish · depth and colour === */
 
 /* === Motion === */
@@ -6452,15 +6497,19 @@ a.feed-mine-row:active { background: var(--raised); }
    annimation…". js/motion.js decides WHEN (first paint of a visit only, never
    the logging path); this says HOW. Rule 7 holds: everyday motion is on the
    three tokens; the one longer duration is the celebration tier below, pinned
-   by name in tests/a11y.test.mjs. */
+   by name in tests/a11y.test.mjs.
+   Pass 2 (docs/motion2-plan.md, Tim: "Put professional level annimation and
+   physics into this cite"): rows now arrive on springs (js/spring.js), which
+   write inline transform/opacity — so nothing here may TRANSITION a row's
+   transform, or the browser would smear every frame the spring writes. */
 :root {
   /* A real win only — a new personal best, a workout saved, a goal reached. */
-  --t-celebrate: 640ms;
+  --t-celebrate: 600ms;
 }
 
-/* ---- rows arrive, 30ms apart (inline animation-delay from motion.js) ---- */
-.m-stagger { animation: m-rise var(--t) var(--ease-out) both; }
-@keyframes m-rise { from { opacity: 0; transform: translateY(6px); } }
+/* ---- rows arrive on a spring after the screen (js/motion.js staggerIn) ---- */
+/* While a spring owns the element, no CSS transition may chase its writes. */
+.m-arriving { transition: none !important; }
 
 /* ---- a bar fills to its number on first paint (Rule 7's width exception) ---- */
 .m-fill { animation: m-grow var(--t-slow) var(--ease-out) both; }
@@ -6482,18 +6531,25 @@ a.feed-mine-row:active { background: var(--raised); }
 /* ---- counted numbers keep one width while they count ---- */
 .me-stat-n, .feed-stat-value, .summary-grid .stat-value { font-variant-numeric: tabular-nums; }
 
-/* ---- a press answers back: a little smaller, a little brighter ---- */
-.btn { transition: transform var(--t-fast) var(--ease-out), filter var(--t-fast) linear; }
-.btn:active { transform: scale(.97); filter: brightness(1.12); }
-/* Filled buttons already press darker (Polish · depth): shrink, don't brighten. */
-.btn.primary:active, .btn.good:active,
-.btn.preset[aria-pressed="true"]:active { filter: none; }
-.row, .chip, .vol-row {
-  transition: background-color var(--t-fast) linear, color var(--t-fast) linear,
-              transform var(--t-fast) var(--ease-out), filter var(--t-fast) linear;
+/* ---- a press answers back ---- */
+/* A BUTTON gives a little (.97) and goes DARKER, never brighter: filled ones
+   to their pressed stop (Polish · depth), raised ones to --raised-hi in both
+   themes. A ROW only changes its background — its text, chevron and divider
+   never move under a finger (Tim's rule: content never moves on tap).
+   ⚠️ iOS Safari only fires :active at all when the page has a touchstart
+   listener; app.js adds a passive no-op one at boot for exactly this. */
+.btn {
+  transition: transform var(--t-fast) var(--ease-out), background-color var(--t-fast) linear,
+              box-shadow var(--t-fast) linear;
 }
-.row:active, .vol-row:active { transform: scale(.98); filter: brightness(1.12); }
-.row.static:active { transform: none; filter: none; }
+.btn:active { transform: scale(.97); }
+.btn:not(.primary):not(.good):not(.ghost):not(.danger):not([aria-pressed="true"]):active {
+  background-image: none;
+  background-color: var(--raised-hi);
+  box-shadow: var(--recess);
+}
+.row, .vol-row { transition: background-color var(--t-fast) linear, color var(--t-fast) linear; }
+.row:active, .vol-row:active, .row.static:active { transform: none; }
 
 /* ---- the tab you just chose gives a small pop ---- */
 .navbar a.m-tabbed svg { animation: m-tab-pop var(--t) var(--ease-out); }
@@ -6503,37 +6559,208 @@ a.feed-mine-row:active { background: var(--raised); }
   100% { transform: scale(1); }
 }
 
-/* ---- the celebration tier: a shine sweeps across, the thing pops ---- */
-.m-celebrate {
-  position: relative; overflow: hidden;
-  animation: m-pop var(--t-celebrate) var(--ease-out);
-}
+/* ---- the celebration tier: a specular shine crosses it, it pops ---- */
+/* Pass 2 rebuild. The pop is a real spring now (js/motion.js, `bounce`, peak
+   1.06, one wobble), so there is no pop keyframe here. The shine is a band of
+   white light on a brief wash of the win colour (--good), which is what makes
+   it visible on a white light-theme row as well as a dark one; the old accent
+   band over a green check read as a khaki smear.
+   ⚠️ NO `overflow: hidden` ON THE HOST, which clipped popovers and shadows for
+   as long as it played. The band is moved INSIDE the pseudo-element by
+   background-position, so the pseudo-element's own box (inset 0, the host's
+   radius) is the clip and the host is left alone. A static host is given
+   `position: relative` for the length of it (.m-celebrate-pos), nothing else. */
+.m-celebrate-pos { position: relative; }
+.m-celebrate { transition: none !important; }
 .m-celebrate::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
   border-radius: inherit;
-  background: linear-gradient(105deg, transparent 28%, rgb(255 255 255 / .10) 42%,
-    rgb(255 255 255 / .34) 50%, rgb(255 255 255 / .10) 58%, transparent 72%);
-  transform: translateX(-110%);
-  animation: m-shine var(--t-celebrate) var(--ease-both) forwards;
+  background-color: color-mix(in srgb, var(--good) 10%, transparent);
+  background-image: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / .10) 46%,
+    rgb(255 255 255 / .30) 50%, rgb(255 255 255 / .10) 54%, transparent 58%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  animation: m-shine var(--t-celebrate) var(--ease-both) both;
 }
 :root[data-theme="light"] .m-celebrate::after {
-  background: linear-gradient(105deg, transparent 28%,
-    color-mix(in srgb, var(--accent) 14%, transparent) 42%,
-    color-mix(in srgb, var(--accent) 32%, transparent) 50%,
-    color-mix(in srgb, var(--accent) 14%, transparent) 58%, transparent 72%);
+  background-color: color-mix(in srgb, var(--good) 13%, transparent);
+  background-image: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / .35) 46%,
+    rgb(255 255 255 / .85) 50%, rgb(255 255 255 / .35) 54%, transparent 58%);
 }
-@keyframes m-pop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.04); }
-  100% { transform: scale(1); }
+@keyframes m-shine {
+  0%   { background-position: 100% 0; opacity: 0; }
+  15%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { background-position: 0% 0; opacity: 0; }
 }
-@keyframes m-shine { to { transform: translateX(110%); } }
 
 /* The blanket at the end of the Motion rules cuts durations; a DELAY it
-   leaves alone, and a staggered row with `both` fill would sit invisible for
-   it. So under reduced motion these are off outright, not just fast. */
+   leaves alone. So under reduced motion these are off outright, not just
+   fast. (The springs in js/spring.js land at once under reduced motion.) */
 @media (prefers-reduced-motion: reduce) {
-  .m-stagger, .m-fill, .m-celebrate, .m-celebrate::after, .navbar a.m-tabbed svg { animation: none !important; }
+  .m-fill, .m-celebrate::after, .navbar a.m-tabbed svg { animation: none !important; }
   .m-celebrate::after { display: none; }
 }
 /* === end Motion === */
+
+/* === Motion 2 · Layout === */
+/* docs/motion2-plan.md, "F · Layout". Measured at 393×659 (WebKit, iPhone) and
+   1440×900, demo account. Layout only: no wording, no colours, no features.
+   Everything here is either a phone rule, a laptop rule (≥860px) or both, and
+   says which. */
+
+/* ── ? dots sit next to their words (both widths) ─────────────────────────
+   Tim, 2026-09-08: the ? "should be right next to the … text, not on the right
+   side". Labels already did this; SENTENCES still took `flex: 1`, so on a
+   laptop (text capped at 68ch) the dot floated 200px right of a short line —
+   "Indirect work counts half a set.  ………  ?". `0 1 auto` sizes the sentence to
+   its words, so a one-line sentence has its dot beside it and a wrapped one has
+   it at the end of its own measure, never out at the column edge.
+   The dot's -9px side margins (they cancel the 44px halo) put its PAINT 9px
+   past the end of the line — measured 7px from the phone's edge in Settings —
+   and 1px from a label's last letter. Inside a help line the dot keeps the
+   vertical cancel and takes the line's own gap instead. */
+.help-line > .field-help,
+.help-line > .note,
+.help-line > .goal-verdict-body { flex: 0 1 auto; }
+.help-line > .help-dot { margin-inline: -4px 0; }
+
+/* ── Workouts: the rating belongs to the notes column (laptop) ────────────
+   Measured at 1440: notes capped at 68ch on the left, the four rating cells at
+   x≈1200 on the far right, 700px from the heading they belong to. The block now
+   keeps the notes' measure, and on a laptop the cells sit in one row of four
+   beside the heading — the 2×2 grid exists for a 390px phone (see ratingBadge),
+   and at this width it only left a 70px hole under the heading. */
+@media (min-width: 860px) {
+  .own-rating { max-width: 510px; }
+  .own-rating .rating { grid-template-columns: repeat(4, minmax(46px, auto)); }
+}
+/* A direct child of the pane would be centred by the column's auto margins once
+   narrower than it; it keeps the column's LEFT edge instead, like the notes. */
+@media (min-width: 860px) {
+  .pane-scroll > .own-rating { margin-inline: max(0px, (100% - 820px) / 2) auto; }
+}
+@media (min-width: 1200px) {
+  .pane-scroll > .own-rating { margin-inline: max(0px, (100% - 940px) / 2) auto; }
+}
+
+/* ── Graph (phone): markers that stop colliding ───────────────────────────
+   52 measured points across a 365px chart are 5px apart (median, measured), and
+   8px rings overlapped into a chain. Rule 5 says a marker means measured, so
+   they are NOT hidden — they get smaller when the chart is dense. The last point
+   keeps its size: it is "now". Laptop widths have room and are untouched. */
+@media (max-width: 859px) {
+  svg.chart:has(circle.pt:nth-of-type(30)) .pt:not(.pt-last) { r: 2.2px; stroke-width: 1.4; }
+}
+
+/* ── Nested lists line up with their headings (laptop) ────────────────────
+   A `.list` bleeds out by the gutter on a phone so its hairlines reach the
+   edge; on a laptop only a list that is a DIRECT child of the pane gets that
+   undone. Goals' lists are nested, so "What this asks of you" rows started at
+   x=228 under a heading at x=250 and ran 44px wider than the column. */
+@media (min-width: 860px) {
+  .goal-screen .list, .goal-measured .list { margin-inline: 0; }
+}
+
+/* ── Goals: the number beside the label, the sentence under both ──────────
+   A requirement row was [label + sentence + source | value], so every sentence
+   wrapped inside 290px of a 365px phone while the value column held 70px of
+   nothing under "7–10". The value now sits on the label's line and the
+   sentence takes the full width. Same words, same order, fewer lines. */
+.req-row, .stall-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1px 10px; /* .row's 10px gap would open between every line */
+  align-items: baseline;
+}
+.req-row > .row-main, .stall-row > .row-main { display: contents; }
+.req-row > .row-main > *, .stall-row > .row-main > * { grid-column: 1 / -1; }
+.req-row > .row-main > .row-title, .stall-row > .row-main > .row-title { grid-column: 1; grid-row: 1; }
+.req-row > .req-value, .stall-row > .req-value { grid-column: 2; grid-row: 1; align-self: baseline; min-width: 0; }
+.req-row .row-sub, .stall-row .row-sub { margin-top: 1px; }
+
+/* ── Workouts (laptop): the split rows keep the column's edges ───────────
+   On a laptop every list row drops its inner gutter (`.list > *`), but a
+   programme's workout row is two buttons inside one `.row-split`, and each kept
+   the phone's --pad — so "Push" sat 22px right of "3 workouts" above it and the
+   Start pills 22px left of "Switch". */
+@media (min-width: 860px) {
+  .row-split > .row { padding-left: 0; }
+  .row-go { padding-right: 0; }
+}
+
+/* ── Profile (phone): the head block, tighter ─────────────────────────────
+   Face, name, two stat tiles and the friends note took ~195px before the first
+   section. The tiles now read "209 Workouts" on one line — a 44px row rather
+   than a 71px one — which is the same figure and word, side by side. */
+@media (max-width: 859px) {
+  .me-stat { flex-direction: row; align-items: baseline; justify-content: center; gap: 6px; padding: 10px 4px; }
+  .me-body { gap: 14px; }
+}
+
+/* ── Profile (laptop): two columns ────────────────────────────────────────
+   One 940px column ran 1500px down: the best lifts, the goal and the calendar
+   stacked under each other with 500px of empty width beside every one. Now:
+   face | figures on top; body details over best lifts on the left, goal over
+   calendar on the right. `dense` lets the goal climb beside body details. A
+   friend's profile (same classes, no body/goal) gets best lifts | calendar. */
+@media (min-width: 1200px) {
+  .pane-scroll > .me-body { max-width: 1180px; }
+  .me-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    column-gap: 48px; row-gap: 16px;
+    align-items: start;
+  }
+  .me-body > * { grid-column: 1 / -1; }
+  .me-body > .me-head { grid-column: 1; align-self: center; }
+  .me-body > .me-stats { grid-column: 2; align-self: center; }
+  .me-body > .me-section, .me-body > .me-bests,
+  .me-body > .me-slot > .me-bests { grid-column: 1; }
+  .me-body > .me-bests ~ .me-section,
+  .me-body > .me-cal, .me-body > .me-slot > .me-cal { grid-column: 2; }
+}
+
+/* ── Calendar (laptop): use the width ─────────────────────────────────────
+   The Years grid is width-bound (53 square columns), so a wider column is the
+   only CSS lever on how much of the pane it fills: 940 → 1180 makes every
+   square 17px → 21px. Months and Years widen together, so switching between
+   them moves nothing. Month names and day letters were 9px on a laptop. */
+@media (min-width: 1200px) {
+  .pane-top:has(> .cal-modes) > *, .pane-top:has(> .cal-modes) ~ .pane-scroll > * { max-width: 1180px; }
+  .yr-month, .yr-dows { font-size: var(--fs-xs); }
+  .yr-grid { gap: 2px; }
+}
+
+/* ── Settings (laptop): the switch stays with its words ───────────────────
+   Labels and sentences stop at 68ch; the switches sat at the column's right
+   edge, 700px from "Rest timer". The settings fields keep the text's measure. */
+@media (min-width: 860px) {
+  .pane-scroll:has(.switch-row) > .field { max-width: 510px; margin-inline: max(0px, (100% - 820px) / 2) auto; }
+}
+@media (min-width: 1200px) {
+  .pane-scroll:has(.switch-row) > .field { margin-inline: max(0px, (100% - 940px) / 2) auto; }
+}
+
+/* ── Runner (laptop only — the phone runner is untouched) ─────────────────
+   Two steppers split 940px, so "180" sat 180px from its − and +. They keep a
+   thumb-sized width and sit together in the middle. The person chips and the
+   progress dashes ran window-wide at x=22 while everything else starts at the
+   content column; they now share its edges. WebKit's number spinners were
+   showing inside the big value on a laptop — the ± buttons are the control. */
+@media (min-width: 860px) {
+  .set-open .steppers { grid-template-columns: repeat(auto-fit, minmax(200px, 340px)); justify-content: center; column-gap: 40px; }
+  .step-value::-webkit-inner-spin-button, .step-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .people-bar, .session-progress { padding-inline: max(var(--pad), (100% - 820px) / 2); }
+}
+@media (min-width: 1200px) {
+  .people-bar, .session-progress { padding-inline: max(var(--pad), (100% - 940px) / 2); }
+}
+/* ── Goals: the section heads were spaced like chapter breaks ────────────
+   `.section-head` carries 18px above it, and inside the goal screen that sat on
+   top of the column's own 16px gap: 34px of nothing over "What this asks of
+   you" on a screen that already scrolls three phone-heights. */
+.goal-screen .section-head { margin-top: 6px; }
+
+/* === end Motion 2 · Layout === */

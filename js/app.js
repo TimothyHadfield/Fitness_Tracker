@@ -652,6 +652,10 @@ function paintShell() {
 }
 
 (async function boot() {
+  // ⚠️ iOS Safari does not apply CSS :active on a tap unless the page has a
+  // touchstart listener — without this no press in the app answers back on the
+  // iPhone. Passive and empty: it only switches :active on (motion pass 2).
+  document.addEventListener('touchstart', () => {}, { passive: true });
   trackKeyboard();
   const cached = cachedLook();
   if (cached) applyLook(cached);

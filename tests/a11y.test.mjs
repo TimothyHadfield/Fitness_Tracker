@@ -20,7 +20,7 @@
 // The one thing it must never become is a test that passes because it stopped
 // looking. Every assertion below names the tokens it compared.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) fails++; };
@@ -509,6 +509,16 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
   const users = [...live.matchAll(/([^{}]+)\{[^{}]*var\(--t-celebrate\)[^{}]*\}/g)].map((m) => m[1].trim());
   ok(users.length > 0 && users.every((sel) => /^\.m-celebrate(::after)?$/.test(sel)),
      `⚠️ and --t-celebrate is used ONLY by the celebration (${users.join(' | ')})`);
+
+  /* 🆕 THE PHYSICS TIER — 2026-09-25, Tim: "Put professional level annimation
+     and physics into this cite." A spring has no duration for the checks above
+     to read, so its "quick" is measured on the physics in tests/spring.test.mjs
+     (90% of travel ≤250ms, at rest ≤400ms). Pinned here only so the rule and
+     its test cannot drift apart silently. */
+  const hb = readFileSync(new URL('../docs/handbook.md', import.meta.url), 'utf8');
+  ok(/PHYSICS TIER[\s\S]{0,400}90% of its travel ≤250ms[\s\S]{0,60}≤400ms/.test(hb),
+     'Rule 7 states the physics tier: a spring covers 90% of its travel in ≤250ms and rests in ≤400ms');
+  ok(existsSync(new URL('./spring.test.mjs', import.meta.url)), 'and tests/spring.test.mjs is there to measure it');
 
   /* 🚨 THE SLIDING PILL IS AN ENHANCEMENT AND THE PAINTED ONE IS THE FLOOR. The
      indicator is drawn by JS; if that never runs — an old engine, a thrown

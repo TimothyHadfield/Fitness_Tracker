@@ -1554,9 +1554,8 @@ in** — which is also the whole of "only when appropriate".
 - ⚠️ **`prefers-reduced-motion` turns all of it off, as a blanket over `*`.** Not a courtesy: sliding
   panels are genuinely unpleasant with a vestibular disorder, and this app is used by people who are
   moving. The browser audit can never catch its removal, so a test pins it.
-- ⚠️ **A movement must not claim something the app does not know.** A screen arrives with a rise
-  rather than a sideways push, because a horizontal slide asserts a direction of travel this router
-  cannot know.
+- ⚠️ **A movement must not claim something the app does not know.** The router DOES know direction
+  since 09-02 (`markRoute()` stamps `history.state.navIndex`), so push/back may slide.
 - 🆕 **TWO WHOLE SCREENS MOVE, AND ONLY TWO — Record since 2026-09-09, the session runner since
   2026-09-10.** Tim: *"to make the record section feel more like a button that actually activates
   something."* Record earns the exception on this rule's own test: the big middle **+** is the one
@@ -1579,9 +1578,12 @@ in** — which is also the whole of "only when appropriate".
   the screen underneath it. One `z-index` for both means one of them plays entirely behind the other,
   and the direction that happens to look right hides the bug. `.screen-ghost` 40, `.is-falling` 50,
   `.screen.rises` 45.
-- 🆕 **ONE NAMED EXCEPTION, `--t-celebrate` ≤700ms (2026-09-25)** — Tim: *"shining, smooth and creative
-  annimation"*. A shine + 1.04 pop for a real win only: a new PB, a saved workout, a goal reached,
-  once per win (`celebrate()`, `js/motion.js`). First-paint stagger/count-up/fill: arrivals only.
+- 🆕 **ONE NAMED EXCEPTION, `--t-celebrate` ≤700ms** — shine + spring pop (≤1.06), real wins only
+  (PB, saved workout, goal), once each (`celebrate()`, `js/motion.js`).
+- 🆕 **PHYSICS TIER (09-25)** — Tim: *"Put professional level annimation and physics into this
+  cite."* A spring (`js/spring.js`) has no duration: each preset covers 90% of its travel ≤250ms and
+  rests ≤400ms (`tests/spring.test.mjs`). Springs are for gestures and navigation; the logging path
+  still only gets a press.
 
 ### Colour — validate, never eyeball
 
