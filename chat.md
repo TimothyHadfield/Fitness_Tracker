@@ -657,3 +657,9 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   shaded top edge; Record ring 3px 14% + sheen; selection glow; celebration 640 ms, once per device;
   rows stagger 30 ms; row press .98.
 - **Open:** `docs/polish-plan.md` NOT verified.
+- **Logo, later the same day:** round 2 (6 marks, no name) → *"rise is good. Could you maybe make 10
+  different variants"* → picked **Black Ember** (installed: icon.svg, apple-touch-icon.png, icon-192/512
+  PNG in manifest + sw precache); Dusk Mirror saved in `docs/logos/`. Asked whether "Rise" is a crowded
+  app name — answered from a web search (many small "Rise" fitness apps + the big RISE sleep app).
+  Verified: suite 7,074/0; icon links 200 and served in WebKit 393px. Home-screen look on a real
+  iPhone NOT checked.

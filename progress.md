@@ -158,7 +158,11 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **Discovery feed**: the old refusal is lifted — *"It has to go eventually."* Nothing built, no plan
   asked for; finding strangers can't ship before blocking/reporting.
 - **A rename is coming and he will bring it.** Don't push; keep "Fitness Tracker" cheap to change.
-- **The app icon is closed** (2026-08-30). Don't reopen.
+- **App icon = "Rise · Black Ember"** (Tim picked it 2026-09-25 from 10 Rise variants; plate-sun
+  eclipse on black). Files: `icon.svg` (tab), `apple-touch-icon.png`, `icon-192/512.png` (full-bleed,
+  from `docs/logos/rise-v4-square.svg`). *"I still like the dusk mirror one, so just save it for now"*
+  → `docs/logos/rise-v2-*.svg`. He likes **"Rise"** as the app name (asked how crowded it is; not
+  decided — don't rename until he says).
 - **Accessibility work is deferred** (2026-09-17): *"Let's not work on the accessibility for a
   while."* Don't offer it again; he'll raise it.
 - **Photos are ON** (2026-09-25, lifting the 09-10 pause): *"start deploying the 'take a picture'
@@ -168,8 +172,8 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   shading, reflection graphics, shining … eye-catching logos, good coloring"*. Depth + motion BUILT and
   live (`docs/polish-plan.md`, `js/motion.js`, `--t-celebrate` 640ms for wins only). **App icon reopened
   by that ask**: round 1 of 6 logos rejected (*"None of these feel quite right… ignore the name…
-  just go off the image"*); round 2 (marks only) goes on the same picks page
-  https://claude.ai/artifact/5dQgjHSQr8A1H6kTbZ8Lvw (db doc `pick/logo`). Install only what he picks.
+  just go off the image"*); round 2 (marks only) → he liked "Rise" → 10 variants → picked Black
+  Ember, INSTALLED (see icon line below). Picks page https://claude.ai/artifact/5dQgjHSQr8A1H6kTbZ8Lvw.
 - **He took these himself** — don't start or offer: checking the estimator against a real attempt
   (Open work 19: *"I'll do 4 myself sometime this week, but I'll come to you about it"*); asking about
   public/private on first sign-in (*"I'll work on #2 along with some other things later"*).

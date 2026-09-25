@@ -28,6 +28,10 @@ package-lock.json
 # sets.png, ~200 KB) were committed the same way and served to the world for
 # no reason. Real app art lives in img/ and is committed deliberately.
 /*.png
+# …except the app icons, which the manifest and iPhone home screen need at the root.
+!/apple-touch-icon.png
+!/icon-192.png
+!/icon-512.png
 
 # Python's bytecode cache, left behind by tools/build-body-art.py. Same rule as
 # the two above: this site is served from the repo, so anything tracked here is

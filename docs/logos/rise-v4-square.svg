@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <clipPath id="tile"><rect width="1024" height="1024" rx="228"/></clipPath>
+    <clipPath id="tile"><rect width="1024" height="1024"/></clipPath>
     <filter id="b4" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
     <filter id="b8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
     <filter id="b16" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>
@@ -45,5 +45,5 @@
     <rect x="40" y="602" width="944" height="28" fill="url(#line)" opacity="0.8" filter="url(#b8)"/>
     <rect x="40" y="610" width="944" height="12" rx="6" fill="url(#line)"/>
   </g>
-  <rect x="3" y="3" width="1018" height="1018" rx="225" fill="none" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="6"/>
+  
 </svg>
