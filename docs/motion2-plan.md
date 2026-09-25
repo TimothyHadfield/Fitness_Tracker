@@ -109,6 +109,17 @@ router cannot know" (written 09-01) is out of date since 09-02.
   from 55%. Minimise: card text fades in 130ms, card squashes into the bar.
 - Shimmer/spinner loops use `--m-loop` (outside the 250ms cap — loading indicators).
 
+## BUILT 2026-09-25
+- Shipped: all six packages A–F plus laptop layout/polish and additions #6 (goal bar on Profile) and
+  #8 (tappable strongest/weakest muscle); `js/spring.js` + `js/gestures.js` in `sw.js` SHELL; Rule 7
+  physics tier in the handbook; memoised ratings in `store.js` (Profile open 633 → 117 ms at 4× throttle).
+- Where the plan was wrong: ~~reduced motion = `transform:none` on everything moving~~ — the tab indicator's transform IS
+  its position (f5aef8b; nav-motion test pins it); jsdom has no global `getComputedStyle`, so
+  views-data.js reads it from the node's own window.
+- Verified how: suite 7,563 PASS / 0 FAIL (2026-09-25); 5 review rounds; sign-off = 65 states × 7
+  setups (393 WebKit dark/light/reduced, 1440 + 1024 dark/light), ~830 shots, no defects left;
+  live-check confirmed 7cc8d43 on Pages.
+
 ## NOT verified
 - Real iPhone: :active via the touchstart listener, spring feel at 60/120Hz, edge swipe vs Safari's
   own, pull-to-refresh vs iOS overscroll, pinch in the photo viewer, theme reveal in iOS Safari.
