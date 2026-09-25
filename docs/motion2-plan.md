@@ -1,7 +1,8 @@
 # Motion, physics and layout — pass 2 (2026-09-25)
 
-**Status: BUILT, IN REVIEW** — A+F 503e15d · D+E e12f3ae · B 901c3b6 · C + review-1 fixes (13
-defects) a1855bb. Review round 2 (phone + laptop reviewers) running; fixes land after it.
+**Status: DONE, LIVE** — A+F 503e15d · D+E e12f3ae · B 901c3b6 · C + review-1 fixes a1855bb ·
+review-2 fixes 240cada · additions 8e04944 · review-3 fixes da0d5c2 · sign-off fix f5aef8b. Final
+sign-off review: 65 states × 7 setups, no remaining defects. Additions for Tim: `additions-ideas.md`.
 
 ## Tim's words
 > "I notice the rows slide up when a screen opens but that's it, and there are some problems with the

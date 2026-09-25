@@ -663,3 +663,23 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   app name — answered from a web search (many small "Rise" fitness apps + the big RISE sleep app).
   Verified: suite 7,074/0; icon links 200 and served in WebKit 393px. Home-screen look on a real
   iPhone NOT checked.
+- **Names:** brainstorm → shortlist in `docs/name-ideas.md` (a348e29); nothing decided.
+
+## 2026-09-25 (night) · Motion pass 2: physics, fixes, layouts (Tim asleep, full permission)
+- **Asked:** *"Put professional level annimation and physics into this cite. Really analyze all the
+  design layouts … Think about the potential for any additions … Impress me. When you're done make
+  sure that everything still looks good on every single page"* + *"keep working for a long time …
+  don't ask me any questions … If you think you're done, you're probably not"*.
+- **Built** (plan + choices: `docs/motion2-plan.md`): `js/spring.js` physics + Rule 7 physics tier;
+  all pass-1 problems fixed (503e15d); data screens + moments (e12f3ae); navigation — push/back slide,
+  tab crossfade, Record card, edge swipe, sliding tab line, `js/gestures.js` (901c3b6); surfaces —
+  pill drag, sheet drag-dismiss, toasts, photo viewer (a1855bb); 3 review rounds of fixes (a1855bb,
+  240cada, da0d5c2, f5aef8b) incl. laptop hover states, persistent sidebar, two-pane Volume/Goals/
+  Profile/friend workout, muscle-rating memo in store.js (Profile open 633→117 ms at 4× CPU).
+  Additions: goal bar on Profile + tappable strongest/weakest (8e04944); the rest listed for Tim in
+  `docs/additions-ideas.md`.
+- **Verified how:** suite 7,563 PASS / 0 FAIL (exit codes checked); final sign-off review swept 65
+  states × 7 setups (393 WebKit dark/light/reduced, 1440 + 1024 dark/light), ~830 shots, looked at
+  via contact sheets: no overflow/console errors; its one defect (reduced-motion tab line) fixed.
+- **Open:** real-iPhone feel (NOT verified list in the plan); Profile first open still ~330 ms at 4×
+  (render cost); `docs/additions-ideas.md` awaits Tim.

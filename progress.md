@@ -1,8 +1,8 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-25 night (motion pass 2 IN PROGRESS: waves 1–3 live 503e15d…a1855bb; review
-rounds + fixes continue — status in `docs/motion2-plan.md`). Before that 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
+_Last updated 2026-09-25 night (motion pass 2 DONE and live through f5aef8b — `docs/motion2-plan.md`;
+addition ideas waiting on Tim in `docs/additions-ideas.md`). Before that 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
 40 built and live through 81fada0, 2 skipped; picks page
 https://claude.ai/artifact/HiHY1QBrwm3dVQkK9DHy73, see chat.md 2026-09-24 second half). Older note: the
 headings are a SESSION sequence, not the calendar (the previous session is labelled 2026-09-27 and the
