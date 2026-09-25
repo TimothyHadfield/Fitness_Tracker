@@ -154,12 +154,24 @@ const G = await import(new URL('js/views-goals.js', root).href);
     const t = finishTimeline(2, 2);
     ok(t.draw < t.counts[0] && t.counts[0] < t.counts[1] && t.counts[1] < t.prs[0],
        'order: the check draws, then the two numbers count, then the records shine');
+    // Review 2026-09-25: the exercise list came in ~330ms late and faint.
+    const r = finishTimeline(0, 2, 6);
+    ok(typeof r.rows === 'number' && r.rows > t.draw && r.rows <= 200,
+       `the exercise rows follow right behind the check (${r.rows}ms, ≤200)`);
+    ok(r.inMs <= 900, `everything has arrived by ${r.inMs}ms (≤900; the shines after are the celebration tier)`);
   }
+  ok(/\.screen:has\(\.finish-hero\)\s*\{\s*animation:\s*none/.test(read('css/app.css')),
+     'the finish screen is on screen from its first frame — no whole-screen fade from 0 (it was 0.51 at 143ms)');
   const src = read('js/views-session.js');
   ok(/export function minimizeFlight\(/.test(src) && /export function restoreFlight\(/.test(src),
      'the runner exports minimizeFlight() and restoreFlight() for the bar');
   ok(/if \(!minimizeFlight\(leaving\)\) parkScreen\(leaving, \{ falls: true \}\)/.test(src),
      'minimise flies into the bar, and falls off the bottom as before wherever the flight cannot run');
+  const fly = src.slice(src.indexOf('export function minimizeFlight('), src.indexOf('export function restoreFlight('));
+  ok(/scale\(\$\{lerp\(a\.sx[\s\S]*lerp\(a\.sy/.test(src) && /flyPlan\(from, /.test(fly),
+     'minimise scales BOTH axes onto the bar (it measured 0.983→1.0 with a width-only scale)');
+  ok(/ghost\.animate\(/.test(fly) && !/requestAnimationFrame\(\(\) =>[^)]*ghost\.animate/.test(fly),
+     'and it is a web animation started in the tap\'s own task, not a spring waiting for the first frame after the render');
 }
 
 /* ---------- 6. goals: the bar springs once, and only with motion ---------- */

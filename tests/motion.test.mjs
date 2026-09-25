@@ -157,6 +157,20 @@ __setMotionForTest(true);
   ok(arriving(box).length === 0, 'and lets go of them at rest');
 }
 
+/* ---------- not on top of a screen transition (review 2026-09-25) ---------- */
+{
+  const box = document.createElement('div');
+  box.innerHTML = rows(6);
+  document.getElementById('app').replaceChildren(box);
+  document.documentElement.setAttribute('data-nav-moving', '');
+  const n = staggerIn(box.querySelectorAll('.row'));
+  ok(n === 0 && arriving(box).length === 0 && ![...box.querySelectorAll('.row')].some((r) => r.getAttribute('style')),
+     `while <html data-nav-moving> is set, rows ride with the sliding screen — no cascade on top (${n})`);
+  document.documentElement.removeAttribute('data-nav-moving');
+  ok(staggerIn(box.querySelectorAll('.row')) === 6, '…and cascade again once it is gone');
+  await settle(800);
+}
+
 /* ---------- the logging path and a rising screen stay still ---------- */
 {
   const s = h(rows(6));

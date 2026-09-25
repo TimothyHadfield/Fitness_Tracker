@@ -44,8 +44,23 @@
 import { spring, springTransform, simulate, velocityTracker, rubberBand, reducedMotion } from './spring.js';
 import { canGoBack, currentNavIndex } from './ui.js';
 
+/* 🔄 NAVIGATION HAS ITS OWN SPRINGS SINCE THE REVIEW (2026-09-25). The shared
+ * presets rest by a 0.0005 threshold, and a whole screen riding `glide` was
+ * measured at rest ~660ms after the tap in WebKit — outside Rule 7's physics
+ * tier however quick its 90% was. These are critically damped, stiffer, and
+ * rest by NAV_PRECISION (under a pixel of a phone's width): 90% of the way in
+ * ~155ms, at rest by ~380ms, by spring.js's own rest rule (tests/nav-motion). */
+export const NAV_GLIDE = { k: 676, c: 52 };   // ζ=1, ω=26/s — a screen or a card travelling
+export const NAV_FADE = { k: 784, c: 56 };    // ζ=1, ω=28/s — a tab's content arriving in place
+export const NAV_PRECISION = 0.0025;          // of the whole movement: under 1px of a 393px push
 /** Which spring each movement rides. All inside Rule 7's physics tier. */
-export const NAV_SPRINGS = { push: 'glide', back: 'glide', tab: 'snap', rise: 'sheet', fall: 'sheet' };
+export const NAV_SPRINGS = { push: NAV_GLIDE, back: NAV_GLIDE, tab: NAV_FADE, rise: NAV_GLIDE, fall: NAV_GLIDE };
+/** The screen being left lets go of its content this fast, from the tap — before
+ *  the next screen has even been built — so the tap answers at once however
+ *  long the next screen takes, and two screens are never legible together. */
+export const EARLY_FADE_MS = 90;
+/** …and a screen about to be covered by a slide dims this far (of its full dim) meanwhile. */
+export const EARLY_DIM = 0.35;
 export const PARALLAX = 0.3;      // the covered screen slips 30% of the width
 export const DESK_SHIFT = 40;     // laptop: a short slide and a fade, not the whole width
 export const TAB_SCALE = 0.985;
@@ -98,14 +113,20 @@ export function frameFor(kind, p, { W = 0, H = 0, phone = true } = {}) {
   switch (kind) {
     case 'push':
       if (phone) { f.inX = W * (1 - p); f.outX = -PARALLAX * W * p; f.dim = p; }
-      else { f.inX = DESK_SHIFT * (1 - p); f.inOpacity = p; f.outX = -DESK_SHIFT * 0.3 * p; f.dim = 0.5 * p; }
+      // 🔄 Laptop (review, 2026-09-25): the arriving screen is OPAQUE from its
+      // first frame and only its CONTENT slides 40px and fades — the old screen
+      // is covered, never seen through it, and nothing else moves.
+      else { f.inX = DESK_SHIFT * (1 - p); f.inOpacity = p; }
       return f;
     case 'back': {
+      // Laptop: the same arrival, coming from the other side.
+      if (!phone) { f.inX = -DESK_SHIFT * (1 - p); f.inOpacity = p; return f; }
       // The exact reverse: back at p is push at 1−p with the roles swapped.
       const q = frameFor('push', 1 - p, { W, H, phone });
       return { ...f, inX: q.outX, outX: q.inX, outOpacity: q.inOpacity, dim: q.dim };
     }
     case 'tab':
+      // Applied to the arriving screen's CONTENT; its ground is opaque at once.
       f.inOpacity = p;
       f.inScale = TAB_SCALE + (1 - TAB_SCALE) * p;
       return f;
@@ -190,6 +211,78 @@ function dimLayer(rect) {
   d.setAttribute('aria-hidden', 'true');
   if (rect) { d.classList.add('nav-dim-fixed'); place(d, rect); }
   return d;
+}
+
+/** A screen's content — everything in it but the demo strip, which never moves. */
+const contentOf = (screen) => (screen && screen.children
+  ? [...screen.children].filter((c) => !(c.classList && c.classList.contains('demo-bar'))) : []);
+
+function easeIn() {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--ease-in').trim();
+    if (v) return v;
+  } catch (_) {}
+  return 'cubic-bezier(.4, 0, 1, 1)';
+}
+
+/**
+ * The leaving screen's content goes, from the tap. A compositor animation
+ * (WAAPI on opacity), not a spring: the next view may hold the main thread for
+ * a few hundred ms while it builds, and a spring cannot draw a frame then —
+ * this still can. Returns the animations, so the picture kept for the back
+ * swipe can be put back to full strength.
+ */
+function fadeOutEarly(nodes) {
+  const out = [];
+  const easing = easeIn();
+  for (const n of nodes) {
+    try {
+      const a = n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: EARLY_FADE_MS, easing, fill: 'forwards' });
+      if (a) out.push(a);
+    } catch (_) {}
+  }
+  return out;
+}
+
+/** Resolves once the frame after this one has been painted: what the router
+ *  waits for before building a heavy view, so the movement is on screen first. */
+function afterPaint() {
+  if (typeof requestAnimationFrame !== 'function') return Promise.resolve();
+  return new Promise((r) => {
+    let done = false;
+    const go = () => { if (!done) { done = true; r(); } };
+    requestAnimationFrame(() => setTimeout(go, 0));
+    setTimeout(go, 100);   // a frame that never comes (hidden tab) must not hold the router
+  });
+}
+
+/* ---- the demo strip stays where it is ----
+ * Every screen carries its own `.demo-bar`, so any movement of two screens
+ * showed two strips, sliding. While a movement or a drag is in flight ONE
+ * copy is pinned on <body> at the strip's resting place and the real ones are
+ * hidden (visibility, so no layout moves). */
+let pin = null;
+function pinBanner(from) {
+  if (pin) return;
+  const bar = from && from.querySelector && from.querySelector('.demo-bar');
+  if (!bar) return;
+  const r = bar.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const c = bar.cloneNode(true);
+  c.classList.add('nav-banner-pin');
+  c.setAttribute('aria-hidden', 'true');
+  c.removeAttribute('role');
+  c.inert = true;
+  place(c, r);
+  document.body.append(c);
+  document.body.classList.add('nav-pinned');
+  pin = c;
+}
+function unpinBanner() {
+  if (!pin) return;
+  pin.remove();
+  pin = null;
+  document.body.classList.remove('nav-pinned');
 }
 
 const SCROLLERS = '.pane-scroll, .pane-top, .segmented, .chips-scroll, .people-bar, .research-scroll';
@@ -282,6 +375,7 @@ function dropHint(h) {
   if (h.dim) h.dim.remove();
   if (h.screen && h.screen.isConnected) { clearStyle(h.screen); stripNav(h.screen); }
   document.body.classList.remove('nav-card');
+  unpinBanner();
 }
 
 /* Safari's own edge swipe navigates with its OWN slide; playing ours on top of
@@ -327,17 +421,44 @@ export function beginNav({
 }
 
 function movement(kind, ghost, app, h, ctx) {
-  const over = kind === 'back' || kind === 'fall';
-  const card = kind === 'rise' || kind === 'fall';
   const phone = isPhone();
+  /* 🔄 IN PLACE, NOT OVER (review, 2026-09-25). A tab switch, and a push or back
+   * on a laptop, used to fade the WHOLE new screen in over the old one, so for
+   * ~150ms both were legible through each other — and on a laptop the sidebar
+   * faded with it. Now the arriving screen is opaque from its first frame and
+   * covers the old one outright; only its CONTENT fades (and, on a laptop,
+   * slides 40px). The old content fades out from the tap (`fadeOutEarly`), so
+   * something answers at once even when the next view is slow to build. */
+  const inPlace = kind === 'tab' || (!phone && (kind === 'push' || kind === 'back'));
+  const over = !inPlace && (kind === 'back' || kind === 'fall');
+  const card = kind === 'rise' || kind === 'fall';
   ghost.classList.add('nav-ghost', over ? 'nav-over' : 'nav-under', `nav-g-${kind}`);
   const gScreens = [...ghost.children].filter((n) => n.classList && n.classList.contains('screen'));
   // A dragged screen arrives with the finger's offset on it; the ghost carries it from here.
   for (const s of gScreens) { clearStyle(s); stripNav(s); }
+  // One demo strip, pinned where it rests, while two screens move (phone, and cards).
+  if (!inPlace && (phone || card)) pinBanner(gScreens[0] || ghost);
+  document.documentElement.setAttribute('data-nav-moving', kind);
+  const early = inPlace ? fadeOutEarly(gScreens.flatMap(contentOf)) : [];
   const dims = { W: ghost.offsetWidth || window.innerWidth, H: ghost.offsetHeight || window.innerHeight, phone };
   const dimMax = readDim(card);
   let gDim = null;
-  if (kind === 'push' || kind === 'rise') { gDim = dimLayer(null); ghost.append(gDim); }
+  let content = [];
+  if (!inPlace && (kind === 'push' || kind === 'rise')) { gDim = dimLayer(null); ghost.append(gDim); }
+  /* The screen being covered starts to dim FROM THE TAP (a compositor
+   * animation, like `fadeOutEarly`), so a slide into a slow-to-build screen
+   * still answers at once; the spring's own dim then carries on from wherever
+   * this got to, never back down (`dimFloor`). Nothing moves sideways before
+   * the new screen exists — that would claim a place that is not there yet. */
+  let dimFloor = 0;
+  let earlyDim = null;
+  if (gDim && !h) {
+    try {
+      earlyDim = gDim.animate([{ opacity: 0 }, { opacity: EARLY_DIM * dimMax }],
+        { duration: EARLY_FADE_MS + 30, easing: 'ease-out', fill: 'forwards' }) || null;
+    } catch (_) { earlyDim = null; }
+  }
+  if (earlyDim) early.push(earlyDim);
   let under = h ? h.under : null;
   let uDim = h ? h.dim : null;
   let screen = null;
@@ -350,11 +471,19 @@ function movement(kind, ghost, app, h, ctx) {
 
   const paint = (x) => {
     const f = frameFor(kind, clamp01(x), dims);
+    if (inPlace) {
+      const tf = [
+        Math.abs(f.inX) > 0.05 ? `translate3d(${f.inX.toFixed(2)}px,0,0)` : '',
+        f.inScale < 0.9999 ? `scale(${f.inScale.toFixed(4)})` : '',
+      ].filter(Boolean).join(' ');
+      for (const c of content) setT(c, tf, f.inOpacity);
+      return;
+    }
     switch (kind) {
       case 'push':
         setT(screen, f.inX ? `translate3d(${f.inX.toFixed(2)}px,0,0)` : '', f.inOpacity);
         for (const s of gScreens) setT(s, f.outX ? `translate3d(${f.outX.toFixed(2)}px,0,0)` : '');
-        if (gDim) gDim.style.opacity = (f.dim * dimMax).toFixed(3);
+        if (gDim) gDim.style.opacity = (Math.max(dimFloor, f.dim) * dimMax).toFixed(3);
         break;
       case 'back':
         setT(ghost, f.outX ? `translate3d(${f.outX.toFixed(2)}px,0,0)` : '', f.outOpacity);
@@ -371,7 +500,7 @@ function movement(kind, ghost, app, h, ctx) {
         }
         setT(ghost, f.outScale < 0.9999 ? `scale(${f.outScale.toFixed(4)})` : '');
         ghost.style.borderRadius = radiusAll(f.outRadius);
-        if (gDim) gDim.style.opacity = (f.dim * dimMax).toFixed(3);
+        if (gDim) gDim.style.opacity = (Math.max(dimFloor, f.dim) * dimMax).toFixed(3);
         break;
       case 'fall':
         setT(ghost, f.inY > 0.05 ? `translate3d(0,${f.inY.toFixed(2)}px,0)` : '');
@@ -391,7 +520,18 @@ function movement(kind, ghost, app, h, ctx) {
     done = true;
     if (active === t) active = null;
     if (ctl && ctl.active) ctl.stop();
-    if (screen) { clearStyle(screen); stripNav(screen); }
+    if (screen) {
+      clearStyle(screen);
+      stripNav(screen);
+      // ⚠️ Taking `nav-moving` off hands `animation` back to `.screen`'s own
+      // arrival keyframe, which would then START — the screen blinked and rose
+      // 6px again ~70ms after it had landed (measured, review 2026-09-25).
+      screen.classList.add('landed');
+    }
+    for (const c of content) clearStyle(c);
+    for (const a of early) { try { a.cancel(); } catch (_) {} }
+    unpinBanner();
+    document.documentElement.removeAttribute('data-nav-moving');
     clearStyle(app);
     app.classList.remove('nav-card-app');
     const bar = app.querySelector(':scope > .navbar');
@@ -416,11 +556,20 @@ function movement(kind, ghost, app, h, ctx) {
       clearTimeout(backstop);
       if (!next) { cleanup(); return; }
       screen = next;
+      if (earlyDim) {
+        try { dimFloor = Math.min(EARLY_DIM, (parseFloat(getComputedStyle(gDim).opacity) || 0) / (dimMax || 1)); } catch (_) {}
+        try { earlyDim.cancel(); } catch (_) {}
+      }
       screen.classList.add('nav-moving', `nav-k-${kind}`);
+      if (inPlace) {
+        screen.classList.add('nav-in-place');
+        content = contentOf(screen);
+      }
       if (!over) screen.classList.add('nav-high');
       // The tab bar is not part of the stack: it stays put, above the move.
+      // (On a laptop that is the sidebar, and it never moves or fades.)
       const bar = app.querySelector(':scope > .navbar');
-      if (bar && (kind === 'push' || kind === 'tab')) bar.classList.add('nav-bar-top');
+      if (bar && (kind === 'push' || kind === 'tab' || inPlace)) bar.classList.add('nav-bar-top');
       if (kind === 'back') {
         if (under && under !== screen) dropUnder(under);
         under = screen;
@@ -436,11 +585,15 @@ function movement(kind, ghost, app, h, ctx) {
       }
       paint(p);
       ctl = spring({
-        from: p, to: 1, velocity: v, preset: NAV_SPRINGS[kind], precision: 0.0005,
+        from: p, to: 1, velocity: v, preset: NAV_SPRINGS[kind], precision: NAV_PRECISION,
         onUpdate: (x) => { p = x; paint(x); },
         onRest: () => cleanup(),
       });
     },
+    /** For the router to await before building the next view: the frame in
+     *  which the old content starts to go has been painted. Null when nothing
+     *  has started yet (a slide waits for its new screen). */
+    lead: inPlace || earlyDim ? afterPaint() : null,
     /** Land now: the final frame, then tidy. */
     finish() {
       if (done) return;
@@ -506,38 +659,71 @@ export function restoreScroll(screen, index) {
 
 const inds = new WeakMap();
 
-function drawInd(s, k) {
-  s.ind.style.transform = s.mode === 'desk'
-    ? `translate3d(0,${s.x.toFixed(2)}px,0) scaleY(${k.toFixed(3)})`
-    : `translate3d(${s.x.toFixed(2)}px,0,0) scaleX(${k.toFixed(3)})`;
-}
+const indTf = (mode, x, k) => (mode === 'desk'
+  ? `translate3d(0,${x.toFixed(2)}px,0) scaleY(${k.toFixed(3)})`
+  : `translate3d(${x.toFixed(2)}px,0,0) scaleX(${k.toFixed(3)})`);
+function drawInd(s, k) { s.ind.style.transform = indTf(s.mode, s.x, k); }
 /** It stretches along its path while it moves, in proportion to its speed. */
-function stretchOf(s) {
-  const v = s.ctl ? Math.abs(s.ctl.velocity) : 0;
-  return s.mode === 'desk' ? 1 + Math.min(0.12, v / 6000) : 1 + Math.min(0.6, v / 2500);
+const stretchAt = (mode, v) => (mode === 'desk'
+  ? 1 + Math.min(0.12, Math.abs(v) / 6000) : 1 + Math.min(0.6, Math.abs(v) / 2500));
+
+/* 🔄 THE SLIDE IS A SPRING PLAYED BY THE COMPOSITOR (review, 2026-09-25). It
+ * was a spring written per frame from JS, which starts only once the next view
+ * has been built — on Data or Profile that is ~300ms after the tap, all of it
+ * with the old tab still lit, and then the fill leapt. Now the same spring
+ * (`glide`, simulated by spring.js) is sampled into keyframes and handed to
+ * WAAPI at the TAP, so it runs while the next view builds. Retargeting reads
+ * where the running one is, position and speed, and carries on from there. */
+function slideInd(s, target) {
+  let from = s.x;
+  let v = 0;
+  if (s.anim && s.anim.playState === 'running' && s.path) {
+    const ct = Number(s.anim.currentTime) || 0;
+    const here = s.path.find((q) => q.t >= ct) || s.path[s.path.length - 1];
+    from = here.x;
+    v = here.v;
+  }
+  if (s.anim) { try { s.anim.cancel(); } catch (_) {} s.anim = null; }
+  s.x = target;
+  s.target = target;
+  drawInd(s, 1);          // where it rests, underneath the animation
+  if (Math.abs(from - target) < 0.5) return;
+  const sim = simulate({ from, to: target, velocity: v, preset: 'glide', ms: 800 });
+  let end = sim.findIndex((q) => Math.abs(q.x - target) < 0.25 && Math.abs(q.v) < 2.5);
+  if (end < 1) end = sim.length - 1;
+  const path = sim.slice(0, end + 1);
+  const dur = path[path.length - 1].t;
+  const frames = path.filter((_, i) => i % 4 === 0 || i === path.length - 1)
+    .map((q) => ({ offset: q.t / dur, transform: indTf(s.mode, q.x, stretchAt(s.mode, q.v)) }));
+  try {
+    s.anim = s.ind.animate(frames, { duration: dur, easing: 'linear' });
+    s.path = path;
+  } catch (_) { s.anim = null; }
 }
 
 /**
  * Put the selection under the lit tab — sliding there from wherever it was if
  * this is the same bar as last time, placed outright if it is a new one.
  * On a phone the big Record button carries its own filled look, so the line
- * steps aside rather than sitting under the hub.
+ * steps aside rather than sitting under the hub. `link` names the tab it is
+ * going to before the bar has been re-lit (the tap itself).
  */
-export function syncTabIndicator(nav) {
+export function syncTabIndicator(nav, link = null) {
   if (!nav || !inBrowser() || !nav.isConnected) return;
   let s = inds.get(nav);
   const fresh = !s;
   if (!s) {
+    if (link) return;     // a bar never drawn is placed by the render, not the tap
     const ind = document.createElement('span');
     ind.className = 'nav-ind';
     ind.setAttribute('aria-hidden', 'true');
     nav.prepend(ind);
     nav.classList.add('has-ind');
-    s = { ind, x: 0, ctl: null, mode: null, shown: false };
+    s = { ind, x: 0, anim: null, path: null, target: null, mode: null, shown: false };
     inds.set(nav, s);
   }
   const mode = isPhone() ? 'phone' : 'desk';
-  const on = nav.querySelector(':scope > a[aria-current="page"]');
+  const on = link || nav.querySelector(':scope > a[aria-current="page"]');
   const show = Boolean(on) && !(mode === 'phone' && on.classList.contains('nav-primary'));
   s.ind.style.opacity = show ? '' : '0';
   if (!on) { s.shown = false; return; }
@@ -557,16 +743,23 @@ export function syncTabIndicator(nav) {
   s.mode = mode;
   s.shown = show;
   if (jump) {
-    if (s.ctl && s.ctl.active) s.ctl.stop();
+    if (s.anim) { try { s.anim.cancel(); } catch (_) {} s.anim = null; }
     s.x = target;
+    s.target = target;
     drawInd(s, 1);
     return;
   }
-  if (s.ctl && s.ctl.active) { s.ctl.set(target); return; }
-  s.ctl = spring({
-    from: s.x, to: target, preset: 'glide', precision: 0.25,
-    onUpdate: (x) => { s.x = x; drawInd(s, stretchOf(s)); },
-  });
+  // Already on its way there (the tap started it): leave it be.
+  if (s.target === target && Math.abs(s.x - target) < 0.5) return;
+  slideInd(s, target);
+}
+
+/** A tab was tapped: the selection starts for it now, not after the render. */
+function onNavClick(e) {
+  const a = e.target && e.target.closest && e.target.closest('#app > .navbar > a');
+  if (!a || !canMove() || e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey) return;
+  if (a.getAttribute('aria-current') === 'page') return;
+  syncTabIndicator(a.parentElement, a);
 }
 
 const PRESS_SCALE = 0.86;
@@ -679,6 +872,7 @@ function startEdge(dx) {
   const app = s.parentElement;
   const snap = snaps.get(currentNavIndex() - 1);
   const r = s.getBoundingClientRect();
+  pinBanner(s);
   const under = snap ? showSnap(snap, app, s) : blankUnder(r);
   const dim = dimLayer(r);
   dim.classList.add('nav-dim-swipe');
@@ -710,7 +904,7 @@ function endEdge(tr, vx) {
     tr.btn.click();
     return;
   }
-  springHome(tr, vx / W, (x) => paintEdge(tr, x * W), tr.off / W, 'glide');
+  springHome(tr, vx / W, (x) => paintEdge(tr, x * W), tr.off / W, NAV_GLIDE);
 }
 
 /* ---- Record's card ---- */
@@ -728,6 +922,7 @@ function startCard(dy) {
   const app = s.parentElement;
   const snap = homeSnap(app);
   const r = app.getBoundingClientRect();
+  pinBanner(s);
   const under = snap ? showSnap({ ...snap, withNav: true }, app, s) : blankUnder(r);
   const dim = dimLayer(r);
   dim.classList.add('nav-dim-swipe');
@@ -764,7 +959,7 @@ function endCard(tr, vy) {
     tr.btn.click();
     return;
   }
-  springHome(tr, vy / H, (x) => paintCard(tr, x * H), tr.off / H, 'sheet');
+  springHome(tr, vy / H, (x) => paintCard(tr, x * H), tr.off / H, NAV_GLIDE);
 }
 
 /* ---- letting go without completing: back where it started, on a spring ---- */
@@ -781,11 +976,12 @@ function springHome(tr, v, draw, from, preset) {
     clearStyle(tr.screen);
     stripNav(tr.screen);
     document.body.classList.remove('nav-card');
+    unpinBanner();
   };
   const holder = { kind: 'cancel', finish() { if (ctl && ctl.active) ctl.stop(); tidy(); } };
   active = holder;
   ctl = spring({
-    from, to: 0, velocity: v, preset, precision: 0.0005,
+    from, to: 0, velocity: v, preset, precision: NAV_PRECISION,
     onUpdate: (x) => draw(x),
     onRest: tidy,
   });
@@ -812,6 +1008,7 @@ export function initGestures(o = {}) {
   document.addEventListener('touchend', onEnd, { passive: true });
   document.addEventListener('touchcancel', onEnd, { passive: true });
   document.addEventListener('pointerdown', onPress, { passive: true });
+  document.addEventListener('click', onNavClick);
   window.addEventListener('resize', () => {
     const nav = document.querySelector('#app > .navbar');
     const s = nav && inds.get(nav);

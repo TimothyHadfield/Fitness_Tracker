@@ -207,6 +207,33 @@ function h(tag, cls, ...kids) {
   return n;
 }
 
+/* 🆕 THE FULL-SCREEN VIEWER lives in js/ui.js (Motion 2 · Surfaces,
+ * 2026-09-25), which this module cannot import — it imports nothing, so pure
+ * callers can use it. ui.js hands the viewer in here instead. */
+let opener = null;
+/** ui.js registers `openPhotoViewer({ src, from, alt })` through this. */
+export function setPhotoOpener(fn) { opener = typeof fn === 'function' ? fn : null; }
+
+/**
+ * A loaded photo becomes a button that opens the viewer — but only where it is
+ * not already inside a link or a button: a feed card's photo is part of the
+ * card's link and still opens the workout (views-workouts.js attachCardPhoto).
+ */
+function makeOpenable(box, img, src, alt) {
+  if (!opener || !box.isConnected || (box.closest && box.closest('a, button'))) return;
+  box.classList.add('is-openable');
+  box.setAttribute('role', 'button');
+  box.setAttribute('aria-label', 'Open photo');
+  box.tabIndex = 0;
+  // `byKey`: only a keyboard opening gets focus handed back to the box on
+  // close — after a tap that would paint a focus ring on the photo.
+  const open = (byKey) => { if (opener) opener({ src, from: img, alt, byKey }); };
+  box.addEventListener('click', () => open(false));
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(true); }
+  });
+}
+
 /* One shared observer for every photo box on the page. */
 let observer = null;
 const starters = new WeakMap();
@@ -263,7 +290,7 @@ export function photoBox({ size, load, alt = 'Workout photo' }) {
         // withdrawn) goes away rather than sitting there empty. It is the one
         // case where something moves, and only on a failure.
         if (!safe) { box.hidden = true; return; }
-        img.onload = () => box.classList.add('is-loaded');
+        img.onload = () => { box.classList.add('is-loaded'); makeOpenable(box, img, safe, alt); };
         img.src = safe;
       })
       .catch(() => { box.hidden = true; });

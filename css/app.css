@@ -6649,9 +6649,8 @@ a.pick-row { text-decoration: none; }
    8px rings overlapped into a chain. Rule 5 says a marker means measured, so
    they are NOT hidden — they get smaller when the chart is dense. The last point
    keeps its size: it is "now". Laptop widths have room and are untouched. */
-@media (max-width: 859px) {
-  svg.chart:has(circle.pt:nth-of-type(30)) .pt:not(.pt-last) { r: 2.2px; stroke-width: 1.4; }
-}
+/* 🔄 2026-09-25: superseded — thinMarkers() now hides a marker within 12px of a
+   drawn one, so the markers left are all full size and never touch (Data section). */
 
 /* ── Nested lists line up with their headings (laptop) ────────────────────
    A `.list` bleeds out by the gutter on a phone so its hairlines reach the
@@ -6720,6 +6719,15 @@ a.pick-row { text-decoration: none; }
   .me-body > .me-slot > .me-bests { grid-column: 1; }
   .me-body > .me-bests ~ .me-section,
   .me-body > .me-cal, .me-body > .me-slot > .me-cal { grid-column: 2; }
+  /* 🆕 2026-09-25: the calendar column scrolls on its own. Months lands on the
+     current month (Tim, 09-12); with the whole pane as the scroller that
+     landing took the left column 6,000px out of view and left ~600px empty
+     beside one month. Now only this column moves (views-data.js scrollerOf). */
+  .me-body > .me-cal .me-cal-host, .me-body > .me-slot > .me-cal .me-cal-host {
+    max-height: calc(100dvh - 140px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
 
 /* ── Calendar (laptop): use the width ─────────────────────────────────────
@@ -6763,6 +6771,25 @@ a.pick-row { text-decoration: none; }
    you" on a screen that already scrolls three phone-heights. */
 .goal-screen .section-head { margin-top: 6px; }
 
+/* ── Best lifts: a piece of the sub-line never crosses into the numbers ────
+   Each piece is kept whole (`.me-best-bit`, nowrap), but a piece wider than the
+   whole column — "Estimated from Triceps Pushdown, Overhead Press", "Hammer Curl
+   35 lbs/side × 12" — then ran up to 150px past it, under the figures (measured
+   at 393px). As an inline-block capped at the column, a piece still moves to
+   the next line whole when it fits there, and breaks inside itself only when
+   no line could hold it. */
+.me-best-bit { display: inline-block; max-width: 100%; white-space: normal; }
+.me-best > .row-main { min-width: 0; }
+
+/* ── Superset line inside a workout (laptop) ──────────────────────────────
+   `.builder-group > .list` bleeds out by the phone gutter so its rows' padding
+   clears the group's line. On a laptop `.list > *` drops that padding, so the
+   2px line at x=250 ran through names starting at x=241 (measured, 1440). The
+   bleed goes with the padding it existed for. */
+@media (min-width: 860px) {
+  .builder-group > .list { margin-inline: 0; }
+}
+
 /* === end Motion 2 · Layout === */
 
 /* === Motion 2 · Data === */
@@ -6791,8 +6818,10 @@ a.pick-row { text-decoration: none; }
    means measured). The ones kept full size — the last point, every new best,
    any with 12px of room — keep the full ring even where the Layout section
    shrinks a dense chart's markers. Same small size as that rule. */
-.chart .pt.pt-thin { r: 2.2px; stroke-width: 1.4; }
-svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; stroke-width: 2.5; }
+/* 🔄 2026-09-25: small rings between full ones still overlapped in clusters, so
+   a crowded marker is now hidden (it stays in the markup; the crosshair still
+   reaches it). One size for every marker left. */
+.chart .pt.pt-hid { display: none; }
 
 /* ---- the calendar ---- */
 /* Vertical drags stay the browser's (the months scroll); a sideways one is the
@@ -6835,6 +6864,11 @@ svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; st
 
 /* ── Finish screen: the counted numbers never change width ── */
 .finish-n { font-variant-numeric: tabular-nums; }
+/* 🔄 2026-09-25 (review): the finish screen is there from its first frame. The
+   shell's `screen-in` fade replaced the runner with a black frame and then
+   0.51 at 143ms (measured, WebKit 393px); what moves is its contents — the
+   check pops, the numbers count, the rows follow (playFinish). */
+.screen:has(.finish-hero) { animation: none; }
 
 /* ── The runner going into its bar, and coming back out of it ──
    `transform-origin: 0 0` is what js/photo.js `rectFlight()` computes for. The
@@ -6967,6 +7001,9 @@ svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; st
 /* The screen in motion, the parked one and a kept picture each own their
    ground, so two screens never show through each other. */
 .screen.nav-moving{animation:none}
+/* …and stays without it once landed: removing `nav-moving` would otherwise
+   start `.screen`'s arrival keyframe after the spring had already brought it. */
+.screen.landed { animation: none; }
 .screen.nav-moving { background: var(--ground); will-change: transform, opacity; }
 .screen.nav-still { animation: none; }
 .screen.nav-high { z-index: 45; }
@@ -6996,6 +7033,21 @@ svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; st
 /* The tab bar is not part of the stack: it stays put, above what moves. */
 .navbar.nav-bar-top { z-index: 46; }
 
+/* 🔄 Review, 2026-09-25. A tab switch (and a laptop push/back) arrives IN
+   PLACE: the new screen's ground covers the old one from its first frame and
+   only its content fades, so two screens are never legible together. */
+.screen.nav-in-place { box-shadow: none; }
+
+/* One demo strip while screens move: a copy pinned at the strip's resting
+   place, the real ones hidden (visibility — nothing below them shifts). The
+   copy's ground is the page's, as the real strip's is. */
+.nav-banner-pin {
+  position: fixed; z-index: 60; margin: 0; box-sizing: border-box;
+  pointer-events: none;
+  background: linear-gradient(var(--accent-dim), var(--accent-dim)), var(--ground);
+}
+body.nav-pinned .demo-bar:not(.nav-banner-pin) { visibility: hidden; }
+
 /* A card is up: behind the screen that stepped back is black, like iOS. */
 body.nav-card { background: #000; }
 #app.nav-card-app { background: var(--ground); overflow: hidden; transform-origin: 50% 50%; }
@@ -7023,3 +7075,81 @@ body.nav-card { background: #000; }
   .screen.nav-moving, .nav-ghost, .nav-snap, .nav-ind { transform: none !important; }
 }
 /* === end Motion 2 · Navigation === */
+
+/* === Motion 2 · Surfaces === */
+/* docs/motion2-plan.md package C, 2026-09-25. Tim: "Put professional level
+   annimation and physics into this cite … Impress me." The segmented pill,
+   sheets, the photo viewer, toasts, the ± press and the ? box ride springs in
+   js/ui.js (SURFACE_SPRINGS); this section only owes them layers, origins and
+   grounds, and switches off the keyframes they replace. `.s2-live` = a spring
+   owns this element. ⚠️ No transition on a transform here: it would smear
+   every frame the spring writes. */
+.s2-live { animation: none !important; }
+
+/* ── The segmented pill: a spring moves it, a finger can drag it ── */
+.seg-ind { transition: none; }
+/* The selected segment is the thumb: a sideways drag on it is ours, a
+   vertical one still scrolls the page. */
+.segmented.has-ind > .seg[aria-selected="true"] { touch-action: pan-y; }
+.segmented.seg-dragging { -webkit-user-select: none; user-select: none; }
+/* Months / Years: two equal halves (measured 187 / 172px at 393 — the pill
+   changed width as it moved). Same on Profile and the Calendar screen. */
+.cal-modes .segmented > .seg { flex: 1 1 0; }
+
+/* ── Sheets: the dark behind thins as the sheet is dragged away ── */
+.sheet-backdrop.s2-live, .sheet-backdrop-x.s2-live { background: rgb(0 0 0 / calc(.55 * var(--s2-k, 1))); }
+.sheet.s2-phone, .sheet-x.s2-phone-x { position: relative; }
+/* Pulled up past its rest (rubber band) the sheet must not lift off the
+   bottom edge: its ground carries on below it. */
+.sheet.s2-phone::after, .sheet-x.s2-phone-x::after {
+  content: ""; position: absolute; left: 0; right: 0; top: calc(100% - 1px); height: 64px;
+  background: var(--ground); pointer-events: none;
+}
+.sheet-grab {
+  position: absolute; top: 5px; left: 50%; z-index: 1;
+  width: 36px; height: 5px; margin-left: -18px; border-radius: 3px;
+  background: var(--ink-faint); opacity: .55; pointer-events: none;
+}
+.s2-dragging { -webkit-user-select: none; user-select: none; }
+
+/* ── Toasts: centred without a transform, so the spring owns it whole ── */
+.toast, .toast-x {
+  left: 14px; right: 14px; margin-inline: auto; width: max-content;
+  transform: none; animation: none; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+
+/* ── The runner's ±: the spring is the press (.94); no CSS scale under it ── */
+.step-btn { transition: background .1s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .step-btn:active { transform: none; }
+}
+
+/* ── The ? box grows out of its dot ── */
+.help-pop { transform-origin: var(--arrow-x, 50%) 0; }
+.help-pop.is-above { transform-origin: var(--arrow-x, 50%) 100%; }
+
+/* ── The workout photo, full screen ── */
+.pview { position: fixed; inset: 0; z-index: 60; overflow: hidden; touch-action: none; outline: none; }
+.pview.is-closing { pointer-events: none; }
+.pview-back { position: absolute; inset: 0; background: #000; }
+.pview-img {
+  position: absolute; display: block; max-width: none; transform-origin: 0 0;
+  -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
+}
+.pview-close {
+  position: absolute; z-index: 1; top: calc(env(safe-area-inset-top) + 8px); right: 10px;
+  background: var(--raised); color: var(--ink);
+}
+.card-photo.is-openable { cursor: zoom-in; }
+/* While the photo is out of its thumbnail, the thumbnail is empty. */
+.card-photo.s2-src-hidden .card-photo-img { visibility: hidden; }
+
+/* Reduced motion: the JS starts none of these springs; this is the backstop
+   for a setting changed while something was moving. The grab handle goes —
+   nothing can be dragged. */
+@media (prefers-reduced-motion: reduce) {
+  .sheet-grab { display: none; }
+  .sheet.s2-live, .toast.s2-live, .help-pop.s2-live { transform: none !important; }
+}
+/* === end Motion 2 · Surfaces === */

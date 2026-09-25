@@ -5,6 +5,10 @@ import { plateLoad, plateLabel, inventoryFor } from './plates.js';
 import { imageFor } from './exercise-images.js';
 import { safeAvatar } from './social.js';
 import * as units from './units.js';
+// Motion 2 · Surfaces (2026-09-25): the springs the surfaces below ride, and
+// the box-to-box flight the photo viewer opens out of its thumbnail on.
+import { spring, springTransform, velocityTracker, rubberBand } from './spring.js';
+import { rectFlight, setPhotoOpener } from './photo.js';
 
 /* ------------------------------------------------------------------ *
  * DOM
@@ -446,6 +450,14 @@ const canAnimate = () => typeof document !== 'undefined'
 export function leave(node, ms = LEAVE_MS) {
   if (!node || !node.isConnected || node.dataset.leaving) return;
   if (!canAnimate()) { node.remove(); return; }
+  retire(node);
+  setTimeout(() => node.remove(), ms);
+}
+
+/** leave()'s first half: stop being addressable and touchable, stay painted.
+ *  The spring-driven surfaces (sheets, toasts) call this and remove the node
+ *  themselves when their spring lands. */
+function retire(node) {
   node.dataset.leaving = '1';
   node.className = String(node.className).split(/\s+/).filter(Boolean)
     .map((c) => `${c}-x`).join(' ');
@@ -453,7 +465,136 @@ export function leave(node, ms = LEAVE_MS) {
   // being touchable in the frames it is still painted for.
   node.setAttribute('aria-hidden', 'true');
   node.style.pointerEvents = 'none';
-  setTimeout(() => node.remove(), ms);
+}
+
+/* ------------------------------------------------------------------ *
+ * MOTION 2 · SURFACES — docs/motion2-plan.md package C, 2026-09-25.
+ *
+ * Tim: *"Put professional level annimation and physics into this cite …
+ * Impress me."* The surfaces are the things that sit ON a screen rather than
+ * being one: the segmented pill, sheets, the photo viewer, toasts, the ± press
+ * and the ? box. Each rides a named spring below (all js/spring.js presets, so
+ * all inside Rule 7's physics tier, tests/spring.test.mjs), and each is pinned
+ * in tests/surfaces-motion.test.mjs.
+ *
+ * 🛑 WHERE NOTHING CAN ANIMATE (jsdom, reduced motion) NOTHING HERE IS BUILT:
+ * no grab handle, no listener effect, no inline style. The surfaces behave
+ * exactly as they did before this pass. `canAnimate()` above is the switch.
+ * 🛑 THE LOGGING PATH gets a press and nothing else (the ± buttons).
+ * ------------------------------------------------------------------ */
+
+/** Which spring each surface rides. */
+export const SURFACE_SPRINGS = {
+  pill: 'glide',     // the segmented pill travelling or let go of
+  sheet: 'sheet',    // a phone sheet rising, dropping, or snapping back
+  dialog: 'snap',    // a laptop dialog scaling in
+  toast: 'sheet',    // a toast arriving
+  press: 'snap',     // a ± button going down
+  release: 'bounce', // …and coming back up (overshoot ≈ .005 — felt, not seen)
+  pop: 'snap',       // the ? box growing out of its dot
+  photo: 'glide',    // the photo flying out of its thumbnail and back
+};
+
+const LAPTOP_MIN = 860; // the stylesheet's phone/laptop line
+const isLaptop = () => typeof window !== 'undefined' && (window.innerWidth || 0) >= LAPTOP_MIN;
+const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+/** Drop an emptied style attribute, so a node at rest carries none at all. */
+function tidyStyle(node) {
+  if (node && node.getAttribute && node.getAttribute('style') === '') node.removeAttribute('style');
+}
+
+/**
+ * Where a dragged segmented pill lands: the segment nearest to where its
+ * centre is heading. `velocity` (px/s) carries a flick on by ~0.12s of travel.
+ */
+export function pickSegment({ centers = [], x = 0, velocity = 0 } = {}) {
+  if (!centers.length) return -1;
+  const at = x + velocity * 0.12;
+  let best = 0;
+  for (let i = 1; i < centers.length; i++) {
+    if (Math.abs(centers[i] - at) < Math.abs(centers[best] - at)) best = i;
+  }
+  return best;
+}
+
+/** The pill stretches along its path in proportion to its speed, ≤15%. */
+export function pillStretch(v) {
+  return 1 + Math.min(0.15, Math.abs(v || 0) / 6000);
+}
+
+/**
+ * A sheet let go of: close it, or spring it back? px and px/s, down positive.
+ * A flick down closes from anywhere; a flick up keeps it; otherwise it closes
+ * past ~40% of its height, and never needs more than 240px on a tall one.
+ */
+export function sheetShouldClose({ offset = 0, velocity = 0, height = 1 } = {}) {
+  if (offset <= 0) return false;
+  if (velocity < -300) return false;
+  if (velocity > 700) return true;
+  return offset + velocity * 0.12 > Math.min(height * 0.4, 240);
+}
+
+/** A toast let go of: 'left' | 'right' | 'down', or null to spring back. */
+export function toastFling({ dx = 0, dy = 0, vx = 0, vy = 0, width = 360 } = {}) {
+  if (Math.abs(vx) > 500 && Math.abs(vx) > Math.abs(vy)) return vx > 0 ? 'right' : 'left';
+  if (Math.abs(dx) > width * 0.35 && Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'right' : 'left';
+  if (vy > 450 || dy > 36) return 'down';
+  return null;
+}
+
+const rectOf = (r) => ({
+  left: r.left != null ? r.left : r.x, top: r.top != null ? r.top : r.y,
+  width: r.width != null ? r.width : r.w, height: r.height != null ? r.height : r.h,
+});
+
+/**
+ * The whole photo as `object-fit: cover` draws it inside a thumbnail box `T` —
+ * bigger than the box on the cropped axis, centred on it. `F` is the photo's
+ * own full-size box (only its shape is used).
+ */
+export function coverRect(T, F) {
+  const t = rectOf(T); const f = rectOf(F);
+  const c = Math.max(t.width / f.width, t.height / f.height);
+  const w = f.width * c; const h = f.height * c;
+  return { left: t.left + t.width / 2 - w / 2, top: t.top + t.height / 2 - h / 2, width: w, height: h };
+}
+
+/**
+ * The start of a photo's flight out of its thumbnail: the transform (origin
+ * 0 0) that puts the full-size photo `F` over the cover-drawn thumbnail `T`
+ * (js/photo.js rectFlight), plus the clip, in the photo's own pixels, that
+ * crops it to exactly the box the thumbnail showed.
+ */
+export function photoFlight(F, T) {
+  const f = rectOf(F); const t = rectOf(T);
+  const fl = rectFlight(f, coverRect(t, f));
+  const cut = (n) => (n < 0.01 ? 0 : n);
+  return {
+    ...fl,
+    clipX: cut((f.width - t.width / fl.scale) / 2),
+    clipY: cut((f.height - t.height / fl.scale) / 2),
+  };
+}
+
+/** Zoom a `{x, y, s}` photo (origin 0 0, laid out at `F`) to scale `s2`,
+ *  keeping the photo point under `pt` (page px) where it is. */
+export function zoomAbout(st, pt, s2, F) {
+  const f = rectOf(F);
+  const lx = (pt.x - f.left - st.x) / st.s;
+  const ly = (pt.y - f.top - st.y) / st.s;
+  return { x: pt.x - f.left - lx * s2, y: pt.y - f.top - ly * s2, s: s2 };
+}
+
+/** Keep a zoomed photo covering the screen where it is bigger than it, and
+ *  centred where it is smaller. */
+export function clampPan(st, F, vw, vh) {
+  const f = rectOf(F);
+  const W = f.width * st.s; const H = f.height * st.s;
+  const axis = (pos, lo, size, view) => (size <= view
+    ? (view - size) / 2 - lo
+    : Math.min(-lo, Math.max(view - size - lo, pos)));
+  return { ...st, x: axis(st.x, f.left, W, vw), y: axis(st.y, f.top, H, vh) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -626,11 +767,72 @@ export function toast(message) {
   // ⚠️ The one already on screen LEAVES rather than vanishing under the new
   // one — two toasts in a row is a queue, and a queue that teleports reads as
   // a flicker.
-  document.querySelectorAll('.toast').forEach((t) => leave(t, 200));
+  document.querySelectorAll('.toast').forEach((t) => dismissToast(t));
   const t = el('div', { class: 'toast', role: 'status', text: message });
   document.body.append(t);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => leave(t, 200), 2400);
+  if (!canAnimate()) { toastTimer = setTimeout(() => leave(t, 200), 2400); return; }
+
+  /* 🆕 MOTION 2 · SURFACES: it springs up from just above the tab bar, and a
+   * flick sends it away — sideways or down — at the speed it was thrown.
+   * While a finger is on it, it stays. */
+  t.classList.add('s2-live');
+  springTransform(t, { y: 0, opacity: 1, scale: 1 }, SURFACE_SPRINGS.toast,
+    { from: { y: 28, opacity: 0, scale: 0.96 } });
+  const arm = () => { clearTimeout(toastTimer); toastTimer = setTimeout(() => dismissToast(t), 2400); };
+  arm();
+
+  /* The finger moves it directly (a spring would lag it); the springs take
+   * over again from exactly where it was let go, with the finger's speed. */
+  let tr = null;
+  t.addEventListener('pointerdown', (e) => {
+    if (t.dataset.leaving) return;
+    clearTimeout(toastTimer);
+    const cur = springTransform(t, {}).stop().value;
+    tr = { id: e.pointerId, x0: e.clientX - cur.x, y0: e.clientY - cur.y, vt: velocityTracker(), x: cur.x, y: cur.y, o: cur.opacity, dx: cur.x, dy: cur.y };
+    tr.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+    try { t.setPointerCapture(e.pointerId); } catch (_) { /* synthetic events */ }
+  });
+  t.addEventListener('pointermove', (e) => {
+    if (!tr || e.pointerId !== tr.id) return;
+    tr.dx = e.clientX - tr.x0;
+    tr.dy = e.clientY - tr.y0;
+    tr.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+    tr.x = tr.dx;
+    tr.y = tr.dy > 0 ? tr.dy : rubberBand(tr.dy, 16);
+    tr.o = 1 - Math.min(0.6, Math.abs(tr.dx) / (window.innerWidth || 360));
+    t.style.transform = `translate3d(${tr.x.toFixed(2)}px, ${tr.y.toFixed(2)}px, 0)`;
+    t.style.opacity = tr.o.toFixed(3);
+  });
+  const up = (e) => {
+    if (!tr || e.pointerId !== tr.id) return;
+    const { vx, vy } = tr.vt.get();
+    const dir = toastFling({ dx: tr.dx, dy: tr.dy, vx, vy, width: window.innerWidth || 360 });
+    const from = { x: tr.x, y: tr.y, opacity: tr.o, scale: 1 };
+    tr = null;
+    if (dir) { dismissToast(t, dir, { x: vx, y: vy }, from); return; }
+    springTransform(t, { x: 0, y: 0, opacity: 1 }, SURFACE_SPRINGS.toast, { from, velocity: { x: vx, y: vy } });
+    arm();
+  };
+  t.addEventListener('pointerup', up);
+  t.addEventListener('pointercancel', up);
+}
+
+/** A toast goes: thrown (`dir`) or just dropping away when its time is up. */
+function dismissToast(t, dir = null, v = {}, from = null) {
+  if (!t || !t.isConnected || t.dataset.leaving) return;
+  if (!canAnimate()) { leave(t, 200); return; }
+  retire(t);
+  t.classList.add('s2-live');
+  const W = window.innerWidth || 360;
+  const to = dir === 'left' ? { x: -W, opacity: 0 }
+    : dir === 'right' ? { x: W, opacity: 0 }
+      : dir === 'down' ? { y: 90, opacity: 0 }
+        : { y: 14, opacity: 0, scale: 0.97 };
+  const ctl = springTransform(t, to, 'snap', { velocity: { x: v.x || 0, y: v.y || 0 }, ...(from ? { from } : {}) });
+  ctl.done.then(() => t.remove());
+  // Backstop: a spring whose frames never come (a hidden tab) still ends it.
+  setTimeout(() => t.remove(), 900);
 }
 
 /* ------------------------------------------------------------------ *
@@ -665,21 +867,62 @@ export function wireSegmented(root) {
     bar.prepend(ind);
     bar.classList.add('has-ind');
 
-    const place = () => {
-      const on = segs.find((s) => s.getAttribute('aria-selected') === 'true');
+    /* 🆕 MOTION 2 · SURFACES (2026-09-25): the pill is a spring now, not a CSS
+     * transition — it keeps its speed if a second tap turns it round, it
+     * stretches a little along its path while it travels (pillStretch), and it
+     * can be DRAGGED: put a finger on the selected segment and slide, and it
+     * follows the finger and lands on the nearest segment when let go (a
+     * flick carries it on). Position and width are two springs. */
+    const st = { x: 0, y: 0, w: 0, h: 0, shown: false, xc: null, wc: null, drag: null, fling: 0 };
+    const draw = () => {
+      const v = st.xc && st.xc.active ? st.xc.velocity : 0;
+      const k = st.drag ? pillStretch(st.drag.v) : pillStretch(v);
+      ind.style.width = `${Math.round(st.w * 100) / 100}px`;
+      ind.style.height = `${st.h}px`;
+      ind.style.transform = `translate(${Math.round(st.x * 100) / 100}px, ${st.y}px)`
+        + (k > 1.0005 ? ` scaleX(${k.toFixed(4)})` : '');
+    };
+    const stopSprings = () => {
+      if (st.xc && st.xc.active) st.xc.stop();
+      if (st.wc && st.wc.active) st.wc.stop();
+    };
+    const selected = () => segs.find((s) => s.getAttribute('aria-selected') === 'true');
+
+    const place = (how = 'auto') => {
+      const on = selected();
       // Nothing selected is a real state on some of these — the pill hides
       // rather than parking on the first segment and lying about it.
       ind.style.opacity = on ? '1' : '0';
-      if (!on) return;
-      ind.style.width = `${on.offsetWidth}px`;
-      ind.style.height = `${on.offsetHeight}px`;
+      if (!on) { st.shown = false; return; }
+      if (st.drag && st.drag.started) return;   // the finger has it
       /* ⚠️ `offsetLeft`, NOT a bounding-rect difference, and since 2026-09-08
        * that is load-bearing rather than incidental: this row can SCROLL now
        * that Data has six segments, and `offsetLeft` is measured against the
        * bar itself, so the pill stays on its segment as the row moves. A
        * viewport-relative measurement would have drifted the moment anybody
        * flicked it sideways. */
-      ind.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+      const tx = on.offsetLeft; const tw = on.offsetWidth;
+      st.y = on.offsetTop; st.h = on.offsetHeight;
+      const travel = how !== 'jump' && st.shown && canAnimate()
+        && (Math.abs(tx - st.x) > 0.5 || Math.abs(tw - st.w) > 0.5);
+      st.shown = true;
+      if (!travel) {
+        stopSprings();
+        st.x = tx; st.w = tw; st.fling = 0;
+        draw();
+      } else {
+        const v = st.fling; st.fling = 0;
+        if (st.xc && st.xc.active) st.xc.set(tx, v || undefined);
+        else {
+          st.xc = spring({ from: st.x, to: tx, velocity: v, preset: SURFACE_SPRINGS.pill, precision: 0.25,
+            onUpdate: (x) => { st.x = x; draw(); } });
+        }
+        if (st.wc && st.wc.active) st.wc.set(tw);
+        else {
+          st.wc = spring({ from: st.w, to: tw, preset: SURFACE_SPRINGS.pill, precision: 0.25,
+            onUpdate: (w) => { st.w = w; draw(); } });
+        }
+      }
 
       /* 🚨 AND THE SELECTED SEGMENT IS SCROLLED INTO VIEW. Data's sixth segment
        * is off-screen at 360px, so opening the app on Calendar would otherwise
@@ -701,12 +944,9 @@ export function wireSegmented(root) {
     // ⚠️ The FIRST placement must not slide. Without this every screen would
     // open with the pill flying in from the left edge, which is decoration
     // rather than a relationship — the rule the whole motion section is under.
-    ind.classList.add('no-anim');
-    place();
-    requestAnimationFrame(() => {
-      place();
-      requestAnimationFrame(() => ind.classList.remove('no-anim'));
-    });
+    place('jump');
+    const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
+    if (raf) raf(() => place('jump'));
 
     // ⚠️ OFF `window`, NOT THE BARE GLOBAL. In a browser they are the same
     // object; under jsdom the DOM globals are assigned onto globalThis one by
@@ -715,11 +955,93 @@ export function wireSegmented(root) {
     // moved, and every assertion about it passed except the one that watched.
     const MO = (typeof window !== 'undefined' && window.MutationObserver) || null;
     if (MO) {
-      new MO(place).observe(bar, {
+      new MO(() => place('auto')).observe(bar, {
         subtree: true, attributes: true, attributeFilter: ['aria-selected'],
       });
     }
+    /* 🆕 A bar wired before it was laid out (built off-screen, then inserted
+     * — Profile's calendar is painted a beat after its screen) measured every
+     * segment as 0 wide and drew no pill. It is re-placed, without sliding,
+     * whenever the bar's own size changes — which includes its first layout. */
+    const RO = (typeof window !== 'undefined' && window.ResizeObserver) || null;
+    if (RO) new RO(() => place('jump')).observe(bar);
+
+    wireSegDrag(bar, segs, st, draw, stopSprings, selected, place);
   }
+}
+
+/**
+ * The pill as a thumb: a finger on the SELECTED segment drags it (the others
+ * are still plain taps, and a vertical move is still a scroll). Let go and it
+ * lands on the nearest segment — by tapping that segment for you, so the
+ * control's own handler does what a tap does and nothing here knows what the
+ * segments mean.
+ */
+function wireSegDrag(bar, segs, st, draw, stopSprings, selected, place) {
+  let swallowUntil = 0;
+  const end = (e, cancelled) => {
+    const d = st.drag;
+    if (!d || (e && e.pointerId !== d.id)) return;
+    st.drag = null;
+    bar.classList.remove('seg-dragging');
+    if (!d.started) return;
+    swallowUntil = nowMs() + 400;
+    const { vx } = d.vt.get();
+    st.fling = cancelled ? 0 : vx;
+    const centers = segs.map((s) => s.offsetLeft + s.offsetWidth / 2);
+    const i = cancelled ? segs.indexOf(d.seg) : pickSegment({ centers, x: st.x + st.w / 2, velocity: vx });
+    const target = segs[i];
+    if (target && target !== selected() && !target.disabled) {
+      target.click();
+      // Its handler moves aria-selected and the observer lands the pill; if a
+      // handler re-renders instead, this is the pill's last word either way.
+      setTimeout(() => place('auto'), 80);
+    } else {
+      place('auto');
+    }
+  };
+  bar.addEventListener('pointerdown', (e) => {
+    if (!canAnimate() || (e.button != null && e.button > 0) || st.drag) return;
+    const on = selected();
+    const seg = e.target && e.target.closest ? e.target.closest('.seg') : null;
+    // Only the selected segment is the thumb; within 26px of the screen's edge
+    // the edge swipe (js/gestures.js) has it.
+    if (!on || seg !== on || on.disabled || e.clientX < 26) return;
+    st.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, from: st.x, started: false, v: 0, seg: on, vt: velocityTracker() };
+    st.drag.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+  });
+  bar.addEventListener('pointermove', (e) => {
+    const d = st.drag;
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x0; const dy = e.clientY - d.y0;
+    d.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+    if (!d.started) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (Math.abs(dy) > Math.abs(dx)) { st.drag = null; return; }
+      d.started = true;
+      stopSprings();
+      d.from = st.x;
+      d.x0 = e.clientX;   // it starts from where it was taken, no jump
+      bar.classList.add('seg-dragging');
+      try { bar.setPointerCapture(e.pointerId); } catch (_) { /* synthetic */ }
+    }
+    const first = segs[0]; const last = segs[segs.length - 1];
+    const min = first.offsetLeft;
+    const max = last.offsetLeft + last.offsetWidth - st.w;
+    let x = d.from + (e.clientX - d.x0);
+    if (x < min) x = min + rubberBand(x - min, 18);
+    if (x > max) x = max + rubberBand(x - max, 18);
+    st.x = x;
+    d.v = d.vt.get().vx;
+    draw();
+  });
+  bar.addEventListener('pointerup', (e) => end(e, false));
+  bar.addEventListener('pointercancel', (e) => end(e, true));
+  // The click a browser sends after a drag is not a tap on whatever is under
+  // the finger now; the landing above already chose.
+  bar.addEventListener('click', (e) => {
+    if (e.isTrusted && nowMs() < swallowUntil) { e.preventDefault(); e.stopPropagation(); swallowUntil = 0; }
+  }, true);
 }
 
 /* ------------------------------------------------------------------ *
@@ -775,6 +1097,253 @@ export function openImageViewer({ src, name }) {
   return { close };
 }
 
+/* ------------------------------------------------------------------ *
+ * 🆕 THE WORKOUT PHOTO, FULL SCREEN — Motion 2 · Surfaces, 2026-09-25.
+ *
+ * Tim: *"Put professional level annimation and physics into this cite."*
+ * There was no viewer for workout photos; this is the plain one the brief
+ * asked for (a choice made for Tim — flagged in the report): black ground, the
+ * photo fitted to the screen, an ✕.
+ *
+ * WHAT MOVES: the photo flies OUT OF ITS THUMBNAIL — same corners, same crop
+ * (photoFlight: js/photo.js rectFlight + a clip that opens), the ground fades
+ * up behind it — and on close it flies back INTO the thumbnail. Drag it down
+ * (or up) and it follows the finger, shrinking a little, the ground thinning;
+ * let go past the line (sheetShouldClose) and it flies home, else it springs
+ * back. Double-tap zooms 2.5× about the tap; pinch zooms; a zoomed photo pans
+ * and settles inside the screen (clampPan). A single tap closes it.
+ *
+ * Opened by js/photo.js photoBox() — only where the photo is not already
+ * inside a link (a feed card's photo still opens the workout, as it always
+ * did). photo.js imports nothing, so it reaches this through setPhotoOpener().
+ * ------------------------------------------------------------------ */
+export function openPhotoViewer({ src, from = null, alt = 'Workout photo', byKey = false } = {}) {
+  const motion = canAnimate();
+  const back = el('div', { class: 'pview-back', 'aria-hidden': 'true' });
+  const img = el('img', { class: 'pview-img', src, alt, draggable: 'false' });
+  const xBtn = iconBtn('x', 'Close photo', () => close(), 'icon-btn pview-close');
+  const root = el('div', { class: 'pview', role: 'dialog', 'aria-modal': 'true', 'aria-label': alt, tabindex: '-1' }, back, img, xBtn);
+  const srcBox = from && from.parentElement && from.parentElement.classList.contains('card-photo') ? from.parentElement : null;
+
+  // The photo's resting box: its own shape, as big as the screen allows
+  // (never more than twice its pixels).
+  const nw = (from && from.naturalWidth) || 4;
+  const nh = (from && from.naturalHeight) || 3;
+  let F = null;
+  const layout = () => {
+    const vw = window.innerWidth || 393; const vh = window.innerHeight || 659;
+    const pad = isLaptop() ? 48 : 0;
+    const s = Math.min((vw - pad * 2) / nw, (vh - pad * 2) / nh, 2);
+    const w = nw * s; const hh = nh * s;
+    F = { left: (vw - w) / 2, top: (vh - hh) / 2, width: w, height: hh };
+    img.style.left = `${F.left.toFixed(2)}px`;
+    img.style.top = `${F.top.toFixed(2)}px`;
+    img.style.width = `${w.toFixed(2)}px`;
+    img.style.height = `${hh.toFixed(2)}px`;
+  };
+
+  // Everything that moves is one state: translate(x,y) scale(s) about the top
+  // left, a clip (cx, cy, rounded r) in the photo's own px, the ground (b) and
+  // the photo's own opacity (o).
+  const REST = { x: 0, y: 0, s: 1, cx: 0, cy: 0, r: 0, b: 1, o: 1 };
+  let cur = { ...REST };
+  const paint = () => {
+    const moved = Math.abs(cur.x) > 0.01 || Math.abs(cur.y) > 0.01 || Math.abs(cur.s - 1) > 0.0001;
+    img.style.transform = moved
+      ? `translate3d(${cur.x.toFixed(2)}px, ${cur.y.toFixed(2)}px, 0) scale(${cur.s.toFixed(4)})` : '';
+    const clip = cur.cx > 0.05 || cur.cy > 0.05 || cur.r > 0.05
+      ? `inset(${Math.max(0, cur.cy).toFixed(2)}px ${Math.max(0, cur.cx).toFixed(2)}px round ${Math.max(0, cur.r).toFixed(2)}px)` : '';
+    img.style.clipPath = clip;
+    img.style.webkitClipPath = clip;
+    img.style.opacity = cur.o >= 0.999 ? '' : clamp01(cur.o).toFixed(3);
+    const b = clamp01(cur.b);
+    back.style.opacity = b >= 0.999 ? '' : b.toFixed(3);
+    xBtn.style.opacity = back.style.opacity;
+    tidyStyle(back); tidyStyle(xBtn);
+  };
+  let anim = null;
+  const animateTo = (target, { v = 0, preset = SURFACE_SPRINGS.photo, onRest = null } = {}) => {
+    if (anim && anim.active) anim.stop();
+    const a = { ...cur };
+    anim = spring({
+      from: 0, to: 1, velocity: v, preset, precision: 0.0005,
+      onUpdate: (q) => {
+        for (const k of Object.keys(REST)) cur[k] = a[k] + (target[k] - a[k]) * q;
+        paint();
+      },
+      onRest,
+    });
+  };
+
+  /** Where the thumbnail is now, as a flight state — or null if it is gone. */
+  const thumbState = () => {
+    if (!from || !from.isConnected) return null;
+    const T = from.getBoundingClientRect();
+    const vh = window.innerHeight || 659;
+    if (!T.width || !T.height || T.bottom < 0 || T.top > vh) return null;
+    const f = photoFlight(F, T);
+    const radius = srcBox ? parseFloat(getComputedStyle(srcBox).borderTopLeftRadius) || 0 : 0;
+    return { x: f.x, y: f.y, s: f.scale, cx: f.clipX, cy: f.clipY, r: radius / f.scale, b: 0, o: 1 };
+  };
+
+  let closing = false;
+  const finish = () => {
+    root.remove();
+    if (srcBox) srcBox.classList.remove('s2-src-hidden');
+    // Focus goes back only where it came from a key (a tap would be left with
+    // a focus ring on the photo).
+    if (byKey && srcBox && srcBox.isConnected && typeof srcBox.focus === 'function') srcBox.focus({ preventScroll: true });
+  };
+  const close = (v = 0) => {
+    if (closing) return;
+    closing = true;
+    clearTimeout(tapTimer);
+    document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onResize);
+    root.classList.add('is-closing');
+    if (!motion) { finish(); return; }
+    const home = thumbState();
+    animateTo(home || { ...cur, y: cur.y + 60, s: cur.s * 0.92, b: 0, o: 0 },
+      { v: typeof v === 'number' ? v : 0, onRest: finish });
+    setTimeout(() => { if (root.isConnected) finish(); }, 1500);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const onResize = () => { layout(); cur = { ...REST }; paint(); };
+
+  document.body.append(root);
+  layout();
+  if (motion) {
+    const start = thumbState();
+    cur = start || { ...REST, s: 0.92, b: 0, o: 0 };
+    if (start && srcBox) srcBox.classList.add('s2-src-hidden');
+    paint();
+    animateTo(REST);
+  }
+  document.addEventListener('keydown', onKey);
+  window.addEventListener('resize', onResize);
+  // Focus into the dialog itself (Escape and Tab start here) — not onto the ✕,
+  // which would sit there ringed for the whole viewing. From a key, the ✕.
+  const into = byKey ? xBtn : root;
+  if (typeof into.focus === 'function') into.focus({ preventScroll: true });
+
+  /* ---- fingers ---- */
+  const vw = () => window.innerWidth || 393;
+  const vh = () => window.innerHeight || 659;
+  const pts = new Map();
+  let one = null;     // a single finger: tap, dismiss-drag, or pan
+  let two = null;     // a pinch
+  let lastTap = null;
+  let tapTimer = null;
+  const zoomed = () => cur.s > 1.01;
+  const mid = () => { const [a, b] = [...pts.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+  const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+  const startOne = (e) => {
+    one = { id: e.pointerId, x0: e.clientX, y0: e.clientY, start: { ...cur }, moved: false, vt: velocityTracker() };
+    one.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+  };
+
+  root.addEventListener('pointerdown', (e) => {
+    if (closing || (e.target.closest && e.target.closest('.pview-close'))) return;
+    if (anim && anim.active) anim.stop();
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { root.setPointerCapture(e.pointerId); } catch (_) { /* synthetic */ }
+    if (pts.size === 1) startOne(e);
+    else if (pts.size === 2) {
+      one = null;
+      clearTimeout(tapTimer);
+      two = { d0: dist(), m0: mid(), start: { ...cur } };
+    }
+  });
+  root.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId) || closing) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (two && pts.size >= 2) {
+      const m = mid();
+      const s = Math.min(5, Math.max(0.7, two.start.s * (dist() / two.d0)));
+      const z = zoomAbout(two.start, two.m0, s, F);
+      cur = { ...cur, x: z.x + (m.x - two.m0.x), y: z.y + (m.y - two.m0.y), s, b: 1 };
+      paint();
+      return;
+    }
+    if (!one || e.pointerId !== one.id) return;
+    const dx = e.clientX - one.x0; const dy = e.clientY - one.y0;
+    one.vt.add({ x: e.clientX, y: e.clientY, t: nowMs() });
+    if (!one.moved && Math.hypot(dx, dy) < 8) return;
+    one.moved = true;
+    clearTimeout(tapTimer);
+    if (one.start.s > 1.01) {
+      // Panning a zoomed photo: free inside the screen, resisting past it.
+      const want = { ...one.start, x: one.start.x + dx, y: one.start.y + dy };
+      const c = clampPan(want, F, vw(), vh());
+      cur = { ...cur, x: c.x + rubberBand(want.x - c.x, 80), y: c.y + rubberBand(want.y - c.y, 80) };
+    } else {
+      // Dismiss drag: it follows the finger, shrinking about its centre.
+      const s = 1 - Math.min(0.3, (Math.abs(dy) / vh()) * 0.6);
+      cur = {
+        ...REST, s,
+        x: dx + ((1 - s) * F.width) / 2,
+        y: dy + ((1 - s) * F.height) / 2,
+        b: 1 - Math.min(1, Math.abs(dy) / (vh() * 0.45)),
+      };
+    }
+    paint();
+  });
+  const up = (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (closing) return;
+    if (two) {
+      if (pts.size >= 2) return;
+      two = null;
+      // Settle: never smaller than the screen fit, never past 4×, inside the screen.
+      let t = { ...cur, b: 1 };
+      if (t.s < 1) t = { ...REST };
+      else if (t.s > 4) t = { ...t, ...zoomAbout(t, { x: vw() / 2, y: vh() / 2 }, 4, F) };
+      animateTo(clampPan(t, F, vw(), vh()), { preset: SURFACE_SPRINGS.pop });
+      one = null;
+      if (pts.size === 1) { const [id, p0] = [...pts.entries()][0]; startOne({ pointerId: id, clientX: p0.x, clientY: p0.y }); one.moved = true; }
+      return;
+    }
+    const o = one;
+    one = null;
+    if (!o || e.pointerId !== o.id) return;
+    const { vx, vy } = o.vt.get();
+    if (o.moved) {
+      if (o.start.s > 1.01) { animateTo(clampPan({ ...cur }, F, vw(), vh()), { v: 0 }); return; }
+      const dy = e.clientY - o.y0;
+      const sign = dy < 0 ? -1 : 1;
+      if (sheetShouldClose({ offset: Math.abs(dy), velocity: vy * sign, height: vh() })) {
+        const home = thumbState();
+        const dist0 = home ? Math.hypot(home.y - cur.y, home.x - cur.x) : 200;
+        close(Math.min(12, Math.hypot(vx, vy) / Math.max(60, dist0)));
+      } else {
+        animateTo(REST, { v: Math.min(8, Math.abs(vy) / Math.max(60, Math.abs(cur.y))) });
+      }
+      return;
+    }
+    // A tap. Two quick taps in the same place zoom; one alone closes.
+    const at = { x: e.clientX, y: e.clientY, t: nowMs() };
+    if (lastTap && at.t - lastTap.t < 300 && Math.hypot(at.x - lastTap.x, at.y - lastTap.y) < 30) {
+      clearTimeout(tapTimer);
+      lastTap = null;
+      const target = zoomed() ? { ...REST } : { ...REST, ...clampPan(zoomAbout(cur, at, 2.5, F), F, vw(), vh()) };
+      animateTo(target, { preset: SURFACE_SPRINGS.pop });
+      return;
+    }
+    lastTap = at;
+    tapTimer = setTimeout(() => { lastTap = null; close(); }, 300);
+  };
+  root.addEventListener('pointerup', up);
+  root.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); if (!closing && !pts.size) { one = null; two = null; animateTo(zoomed() ? clampPan({ ...cur }, F, vw(), vh()) : REST); } });
+  root.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false });
+
+  return { close };
+}
+
+// js/photo.js cannot import this file (it imports nothing); it asks for the
+// viewer through this hook instead.
+setPhotoOpener((o) => openPhotoViewer(o));
+
 /**
  * An exercise's name with its picture beside it, where there is one.
  *
@@ -824,17 +1393,87 @@ export function exerciseLabel({
  * ------------------------------------------------------------------ */
 
 export function openSheet({ title, body, footer, onClose }) {
-  const close = () => {
+  /* 🆕 MOTION 2 · SURFACES (2026-09-25). On a phone the sheet is a physical
+   * card: it springs up from the bottom edge, carries a grab handle, and can be
+   * dragged down — it follows the finger (resisting upward, rubber band), the
+   * dark behind it thins as it goes, and letting go either closes it at the
+   * speed it was thrown or springs it back (sheetShouldClose). On a laptop it
+   * is a centred dialog that scales in on a spring, with no drag.
+   * One progress spring `p` (0 = gone, 1 = at rest) drives all of it, so a
+   * close that starts mid-rise turns round with the speed it had. */
+  const motion = canAnimate();
+  const phone = !isLaptop();
+  let closed = false;
+  let p = motion ? 0 : 1;
+  let H = 0;
+  let ctl = null;
+
+  const close = (arg) => {
+    if (closed) return;
+    closed = true;
+    const v = typeof arg === 'number' ? arg : 0;
     // ⚠️ BOTH halves leave, and they leave differently: the sheet drops back
     // towards the edge it came from, the dark behind it fades. One movement
     // undoing itself, rather than a panel blinking out of existence. See
     // `leave()` for why the class is renamed rather than added to.
-    leave(sheet);
-    leave(backdrop);
+    if (motion && backdrop.isConnected) {
+      retire(sheet);
+      retire(backdrop);
+      sheet.classList.add('s2-live');
+      backdrop.classList.add('s2-live');
+      drive(0, v, phone ? SURFACE_SPRINGS.sheet : SURFACE_SPRINGS.dialog);
+      setTimeout(() => backdrop.remove(), 1500);   // a spring that never lands
+    } else {
+      leave(sheet);
+      leave(backdrop);
+    }
     document.removeEventListener('keydown', onKey);
     if (onClose) onClose();
   };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Tab') trapTab(e);
+  };
+
+  /* Tab stays inside the top-most sheet: from the last control it wraps to
+   * the first, and back. Nothing else about focus changes. */
+  const trapTab = (e) => {
+    const top = [...document.querySelectorAll('.sheet-backdrop')].pop();
+    if (top !== backdrop) return;
+    const items = [...sheet.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      .filter((n) => !n.disabled && n.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0]; const last = items[items.length - 1];
+    const at = document.activeElement;
+    if (!sheet.contains(at)) { e.preventDefault(); first.focus(); return; }
+    if (e.shiftKey && at === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && at === last) { e.preventDefault(); first.focus(); }
+  };
+
+  const paint = () => {
+    const k = clamp01(p);
+    if (phone) {
+      const y = (1 - p) * H;
+      sheet.style.transform = Math.abs(y) > 0.05 ? `translate3d(0, ${y.toFixed(2)}px, 0)` : '';
+    } else {
+      const s = 0.94 + 0.06 * p;
+      sheet.style.transform = Math.abs(1 - s) > 0.0005 ? `scale(${s.toFixed(4)})` : '';
+      sheet.style.opacity = k >= 0.999 ? '' : k.toFixed(3);
+    }
+    if (k >= 0.999) backdrop.style.removeProperty('--s2-k');
+    else backdrop.style.setProperty('--s2-k', k.toFixed(3));
+    tidyStyle(sheet);
+    tidyStyle(backdrop);
+  };
+  const drive = (to, v = 0, preset = SURFACE_SPRINGS.sheet) => {
+    // A turn-round keeps the speed it had unless a finger hands it a new one.
+    if (ctl && ctl.active) { ctl.set(to, v || undefined); return; }
+    ctl = spring({
+      from: p, to, velocity: v, preset, precision: 0.0005,
+      onUpdate: (x) => { p = x; paint(); },
+      onRest: () => { if (closed) backdrop.remove(); },
+    });
+  };
 
   const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
     el('div', { class: 'sheet-head' },
@@ -855,7 +1494,94 @@ export function openSheet({ title, body, footer, onClose }) {
   associateLabels(sheet);
   autoGrowTextareas(sheet);
   document.addEventListener('keydown', onKey);
+
+  if (motion) {
+    sheet.classList.add('s2-live', phone ? 's2-phone' : 's2-dialog');
+    backdrop.classList.add('s2-live');
+    if (phone) {
+      sheet.prepend(el('div', { class: 'sheet-grab', 'aria-hidden': 'true' }));
+      wireSheetDrag(sheet, {
+        progress: () => p,
+        height: () => H,
+        begin: () => { if (ctl && ctl.active) ctl.stop(); H = sheet.offsetHeight || H; },
+        move: (next) => { p = next; paint(); },
+        release: (offset, vy) => {
+          if (sheetShouldClose({ offset, velocity: vy, height: H })) close(-Math.max(0, vy) / H);
+          else drive(1, -vy / H, SURFACE_SPRINGS.sheet);
+        },
+        closed: () => closed,
+      });
+    }
+    H = sheet.offsetHeight || window.innerHeight || 600;
+    paint();
+    drive(1, 0, phone ? SURFACE_SPRINGS.sheet : SURFACE_SPRINGS.dialog);
+  }
   return { close, sheet };
+}
+
+/** The nearest thing between `node` and `stop` that scrolls vertically. */
+function scrollParent(node, stop) {
+  for (let n = node; n && n !== stop; n = n.parentElement) {
+    if (n.scrollHeight > n.clientHeight + 1) {
+      const oy = getComputedStyle(n).overflowY;
+      if (oy === 'auto' || oy === 'scroll') return n;
+    }
+  }
+  return null;
+}
+
+/**
+ * Drag a phone sheet down to dismiss it. Taken from the grab handle or the
+ * head in either direction, and from the body only when pulling DOWN with its
+ * list already at the top (anything else is the list scrolling). Sideways is
+ * never ours (chip rows, the segmented control). A text field keeps its touch.
+ */
+function wireSheetDrag(sheet, h) {
+  let tr = null;
+  const pt = (e) => (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || null;
+  sheet.addEventListener('touchstart', (e) => {
+    tr = null;
+    const t = pt(e);
+    if (!t || h.closed() || (e.touches && e.touches.length !== 1)) return;
+    const tgt = e.target;
+    if (!tgt.closest || tgt.closest('input, textarea, select, [contenteditable="true"]')) return;
+    const head = Boolean(tgt.closest('.sheet-grab, .sheet-head'));
+    tr = { x0: t.clientX, y0: t.clientY, head, scroller: head ? null : scrollParent(tgt, sheet), started: false, off: 0, base: 0, vt: velocityTracker() };
+    tr.vt.add({ x: t.clientX, y: t.clientY, t: nowMs() });
+  }, { passive: true });
+  // ⚠️ NOT passive: a drag that has been taken must stop the list (and the
+  // page's own bounce) moving under it, and only this listener may say so.
+  sheet.addEventListener('touchmove', (e) => {
+    if (!tr) return;
+    const t = pt(e);
+    if (!t) return;
+    const dx = t.clientX - tr.x0; const dy = t.clientY - tr.y0;
+    tr.vt.add({ x: t.clientX, y: t.clientY, t: nowMs() });
+    if (!tr.started) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (Math.abs(dx) > Math.abs(dy)) { tr = null; return; }
+      if (!tr.head && (dy < 0 || (tr.scroller && tr.scroller.scrollTop > 0))) { tr = null; return; }
+      h.begin();
+      tr.started = true;
+      tr.y0 = t.clientY;                        // taken where the finger is: no jump
+      tr.base = (1 - h.progress()) * h.height(); // a sheet still rising is caught where it is
+      sheet.classList.add('s2-dragging');
+    }
+    if (e.cancelable) e.preventDefault();
+    const off = tr.base + (t.clientY - tr.y0);
+    tr.off = off;
+    const shown = off >= 0 ? off : rubberBand(off, 40);
+    h.move(1 - shown / (h.height() || 1));
+  }, { passive: false });
+  const end = () => {
+    const d = tr;
+    tr = null;
+    if (!d || !d.started) return;
+    sheet.classList.remove('s2-dragging');
+    h.release(d.off, d.vt.get().vy);
+  };
+  sheet.addEventListener('touchend', end, { passive: true });
+  sheet.addEventListener('touchcancel', end, { passive: true });
 }
 
 /* ------------------------------------------------------------------ *
@@ -989,6 +1715,14 @@ function showHelp(dot, body, title, label) {
 
   document.body.append(pop);
   position(pop, dot);
+  /* 🆕 MOTION 2 · SURFACES: it grows out of the dot on a spring — the
+   * stylesheet puts its transform-origin at the arrow, so the box visibly
+   * comes from the ? that opened it — and goes with the quick fade leave()
+   * already gives `.help-pop-x`. */
+  if (canAnimate()) {
+    pop.classList.add('s2-live');
+    springTransform(pop, { scale: 1, opacity: 1 }, SURFACE_SPRINGS.pop, { from: { scale: 0.55, opacity: 0 } });
+  }
   /* ⚠️ A figure changes the height of the box AFTER it is measured. position()
      runs against a box whose image has no size yet, so a popover opened above
      the dot would be placed for a 60px box and then grow down through the
@@ -1349,13 +2083,23 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
 
   // press-and-hold to repeat
   function holdable(btn, dir) {
-    let to = null, iv = null;
+    let to = null, iv = null, down = false;
+    /* 🆕 MOTION 2 · SURFACES: the press answers back on a spring — the button
+     * sinks to .94 and comes back up — and that is ALL. 🛑 The number, its
+     * box and the plate line do not move: this is the logging path (Rule 7). */
+    const press = (on) => {
+      if (on === down) return;
+      down = on;
+      if (!canAnimate()) return;
+      springTransform(btn, { scale: on ? 0.94 : 1 }, on ? SURFACE_SPRINGS.press : SURFACE_SPRINGS.release);
+    };
     const start = (e) => {
       e.preventDefault();
+      press(true);
       bump(dir);
       to = setTimeout(() => { iv = setInterval(() => bump(dir), 90); }, 420);
     };
-    const stop = () => { clearTimeout(to); clearInterval(iv); to = iv = null; };
+    const stop = () => { press(false); clearTimeout(to); clearInterval(iv); to = iv = null; };
     btn.addEventListener('pointerdown', start);
     ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => btn.addEventListener(ev, stop));
     return btn;

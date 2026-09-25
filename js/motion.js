@@ -71,6 +71,11 @@ export function motionAllowed() {
   return !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
 
+/** Is a screen transition in flight? Harmless where nothing ever sets it. */
+export function navMoving() {
+  try { return typeof document !== 'undefined' && document.documentElement.hasAttribute('data-nav-moving'); } catch (_) { return false; }
+}
+
 let lastKey = null;
 /** Routes (and Data sub-panes) already shown once since the app loaded. */
 const visited = new Set();
@@ -194,6 +199,12 @@ function play(root, ctx) {
  */
 export function staggerIn(nodes, { lead = 0, step = STAGGER_STEP, max = STAGGER_MAX, rise = STAGGER_RISE } = {}) {
   if (!motionAllowed() || !nodes) return 0;
+  // 🆕 2026-09-25 (review): not on top of a screen transition. While the
+  // navigation is moving a whole screen (gestures.js sets `data-nav-moving` on
+  // <html>), the rows are travelling with it — a cascade inside a sliding page
+  // is two movements saying the same thing at once. Skipped, not delayed: rows
+  // that faded out after the page landed would read as a flicker.
+  if (navMoving()) return 0;
   const list = [...nodes].filter(Boolean).slice(0, max);
   list.forEach((n, i) => {
     n.classList.add('m-arriving');

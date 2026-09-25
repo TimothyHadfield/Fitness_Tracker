@@ -1017,7 +1017,7 @@ function landOnCurrentMonth(container) {
   // padding it by a fixed fraction of the viewport would work too and would put
   // half a screen of void under December for the sake of August.
   setTimeout(() => {
-    const pane = container.closest ? container.closest('.pane-scroll') : null;
+    const pane = scrollerOf(container);
     // The current month when it is drawn; the most recent month drawn when it
     // is not. `.cal-month` rather than `lastElementChild` because the chart is a
     // child of this container too — and the empty-range case has neither, which
@@ -1056,6 +1056,22 @@ function landOnCurrentMonth(container) {
     // stale claim behind.
     current.dataset.landed = 'true';
   }, 0);
+}
+
+/* 🆕 2026-09-25 (review): THE NEAREST SCROLLER, NOT ALWAYS THE PANE. On the
+ * laptop's two-column Profile the calendar is the right column and scrolls on
+ * its own (`.me-cal-host`, Motion 2 · Layout); landing on the pane there
+ * scrolled the whole page — the left column went 6,000px up and out of view and
+ * ~600px of nothing sat beside one month (measured, 1440×900). Everywhere else
+ * the host does not scroll, so this is the pane, exactly as before. */
+export function scrollerOf(node) {
+  for (let n = node; n && n.nodeType === 1; n = n.parentElement) {
+    if (n.classList.contains('pane-scroll')) return n;
+    let oy = '';
+    try { oy = getComputedStyle(n).overflowY; } catch (_) {}
+    if (oy === 'auto' || oy === 'scroll') return n;
+  }
+  return null;
 }
 
 /**
@@ -2629,25 +2645,29 @@ export function prIndices(values) {
  * Which markers stay FULL SIZE on a chart too dense for them all — the measured
  * fault: 52 rings ~7px apart at 393px ran into one chain.
  *
- * 🚨 RULE 5: THE OTHERS ARE DRAWN SMALLER, NEVER REMOVED. A marker means "you
- * lifted this", and a measured point with no marker would read as an estimate.
+ * 🔄 2026-09-25 (review): THE OTHERS ARE HIDDEN, NOT SHRUNK. Small rings between
+ * full ones still overlapped in clusters on a phone (mixed sizes, measured), so
+ * a marker whose CENTRE is within `gap` of a kept one is hidden (`pt-hid`). It
+ * stays in the markup and the crosshair still snaps to it; each hidden point is
+ * under a visible ring ≤`gap` px away, so the cluster still reads as measured.
  *
- * `keep` (the last point, the best of all) is always full size. `prefer` (every
+ * `keep` (the last point, the best of all) is always drawn. `prefer` (every
  * other new best) is placed next, then everything else, left to right — and a
- * point from either of those is full size only if it is at least `gap` px from
- * every full-size marker already placed. A run of bests a few px apart would
- * otherwise be the same chain of rings the thinning exists to break.
- * @param {number[]} xs    marker x positions, ascending
- * @param {Set<number>} keep    indices into xs that are always full size
+ * point from either of those is drawn only if it is at least `gap` px from
+ * every drawn marker already placed. Distance is 2-D when points are {x, y}
+ * (a steep climb has room a flat run does not), x-only for plain numbers.
+ * @param {Array<number|{x:number,y:number}>} xs    marker positions, by x
+ * @param {Set<number>} keep    indices into xs that are always drawn
  * @param {number} gap
  * @param {Set<number>} [prefer]  indices placed before ordinary points
- * @returns {Set<number>} indices into xs drawn full size
+ * @returns {Set<number>} indices into xs that are drawn
  */
 export function thinMarkers(xs, keep, gap, prefer = new Set()) {
   const full = new Set();
   const placed = [];
   const add = (i) => { full.add(i); placed.push(xs[i]); };
-  const roomAt = (i) => placed.every((px) => Math.abs(px - xs[i]) >= gap);
+  const dist = (a, b) => (typeof a === 'number' ? Math.abs(a - b) : Math.hypot(a.x - b.x, a.y - b.y));
+  const roomAt = (i) => placed.every((p) => dist(p, xs[i]) >= gap);
   [...keep].filter((i) => i >= 0 && i < xs.length).forEach(add);
   const byX = (a, b) => a - b;
   for (const i of [...prefer].filter((j) => j >= 0 && j < xs.length).sort(byX)) {
@@ -2698,12 +2718,16 @@ function growBars(root, sel, key) {
 }
 
 /** Slide a freshly painted pane in from the side it lives on (a sub-tab to the right comes from the right). */
+/* 🔄 2026-09-25 (review): it starts at .7, not 0. From 0 the old pane was gone
+ * and the new one invisible, so the first frame of every switch was an empty
+ * screen (measured: opacity 0.00 on frame 1, 0.35 at 160ms). The slide says
+ * where you went; the fade only softens its first frames. */
 function slideIn(nodes, dir) {
   if (!motionAllowed() || !dir) return;
   for (const n of nodes) {
     if (!n || !n.isConnected) continue;
     n.classList.add('m2-sliding');
-    const c = springTransform(n, { x: 0, opacity: 1 }, 'glide', { from: { x: 24 * dir, opacity: 0 } });
+    const c = springTransform(n, { x: 0, opacity: 1 }, 'glide', { from: { x: 24 * dir, opacity: 0.7 } });
     c.done.then(() => n.classList.remove('m2-sliding'));
   }
 }
@@ -2973,7 +2997,11 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
     niceGap = shownStep;
   }
 
-  const x = (t) => padL + (tMax === tMin ? iw / 2 : ((t - tMin) / (tMax - tMin)) * iw);
+  // 🆕 2026-09-25: the dates are INSET from the plot's ends by a marker's width,
+  // so the first and last rings sit wholly inside the gridlines — the last point
+  // ("now", the biggest ring) was centred on the right edge, half outside it.
+  const inX = 8;
+  const x = (t) => padL + inX + (tMax === tMin ? (iw - 2 * inX) / 2 : ((t - tMin) / (tMax - tMin)) * (iw - 2 * inX));
   const y = (v) => padT + ih - ((v - vMin) / (vMax - vMin)) * ih;
 
   const NS = 'http://www.w3.org/2000/svg';
@@ -3080,8 +3108,8 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
   //
   // 🆕 THINNED WHEN DENSE — Motion 2 · Data. 52 rings ~7px apart at 393px ran into
   // one chain (measured). The last point, every new best and any marker with
-  // ≥12px of room stay full size; the rest are drawn SMALL (`pt-thin`), never
-  // removed — Rule 5. A body-weight line has no "best" (direction is not judged
+  // ≥12px of room are drawn; the rest are hidden (`pt-hid`, see thinMarkers —
+  // shrinking them still overlapped). A body-weight line has no "best" (direction is not judged
   // there, see renderBodyWeight), and nor does time, so neither keeps bests.
   const measured = [];
   points.forEach((p, i) => { if (p.actual !== false) measured.push(i); });
@@ -3096,7 +3124,8 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
     if (pi === points.length - 1 || pi === top) keep.add(mi);
     else if (prs.has(pi)) prefer.add(mi);
   });
-  const full = thinMarkers(measured.map((pi) => x(ts[pi])), keep, 12, prefer);
+  // 12px centre to centre: two 4px rings with their 2.5px strokes need 10.5.
+  const full = thinMarkers(measured.map((pi) => ({ x: x(ts[pi]), y: y(points[pi].value) })), keep, 12, prefer);
   const ptsG = add('g', {}, 'm2-pts');
   if (full.size < measured.length) svg.classList.add('m2-thinned');
   measured.forEach((i, mi) => {
@@ -3104,7 +3133,7 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
     const last = i === points.length - 1;
     const n = mk('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5.5 : 4 },
       (last ? 'pt pt-last' : 'pt' + (p.source === 'benchmark' ? ' bench' : ''))
-        + (full.has(mi) ? '' : ' pt-thin'));
+        + (full.has(mi) ? '' : ' pt-hid'));
     ptsG.append(n);
   });
 

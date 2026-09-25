@@ -115,11 +115,26 @@ if (typeof firstShow === 'function') {
     ok(Boolean(area) && grad && (area.getAttribute('style') || '').includes(`url(#${grad.id})`),
       'the area under the line is filled by that gradient');
     const pts = [...svg.querySelectorAll('circle.pt')];
-    const thin = pts.filter((c) => c.classList.contains('pt-thin'));
-    ok(pts.length > 30 && thin.length > 0, `the dense demo squat thins its markers at 420px (${thin.length} of ${pts.length})`);
-    ok(!pts[pts.length - 1].classList.contains('pt-thin'), 'the last marker is never thinned');
-    ok(pts.length === [...svg.querySelectorAll('circle.pt')].length && thin.every((c) => c.getAttribute('r')),
-      '🚨 Rule 5: a thinned measured point keeps a marker — smaller, never removed');
+    const hid = pts.filter((c) => c.classList.contains('pt-hid'));
+    const shown = pts.filter((c) => !c.classList.contains('pt-hid'));
+    ok(pts.length > 30 && hid.length > 0, `the dense demo squat hides crowded markers at 420px (${hid.length} of ${pts.length})`);
+    ok(!pts[pts.length - 1].classList.contains('pt-hid'), 'the last marker is never hidden');
+    // 2026-09-25 review: mixed sizes still overlapped in clusters. Every drawn
+    // marker is now one size and ≥12px (centre to centre) from every other.
+    const c = (n) => ({ x: +n.getAttribute('cx'), y: +n.getAttribute('cy') });
+    let touching = 0;
+    shown.forEach((a, i) => shown.slice(i + 1).forEach((b) => {
+      if (Math.hypot(c(a).x - c(b).x, c(a).y - c(b).y) < 12) touching++;
+    }));
+    ok(touching === 0, `no two drawn markers overlap (${touching} pairs under 12px)`);
+    ok(hid.every((h) => shown.some((s) => Math.hypot(c(h).x - c(s).x, c(h).y - c(s).y) < 12)),
+      'every hidden marker sits under a drawn one (a cluster still reads as measured)');
+    // The last point was centred ON the plot's right edge, half outside it.
+    const grid = svg.querySelector('.grid-line');
+    const right = +grid.getAttribute('x2'), left = +grid.getAttribute('x1');
+    const lastC = c(pts[pts.length - 1]), firstC = c(pts[0]);
+    ok(lastC.x + 7 <= right && firstC.x - 5.25 >= left,
+      `the end markers sit wholly inside the plot (last ${lastC.x} + 7 ≤ ${right}, first ${firstC.x} ≥ ${left} + 5.25)`);
   }
   void store;
 }
@@ -146,6 +161,43 @@ if (typeof firstShow === 'function') {
   ok(/prefers-reduced-motion/.test(sec), 'that section switches its motion off under prefers-reduced-motion');
   ok(/view-transition-new\(root\)/.test(sec) && /m2-theme-vt/.test(sec),
     'the theme reveal styles its own view transition only while it runs (scoped class)');
+}
+
+/* ---------- 6. review 2026-09-25: switch, best-lift line, superset line ---------- */
+{
+  const src = read('js/views-data.js');
+  const m = src.match(/function slideIn[\s\S]*?from: \{ x: 24 \* dir, opacity: ([\d.]+) \}/);
+  ok(Boolean(m) && Number(m[1]) >= 0.6,
+    `a sub-tab switch starts its new pane visible (opacity ${m && m[1]}, ≥.6) — from 0 its first frame was an empty screen`);
+  const PS = await import(new URL('js/profile-shape.js', root).href);
+  const row = PS.liftRow({ name: 'Barbell Curl', sub: 'Hammer Curl 35 lbs/side × 12 · Sep 12', oneRM: 120, shown: 122,
+    days: 0, level: null, percentile: null, band: { name: 'Good' } });
+  const bits = [...row.querySelectorAll('.me-best-bit')].map((b) => b.textContent);
+  ok(bits.length === 2 && bits[1] === 'Sep 12',
+    `a friend's published line breaks at its " · " seams like our own rows (${JSON.stringify(bits)})`);
+  const css = read('css/app.css');
+  const lay = css.slice(css.indexOf('/* === Motion 2 · Layout === */'), css.indexOf('/* === end Motion 2 · Layout === */'));
+  ok(/\.me-best-bit\s*\{[^}]*max-width:\s*100%/.test(lay),
+    'a sub-line piece is capped at its column, so a long one cannot run under the numbers');
+  ok(/@media \(min-width: 860px\)\s*\{\s*\.builder-group > \.list \{ margin-inline: 0; \}/.test(lay),
+    'on a laptop the superset\'s list keeps inside its line (it bled 22px through it)');
+
+  // Profile, laptop: Months landed by scrolling the WHOLE pane (left column
+  // 6,000px out of view). It now scrolls the nearest scroller.
+  ok(typeof D.scrollerOf === 'function', 'views-data.js exports scrollerOf()');
+  if (typeof D.scrollerOf === 'function') {
+    const pane = document.createElement('div'); pane.className = 'pane-scroll';
+    const col = document.createElement('div'); const host = document.createElement('div');
+    col.append(host); pane.append(col); document.body.append(pane);
+    ok(D.scrollerOf(host) === pane, 'a host that does not scroll lands the pane, as before (phone, Data, Calendar)');
+    host.style.overflowY = 'auto';
+    ok(D.scrollerOf(host) === host, 'a host that scrolls on its own lands itself, and the page stays put');
+    pane.remove();
+  }
+  const land = src.slice(src.indexOf('function landOnCurrentMonth('), src.indexOf('export function scrollerOf('));
+  ok(/const pane = scrollerOf\(container\)/.test(land), 'landOnCurrentMonth() lands on the nearest scroller');
+  ok(/@media \(min-width: 1200px\)[\s\S]*?\.me-cal-host\s*\{[^}]*overflow-y:\s*auto/.test(lay),
+    'on the two-column Profile the calendar column is its own scroller');
 }
 
 console.log(fails ? `\n${fails} FAIL` : '\nall passed');

@@ -141,14 +141,36 @@ const S = await import(new URL('js/spring.js', root).href);
 /* ---------- 4. every movement is a spring inside Rule 7's physics tier ---------- */
 {
   const P = G.NAV_SPRINGS;
-  ok(P && P.push === 'glide' && P.back === 'glide' && P.tab === 'snap' && P.rise === 'sheet' && P.fall === 'sheet',
-     `push/back glide, tab snap, rise/fall sheet (${JSON.stringify(P)})`);
+  ok(P && ['push', 'back', 'tab', 'rise', 'fall'].every((k) => P[k] && typeof P[k].k === 'number'),
+     `every movement names its spring (${JSON.stringify(P)})`);
+  // 🔄 Review, 2026-09-25: "within 1%" was not when the screen came to rest.
+  // The movement ends when spring.js's OWN rest rule fires (|x−1| < precision
+  // AND |v| < precision×10, the precision the router passes) — that was
+  // measured at ~660ms for `glide` at 0.0005. Pin the real moment.
+  const eps = G.NAV_PRECISION;
+  ok(typeof eps === 'number' && eps > 0 && eps * 393 < 1, `rests within a pixel of a phone's width (${eps} × 393 = ${(eps * 393).toFixed(2)}px)`);
   for (const [kind, preset] of Object.entries(P)) {
-    const s = S.simulate({ from: 0, to: 1, preset, ms: 600 });
+    const s = S.simulate({ from: 0, to: 1, preset, ms: 1000 });
     const t90 = s.find((x) => x.x >= 0.9).t;
-    const rest = [...s].reverse().find((x) => Math.abs(x.x - 1) > 0.01);
-    ok(t90 <= 250 && (rest ? rest.t : 0) <= 400, `${kind}: 90% of the way in ${t90.toFixed(0)}ms, within 1% by ${(rest ? rest.t : 0).toFixed(0)}ms`);
+    const rest = s.find((x) => Math.abs(x.x - 1) < eps && Math.abs(x.v) < eps * 10);
+    const over = Math.max(...s.map((x) => x.x)) - 1;
+    ok(t90 <= 250 && rest && rest.t <= 400 && over < 0.001,
+       `${kind}: 90% of the way in ${t90.toFixed(0)}ms, AT REST by ${rest ? rest.t.toFixed(0) : '∞'}ms, no overshoot`);
   }
+}
+
+/* ---------- 4b. review fixes: nothing seen twice, nothing on a laptop but the arrival ---------- */
+{
+  const f = G.frameFor;
+  const near = (a, b, e = 0.01) => Math.abs(a - b) <= e;
+  const desk = { W: 1240, H: 900, phone: false };
+  const ps = [0, 0.3, 0.6, 1];
+  ok(ps.every((p) => { const x = f('push', p, desk); return x.outX === 0 && x.dim === 0 && x.outOpacity === 1; }),
+     'laptop push: the screen being left does not move, fade or dim — it is covered, not seen through');
+  const b0 = f('back', 0, desk), b1 = f('back', 1, desk);
+  ok(near(b0.inX, -G.DESK_SHIFT) && near(b0.inOpacity, 0) && near(b1.inX, 0) && near(b1.inOpacity, 1) && b0.outX === 0,
+     `laptop back: the returning screen arrives from the other side (${b0.inX}px), in place`);
+  ok(G.EARLY_FADE_MS > 0 && G.EARLY_FADE_MS <= 100, `the old content goes from the tap, fast (${G.EARLY_FADE_MS}ms)`);
 }
 
 /* ---------- 5. letting go of a drag ---------- */
@@ -206,6 +228,35 @@ const S = await import(new URL('js/spring.js', root).href);
        `${kind}: at rest there is no ghost, no dim, no inline style and no nav- class (${stray.length} stray, style="${fresh.getAttribute('style') || ''}")`);
   }
   ok(G.__snapshotCount() >= 1, `the screens it left are kept as pictures for the back swipe (${G.__snapshotCount()})`);
+
+  // Review fixes, 2026-09-25 (jsdom is 1024px wide: a laptop).
+  const html = document.documentElement;
+  const withBar = (cls) => {
+    const s = document.createElement('div'); s.className = cls || 'screen';
+    s.innerHTML = '<div class="demo-bar">Demo</div><div class="pane-scroll"><p>x</p></div>';
+    s.firstChild.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1024, bottom: 30, width: 1024, height: 30 });
+    return s;
+  };
+  for (const kind of ['tab', 'push', 'rise']) {
+    const old = withBar();
+    app.replaceChildren(nav, old);
+    const t = G.beginNav({ dir: kind === 'rise' ? 'push' : kind, from: 'home', to: kind === 'rise' ? 'record' : 'workout',
+      rising: kind === 'rise', leaving: old, app, parkNav: kind === 'rise', fromIndex: 9, fromHash: '#/home' });
+    ok(html.getAttribute('data-nav-moving') === kind,
+       `${kind}: <html data-nav-moving> is set while it moves (motion.js keeps its row cascade off it)`);
+    const pins = document.querySelectorAll('.nav-banner-pin').length;
+    ok(kind === 'rise' ? pins === 1 && document.body.classList.contains('nav-pinned') : pins === 0,
+       `${kind}: ${kind === 'rise' ? 'ONE demo strip pinned while the card moves' : 'arrives in place, so the strip needs no copy'} (${pins})`);
+    ok(kind === 'rise' ? true : Boolean(t.lead && typeof t.lead.then === 'function'),
+       `${kind}: hands the router a lead to await, so the old content starts going before a heavy view builds`);
+    const fresh = withBar();
+    app.replaceChildren(nav, fresh);
+    t.play(fresh);
+    ok(!html.hasAttribute('data-nav-moving') && !document.querySelector('.nav-banner-pin') && !document.body.classList.contains('nav-pinned'),
+       `${kind}: at rest the flag, the pinned strip and its class are gone`);
+    ok([...fresh.children].every((c) => !c.getAttribute('style')), `${kind}: and the content carries no inline style`);
+    ok(fresh.classList.contains('landed'), `${kind}: the landed screen is marked so .screen's CSS arrival does not start after it`);
+  }
   // Reduced motion: nothing again.
   S.__setReducedMotionForTest(true);
   const old = document.createElement('div'); old.className = 'screen';
@@ -226,6 +277,15 @@ const S = await import(new URL('js/spring.js', root).href);
   ok(/\.play\(screen\)/.test(r), 'and the movement plays once the new screen is in #app');
   ok(/syncTabIndicator\(/.test(r) && /initGestures\(/.test(app), 'the tab indicator and the gestures are wired');
   ok(/markTabNav\(\)/.test(app), 'a tab-bar tap marks its navigation as a tab switch');
+  const tr = r.indexOf('isTabRoot(location.hash)');
+  ok(tr > 0 && tr < r.indexOf('markRoute()') && /tabByLink\) markTabNav\(\)/.test(r),
+     'a LINK to a tab\'s root ("Back to home") is a tab switch too — marked before markRoute() reads it');
+  ok(/await move\.lead/.test(r) && r.indexOf('await move.lead') < r.indexOf('await resolve(route)'),
+     'the router lets the first frame of a movement paint before it builds the next view');
+  const css0 = read('css/app.css');
+  ok(/\.screen\.landed\s*\{[^}]*animation:\s*none/.test(css0), 'a landed screen does not replay the CSS arrival');
+  ok(/body\.nav-pinned \.demo-bar:not\(\.nav-banner-pin\)\s*\{[^}]*visibility:\s*hidden/.test(css0),
+     'while a strip is pinned the moving copies are hidden, not removed (nothing shifts)');
   ok(!/parkScreen\(leaving\)/.test(app), 'Record no longer rises on the CSS keyframe path');
   ok(read('sw.js').includes("'./js/gestures.js'"), 'gestures.js is precached for offline');
   const css = read('css/app.css');

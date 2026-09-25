@@ -21,10 +21,10 @@ import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
-import { celebrate, countUp, staggerIn, motionAllowed, CELEBRATE_MS, COUNT_MS } from './motion.js';
+import { celebrate, countUp, staggerIn, motionAllowed, CELEBRATE_MS, COUNT_MS, STAGGER_STEP, STAGGER_MAX } from './motion.js';
 // 🆕 Motion 2 · Moments (docs/motion2-plan.md package E): the finish screen's
 // sequence and the runner going into, and coming back out of, its bar.
-import { spring, springTransform } from './spring.js';
+import { spring, springTransform, simulate } from './spring.js';
 import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exercise-estimate.js';
 import {
   normalizeTargets, targetsApply, weightForTarget, summariseTargets,
@@ -5173,22 +5173,33 @@ export const FINISH_PR_STEP = 140;
 export const FINISH_PR_LAST = 600;
 /** The check's own spring has come to rest by here (bounce, ≤400ms, tests/spring.test.mjs). */
 const CHECK_REST_MS = 400;
+/** 🔄 2026-09-25 (review): the exercise rows follow right behind the check,
+ *  35ms apart — they started at 300ms and were fully in only by ~950ms. */
+export const FINISH_ROWS_AT = 140;
+/** A row's snap spring is 90% in by this (tests/spring.test.mjs). */
+const ROW_IN_MS = 250;
 
 /**
  * When each part of the finish screen plays, for `prCount` record groups and
  * `numCount` headline numbers. Pure. `endMs` is when the last movement ends —
  * the whole sequence is inside ~1.2s, and nothing in it holds a tap.
  */
-export function finishTimeline(prCount = 0, numCount = 2) {
+export function finishTimeline(prCount = 0, numCount = 2, rowCount = 0) {
   const counts = Array.from({ length: numCount }, (_, i) => FINISH_COUNT_AT + i * FINISH_COUNT_STEP);
   const step = prCount > 1 ? Math.min(FINISH_PR_STEP, (FINISH_PR_LAST - FINISH_PR_AT) / (prCount - 1)) : 0;
   const prs = Array.from({ length: prCount }, (_, i) => Math.round(FINISH_PR_AT + i * step));
+  const rows = FINISH_ROWS_AT;
+  const rowsIn = rows + Math.max(0, Math.min(rowCount, STAGGER_MAX) - 1) * STAGGER_STEP + ROW_IN_MS;
   const ends = [
+    rowCount ? rowsIn : 0,
     CHECK_REST_MS + CELEBRATE_MS,                        // the check pops, then shines
     ...counts.map((t) => t + COUNT_MS),
     ...prs.map((t) => t + CELEBRATE_MS),
   ];
-  return { draw: FINISH_CHECK_DRAW_AT, counts, prs, endMs: Math.max(...ends) };
+  // `inMs`: when everything has ARRIVED (check landed, numbers counted, rows
+  // in) — the celebration shines after that are the named exception.
+  const inMs = Math.max(CHECK_REST_MS, ...counts.map((t) => t + COUNT_MS), rowCount ? rowsIn : 0);
+  return { draw: FINISH_CHECK_DRAW_AT, counts, prs, rows, inMs, endMs: Math.max(...ends) };
 }
 
 /**
@@ -5200,7 +5211,7 @@ export function finishTimeline(prCount = 0, numCount = 2) {
 function playFinish({ check, nums = [], prRows = [], exRows = [], winKey }) {
   // Each win is keyed and celebrates once — whether or not motion is allowed,
   // celebrate() is what decides, as before.
-  const plan = finishTimeline(prRows.length, nums.length);
+  const plan = finishTimeline(prRows.length, nums.length, exRows.length);
   if (!motionAllowed() || !check || !check.isConnected) {
     celebrate(check, winKey);
     prRows.forEach((r, i) => celebrate(r, `${winKey}:pb:${i}`));
@@ -5245,7 +5256,7 @@ function playFinish({ check, nums = [], prRows = [], exRows = [], winKey }) {
   // What was recorded follows the headline in — the rows in view only.
   const h = (typeof window !== 'undefined' && window.innerHeight) || 0;
   const shown = exRows.filter((r) => { const b = r.getBoundingClientRect(); return b.top < h && b.bottom > 0; });
-  staggerIn(shown, { lead: FINISH_COUNT_AT + FINISH_COUNT_STEP });
+  staggerIn(shown, { lead: plan.rows });
   return true;
 }
 
@@ -5258,29 +5269,121 @@ function playFinish({ check, nums = [], prRows = [], exRows = [], winKey }) {
  * the same object, only smaller. Returns false where it cannot play, and the
  * caller falls back to the old fall.
  */
+/* 🔄 2026-09-25 (review): IT REALLY SHRINKS NOW, AND FROM THE TAP FRAME.
+ * Measured before: scale 0.983→1.0 (a width-only scale onto a full-width bar is
+ * no scale at all), so the card just slid 598px down and faded; and nothing
+ * moved until ~300ms, because the spring's first write waited for the first
+ * frame after the router's ~120ms render of the screen underneath.
+ *   · BOTH AXES: x, y, scaleX, scaleY onto the bar's box, so the card visibly
+ *     collapses to the bar's height. The content fades out in the first 130ms,
+ *     before the squash could show — what lands is the card, not its text.
+ *   · A WEB ANIMATION, NOT A rAF SPRING: its keyframes are sampled from the same
+ *     `glide` spring (spring.js `simulate`), but it is started in the tap's own
+ *     task and runs on the clock (and on the compositor, for transform and
+ *     opacity), so a long render underneath cannot hold its first frame.
+ *   · The bar's box is not known until the router draws it: the flight aims at
+ *     the last box measured at this window size (or the app's bottom edge), and
+ *     is re-aimed at the real one the frame it exists, keeping its speed. */
+const MIN_BAR_H = 66;
+let lastBarBox = null;
+function rememberBar(r) {
+  if (r && r.width > 1) lastBarBox = { left: r.left, top: r.top, width: r.width, height: r.height, vw: window.innerWidth, vh: window.innerHeight };
+}
+const FLY = { x: 0, y: 0, sx: 1, sy: 1 };
+const lerp = (a, b, p) => a + (b - a) * p;
+/** The card holds until it is nearly on the bar, then hands over to it. */
+const landFade = (q) => (q < 0.88 ? 1 : Math.max(0, 1 - (q - 0.88) / 0.11));
+/** A box without the arrival nudge its screen may still be carrying (`screen-in`, 6px). */
+function restingBox(bar) {
+  const r = bar.getBoundingClientRect();
+  const scr = bar.closest('.screen');
+  let dy = 0;
+  try {
+    const t = scr && getComputedStyle(scr).transform;
+    if (t && t !== 'none' && typeof DOMMatrix === 'function') dy = new DOMMatrix(t).m42;
+  } catch (_) {}
+  return { left: r.left, top: r.top - dy, width: r.width, height: r.height };
+}
+function flyPlan(from, box) {
+  return {
+    x: box.left - from.left, y: box.top - from.top,
+    sx: box.width / from.width, sy: box.height / from.height,
+  };
+}
+/** Keyframes for a glide from `a` to `b` (both {x,y,sx,sy}), opacity from `op0`. */
+function flyKeyframes(a, b, v0, op0) {
+  const samples = simulate({ from: 0, to: 1, velocity: v0, preset: 'glide', ms: 420 });
+  const total = samples[samples.length - 1].t;
+  const frames = [];
+  for (let i = 0; i < samples.length; i += 4) {
+    const { t, x: p } = samples[i];
+    const q = Math.min(1, Math.max(0, p));
+    // Held while it travels, gone as it lands: the bar underneath takes over.
+    const op = op0 * landFade(q);
+    frames.push({
+      offset: t / total,
+      transform: `translate3d(${lerp(a.x, b.x, p).toFixed(2)}px, ${lerp(a.y, b.y, p).toFixed(2)}px, 0) scale(${lerp(a.sx, b.sx, p).toFixed(4)}, ${lerp(a.sy, b.sy, p).toFixed(4)})`,
+      opacity: op.toFixed(3),
+    });
+  }
+  frames[frames.length - 1] = { offset: 1, transform: `translate3d(${b.x}px, ${b.y}px, 0) scale(${b.sx}, ${b.sy})`, opacity: 0 };
+  return { frames, total, samples };
+}
+
 export function minimizeFlight(screen) {
   if (!screen || !motionAllowed()) return false;
   const ghost = parkScreen(screen, { falls: false });
   if (!ghost) return false;
+  if (typeof ghost.animate !== 'function') { ghost.remove(); return false; }
   ghost.classList.add('m-flying');
   const from = ghost.getBoundingClientRect();
-  // Before the bar exists: the bottom of the app, a bar's height and a tab bar up.
-  const guess = rectFlight(from, { x: from.left + 8, y: from.bottom - 130, w: from.width - 16 });
-  const move = springTransform(ghost, { x: guess.x, y: guess.y, scale: guess.scale }, 'glide');
-  springTransform(ghost, { opacity: 0 }, 'glide', { delay: 110 });
+  if (!(from.width > 0 && from.height > 0)) { ghost.remove(); return false; }
+  const known = lastBarBox && lastBarBox.vw === window.innerWidth && lastBarBox.vh === window.innerHeight;
+  const guess = known ? lastBarBox
+    : { left: from.left, top: from.bottom - MIN_BAR_H, width: from.width, height: MIN_BAR_H };
+
+  // The content goes first, so the squash never shows as squashed text.
+  for (const k of ghost.children) {
+    k.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 130, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+  }
+  let aim = flyPlan(from, guess);
+  let plan = flyKeyframes(FLY, aim, 0, 1);
+  let start = FLY;
+  let anim = ghost.animate(plan.frames, { duration: plan.total, fill: 'forwards' });
+  const t0 = performance.now();
+  const finish = () => { if (ghost.isConnected) ghost.remove(); };
+  anim.finished.then(finish, () => {});
+
   let tries = 0;
   const seek = () => {
     if (!ghost.isConnected) return;
     const bar = document.querySelector('#app .session-mini');
-    if (bar) {
-      const t = rectFlight(from, bar.getBoundingClientRect());
-      move.set({ x: t.x, y: t.y, scale: t.scale });
-      return;
-    }
-    if (tries++ < 30) requestAnimationFrame(seek);
+    if (!bar) { if (tries++ < 30) requestAnimationFrame(seek); return; }
+    const box = restingBox(bar);
+    rememberBar(box);
+    const real = flyPlan(from, box);
+    const off = Math.max(Math.abs(real.x - aim.x), Math.abs(real.y - aim.y),
+      Math.abs(real.sx - aim.sx) * from.width, Math.abs(real.sy - aim.sy) * from.height);
+    if (off < 2) return;
+    // Where the flight is right now, and how fast, from the spring it samples.
+    const el = performance.now() - t0;
+    const s = plan.samples.find((x) => x.t >= el) || plan.samples[plan.samples.length - 1];
+    const now = {
+      x: lerp(start.x, aim.x, s.x), y: lerp(start.y, aim.y, s.x),
+      sx: lerp(start.sx, aim.sx, s.x), sy: lerp(start.sy, aim.sy, s.x),
+    };
+    const op = landFade(s.x);
+    // The speed it has, re-expressed as progress toward the new aim (along y,
+    // the axis that carries nearly all of the travel).
+    const oldD = aim.y - start.y, newD = real.y - now.y;
+    const v = Math.abs(newD) > 1 ? Math.max(0, Math.min(20, (s.v * oldD) / newD)) : 0;
+    anim.cancel();
+    start = now; aim = real;
+    plan = flyKeyframes(now, real, v, op);
+    anim = ghost.animate(plan.frames, { duration: plan.total, fill: 'forwards' });
+    anim.finished.then(finish, () => {});
   };
   requestAnimationFrame(seek);
-  move.done.then(() => ghost.remove());
   return true;
 }
 
@@ -5301,6 +5404,7 @@ export function restoreFlight(screen, ghost) {
   if (!bar) return false;
   const barBox = bar.getBoundingClientRect();
   if (barBox.width < 1) return false;
+  rememberBar(barBox);
   const t = rectFlight(screen.getBoundingClientRect(), barBox);
   screen.classList.add('m-restoring');
   const ctl = springTransform(screen, { x: 0, y: 0, scale: 1, opacity: 1 }, 'sheet',

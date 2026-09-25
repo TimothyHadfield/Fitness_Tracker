@@ -32,7 +32,7 @@
 // Pure presentation: no store, no network, no clock. Everything it needs is an
 // argument.
 
-import { el, chevron, personFace, fmtDateShort } from './ui.js';
+import { el, chevron, personFace, fmtDateShort, wireSegmented } from './ui.js';
 import * as units from './units.js';
 
 /* ------------------------------------------------------------------ *
@@ -269,7 +269,11 @@ export function liftRow(l, opts = {}) {
  * single string broke inside a piece — "last Sep / 22" — so each piece is its
  * own no-wrap span and the line may only break between them. */
 function subLine(parts) {
-  const list = Array.isArray(parts) ? parts : [parts];
+  // 🆕 2026-09-25: a friend's published line arrives as ONE string with the
+  // same " · " seams ("Hammer Curl 35 lbs/side × 12 · Sep 12"), and as one
+  // no-wrap piece it ran 22px into the numbers column at 393px (measured).
+  // Split at the seams so it breaks where our own rows do.
+  const list = Array.isArray(parts) ? parts : String(parts).split(' · ');
   const kids = [];
   list.forEach((p, i) => {
     if (i) kids.push(' · ');
@@ -388,11 +392,16 @@ export function bestLiftsBlock(model, opts = {}) {
  * ------------------------------------------------------------------ */
 export function calendarBlock(cal, label = 'Training history') {
   const host = el('div', { class: 'me-cal-host' });
-  // Painted after the node exists, exactly as the other doors do it.
-  queueMicrotask(() => cal.paint(host));
-  return el('div', { class: 'me-cal' },
+  const block = el('div', { class: 'me-cal' },
     el('div', { class: 'section-label', text: label }),
     cal.top,
     host,
   );
+  // Painted after the node exists, exactly as the other doors do it.
+  // 🆕 2026-09-25 (Motion 2 · Surfaces): and its Months/Years control is wired
+  // here, because this block is built after its screen — the shell's own
+  // wireSegmented() never saw it, and Profile's switch was the one segmented
+  // control in the app with no sliding pill (measured in WebKit). Idempotent.
+  queueMicrotask(() => { cal.paint(host); wireSegmented(block); });
+  return block;
 }

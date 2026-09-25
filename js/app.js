@@ -397,6 +397,9 @@ let prevHash = '';
 /* Which TAB the last navbar lit. The icon pops only when this changes — a
  * re-render, or a sub-screen of the same tab, is not a tab becoming selected. */
 let lastNavKey = null;
+/* When the tab bar itself was last tapped — to tell a tap (whose icon already
+ * popped under the finger) from a link to a tab's root, which pops it here. */
+let lastTabTap = 0;
 
 async function render() {
   if (rendering) return;
@@ -416,6 +419,17 @@ async function render() {
   // is measured or parked — two movements never stack (js/gestures.js).
   settleNavigation();
   const fromIndex = currentNavIndex();
+
+  /* 🔄 A LINK TO A TAB'S ROOT IS A TAB SWITCH (review, 2026-09-25) — "Back to
+   * home" on the finish screen, an empty state's button to Workouts. Tabs are
+   * places, not a stack: arriving at one by a link crossfades exactly as the
+   * tab bar would, rather than sliding in as if it were deeper. Only a NEW
+   * entry is marked; a real history back or forward keeps its own direction. */
+  const st = window.history && window.history.state;
+  const tabByLink = isTabRoot(location.hash) && !(st && typeof st.navIndex === 'number')
+    && !(lastTabTap && Date.now() - lastTabTap < 1500);
+  lastTabTap = 0;
+  if (tabByLink) markTabNav();
 
   // Where this screen sits in the visit, so the back arrow can go BACK rather
   // than to a hard-coded parent. See markRoute() in ui.js.
@@ -510,6 +524,9 @@ async function render() {
   });
 
   try {
+    // A crossfade starts from the tap: let its first frame reach the screen
+    // before a heavy view holds the main thread (js/gestures.js, `lead`).
+    if (move && move.lead) await move.lead;
     const screen = await resolve(route);
     // The tab bar is not part of what moves: when one is on screen it is KEPT
     // across the render, so its selection can slide to the new tab.
@@ -567,8 +584,11 @@ async function render() {
      * arrival (a new hash) and stays still for a repaint, the logging path and
      * a screen that is already rising as a whole — see js/motion.js. */
     // A screen that slides or rises in as a whole does not ALSO stagger its
-    // rows up — one movement per arrival. A tab crossfade is quiet enough that
-    // the rows still come in under it.
+    // rows up — one movement per arrival. A tab switch still lets its numbers
+    // count and its bars fill, but 🔄 NOT its rows (review, 2026-09-25): rows
+    // rising under the crossfade read as a second, competing movement. While
+    // any movement runs, gestures.js sets <html data-nav-moving>, and
+    // motion.js's staggerIn() stands down for it (`navMoving()`).
     arriveScreen(screen, {
       key: location.hash, route: route.name, rising: rising || Boolean(move && move.kind !== 'tab'),
     });
@@ -578,7 +598,7 @@ async function render() {
     if (!FULLSCREEN.includes(route.name) && navKey) {
       // The icon already popped under the finger (js/gestures.js) when the tab
       // was tapped; this pop is for a tab lit some other way (a link, back).
-      if (lastNavKey !== null && navKey !== lastNavKey && !(canMove() && dir === 'tab')) {
+      if (lastNavKey !== null && navKey !== lastNavKey && !(canMove() && dir === 'tab' && !tabByLink)) {
         tabPop(app.querySelector('.navbar a[aria-current="page"]'));
       }
       lastNavKey = navKey;
@@ -726,7 +746,7 @@ function paintShell() {
   // told before the hash moves. Only when it goes somewhere new.
   document.addEventListener('click', (e) => {
     const a = e.target && e.target.closest && e.target.closest('.navbar > a');
-    if (a && a.getAttribute('href') !== location.hash) markTabNav();
+    if (a && a.getAttribute('href') !== location.hash) { markTabNav(); lastTabTap = Date.now(); }
   }, true);
   // The back swipe and Record's drag-down (phone), and the tab icon's pop.
   initGestures({ isTabRoot, route: () => parse(location.hash).name });
