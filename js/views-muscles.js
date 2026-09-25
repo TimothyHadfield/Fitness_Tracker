@@ -538,7 +538,8 @@ export async function muscleGroupsPane(host, top) {
     if (strongest) { selected = strongest.muscle; previewed = selected; preview = true; }
   }
 
-  const body = bodySvg(levelMap, selected, (muscle) => {
+  // 🆕 Motion 2 · Additions: one pick for the figure AND the summary's names.
+  function pick(muscle) {
     const keep = preview && selected === muscle;   // tapping the previewed muscle opens it for real
     selected = keep ? muscle : selected === muscle ? null : muscle;
     if (!selected) userClosed = true;
@@ -548,7 +549,8 @@ export async function muscleGroupsPane(host, top) {
     setSelected(body, selected);
     pulseMuscle(body, selected);
     renderPanel(true);
-  }, { sex: profile.gender });
+  }
+  const body = bodySvg(levelMap, selected, pick, { sex: profile.gender });
   if (preview) body.classList.add('m2-preview');
   const foot = el('div', { class: 'body-foot' });
 
@@ -567,7 +569,7 @@ export async function muscleGroupsPane(host, top) {
       ? detail(muscles.get(selected), selected, profile,
                blocked ? blocked.get(selected) : null, more, trained.get(selected),
                recent.get(selected))
-      : summary(muscles, trained);
+      : summary(muscles, trained, pick);
     setChildren(foot, legend(more, trained.size > 0), panel);
     foot.scrollTop = 0;
     // Motion 2 · Data: a tapped muscle's details spring up into place — the
@@ -1105,7 +1107,7 @@ function namedEnds(muscles) {
   };
 }
 
-function summary(muscles, trained = new Map()) {
+function summary(muscles, trained = new Map(), onPick = null) {
   /* ⚠️ BELOW BEGINNER IS RANKED TOO — 2026-09-24. Every rating in `muscles` is a
    * placing; a null `level` is the one under Beginner (the figure paints it
    * `below`), not a missing one. Filtering on `level` dropped exactly the
@@ -1121,7 +1123,15 @@ function summary(muscles, trained = new Map()) {
    * `raiseConfidenceHint()` calls "nothing recent"). Fewer than two of those and
    * the sentence falls back to every rating, marked "(guessed)" or "(old)". */
   const { strongest, weakest } = namedEnds(muscles);
-  const named = (m) => `${m.muscle} (${levelName(m)})${summaryMark(m) ? ` (${summaryMark(m)})` : ''}`;
+  /* 🆕 MOTION 2 · ADDITIONS (2026-09-25): each name is a button that picks the
+   * muscle exactly as a tap on the figure does (same `pick`, same panel, same
+   * pulse). Only the name is the button; the sentence reads as it did. */
+  const named = (m) => [
+    onPick
+      ? el('button', { type: 'button', class: 'm-name-btn', text: m.muscle, onClick: () => onPick(m.muscle) })
+      : m.muscle,
+    ` (${levelName(m)})${summaryMark(m) ? ` (${summaryMark(m)})` : ''}`,
+  ];
 
   /* ⚠️ TWO SENTENCES SINCE 2026-09-23, BECAUSE THE HATCH IS TWO STATES.
    *
@@ -1140,7 +1150,7 @@ function summary(muscles, trained = new Map()) {
     el('div', { class: 'field-help', text: 'Tap a muscle for its numbers.' }),
     strongest && weakest && strongest !== weakest
       ? el('div', { class: 'field-help' },
-          `Strongest: ${named(strongest)}. Furthest behind: ${named(weakest)}.`)
+          'Strongest: ', named(strongest), '. Furthest behind: ', named(weakest), '.')
       : null,
     /* ⚠️ THIS SENTENCE WAS ALREADY TRUE AND THE COLOUR BESIDE IT WAS NOT. It
        now names which muscles you have actually trained but the app could not

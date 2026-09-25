@@ -56,7 +56,9 @@ import { store, social, demo, activityByDate, todayISO, muscleRatings } from './
 // own header — a second copy is the drift that function exists to prevent.
 import { ownCalendar, chartLift } from './views-data.js';
 // 🆕 Profile's goal row prints how far along it is (review, 2026-09-24).
-import { goalProgress } from './goals.js';
+import { goalProgress, modelChangedSince } from './goals.js';
+// 🆕 Motion 2 · Additions: the Goals screen's own bar and spring, reused.
+import { springFill } from './views-goals.js';
 // 🆕 "What are my best lifts, ever?" — the question the app could not answer
 // until 2026-09-10 — 🔄 and since 2026-09-12 RANKED: the core eight and the rest,
 // each an estimated 1RM with a level and a confidence. Pure; the screen only
@@ -334,6 +336,22 @@ export function goalLine(goal, muscles, today = todayISO()) {
   return `${now} of ${target} ${units.units()} · ${by}`;
 }
 
+/* 🆕 MOTION 2 · ADDITIONS (2026-09-25) — Tim: *"Think about the potential for
+ * any additions … Impress me."* The row's "228 of 248 lbs" is the Goals screen's
+ * Now and Target; this is that screen's bar under it, drawn thin (css/app.css,
+ * Motion 2 · Additions). Same fraction, same markup, same spring on first show
+ * (its own key, so each screen fills once a session). Nothing when Goals would
+ * draw nothing: no current estimate, or a goal rated under an older model. */
+function goalBar(goal, muscles) {
+  const m = muscles && muscles.get ? muscles.get(goal.muscle) : null;
+  const p = goalProgress(goal, m ? m.estimate : null, todayISO());
+  if (p.currentWeight === null || p.fraction === null || modelChangedSince(goal)) return null;
+  const pct = (p.fraction || 0) * 100;
+  return el('div', { class: 'to-next-bar me-goal-bar', 'aria-hidden': 'true' },
+    springFill(el('div', { class: 'to-next-fill', style: `width:${pct.toFixed(1)}%` }),
+      pct, `me-goal:${goal.id || goal.muscle}`));
+}
+
 function goalSection(goal, muscles) {
   const line = goal ? goalLine(goal, muscles) : null;
   const row = el('a', { class: 'row', href: '#/goals' },
@@ -345,6 +363,7 @@ function goalSection(goal, muscles) {
       el('div', { class: 'row-sub wrap', text: goal
         ? line
         : 'Move a muscle up a strength level' }),
+      goal ? goalBar(goal, muscles) : null,
     ),
     el('span', { class: 'row-chev' }, chevron()),
   );
