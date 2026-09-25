@@ -38,6 +38,8 @@ import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, publishedDaysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
 import { photoBox } from './photo.js';
+import { spring, springTransform, velocityTracker, rubberBand } from './spring.js';
+import { arrivePane, motionAllowed } from './motion.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -880,6 +882,10 @@ export function ownCalendar(activity, today, opts = {}) {
       // already have.
       const pane = land ? host.closest('.pane-scroll') : null;
       if (pane) pane.scrollTop = 0;
+      // Motion 2 · Data: where the calendar IS the pane, the year blocks grow to
+      // fill it (the bottom half was empty); and the squares light up once.
+      if (pane) fitYears(host, pane);
+      lightUpYears(host, `${friend ? `them:${who}` : 'me'}|years`);
     } else {
       /* 🆕 THE CHART GOES ABOVE THE MONTHS AND INSIDE THE HOST — 2026-09-16.
        * Inside, so switching to Years takes it away with them: it is a reading
@@ -928,6 +934,7 @@ export function ownCalendar(activity, today, opts = {}) {
       // screen): the page they just opened does not move under them. A tap
       // does — see the note above `arriving`.
       if (land || !arriving) landOnCurrentMonth(host);
+      wireMonthSwipe(host);
     }
   }
 
@@ -1652,6 +1659,11 @@ export async function GraphView(opts = {}) {
     : graphMode;
   const setMode = rows ? ((k) => { mode = k; }) : ((k) => { graphMode = k; mode = k; });
   const modeSwitch = dataTabs(mode, () => render(), tabs, setMode);
+  // Motion 2 · Data: whose training this is, so my first show of a pane and a
+  // friend's are separate; and the pane last painted, so a tab change knows
+  // which side the new pane lives on.
+  const whose = rows ? `them:${subject || ''}` : 'me';
+  let paintedMode = null;
 
   /* ---------- trend (line, all sources) ---------- */
 
@@ -1816,7 +1828,8 @@ export async function GraphView(opts = {}) {
           : null,
       ),
     );
-    fillChart(plot, points, graphChoice.field, null, axisUnit(graphChoice.field));
+    fillChart(plot, points, graphChoice.field, null, axisUnit(graphChoice.field),
+      { key: `${whose}|${graphChoice.exerciseId}|${graphChoice.field}|${source}` });
   }
 
   /* ---------- rep-normalised trend (weight + reps exercises) ---------- */
@@ -1946,7 +1959,9 @@ export async function GraphView(opts = {}) {
       ),
     );
     // The line is the weight for `target` reps, and the axis now says so (review 2026-09-24).
-    fillChart(plot, points, 'weight', null, `${units.units()} for ${target} reps`);
+    // Keyed without the rep target: stepping 5 → 6 reps redraws the same lift, not a new line.
+    fillChart(plot, points, 'weight', null, `${units.units()} for ${target} reps`,
+      { key: `${whose}|${opt.id}|norm|${source}` });
   }
 
   /* ---------- body weight ---------- */
@@ -1974,7 +1989,7 @@ export async function GraphView(opts = {}) {
         })),
       ),
     );
-    fillChart(plot, bwPoints, 'weight', 'Body weight over time', units.units());
+    fillChart(plot, bwPoints, 'weight', 'Body weight over time', units.units(), { key: `${whose}|bw` });
   }
 
   /* ---------- compare (paired bars) ---------- */
@@ -2140,8 +2155,10 @@ export async function GraphView(opts = {}) {
 
     const anyNormalized = barRows.some((r) => r.atReps);
     const usedSources = [...new Set(barRows.map((r) => r.source))];
+    const bars = barChart(barRows, compareField);
+    growBars(bars, '.bar-track > .bar', `${whose}|bars`);
     setChildren(host,
-      barChart(barRows, compareField),
+      bars,
       el('div', { class: 'chart-foot' },
         el('div', { class: 'chart-caption' },
           el('span', {
@@ -2204,6 +2221,20 @@ export async function GraphView(opts = {}) {
     else if (mode === 'research') await renderResearchPane(host, top);
     else if (mode === 'calendar') await renderCalendarPane(host, top, { rows, subject });
     else await renderTrend();
+
+    /* 🆕 MOTION 2 · DATA — the pane that just painted. A CHANGE OF TAB slides the
+     * new pane in from the side its tab sits on (Bars is right of Graph, so it
+     * comes from the right), every time: that is travel, and it says where you
+     * went. The pane's own arrival — its rows, numbers, bars — plays once per
+     * session through `arrivePane` (js/motion.js). A chip tap or a reload of
+     * the same pane moves nothing. The first paint is the screen's own arrival. */
+    const was = paintedMode;
+    paintedMode = mode;
+    if (was !== null && was !== mode && host.isConnected) {
+      const idx = (k) => tabs.findIndex(([t]) => t === k);
+      slideIn([top, host], Math.sign(idx(mode) - idx(was)) || 1);
+    }
+    if (host.isConnected) arrivePane(host, `data:${whose}:${mode}`);
   }
 
   await render();
@@ -2243,8 +2274,12 @@ let chartObserver = null;
  * @param {string} [axisTitle]  what the y-axis measures, in the reader's unit —
  *   "lbs for 5 reps" (review 2026-09-24). Printed above the axis; see `lineChart`.
  */
-export function fillChart(host, points, field, label, axisTitle = null) {
+export function fillChart(host, points, field, label, axisTitle = null, opts = {}) {
   let lastW = 0, lastH = 0;
+  // 🆕 Motion 2 · Data: `opts.key` names the series. The line draws itself in
+  // the FIRST time that series is shown this session, on its first draw only —
+  // a resize or a rotation redraws it finished.
+  let firstDraw = true;
 
   const draw = () => {
     const w = Math.round(host.clientWidth);
@@ -2252,7 +2287,12 @@ export function fillChart(host, points, field, label, axisTitle = null) {
     if (w < 60 || h < 60) return;          // not laid out yet
     if (w === lastW && h === lastH) return; // nothing changed
     lastW = w; lastH = h;
-    setChildren(host, lineChart(points, field, w, h, label, axisTitle));
+    const svg = lineChart(points, field, w, h, label, axisTitle);
+    setChildren(host, svg);
+    const wasFirst = firstDraw;
+    firstDraw = false;
+    if (wasFirst && opts.key && motionAllowed() && host.isConnected && inViewport(svg)
+      && firstShow(`line:${opts.key}`)) drawIn(svg);
   };
 
   // The observer is the reliable trigger — it fires once the element is in the
@@ -2489,6 +2529,9 @@ function barChart(rows, field) {
         el('div', {
           class: 'bar ' + kind + (estimated ? ' est' : ''),
           style: `width:${Math.max(2, (value / max) * 100)}%`,
+          // Motion 2 · Data: these bars grow on a spring (`growBars`), so the
+          // route-level width fill in js/motion.js is told to leave them alone.
+          dataset: { mSeen: '1' },
         })),
       el('span', { class: 'bar-val mono' + (estimated ? ' est' : ''), text: fmt(value) }),
     );
@@ -2518,6 +2561,357 @@ function barChart(rows, field) {
       );
     }),
   );
+}
+
+/* ================================================================== *
+ * Motion 2 · Data — 2026-09-25, docs/motion2-plan.md package D.
+ *
+ * Tim: *"Put professional level annimation and physics into this cite. Really
+ * analyze all the design layouts and everything."*
+ *
+ * Each movement here answers "what just happened" (Rule 7): the pane came from
+ * the tab beside it, the line is being drawn, the bars are being measured out,
+ * the month you swiped to is where you went, the theme spread from the control
+ * you touched. Springs are js/spring.js (the physics tier: 90% ≤250ms).
+ *
+ * 🚨 FIRST SHOW ONLY, PER PANE, PER SESSION. A chip tap, a window change or a
+ * refresh repaints the same pane; that is not news and nothing replays. The
+ * one exception is travel — a sub-tab slide or a month swipe says where you
+ * went, every time you go.
+ * 🛑 `motionAllowed()` (js/motion.js) gates every piece: reduced motion, jsdom
+ * and an engine without WAAPI see the finished state and nothing inline.
+ * ================================================================== */
+
+const shownOnce = new Set();
+/** True the first time `key` is asked about in this session, false after. */
+export function firstShow(key) {
+  if (shownOnce.has(key)) return false;
+  shownOnce.add(key);
+  return true;
+}
+/** Tests only: forget every first show, as a fresh app load would. */
+export function __resetFirstShowForTest() { shownOnce.clear(); }
+
+/** Is any part of `n` inside the window? */
+function inViewport(n) {
+  if (!n || !n.getBoundingClientRect) return false;
+  const r = n.getBoundingClientRect();
+  return r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth
+    && (r.width > 0 || r.height > 0);
+}
+
+/** Run `fn` on the first frame `node` is in the document (a view builds detached). */
+function whenShown(node, fn, tries = 30) {
+  const step = () => {
+    if (node.isConnected) { fn(); return; }
+    if (tries-- > 0) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/**
+ * The indices of the points that are a new best — strictly above every point
+ * before them. The first point is where the line starts, not a best.
+ * @param {number[]} values
+ * @returns {Set<number>}
+ */
+export function prIndices(values) {
+  const out = new Set();
+  let best = -Infinity;
+  values.forEach((v, i) => {
+    if (i > 0 && v > best) out.add(i);
+    if (v > best) best = v;
+  });
+  return out;
+}
+
+/**
+ * Which markers stay FULL SIZE on a chart too dense for them all — the measured
+ * fault: 52 rings ~7px apart at 393px ran into one chain.
+ *
+ * 🚨 RULE 5: THE OTHERS ARE DRAWN SMALLER, NEVER REMOVED. A marker means "you
+ * lifted this", and a measured point with no marker would read as an estimate.
+ *
+ * `keep` (the last point, the best of all) is always full size. `prefer` (every
+ * other new best) is placed next, then everything else, left to right — and a
+ * point from either of those is full size only if it is at least `gap` px from
+ * every full-size marker already placed. A run of bests a few px apart would
+ * otherwise be the same chain of rings the thinning exists to break.
+ * @param {number[]} xs    marker x positions, ascending
+ * @param {Set<number>} keep    indices into xs that are always full size
+ * @param {number} gap
+ * @param {Set<number>} [prefer]  indices placed before ordinary points
+ * @returns {Set<number>} indices into xs drawn full size
+ */
+export function thinMarkers(xs, keep, gap, prefer = new Set()) {
+  const full = new Set();
+  const placed = [];
+  const add = (i) => { full.add(i); placed.push(xs[i]); };
+  const roomAt = (i) => placed.every((px) => Math.abs(px - xs[i]) >= gap);
+  [...keep].filter((i) => i >= 0 && i < xs.length).forEach(add);
+  const byX = (a, b) => a - b;
+  for (const i of [...prefer].filter((j) => j >= 0 && j < xs.length).sort(byX)) {
+    if (!full.has(i) && roomAt(i)) add(i);
+  }
+  for (let i = 0; i < xs.length; i++) if (!full.has(i) && roomAt(i)) add(i);
+  return full;
+}
+
+/** A grow with a SMALL overshoot (ζ≈0.77, ~3%): a bar measures out, lands, settles. */
+const GROW = { k: 420, c: 31.5 };
+const GROW_STEP = 28;
+
+/**
+ * Bars grow from their baseline, a short stagger apart, the first time `key` is
+ * shown. `transform: scaleX` rather than width — no layout per frame — and the
+ * inline style is cleared at rest so the CSS width is the only truth left.
+ */
+function growBars(root, sel, key) {
+  if (!motionAllowed() || shownOnce.has(key)) return;
+  const grow = (bars) => bars.forEach((b, i) => {
+    b.classList.add('m2-growing');
+    // Held at zero from this frame: a delayed spring writes nothing until it starts.
+    b.style.transform = 'scaleX(0)';
+    spring({
+      from: 0, to: 1, preset: GROW, precision: 0.002, delay: Math.min(i, 12) * GROW_STEP,
+      onUpdate: (v) => { b.style.transform = `scaleX(${Math.max(0, v).toFixed(4)})`; },
+      onRest: () => { b.style.transform = ''; b.classList.remove('m2-growing'); },
+    });
+  });
+  whenShown(root, () => {
+    if (!motionAllowed() || !firstShow(key)) return;
+    const all = [...root.querySelectorAll(sel)].slice(0, 30);
+    grow(all.filter(inViewport));
+    /* Bars below the fold (Volume's rows sit under the figure on a phone) grow
+     * as they scroll in, once each, in the batches they arrive in. Until then
+     * they are left alone at full width — off screen, nobody sees it. */
+    const later = all.filter((b) => !inViewport(b));
+    if (!later.length || typeof IntersectionObserver !== 'function') return;
+    const io = new IntersectionObserver((entries) => {
+      if (!root.isConnected) { io.disconnect(); return; }
+      const arrived = entries.filter((e) => e.isIntersecting).map((e) => e.target);
+      arrived.forEach((b) => io.unobserve(b));
+      grow(arrived);
+    }, { rootMargin: '0px 0px 24px 0px' });
+    later.forEach((b) => io.observe(b));
+  });
+}
+
+/** Slide a freshly painted pane in from the side it lives on (a sub-tab to the right comes from the right). */
+function slideIn(nodes, dir) {
+  if (!motionAllowed() || !dir) return;
+  for (const n of nodes) {
+    if (!n || !n.isConnected) continue;
+    n.classList.add('m2-sliding');
+    const c = springTransform(n, { x: 0, opacity: 1 }, 'glide', { from: { x: 24 * dir, opacity: 0 } });
+    c.done.then(() => n.classList.remove('m2-sliding'));
+  }
+}
+
+/* ---- the calendar: Years fills its pane and lights up; Months swipes ---- */
+
+/** How much taller than wide a Years square may be stretched to fill the pane. */
+export const YEAR_ROW_CAP = 1.5;
+const fitWatch = new WeakMap();
+
+/**
+ * 🆕 THE YEARS VIEW FILLS ITS PANE — Motion 2 · Data. The grid is width-bound
+ * (53 square columns), so two years used the top half of a phone and of a laptop
+ * and left the rest empty (measured, audit 2026-09-25). The ROWS stretch into the
+ * spare height, up to `YEAR_ROW_CAP` × the square — never shrinking, so a long
+ * history still scrolls exactly as before. Only where the calendar IS the pane
+ * (the caller passes it); on Profile it sits under the avatar and keeps its size.
+ */
+function fitYears(host, pane) {
+  const run = () => {
+    if (!host.isConnected) { const ro = fitWatch.get(host); if (ro) ro.disconnect(); fitWatch.delete(host); return; }
+    const grids = [...host.querySelectorAll('.yr-grid')];
+    if (!grids.length) return;
+    host.classList.remove('m2-yr-fit');
+    grids.forEach((g) => { g.style.gridTemplateRows = ''; });
+    const cell = grids[0].querySelector('.yr-cell');
+    const w = cell ? cell.getBoundingClientRect().width : 0;
+    if (!(w > 0)) return;
+    const paneBox = pane.getBoundingClientRect();
+    const padB = parseFloat(getComputedStyle(pane).paddingBottom) || 0;
+    const lastYear = grids[grids.length - 1].closest('.yr') || grids[grids.length - 1];
+    const free = paneBox.bottom - padB - lastYear.getBoundingClientRect().bottom - 2;
+    if (free < 8) return;
+    const row = Math.min(w * YEAR_ROW_CAP, w + free / (7 * grids.length));
+    host.classList.add('m2-yr-fit');
+    grids.forEach((g) => { g.style.gridTemplateRows = `repeat(7, ${row.toFixed(2)}px)`; });
+  };
+  whenShown(host, run);
+  if (typeof ResizeObserver !== 'undefined' && !fitWatch.has(host)) {
+    let last = '';
+    const ro = new ResizeObserver(() => {
+      const size = `${pane.clientWidth}x${pane.clientHeight}`;
+      if (size !== last) { last = size; run(); }
+    });
+    ro.observe(pane);
+    fitWatch.set(host, ro);
+  }
+}
+
+/** Every year's trained squares light up in date order, once per session, ≤600ms in all. */
+export const YEARS_LIGHT_MS = 600;
+function lightUpYears(host, key) {
+  if (!motionAllowed() || shownOnce.has(key)) return;
+  whenShown(host, () => {
+    if (!motionAllowed() || !firstShow(key)) return;
+    const EACH = 150;
+    for (const grid of host.querySelectorAll('.yr-grid')) {
+      if (!inViewport(grid)) continue;
+      const cells = [...grid.querySelectorAll('.yr-cell.on')];
+      const n = cells.length;
+      // DOM order is week by week, day by day — the order the days happened.
+      cells.forEach((c, i) => {
+        if (typeof c.animate !== 'function') return;
+        c.animate([
+          { opacity: 0, transform: 'scale(.3)' },
+          { opacity: 1, transform: 'scale(1)' },
+        ], {
+          duration: EACH, delay: n > 1 ? (i / (n - 1)) * (YEARS_LIGHT_MS - EACH - 20) : 0,
+          easing: 'cubic-bezier(.3, 1.4, .6, 1)', fill: 'backwards',
+        });
+      });
+    }
+  });
+}
+
+const swipeWired = new WeakSet();
+/** Past this (finger travel + ~0.18s of its speed) a swipe changes month. */
+const MONTH_SWIPE_PX = 60;
+
+/** The month section beside `month` in the list: -1 earlier, +1 later. */
+function monthBeside(month, dir) {
+  let n = month;
+  do { n = dir < 0 ? n.previousElementSibling : n.nextElementSibling; }
+  while (n && !n.classList.contains('cal-month'));
+  return n;
+}
+
+/**
+ * 🆕 A SIDEWAYS SWIPE ON A MONTH GOES TO THE NEXT OR PREVIOUS ONE — Motion 2 ·
+ * Data. The months stay one list you scroll (Tim's 2026-09-12 ask: land on this
+ * month, scroll up for earlier ones); the swipe is a second way along it. The
+ * grid follows the finger, rubber-bands at the first and last month, and on
+ * release the finger's speed decides: left = the later month, right = the
+ * earlier one. The pane glides there and the month arrives from the side the
+ * finger sent it. `touch-action: pan-y` on the grid leaves vertical scrolling to
+ * the browser; a swipe never becomes a tap on a day.
+ */
+function wireMonthSwipe(host) {
+  if (swipeWired.has(host)) return;
+  swipeWired.add(host);
+  let g = null;
+  host.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const grid = e.target.closest && e.target.closest('.cal-grid');
+    if (!grid || !host.contains(grid)) return;
+    g = { grid, id: e.pointerId, x0: e.clientX, y0: e.clientY, claimed: false, off: 0, vt: velocityTracker() };
+    g.vt.add(e);
+  });
+  host.addEventListener('pointermove', (e) => {
+    if (!g || e.pointerId !== g.id) return;
+    g.vt.add(e);
+    const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (!g.claimed) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.2) { g = null; return; } // a scroll, not a swipe
+      g.claimed = true;
+      g.month = g.grid.closest('.cal-month');
+      g.earlier = g.month && monthBeside(g.month, -1);
+      g.later = g.month && monthBeside(g.month, 1);
+      g.grid.classList.add('m2-dragging');
+      try { g.grid.setPointerCapture(e.pointerId); } catch (_) { /* not capturable: fine */ }
+    }
+    const room = dx < 0 ? g.later : g.earlier;
+    g.off = room ? dx : rubberBand(dx, 90);
+    g.grid.style.transform = `translate3d(${g.off.toFixed(1)}px, 0, 0)`;
+  });
+  const end = (e) => {
+    if (!g || e.pointerId !== g.id) return;
+    const s = g;
+    g = null;
+    if (!s.claimed) return;
+    // The click a drag leaves behind is not a tap on a day.
+    const kill = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    host.addEventListener('click', kill, { capture: true, once: true });
+    setTimeout(() => host.removeEventListener('click', kill, { capture: true }), 400);
+    const { vx } = s.vt.get();
+    const flung = s.off + vx * 0.18;
+    const dir = e.type === 'pointercancel' ? 0 : flung < -MONTH_SWIPE_PX ? 1 : flung > MONTH_SWIPE_PX ? -1 : 0;
+    const target = dir > 0 ? s.later : dir < 0 ? s.earlier : null;
+    springTransform(s.grid, { x: 0 }, 'glide', { from: { x: s.off }, velocity: { x: target ? 0 : vx } })
+      .done.then(() => s.grid.classList.remove('m2-dragging'));
+    if (target) goToMonth(host, target, dir);
+  };
+  host.addEventListener('pointerup', end);
+  host.addEventListener('pointercancel', end);
+}
+
+/** Glide the pane to `month` and bring it in from the side the swipe sent it. */
+function goToMonth(host, month, dir) {
+  const pane = host.closest('.pane-scroll');
+  if (!pane) return;
+  const max = Math.max(0, pane.scrollHeight - pane.clientHeight);
+  const to = Math.max(0, Math.min(max,
+    pane.scrollTop + month.getBoundingClientRect().top - pane.getBoundingClientRect().top));
+  const glide = spring({
+    from: pane.scrollTop, to, preset: 'glide', precision: 0.5,
+    onUpdate: (v) => { pane.scrollTop = v; },
+  });
+  // A finger on the pane takes the scroll back at once.
+  const grab = () => glide.stop();
+  pane.addEventListener('pointerdown', grab, { once: true });
+  pane.addEventListener('wheel', grab, { once: true, passive: true });
+  glide.done.then(() => {
+    pane.removeEventListener('pointerdown', grab);
+    pane.removeEventListener('wheel', grab);
+  });
+  const arriving = month.querySelector('.cal-grid') || month;
+  springTransform(arriving, { x: 0, opacity: 1 }, 'glide', { from: { x: 40 * dir, opacity: 0.25 } });
+}
+
+/* ---- the line chart: draw-in, and a scrub dot that travels ---- */
+
+let chartSeq = 0;
+
+/**
+ * Draw a chart's line in, left to right, with the area and markers revealed
+ * under the pen. The line uses `pathLength="1"` and a dash offset, so no path
+ * has to be measured before it can start; the area and the markers are clipped
+ * to the pen's x, read off the real path each frame.
+ */
+function drawIn(svg) {
+  const line = svg.querySelector('.series-line');
+  const clip = svg.querySelector('.m2-clip-rect');
+  if (!line || !clip || typeof line.getTotalLength !== 'function') return;
+  let total = 0;
+  try { total = line.getTotalLength(); } catch (_) { total = 0; }
+  if (!(total > 0)) return;
+  const revealed = [...svg.querySelectorAll('.series-area, .m2-pts')];
+  line.setAttribute('pathLength', '1');
+  line.style.strokeDasharray = '1 1';
+  revealed.forEach((n) => n.setAttribute('clip-path', `url(#${clip.parentNode.id})`));
+  svg.dataset.m2Drew = '1';
+  const at = (p) => {
+    line.style.strokeDashoffset = String(1 - p);
+    let x = 0;
+    try { x = line.getPointAtLength(Math.max(0, Math.min(1, p)) * total).x; } catch (_) { x = 0; }
+    clip.setAttribute('width', (p >= 1 ? Number(svg.getAttribute('width')) : x + 1).toFixed(1));
+  };
+  spring({
+    from: 0, to: 1, preset: 'glide', precision: 0.002,
+    onUpdate: at,
+    onRest: () => {
+      line.removeAttribute('pathLength');
+      line.style.strokeDasharray = '';
+      line.style.strokeDashoffset = '';
+      revealed.forEach((n) => n.removeAttribute('clip-path'));
+    },
+  });
 }
 
 /* ---- SVG line chart ---- */
@@ -2658,19 +3052,60 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
     at.textContent = axisTitle;
   }
 
+  /* 🆕 A REAL GRADIENT UNDER THE LINE — Motion 2 · Data, 2026-09-25. The CSS mask
+   * that faded the area (Polish section) is computed and not painted by WebKit, so
+   * every iPhone saw a flat .09 wash. A <linearGradient> in the markup is painted
+   * everywhere; its stops take their colour from the stylesheet (`.m2-stop-*`), so
+   * the accent, both themes and every palette follow without a second copy here.
+   * The clip rect is the draw-in's pen (`drawIn`); it clips nothing at rest. */
+  const seq = ++chartSeq;
+  const defs = add('defs', {});
+  const grad = mk('linearGradient', { id: `m2g-${seq}`, x1: 0, y1: 0, x2: 0, y2: 1 });
+  grad.append(mk('stop', { offset: 0 }, 'm2-stop-top'), mk('stop', { offset: 1 }, 'm2-stop-bot'));
+  const clipPath = mk('clipPath', { id: `m2c-${seq}` });
+  clipPath.append(mk('rect', { x: 0, y: 0, width: 0, height: H }, 'm2-clip-rect'));
+  defs.append(grad, clipPath);
+
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(ts[i]).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
-  add('path', { d: `${d} L${x(ts[ts.length - 1]).toFixed(1)},${padT + ih} L${x(ts[0]).toFixed(1)},${padT + ih} Z` }, 'series-area');
+  add('path', {
+    d: `${d} L${x(ts[ts.length - 1]).toFixed(1)},${padT + ih} L${x(ts[0]).toFixed(1)},${padT + ih} Z`,
+    style: `fill:url(#m2g-${seq})`,
+  }, 'series-area m2-grad');
   add('path', { d }, 'series-line');
 
   // A marker means "you actually lifted this, at this rep count". Estimated
   // points are carried by the line alone and get no marker, so a glance
   // separates measurement from inference. `actual` is undefined on charts that
   // are not rep-normalised, where every point is a measurement.
-  points.forEach((p, i) => {
-    if (p.actual === false) return;
+  //
+  // 🆕 THINNED WHEN DENSE — Motion 2 · Data. 52 rings ~7px apart at 393px ran into
+  // one chain (measured). The last point, every new best and any marker with
+  // ≥12px of room stay full size; the rest are drawn SMALL (`pt-thin`), never
+  // removed — Rule 5. A body-weight line has no "best" (direction is not judged
+  // there, see renderBodyWeight), and nor does time, so neither keeps bests.
+  const measured = [];
+  points.forEach((p, i) => { if (p.actual !== false) measured.push(i); });
+  const judgedBest = field !== 'time' && !label;
+  const prs = judgedBest ? prIndices(points.map((p) => p.value)) : new Set();
+  // Always: the last point, and (where bests are judged) the best of all.
+  let top = -1;
+  if (judgedBest) prs.forEach((i) => { if (top < 0 || points[i].value >= points[top].value) top = i; });
+  const keep = new Set();
+  const prefer = new Set();
+  measured.forEach((pi, mi) => {
+    if (pi === points.length - 1 || pi === top) keep.add(mi);
+    else if (prs.has(pi)) prefer.add(mi);
+  });
+  const full = thinMarkers(measured.map((pi) => x(ts[pi])), keep, 12, prefer);
+  const ptsG = add('g', {}, 'm2-pts');
+  if (full.size < measured.length) svg.classList.add('m2-thinned');
+  measured.forEach((i, mi) => {
+    const p = points[i];
     const last = i === points.length - 1;
-    add('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5.5 : 4 },
-      last ? 'pt pt-last' : 'pt' + (p.source === 'benchmark' ? ' bench' : ''));
+    const n = mk('circle', { cx: x(ts[i]).toFixed(1), cy: y(p.value).toFixed(1), r: last ? 5.5 : 4 },
+      (last ? 'pt pt-last' : 'pt' + (p.source === 'benchmark' ? ' bench' : ''))
+        + (full.has(mi) ? '' : ' pt-thin'));
+    ptsG.append(n);
   });
 
   // Roughly one date label per 90px of width.
@@ -2704,28 +3139,54 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
   hoverG.append(hLine, hDot, hVal, hDate);
   svg.append(hoverG);
 
-  const showAt = (i) => {
-    const p = points[i];
-    const px = x(ts[i]), py = y(p.value);
-
+  /* 🆕 THE DOT TRAVELS — Motion 2 · Data. It used to teleport from point to point
+   * under a scrubbing finger; now it follows on a `snap` spring (90% in ~160ms),
+   * keeping its speed when the finger changes direction, with the crosshair and
+   * the readout riding along. The NUMBER changes at once — only the position
+   * moves. Reduced motion: the spring lands on its target synchronously. */
+  let cur = null;       // where the crosshair is drawn now, {x, y}
+  let sx = null, sy = null;
+  const place = () => {
+    const px = cur.x, py = cur.y;
     hLine.setAttribute('x1', px.toFixed(1));
     hLine.setAttribute('x2', px.toFixed(1));
     hDot.setAttribute('cx', px.toFixed(1));
     hDot.setAttribute('cy', py.toFixed(1));
-    // An estimate keeps its dashed identity here too — never let an inference
-    // read as a measurement (Rule 5).
-    hDot.setAttribute('class', 'hover-dot' + (p.actual === false ? ' est' : ''));
-
     // Keep the readout inside the plot instead of letting it clip at the edges.
     const anchor = px > W - padR - 64 ? 'end' : px < padL + 64 ? 'start' : 'middle';
     for (const t of [hVal, hDate]) {
       t.setAttribute('x', px.toFixed(1));
       t.setAttribute('text-anchor', anchor);
     }
+  };
+  const showAt = (i) => {
+    const p = points[i];
+    const px = x(ts[i]), py = y(p.value);
+    const hidden = hoverG.getAttribute('visibility') !== 'visible';
 
+    // An estimate keeps its dashed identity here too — never let an inference
+    // read as a measurement (Rule 5).
+    hDot.setAttribute('class', 'hover-dot' + (p.actual === false ? ' est' : ''));
     hVal.textContent = fmtField(field, Math.round(p.value * 10) / 10)
       + (p.actual === false ? '  est' : '');
     hDate.textContent = fmtDateShort(p.date);
+
+    // Appearing: it starts where the finger is, not from wherever it was left.
+    if (hidden || !cur || !motionAllowed()) {
+      if (sx) sx.stop();
+      if (sy) sy.stop();
+      sx = null; sy = null;
+      cur = { x: px, y: py };
+      place();
+    } else {
+      if (!sx) {
+        sx = spring({ from: cur.x, to: px, preset: 'snap', precision: 0.2, onUpdate: (v) => { cur.x = v; place(); } });
+        sy = spring({ from: cur.y, to: py, preset: 'snap', precision: 0.2, onUpdate: (v) => { cur.y = v; place(); } });
+      } else {
+        sx.set(px);
+        sy.set(py);
+      }
+    }
     hoverG.setAttribute('visibility', 'visible');
   };
 
@@ -2936,6 +3397,7 @@ export function onOffSwitch(label, on, onChange) {
     onClick: () => {
       const next = sw.getAttribute('aria-checked') !== 'true';
       sw.setAttribute('aria-checked', String(next));
+      springKnob(sw.firstChild, next);
       onChange(next);
     },
   }, el('span', { class: 'switch-knob', 'aria-hidden': 'true' }));
@@ -2943,6 +3405,63 @@ export function onOffSwitch(label, on, onChange) {
     el('label', { for: id, text: label }),
     sw,
   );
+}
+
+/* 🆕 THE KNOB IS AN OBJECT — Motion 2 · Data. It crosses the track on a spring
+ * with a touch of give (ζ≈0.7, ~1px past the end and back) and stretches along
+ * the way it is travelling, in proportion to its speed, so it reads as a thing
+ * thrown rather than a picture swapped. The CSS keeps the rest positions; this
+ * writes the transform only while moving and hands back to the stylesheet at
+ * rest. Reduced motion / jsdom: nothing inline, the CSS state is the answer. */
+const KNOB_TRAVEL = 18;          // px, matches `.switch[aria-checked="true"] .switch-knob`
+const KNOB_SPRING = { k: 600, c: 34 };
+const knobs = new WeakMap();
+function springKnob(knob, on) {
+  if (!knob || !motionAllowed()) return;
+  const prev = knobs.get(knob);
+  const from = prev && prev.active ? prev.value : (on ? 0 : KNOB_TRAVEL);
+  const velocity = prev && prev.active ? prev.velocity : 0;
+  if (prev && prev.active) prev.stop();
+  knob.classList.add('m2-knob');
+  let ctl = null;
+  ctl = spring({
+    from, to: on ? KNOB_TRAVEL : 0, velocity, preset: KNOB_SPRING, precision: 0.05,
+    onUpdate: (x) => {
+      const v = ctl ? Math.abs(ctl.velocity) : 0;
+      const s = Math.min(0.2, v / 1000);
+      knob.style.transform = `translateX(${x.toFixed(2)}px) scale(${(1 + s).toFixed(3)}, ${(1 - s * 0.6).toFixed(3)})`;
+    },
+    onRest: () => {
+      if (ctl && knobs.get(knob) !== ctl) return; // a newer throw owns the knob
+      knob.style.transform = '';
+      knob.classList.remove('m2-knob');
+    },
+  });
+  knobs.set(knob, ctl);
+}
+
+/* 🆕 A THEME CHANGE SPREADS FROM THE CONTROL YOU TOUCHED — Motion 2 · Data. A
+ * circle grows out of the tapped chip until it covers the screen, the new theme
+ * inside it (`document.startViewTransition`, a real snapshot of both). Where
+ * the engine has no View Transitions, or the reader asked for less motion, the
+ * theme simply switches, as it always did. `m2-theme-vt` scopes the CSS to this
+ * one transition so any other view transition in the app keeps its own. */
+function revealTheme(apply, from) {
+  const root = document.documentElement;
+  if (!motionAllowed() || typeof document.startViewTransition !== 'function' || !from) { apply(); return; }
+  const r = from.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const R = Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy));
+  root.classList.add('m2-theme-vt');
+  let vt;
+  try { vt = document.startViewTransition(apply); } catch (_) { root.classList.remove('m2-theme-vt'); apply(); return; }
+  vt.ready.then(() => {
+    root.animate(
+      { clipPath: [`circle(0px at ${cx}px ${cy}px)`, `circle(${R.toFixed(0)}px at ${cx}px ${cy}px)`] },
+      { duration: 240, easing: 'cubic-bezier(.2, .7, .2, 1)', pseudoElement: '::view-transition-new(root)' },
+    );
+  }).catch(() => {});
+  vt.finished.finally(() => root.classList.remove('m2-theme-vt'));
 }
 
 export async function SettingsView() {
@@ -2957,7 +3476,10 @@ export async function SettingsView() {
   const accountLine = describeAccount(accountState, auth.configured());
 
   function setTheme(theme, e) {
-    document.documentElement.setAttribute('data-theme', theme);
+    const was = document.documentElement.getAttribute('data-theme');
+    const apply = () => document.documentElement.setAttribute('data-theme', theme);
+    if (was === theme) apply();
+    else revealTheme(apply, e.currentTarget || e.target);
     store.saveSettings({ theme });
     e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
     e.target.setAttribute('aria-pressed', 'true');
@@ -3601,6 +4123,9 @@ export async function renderVolumePane(host, top, opts = {}) {
   setChildren(list, ...data.muscles.map((m) => volRow(
     m, scale, volOpen === m.muscle, () => select(m.muscle),
   )));
+  // Motion 2 · Data: the rows' bars measure out on the pane's first show only;
+  // a window chip repaints them finished.
+  growBars(list, '.vol-fill', `${who ? `them:${who}` : 'me'}|volume`);
 
   /* ⚠️ A PICK ON THE FIGURE BRINGS ITS DETAILS INTO VIEW — 2026-09-24. On a
    * 659px-tall phone the panel opened at y≈687, below the fold, and nothing

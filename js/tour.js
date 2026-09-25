@@ -15,8 +15,17 @@
 // change or delete anything a person owns — the runner stop points at the door
 // to the runner rather than opening a workout, because opening one makes a draft.
 //
-// ⚠️ NO IMPORTS, and nothing touches the DOM at load, so the stop list and the
-// placement maths can be tested in plain Node (tests/tour.test.mjs).
+// ⚠️ ONE IMPORT, js/spring.js, which itself imports nothing and touches no DOM
+// at load — so the stop list and the placement maths can still be tested in
+// plain Node (tests/tour.test.mjs).
+//
+// 🆕 MOTION 2 (2026-09-25, docs/motion2-plan.md package E) — Tim: *"Put
+// professional level annimation and physics into this cite."* The hole used
+// to glide on a CSS transition; it now moves on four springs (x, y, width,
+// height). A spring keeps its speed when retargeted, so a quick Next · Next
+// bends the hole's path toward the newer stop instead of restarting it.
+
+import { spring } from './spring.js';
 
 export const TOUR_KEY = 'ftrack:v1:toured';
 
@@ -255,10 +264,32 @@ export function startTour() {
 
   const vp = () => ({ w: innerWidth, h: innerHeight });
 
-  function placeSpot(rect) {
-    spot.style.transform = `translate(${rect.x}px, ${rect.y}px)`;
-    spot.style.width = `${rect.w}px`;
-    spot.style.height = `${rect.h}px`;
+  /* The hole, on springs. `animate` false (first placement, a resize, a late
+   * re-render — `instantly()`) puts it there at once; true springs it from
+   * wherever it is now, keeping any speed it already has. */
+  const SPOT_KEYS = ['x', 'y', 'w', 'h'];
+  const spotNow = { x: 0, y: 0, w: 0, h: 0 };
+  const spotSprings = {};
+  function writeSpot() {
+    spot.style.transform = `translate(${spotNow.x.toFixed(1)}px, ${spotNow.y.toFixed(1)}px)`;
+    spot.style.width = `${Math.max(0, spotNow.w).toFixed(1)}px`;
+    spot.style.height = `${Math.max(0, spotNow.h).toFixed(1)}px`;
+  }
+  function placeSpot(rect, animate = false) {
+    for (const k of SPOT_KEYS) {
+      const s = spotSprings[k];
+      if (!animate) {
+        if (s && s.active) s.stop();
+        spotNow[k] = rect[k];
+        continue;
+      }
+      if (s && s.active) { s.set(rect[k]); continue; }
+      spotSprings[k] = spring({
+        from: spotNow[k], to: rect[k], preset: 'glide', precision: 0.3,
+        onUpdate: (v) => { spotNow[k] = v; writeSpot(); },
+      });
+    }
+    writeSpot();
   }
 
   // The hole over the target, measured now.
@@ -338,7 +369,7 @@ export function startTour() {
             instantly(() => { placeSpot(closedHole()); placeBubbleAt(null, true); });
             root.classList.add('is-on');
           } else {
-            placeSpot(closedHole());
+            placeSpot(closedHole(), true);
             placeBubbleAt(null, true);
           }
           if (!reduced()) await sleep(cssMs('--t-slow', 240));
@@ -383,7 +414,7 @@ export function startTour() {
           root.classList.add('is-on');
           if (!reduced()) await sleep(cssMs('--t', 170));
         } else {
-          placeSpot(hole);
+          placeSpot(hole, true);
           placeBubbleAt(hole, false);
           if (!reduced()) await sleep(cssMs('--t-slow', 240));
         }

@@ -41,6 +41,9 @@ import { alternativesFor } from './exercise-families.js';
  * a FRIEND. `sessionStats`/`setsLabel`/`ACTIVITY_NAMES` left with it and are
  * imported here no longer — they had no other caller. */
 import { workoutCard, cardMeta } from './workout-card.js';
+// 🆕 Motion 2 · Moments (package E): skeleton, pull to refresh, kudos roll.
+import { feedSkeleton, pullToRefresh, kudosLabel, rollCount, kudosPop } from './workout-card.js';
+import { staggerIn } from './motion.js';
 import { liveDraft, draftRecordedSets } from './session-draft.js';
 // Workout photos (2026-09-25) — the box, and the store's cached read.
 import { photoBox } from './photo.js';
@@ -190,7 +193,9 @@ function lintBlock(findings, nameOf = null) {
  * where anything that belongs to no other tab goes. Nothing was added here today
  * — he described the destination, not a feature — so resist filling it. */
 export async function HomeView() {
-  const body = el('div', { class: 'feed' });
+  // 🆕 Motion 2: placeholder cards hold the feed's shape while it reads —
+  // shown only if the read is slow enough to see (they fade in after 150ms).
+  const body = el('div', { class: 'feed', 'aria-busy': 'true' }, ...feedSkeleton(3));
 
   const screen = screenShell({
     profile: true,
@@ -203,10 +208,13 @@ export async function HomeView() {
   // fills in. Every friend is a separate network read; awaiting all of them
   // before showing anything would make the Home tab the slowest in the app,
   // which is the fault the 2026-08-22 read-cache pass was written to remove.
-  fillFeed(body).catch(() => {
+  const load = () => fillFeed(body).catch(() => {
     setChildren(body, emptyState('Could not load your feed',
       'Your connection dropped. Everything else in the app works offline — this is the one screen that cannot.'));
-  });
+  }).finally(() => body.removeAttribute('aria-busy'));
+  load();
+  // 🆕 Motion 2: pull down at the top (phones) reads the feed again, in place.
+  pullToRefresh(screen.querySelector('.pane-scroll'), load);
 
   return screen;
 }
@@ -356,7 +364,9 @@ async function fillFeed(body) {
     const slice = entries.slice(shown, shown + PAGE);
     await loadReactions(slice);
     shown += slice.length;
-    more.before(...slice.map((e) => feedCard(withRx(e))));
+    const added = slice.map((e) => feedCard(withRx(e)));
+    more.before(...added);
+    staggerIn(added);   // 🆕 Motion 2: the new cards follow each other in
     more.disabled = false;
     if (shown >= entries.length) more.remove();
   } });
@@ -665,22 +675,34 @@ export function feedActions(e) {
     openCommentsSheet(e, rx, () => paint());
   }
 
+  let shownCount = slot.kudos.length;
   function paint(pop = false) {
     const mine = Boolean(slot.myKudosId);
+    // 🆕 Motion 2: the thumb pops on a spring and the count rolls like an
+    // odometer (js/workout-card.js). The words are exactly what they were.
+    // `is-popping` stays as the CSS fallback pop; the spring takes over from it.
+    const glyph = el('span', { class: 'feed-act-glyph' + (pop ? ' is-popping' : '') }, icon('thumb', 17));
+    const label = kudosLabel(slot.kudos.length);
+    const was = shownCount;
+    shownCount = slot.kudos.length;
     setChildren(row,
       el('button', {
         class: 'feed-act' + (mine ? ' is-mine' : ''),
         'aria-pressed': mine ? 'true' : 'false',
         onClick: onKudos,
-      },
-        el('span', { class: 'feed-act-glyph' + (pop ? ' is-popping' : '') }, icon('thumb', 17)),
-        'Kudos' + (slot.kudos.length ? ` · ${slot.kudos.length}` : '')),
+      }, glyph, label),
       el('button', { class: 'feed-act', onClick: onComment },
         el('span', { class: 'feed-act-glyph' }, icon('comment', 17)),
         'Comment' + (slot.comments.length ? ` · ${slot.comments.length}` : '')),
       el('button', { class: 'feed-act', onClick: () => shareActivity(e) },
         el('span', { class: 'feed-act-glyph' }, icon('share', 17)), 'Share'),
     );
+    if (pop) {
+      kudosPop(glyph);
+      const n = label.querySelector('.kudos-n');
+      // 0 → 1 rolls up out of an empty cell; a count going to 0 simply goes.
+      if (n) rollCount(n, was > 0 ? was : '', shownCount);
+    }
   }
   paint();
   return row;

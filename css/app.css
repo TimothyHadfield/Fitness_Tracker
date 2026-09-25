@@ -6764,3 +6764,194 @@ a.pick-row { text-decoration: none; }
 .goal-screen .section-head { margin-top: 6px; }
 
 /* === end Motion 2 · Layout === */
+
+/* === Motion 2 · Data === */
+/* docs/motion2-plan.md package D, 2026-09-25. Tim: "Put professional level
+   annimation and physics into this cite." js/views-data.js and
+   js/views-muscles.js decide WHEN (a pane's first show per session; travel —
+   a sub-tab, a month swipe — every time) and drive the springs (js/spring.js).
+   This holds the rest states, and switches CSS transitions off on anything a
+   spring is writing, or the browser would smear every frame it writes. */
+
+/* ---- a spring owns it: no transition, no keyframe may chase it ---- */
+.m2-sliding, .m2-growing, .m2-dragging, .m2-panel-in { transition: none !important; }
+
+/* ---- bars measure out from their baseline (scaleX, no layout per frame) ---- */
+.m2-growing { transform-origin: left center; animation: none !important; }
+
+/* ---- the line chart ---- */
+/* A real <linearGradient> (in the markup, so WebKit paints it): the accent
+   under the line fading to nothing at the baseline. The Polish section's mask
+   and flat .09 are replaced on the charts that carry the gradient. */
+.chart .series-area.m2-grad { opacity: 1; -webkit-mask-image: none; mask-image: none; }
+.chart .m2-stop-top { stop-color: var(--accent); stop-opacity: .30; }
+.chart .m2-stop-bot { stop-color: var(--accent); stop-opacity: 0; }
+:root[data-theme="light"] .chart .m2-stop-top { stop-opacity: .22; }
+/* Dense: the thinned markers are drawn small, never removed (Rule 5: a marker
+   means measured). The ones kept full size — the last point, every new best,
+   any with 12px of room — keep the full ring even where the Layout section
+   shrinks a dense chart's markers. Same small size as that rule. */
+.chart .pt.pt-thin { r: 2.2px; stroke-width: 1.4; }
+svg.chart.m2-thinned:has(circle.pt) .pt:not(.pt-thin):not(.pt-last) { r: 4px; stroke-width: 2.5; }
+
+/* ---- the calendar ---- */
+/* Vertical drags stay the browser's (the months scroll); a sideways one is the
+   month swipe. */
+.cal-grid { touch-action: pan-y; }
+.m2-dragging { -webkit-user-select: none; user-select: none; }
+/* Years stretched to fill its pane: the rows are sized in JS (≤1.5× the square). */
+.m2-yr-fit .yr-cell { aspect-ratio: auto; }
+
+/* ---- Settings ---- */
+/* The knob's position is a spring while it moves; its colour still eases. */
+.switch-knob.m2-knob { transition: background-color var(--t) var(--ease-out) !important; }
+/* The theme reveal: the new theme grows in a circle from the tapped chip.
+   Scoped to its own transition by class, so no other view transition in the
+   app inherits "no crossfade". */
+:root.m2-theme-vt::view-transition-old(root),
+:root.m2-theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root.m2-theme-vt::view-transition-new(root) { z-index: 2; }
+
+/* ---- Muscles ---- */
+/* The laptop's default pick is outlined without dimming the rest of the map. */
+.body-map.m2-preview[data-selected] .body-region:not(.is-selected) { opacity: 1; }
+
+/* Reduced motion: the JS starts none of this (motionAllowed()); this is the
+   backstop for a setting changed while something was moving. */
+@media (prefers-reduced-motion: reduce) {
+  .m2-sliding, .m2-growing, .m2-panel-in { transform: none !important; opacity: 1 !important; }
+}
+/* === end Motion 2 · Data === */
+
+/* === Motion 2 · Moments === */
+/* docs/motion2-plan.md package E, 2026-09-25. Tim: *"Put professional level
+   annimation and physics into this cite … Impress me."* The movement itself is
+   springs in JS (js/spring.js); what is here is only what those springs need —
+   an origin, a stacking order, a window to roll a digit through — plus the two
+   loading indicators. Nothing here is on the logging path.
+   ⚠️ THE TWO LOOPS (the skeleton's shimmer, the refresh spinner) are loading
+   indicators, not transitions: a shimmer at Rule 7's 250ms would strobe. Their
+   period is a variable (--m-loop), and they stop the moment the data lands. */
+
+/* ── Finish screen: the counted numbers never change width ── */
+.finish-n { font-variant-numeric: tabular-nums; }
+
+/* ── The runner going into its bar, and coming back out of it ──
+   `transform-origin: 0 0` is what js/photo.js `rectFlight()` computes for. The
+   flying ghost sits above the screen the router draws under it (the fall's
+   own order, `.is-falling`); the rounded corners are what make a whole screen
+   read as a card while it is small. The restoring screen keeps `.rises`
+   (its stacking and ground) with the keyframe off — a CSS animation would
+   override the spring's inline transform for its whole length. */
+.screen-ghost.m-flying {
+  z-index: 50;
+  transform-origin: 0 0;
+  border-radius: 18px;
+  box-shadow: var(--elev-3);
+  will-change: transform, opacity;
+}
+.screen.m-restoring {
+  animation: none !important;
+  transform-origin: 0 0;
+  border-radius: 18px;
+  will-change: transform, opacity;
+}
+
+/* ── Kudos: the count rolls through a one-line window ── */
+.kudos-n { font-variant-numeric: tabular-nums; }
+.odo-d {
+  display: inline-block;
+  height: 1.2em; line-height: 1.2em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.odo-col { display: flex; flex-direction: column; will-change: transform; }
+.odo-cell { display: block; height: 1.2em; text-align: right; }
+/* The spring is the pop now; the keyframe stays only where springs do not run. */
+.feed-act-glyph.is-popping.m-sprung { animation: none; }
+
+/* ── Skeletons: the shape of the rows while a screen reads ──
+   Faded in only after 150ms, so a quick read never flashes grey. Sizes match
+   the real rows (measured at 393px on the demo): a feed card, Profile's head,
+   counts and rows. */
+.m-skel {
+  --m-loop: 1.4s;
+  --m-hl: rgb(255 255 255 / .06);
+  animation: m-skel-in var(--t) var(--ease-out) 150ms both;
+  pointer-events: none;
+}
+:root[data-theme="light"] .m-skel { --m-hl: rgb(255 255 255 / .6); }
+@keyframes m-skel-in { from { opacity: 0; } }
+.m-skel-card { display: flex; flex-direction: column; gap: 7px; padding: 15px 0 13px; }
+.m-skel-card + .m-skel-card { border-top: 1px solid var(--rule); }
+.m-skel-row { display: flex; align-items: center; gap: 9px; }
+.m-skel-row > .m-skel-col { flex: 1; }
+.m-skel-card > .m-skel-row:nth-child(3) { gap: 24px; }
+.m-skel-card > .m-skel-row:nth-child(3) > .m-skel-col { flex: none; }
+.m-skel-row.is-head { gap: 16px; min-height: 72px; }
+.m-skel-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.m-skel-col.is-lines { gap: 8px; padding-top: 4px; }
+.m-skel-foot { height: 40px; }
+.m-skel-line { display: flex; align-items: center; }
+.m-skel-line > .m-skel-col { flex: 1; }
+.m-skel-line + .m-skel-line { border-top: 1px solid var(--rule-soft); }
+.m-skel-bar {
+  display: block; flex: none;
+  max-width: 100%;
+  border-radius: 5px;
+  background: var(--raised);
+  position: relative; overflow: hidden;
+}
+.m-skel-bar.is-round { border-radius: 50%; }
+.m-skel-bar.is-soft { opacity: .55; border-radius: var(--r); }
+.m-skel-bar::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--m-hl) 50%, transparent 70%) no-repeat;
+  background-size: 250% 100%;
+  animation: m-shimmer var(--m-loop) ease-in-out infinite;
+}
+@keyframes m-shimmer {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
+}
+
+/* ── Pull to refresh (Home, phones) ──
+   The pane's own bounce is turned off (iOS 16+ honours it) so the drawn
+   rubber band is the only one — see pullToRefresh() in js/workout-card.js.
+   Its children move only while a pull is on screen. */
+.m-ptr-host { overscroll-behavior-y: none; position: relative; }
+.m-ptr-host.is-pulling > * { transform: translateY(var(--ptr-y, 0px)); }
+.m-ptr {
+  --m-loop: .8s;
+  position: absolute; top: -46px; left: 50%;
+  width: 36px; height: 36px; margin-left: -18px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--raised);
+  box-shadow: var(--elev-2);
+  color: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.m-ptr svg { width: 22px; height: 22px; display: block; }
+.m-ptr-arc { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.m-ptr:not(.is-armed) .m-ptr-arc { opacity: .7; }
+.m-ptr.is-busy svg { animation: m-ptr-spin var(--m-loop) linear infinite; }
+.m-ptr.is-busy .m-ptr-arc { stroke-dasharray: 34 60 !important; }
+@keyframes m-ptr-spin { to { transform: rotate(360deg); } }
+
+/* ── Tour: the hole moves on springs now, not on a transition ── */
+.tour-spot { transition: none; }
+
+/* ── Onboarding: a screen pushed out cannot be tapped on its way ── */
+.ob-leaving { pointer-events: none; }
+
+/* Reduced motion: the JS starts none of the springs (motionAllowed()). The
+   loops are stopped outright — the blanket shortens a duration, and an
+   infinite loop at .01ms is a flicker, not a stop. */
+@media (prefers-reduced-motion: reduce) {
+  .m-skel, .m-skel-bar::after, .m-ptr svg { animation: none !important; }
+  .m-skel-bar::after { display: none; }
+}
+/* === end Motion 2 · Moments === */

@@ -351,13 +351,14 @@ async function runCount(text, frames) {
     'profile', 'session', 'social', 'workouts'].map((v) => `js/views-${v}.js`)];
   const calls = Object.fromEntries(files.map((f) => [f, (read(f).match(/\bcelebrate\(/g) || []).length]));
   const where = Object.entries(calls).filter(([, n]) => n).map(([f, n]) => `${f}×${n}`).join(', ');
-  ok(calls['js/views-session.js'] === 2, `the finish screen celebrates the save and the personal bests (${calls['js/views-session.js']})`);
+  // Motion 2: the check, then each personal-best row in turn (motion on and off paths).
+  ok(calls['js/views-session.js'] >= 2, `the finish screen celebrates the save and the personal bests (${calls['js/views-session.js']})`);
   ok(calls['js/views-me.js'] === 2, `Profile celebrates a best lift set today and a reached goal (${calls['js/views-me.js']})`);
   ok(calls['js/views-goals.js'] === 1, `Goals celebrates a reached target (${calls['js/views-goals.js']})`);
   ok(Object.entries(calls).every(([f, n]) => !n || ['js/views-session.js', 'js/views-me.js', 'js/views-goals.js'].includes(f)),
      `🚨 no other file celebrates anything (${where})`);
   const sess = read('js/views-session.js');
-  ok(/celebrate\(check/.test(sess) && /celebrate\(prsBlock/.test(sess), 'on the finish screen: the check and the personal-best block');
+  ok(/celebrate\(check/.test(sess) && /celebrate\(r, `\$\{winKey\}:pb:/.test(sess), 'on the finish screen: the check and each personal-best row');
   ok(/p\.reached[\s\S]{0,200}celebrate\(/.test(read('js/views-goals.js')), 'on Goals: only when p.reached');
 }
 

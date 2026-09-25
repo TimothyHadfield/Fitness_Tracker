@@ -97,6 +97,7 @@ import { workoutCard, sessionToCard, cardMeta } from './workout-card.js';
 import { ownCardActions, rxBit, attachCardPhoto } from './views-workouts.js';
 import { commentAge } from './social.js';
 import { celebrate } from './motion.js';
+import { skelBar, skelCircle } from './workout-card.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -124,7 +125,9 @@ const PUBLIC_NOTE = 'Your account is public, so people can see your training wit
  * ------------------------------------------------------------------ */
 
 export async function MeView() {
-  const body = el('div', { class: 'me-body' });
+  // 🆕 Motion 2: the page's shape while it reads (faded in only after 150ms,
+  // so a quick read never flashes it). `fill()` replaces it whole.
+  const body = el('div', { class: 'me-body', 'aria-busy': 'true' }, ...profileSkeleton());
   const screen = screenShell({
     profile: true,
     title: 'Profile',
@@ -139,8 +142,27 @@ export async function MeView() {
     setChildren(body, emptyState('Could not load your profile',
       'Your account could not be reached just now. Everything you have recorded is safe on '
       + 'this device.'));
-  });
+  }).finally(() => body.removeAttribute('aria-busy'));
   return screen;
+}
+
+/**
+ * 🆕 Motion 2 · Moments (docs/motion2-plan.md package E): Profile's shape,
+ * drawn in grey while `fill()` reads — the head (photo and name), the two
+ * counts, the body row and three best-lift rows, each at its real height
+ * (measured at 393px on the demo) so nothing jumps when the real ones land.
+ */
+function profileSkeleton() {
+  const row = (h, a, b) => el('div', { class: 'm-skel m-skel-line', 'aria-hidden': 'true', style: `min-height:${h}px` },
+    el('div', { class: 'm-skel-col' }, skelBar(a, 17), skelBar(b, 13)));
+  return [
+    el('div', { class: 'm-skel m-skel-row is-head', 'aria-hidden': 'true' },
+      skelCircle(72), el('div', { class: 'm-skel-col' }, skelBar('58%', 22), skelBar('40%', 14))),
+    el('div', { class: 'm-skel', 'aria-hidden': 'true', style: 'height:49px' }, skelBar('100%', 49, 'is-soft')),
+    el('div', { class: 'm-skel m-skel-col', 'aria-hidden': 'true' }, skelBar('26%', 12), row(56, '55%', '35%')),
+    el('div', { class: 'm-skel m-skel-col', 'aria-hidden': 'true' }, skelBar('30%', 12),
+      row(74, '45%', '60%'), row(74, '52%', '55%'), row(74, '40%', '62%')),
+  ];
 }
 
 async function fill(body) {

@@ -26,10 +26,43 @@ import * as units from './units.js';
 // muscles did a set of this exercise land on".
 import { volumeContributions } from './volume-map.js';
 import { recordedSetCount } from './session-stats.js';
+import { spring, springTransform } from './spring.js';
+import { motionAllowed } from './motion.js';
 
 const go = (hash) => { location.hash = hash; };
 
 let selected = null;
+
+/* 🆕 MOTION 2 · DATA — the laptop panel's default, 2026-09-25. On a laptop the
+ * side panel beside the figure held two lines and ~600px of nothing until a tap
+ * (audit). With nothing picked, the laptop opens on the muscle the summary
+ * already names as strongest, outlined on the figure WITHOUT dimming the rest
+ * (`m2-preview`), so the map still reads whole. Any tap ends the preview; a tap
+ * on that same muscle keeps it open for real. Once somebody closes a muscle
+ * themselves, the default does not come back this session. Phones: never. */
+let previewed = null;
+let userClosed = false;
+const wideLayout = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+  && window.matchMedia('(min-width: 860px)').matches;
+
+/** A picked muscle glows once in its own colour — its level's fill, never a new shape. */
+function pulseMuscle(svg, muscle) {
+  if (!muscle || !motionAllowed()) return;
+  const regions = [...svg.querySelectorAll('.body-region')].filter((n) => n.dataset.muscle === muscle);
+  if (!regions.length) return;
+  let colour = '';
+  try { colour = getComputedStyle(regions[0]).fill; } catch (_) { colour = ''; }
+  if (!colour || colour === 'none' || colour.startsWith('url')) colour = 'currentColor';
+  const paint = (g) => {
+    const f = g > 0.01 ? `drop-shadow(0 0 ${(7 * g).toFixed(2)}px ${colour}) brightness(${(1 + 0.22 * g).toFixed(3)})` : '';
+    regions.forEach((r) => { r.style.filter = f; });
+  };
+  // Up fast (snap), then let go (glide): one pulse, ~0.4s in all.
+  spring({
+    from: 0, to: 1, preset: 'snap', precision: 0.02, onUpdate: paint,
+    onRest: () => spring({ from: 1, to: 0, preset: 'glide', precision: 0.01, onUpdate: paint }),
+  });
+}
 
 /* ------------------------------------------------------------------ *
  * THE SOURCE TABLE'S EXTRA COLUMNS — 2026-09-21
@@ -497,17 +530,32 @@ export async function muscleGroupsPane(host, top) {
 
   // The figure is built ONCE. Rebuilding it on every tap would re-attach the
   // two ink mask images and flash the drawing; only the panel below changes.
+  // Motion 2 · Data: the laptop's default pick (see `previewed`).
+  let preview = false;
+  if (!wideLayout() && previewed && selected === previewed) { selected = null; previewed = null; }
+  if (wideLayout() && !userClosed && (selected === null || selected === previewed)) {
+    const { strongest } = namedEnds(muscles);
+    if (strongest) { selected = strongest.muscle; previewed = selected; preview = true; }
+  }
+
   const body = bodySvg(levelMap, selected, (muscle) => {
-    selected = selected === muscle ? null : muscle;
+    const keep = preview && selected === muscle;   // tapping the previewed muscle opens it for real
+    selected = keep ? muscle : selected === muscle ? null : muscle;
+    if (!selected) userClosed = true;
+    preview = false;
+    previewed = null;
+    body.classList.remove('m2-preview');
     setSelected(body, selected);
-    renderPanel();
+    pulseMuscle(body, selected);
+    renderPanel(true);
   }, { sex: profile.gender });
+  if (preview) body.classList.add('m2-preview');
   const foot = el('div', { class: 'body-foot' });
 
   // The 8-week change, worked out only for the muscle that is open (review 2026-09-24).
   const trend = pastTrend(sessions, exMap, profile);
 
-  function renderPanel() {
+  function renderPanel(tapped = false) {
     /* 🆕 A PICKED MUSCLE'S DETAILS COME FIRST ON A PHONE — review 2026-09-24. At 393×659
      * the panel under the figure is ~169px, and the 76px level key sat on top of it, so
      * the confidence line and the caveats were below the fold with nothing hinting at
@@ -522,6 +570,13 @@ export async function muscleGroupsPane(host, top) {
       : summary(muscles, trained);
     setChildren(foot, legend(more, trained.size > 0), panel);
     foot.scrollTop = 0;
+    // Motion 2 · Data: a tapped muscle's details spring up into place — the
+    // answer arriving, 10px, on `snap`. Nothing else in the panel moves.
+    if (tapped && motionAllowed()) {
+      panel.classList.add('m2-panel-in');
+      springTransform(panel, { y: 0, opacity: 1 }, 'snap', { from: { y: 10, opacity: 0 } })
+        .done.then(() => panel.classList.remove('m2-panel-in'));
+    }
     if (selected && muscles.get(selected)) trend.fill(panel, selected, muscles.get(selected));
   }
 
@@ -1037,13 +1092,24 @@ export function summaryMark(m) {
   return null;
 }
 
+/** The muscles the summary names as strongest and furthest behind — one answer,
+ *  read by the sentence and by the laptop panel's default pick (Motion 2 · Data). */
+function namedEnds(muscles) {
+  const ranked = [...muscles.values()];
+  const pct = (m) => (Number.isFinite(m.percentile) ? m.percentile : -Infinity);
+  const firm = ranked.filter((m) => !summaryMark(m));
+  const pool = firm.length >= 2 ? firm : ranked;
+  return {
+    strongest: pool.slice().sort((a, b) => pct(b) - pct(a))[0],
+    weakest: pool.slice().sort((a, b) => pct(a) - pct(b))[0],
+  };
+}
+
 function summary(muscles, trained = new Map()) {
   /* ⚠️ BELOW BEGINNER IS RANKED TOO — 2026-09-24. Every rating in `muscles` is a
    * placing; a null `level` is the one under Beginner (the figure paints it
    * `below`), not a missing one. Filtering on `level` dropped exactly the
    * weakest muscle, so "Furthest behind" named another one or vanished. */
-  const ranked = [...muscles.values()];
-  const pct = (m) => (Number.isFinite(m.percentile) ? m.percentile : -Infinity);
   const levelName = (m) => (m.level ? m.level.name : 'Below Beginner');
   // Cardio and Activity are library shelves, not muscles — listing them as
   // "not ranked" beside Core and Neck would imply the map is missing them.
@@ -1054,10 +1120,7 @@ function summary(muscles, trained = new Map()) {
    * Fair confidence or better, with a set in the last 6 weeks (the same 42 days
    * `raiseConfidenceHint()` calls "nothing recent"). Fewer than two of those and
    * the sentence falls back to every rating, marked "(guessed)" or "(old)". */
-  const firm = ranked.filter((m) => !summaryMark(m));
-  const pool = firm.length >= 2 ? firm : ranked;
-  const strongest = pool.slice().sort((a, b) => pct(b) - pct(a))[0];
-  const weakest = pool.slice().sort((a, b) => pct(a) - pct(b))[0];
+  const { strongest, weakest } = namedEnds(muscles);
   const named = (m) => `${m.muscle} (${levelName(m)})${summaryMark(m) ? ` (${summaryMark(m)})` : ''}`;
 
   /* ⚠️ TWO SENTENCES SINCE 2026-09-23, BECAUSE THE HATCH IS TWO STATES.

@@ -31,6 +31,9 @@
 import { el, icon, relativeDay } from './ui.js';
 import { sessionStats, setsLabel } from './session-stats.js';
 import { BUILT_IN_EXERCISES } from './exercises.js';
+// 🆕 Motion 2 · Moments (docs/motion2-plan.md package E) — see the end of file.
+import { spring, springTransform, simulate, rubberBand } from './spring.js';
+import { motionAllowed } from './motion.js';
 
 /** The library's Activity shelf, by lowercased name — see the kind glyph below.
  *
@@ -267,4 +270,297 @@ export function workoutCard(a, opts = {}) {
       : el('div', { class: 'feed-open is-flat' }, ...body),
     opts.foot || null,
   );
+}
+
+/* ==========================================================================
+   🆕 MOTION 2 · MOMENTS — docs/motion2-plan.md package E, 2026-09-25.
+
+   Tim: *"Put professional level annimation and physics into this cite …
+   Think about the potential for any additions and where they could be.
+   Impress me."*
+
+   Three things the feed does that used to be instant or blank, each on a
+   spring from js/spring.js and each OFF where motion is off (reduced motion,
+   jsdom — `motionAllowed()`, the same question js/motion.js asks, so no test
+   suite ever sees an inline style from here):
+
+     · KUDOS answers the tap: the thumb pops on a bounce spring and the count
+       rolls like an odometer, digits sliding up (or down when it drops).
+     · SKELETONS hold the shape of the rows while a screen reads its data, and
+       only if the read is slow enough to be seen (they fade in after 150ms).
+     · PULL TO REFRESH on Home, on a phone: an iOS-style rubber band, a dial
+       that winds with the pull, and the feed read again on release.
+   ========================================================================== */
+
+/* ---- kudos ---- */
+
+/** The thumb's pop peaks at this scale — what the old 170ms keyframe did. */
+export const KUDOS_POP_PEAK = 1.3;
+const KUDOS_KICK = (() => {
+  const peak = Math.max(...simulate({ from: 0, to: 0, velocity: 1, preset: 'bounce', ms: 300 }).map((s) => s.x));
+  return (KUDOS_POP_PEAK - 1) / peak;
+})();
+
+/**
+ * Which digit positions of a count change between `from` and `to`, right-
+ * aligned the way numbers are. `up` is the way the new digits come in: from
+ * below for a count that grew, from above for one that fell. Pure.
+ *
+ * @returns {{ up: boolean, cols: { from: string, to: string, roll: boolean }[] }}
+ */
+export function odometerPlan(from, to) {
+  const a = String(from == null ? '' : from);
+  const b = String(to == null ? '' : to);
+  const n = Math.max(a.length, b.length);
+  const A = a.padStart(n, ' ');
+  const B = b.padStart(n, ' ');
+  const cols = [];
+  for (let i = 0; i < n; i++) {
+    const f = A[i].trim();
+    const t = B[i].trim();
+    cols.push({ from: f, to: t, roll: f !== t });
+  }
+  return { up: Number(to) >= Number(from), cols };
+}
+
+/**
+ * The words on the Kudos button: `Kudos` or `Kudos · 3`, as ONE inline run.
+ * The number is its own span (tabular figures, so 1→2 is not a width change)
+ * that `rollCount()` can find. The button's text is exactly what it was.
+ */
+export function kudosLabel(count) {
+  const n = Number(count) || 0;
+  return el('span', { class: 'kudos-label' }, 'Kudos',
+    n ? [' · ', el('span', { class: 'kudos-n', text: String(n) })] : null);
+}
+
+/**
+ * Roll `node`'s number from `from` to what it says now, odometer-style. Each
+ * changed digit is a two-cell column in a one-line window; a spring slides it
+ * one cell. At rest the node is plain text again. False when nothing plays.
+ */
+export function rollCount(node, from, to = node && node.textContent) {
+  if (!node || !motionAllowed() || from == null || String(from) === String(to)) return false;
+  const plan = odometerPlan(from, to);
+  const final = String(to);
+  const cells = plan.cols.map((c) => {
+    if (!c.roll) return el('span', { text: c.to });
+    // A blank side is a FIGURE space: a digit wide, so the column is too.
+    const cellOld = el('span', { class: 'odo-cell', text: c.from || ' ', 'aria-hidden': 'true' });
+    const cellNew = el('span', { class: 'odo-cell', text: c.to || ' ' });
+    const col = el('span', { class: 'odo-col' }, ...(plan.up ? [cellOld, cellNew] : [cellNew, cellOld]));
+    return { box: el('span', { class: 'odo-d' }, col), col };
+  });
+  node.replaceChildren(...cells.map((c) => (c.box ? c.box : c)));
+  const cols = cells.filter((c) => c.box).map((c) => c.col);
+  // Up: the column starts on its old (top) cell and climbs half its height.
+  // Down: it starts on the old (bottom) cell and drops to the new one on top.
+  const put = (p) => cols.forEach((col) => { col.style.transform = `translateY(${(-50 * p).toFixed(2)}%)`; });
+  const [a, b] = plan.up ? [0, 1] : [1, 0];
+  put(a);
+  spring({
+    from: a, to: b, preset: 'snap', precision: 0.002,
+    onUpdate: put,
+    onRest: () => { if (node.isConnected || node.firstChild) node.textContent = final; },
+  });
+  return true;
+}
+
+/** The thumb's pop — a bounce spring kicked from rest, one wobble. */
+export function kudosPop(glyph) {
+  if (!glyph || !motionAllowed()) return false;
+  // `m-sprung` switches off the old CSS keyframe pop — a CSS animation would
+  // override the spring's inline transform for its whole length.
+  glyph.classList.add('m-sprung');
+  springTransform(glyph, { scale: 1 }, 'bounce', { velocity: { scale: KUDOS_KICK } });
+  return true;
+}
+
+/* ---- skeletons ---- */
+
+/** A grey bar `w` wide (a CSS length or %) and `h` px tall. */
+export function skelBar(w, h, extra = '') {
+  return el('span', { class: 'm-skel-bar' + (extra ? ' ' + extra : ''), style: `width:${w};height:${h}px` });
+}
+
+/** A grey circle `d` px across (an avatar). */
+export function skelCircle(d) {
+  return el('span', { class: 'm-skel-bar is-round', style: `width:${d}px;height:${d}px` });
+}
+
+/**
+ * Placeholder feed cards: the same padding, gaps and line heights as a real
+ * `.feed-card` (face and name, title, the Time/Sets row, four exercise lines,
+ * the action row), so nothing jumps when the real ones replace them. Hidden
+ * from screen readers; `aria-busy` on the list says it is loading.
+ */
+export function feedSkeleton(n = 3) {
+  return Array.from({ length: n }, (_, i) => el('div', { class: 'm-skel m-skel-card', 'aria-hidden': 'true' },
+    el('div', { class: 'm-skel-row' }, skelCircle(36),
+      el('div', { class: 'm-skel-col' }, skelBar(i % 2 ? '34%' : '42%', 13), skelBar(i % 2 ? '58%' : '64%', 11))),
+    skelBar(i % 2 ? '38%' : '30%', 22, 'is-title'),
+    el('div', { class: 'm-skel-row' },
+      el('div', { class: 'm-skel-col' }, skelBar('38px', 11), skelBar('62px', 20)),
+      el('div', { class: 'm-skel-col' }, skelBar('34px', 11), skelBar('26px', 20))),
+    el('div', { class: 'm-skel-col is-lines' },
+      ...['52%', '44%', '60%', '48%'].map((w) => skelBar(w, 13))),
+    el('div', { class: 'm-skel-foot' }),
+  ));
+}
+
+/* ---- pull to refresh ---- */
+
+/** Pull this far (after the rubber band) and letting go refreshes. */
+export const PTR_THRESHOLD = 64;
+/** The rubber band's ceiling: however far the finger goes, the feed stops here. */
+export const PTR_LIMIT = 160;
+/** Where the feed waits, spinner showing, while the refresh runs. */
+export const PTR_HOLD = 52;
+export const PTR_MIN_SPIN = 450;
+
+/**
+ * The dial for a pull of `dist` px: how much of the ring is drawn (0–1), how
+ * far it has turned (degrees — it winds with the finger), how visible it is,
+ * and whether letting go now would refresh. Pure.
+ */
+export function pullDial(dist, threshold = PTR_THRESHOLD) {
+  const d = Math.max(0, Number(dist) || 0);
+  return {
+    progress: Math.min(1, d / threshold),
+    turn: d * 2.2,
+    opacity: Math.min(1, d / (threshold * 0.45)),
+    armed: d >= threshold,
+  };
+}
+
+const RING = 2 * Math.PI * 8;   // the arc's circumference (r = 8 in a 24 box)
+
+/**
+ * Pull-to-refresh on a scrolling pane, for touch screens.
+ *
+ * ⚠️ NATIVE OVERSCROLL IS TURNED OFF ON THIS PANE, NOT FOUGHT. `.pane-scroll`
+ * is `overscroll-behavior: contain`, which on iOS keeps the pane's own bounce;
+ * a second, drawn rubber band on top of that is two movements for one pull.
+ * `.m-ptr-host` makes it `none` (iOS 16+), and the band here is the only one.
+ * On an engine that ignores that and bounces anyway (`scrollTop < 0`), the
+ * gesture follows the native bounce instead of adding to it, and never holds.
+ *
+ * Nothing here calls preventDefault: a scroll that starts anywhere but the top,
+ * or goes sideways, or goes up, is left to the browser untouched.
+ *
+ * @param {HTMLElement} pane      the `.pane-scroll`
+ * @param {Function} onRefresh    re-reads the screen's data; may return a promise
+ * @returns {object|null}         null where it does not apply (no touch, no motion)
+ */
+export function pullToRefresh(pane, onRefresh, { threshold = PTR_THRESHOLD } = {}) {
+  if (!pane || typeof onRefresh !== 'function' || !motionAllowed()) return null;
+  if (typeof window === 'undefined' || !('ontouchstart' in window)) return null;
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  const arc = document.createElementNS(svgNS, 'circle');
+  arc.setAttribute('class', 'm-ptr-arc');
+  arc.setAttribute('cx', '12'); arc.setAttribute('cy', '12'); arc.setAttribute('r', '8');
+  svg.append(arc);
+  const chip = el('div', { class: 'm-ptr', 'aria-hidden': 'true' }, svg);
+  pane.classList.add('m-ptr-host');
+  pane.prepend(chip);
+
+  let startY = null, startX = 0, dist = 0, pulling = false, busy = false, nativeBounce = false;
+  let settle = null;
+
+  const paint = (d) => {
+    dist = d;
+    pane.style.setProperty('--ptr-y', `${d.toFixed(1)}px`);
+    const dial = pullDial(d, threshold);
+    chip.style.opacity = busy ? '1' : dial.opacity.toFixed(3);
+    if (!busy) {
+      svg.style.transform = `rotate(${dial.turn.toFixed(1)}deg)`;
+      arc.style.strokeDasharray = `${(RING * 0.8 * dial.progress).toFixed(2)} ${RING.toFixed(2)}`;
+    }
+    chip.classList.toggle('is-armed', dial.armed || busy);
+    // The children are only transformed while there is a pull to show: an
+    // identity transform left on them for ever would still make each one a
+    // containing block and a stacking context.
+    const on = d > 0.01 || busy;
+    pane.classList.toggle('is-pulling', on);
+    if (!on) pane.style.removeProperty('--ptr-y');
+  };
+  const glide = (to) => {
+    if (settle && settle.active) { settle.set(to); return settle.done; }
+    settle = spring({ from: dist, to, preset: 'glide', precision: 0.3, onUpdate: paint });
+    return settle.done;
+  };
+
+  pane.addEventListener('touchstart', (e) => {
+    if (busy || e.touches.length !== 1) { startY = null; return; }
+    if (settle && settle.active) settle.stop();
+    startY = pane.scrollTop <= 0 ? e.touches[0].clientY : null;
+    startX = e.touches[0].clientX;
+    pulling = false;
+    nativeBounce = false;
+  }, { passive: true });
+
+  pane.addEventListener('touchmove', (e) => {
+    if (startY === null || busy) return;
+    const t = e.touches[0];
+    const dy = t.clientY - startY;
+    if (!pulling) {
+      // Sideways or upwards first: this is a scroll, not a pull. Let it go.
+      if (Math.abs(t.clientX - startX) > Math.abs(dy) || dy <= 0 || pane.scrollTop > 0) {
+        if (Math.abs(dy) > 6 || Math.abs(t.clientX - startX) > 6) startY = null;
+        return;
+      }
+      pulling = true;
+    }
+    if (pane.scrollTop < 0) {
+      // An engine bouncing natively: ride its bounce, draw nothing extra.
+      nativeBounce = true;
+      paintNative(-pane.scrollTop);
+      return;
+    }
+    // c = 1: ~107px of finger arms it (64px of travel), and it never passes the limit.
+    paint(rubberBand(Math.max(0, dy), PTR_LIMIT, 1));
+  }, { passive: true });
+
+  const paintNative = (d) => {
+    dist = 0;
+    const dial = pullDial(d, threshold);
+    chip.style.opacity = dial.opacity.toFixed(3);
+    svg.style.transform = `rotate(${dial.turn.toFixed(1)}deg)`;
+    arc.style.strokeDasharray = `${(RING * 0.8 * dial.progress).toFixed(2)} ${RING.toFixed(2)}`;
+    chip.classList.toggle('is-armed', dial.armed);
+    chip.dataset.native = String(d);
+  };
+
+  const release = async () => {
+    if (startY === null) return;
+    startY = null;
+    if (!pulling) return;
+    pulling = false;
+    const nativeD = nativeBounce ? Number(chip.dataset.native || 0) : 0;
+    const armed = nativeBounce ? nativeD >= threshold : dist >= threshold;
+    if (!armed) {
+      if (nativeBounce) paintNative(0);
+      else glide(0);
+      return;
+    }
+    busy = true;
+    chip.classList.add('is-busy');
+    if (!nativeBounce) glide(PTR_HOLD);
+    // The spinner stays at least PTR_MIN_SPIN, so a fast (cached) refresh
+    // still reads as "refreshed" instead of a flicker.
+    const minSpin = new Promise((r) => setTimeout(r, PTR_MIN_SPIN));
+    try { await onRefresh(); } catch (_) { /* the screen shows its own error */ }
+    await minSpin;
+    busy = false;
+    chip.classList.remove('is-busy');
+    if (nativeBounce) paintNative(0);
+    else glide(0);
+  };
+  pane.addEventListener('touchend', release, { passive: true });
+  pane.addEventListener('touchcancel', release, { passive: true });
+
+  return { chip, get pulling() { return pulling; }, get busy() { return busy; } };
 }

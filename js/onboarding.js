@@ -21,6 +21,8 @@
 import { el, iconBtn, toast, refreshRoute } from './ui.js';
 import { store, demo, auth } from './store.js';
 import { buildProgram, matchingPresets } from './program-builder.js';
+import { springTransform } from './spring.js';
+import { motionAllowed } from './motion.js';
 import { expandRepSpec } from './set-reps.js';
 
 export const ONBOARDED_KEY = 'ftrack:v1:onboarded';
@@ -213,15 +215,29 @@ export function openOnboarding({ onDone } = {}) {
   const show = (node, dir) => {
     const old = stage.querySelector('.ob-screen.is-current');
     node.classList.add('ob-screen', 'is-current');
-    if (old && dir) node.classList.add(dir > 0 ? 'ob-in-fwd' : 'ob-in-back');
+    /* 🆕 MOTION 2 (2026-09-25, docs/motion2-plan.md package E): the two screens
+     * are PUSHED on a spring (`sheet`), the new one in from the side you are
+     * going, the old one out the other. A second tap mid-push retargets the
+     * screen still moving, with the speed it has, rather than restarting it.
+     * The CSS keyframes below stay as the path where springs do not run. */
+    const sprung = Boolean(old && dir) && motionAllowed();
+    if (old && dir && !sprung) node.classList.add(dir > 0 ? 'ob-in-fwd' : 'ob-in-back');
     stage.append(node);
+    if (sprung) {
+      const w = stage.clientWidth || 360;
+      springTransform(node, { x: 0 }, 'sheet', { from: { x: dir * w } });
+    }
     if (old) {
       old.classList.remove('is-current');
       old.setAttribute('aria-hidden', 'true');
       old.inert = true;
-      if (dir) old.classList.add(dir > 0 ? 'ob-out-fwd' : 'ob-out-back');
+      if (dir && !sprung) old.classList.add(dir > 0 ? 'ob-out-fwd' : 'ob-out-back');
       const drop = () => old.remove();
-      if (dir) {
+      if (sprung) {
+        old.classList.add('ob-leaving');
+        springTransform(old, { x: -dir * (stage.clientWidth || 360) }, 'sheet').done.then(drop);
+        setTimeout(drop, 700);
+      } else if (dir) {
         old.addEventListener('animationend', drop, { once: true });
         setTimeout(drop, SLIDE_MS + 60);
       } else drop();

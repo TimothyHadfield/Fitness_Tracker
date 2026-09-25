@@ -129,6 +129,32 @@ export function boxRatio(size) {
   return Math.min(1.91, Math.max(0.8, s.w / s.h));
 }
 
+/**
+ * 🆕 FROM ONE BOX TO ANOTHER — docs/motion2-plan.md package E, 2026-09-25.
+ * Tim: *"Put professional level annimation and physics into this cite."*
+ *
+ * The transform that makes an element whose resting box is `box` appear on top
+ * of `target` instead: `{ x, y, scale }` for a spring (js/spring.js
+ * `springTransform`) with `transform-origin: 0 0` on the element. One uniform
+ * scale, the target's width over the box's — a picture keeps its shape, and a
+ * whole screen shrinking into a bar keeps its own.
+ *
+ * Spring FROM this to identity and a thing grows out of `target` (a photo
+ * opening from its thumbnail, the runner coming back up out of its bar); spring
+ * TO it and the thing goes into `target` (the runner minimising). Pure, so it is
+ * tested without a browser. Boxes are `{ x|left, y|top, w|width }`.
+ */
+export function rectFlight(box, target) {
+  const bx = box.x != null ? box.x : box.left;
+  const by = box.y != null ? box.y : box.top;
+  const bw = box.w != null ? box.w : box.width;
+  const tx = target.x != null ? target.x : target.left;
+  const ty = target.y != null ? target.y : target.top;
+  const tw = target.w != null ? target.w : target.width;
+  if (![bx, by, bw, tx, ty, tw].every(Number.isFinite) || bw <= 0) return { x: 0, y: 0, scale: 1 };
+  return { x: tx - bx, y: ty - by, scale: Math.max(0.05, tw / bw) };
+}
+
 /* ------------------------------------------------------------------ *
  * Browser half
  * ------------------------------------------------------------------ */

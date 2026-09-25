@@ -21,7 +21,10 @@ import {
   historyFor, lastSessionDate, suggestProgression, applySuggestion,
 } from './progression.js';
 import { personalBests, PB_LABEL } from './personal-bests.js';
-import { celebrate } from './motion.js';
+import { celebrate, countUp, staggerIn, motionAllowed, CELEBRATE_MS, COUNT_MS } from './motion.js';
+// 🆕 Motion 2 · Moments (docs/motion2-plan.md package E): the finish screen's
+// sequence and the runner going into, and coming back out of, its bar.
+import { spring, springTransform } from './spring.js';
 import { estimateOneRM, percentOfMax, repPrediction, ownBestSet } from './exercise-estimate.js';
 import {
   normalizeTargets, targetsApply, weightForTarget, summariseTargets,
@@ -32,7 +35,7 @@ import {
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
 // Workout photo on the save screen (2026-09-25, onboarding-plan part C).
-import { photoField } from './photo.js';
+import { photoField, rectFlight } from './photo.js';
 import { primePhoto } from './store.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -4377,10 +4380,14 @@ export async function SessionView(workoutId) {
       : null;
     /* 🆕 THE CELEBRATION TIER (2026-09-25, js/motion.js): the saved check and a
      * new personal best are two of the three real wins it is allowed on. Keyed
-     * by the saved session, so this screen can never replay it. */
+     * by the saved session, so this screen can never replay it.
+     * 🔄 Motion 2 (same day): played as ONE SEQUENCE by `playFinish()` below —
+     * the check draws, the numbers count, each record shines in turn. */
     const winKey = `saved:${ownId || `${state.date}:${state.workoutName}`}`;
-    celebrate(check, winKey);
-    if (prsBlock) celebrate(prsBlock, `${winKey}:pb`);
+    // The two headline numbers are their own spans so they can count; the
+    // line's text is exactly what it was.
+    const nums = [];
+    const num = (n) => { const s = el('span', { class: 'finish-n', text: String(n) }); nums.push(s); return s; };
     document.getElementById('app').replaceChildren(screenShell({
       title: 'Workout complete',
       // ⚠️ A FUNCTION, not a hash. `screenShell` hands `back` straight to
@@ -4421,7 +4428,8 @@ export async function SessionView(workoutId) {
         // "0 sets" would read as a failed save — the guests' lines are the
         // record of what happened.
         entries.length
-          ? el('p', { text: `${state.workoutName} · ${entries.length} exercise${entries.length === 1 ? '' : 's'} · ${setCount} set${setCount === 1 ? '' : 's'}` })
+          ? el('p', {}, `${state.workoutName} · `, num(entries.length),
+              ` exercise${entries.length === 1 ? '' : 's'} · `, num(setCount), ` set${setCount === 1 ? '' : 's'}`)
           : el('p', { text: `${state.workoutName} — nothing recorded for you` }),
         /* ⚠️ EACH PERSON'S LINE SAYS WHERE THEIR WORKOUT WENT, because the two
          * destinations are genuinely different promises and the difference is
@@ -4472,6 +4480,11 @@ export async function SessionView(workoutId) {
       ),
       bottom: el('button', { class: 'btn primary block', text: 'Back to home', onClick: () => go('#/home') }),
     }));
+    playFinish({
+      check, nums, winKey,
+      prRows: prsBlock ? [...prsBlock.querySelectorAll('.finish-pr')] : [],
+      exRows: [...document.querySelectorAll('#app .finish-ex')],
+    });
   }
 
   /**
@@ -4501,7 +4514,11 @@ export async function SessionView(workoutId) {
      * draws underneath it. ⚠️ `parkScreen` returns null where nothing can
      * animate (reduced motion, jsdom), so this stays a plain navigation there
      * and no test ever sees a second `.screen`. */
-    parkScreen(document.querySelector('#app > .screen'), { falls: true });
+    /* 🔄 AND SINCE MOTION 2 (2026-09-25) IT GOES *INTO THE BAR* rather than off
+     * the bottom — `minimizeFlight()` below. The fall stays as the fallback for
+     * wherever the flight cannot run. */
+    const leaving = document.querySelector('#app > .screen');
+    if (!minimizeFlight(leaving)) parkScreen(leaving, { falls: true });
     goBack(() => go('#/home'));
   }
 
@@ -5129,4 +5146,165 @@ export async function BenchmarkView() {
     scroll: el('div', { class: 'bench-body' }, estLine, stepWrap),
     bottom: submitBtn,
   });
+}
+
+/* ==========================================================================
+   🆕 MOTION 2 · MOMENTS — docs/motion2-plan.md package E, 2026-09-25.
+
+   Tim: *"Put professional level annimation and physics into this cite …
+   Impress me."*
+
+   🛑 NONE OF THIS IS ON THE LOGGING PATH. The set list, the steppers and the
+   rest timer are untouched (Rule 7). What moves is the end of a workout (the
+   finish screen) and putting a workout down / picking it back up — both
+   moments between sets, never during one. Everything is off where motion is
+   off (`motionAllowed()`: reduced motion, jsdom).
+   ========================================================================== */
+
+/** The check's pop and the start of its stroke, ms after the screen appears. */
+export const FINISH_CHECK_DRAW_AT = 60;
+/** The two headline numbers start counting here, this far apart. */
+export const FINISH_COUNT_AT = 180;
+export const FINISH_COUNT_STEP = 120;
+/** The first personal best shines here; the last one never starts after
+ *  FINISH_PR_LAST, so a long list is a faster ripple, not a longer one. */
+export const FINISH_PR_AT = 380;
+export const FINISH_PR_STEP = 140;
+export const FINISH_PR_LAST = 600;
+/** The check's own spring has come to rest by here (bounce, ≤400ms, tests/spring.test.mjs). */
+const CHECK_REST_MS = 400;
+
+/**
+ * When each part of the finish screen plays, for `prCount` record groups and
+ * `numCount` headline numbers. Pure. `endMs` is when the last movement ends —
+ * the whole sequence is inside ~1.2s, and nothing in it holds a tap.
+ */
+export function finishTimeline(prCount = 0, numCount = 2) {
+  const counts = Array.from({ length: numCount }, (_, i) => FINISH_COUNT_AT + i * FINISH_COUNT_STEP);
+  const step = prCount > 1 ? Math.min(FINISH_PR_STEP, (FINISH_PR_LAST - FINISH_PR_AT) / (prCount - 1)) : 0;
+  const prs = Array.from({ length: prCount }, (_, i) => Math.round(FINISH_PR_AT + i * step));
+  const ends = [
+    CHECK_REST_MS + CELEBRATE_MS,                        // the check pops, then shines
+    ...counts.map((t) => t + COUNT_MS),
+    ...prs.map((t) => t + CELEBRATE_MS),
+  ];
+  return { draw: FINISH_CHECK_DRAW_AT, counts, prs, endMs: Math.max(...ends) };
+}
+
+/**
+ * Play the finish screen: the check pops and its tick DRAWS, the headline
+ * numbers count up one after the other, and each personal best shines in turn
+ * (`celebrate()`, the celebration tier, once per win). The exercise list below
+ * follows in. Keys are the saved session's, so this never replays.
+ */
+function playFinish({ check, nums = [], prRows = [], exRows = [], winKey }) {
+  // Each win is keyed and celebrates once — whether or not motion is allowed,
+  // celebrate() is what decides, as before.
+  const plan = finishTimeline(prRows.length, nums.length);
+  if (!motionAllowed() || !check || !check.isConnected) {
+    celebrate(check, winKey);
+    prRows.forEach((r, i) => celebrate(r, `${winKey}:pb:${i}`));
+    return false;
+  }
+
+  // The check: the green disc pops in on a bounce spring…
+  springTransform(check, { scale: 1, opacity: 1 }, 'bounce', { from: { scale: 0.55, opacity: 0 } });
+  // …and the tick is drawn, stroke first to last, as it lands.
+  const path = check.querySelector('path');
+  if (path && typeof path.getTotalLength === 'function') {
+    const len = path.getTotalLength() || 22;
+    path.style.strokeDasharray = `${len} ${len}`;
+    path.style.strokeDashoffset = String(len);
+    spring({
+      from: len, to: 0, preset: 'glide', precision: 0.05, delay: plan.draw,
+      onUpdate: (v) => { path.style.strokeDashoffset = v.toFixed(2); },
+      onRest: () => { path.style.strokeDasharray = ''; path.style.strokeDashoffset = ''; },
+    });
+  }
+  // celebrate() waits for the check's spring to come to rest, then shines it.
+  celebrate(check, winKey);
+
+  // The numbers count up in order. countUp() writes the first frame (zeros, at
+  // the final width) at once; the first real frame waits for its slot.
+  nums.forEach((n, i) => {
+    let first = true;
+    countUp(n, {
+      raf: (fn) => {
+        if (!first) { requestAnimationFrame(fn); return; }
+        first = false;
+        setTimeout(() => requestAnimationFrame(fn), plan.counts[i]);
+      },
+    });
+  });
+
+  // Each record group shines in turn.
+  prRows.forEach((r, i) => setTimeout(() => {
+    if (r.isConnected) celebrate(r, `${winKey}:pb:${i}`);
+  }, plan.prs[i]));
+
+  // What was recorded follows the headline in — the rows in view only.
+  const h = (typeof window !== 'undefined' && window.innerHeight) || 0;
+  const shown = exRows.filter((r) => { const b = r.getBoundingClientRect(); return b.top < h && b.bottom > 0; });
+  staggerIn(shown, { lead: FINISH_COUNT_AT + FINISH_COUNT_STEP });
+  return true;
+}
+
+/**
+ * Minimise: the runner SHRINKS INTO THE BAR it becomes, instead of falling off
+ * the bottom. The screen is parked (ui.js `parkScreen`, holding still) and a
+ * spring carries it toward where the bar will be — then, once the router has
+ * drawn the real `.session-mini`, the spring is RETARGETED onto its measured
+ * box with the speed it already has. It fades as it lands, so the bar reads as
+ * the same object, only smaller. Returns false where it cannot play, and the
+ * caller falls back to the old fall.
+ */
+export function minimizeFlight(screen) {
+  if (!screen || !motionAllowed()) return false;
+  const ghost = parkScreen(screen, { falls: false });
+  if (!ghost) return false;
+  ghost.classList.add('m-flying');
+  const from = ghost.getBoundingClientRect();
+  // Before the bar exists: the bottom of the app, a bar's height and a tab bar up.
+  const guess = rectFlight(from, { x: from.left + 8, y: from.bottom - 130, w: from.width - 16 });
+  const move = springTransform(ghost, { x: guess.x, y: guess.y, scale: guess.scale }, 'glide');
+  springTransform(ghost, { opacity: 0 }, 'glide', { delay: 110 });
+  let tries = 0;
+  const seek = () => {
+    if (!ghost.isConnected) return;
+    const bar = document.querySelector('#app .session-mini');
+    if (bar) {
+      const t = rectFlight(from, bar.getBoundingClientRect());
+      move.set({ x: t.x, y: t.y, scale: t.scale });
+      return;
+    }
+    if (tries++ < 30) requestAnimationFrame(seek);
+  };
+  requestAnimationFrame(seek);
+  move.done.then(() => ghost.remove());
+  return true;
+}
+
+/**
+ * Restore: the runner GROWS OUT OF THE BAR it was minimised into. For the
+ * router (app.js), right after a rising `session` screen is appended: the
+ * ghost it rose over still holds the old screen and its bar, so the bar's box
+ * is measured there, the screen starts on it and springs to full size.
+ * Takes the ghost away itself when it lands. False = nothing played; the
+ * router's own rise (`releaseGhost`) carries on as before.
+ *
+ * @param {HTMLElement} screen  the runner's `.screen`, in the document
+ * @param {HTMLElement} ghost   what `parkScreen()` returned for this render
+ */
+export function restoreFlight(screen, ghost) {
+  if (!screen || !ghost || !screen.isConnected || !motionAllowed()) return false;
+  const bar = ghost.querySelector('.session-mini');
+  if (!bar) return false;
+  const barBox = bar.getBoundingClientRect();
+  if (barBox.width < 1) return false;
+  const t = rectFlight(screen.getBoundingClientRect(), barBox);
+  screen.classList.add('m-restoring');
+  const ctl = springTransform(screen, { x: 0, y: 0, scale: 1, opacity: 1 }, 'sheet',
+    { from: { x: t.x, y: t.y, scale: t.scale, opacity: 0.35 } });
+  ctl.done.then(() => { screen.classList.remove('m-restoring'); ghost.remove(); });
+  return true;
 }

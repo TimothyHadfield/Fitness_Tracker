@@ -76,7 +76,8 @@ import {
   refreshRoute, helpDot, figureNote,
 } from './ui.js';
 import * as units from './units.js';
-import { celebrate } from './motion.js';
+import { celebrate, motionAllowed } from './motion.js';
+import { spring } from './spring.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -476,6 +477,25 @@ function refreezeSheet(goal, next) {
   });
 }
 
+/* 🆕 MOTION 2 · MOMENTS (2026-09-25, docs/motion2-plan.md package E) — Tim:
+ * *"Put professional level annimation and physics into this cite."* The bar
+ * fills from zero on a spring the FIRST time a goal is shown this session
+ * (a bar's width is Rule 7's named exception: the growth is what says how
+ * much). A bounce spring, so it lands with one small settle; the width never
+ * draws past the track. `data-m-seen` tells js/motion.js's own CSS fill to
+ * leave this bar to the spring. Off where motion is off. */
+const filledThisSession = new Set();
+export function springFill(fill, pct, key) {
+  if (!fill || !motionAllowed() || !key || filledThisSession.has(key)) return fill;
+  filledThisSession.add(key);
+  fill.dataset.mSeen = '1';
+  fill.style.width = '0%';
+  const to = Math.max(0, Math.min(100, Number(pct) || 0));
+  const draw = (v) => { fill.style.width = `${Math.max(0, Math.min(100, v)).toFixed(2)}%`; };
+  requestAnimationFrame(() => spring({ from: 0, to, preset: 'bounce', precision: 0.05, delay: 60, onUpdate: draw }));
+  return fill;
+}
+
 function progressBlock(goal, p, m, stale) {
   if (p.currentWeight === null) {
     return el('div', { class: 'card' },
@@ -513,10 +533,10 @@ function progressBlock(goal, p, m, stale) {
           + 'today\'s the new way, so the gap between them is not a measure of training.' })
       : [
           el('div', { class: 'to-next-bar' },
-            el('div', {
+            springFill(el('div', {
               class: 'to-next-fill',
               style: `width:${((p.fraction || 0) * 100).toFixed(1)}%`,
-            })),
+            }), (p.fraction || 0) * 100, `goal:${goal.id || goal.muscle}`)),
 
           el('div', { class: 'to-next-label', text: p.reached
             ? 'Target reached.'
