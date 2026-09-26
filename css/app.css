@@ -1328,6 +1328,37 @@ select.input {
   text-wrap: balance;
 }
 
+/* ---- Plate drawing (2026-09-26) ----
+   Tim: "a visual of one side of the bar that has 2 10 plates visually on it …
+   Color them differently aswell." The slot now holds a picture of ONE sleeve
+   (js/plates.js plateDrawing, drawn by ui.js plateSvg); the sentence above is
+   its aria-label/title. `has-plates` is on every stepper that CAN show plates
+   and holds the slot at the drawing's 22px, so stepping onto a weight no plates
+   make (the steps hint) never moves the rows below.
+   Colours are the calibrated-plate convention (25 kg red, 20 blue, 15 yellow,
+   10 green, 5 white, 2.5 black, 1.25 chrome; pound plates take the colour of
+   the nearest kilo plate) — fixed hues, not theme tokens, because a blue 20 is
+   blue in every gym. A thin --ink-faint outline is what lets the black plate
+   read on the dark ground and the white one on the light.
+   🛑 NO MOTION: rebuilt on every tap of ± (Rule 7). */
+.step-unit.has-plates {
+  min-height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+.plate-draw { display: block; max-width: 100%; overflow: visible; }
+.plate-draw .pd-shaft,
+.plate-draw .pd-sleeve { fill: var(--ink-faint); }
+.plate-draw .pd-collar,
+.plate-draw .pd-frame  { fill: var(--ink-soft); }
+.plate-draw .pd-plate  { stroke: var(--ink-faint); stroke-opacity: .55; stroke-width: .75; }
+.plate-draw .pd-red    { fill: #D9463B; }
+.plate-draw .pd-blue   { fill: #3673D6; }
+.plate-draw .pd-yellow { fill: #E9C23A; }
+.plate-draw .pd-green  { fill: #2F9E57; }
+.plate-draw .pd-white  { fill: #F4F4F0; }
+.plate-draw .pd-black  { fill: #1E2022; }
+.plate-draw .pd-chrome { fill: #B4BAC0; }
+
 /* ==========================================================================
    Session runner
    ========================================================================== */

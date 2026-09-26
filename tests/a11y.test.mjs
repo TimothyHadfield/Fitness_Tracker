@@ -550,6 +550,17 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      '⚠️ and it paints on --ink-soft, a token the palette sweep above already clears on every '
      + 'surface — one step up from the steps hint because an instruction read at arm\'s length is '
      + 'not a footnote, and never a colour of its own');
+
+  /* 🆕 2026-09-26 the plate list is now a DRAWING of one sleeve. Same rule:
+     it is rebuilt on every tap of ±, so none of its rules may move. And the
+     black 2.5 kg plate is invisible on the dark ground (the white 5 on the
+     light one) unless every plate is outlined. */
+  const drawRules = CSS.match(/\.plate-draw[^{]*\{[^}]*\}/g) || [];
+  ok(drawRules.length >= 8, `(guard) the plate drawing has its rules (${drawRules.length})`);
+  ok(drawRules.every((r) => !/transition|animation/.test(r)),
+     '🛑 and none of them declares motion — the drawing re-solves on every tap of ± (Rule 7)');
+  ok(/\.plate-draw \.pd-plate\s*\{[^}]*stroke:\s*var\(--ink-faint\)/.test(CSS),
+     'every plate carries a theme-coloured outline, so black reads on dark and white on light');
 }
 
 /* ================================================================== *

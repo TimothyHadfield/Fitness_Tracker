@@ -215,3 +215,110 @@ export function plateLabel(load) {
 function fmtPlate(p) {
   return String(Math.round(p * 100) / 100);
 }
+
+/* ------------------------------------------------------------------ *
+ * The drawing — one sleeve with its plates on it
+ * ------------------------------------------------------------------ */
+
+/* 2026-09-26, Tim: *"instead of having the measurement below the weight be
+ * bar+10,10 each side, you should just have a visual of one side of the bar
+ * that has 2 10 plates visually on it, and whatnot, depending on the excersize.
+ * Color them differently aswell."*
+ *
+ * THE COLOURS ARE THE CALIBRATED-PLATE CONVENTION (IWF / IPF): 25 kg red,
+ * 20 blue, 15 yellow, 10 green, 5 white, 2.5 black, 1.25 chrome. Pound gyms
+ * have no one standard, so each pound plate takes the colour of the kilo plate
+ * nearest its weight — 55 lb (24.9 kg) red, 45 (20.4) blue, 35 (15.9) yellow,
+ * 25 (11.3) green, 10 (4.5) white, 5 (2.3) black, 2.5 (1.1) chrome — which is
+ * how colour-coded pound bumpers are sold. 55 and 35 are listed although the
+ * inventory never recommends them (see the canonicity note above), so a plate
+ * added later already has its colour. The hues themselves live in the
+ * stylesheet ("Plate drawing"); this file only names them. */
+export const PLATE_COLOURS = Object.freeze({
+  kg: Object.freeze({ 25: 'red', 20: 'blue', 15: 'yellow', 10: 'green', 5: 'white', 2.5: 'black', 1.25: 'chrome' }),
+  lbs: Object.freeze({ 55: 'red', 45: 'blue', 35: 'yellow', 25: 'green', 10: 'white', 5: 'black', 2.5: 'chrome' }),
+});
+
+/* Real calibrated plates, in millimetres: diameter and thickness, by colour.
+ * A 25 and a 20 are both full 450 mm discs; below that each is smaller. The
+ * thicknesses are rounded, and are only ever compared with each other. */
+const PLATE_SIZE = Object.freeze({
+  red:    { dia: 450, mm: 27 },
+  blue:   { dia: 450, mm: 23 },
+  yellow: { dia: 400, mm: 20 },
+  green:  { dia: 325, mm: 17 },
+  white:  { dia: 230, mm: 14 },
+  black:  { dia: 190, mm: 11 },
+  chrome: { dia: 160, mm: 9 },
+});
+
+// The picture, in CSS pixels. 22 tall is the old text line plus a few pixels —
+// enough for a 1.25 to be told from a 2.5 at arm's length.
+const DRAW_H = 22;
+const PX_PER_MM = 0.4;   // a 45 lb plate ≈ 9px thick when there is room
+const GAP = 1;           // between plates, so two blues read as two
+const MIN_SLEEVE = 30;   // an empty sleeve still looks like one
+const round = (n) => Math.round(n * 100) / 100;
+
+/**
+ * The picture of ONE loading point, or null exactly when `plateLabel()` is
+ * null — so the stepper's fallback is the same in both.
+ *
+ * @param load       plateLoad()'s answer
+ * @param maxWidth   the most px the picture may take. A crowded sleeve draws
+ *                   its plates THINNER rather than wider: a picture that wraps
+ *                   or is cut off is a wrong plate count.
+ *
+ * Returns { width, height, kind: 'bar'|'peg', parts }, every part a rectangle
+ * { part, x, y, w, h } in px, drawn in order:
+ *   bar: shaft (a stub of the bar) · collar · sleeve · plates
+ *   peg: frame (the machine / landmine post) · sleeve (its horn) · plates
+ * A plate part also carries { plate, colour }. Plates go from the collar
+ * outward, biggest first, as `each` already is — that is how they are loaded.
+ *
+ * ⚠️ No `bar` weight means no bar drawn: a sled's horn and a landmine's end
+ * look alike here on purpose, and the sentence (the element's label) still
+ * says which is "each side" and which is "on one end".
+ */
+export function plateDrawing(load, { maxWidth = 160 } = {}) {
+  if (plateLabel(load) === null) return null;
+  const colours = PLATE_COLOURS[load.unit] || PLATE_COLOURS.lbs;
+  const cy = DRAW_H / 2;
+  const parts = [];
+  const hasBar = load.bar > 0;
+  let x = 0;
+
+  if (hasBar) {
+    parts.push({ part: 'shaft', x: 0, y: round(cy - 1.25), w: 10, h: 2.5 });
+    parts.push({ part: 'collar', x: 10, y: round(cy - 4.5), w: 3, h: 9 });
+    x = 13;
+  } else {
+    parts.push({ part: 'frame', x: 0, y: 2, w: 3, h: DRAW_H - 4 });
+    x = 3;
+  }
+
+  const plates = load.each.map((plate) => {
+    const colour = colours[plate] || 'chrome';
+    const size = PLATE_SIZE[colour];
+    return { plate, colour, h: round(DRAW_H * size.dia / 450), mm: size.mm };
+  });
+  // Fit: the plates share whatever the fixed parts and the sleeve's lip leave.
+  const LIP = 4;
+  const room = maxWidth - x - GAP - LIP;
+  const natural = plates.reduce((s, p) => s + p.mm * PX_PER_MM, 0) + GAP * Math.max(0, plates.length - 1);
+  const squeeze = natural > room ? room / natural : 1;
+  const gap = GAP * squeeze;
+
+  let px = x + GAP;
+  for (const p of plates) {
+    const w = round(Math.max(1, p.mm * PX_PER_MM * squeeze));
+    parts.push({ part: 'plate', plate: p.plate, colour: p.colour, x: round(px), y: round(cy - p.h / 2), w, h: p.h });
+    px += w + gap;
+  }
+  const stack = plates.length ? px - gap - x : 0;
+  const sleeveLen = round(Math.min(maxWidth - x, Math.max(MIN_SLEEVE, stack + LIP)));
+  // Drawn under the plates, so it goes in before them.
+  parts.splice(hasBar ? 2 : 1, 0, { part: 'sleeve', x, y: round(cy - 2.25), w: sleeveLen, h: 4.5 });
+
+  return { width: round(x + sleeveLen), height: DRAW_H, kind: hasBar ? 'bar' : 'peg', parts };
+}

@@ -1,7 +1,7 @@
 // Shared UI primitives: DOM builder, icons, sheets, toasts, steppers, formatters.
 
 import { FIELD_META, plateLoadFor } from './exercises.js';
-import { plateLoad, plateLabel, inventoryFor } from './plates.js';
+import { plateLoad, plateLabel, plateDrawing, inventoryFor } from './plates.js';
 import { imageFor } from './exercise-images.js';
 import { safeAvatar } from './social.js';
 import * as units from './units.js';
@@ -2133,18 +2133,36 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
   // is chosen from the CURRENT unit rather than baked in, so a kg user is
   // handed 20 kg and 1.25s instead of pounds with converted numbers.
   const hint = el('div', { class: 'step-unit', text: isDuration ? '1 min steps' : stepHint(field, meta) });
+  // 🆕 2026-09-26: the plates are a DRAWING now (Tim: "a visual of one side of
+  // the bar … Color them differently"). `has-plates` holds the slot at the
+  // drawing's height even while the steps hint shows, so the rows below never
+  // jump as ± crosses a weight no plates make.
+  if (loading) hint.classList.add('has-plates');
   function paintHint() {
     if (!loading) return;
-    const label = plateLabel(plateLoad(outbound(current), {
+    const load = plateLoad(outbound(current), {
       inventory: inventoryFor(units.units()),
       bar: loading.bar,
       points: loading.points,
-    }));
+    });
+    const label = plateLabel(load);
     // Null is the honest answer for a weight no set of plates makes, and the
     // fallback is the hint this control has always shown — so a refusal reads
     // as "nothing to say here" rather than as a gap. plates.js's header has the
     // argument for why a nearly-right list is not offered instead.
-    hint.textContent = label || stepHint(field, meta);
+    // ⚠️ The sentence stays as the drawing's label: a screen reader, and a
+    // hover on a laptop, still get "bar + 45, 45, 25 each side".
+    if (label) {
+      hint.replaceChildren(plateSvg(plateDrawing(load)));
+      hint.setAttribute('role', 'img');
+      hint.setAttribute('aria-label', label);
+      hint.setAttribute('title', label);
+    } else {
+      hint.removeAttribute('role');
+      hint.removeAttribute('aria-label');
+      hint.removeAttribute('title');
+      hint.textContent = stepHint(field, meta);
+    }
     hint.classList.toggle('is-plates', Boolean(label));
   }
   paintHint();
@@ -2228,6 +2246,33 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
   );
 
   return { node, get: () => outbound(current), set: (v) => set(inbound(v), true) };
+}
+
+/* plateDrawing()'s rectangles as an SVG (2026-09-26). The geometry and the
+ * colour NAMES are plates.js's; the hues are the stylesheet's ("Plate
+ * drawing"), so a theme can outline them. Hidden from screen readers — the
+ * hint around it carries the sentence as its label. 🛑 No motion: it is
+ * rebuilt on every tap of ± (Rule 7). */
+function plateSvg(d) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', `plate-draw is-${d.kind}`);
+  svg.setAttribute('width', String(d.width));
+  svg.setAttribute('height', String(d.height));
+  svg.setAttribute('viewBox', `0 0 ${d.width} ${d.height}`);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  for (const p of d.parts) {
+    const r = document.createElementNS(NS, 'rect');
+    r.setAttribute('class', p.part === 'plate' ? `pd-plate pd-${p.colour}` : `pd-${p.part}`);
+    r.setAttribute('x', String(p.x));
+    r.setAttribute('y', String(p.y));
+    r.setAttribute('width', String(p.w));
+    r.setAttribute('height', String(p.h));
+    r.setAttribute('rx', p.part === 'plate' ? String(Math.min(1, p.w / 3)) : '0.75');
+    svg.appendChild(r);
+  }
+  return svg;
 }
 
 function stepHint(field, meta) {

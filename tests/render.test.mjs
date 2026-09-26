@@ -1306,7 +1306,9 @@ ok(!data.querySelector('.rep-target'),
       exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3, notes: '' }],
     });
     const screen = await mount(SessionView(multi.id));
-    const items = [...screen.querySelectorAll('.set-list .set-item')];
+    // 🔄 2026-09-26: working sets only — suggested warm-up rows (tests/warmup.test.mjs)
+    // sit above them once set 1 has a weight, and are not what this block counts.
+    const items = [...screen.querySelectorAll('.set-list .set-item:not(.set-warm)')];
     ok(items.length === 3, `three sets are listed (${items.length})`);
     ok(items[0].classList.contains('active'), 'set 1 is the one open to begin with');
 
@@ -1323,7 +1325,7 @@ ok(!data.querySelector('.rep-target'),
     // ⚠️ THE ONE THAT FLIPS IF THIS IS EVER REVERTED: click the numbers, not the square.
     items[2].querySelector('.set-vals').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await settle();
-    const after = [...screen.querySelectorAll('.set-list .set-item')];
+    const after = [...screen.querySelectorAll('.set-list .set-item:not(.set-warm)')];
     ok(after[2].classList.contains('active') && !after[0].classList.contains('active'),
        '⚠️ clicking the WEIGHT AND REPS of set 3 opens set 3 — the numbered square is no longer '
        + 'the only live part of the row');
@@ -1335,7 +1337,7 @@ ok(!data.querySelector('.rep-target'),
        'delete sits BESIDE the row button rather than inside it, so it can never also select');
     del.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     await settle();
-    ok(screen.querySelectorAll('.set-list .set-item').length === 2,
+    ok(screen.querySelectorAll('.set-list .set-item:not(.set-warm)').length === 2,
        'and tapping it still deletes rather than selecting');
 
     localStorage.removeItem(DRAFT);
@@ -1368,7 +1370,7 @@ ok(!data.querySelector('.rep-target'),
     ok(Boolean(all[0].closest('.set-list')),
        '⚠️ the steppers are INSIDE the set list, not in a block of their own above it');
 
-    const rows = () => [...screen.querySelectorAll('.set-list .set-item')];
+    const rows = () => [...screen.querySelectorAll('.set-list .set-item:not(.set-warm)')];
     /* ⚠️ `.closest`, NOT `previousElementSibling` — CHANGED 2026-08-31 WITH THE
      * SHAPE IT MEASURES. The controls were a SIBLING of their row until Tim
      * asked for the row itself to morph into them; the row is now their parent.
@@ -2105,7 +2107,13 @@ ok(!data.querySelector('.rep-target'),
   const { stepper } = await import(BASE + 'ui.js');
   const u = await import(BASE + 'units.js');
   u.setUnits('lbs');
-  const hintOf = (s) => s.node.querySelector('.step-unit').textContent;
+  /* 🆕 2026-09-26 the plates are a DRAWING and the sentence is its label (Tim:
+   * "a visual of one side of the bar … Color them differently"), so the
+   * sentence is read from aria-label; the steps hint is still plain text. */
+  const hintOf = (s) => {
+    const h = s.node.querySelector('.step-unit');
+    return h.getAttribute('aria-label') || h.textContent;
+  };
   const nudge = (s, dir) =>
     s.node.querySelectorAll('.step-btn')[dir > 0 ? 1 : 0]
       .dispatchEvent(new window.Event('pointerdown'));
@@ -2116,6 +2124,19 @@ ok(!data.querySelector('.rep-target'),
      `275 lb on a bench press reads "bar + 45, 45, 25 each side" (${hintOf(bar)})`);
   ok(bar.node.querySelector('.step-unit').classList.contains('is-plates'),
      'and it is marked as a plate list, which is what the stylesheet reads to lift it off --ink-faint');
+  {
+    const h = bar.node.querySelector('.step-unit');
+    const plates = [...h.querySelectorAll('svg.plate-draw rect.pd-plate')];
+    ok(plates.length === 3 && plates.map((r) => r.getAttribute('class')).join('|')
+         === 'pd-plate pd-blue|pd-plate pd-blue|pd-plate pd-green',
+       `🆕 it DRAWS one sleeve: two blue 45s and a green 25, collar outward (${plates.map((r) => r.getAttribute('class'))})`);
+    ok(h.querySelector('.pd-shaft') && h.querySelector('.pd-collar') && !h.querySelector('.pd-frame'),
+       'a barbell drawing has the bar stub and collar, not a machine post');
+    ok(h.textContent === '' && h.getAttribute('role') === 'img' && h.getAttribute('title') === 'bar + 45, 45, 25 each side',
+       'the sentence is no longer printed — it is the picture\'s label and hover title, so a screen reader still hears the plates');
+    ok(h.querySelector('svg').getAttribute('aria-hidden') === 'true',
+       'and the svg itself is hidden, so the label is read once rather than as a pile of rectangles');
+  }
 
   /* ---- 🚨 IT FOLLOWS THE NUMBER. That is the whole feature ---- */
   nudge(bar, 1);
@@ -2136,6 +2157,16 @@ ok(!data.querySelector('.rep-target'),
        + `than printing a nearly-right list under a 40px number (${hintOf(bar)})`);
     ok(!bar.node.querySelector('.step-unit').classList.contains('is-plates'),
        'and drops the plate class with it — the fallback is styled as the footnote it is');
+    const h = bar.node.querySelector('.step-unit');
+    ok(!h.querySelector('svg') && !h.hasAttribute('aria-label') && !h.hasAttribute('role'),
+       'and the drawing and its label go with it — nothing is left claiming plates');
+    ok(h.classList.contains('has-plates'),
+       'but the slot keeps its plate height (has-plates), so the rows below do not jump');
+  }
+  {
+    const db = stepper({ field: 'weight', value: 60, onChange: () => {}, exercise: byName('Dumbbell Bench Press') });
+    ok(!db.node.querySelector('.step-unit').classList.contains('has-plates'),
+       'a dumbbell stepper never reserves the plate slot — its steps hint is exactly as before');
   }
 
   /* ---- the machines Tim actually asked about ---- */
@@ -6266,7 +6297,8 @@ ok(!data.querySelector('.rep-target'),
   });
   localStorage.removeItem(DRAFT);
   let s = await mount(SessionView(w.id));
-  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  // Working sets only (2026-09-26): suggested warm-ups appear above set 1 once it has a weight.
+  const rows = () => [...s.querySelectorAll('.set-list .set-item:not(.set-warm)')];
   const btnOf = (i) => rows()[i].querySelector('.set-done-btn');
   const openAt = () => { const o = s.querySelector('.set-open'); return o ? rows().indexOf(o.closest('.set-item')) : -1; };
   const footer = (re) => [...s.querySelectorAll('.session-footer button')]
