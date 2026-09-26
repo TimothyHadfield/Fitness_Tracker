@@ -2366,7 +2366,14 @@ export const store = {
         ? Math.round(y)
         : null;
     }
-    return this.saveSettings(patch);
+    const saved = await this.saveSettings(patch);
+    /* ⚠️ FRIENDS' COPIES FOLLOW BODY DETAILS TOO — 2026-09-26. Gender gates the
+     * published muscle map (buildStrengthShare refuses without it) and gender and
+     * age are published fields, but only a workout or a weigh-in republished — so
+     * somebody who filled in Body details kept a mapless friends document until
+     * their next workout (Tim, comparing with Autumn). */
+    schedulePublish();
+    return saved;
   },
 
   async clearAll() {
@@ -3747,6 +3754,8 @@ export const social = {
       // 2026-09-16 — see the block below the loop. Set when a document that IS
       // published was written before `connections` existed.
       let preConnections = false;
+      // 2026-09-26 — see the block below the loop. A live document with no map.
+      let mapless = false;
       // ⚠️ The legacy tier documents are read too, and on purpose: an account
       // that has not published since the model changed has its newest timestamp
       // in one of them, and skipping them would make every such account look
@@ -3760,6 +3769,10 @@ export const social = {
         // deleted on the next publish, and `sharedTiersCleared` below is what
         // makes that publish happen.
         if (S.AUDIENCES.includes(audience) && !Array.isArray(d.connections)) preConnections = true;
+        if (S.AUDIENCES.includes(audience)
+            && !(d.strength && Array.isArray(d.strength.muscles) && d.strength.muscles.length)) {
+          mapless = true;
+        }
         if (typeof d.publishedAt === 'string'
             && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
           newest = d.publishedAt;
@@ -3823,6 +3836,20 @@ export const social = {
       // it publishes again. `sharedTiersCleared` is set by that publish and is
       // therefore the flag for "this account has been through the change".
       if (settings.sharedTiersCleared !== true) {
+        await republish();
+        return true;
+      }
+      /* 🚨 AND SO IS A DOCUMENT WITH NO MAP THAT COULD NOW HAVE ONE — 2026-09-26.
+       * Tim: *"When I compare my body with Autumn, it says 'nothing to compare
+       * yet'… even though she has 11 workouts."* A map is refused while gender
+       * or a weigh-in is missing, and filling those in used to republish nothing,
+       * so the friends copy stayed mapless until the next workout. The timestamp
+       * test below cannot see that: no workout is newer than the document.
+       *
+       * ⚠️ ONLY WHEN THE MAP WOULD NOW BUILD, so a document that is mapless for
+       * a reason still true (no gender yet, nothing rateable) is not rewritten on
+       * every boot. The build is paid only on a mapless document. */
+      if (mapless && await buildStrengthShare().catch(() => null)) {
         await republish();
         return true;
       }

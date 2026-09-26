@@ -67,6 +67,7 @@ import {
   // How many sessions a published document can hold. Printed on their profile
   // because a bounded figure that does not say its bound reads as a total.
   MAX_ACTIVITY,
+  whyNoSharedMap,
 } from './social.js';
 import { encodeQR } from './qr.js';
 // ⚠️ A STATIC IMPORT, because a friend's body weight and every weight on their
@@ -1994,10 +1995,9 @@ export async function CompareBodiesView(param) {
       why: r && r.legacy
         ? 'their app has not updated since this screen changed — it starts working the next time '
           + 'they open it'
-        : (r && r.doc
-          ? 'they have not recorded enough for a map yet, or their Body details are missing the gender, body '
-            + 'weight and age a ranking needs'
-          : 'nothing of theirs is readable from here'),
+        // Names the one thing their document shows is missing (never age,
+        // which a ranking does not need) — see whyNoSharedMap, 2026-09-26.
+        : (r && r.doc ? whyNoSharedMap(r.doc) : 'nothing of theirs is readable from here'),
     });
   }
   /* ⚠️ IN THE DEMO, "YOU" IS THE DEMO ACCOUNT — whose muscle map is the one the

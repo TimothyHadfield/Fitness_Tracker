@@ -1462,6 +1462,33 @@ export function needsRepublish({ sessions, publishedAt }) {
   return false;
 }
 
+/**
+ * Why a friend's published document carries no muscle map, as the part of a
+ * sentence after their name — 2026-09-26, Tim comparing with Autumn.
+ *
+ * ⚠️ READ OFF WHAT THE DOCUMENT CAN PROVE, nothing more. The owner's publish
+ * refuses a map without a gender or a weigh-in (store.js buildStrengthShare) —
+ * age is NOT needed, so it is never named. `profile.gender` travels whenever it
+ * is set, so a document that carries `connections` (written 2026-09-16 or
+ * later, the same publish that added gender) and no gender is missing exactly
+ * that. With a gender, the weigh-in (never published unless opted in) or too
+ * little rateable training is what is left. An older document cannot tell.
+ */
+export function whyNoSharedMap(doc) {
+  const d = doc && typeof doc === 'object' ? doc : {};
+  const current = Array.isArray(d.connections);
+  const gender = safeGender(d.profile && d.profile.gender);
+  if (current && !gender) {
+    return 'their Body details are missing the gender a ranking needs — their map shows here once they add it';
+  }
+  if (gender) {
+    return 'they have not recorded enough for a map yet, or their Body details are missing the body weight a '
+      + 'ranking needs';
+  }
+  return 'they have not recorded enough for a map yet, or their Body details are missing the gender or body '
+    + 'weight a ranking needs';
+}
+
 /* ------------------------------------------------------------------ *
  * Finding people by name — 🚨 THE PART THAT REVERSES A LOCKED DECISION
  *
