@@ -3096,6 +3096,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    * Confidence and every count are unchanged: the fade moves the pooled VALUE
    * only. Measured through a 200-day layoff on the demo: the worst one-day drop
    * fell from 3.7 % (Shoulders) to 1.7 %, and to ≤ 0.3 % for every other muscle. */
+  /* 🔄 RE-BASELINED 2026-09-26, ON ITS OWN — GLUTES FROM ALL THEIR WORK. Tim:
+   * *"This machine hip thrust set is the only thing the glutes are getting based
+   * off of, even though I've done Romanian deadlifts, stiff-leg deadlifts,
+   * squats, and lunges."* Glutes' stand-ins now stay in the blend beside direct
+   * work (`BLEND_STAND_INS`), and lunges / split squats / leg press reach the
+   * glutes (`minQuality` 0.30 on the Quads hop). tests/glutes.test.mjs pins it.
+   *
+   *   Glutes     353.40 -> 350.42  -0.8 %  the demo's Deadlift (σ 0.05) still
+   *                                        carries it; squat, RDL, leg press and
+   *                                        split squat now join at small shares.
+   *                                        obs 630 -> 882, contributors 64 -> 275,
+   *                                        exercises 1 -> 5, confidence 0.8587 ->
+   *                                        0.9126 (depth and a second opinion)
+   *   every other muscle             0     byte-identical rows */
   const GOLDEN = [
     ['Back', 720, 190.4488, 0.7899, 212, 4],
     ['Biceps', 904, 110.7546, 0.8049, 125, 2],
@@ -3103,7 +3117,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ['Chest', 465, 228.2494, 0.9450, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
     ['Forearms', 904, 105.2254, 0.5777, 273, 5],
-    ['Glutes', 630, 353.4013, 0.8587, 64, 1],
+    ['Glutes', 882, 350.4209, 0.9126, 275, 5],
     ['Hamstrings', 882, 262.1308, 0.8954, 146, 3],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is

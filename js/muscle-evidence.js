@@ -837,10 +837,33 @@ const RATIOS = {
   ],
   Glutes: [ // key: Deadlift
     [/^Deadlift$/, 1.00, 1.00],
-    // Carried across the corrected hip-thrust anchor (× 0.96/1.15), not
+    // ~~Carried across the corrected hip-thrust anchor (× 0.96/1.15), not
     // measured — SL publish no machine hip thrust standard (checked
-    // 2026-08-26).
-    [/Machine Hip Thrust/, 1.00, 0.35],
+    // 2026-08-26).~~ `[/Machine Hip Thrust/, 1.00, 0.35]` until 2026-09-26.
+    /* 🚨 SPLIT AND LOWERED 2026-09-26 — Tim, on a plate-loaded LEVER machine:
+     * *"The one we used had a long extended rod which made the machanical
+     * advantage more for the weight (if it was on your hip, it would feel a lot
+     * lighter). Maybe the app thinks the weight is held on your hip."* It did:
+     * 1.00 read plates on the lever as a deadlift, pound for pound, so 45 x 10
+     * rated his glutes a 71 lb deadlift while his RDL implied ~300.
+     *
+     * 1.00 was wrong in EVERY geometry, not only his. What is logged on a machine
+     * is plates, with no 45 lb bar: at the barbell hip thrust's own median (335,
+     * bar included, over a 348 deadlift) plates-over-the-hips is ~290/348 = 0.83.
+     * Plates on the far end of a lever sit further from the pivot than the hip
+     * pad, so each pound logged is MORE than a pound at the hips — about twice on
+     * a long arm like his, i.e. ~0.42. 0.60 is the geometric middle of the two
+     * geometries. REASONED, NOT MEASURED — still no published machine hip thrust
+     * standard (re-checked 2026-09-26) — and the leverage is the brand's, so q
+     * drops to 0.25 (the table's "carried" floor): on a lifter with any hinge or
+     * squat work the compounds now carry most of the glute reading (the blend
+     * rule in rateMuscle()). If a real lever-machine table appears, replace this. */
+    // Smith: plates over the hips, logged "Plates only, no bar" — NOT a lever, so
+    // it keeps the old number exactly rather than falling into the rule below.
+    // (~0.90 is arguably closer — plates only, counterbalanced bar — not changed
+    // here because nobody asked; flagged 2026-09-26.)
+    [/^Smith Machine Hip Thrust$/, 1.00, 0.35],
+    [/Machine Hip Thrust/, 0.60, 0.25],
     // 2026-08-26 sweep, the second entry that ran the OTHER way: SL hip
     // thrust 129/218/335/478/639 over deadlift 201/268/348/438/535 →
     // 0.64/0.81/0.96/1.09/1.19, median 0.96. The reasoned 1.15 was
@@ -1504,16 +1527,75 @@ const FALLBACK = {
   Shoulders:  [{ from: 'Chest', q: 0.30 }],
   Biceps:     [{ from: 'Back', q: 0.30 }],
   Back:       [{ from: 'Glutes', q: 0.35 }],
-  Glutes:     [{ from: 'Quads', q: 0.40 }, { from: 'Hamstrings', q: 0.40 }],
+  // 🔄 2026-09-26: `minQuality` 0.30 on the Quads source, and ONLY there. Tim:
+  // *"I've done Romanian deadlifts, stiff-leg deadlifts, squats, and lunges …
+  // all of those use the glutes to some degree."* Lunges, split squats, goblet,
+  // hack, belt and pendulum squats and the leg press are Quads at q 0.35–0.45,
+  // so the global floor (strict > 0.45) kept every one of them away from the
+  // glutes. At strict > 0.30 exactly the squat/lunge PATTERNS pass and the two
+  // Quads ISOLATIONS do not (Leg Extension 0.30, Single-Leg Extension 0.25 —
+  // pinned by tests/glutes.test.mjs), and the hop's own q (× 0.40) prices them
+  // low: a lunge arrives at 0.14, so it counts "to some degree" and no more.
+  // Hamstrings keeps the global floor because its sub-0.45 entries are leg
+  // curls, which say nothing about glutes.
+  Glutes:     [{ from: 'Quads', q: 0.40, minQuality: 0.30 }, { from: 'Hamstrings', q: 0.40 }],
   Hamstrings: [{ from: 'Glutes', q: 0.40 }, { from: 'Quads', q: 0.25 }],
   Traps:      [{ from: 'Back', q: 0.25 }],
   Forearms:   [{ from: 'Back', q: 0.25 }, { from: 'Biceps', q: 0.30 }],
+};
+
+/* 🆕 2026-09-26 — HINGES FILED UNDER BACK THAT ARE ALSO GLUTE LIFTS.
+ *
+ * The Glutes key lift is the Deadlift, and its variants were filed under Back,
+ * so they reached the glutes only by chaining through the barbell ROW median —
+ * which the global floor refused (sumo/trap/deficit/rack pull are Back q 0.40)
+ * — and so a sumo or trap-bar puller's glutes read grey. Tim asked for hinge
+ * work to count toward glutes (*"all of those use the glutes to some degree"*).
+ *
+ * These are ONE hop, variant over the Deadlift itself, from the same Strength
+ * Level pages the Back entries were derived from (intermediate/median rows,
+ * male 180 / female 140; deadlift 348 m / 196 f):
+ *   Sumo      390 / 210  → 1.12 m, 1.07 f   (1.14 → 1.11 Beginner→Elite, flat)
+ *   Trap bar  372 / 211  → 1.07 m, 1.08 f   (1.11 → 1.05)
+ *   Deficit   358 / 207  → 1.03 m, 1.06 f   (1.07 → 1.00)
+ *   Rack pull 415 / 246  → 1.19 m, 1.26 f   (1.11 → 1.24; partial range)
+ *   Good morning 189 / 101 → 0.54 m, 0.52 f (0.34 → 0.69 — wide, female row
+ *                          fetched 2026-09-26: 36/64/101/147/199)
+ * q is set by that drift, like the rest of the table: flat pulls 0.70, the rack
+ * pull 0.50, the good morning 0.30 (its Back q). ⚠️ `sigmaFor()` reads drift by
+ * exercise NAME, so these readings carry the Back ratio's drift, not this one's;
+ * for the pulls the two are both small, for the good morning it understates.
+ * Direct, not a stand-in, because the Deadlift IS the glute standard. */
+const SECOND_MUSCLE = {
+  Glutes: [
+    [/^Sumo Deadlift$/, { m: 1.12, f: 1.07 }, 0.70],
+    [/^Trap Bar Deadlift$/, 1.07, 0.70],
+    [/^Deficit Deadlift$/, { m: 1.03, f: 1.06 }, 0.70],
+    [/^Rack Pull$/, { m: 1.19, f: 1.26 }, 0.50],
+    [/^Good Morning$/, 0.53, 0.30],
+  ],
 };
 
 // Only a genuine compound may stand in for another muscle. A cable fly says
 // nothing about triceps, and letting it through would be the "machine for
 // confidently wrong numbers" the estimate plan warns about.
 export const FALLBACK_MIN_QUALITY = 0.45;
+
+/* 🆕 2026-09-26 — MUSCLES WHOSE STAND-INS ARE BLENDED WITH DIRECT EVIDENCE rather
+ * than dropped the moment any direct reading exists (rateMuscle(), the pool
+ * line). Glutes only, because that is what Tim asked for and the glutes are
+ * where the shut-out bit hardest: their direct work is mostly machines and
+ * isolations (hip thrust machine, abduction, kickbacks, all q ≤ 0.40) while the
+ * compounds that train them — RDL, squat — are key lifts of OTHER muscles.
+ * Autumn's 2026-09-23 case (one abduction set shutting out her RDL) is the same
+ * shape and is fixed by the same line.
+ *
+ * ⚠️ THE SAME SHUT-OUT EXISTS ELSEWHERE AND WAS MEASURED, NOT FIXED: a leg curl
+ * shuts squats/deadlifts out of Hamstrings, a pushdown shuts the bench out of
+ * Triceps, a curl shuts rows out of Biceps. Adding a muscle here is one word;
+ * its effect on the demo year is in tests/glutes.test.mjs's header. That is
+ * Tim's call (it reverses the 2026-08-17 rule for that muscle). */
+export const BLEND_STAND_INS = new Set(['Glutes']);
 
 // The population conversion between two muscles' key lifts, taken from the
 // medians.
@@ -1899,6 +1981,18 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
       levelCurveFor(exercise.name, exercise.muscle, rule.entry, sex, bodyWeight));
   }
 
+  // 2b. 🆕 2026-09-26 — a hinge filed under Back that is ALSO a glute lift, read
+  //     straight against the Deadlift (see SECOND_MUSCLE). Before the fallbacks,
+  //     so it is direct evidence rather than a two-hop guess.
+  for (const [muscle, rules] of Object.entries(SECOND_MUSCLE)) {
+    if (muscle === exercise.muscle || seen.has(muscle)) continue;
+    for (const [re, ratio, q] of rules) {
+      if (!re.test(exercise.name)) continue;
+      add(muscle, resolveRatio(ratio, sex), q, 'direct');
+      break;
+    }
+  }
+
   // 3. Everything this lift can stand in for. Chained off the DIRECT reading it
   //    already produced, so the conversion is (this exercise → its own key
   //    lift → the other muscle's key lift).
@@ -1909,11 +2003,14 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
   // the floor, and it only does because the body-weight fraction multiplies it
   // to 0.4275; the deadlift had nothing to bring it under. The floor is a
   // threshold to CLEAR, not to touch.
-  const direct = out.filter((c) => c.kind === 'direct' && c.quality > FALLBACK_MIN_QUALITY);
+  // 🔄 2026-09-26: the floor is per SOURCE now (`minQuality`, default the global
+  // one) — see the Glutes line in FALLBACK. Still strict.
+  const direct = out.filter((c) => c.kind === 'direct');
   for (const [target, sources] of Object.entries(FALLBACK)) {
     if (seen.has(target)) continue;
     for (const src of sources) {
-      const base = direct.find((c) => c.muscle === src.from);
+      const floor = Number.isFinite(src.minQuality) ? src.minQuality : FALLBACK_MIN_QUALITY;
+      const base = direct.find((c) => c.muscle === src.from && c.quality > floor);
       if (!base) continue;
       const cross = crossMuscleRatio(src.from, target, sex);
       if (!cross) continue;
@@ -2599,8 +2696,21 @@ export function rateMuscle(observations, muscle = null) {
 
   // Direct evidence decides the rating. A compound only stands in when there is
   // none — Tim's call, and what keeps a grey muscle meaningful.
+  /* 🔄 EXCEPT FOR THE MUSCLES IN `BLEND_STAND_INS` — 2026-09-26, Tim, from his
+   * own training: *"This machine hip thrust set is the only thing the glutes are
+   * getting based off of, even though I've done Romanian deadlifts, stiff-leg
+   * deadlifts, squats, and lunges."* One light machine set (q 0.35) was direct,
+   * so it shut out an RDL and a squat (key lifts, q 1.00, hopping at 0.40) and
+   * rated his glutes a 71 lb deadlift against ~300 from the hinge work. For
+   * these muscles the stand-ins STAY IN, and the blend below weighs everything
+   * at 1/σ² as it already does — a Deadlift (σ 0.05) still carries its muscle
+   * almost alone; a machine or isolation reading (σ ~0.3) now meets a compound
+   * of about its own precision instead of silencing it. `kind` still says
+   * 'direct' whenever anything direct exists, so the Fair cap on a stand-in-only
+   * rating and grey for "no evidence at all" are unchanged. Other muscles keep
+   * the 2026-08-17 rule — see BLEND_STAND_INS for why and what it would do. */
   const direct = admissible.filter((o) => o.kind === 'direct');
-  const pool = direct.length ? direct : admissible;
+  const pool = direct.length && !BLEND_STAND_INS.has(muscle) ? direct : admissible;
   const kind = direct.length ? 'direct' : 'fallback';
 
   /* One value per exercise per day. Every other set that day is a warm-up, a
