@@ -34,6 +34,7 @@ import {
 } from './set-reps.js';
 import { leadingRun, personalDecrement, blendedMultipliers, repsAtSet } from './rep-decrement.js';
 import * as units from './units.js';
+import { warmupRamp, warmupKind, generalWarmup } from './warmup.js';
 // Workout photo on the save screen (2026-09-25, onboarding-plan part C).
 import { photoField, rectFlight } from './photo.js';
 import { primePhoto } from './store.js';
@@ -68,6 +69,49 @@ function daysBetweenDays(fromISO, toISO) {
   };
   const a = parse(fromISO), b = parse(toISO);
   return a === null || b === null ? null : Math.round((b - a) / 86400000);
+}
+
+/* SUGGESTED WARM-UPS (2026-09-26). Tim: *"Make the warmup sets automatically
+ * appear and if the user changes the weight for the first set, then
+ * automatically adjust the warmup sets in real time."* The ramp itself is
+ * js/warmup.js; this is only where it meets the draft.
+ *
+ * A suggested row is an ordinary `entry.warmups` row carrying `auto: true` — a
+ * draft-only flag, like `prefilled`, that `pickFields()` drops at save. Rules:
+ *   • set 1's weight x reps is what it ramps to (display unit, then back to lb);
+ *   • rows are merged BY POSITION: a row the user typed into has lost `auto` and
+ *     is never overwritten; every `auto` row takes the plan's row at its index;
+ *   • adding or deleting a warm-up sets `entry.warmAuto = false` and strips
+ *     every `auto` — the list is the user's from then on and nothing comes back.
+ * They stay in `warmups`, never `sets`, so no count, rating or discard warning
+ * can see them (`draftRecordedSets` reads `sets` only). */
+function suggestedWarmups(entry, ex) {
+  if (!ex || entry.group != null || entry.warmAuto === false) return [];
+  if (!entry.fields.includes('weight') || !entry.fields.includes('reps')) return [];
+  const s0 = entry.sets && entry.sets[0];
+  if (!s0) return [];
+  const exercise = entry.loadType ? { ...ex, loadType: entry.loadType } : ex;
+  return warmupRamp({
+    exercise, weight: units.toDisplay(s0.weight), reps: Number(s0.reps) || 0, unit: units.units(),
+  }).map((w) => ({ weight: units.fromDisplay(w.weight), reps: w.reps }));
+}
+
+/** Bring the `auto` rows in line with set 1. True if anything changed. */
+function syncAutoWarmups(entry, ex) {
+  if (entry.warmAuto === false) return false;
+  const cur = Array.isArray(entry.warmups) ? entry.warmups : [];
+  const plan = suggestedWarmups(entry, ex);
+  const next = [];
+  for (let i = 0; i < Math.max(cur.length, plan.length); i++) {
+    const c = cur[i];
+    if (c && !c.auto) next.push(c);
+    else if (plan[i]) next.push({ ...plan[i], auto: true });
+  }
+  const same = next.length === cur.length && next.every((x, i) => x === cur[i]
+    || (cur[i].auto && x.weight === cur[i].weight && x.reps === cur[i].reps));
+  if (same) return false;
+  if (next.length) entry.warmups = next; else delete entry.warmups;
+  return true;
 }
 
 /* ⚠️ DRAFT PERSISTENCE MOVED TO js/session-draft.js ON 2026-09-07, when the bar
@@ -1880,7 +1924,9 @@ export async function SessionView(workoutId) {
      * `entry.activeWarm` (an index, or null) is which warm-up the steppers point
      * at; while it is set, no working set is open. Hidden inside supersets,
      * where a set is a round. */
-    const warms = Array.isArray(entry.warmups) ? entry.warmups : [];
+    // Suggested warm-ups follow set 1 — see `syncAutoWarmups` at the top.
+    if (syncAutoWarmups(entry, ex)) saveDraft(state);
+    let warms = Array.isArray(entry.warmups) ? entry.warmups : [];
     if (entry.activeWarm != null && !warms[entry.activeWarm]) entry.activeWarm = null;
     const onWarm = entry.activeWarm != null;
     const target = onWarm ? warms[entry.activeWarm]
@@ -1889,6 +1935,12 @@ export async function SessionView(workoutId) {
     const ownerSet = onWarm ? target : activeSet;
 
     const setList = el('div', { class: 'set-list' });
+    // The general warm-up, once a session: on the first solo lift that gets a
+    // ramp, above its W rows, and only while there are any.
+    const firstWarmIdx = state.entries.findIndex((e) => e.group == null && warmupKind(exMap.get(e.exerciseId)));
+    const warmWords = firstWarmIdx === step.entryIndex ? generalWarmup(ex) : null;
+    const warmLine = warmWords ? el('div', { class: 'session-ex-meta warm-general', text: warmWords }) : null;
+    if (warmLine) warmLine.hidden = !warms.length;
 
     /**
      * The FIRST time you ever do an exercise, opening set 2 fills it from set 1.
@@ -2130,18 +2182,13 @@ export async function SessionView(workoutId) {
       return { row, live: lock ? { vals: null, pick: null, lock: lockNode, set: lock.set } : null };
     }
 
-    function renderSets() {
+    // Warm-ups sit ABOVE the working sets, marked "W" and never numbered, so
+    // set 1 is still the first set that counts. No Finished button: nothing
+    // is scored from them, so there is nothing to protect. Built apart from
+    // `renderSets` so a suggested ramp can be swapped in place while set 1's
+    // stepper is under the thumb (`refreshWarmRows`).
+    function buildWarmRows(editing) {
       const rows = [];
-      liveRows.length = 0;
-      // Closed by a tap on the open row or on the screen behind it. Undefined —
-      // every draft written before 2026-08-31, and every entry the runner has
-      // just built — means open, which is the state this screen has always
-      // arrived in.
-      const editing = entry.editing !== false;
-
-      // Warm-ups sit ABOVE the working sets, marked "W" and never numbered, so
-      // set 1 is still the first set that counts. No Finished button: nothing
-      // is scored from them, so there is nothing to protect.
       warms.forEach((wu, k) => {
         const { row, live } = setRow({
           open: entry.activeWarm === k && editing,
@@ -2161,15 +2208,42 @@ export async function SessionView(workoutId) {
           delLabel: `Delete warm-up ${k + 1}`,
           onDelete: () => {
             warms.splice(k, 1);
+            // The list is the user's now: nothing suggested comes back.
+            for (const x of warms) delete x.auto;
+            entry.warmAuto = false;
             if (!warms.length) delete entry.warmups;
             entry.activeWarm = null;
             saveDraft(state);
             renderPane({ keepScroll: true });
           },
         });
-        if (live) liveRows.push(live);
+        if (live) { live.warm = true; liveRows.push(live); }
         rows.push(row);
       });
+      return rows;
+    }
+
+    /* Swap the warm-up rows for fresh ones WITHOUT touching the working rows —
+     * set 1's open stepper is the thing being typed into (see `liveRows`). */
+    function refreshWarmRows() {
+      warms = Array.isArray(entry.warmups) ? entry.warmups : [];
+      for (const n of [...setList.children]) if (n.classList.contains('set-warm')) n.remove();
+      for (let i = liveRows.length - 1; i >= 0; i--) if (liveRows[i].warm) liveRows.splice(i, 1);
+      const first = setList.firstChild;
+      for (const r of buildWarmRows(entry.editing !== false)) setList.insertBefore(r, first);
+      if (warmLine) warmLine.hidden = !warms.length;
+    }
+
+    function renderSets() {
+      const rows = [];
+      liveRows.length = 0;
+      // Closed by a tap on the open row or on the screen behind it. Undefined —
+      // every draft written before 2026-08-31, and every entry the runner has
+      // just built — means open, which is the state this screen has always
+      // arrived in.
+      const editing = entry.editing !== false;
+
+      rows.push(...buildWarmRows(editing));
 
       entry.sets.forEach((s, i) => {
         const isHere = i === entry.active && !onWarm;
@@ -2503,12 +2577,19 @@ export async function SessionView(workoutId) {
           // swap has to know which, or it keeps untouched sets as done work.
           // Dropped at save like `locked`. See swapExercise().
           if (!onWarm) activeSet.touched = true;
+          // A suggested warm-up typed into is the user's from now on.
+          if (onWarm) delete target.auto;
           saveDraft(state);
           renderAssist();
           renderCaptions();
           // In place — see `syncSetValues`. Rebuilding the list would now
           // destroy the stepper that raised this.
           syncSetValues();
+          // Set 1 changed: the suggested warm-ups follow it, live.
+          if (!onWarm && entry.active === 0 && entry.activeDrop == null && syncAutoWarmups(entry, ex)) {
+            saveDraft(state);
+            refreshWarmRows();
+          }
           // Recording a number IS finishing a set, so that is when rest starts.
           // No extra button to remember to press mid-workout.
           //
@@ -2900,12 +2981,17 @@ export async function SessionView(workoutId) {
         // Beside "Add set", on any solo lift with a weight — see the warm-up
         // block at the top of `renderPane`. A new warm-up copies the one above
         // it (a ramp is usually the same reps at a heavier weight) and the
-        // first one starts blank: the app does not guess a warm-up weight.
+        // first one starts blank. 🔄 2026-09-26: the app now SUGGESTS a ramp
+        // on its own (js/warmup.js); this button is for adding past it.
         step.group == null && entry.fields.includes('weight')
           ? el('button', {
               class: 'add-set add-warm', 'aria-label': 'Add a warm-up set',
               onClick: () => {
                 if (!Array.isArray(entry.warmups)) entry.warmups = [];
+                // Adding one makes the whole list the user's (see
+                // `syncAutoWarmups`): nothing suggested moves after this.
+                for (const x of entry.warmups) delete x.auto;
+                entry.warmAuto = false;
                 const prev = entry.warmups[entry.warmups.length - 1];
                 entry.warmups.push(prev
                   ? pickFields(prev, entry.fields)
@@ -2919,6 +3005,7 @@ export async function SessionView(workoutId) {
             }, icon('plus', 15), 'Warm-up')
           : null,
       ),
+      warmLine,
       setList,
     );
 

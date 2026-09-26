@@ -6404,7 +6404,8 @@ ok(!data.querySelector('.rep-target'),
   });
   localStorage.removeItem(DRAFT);
   const s = await mount(SessionView(w.id));
-  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  // Working sets and drops only (2026-09-26): suggested warm-ups sit above set 1.
+  const rows = () => [...s.querySelectorAll('.set-list .set-item:not(.set-warm)')];
   type(s.querySelector('.set-open .step-value'), 200);
   await settle();
   [...s.querySelectorAll('button')].find((b) => /Strip the weight/.test(b.textContent)).click();
@@ -6452,7 +6453,8 @@ ok(!data.querySelector('.rep-target'),
   await settle(); await settle();
   [...s.querySelectorAll('.person-chip')].find((b) => b.textContent.trim() === 'You').click();
   await settle();
-  const rows = () => [...s.querySelectorAll('.set-list .set-item')];
+  // Working sets only (2026-09-26): suggested warm-ups sit above set 1.
+  const rows = () => [...s.querySelectorAll('.set-list .set-item:not(.set-warm)')];
   type(s.querySelector('.set-open .step-value'), 155);
   await settle();
   rows()[0].querySelector('.set-done-btn').click();
@@ -6480,7 +6482,10 @@ ok(!data.querySelector('.rep-target'),
   const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
   const w = await store.saveWorkout({
     name: 'Warm-up day',
-    exercises: [{ exerciseId: byName('Seal Row').id, sets: 2, notes: '' }],
+    // 🔄 2026-09-26: a single-joint lift, because a compound with a weight in
+    // set 1 now opens with SUGGESTED warm-ups (tests/warmup.test.mjs covers
+    // those). This block is the hand-added path, which is identical on either.
+    exercises: [{ exerciseId: byName('Leg Extension').id, sets: 2, notes: '' }],
   });
   localStorage.removeItem(DRAFT);
   const s = await mount(SessionView(w.id));
@@ -7499,7 +7504,8 @@ ok(!data.querySelector('.rep-target'),
     for (let k = 0; k < 8; k++) await settle();
   };
   const openSet = async (i) => {
-    [...s.querySelectorAll('.set-list .set-pick')][i].click();
+    // Working sets only (2026-09-26): suggested warm-ups sit above set 1.
+    [...s.querySelectorAll('.set-list .set-item:not(.set-warm) .set-pick')][i].click();
     for (let k = 0; k < 8; k++) await settle();
   };
   // "maybe 6–11 to failure on this set (12 fresh)" → [6, 11, 12].
