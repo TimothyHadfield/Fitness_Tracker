@@ -95,7 +95,10 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 (or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
-- **Nothing open.** Every authorization through 2026-09-25 is DONE: motion pass 2 (2026-09-25 night,
+- **Nothing open.** 2026-09-26 (after his joint legs workout) all 4 DONE and live: compare reshare
+  389bd52, plate drawing 14e0ae1, glutes ab0505c, auto warm-ups a37bd57 — see
+  chat.md 2026-09-26. Item 35 was REOPENED at Tim's word and is now fixed for Glutes only.
+- Every authorization through 2026-09-25 is DONE: motion pass 2 (2026-09-25 night,
   live 7cc8d43) and the 2026-09-23 set (Finished/Edit, warm-ups, logging notes, typo warning, smooth
   fade, "at least X", blend every set, level-aware ratios). Their verbatim quotes are in
   `docs/archive/progress-2026-09-25.md` → "Authorized next steps".
@@ -255,6 +258,12 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## NOT verified
 _Tim's rule bans device warnings ("not verified on a phone"). This list is only for claims no screen
 can check._
+- **2026-09-26:** Autumn's cause (no gender / no weigh-in in her Body details) is REASONED — her data
+  was never read. Hip thrust machine ratio 0.60 is reasoned (lever brands vary). Warm-up set COUNT
+  rule is judgement, not from a paper. Plate drawing in kg only checked in a stepper panel.
+- **Offered, not decided (2026-09-26):** apply the glutes blend to every muscle (demo Triceps +12 %,
+  Hamstrings ~+1 %, Biceps ≤ +0.8 %) — reverses his 2026-08-17 rule, so his call; Smith hip thrust
+  probably ~0.90 not 1.00; own-map sentence in Compare still wrongly lists "age".
 - **No predicted number has ever been checked against a real attempt** (Open work 19 — Tim's). Don't
   describe any estimate as accurate.
 - **Review wave 2 (81fada0):** the checker's "N more" is only test-checked (demo has no checker

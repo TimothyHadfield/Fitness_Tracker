@@ -683,3 +683,21 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   via contact sheets: no overflow/console errors; its one defect (reduced-motion tab line) fixed.
 - **Open:** real-iPhone feel (NOT verified list in the plan); Profile first open still ~330 ms at 4×
   (render cost); `docs/additions-ideas.md` awaits Tim.
+
+## 2026-09-26 · After a joint legs workout: warm-ups, glutes, Autumn's compare, plate drawing
+- **Asked:** auto warm-up sets from research that follow set 1's weight live; why glutes rate only
+  from one machine hip thrust (45 lb on a long lever) when RDL/SLDL/squats/lunges were done; why
+  Autumn's compare says "Nothing to compare yet"; a coloured drawing of one bar side instead of
+  "bar + 10, 10 each side".
+- **Built (4 builders, one checkout):** 389bd52 compare — a friend's shared map needs gender + a
+  weigh-in (own map draws on an assumption, so she saw hers); saving gender/age now republishes, boot
+  heal republishes a map-less copy, the sentence names what's missing (never age). 14e0ae1
+  `plateDrawing()` in plates.js, IPF colours, sentence kept as aria-label. ab0505c glutes keep
+  fallbacks in the blend (Glutes only), lunges/leg press reach glutes, hinge variants rate glutes
+  directly, hip thrust machine 1.00→0.60 q 0.25; golden Glutes −0.8 %. a37bd57 `js/warmup.js` + W rows
+  auto-filled, user edits win.
+- **Verified how:** full no-Chrome suite 7,687 PASS / 0 FAIL, exit codes checked; new suites
+  compare-publish (9/15 failed first), glutes (15/28 failed first), plates-visual, warmup; WebKit
+  393/1280 shots in session scratchpad (plates/, warmup/).
+- **Open:** see progress.md NOT verified 2026-09-26 (blend-everywhere offer, Smith hip thrust, own-map
+  "age" sentence). Set 1 sits partly below the fold on a phone with 3 warm-ups showing.
