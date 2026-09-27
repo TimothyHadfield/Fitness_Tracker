@@ -95,11 +95,14 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 (or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
-- **2026-09-27 evening, IN PROGRESS (4 builders):** (1) *"Yes rework the other exercises if you think
-  they should be"* — the ~33 reasoned machine ratios, by source or mechanics, never one blanket factor;
-  (2) *"add the warm-up sets in the workout history and day view"*; (3) plate drawing bigger WITH a
-  number on every plate and a clear bar end, reps/weight numbers aligned, drop "(from your other
-  lifts)"; (4) group workout: Finished on one person's set jumps to the next person's next set.
+- **2026-09-27 evening: ALL DONE and live** — 16 machine ratios reworked (7 left with reasons), warm-ups
+  in history/day/edit, labelled 48px plates + aligned numbers + wording cut, group Finished hands over
+  to the next person, and **Auto-guide** (`js/guide-steps.js` order, `js/guide-mode.js` view; toggle
+  "Auto-guide"/"Edit" in the runner top bar; `draft.view = 'guide'`). Choices Tim hasn't seen: guide
+  labels "Next: <name>", warm-ups alternate people too, a pre-filled number counts on Next, no slide
+  between steps, the "Dynamic stretch" line and %-of-max caption are not in the guide, drop sets need
+  Edit. Meadows row / landmine press probably over-credited (bar added before one-arm doubling in
+  strength-observations.js) — flagged, not fixed.
 - **Nothing open.** 2026-09-26 (after his joint legs workout) all 4 DONE and live: compare reshare
   389bd52, plate drawing 14e0ae1, glutes ab0505c, auto warm-ups a37bd57 — see
   chat.md 2026-09-26. Item 35 was REOPENED at Tim's word and is now fixed for Glutes only.

@@ -710,3 +710,15 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Verified how:** full no-Chrome suite 7,756 PASS / 0 FAIL after the machine build; WebKit 393px
   shots of the Leverage picker and the assumed-friend Compare line (scratch copies).
 - **Open:** see progress.md "2026-09-27 later".
+
+## 2026-09-27 (evening) · Machine rework, warm-up history, clearer plates, group hand-over, Auto-guide
+- **Asked:** rework the other guessed machines; warm-ups in history/day view; plates bigger with a
+  number on each and a clear bar end; align weight/reps numbers; cut "(from your other lifts)";
+  group Finished → next person; an "auto-guide" one-set-at-a-time view with Next + Edit.
+- **Built:** 5 builders (one checkout; shared css/views-session staged by building index blobs so
+  each commit held only its own block). Auto-guide builder was cut off by Tim's interrupt after
+  wiring; manager finished it (fixed a hidden empty `.steppers` that broke render's one-controls
+  check), shot it, pushed. A README commit from another session was merged in (no overlap).
+- **Verified how:** full no-Chrome suite 0 FAIL (8,104 incl. ok-style suites) before the Auto-guide
+  commit; WebKit 393×659 + 1366 shots of Auto-guide (warm-ups → sets, Edit back), no page scroll.
+- **Open:** see progress.md Authorized "2026-09-27 evening" choices list.
