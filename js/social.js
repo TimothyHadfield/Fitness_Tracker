@@ -958,7 +958,19 @@ export function projectStrength(strength) {
     // document carries, and it is here because the alternative is a viewer's
     // "Like me" silently meaning "like ME" on somebody else's body.
     defaultCompare: str(s.defaultCompare, 40),
+    // 🆕 2026-09-27: what the owner's app had to ASSUME to rank this map (no
+    // gender → male, no weigh-in → the reference weight), so the reader can say
+    // so — Rule 5, the caveat travels with the number. Only the two known words;
+    // absent when nothing was assumed. The reader filters again (shared-map.js
+    // `assumedOf`), because a document is written by somebody else's client.
+    ...(assumedWords(s.assumed).length ? { assumed: assumedWords(s.assumed) } : {}),
   };
+}
+
+/** The only things a map can have been ranked on by assumption. */
+const ASSUMABLE = ['sex', 'body weight'];
+function assumedWords(list) {
+  return Array.isArray(list) ? ASSUMABLE.filter((k) => list.includes(k)) : [];
 }
 
 /* ------------------------------------------------------------------ *
@@ -1466,9 +1478,12 @@ export function needsRepublish({ sessions, publishedAt }) {
  * Why a friend's published document carries no muscle map, as the part of a
  * sentence after their name — 2026-09-26, Tim comparing with Autumn.
  *
- * ⚠️ READ OFF WHAT THE DOCUMENT CAN PROVE, nothing more. The owner's publish
- * refuses a map without a gender or a weigh-in (store.js buildStrengthShare) —
- * age is NOT needed, so it is never named. `profile.gender` travels whenever it
+ * ⚠️ READ OFF WHAT THE DOCUMENT CAN PROVE, nothing more. Builds before
+ * 2026-09-27 refused a map without a gender or a weigh-in (store.js
+ * buildStrengthShare; that refusal is reversed, and a current build publishes an
+ * assumed map instead and heals a mapless document on boot) — so this sentence
+ * now describes a document an OLDER build wrote. Age is NOT needed, so it is
+ * never named. `profile.gender` travels whenever it
  * is set, so a document that carries `connections` (written 2026-09-16 or
  * later, the same publish that added gender) and no gender is missing exactly
  * that. With a gender, the weigh-in (never published unless opted in) or too

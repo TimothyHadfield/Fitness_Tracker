@@ -27,9 +27,10 @@
 // module in this app that decides what a number means.
 
 import {
-  LEVELS, levelFor, nextLevelAfter, levelProgress, compareKey, keyLiftFor,
+  LEVELS, levelFor, nextLevelAfter, levelProgress, compareKey, keyLiftFor, REF_BW,
 } from './strength-standards.js';
 import { tintFor, confidenceBand } from './muscle-evidence.js';
+import { withUnitRounded } from './units.js';
 
 /** The sex the owner's own "like me" resolves to, from their published default. */
 export function ownSexOf(strength) {
@@ -184,3 +185,51 @@ export function levelMapFrom(ratings) {
 
 /** Every level name, for anything that needs to resolve one. */
 export const LEVEL_BY_NAME = new Map(LEVELS.map((l) => [l.name, l]));
+
+/* ------------------------------------------------------------------ *
+ * A MAP RANKED ON AN ASSUMPTION — 2026-09-27
+ *
+ * Tim reversed "an assumed profile is never published" (store.js
+ * buildStrengthShare): a friend with no gender or no weigh-in now publishes the
+ * map their own screen shows, ranked on the same stated assumption, and the
+ * document says which (`strength.assumed`). Every screen that draws a friend's
+ * map prints `assumedNoteFor()` — the owner's own sentence
+ * (strength-standards.js `assumptionNote`), in the third person.
+ * ------------------------------------------------------------------ */
+const ASSUMABLE = ['sex', 'body weight'];
+
+/** What the owner's app assumed, filtered to the two known words. Never throws. */
+export function assumedOf(strength) {
+  const a = strength && typeof strength === 'object' && Array.isArray(strength.assumed)
+    ? strength.assumed : [];
+  return ASSUMABLE.filter((k) => a.includes(k));
+}
+
+/** One plain line saying what their map was ranked on, or null. */
+export function assumedNoteFor(strength, name) {
+  const assumed = assumedOf(strength);
+  if (!assumed.length) return null;
+  const who = typeof name === 'string' && name.trim() ? name.trim() : 'They';
+  const bits = [];
+  if (assumed.includes('sex')) bits.push(`Assumed male — ${who} has no Gender in Body details.`);
+  if (assumed.includes('body weight')) {
+    bits.push(`Ranked as if ${who} weighs ${withUnitRounded(REF_BW[ownSexOf(strength)])} — no weigh-in on record.`);
+  }
+  return bits.join(' ');
+}
+
+/**
+ * A LEGACY document's levels (social.js `legacyLevels()` rows) as what
+ * `bodySvg()` draws, or null when none is readable. The last map an old build
+ * published is still worth drawing over "Nothing to compare yet" — levels only,
+ * under whatever comparison group their app had then (see legacyLevels).
+ */
+export function levelMapFromLegacy(rows) {
+  if (!Array.isArray(rows)) return null;
+  const levels = new Map();
+  for (const r of rows) {
+    const lv = r && LEVEL_BY_NAME.get(r.level);
+    if (lv) levels.set(r.muscle, { levelKey: lv.key, label: lv.name });
+  }
+  return levels.size ? levels : null;
+}

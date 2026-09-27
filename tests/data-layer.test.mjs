@@ -9166,12 +9166,15 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + 'the list of what had to be assumed — a screen cannot state a comparison group the numbers '
      + 'were not built from');
 
-  /* ---- 🚨 and it is never published ---- */
-  ok(await buildStrengthShare() === null,
-     '🚨 AN ASSUMED MAP IS NEVER PUBLISHED TO A FRIEND. This is the load-bearing assertion of the '
-     + 'whole change: js/shared-map.js cannot recompute a percentile (body weight is deliberately '
-     + 'not in a public document), so a reader would get 24 rows built on a guessed sex with no way '
-     + 'to check any of them, and nowhere for the caveat to travel to');
+  /* ---- 🔄 and it IS published, saying what was assumed ----
+     ~~An assumed map is never published~~ — REVERSED 2026-09-27 at Tim's word
+     ("even if there are whatever user errors it still is working as much as it
+     can"). The caveat now travels in the map; tests/compare-publish.test.mjs
+     pins the rest (same numbers as the owner's screen, the reader's line). */
+  const assumedShare = await buildStrengthShare();
+  ok(assumedShare !== null && Array.isArray(assumedShare.assumed) && assumedShare.assumed.includes('sex'),
+     '🚨 AN ASSUMED MAP IS PUBLISHED WITH ITS ASSUMPTION ON IT (2026-09-27) — the friend reads the '
+     + 'same map the owner does, and `assumed` is what lets their screen say so');
 
   await store.saveSettings({ gender: 'male' });
   const restored = await muscleStrength();

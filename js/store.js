@@ -2367,8 +2367,9 @@ export const store = {
         : null;
     }
     const saved = await this.saveSettings(patch);
-    /* ⚠️ FRIENDS' COPIES FOLLOW BODY DETAILS TOO — 2026-09-26. Gender gates the
-     * published muscle map (buildStrengthShare refuses without it) and gender and
+    /* ⚠️ FRIENDS' COPIES FOLLOW BODY DETAILS TOO — 2026-09-26. Gender decides the
+     * published muscle map (without it the map is published as assumed male and
+     * says so — 2026-09-27; it was refused before that) and gender and
      * age are published fields, but only a workout or a weigh-in republished — so
      * somebody who filled in Body details kept a mapless friends document until
      * their next workout (Tim, comparing with Autumn). */
@@ -3756,6 +3757,8 @@ export const social = {
       let preConnections = false;
       // 2026-09-26 — see the block below the loop. A live document with no map.
       let mapless = false;
+      // 2026-09-27 — the `assumed` list of each live document that has a map.
+      const publishedAssumed = [];
       // ⚠️ The legacy tier documents are read too, and on purpose: an account
       // that has not published since the model changed has its newest timestamp
       // in one of them, and skipping them would make every such account look
@@ -3772,6 +3775,9 @@ export const social = {
         if (S.AUDIENCES.includes(audience)
             && !(d.strength && Array.isArray(d.strength.muscles) && d.strength.muscles.length)) {
           mapless = true;
+        } else if (S.AUDIENCES.includes(audience)) {
+          // 2026-09-27: what this map was ranked on — see the block below the loop.
+          publishedAssumed.push(Array.isArray(d.strength.assumed) ? [...d.strength.assumed].sort().join('|') : '');
         }
         if (typeof d.publishedAt === 'string'
             && (!newest || Date.parse(d.publishedAt) > Date.parse(newest))) {
@@ -3841,17 +3847,34 @@ export const social = {
       }
       /* 🚨 AND SO IS A DOCUMENT WITH NO MAP THAT COULD NOW HAVE ONE — 2026-09-26.
        * Tim: *"When I compare my body with Autumn, it says 'nothing to compare
-       * yet'… even though she has 11 workouts."* A map is refused while gender
-       * or a weigh-in is missing, and filling those in used to republish nothing,
+       * yet'… even though she has 11 workouts."* A map was refused while gender
+       * or a weigh-in was missing, and filling those in used to republish nothing,
        * so the friends copy stayed mapless until the next workout. The timestamp
        * test below cannot see that: no workout is newer than the document.
+       * 🔄 2026-09-27: the refusal is gone, so this is also what heals a mapless
+       * document an OLDER build left behind, the first boot on this one.
        *
        * ⚠️ ONLY WHEN THE MAP WOULD NOW BUILD, so a document that is mapless for
-       * a reason still true (no gender yet, nothing rateable) is not rewritten on
+       * a reason still true (nothing rateable) is not rewritten on
        * every boot. The build is paid only on a mapless document. */
       if (mapless && await buildStrengthShare().catch(() => null)) {
         await republish();
         return true;
+      }
+      /* 🚨 AND SO IS A MAP RANKED ON AN ASSUMPTION THE PROFILE NO LONGER NEEDS
+       * (or newly needs) — 2026-09-27. Since then an incomplete profile publishes
+       * its map on a stated assumption (`strength.assumed`); once the gender or a
+       * weigh-in lands without a publish (another device, an older build), the
+       * friend's copy would keep saying "Assumed male" for good. Compared against
+       * the SAME function the map was built with, and cheap: one profile read,
+       * no rating. */
+      if (publishedAssumed.length) {
+        const { withAssumptions } = await import('./strength-standards.js');
+        const now = [...withAssumptions(await store.getProfile()).assumed].sort().join('|');
+        if (publishedAssumed.some((a) => a !== now)) {
+          await republish();
+          return true;
+        }
       }
       const sessions = await store.getSessions();
       if (!S.needsRepublish({ sessions, publishedAt: newest })) return false;
@@ -4328,48 +4351,52 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
    * one function, so the fixture cannot be a tidier shape than the real thing. */
   const {
     percentileFor, levelFor, nextLevelAfter, weightForPercentile,
-    allCompareCombos, compareKey, keyLiftFor,
+    allCompareCombos, compareKey, keyLiftFor, withAssumptions,
   } = await import('./strength-standards.js');
 
+  /* 🔄 ~~AN ASSUMED PROFILE IS NEVER PUBLISHED~~ — the 2026-09-06 rule, REVERSED
+   * 2026-09-27 at Tim's word. It returned null here whenever gender or a weigh-in
+   * was missing, so the owner saw their own map (ranked on a stated assumption)
+   * while every friend's Compare said "Nothing to compare yet" — Autumn, 11
+   * workouts, no gender on file. Tim: *"I want you to fix the code on your end so
+   * that even if there are whatever user errors it still is working as much as it
+   * can. Worse case, we just show the information that was previously being
+   * shown in the first place, right?"*
+   *
+   * The old argument was that a reader could not check a grid built on a guessed
+   * sex and there was nowhere for the caveat to travel. Both halves are answered
+   * now rather than refused:
+   *
+   *   - 🚨 THE SAME ASSUMPTION AS THE OWNER'S OWN SCREEN, NOT A SECOND ONE. The
+   *     profile below is `withAssumptions()`'s overlay — for the owner it is
+   *     literally `muscleStrength().profile`, the one their colours were computed
+   *     against — and every grid row is re-run through `withAssumptions()` so a
+   *     missing weigh-in forces the reference weight on every combination, as it
+   *     does on their screen. Their "like me" and a friend's "like them" are the
+   *     same numbers (tests/compare-publish.test.mjs pins it muscle by muscle).
+   *   - 🚨 THE CAVEAT TRAVELS: `assumed` is published beside the grid (absent when
+   *     nothing was assumed), and every screen that draws a friend's map says it
+   *     in one line — `assumedNoteFor()` in js/shared-map.js.
+   *
+   * ⚠️ A LATER PUBLISH REPLACES IT. Saving Body details or a weigh-in republishes
+   * (saveProfile / logBodyWeight), and the boot heal republishes a document whose
+   * `assumed` no longer matches the profile (healStalePublish). */
   let profile;
   let muscles;
   if (rows) {
-    profile = asProfile || {};
-    if (!profile.bodyWeight || !profile.gender) return null;
+    // The demo's friends and the famous lifters — the same rule, not a refusal.
+    profile = withAssumptions(asProfile || {});
     muscles = await ratedFromRows(rows, profile);
   } else {
-    const [mine, s] = await Promise.all([store.getProfile(), muscleStrength()]);
-    profile = mine;
-    /* 🚨 AN ASSUMED PROFILE IS NEVER PUBLISHED — 2026-09-06, and this line is the
-     * whole of it. `muscleStrength()` stopped refusing an incomplete profile on
-     * that date so the OWNER can still see their own map, ranked on a stated
-     * assumption (male, and lifters of every size). That is defensible on their
-     * own screen, where the sentence saying so sits under the figure and the
-     * profile is one tap away.
-     *
-     * 🛑 IT IS NOT DEFENSIBLE ON SOMEBODY ELSE'S. A reader gets 24 rows of
-     * percentiles with no way to check any of them: js/shared-map.js does not
-     * recompute a percentile — it cannot, because body weight is deliberately not
-     * in a public document — so a grid built against a guessed sex would be read
-     * as the owner's real standing, and a silently-different comparison group is
-     * the precise fault that module's header says this control exists to prevent.
-     * There is nowhere on a friend's page for the caveat to travel to.
-     *
-     * ⚠️ TESTED ON `mine.missing`, THE RAW PROFILE, NOT ON `s.profile.assumed`.
-     * The two agree today and the raw one cannot stop agreeing: `s.profile` is
-     * the assumed overlay, so a future field that gets a fallback would make
-     * `assumed` the thing that has to be remembered. `missing` is the store's own
-     * account of what the user has not told us, which is the question being
-     * asked here. `!s.ready` is kept beside it because it is still the general
-     * "there is no map" answer, and this must not become the only guard.
-     *
-     * The `rows` branch above refuses the same way, one line up: no body weight
-     * or no gender on the profile handed in, no publication. */
-    if (!s.ready || mine.missing.length) return null;
+    const s = await muscleStrength();
+    // `!s.ready` is still the general "there is no map" answer.
+    if (!s || !s.ready) return null;
+    profile = s.profile || withAssumptions(await store.getProfile());
     muscles = s.muscles;
   }
-  if (!muscles.size) return null;
+  if (!muscles || !muscles.size) return null;
 
+  const assumed = Array.isArray(profile.assumed) ? profile.assumed.slice() : [];
   const ownSex = profile.gender === 'female' ? 'female' : 'male';
   const rated = [...muscles.values()];
 
@@ -4377,8 +4404,11 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
   for (const combo of allCompareCombos()) {
     // ⚠️ The owner's profile with ONE field replaced. Every other input — sex,
     // age, body weight — has to be theirs, which is the entire reason this runs
-    // on their device and not on the reader's.
-    const asked = { ...profile, compare: combo };
+    // on their device and not on the reader's. Through `withAssumptions()` so a
+    // missing weigh-in reads the reference weight on the `own` rows too, exactly
+    // as the owner's screen forces it (the combo would otherwise un-force it and
+    // every `own` row would come out empty).
+    const asked = withAssumptions({ ...profile, compare: combo });
     const row = {};
     for (const m of rated) {
       const pct = percentileFor(m.estimate, m.muscle, asked);
@@ -4483,6 +4513,10 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
     grid,
     // Which row is THEIR "like me" — the combination their own screen opens on.
     defaultCompare: compareKey({ pool: 'lifters', sex: ownSex, weight: 'own', age: 'own' }, ownSex),
+    // What had to be assumed to rank this map (2026-09-27, see the top of this
+    // function) — a subset of ['sex', 'body weight']. Absent, not [], when
+    // nothing was, so a complete profile publishes the same bytes as before.
+    ...(assumed.length ? { assumed } : {}),
   };
 }
 
@@ -4682,9 +4716,9 @@ async function computeMuscleStrength() {
    * function is expected to use it:
    *
    *   - the screen SAYS it — `comparisonLabel().assumed` (views-muscles.js);
-   *   - `buildStrengthShare()` REFUSES on it, a few dozen lines above. A map
-   *     built on an assumed sex must never be published to a friend, who cannot
-   *     check it against anything.
+   *   - `buildStrengthShare()` PUBLISHES it beside the grid (🔄 it refused on it
+   *     until 2026-09-27, when Tim reversed that), so a friend's screen says it
+   *     too — `assumedNoteFor()` in js/shared-map.js.
    *
    * ⚠️ `ready` STAYS IN THE RETURN and is now always true here. It is not dead:
    * views-goals.js and the friend screens still branch on it, and a caller that

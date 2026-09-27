@@ -967,8 +967,12 @@ async function musclesParts({ uid, name, seen }) {
     if (strength && strength.muscles && strength.muscles.length) {
       parts.push(el('h2', { class: 'section-head', text: 'Muscle map' }));
       parts.push(await friendBody(strength, { name, uid }));
-    } else if (seen.legacy) {
-      /* 🚨 A FRIEND WHO HAS NOT OPENED THE APP SINCE 2026-09-03. Their account
+    } else {
+      /* 🔄 2026-09-27: TRIED ON ANY DOCUMENT, not only one flagged `legacy` —
+       * legacyBody() returns null unless `strength` really is the old array, so a
+       * document that carries old levels is drawn however it was reached.
+       *
+       * 🚨 A FRIEND WHO HAS NOT OPENED THE APP SINCE 2026-09-03. Their account
        * still holds the old tier document, which carries a level per muscle and
        * deliberately nothing behind it. Their body is still worth drawing — and
        * the line under it says what is missing and why, rather than letting the
@@ -1343,7 +1347,9 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
  * printed: `withAssumptions()` substitutes a reference weight for a missing
  * weigh-in, which is right on my own screen — where the profile is mine and the
  * assumption is stated — and would be a number about a body nobody measured
- * here. Nothing assumed ever reaches the page.
+ * here. Nothing assumed HERE ever reaches the page. (🔄 2026-09-27: THEIR app may
+ * have ranked on an assumption of its own — no gender or no weigh-in — and the
+ * caption then says so, from the published `strength.assumed`.)
  * ------------------------------------------------------------------ */
 
 /** Highest level first; no percentile last; ties by name. */
@@ -1373,7 +1379,7 @@ function publishedSub(m) {
 
 async function theirBestLifts(doc, name, legacy) {
   const [
-    { ratingsFromShared, ownSexOf },
+    { ratingsFromShared, ownSexOf, assumedNoteFor },
     { comparePreset, comparisonLabel, keyLiftFor },
     { CORE_MUSCLES, rankedLifts },
     exMap,
@@ -1473,6 +1479,9 @@ async function theirBestLifts(doc, name, legacy) {
   if (!anyCore && !other.length && !r.repsOnly.length) return null;
 
   const label = comparisonLabel({ compare, gender: theirSex, whose: 'their' });
+  // 2026-09-27: their app may have ranked on an assumption (no gender or no
+  // weigh-in); the core eight are its ranking, so the caveat rides with them.
+  const assumedLine = strength ? assumedNoteFor(strength, name) : null;
   return bestLiftsBlock({
     label: `${name}'s best lifts`,
     core,
@@ -1480,7 +1489,7 @@ async function theirBestLifts(doc, name, legacy) {
     repsOnly: r.repsOnly,
     caption: anyCore
       ? `Estimated one-rep maxes. The core eight are ${name}'s own app's ranking, `
-        + `coloured by level ${label.main} · ${label.sub}.`
+        + `coloured by level ${label.main} · ${label.sub}.${assumedLine ? ` ${assumedLine}` : ''}`
       : `Estimated one-rep maxes, worked out here from the sets ${name} publishes.`,
     note: 'The other lifts are worked out on this device from the sets they publish, and are not '
       + 'ranked: their app publishes a level per muscle rather than per lift, and one worked out '
@@ -1757,20 +1766,13 @@ export async function FriendPeopleView(uid) {
  * to answer anything is worse still.
  */
 async function legacyBody(doc, name) {
-  const [{ legacyLevels }, { bodySvg, bodyAspect }, { LEVELS }, muscles] = await Promise.all([
-    import('./social.js'), import('./body-map.js'), import('./strength-standards.js'),
+  const [{ legacyLevels }, { bodySvg, bodyAspect }, { levelMapFromLegacy }, muscles] = await Promise.all([
+    import('./social.js'), import('./body-map.js'), import('./shared-map.js'),
     import('./views-muscles.js'),
   ]);
-  const rows = legacyLevels(doc);
-  if (!rows) return null;
-
-  const byName = new Map(LEVELS.map((l) => [l.name, l]));
-  const levels = new Map();
-  for (const r of rows) {
-    const lv = byName.get(r.level);
-    if (lv) levels.set(r.muscle, { levelKey: lv.key, label: lv.name });
-  }
-  if (!levels.size) return null;
+  // Shared with the Compare screen (2026-09-27), so both read old levels alike.
+  const levels = levelMapFromLegacy(legacyLevels(doc));
+  if (!levels) return null;
 
   const settings = await store.getSettings();
   // ⚠️ A legacy document predates D32 and carries no `profile` at all, so this
@@ -1917,11 +1919,13 @@ export async function CompareBodiesView(param) {
   const [leftUid, rightUid] = String(param || '').split('/').map((x) => decodeURIComponent(x || ''));
 
   const [
-    { ratingsFromShared, levelMapFrom, ownSexOf }, { bodySvg, bodyAspect }, muscles,
-    { comparisonLabel, comparePreset }, settings, figures,
+    { ratingsFromShared, levelMapFrom, ownSexOf, assumedOf, assumedNoteFor, levelMapFromLegacy },
+    { bodySvg, bodyAspect }, muscles,
+    { comparisonLabel, comparePreset }, settings, figures, { legacyLevels },
   ] = await Promise.all([
     import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
     import('./strength-standards.js'), store.getSettings(), import('./public-figures.js'),
+    import('./social.js'),
   ]);
 
   // A famous lifter has no page to go back to — they were picked from YOUR map.
@@ -1984,6 +1988,20 @@ export async function CompareBodiesView(param) {
       });
       continue;
     }
+    /* 🆕 2026-09-27 — Tim: *"Worse case, we just show the information that was
+     * previously being shown in the first place."* A document an old build wrote
+     * still carries a level per muscle; drawing those beats "Nothing to compare
+     * yet". Levels only, fixed — the line in `top` says so, and a tap says the
+     * numbers behind them are not in it. Tried on any readable document, not
+     * only one flagged `legacy`. */
+    const oldLevels = r && r.doc ? levelMapFromLegacy(legacyLevels(r.doc)) : null;
+    if (oldLevels) {
+      sides.push({
+        uid, name: r.name, strength: null, legacyLevels: oldLevels,
+        sex: r.doc.profile && r.doc.profile.gender === 'female' ? 'female' : 'male',
+      });
+      continue;
+    }
     /* 🚨 SAY WHO, AND SAY WHY. This screen shipped saying "One of these two has
      * not published a muscle map", which is the sentence Tim hit within minutes
      * — it names neither the person nor the reason, and the reason is almost
@@ -2026,8 +2044,9 @@ export async function CompareBodiesView(param) {
     setChildren(host, emptyState(
       'Nothing to compare yet',
       mineMissing
-        ? 'Your own muscle map needs your gender, body weight and age before it can be ranked — and at '
-          + 'least one recorded set.'
+        // 🔄 2026-09-27: gender and body weight are no longer needed (an
+        // assumed map is published and says so), so a set is all that is left.
+        ? 'Your own muscle map needs at least one recorded set before it can be ranked.'
         : missing.length
           ? `${missing.map((m) => `${m.name}: ${m.why}`).join('. ')}.`
           : 'There is only one map to draw here.',
@@ -2080,9 +2099,26 @@ export async function CompareBodiesView(param) {
         el('span', { class: 'basis-main' }, label.main, icon('down', 15)),
         el('span', { class: 'basis-sub', text: label.sub }),
       ),
-    ));
+    ),
+    /* 🆕 2026-09-27: ONE LINE PER BODY THAT WAS RANKED ON AN ASSUMPTION, or
+     * drawn from an old build's levels — under the control, where the owner's
+     * own screen puts its line. Yours is your own screen's sentence, word for
+     * word; a friend's is the same in the third person. */
+    ...sides.map((s) => {
+      if (s.legacyLevels) {
+        return el('div', { class: 'field-help', text:
+          `${s.name}'s app has not updated since this screen changed, so their body shows the levels `
+          + 'it last published, whatever comparison is picked above.' });
+      }
+      const line = s.uid === null
+        ? comparisonLabel({ gender: s.sex, assumed: assumedOf(s.strength) }).assumed
+        : assumedNoteFor(s.strength, s.name);
+      return line ? el('div', { class: 'field-help', text: line }) : null;
+    }));
 
-    const read = sides.map((s) => ({ ...s, ...ratingsFromShared(s.strength, compare) }));
+    const read = sides.map((s) => (s.legacyLevels
+      ? { ...s, muscles: new Map(), missing: false }
+      : { ...s, ...ratingsFromShared(s.strength, compare) }));
 
     /* 🚨 ONE BOX SHAPE FOR BOTH COLUMNS, TAKEN FROM THE WIDER FIGURE — 2026-09-07,
      * and it exists because two differently-shaped drawings can now sit side by
@@ -2101,7 +2137,7 @@ export async function CompareBodiesView(param) {
     const arMax = Math.max(...read.map((s) => bodyAspect(s.sex)));
 
     const columns = read.map((s) => {
-      const figure = bodySvg(levelMapFrom(s.muscles), selected, (muscle) => {
+      const figure = bodySvg(s.legacyLevels || levelMapFrom(s.muscles), selected, (muscle) => {
         // ⚠️ TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH. Two
         // independent selections is the state where somebody reads one person's
         // chest against the other's back and never notices.
@@ -2125,7 +2161,13 @@ export async function CompareBodiesView(param) {
     const panels = selected
       ? read.map((s) => el('div', { class: 'cmp-col' },
           el('div', { class: 'cmp-name', text: s.name }),
-          s.missing
+          s.legacyLevels
+            ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
+                s.legacyLevels.has(selected)
+                  ? `${s.name}: ${s.legacyLevels.get(selected).label}. The numbers behind it are not in `
+                    + 'what their app last published — they arrive the next time they open it.'
+                  : `${s.name}'s app has not published this muscle.` }))
+          : s.missing
             ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
                 `${s.name} has not published a map for that comparison.` }))
             : muscles.musclePanel(publishedRating(s.muscles, s.strength, selected), selected,
@@ -3155,7 +3197,7 @@ function publishedRating(rated, strength, muscle) {
 async function friendBody(strength, who) {
   const [
     { bodySvg, setSelected, bodyAspect },
-    { ratingsFromShared, levelMapFrom, ownSexOf },
+    { ratingsFromShared, levelMapFrom, ownSexOf, assumedNoteFor },
     muscles,
   ] = await Promise.all([
     import('./body-map.js'), import('./shared-map.js'), import('./views-muscles.js'),
@@ -3283,8 +3325,14 @@ async function friendBody(strength, who) {
    * ⚠️ AND THE CONTROL ROW STAYS OUTSIDE IT, full width above both columns —
    * which is where your own Data screen puts it, and it is a question about the
    * whole screen rather than about either column. */
+  /* 🆕 2026-09-27: WHAT THEIR MAP WAS RANKED ON, when their app had to assume
+   * it (no gender or no weigh-in) — the same line their own screen shows under
+   * its control, in the third person. Directly under the control, like theirs. */
+  const assumedLine = assumedNoteFor(strength, who.name);
+
   return el('div', { class: 'map-block' },
     controls,
+    assumedLine ? el('div', { class: 'field-help', text: assumedLine }) : null,
     el('div', { class: 'map-split' }, wrap, foot),
   );
 }
