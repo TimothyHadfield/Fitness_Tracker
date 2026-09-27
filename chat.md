@@ -738,3 +738,8 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   male after a second save (first was lost — progress.md Traps).
 - **Open:** Tim accepts the request; picks to confirm (pushdown vs other triceps, barbell curl vs
   dumbbell, leg press counted as plates only).
+- **Then:** *"the % of 1RM and estimated number of reps should also be shown in the auto-guide"* →
+  bcbbf54: runner caption content is one `captionParts()` (views-session.js) used by the pane and the
+  guide (`ctx.captions` / `ctx.captionData`, replacing `estimatedMax`/`typoRatio`). guide-mode 76/0
+  (the 4 new checks failed on HEAD first); full no-Chrome suite 8,015 PASS / 0 FAIL, exit codes 0;
+  WebKit 393×659 + 1366 demo shots: both lines show, no page scroll, Next on screen.
