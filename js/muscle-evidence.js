@@ -337,7 +337,17 @@ const RATIOS = {
     [/^Close-Grip Incline Bench Press$/, 0.81, 0.65],
     [/^Decline Barbell Bench Press$/, 1.03, 0.75],
     [/^Floor Press$/, 0.92, 0.70],
-    [/Smith Machine Bench Press/, 1.00, 0.50],
+    /* 🔄 2026-09-27 (the machine pass, docs/machine-conversion-plan.md §4 "quick
+     * fixes") — ~~1.00, reasoned, + the reasoned 20 lb bar~~. Strength Level's
+     * own page (smith-machine-bench-press, re-fetched 2026-09-27, 341,390 lifts)
+     * m180 120/162/212/270/331 over bench 127/169/220/277/339 →
+     * 0.945/0.959/0.964/0.975/0.976, median 0.964; f140 38/65/100/142/190 over
+     * 44/72/108/152/201 → median 0.926. 4 % apart → one number, 0.95. The page
+     * says "include the bar, normally 44 lb", so machine-mechanics.js now adds
+     * the page's 44 (SMITH_SL_SOURCED), as for the Smith squat. 100 lb of plates:
+     * 120 ÷ 1.00 = 120 → 144 ÷ 0.95 = 152 lb bench. The drift is flat (1.03×);
+     * q stays 0.50 for the bar convention nobody can check. */
+    [/Smith Machine Bench Press/, 0.95, 0.50],
     // ⚠️ THE PER-SIDE DUMBBELL SWEEP, 2026-08-24. See the note above the Back
     // table's Dumbbell Row entry for how this class of error was found. Every
     // reasoned per-side dumbbell ratio checked so far has been too LOW, which
@@ -411,10 +421,22 @@ const RATIOS = {
      * beside it, and q is low because the discount is judgement. */
     [/Dumbbell Squeeze Press/, 0.65, 0.30],
     [/Dumbbell Bench Press/, 0.81, 0.65],
-    // Carried across the Incline Barbell anchor (0.85) with the Smith discount
-    // the flat version already takes. Not separately sourced.
-    [/Smith Machine Incline Bench Press/, 0.85, 0.40],
-    [/Incline Machine Press/, 0.82, 0.45],
+    // ~~Carried across the Incline Barbell anchor (0.85) with the Smith discount
+    // the flat version already takes.~~ 🔄 2026-09-27: carried the other way
+    // round, off the SOURCED Smith bench — Smith bench × SL's incline-over-flat
+    // barbell factor (incline-bench-press 195/220 = 0.886 m, 90/108 = 0.833 f):
+    // 0.964 × 0.886 = 0.854 m, 0.926 × 0.833 = 0.771 f, 10 % apart → a pair.
+    // No Smith incline page (checked 2026-09-27). On the Smith bench's
+    // bar-included scale, so it adds the same 44 (machine-mechanics.js).
+    [/Smith Machine Incline Bench Press/, { m: 0.85, f: 0.77 }, 0.40],
+    /* ~~0.82, q 0.45, reasoned~~ — 2026-09-27. No incline machine press page
+     * (incline-chest-press / machine-incline-chest-press checked). Carried off
+     * the machine chest press page below by the same measured incline factor:
+     * 0.91 × 0.886 = 0.81 m, 0.75 × 0.833 = 0.62 f. The male number barely
+     * moves; the female one was ~32 % high (women press relatively less on the
+     * machine, which 0.82 never knew). q drops BELOW the sourced chest press's
+     * 0.35: carried off it, not measured, and the gearing is the brand's. */
+    [/Incline Machine Press/, { m: 0.81, f: 0.62 }, 0.30],
     // 2026-08-26 sweep: SL machine chest press 88/137/200/274/356 over bench
     // → 0.69/0.81/0.91/0.99/1.05, median 0.91. The drift is machine gearing
     // across brands, which is exactly what a low q prices — it goes DOWN a
@@ -559,17 +581,42 @@ const RATIOS = {
     // 0.80/0.87/0.93/0.98/1.02, median 0.93; f 34/61/96/140/189 → median 0.99.
     // Was a reasoned 1.05 — under-crediting ~12 %. The drift (1.28×) is a
     // plate-loaded lever's, so q drops a step.
+    // 🆕 2026-09-27: ratio unchanged, but the page says "include the bar,
+    // normally 44 lb" and the app logs plates only, so machine-mechanics.js now
+    // adds the page's 44 (LANDMINE_BAR_SL) before this ratio. A median page
+    // lifter (185 = 141 of plates) read 152 lb of row; now 198, the median.
     [/^T-Bar Row$/, { m: 0.93, f: 0.99 }, 0.55],
     // Derived 2026-09-13 (slug chest-supported-dumbbell-row): m 33/55/84/119/
     // 158 ×2 over row → 0.61/0.74/0.85/0.93/1.00, median 0.85; f 17/29/46/67/
     // 91 ×2 → median 0.95. Was a reasoned 0.80. Still below the free dumbbell
     // row's 0.98 on both sides, which is the ordering the entry has to keep.
     [/Chest-Supported Dumbbell Row/, { m: 0.85, f: 0.95 }, 0.55],
-    [/Chest-Supported Row/, 0.95, 0.45],
+    /* ~~0.95, q 0.45, reasoned ("the chest pad costs load")~~ — 2026-09-27.
+     * The library's Chest-Supported Row is a MACHINE, and a chest-supported
+     * plate-loaded lever row is exactly the machine Strength Level's machine-row
+     * page measures (see the Machine Row entry below) — the pad is already
+     * inside that page's 1.18 / 1.20. No separate page (chest-supported-t-bar-row
+     * and chest-supported-machine-row checked 2026-09-27; chest-supported-row is
+     * the DUMBBELL page, above). So it carries the machine row's pair at a lower
+     * q: 0.95 was flattering it ~20 %. */
+    [/Chest-Supported Row/, { m: 1.18, f: 1.20 }, 0.35],
+    /* 🛑 LEFT AT 0.55, AND IT IS PROBABLY FLATTERING — flagged, not fixed
+     * (2026-09-27). A Meadows row is a one-arm landmine row, logged per arm and
+     * doubled; the one-arm pulldown page says a doubled one-arm number runs
+     * ~1.36× the two-arm lift, which would put it near 0.93 × 1.36 = 1.26 plus a
+     * bar per arm. It needs the landmine bar offset, and the rep curve applies
+     * an offset to the UNDOUBLED logged number (strength-observations.js), so
+     * it cannot take one yet. Same for Landmine Press in Shoulders. */
     [/Meadows Row/, 0.55, 0.45],
-    // Carried across the T-Bar anchor (1.05): a landmine row is a T-bar row
-    // without the pad and without the machine, so it moves a little less.
-    [/Landmine Row/, 1.00, 0.40],
+    // ~~Carried across the T-Bar anchor (1.05): a landmine row is a T-bar row
+    // without the pad and without the machine, so it moves a little less.~~
+    // `1.00, 0.40` until 2026-09-27. There is no pad and no machine on either:
+    // the library's T-Bar Row is a bar in a landmine with a handle under the
+    // sleeve, and so is this. Same lift, so the same sourced pair and the same
+    // 44 lb page bar (machine-mechanics.js); the "a little less" discount had no
+    // number behind it, and the anchor it was taken off has moved to 0.93.
+    // No landmine-row page (checked 2026-09-27), so q stays below the T-bar's.
+    [/Landmine Row/, { m: 0.93, f: 0.99 }, 0.40],
     // One of the six silent ones (2026-08-31). A Kroc row is a dumbbell row done
     // heavy and loose for high reps — the same lift with body english, so it
     // takes the dumbbell row's own sourced 0.98 with q dropped for the looseness.
@@ -618,12 +665,25 @@ const RATIOS = {
     // 41/66/97/134/175 → median 1.06 (women's cable row is relatively stronger
     // than their barbell row, the pattern of every pull on this page).
     [/Seated Cable Row|Wide-Grip Seated Row/, { m: 0.98, f: 1.06 }, 0.60],
-    // Carried across the corrected pulldown anchor (× 0.95/0.90), not measured.
-    [/Single-Arm Lat Pulldown/, 0.84, 0.40],
-    // Same treatment for the one-arm row, carried across the seated cable row's
-    // sourced 0.98 by the same 0.86 the pulldown pair implies. It is logged per
-    // side and doubled, so the comparison is like for like.
-    [/Single-Arm Cable Row/, 0.84, 0.35],
+    /* ~~Carried across the corrected pulldown anchor (× 0.95/0.90), not
+     * measured.~~ `0.84, 0.40` until 2026-09-27, and it was FLATTERING EVERY
+     * ONE-ARM PULLDOWN BY ~50 %. Strength Level has the page
+     * (one-arm-lat-pulldown, 60,050 lifts): m180 55/87/128/177/231 PER ARM,
+     * f140 28/46/70/98/130. The app logs it per arm and doubles, so over the
+     * row 108/149/198/255/315 m → 1.02/1.17/1.29/1.39/1.47, median 1.29; f over
+     * 41/66/97/134/175 → median 1.44. 12 % apart → a pair.
+     *
+     * ⚠️ WHY A DOUBLED ONE-ARM NUMBER IS ABOVE THE TWO-ARM ONE: the bilateral
+     * deficit. One arm pulls 128 where two pull 189 — 68 %, not 50 % — so twice
+     * one arm is 1.36× the two-arm pulldown (1.29/0.95 m, 1.44/1.06 f: the same
+     * 1.36 on both sexes). 0.84 assumed the opposite direction. */
+    [/Single-Arm Lat Pulldown/, { m: 1.29, f: 1.44 }, 0.40],
+    // ~~Carried across the seated cable row's sourced 0.98 by the same 0.86 the
+    // pulldown pair implies~~ — that 0.86 was the carried pulldown's own guess.
+    // 2026-09-27: the MEASURED one-arm factor (1.36, above) on the seated cable
+    // row's sourced pair: 0.98 × 1.36 = 1.33 m, 1.06 × 1.36 = 1.44 f. No
+    // one-arm cable row page (checked 2026-09-27), so carried, q a step lower.
+    [/Single-Arm Cable Row/, { m: 1.33, f: 1.44 }, 0.30],
     // Carried across Cable Pullover, which is the same movement on a different
     // machine and is itself reasoned rather than sourced.
     [/Machine Pullover/, 0.45, 0.25],
@@ -734,6 +794,16 @@ const RATIOS = {
     // though the median is now sourced.
     // Paired 2026-09-15: 0.955 male / 1.041 female.
     [/Good Morning/, { m: 0.96, f: 1.04 }, 0.30],
+    /* 🛑 LEFT AT 0.55, REASONED — AND A PAGE EXISTS THAT MUST NOT BE USED
+     * (checked 2026-09-27). Strength Level's reverse-hyperextension page gives
+     * m180 <1/14/33/55/80, f140 <1/12/27/45/64: a Beginner lifting "< 1 lb" is
+     * a bodyweight movement with a little added load, where the LEGS are most of
+     * the resistance (≈ a third of body weight, swung from the hip). Dividing
+     * that added weight by a barbell row would read 0.17, and a 100 lb max on a
+     * plate-loaded pendulum machine would come out as a ~600 lb row. The
+     * library's entry is the machine; its pendulum's leverage is the brand's, so
+     * q stays at the carried floor. The bodyweight-squat refusal in exercises.js
+     * is the same argument. */
     [/Reverse Hyperextension/, 0.55, 0.25],
   ],
   Quads: [ // key: Back Squat
@@ -757,6 +827,15 @@ const RATIOS = {
     // the reasoned number. Kept, now sourced; the huge drift (novices hack
     // less than they squat, strong lifters far more) is why q stays low.
     [/Hack Squat/, 1.15, 0.40],
+    /* 🛑 LEFT AT 1.05, REASONED (re-checked 2026-09-27: no pendulum-squat page,
+     * and no maker publishes a lever ratio or a starting resistance). A pendulum
+     * is a pure lever whose empty arm is COUNTERBALANCED by the maker (a spring
+     * or counterweight horn), so neither k nor A can be read off the design the
+     * way the hip thrust's can, and it is plates-only like the hack squat. 1.05
+     * sits just under the hack squat's sourced 1.15 — pendulum users load less
+     * per rep than on a 45° sled — which is the one claim it makes. A leverage
+     * pick like the hip thrust's is the way to do better, and that is a screen
+     * (Tim's call), not a number. */
     [/Pendulum Squat/, 1.05, 0.35],
     [/Belt Squat/, { m: 1.40, f: 1.50 }, 0.35],
     [/Single-Leg Press/, { m: 0.95, f: 0.97 }, 0.30],
@@ -783,9 +862,16 @@ const RATIOS = {
     // 0.63/0.71/0.78/0.83/0.87, median 0.78. Was 0.60 — flattering by ~23 %.
     [/Leg Extension/, 0.78, 0.30],
     [/Goblet Squat/, { m: 0.31, f: 0.35 }, 0.40],
-    // One end of a bar in a corner, held at the chest — a goblet squat with a
-    // longer lever and a little more load. Carried, not published.
-    [/Landmine Squat/, 0.40, 0.25],
+    // ~~One end of a bar in a corner, held at the chest — a goblet squat with a
+    // longer lever and a little more load. Carried, not published.~~ `0.40, 0.25`
+    // until 2026-09-27. It IS published (landmine-squat, 126,536 lifts): m180
+    // 63/119/196/292/401 over squat 169/228/298/377/462 → 0.37/0.52/0.66/0.77/
+    // 0.87, median 0.658; f140 38/68/108/158/215 over 74/114/165/226/292 →
+    // median 0.655. One number, 0.66. The page includes the 44 lb bar and the
+    // app logs plates only, so machine-mechanics.js adds it (LANDMINE_BAR_SL).
+    // 90 × 8, male 180, through the real walk: 306 → 282 lb squat (measured).
+    // Drift 2.3×, q 0.30.
+    [/Landmine Squat/, 0.66, 0.30],
     // ⚠️ The barbell versions added 2026-08-31 fall into these two family rules
     // deliberately. The ratios were set for the dumbbell versions, and a barbell
     // split squat or lunge is the same movement with the load on the back — what
@@ -833,6 +919,20 @@ const RATIOS = {
      * commoner machine, and at 0.53 a 150 x 10 read Hamstrings 93rd rather than
      * ~70th. It sits first, because /Leg Curl/ would otherwise take it. */
     [/Seated Leg Curl/, { m: 0.66, f: 0.71 }, 0.35],
+    /* 🆕 SPLIT 2026-09-27 — ONE LEG, NOT TWO. The standing curl was riding on
+     * the lying curl's 0.53, a two-leg machine, while the app logs it as one
+     * leg's stack ("Reps per leg"). Strength Level has the page
+     * (standing-leg-curl, 129,524 lifts, one leg): m180 24/56/102/163/233 over
+     * RDL 147/207/280/364/455 → 0.16/0.27/0.36/0.45/0.51, median 0.364; f140
+     * 9/31/67/118/179 over 71/106/151/203/261 → median 0.444. 20 % apart → a
+     * pair. One leg's 50 × 10 (male 180, the real walk, now level-matched on
+     * the page's row) read a 146 lb RDL and now reads 247 — the old number
+     * UNDER-credited, because one leg curls well over half of what two do.
+     * Drift 3.1× (novices barely load it), so q is low.
+     * The cable leg curl is the same one-leg curl on a pulley: carried, no page
+     * (checked 2026-09-27), q a step lower. */
+    [/Standing Leg Curl/, { m: 0.36, f: 0.44 }, 0.25],
+    [/Cable Leg Curl/, { m: 0.36, f: 0.44 }, 0.20],
     [/Leg Curl/, 0.53, 0.35],
     [/Cable Pull-Through/, { m: 0.49, f: 0.59 }, 0.30],
     [/Kettlebell Swing/, 0.35, 0.25],
@@ -1016,6 +1116,9 @@ const RATIOS = {
     // press 40/72/117/172/236 (m) over OHP → median 0.90 on the app's doubled
     // reading, and 0.89 (f). Was 0.60, a reasoned number, flattering by a third:
     // a 70 lb landmine press read Shoulders 99.6th percentile.
+    // 🚩 2026-09-27: the page also says "include the bar, normally 44 lb" and
+    // the app logs plates per arm, doubled — the T-bar's bar offset belongs here
+    // too, and cannot go on a per-side lift yet (see Meadows Row in Back). Left.
     [/Landmine Press/, { m: 0.90, f: 0.89 }, 0.35],
     // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
     // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
@@ -1025,6 +1128,12 @@ const RATIOS = {
     // over OHP is 0.79 (m) / 0.84 (f), not the barbell's 0.94. It sits first,
     // because /Upright Row/ would otherwise swallow it.
     [/Dumbbell Upright Row/, { m: 0.79, f: 0.84 }, 0.35],
+    // 🆕 SPLIT 2026-09-27: the cable version has its own page (cable-upright-row,
+    // 66,795 lifts): m180 48/87/140/205/278 over OHP → 0.64/0.84/1.00/1.13/1.23,
+    // median 1.00; f140 23/46/78/119/166 over 29/47/70/98/129 → median 1.11.
+    // A stack reads higher than a bar on the same pull (the cable curl shows the
+    // same, 1.11), so the barbell's 0.94 was flattering it 6 % m / 18 % f.
+    [/Cable Upright Row/, { m: 1.00, f: 1.11 }, 0.35],
     [/Upright Row/, 0.94, 0.35],
     // ⚠️ SPLIT OUT OF THE RAISE FAMILY 2026-08-26, because it turned out to be
     // measurable: SL face pull 35/64/105/155/211 over OHP →
@@ -1117,7 +1226,14 @@ const RATIOS = {
     // Machine and dumbbell preacher have NO published standard (checked) and
     // are carried across the corrected barbell-preacher anchor (× 0.96/0.82),
     // keeping the shape somebody chose while resting on a sourced number.
-    [/Machine Preacher Curl/, 1.05, 0.40],
+    // ~~1.05, q 0.40, carried off the barbell preacher~~ — 2026-09-27: no
+    // machine preacher page (checked), so carried off the nearer MEASURED
+    // anchor, the machine curl page (1.23 m / 1.09 f), by SL's own
+    // preacher-over-curl factor (preacher-curl 100/104 = 0.96 m, 54/53 = 1.02 f):
+    // 1.18 m, 1.11 f, 6 % apart → 1.15. Most "machine curl" stations ARE a
+    // preacher pad, so the two machines should sit close; 1.05 was flattering
+    // men ~12 %. q down a step: carried, and the cam is the brand's.
+    [/Machine Preacher Curl/, 1.15, 0.30],
     // ⚠️ AFTER the preacher entry above, which is more specific. A seated curl
     // machine without the pad is carried across it at a small discount; nothing
     // is published for either.
@@ -1131,7 +1247,11 @@ const RATIOS = {
     [/Preacher Curl/, 0.96, 0.60],
     // Carried across the corrected hammer anchor (× 1.04/0.98), not measured.
     [/Cross-Body Hammer Curl/, 0.98, 0.45],
-    [/Cable Rope Hammer Curl/, 1.01, 0.45],
+    // ~~Carried, 1.01, q 0.45~~ — 2026-09-27. Its own page was already shipped
+    // in exercise-standards.js and never read for the ratio (plan §3): SL
+    // cable-hammer-curl m180 97 over the curl's 104 = 0.93; f140 57/53 = 1.08.
+    // 14 % apart → a pair. q to the cable-curl grade.
+    [/Cable Rope Hammer Curl/, { m: 0.93, f: 1.08 }, 0.40],
     // SL hammer curl 24/37/54/73/95 ×2 → 0.98/1.01/1.04/1.04/1.06, median
     // 1.04. The neutral grip really is the strongest curl, now by measurement.
     [/Hammer Curl/, 1.04, 0.55],
@@ -1219,6 +1339,12 @@ const RATIOS = {
     // different enough animal from the population that was measured to be worth
     // believing a step less.
     [/Single-Arm Cable Pushdown/, 0.61, 0.30],
+    // 🆕 SPLIT 2026-09-27: a reverse (underhand) grip is its own page
+    // (reverse-grip-tricep-pushdown, 75,570 lifts): m180 33/64/108/163/226 over
+    // close-grip bench → median 108/208 = 0.52; f140 62/106 = 0.58, 13 % apart.
+    // The supinated grip moves less, so the family's 0.61 UNDER-credited it:
+    // 60 × 10 read a 149 lb close-grip bench, now 192 (measured, male 180).
+    [/Reverse-Grip Pushdown/, { m: 0.52, f: 0.58 }, 0.35],
     [/Pushdown/, 0.61, 0.40],
     // 2026-08-26 sweep: SL cable overhead extension 33/60/97/142/194 over
     // close-grip bench → 0.27/0.37/0.47/0.55/0.62, median 0.47 (was 0.45).
@@ -1237,14 +1363,16 @@ const RATIOS = {
      * already had), and SL's dumbbell tricep extension read as ONE bell gives
      * 0.24 male / 0.25 female. Both halves are required. */
     [/Overhead Dumbbell Extension/, { m: 0.24, f: 0.25 }, 0.35],
-    // ⚠️ REASONED, NO PUBLISHED STANDARD — checked 2026-08-27 and the note that
-    // used to sit here was WRONG. It said "SL publish a machine extension
-    // standard a later pass can use"; they do not. They publish a machine
-    // tricep PUSHDOWN, which is a different movement from a seated machine
-    // extension and already has its own entry. This is now in the same class as
-    // Machine Row and the shrug variants: labelled rather than left looking
-    // derivable, so nobody spends another pass looking for it.
-    [/Machine Triceps Extension/, 0.60, 0.35],
+    // ~~⚠️ REASONED, NO PUBLISHED STANDARD — checked 2026-08-27 … labelled
+    // rather than left looking derivable, so nobody spends another pass looking
+    // for it.~~ `0.60, 0.35` until 2026-09-27 — "no published standard" had a
+    // shelf life again. The page is machine-tricep-extension (110,273 lifts;
+    // the 2026-08-27 check tried the "triceps" spelling): m180
+    // 71/112/164/227/296 over close-grip bench 124/163/208/260/314 →
+    // 0.57/0.69/0.79/0.87/0.94, median 0.788; f140 32/55/88/127/171 over
+    // 48/73/106/144/186 → median 0.830. 5 % apart → 0.81. 0.60 was flattering
+    // every set ~35 %. Drift 1.65× and a cam → q 0.30.
+    [/Machine Triceps Extension/, 0.81, 0.30],
     // Corrected 2026-09-13: SL dumbbell tricep kickback, doubled, over the
     // close-grip bench → 0.39 male / 0.43 female. Was a reasoned 0.20, so a
     // 20 lb x 12 kickback rated Triceps 97th, Elite.
@@ -1323,6 +1451,10 @@ const RATIOS = {
     // Raised 2026-09-15: 1.451 male / 1.487 female; the sexes agree within
     // 3 %, so one number, but 1.35 was ~8 % low for both.
     [/Leg Press Calf Raise/, 1.47, 0.35],
+    // 🛑 LEFT AT 1.05 (checked 2026-09-27): the donkey-calf-raise page exists
+    // but is 4,124 lifts with a Beginner of 2 lb — an added-weight bodyweight
+    // (or rider) population, not the library's machine — so it is refused for
+    // the reverse-hyperextension reason in Back.
     [/Donkey Calf Raise/, 1.05, 0.35],
     // Trimmed 2026-09-15: 0.524 male / 0.508 female.
     [/Dumbbell Calf Raise/, 0.52, 0.35],
@@ -1337,7 +1469,14 @@ const RATIOS = {
     // Corrected 2026-09-13: 0.92, from SL's own page. The reasoned 0.55 was
     // flattering by 40 % — a 45 x 12 read Forearms 88th.
     [/Reverse Wrist Curl/, 0.92, 0.50],
-    [/Cable Reverse Curl/, 0.78, 0.35],
+    // ~~0.78, q 0.35, reasoned~~ — 2026-09-27. No cable reverse curl page
+    // (checked). Carried off the barbell reverse curl below (0.92 m / 0.90 f,
+    // sourced) by the MEASURED stack-over-bar factor on the same curl pattern
+    // (cable-curl over barbell-curl: 115/104 = 1.106 m, 56/53 = 1.057 f):
+    // 1.02 m, 0.95 f, 7 % apart → 0.98. A stack number runs above a bar's on a
+    // curl, so 0.78 (below the barbell's) had the direction wrong and was
+    // flattering ~25 %. q a step below its anchor's 0.40.
+    [/Cable Reverse Curl/, 0.98, 0.30],
     [/Reverse Curl/, { m: 0.92, f: 0.90 }, 0.40],
     [/Plate Pinch Hold/, 0.45, 0.20],
   ],

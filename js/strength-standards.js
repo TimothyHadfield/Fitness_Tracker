@@ -764,10 +764,14 @@ export function normalizeCompare(compare) {
  * screen still asks for the two settings and the note below the map still says
  * they are absent. An assumption that got saved would stop being an assumption.
  *
- * 🚨 AND A MAP BUILT ON ONE MUST NOT BE PUBLISHED — see `buildStrengthShare()`
- * in js/store.js, which refuses on `assumed`. A reader of somebody else's map
- * cannot check it against anything, and a silently-different comparison group is
- * the exact fault js/shared-map.js exists to prevent.
+ * ~~🚨 AND A MAP BUILT ON ONE MUST NOT BE PUBLISHED — `buildStrengthShare()`
+ * refuses on `assumed`.~~ 🔄 REVERSED 2026-09-27 at Tim's word (*"I don't want
+ * it to be our job to fix anything"*): a map built on an assumption IS
+ * published, with the `assumed` list beside the grid, and every screen that
+ * draws a friend's map says it in one line (`assumedNoteFor()` in
+ * js/shared-map.js). What still holds is the reason the refusal existed — a
+ * reader cannot check somebody else's comparison group — so the assumption must
+ * never travel SILENTLY. See `buildStrengthShare()` in js/store.js.
  *
  * @param {object} profile  as `store.getProfile()` returns it
  * @returns {object} the same profile, plus `assumed` — a subset of

@@ -36,6 +36,16 @@
 //
 // 98 rows. Regenerate by filtering tools/strength-level-data.mjs through
 // tools/strength-level-map.mjs with the refusals above; never hand-edit a number.
+//
+// 🆕 +6 ROWS, 2026-09-27 (the machine pass, docs/machine-conversion-plan.md) —
+// pages the 2026-09-03 pull did not have, fetched 2026-09-27 from the same
+// URL pattern and copied as printed (male 180 / female 140 rows): Single-Arm
+// Lat Pulldown (one-arm-lat-pulldown, per arm), Landmine Squat, Standing Leg
+// Curl, Cable Upright Row, Machine Triceps Extension, Reverse-Grip Pushdown.
+// Existing rows re-fetched the same day (hack-squat, t-bar-row,
+// smith-machine-bench-press, …) matched to the pound. ⚠️ tools/
+// strength-level-data.mjs does not have these six yet; a regeneration must add
+// them there first or it will drop them. 104 rows.
 export const EXERCISE_STANDARDS = new Map([
   ["Close-Grip Bench Press",         { muscle: "Chest",      slug: "close-grip-bench-press", m: [124, 163, 208, 260, 314], f: [48, 73, 106, 144, 186] }],
   ["Incline Barbell Bench Press",    { muscle: "Chest",      slug: "incline-bench-press", m: [113, 150, 195, 246, 300], f: [34, 58, 90, 130, 174] }],
@@ -135,4 +145,11 @@ export const EXERCISE_STANDARDS = new Map([
   ["Reverse Wrist Curl",             { muscle: "Forearms",   slug: "reverse-wrist-curl", m: [8, 37, 90, 165, 258], f: [3, 18, 48, 91, 147] }],
   ["Reverse Curl",                   { muscle: "Forearms",   slug: "reverse-barbell-curl", m: [35, 59, 90, 128, 171], f: [16, 29, 47, 69, 95] }],
   ["Machine Crunch",                 { muscle: "Core",       slug: "machine-seated-crunch", m: [65, 110, 170, 243, 325], f: [30, 57, 94, 140, 192] }],
+  // Added 2026-09-27 (see the header).
+  ["Single-Arm Lat Pulldown",        { muscle: "Back",       slug: "one-arm-lat-pulldown", m: [55, 87, 128, 177, 231], f: [28, 46, 70, 98, 130] }],
+  ["Landmine Squat",                 { muscle: "Quads",      slug: "landmine-squat", m: [63, 119, 196, 292, 401], f: [38, 68, 108, 158, 215] }],
+  ["Standing Leg Curl",              { muscle: "Hamstrings", slug: "standing-leg-curl", m: [24, 56, 102, 163, 233], f: [9, 31, 67, 118, 179] }],
+  ["Cable Upright Row",              { muscle: "Shoulders",  slug: "cable-upright-row", m: [48, 87, 140, 205, 278], f: [23, 46, 78, 119, 166] }],
+  ["Machine Triceps Extension",      { muscle: "Triceps",    slug: "machine-tricep-extension", m: [71, 112, 164, 227, 296], f: [32, 55, 88, 127, 171] }],
+  ["Reverse-Grip Pushdown",          { muscle: "Triceps",    slug: "reverse-grip-tricep-pushdown", m: [33, 64, 108, 163, 226], f: [15, 34, 62, 98, 141] }],
 ]);

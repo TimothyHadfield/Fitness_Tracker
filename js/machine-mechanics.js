@@ -22,7 +22,8 @@
 // is a percentage of anything.
 //
 // ⚠️ ONLY WHERE THE GEOMETRY IS VISIBLE AND VARIES BETWEEN MACHINES OF ONE NAME
-// (plan §4): the hip thrust designs and the Smith bar. A stack machine whose
+// (plan §4): the hip thrust designs, the Smith bar and (2026-09-27, second
+// pass) the landmine bar on T-bar/landmine lifts. A stack machine whose
 // gearing is hidden in a cam stays on its Strength Level median in
 // muscle-evidence.js, because nobody can measure anything better.
 //
@@ -50,8 +51,43 @@ import { e1rm } from './e1rm.js';
  *     middle, reasoned. */
 export const SMITH_BAR_SL = 44;
 export const SMITH_BAR_EFFECTIVE = 20;
-// The Smith entries whose ratio came off Strength Level's own Smith page.
-const SMITH_SL_SOURCED = new Set(['Smith Machine Squat', 'Smith Machine Shrug']);
+// The Smith entries whose ratio sits on Strength Level's bar-included scale:
+// derived from their own Smith page (squat, shrug, and since the second pass
+// on 2026-09-27 the bench — smith-machine-bench-press, "include the weight of
+// the bar, normally 44 lb"), or CARRIED off one of those (the incline, from the
+// Smith bench). A ratio carried off a bar-included anchor is on that anchor's
+// scale, so it needs the same 44. Smith OHP, row, calf raise and hip thrust
+// have no page and stay on the reasoned 20.
+const SMITH_SL_SOURCED = new Set([
+  'Smith Machine Squat', 'Smith Machine Shrug',
+  'Smith Machine Bench Press', 'Smith Machine Incline Bench Press',
+]);
+
+/* The landmine bar — 2026-09-27, the second pass.
+ *
+ * ONE END OF A BAR IN A FLOOR SOCKET, plates on the free end, hands just inside
+ * the sleeve. The torque balance about the socket puts, at the hands,
+ *     plates × (d_plate / d_hands) + bar × (d_barCentre / d_hands)
+ * and the angle cancels as on any rigid arm. d_plate/d_hands is ~1.0–1.1 (the
+ * hands sit right under the plates), and the bar's centre is half way out, so
+ * PHYSICALLY a 44 lb bar puts ~22 lb on the hands.
+ *
+ * ⚠️ BUT THE NUMBER THAT MATTERS IS THE PAGE'S CONVENTION, EXACTLY AS FOR THE
+ * SMITH BAR ABOVE. Strength Level's t-bar-row and landmine-squat pages both say
+ * "Barbell weights include the weight of the bar, normally 20 kg / 44 lb", and
+ * the ratios in muscle-evidence.js were divided from those pages; the app logs
+ * these as "Plates only, no bar" (exercises.js). So a plates-only number needs
+ * the same 44 to land on the page's scale, and k stays 1 because the page's
+ * lifters stood at the same geometry — whatever k really is, the ratio already
+ * carries it. Before this, a median T-bar lifter (185 on the page = 141 of
+ * plates) read 141 ÷ 0.93 = 152 lb of barbell row, ~30th percentile.
+ *
+ * 🛑 TOTAL-LOAD LIFTS ONLY. Meadows Row and Landmine Press are logged per arm and
+ * doubled, and the rep curve in strength-observations.js runs `plateE1rm()` on
+ * the LOGGED (undoubled) number, so a lever on a per-side lift would convert
+ * half the load. They keep their plain ratios until that path doubles first. */
+export const LANDMINE_BAR_SL = 44;
+const LANDMINE_SL_SCALE = new Set(['T-Bar Row', 'Landmine Row', 'Landmine Squat']);
 
 /* The leverage a person can pick for their own lever machine: "the plates sit
  * this many times as far from the pivot as the pad". 1 = the same distance.
@@ -127,6 +163,9 @@ export function mechanicsFor(exercise, picked) {
       A: SMITH_SL_SOURCED.has(name) ? SMITH_BAR_SL : SMITH_BAR_EFFECTIVE,
       q: null, picked: false,
     };
+  }
+  if (LANDMINE_SL_SCALE.has(name)) {
+    return { design: 'landmine', k: 1, A: LANDMINE_BAR_SL, q: null, picked: false };
   }
   return null;
 }
