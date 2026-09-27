@@ -7666,13 +7666,18 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 .screen > .session-footer[hidden] { display: none; }
 
 .guide { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.guide-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; }
+.guide-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
+/* The body shrinks to the space there is, and only the lines about the
+   exercise give way (they scroll on their own): the steppers and Next never
+   leave the screen (2026-09-27 review). */
 .guide-body {
   margin: auto; width: 100%; max-width: 460px;
+  flex: 0 1 auto; min-height: 0;
   padding: 16px var(--pad);
   display: flex; flex-direction: column; align-items: stretch; gap: 4px;
   text-align: center;
 }
+.guide-body > * { flex: none; }
 .guide-where {
   display: flex; justify-content: center; align-items: baseline; gap: 6px;
   font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--ink-soft);
@@ -7685,10 +7690,30 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
   letter-spacing: -0.028em; line-height: 1.15; text-wrap: balance;
   overflow-wrap: anywhere;
 }
-.guide-note { font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--ink-soft); }
+.guide-name { display: flex; justify-content: center; min-width: 0; }
+.guide-name .ex-label-btn { text-align: center; }
+/* The pane's own lines (coach's note, plan, last time …), in their own
+   classes; this slot only stacks them and scrolls when there is no room. */
+.guide-body > .guide-note {
+  flex: 0 1 auto; min-height: 20px; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column; gap: 4px; margin-top: 2px;
+}
 .guide-note[hidden] { display: none; }
+.guide-note > * { flex: none; }
+.guide-how { font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--ink-soft); }
+.guide-note .note-card { text-align: left; }
+.guide-note .prefill-note { justify-content: center; }
 .guide-steppers { margin-top: 18px; text-align: left; }
+.guide-assist { margin-top: 6px; }
+.guide-assist[hidden] { display: none; }
 .guide .step-value { font-size: 38px; }
+/* A long number steps the font down so it is never clipped (2026-09-27:
+   "1000" showed as "100"). Chosen by character count in guide-mode.js
+   `boxFit()`; sizes measured in WebKit at 393px, and stepped down further
+   there by measurement on a narrower phone. */
+.guide .step-value.fit-md { font-size: 28px; }
+.guide .step-value.fit-sm { font-size: 24px; }
+.guide .step-value.fit-xs { font-size: 20px; }
 .guide .step-btn { height: 60px; }
 .guide-footer { justify-content: center; }
 .guide-footer .btn { flex: 1; max-width: 460px; }
@@ -7708,6 +7733,11 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
    Plates move on the `snap` spring in bar-view.js; reduced motion swaps them. */
 .guide-bar { width: 100%; margin: 12px auto 0; }
 .guide-bar[hidden] { display: none; }
+/* On a step with many lines the drawing gives way first — it scales down
+   (the viewBox is `meet`, so it stays whole and centred) to a floor — so the
+   lines above it keep room to be read (2026-09-27 review). */
+.guide-body > .guide-bar { flex: 0 6 auto; min-height: 72px; aspect-ratio: 360 / 150; }
+.guide-body > .guide-bar > .bar-draw { height: 100%; aspect-ratio: auto; }
 .bar-draw { display: block; width: 100%; height: auto; aspect-ratio: 360 / 150; overflow: visible; }
 .guide-bar.is-empty .bar-draw { opacity: .35; }
 .bar-draw .bv-shaft,

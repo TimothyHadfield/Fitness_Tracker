@@ -134,14 +134,16 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
   const d = { forName: null, guestNames: [], others: [], index: 0,
     entries: [ent('a', Sx(2), { group: 1 }), ent('b', Sx(2), { group: 1 }), ent('c', Sx(1))] };
   const seq = walk(d, G.startStep(d)).map(fmt);
+  // 🔄 2026-09-27 review: the runner's own superset words — the step is a
+  // round, and the button says "Straight into B" / "Round 2 of 2".
   const want = [
-    'A Set 1 of 2 → Next exercise',
-    'B Set 1 of 2 → Next exercise',
-    'A Set 2 of 2 → Next exercise',
-    'B Set 2 of 2 → Next exercise',
+    'A Round 1 of 2 → Straight into B',
+    'B Round 1 of 2 → Round 2 of 2',
+    'A Round 2 of 2 → Straight into B',
+    'B Round 2 of 2 → Next exercise',
     'C Set 1 of 1 → Finish workout',
   ];
-  ok(JSON.stringify(seq) === JSON.stringify(want), 'superset: A1, B1, A2, B2 (warm-ups stay hidden in a superset)\n      ' + seq.join('\n      '));
+  ok(JSON.stringify(seq) === JSON.stringify(want), 'superset: A1, B1, A2, B2, in the runner\'s words (warm-ups stay hidden in a superset)\n      ' + seq.join('\n      '));
 }
 
 {
@@ -150,27 +152,34 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
   const d = { forName: null, guestNames: ['Rae'], index: 0, entries: mk(), others: [{ name: 'Rae', index: 0, entries: mk() }] };
   const seq = walk(d, G.startStep(d)).map(fmt);
   const want = [
-    'You A Set 1 of 2 → Next exercise',
-    'You B Set 1 of 2 → Next: Rae',
-    'Rae A Set 1 of 2 → Next exercise',
-    'Rae B Set 1 of 2 → Next: You',
-    'You A Set 2 of 2 → Next exercise',
-    'You B Set 2 of 2 → Next: Rae',
-    'Rae A Set 2 of 2 → Next exercise',
-    'Rae B Set 2 of 2 → Finish workout',
+    'You A Round 1 of 2 → Straight into B',
+    'You B Round 1 of 2 → Next: Rae',
+    'Rae A Round 1 of 2 → Straight into B',
+    'Rae B Round 1 of 2 → Next: You',
+    'You A Round 2 of 2 → Straight into B',
+    'You B Round 2 of 2 → Next: Rae',
+    'Rae A Round 2 of 2 → Straight into B',
+    'Rae B Round 2 of 2 → Finish workout',
   ];
   ok(JSON.stringify(seq) === JSON.stringify(want), 'superset with two people: a whole round each, then swap\n      ' + seq.join('\n      '));
 }
 
 {
-  // A blank set cannot be marked done; a prefilled one loses the flag when it is.
+  // A blank set cannot be marked done.
   const d = { forName: null, guestNames: [], others: [], index: 0,
-    entries: [ent('a', [{ weight: 0, reps: 0 }, { weight: 100, reps: 10, prefilled: true }])] };
+    entries: [ent('a', [{ weight: 0, reps: 0 }, { weight: 100, reps: 10, prefilled: true },
+      { weight: 100, reps: 10, prefilled: true, fromPlan: true }])] };
   ok(G.markDone(d, { name: null, entryIndex: 0, kind: 'set', index: 0 }) === false && !d.entries[0].sets[0].done,
      'a blank set is refused, and nothing changes');
-  ok(G.markDone(d, { name: null, entryIndex: 0, kind: 'set', index: 1 }) === true
-     && d.entries[0].sets[1].done === true && !('prefilled' in d.entries[0].sets[1]),
-     'Next under an app-worked-out number accepts it: done, and no longer `prefilled`');
+  // 🔄 2026-09-27 review: the runner's Finished rule (`setIsRecorded`). A
+  // number the app only worked out is refused, exactly as Finished is hidden
+  // on it; the plan's numbers pass, as they do there.
+  ok(G.markDone(d, { name: null, entryIndex: 0, kind: 'set', index: 1 }) === false
+     && !d.entries[0].sets[1].done && d.entries[0].sets[1].prefilled === true,
+     'Next under an app-worked-out number is refused (the runner\'s Finished rule)');
+  ok(G.markDone(d, { name: null, entryIndex: 0, kind: 'set', index: 2 }) === true
+     && d.entries[0].sets[2].done === true && !('prefilled' in d.entries[0].sets[2]),
+     'Next under the PLAN\'s numbers accepts them: done, and no longer `prefilled`');
   // Where it opens: a finished first set is skipped to the first unfinished one.
   const e = { forName: null, guestNames: [], others: [], index: 0,
     entries: [ent('a', [{ weight: 1, reps: 1, done: true }, { weight: 1, reps: 1 }], { warmups: W(1, true) })] };
@@ -227,9 +236,75 @@ if (typeof G.prevStep !== 'function') {
      'prevStep changes nothing on the draft (set 1 stays done, its numbers kept)');
 }
 
+/* ============ 0c. the 2026-09-27 review (pure) ============
+ * Tim: "could you analyze the auto-guide system and really think if we're
+ * missing anything there?" — each block names the review item it pins. */
+{
+  const allDone = (d) => [d.entries, ...(d.others || []).map((o) => o.entries)]
+    .every((es) => es.every((e) => e.sets.every((s) => s.done)));
+  const one = (id) => ent(id, Sx(1));
+  // 5. "Just for": a different exercise list per person — everybody's work is visited.
+  const d1 = { forName: null, guestNames: ['Rae'], index: 0, entries: [one('a'), one('b')],
+    others: [{ name: 'Rae', index: 0, entries: [one('a'), one('c')] }] };
+  const s1 = walk(d1, G.startStep(d1)).map(fmt);
+  ok(allDone(d1), 'Just for: You [A,B] / Rae [A,C] — every set on both lists is walked\n      ' + s1.join('\n      '));
+  const d2 = { forName: null, guestNames: ['Rae'], index: 0, entries: [one('a'), one('b'), one('a')],
+    others: [{ name: 'Rae', index: 0, entries: [one('b'), one('a'), one('a')] }] };
+  const s2 = walk(d2, G.startStep(d2)).map(fmt);
+  ok(allDone(d2), 'Just for: You [A,B,A] / Rae [B,A,A] — every set on both lists is walked\n      ' + s2.join('\n      '));
+  const d3 = { forName: null, guestNames: ['Rae'], index: 0, entries: [one('a')],
+    others: [{ name: 'Rae', index: 0, entries: [one('a'), ent('c', Sx(2))] }] };
+  walk(d3, G.startStep(d3));
+  ok(allDone(d3), 'Just for: Rae has an exercise You do not — it is still walked');
+
+  // 6. Unfinished work BEFORE where the guide opened is visited before Finish.
+  const d4 = { forName: null, guestNames: [], others: [], index: 1, entries: [ent('a', Sx(1)), ent('b', Sx(2))] };
+  const s4 = walk(d4, G.startStep(d4)).map(fmt);
+  ok(allDone(d4) && /^B /.test(s4[0]) && /Finish workout/.test(s4[s4.length - 1]),
+     'opened on exercise 2: its sets, then back to exercise 1, then Finish\n      ' + s4.join('\n      '));
+
+  // 7. A drop set: each planned drop is its own step, in the runner's words.
+  const d5 = { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(2), { setType: 'drop', plannedMinis: 2 })] };
+  const s5 = walk(d5, G.startStep(d5)).map(fmt);
+  const want5 = [
+    'A Set 1 of 2 → Strip the weight',
+    'A Drop 1 of 2 → Drop again',
+    'A Drop 2 of 2 → Next set',
+    'A Set 2 of 2 → Strip the weight',
+    'A Drop 1 of 2 → Drop again',
+    'A Drop 2 of 2 → Finish workout',
+  ];
+  ok(JSON.stringify(s5) === JSON.stringify(want5), 'drop set: set, Drop 1 of 2, Drop 2 of 2 — one step each\n      ' + s5.join('\n      '));
+  ok(d5.entries[0].sets.every((s) => s.done && Array.isArray(s.minis) && s.minis.length === 2),
+     'each set is Finished with its last drop, and both drops are its own `minis` rows');
+  const items5 = G.blockItems([ent('a', Sx(1), { setType: 'drop', plannedMinis: 2 })], 0);
+  ok(items5.map((x) => x.turnEnd).join() === 'false,false,true',
+     'the turn (and so the rest) ends on the last drop, not the top set');
+  const d6 = { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(1), { setType: 'myo', plannedMinis: 2 })] };
+  const s6 = walk(d6, G.startStep(d6)).map(fmt);
+  ok(JSON.stringify(s6) === JSON.stringify([
+    'A Set 1 of 1 → Rest 10–15 seconds', 'A Mini-set 1 of 2 → Another mini-set', 'A Mini-set 2 of 2 → Finish workout']),
+  'myo-reps: the mini-sets, in the runner\'s words\n      ' + s6.join('\n      '));
+
+  // 10. Everything done: there is still a last step to go Back to.
+  const d7 = { forName: null, guestNames: [], others: [], index: 0, entries: [ent('a', Sx(2)), ent('b', Sx(1))] };
+  walk(d7, G.startStep(d7));
+  const last = typeof G.lastStep === 'function' ? G.lastStep(d7) : null;
+  ok(G.startStep(d7) === null && last && last.entryIndex === 1 && last.kind === 'set' && last.index === 0,
+     'all done: nothing to start on, and lastStep() is the last set walked');
+}
+
 /* ============ 1+. the real runner ============ */
 const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
-const settle = () => new Promise((r) => setTimeout(r, 30));
+// Next ignores a second tap within NEXT_GUARD_MS of the last (2026-09-27), so
+// the clock moves on half a second with every settle(): a test's taps are
+// separate taps. A double tap is two clicks with no settle between them.
+const realNow = Date.now.bind(Date);
+let skew = 0;
+Date.now = () => realNow() + skew;
+const settle = () => new Promise((r) => setTimeout(() => { skew += 450; r(); }, 30));
 const app = () => document.getElementById('app');
 const DRAFT = 'ftrack:v1:draftSession';
 const draft = () => JSON.parse(localStorage.getItem(DRAFT) || '{}');
@@ -472,6 +547,250 @@ if (!toggle()) {
   await settle(); await settle();
   const paneCaps = [...app().querySelectorAll('.pane-scroll .step-est')].map((n) => n.textContent.trim());
   ok(paneCaps[0] === wCap2 && paneCaps[1] === rCap2, `the normal view agrees (${JSON.stringify(paneCaps)})`);
+  localStorage.removeItem(DRAFT);
+}
+
+/* ============ 3. the 2026-09-27 review, in the real runner ============
+ * Tim: "could you analyze the auto-guide system and really think if we're
+ * missing anything there?" The guide must do what the normal runner does. */
+const val = (i = 0) => app().querySelectorAll('.guide .step-value')[i];
+// Type into box i if it is there — a missing box fails the check after it
+// rather than stopping the file (so every check runs on the unfixed code too).
+const put = (i, v) => { const n = val(i); if (n) type(n, v); };
+// Same for the two buttons: gone (the save screen opened early) is a failed
+// check, not a crash. Each block below shadows nextBtn / backBtn with these.
+const GONE = { click() {}, textContent: '', disabled: true };
+const safeNext = () => app().querySelector('.guide-next') || GONE;
+const safeBack = () => app().querySelector('.guide-back') || GONE;
+const noteText = () => {
+  const n = app().querySelector('.guide-note');
+  return n && !n.hidden ? n.textContent : '';
+};
+const exText = () => (app().querySelector('.guide-ex') || {}).textContent || '';
+const onSave = () => /Save workout/.test((app().querySelector('.topbar h1') || {}).textContent || '');
+/** Next until `re` matches the step, putting numbers in on the way. */
+async function walkTo(re, w = 100, r = 5) {
+  for (let g = 0; g < 16 && !re.test(`${exText()} ${where()}`) && !onSave(); g++) {
+    if (!/Warm-up/.test(where())) { put(0, w); put(1, r); }
+    safeNext().click(); await settle();
+  }
+  return re.test(`${exText()} ${where()}`);
+}
+const { MANIFEST } = await import(BASE + 'exercise-images.js');
+const GM = await import(BASE + 'guide-mode.js');
+
+/* 1, 13, 15, 16, 19: warm-ups on EVERY exercise, and the pane's lines. */
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  const squat = byName('Back Squat'), dl = byName('Deadlift');
+  await store.saveSession({
+    workoutName: 'Earlier legs', date: '2026-09-02', startedAt: '2026-09-02T18:00:00.000Z',
+    finishedAt: '2026-09-02T19:00:00.000Z', isBenchmark: false,
+    entries: [
+      { exerciseId: squat.id, exerciseName: squat.name, sets: [{ weight: 225, reps: 5 }] },
+      { exerciseId: dl.id, exerciseName: dl.name, sets: [{ weight: 315, reps: 5 }] },
+    ],
+  });
+  const w = await store.saveWorkout({ name: 'Warm day', exercises: [
+    { exerciseId: squat.id, sets: 1, notes: 'Brace hard' },
+    { exerciseId: dl.id, sets: 1, notes: '' },
+  ] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  ok(/Warm-up 1 of/.test(where()) && exText() === 'Back Squat', `opens on Back Squat's first warm-up ("${where().trim()}")`);
+  ok(/Brace hard/.test(noteText()), `13. the coach's note is under the name ("${noteText()}")`);
+  ok(/Last time: 225/.test(noteText()), '15. "Last time" is there');
+  ok(/Dynamic stretch/.test(noteText()), '19. the dynamic stretch line is on the first warm-up');
+  const prog = app().querySelector('.session-progress');
+  ok(prog && !prog.hidden && prog.querySelector('.current'), '16. the thin workout progress bar stays on show');
+  nextBtn().click(); await settle();
+  ok(/Warm-up 2 of/.test(where()) && !/Dynamic stretch/.test(noteText()), '19. …and only on the first warm-up');
+  const seen = [];
+  for (let g = 0; g < 12 && exText() !== 'Deadlift' && !onSave(); g++) { nextBtn().click(); await settle(); }
+  seen.push(`${exText()} ${where().trim()}`);
+  ok(exText() === 'Deadlift' && /Warm-up 1 of/.test(where()),
+     `1. the SECOND exercise opens on its warm-ups too ("${seen[0]}")`);
+  ok(!/Brace hard/.test(noteText()), '13. the note belongs to its own exercise');
+  localStorage.removeItem(DRAFT);
+}
+
+/* 2, 19: a number the app only guessed is refused; "No opening weight". */
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  const w = await store.saveWorkout({ name: 'Press day', exercises: [{ exerciseId: byName('Leg Press').id, sets: 2, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Set 1 of 2/);
+  ok(/No opening weight/.test(noteText()), `19. "No opening weight — …" is in the note slot ("${noteText()}")`);
+  const before = JSON.stringify(entriesOf(null)[0].sets[0]);
+  nextBtn().click(); await settle();
+  ok(/Set 1 of 2/.test(where()) && !entriesOf(null)[0].sets[0].done,
+     `2. Next on numbers nobody typed is refused, like Finished (${before} → still "${where().trim()}")`);
+  put(0,200); put(1,10);
+  nextBtn().click(); await settle();
+  ok(/Set 2 of 2/.test(where()) && entriesOf(null)[0].sets[0].done === true, '2. with a number in, Next goes on');
+  localStorage.removeItem(DRAFT);
+}
+
+/* 14: the plan's sentence. (Bench has 185 × 5 on 2026-09-01, above.) */
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  const w = await store.saveWorkout({ name: 'Plan day', exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3, targets: [70, 80, 90] }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  ok(/Plan: 70\/80\/90 %/.test(noteText()), `14. the plan's line is there ("${noteText()}")`);
+  await walkTo(/Set 1 of 3/);
+  nextBtn().click(); await settle();
+  ok(/Set 2 of 3/.test(where()), '2. the plan\'s own numbers pass Next untouched (as they pass Finished)');
+  localStorage.removeItem(DRAFT);
+}
+
+/* 4: in a joint workout no warm-up is kept that nobody walked. */
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  const w = await store.saveWorkout({ name: 'Pair RDL', exercises: [{ exerciseId: byName('Romanian Deadlift').id, sets: 2, notes: '' }] });
+  await mount(SessionView(w.id));
+  await addGuest('Rae');
+  chip('You').click(); await settle();
+  toggle().click(); await settle();
+  const seq = [];
+  for (let g = 0; g < 20 && !onSave(); g++) {
+    seq.push(where().trim());
+    if (!/Warm-up/.test(where())) { put(0,/Rae/.test(where()) ? 135 : 225); put(1,5); }
+    nextBtn().click(); await settle(); await settle();
+  }
+  const unseen = [null, 'Rae'].flatMap((n) => ((entriesOf(n) || [])[0].warmups || [])
+    .filter((x) => (Number(x.weight) > 0 || Number(x.reps) > 0) && !x.done).map((x) => `${n || 'You'} ${x.weight}×${x.reps}`));
+  ok(onSave() && unseen.length === 0, `4. no warm-up with numbers is left that the guide never showed (${JSON.stringify(unseen)})\n      ${seq.join(' → ')}`);
+  localStorage.removeItem(DRAFT);
+}
+
+/* 7: a drop set in the guide — each drop a step, rest after the last. */
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  await store.saveSettings({ restTimer: true, restTarget: 90 });
+  const w = await store.saveWorkout({ name: 'Drop day', exercises: [{ exerciseId: byName('Barbell Curl').id, sets: 2, notes: '', setType: 'drop', minis: 2 }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Set 1 of 2/);
+  put(0,60); put(1,10);
+  ok(/Strip the weight/.test(nextBtn().textContent), `7. the button before a drop: "${nextBtn().textContent.trim()}"`);
+  nextBtn().click(); await settle();
+  ok(/Drop 1 of 2/.test(where()), `7. → "Drop 1 of 2" ("${where().trim()}")`);
+  ok(!draft().restStartedAt && !entriesOf(null)[0].sets[0].done, '7. no rest yet, and the set is not Finished before its drops');
+  ok(/Drop again/.test(nextBtn().textContent), `7. then "${nextBtn().textContent.trim()}"`);
+  put(0,40);
+  nextBtn().click(); await settle();
+  ok(/Drop 2 of 2/.test(where()) && /Next set/.test(nextBtn().textContent), '7. → "Drop 2 of 2", then "Next set"');
+  put(0,25);
+  nextBtn().click(); await settle();
+  const s0 = entriesOf(null)[0].sets[0];
+  ok(/Set 2 of 2/.test(where()) && s0.done === true && (s0.minis || []).map((m) => m.weight).join() === '40,25',
+     `7. the set is Finished with its drops as its own minis (${JSON.stringify(s0.minis)})`);
+  ok(draft().restStartedAt > 0, '7. rest starts after the last drop');
+  await store.saveSettings({ restTimer: false });
+  localStorage.removeItem(DRAFT);
+}
+
+/* 8, 9, 20: the rest timer and a double tap. */
+{
+  const nextBtn = safeNext, backBtn = safeBack;
+  localStorage.removeItem(DRAFT);
+  await store.saveSettings({ restTimer: true, restTarget: 90 });
+  const w = await store.saveWorkout({ name: 'Rest day', exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 3, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Set 1 of 3/);
+  const rb = app().querySelector('.guide .rest-bar');
+  ok(rb && rb.nextElementSibling === app().querySelector('.guide-footer'), '20. the rest bar sits right above Back / Next');
+  put(0,135); put(1,5);
+  nextBtn().click(); await settle();
+  const r1 = draft().restStartedAt;
+  ok(/Set 2 of 3/.test(where()) && r1 > 0, 'rest starts after set 1');
+  backBtn().click(); await settle();
+  nextBtn().click(); await settle();
+  ok(/Set 2 of 3/.test(where()) && draft().restStartedAt === r1, '8. Back → Next over a finished set does not restart the rest');
+  put(0,135); put(1,5);
+  nextBtn().click(); nextBtn().click();
+  await settle();
+  ok(/Set 3 of 3/.test(where()) && !entriesOf(null)[0].sets[2].done, `9. a double tap on Next finishes one set, not two ("${where().trim()}")`);
+  toggle().click(); await settle();
+  const home = app().querySelector('.screen > .rest-bar');
+  ok(home && !app().querySelector('.guide .rest-bar'), '20. Edit: the rest bar is back in the normal view\'s place');
+  await store.saveSettings({ restTimer: false });
+  localStorage.removeItem(DRAFT);
+}
+
+/* 10: everything done — Back still goes somewhere. */
+{
+  const backBtn = safeBack;
+  localStorage.removeItem(DRAFT);
+  const w = await store.saveWorkout({ name: 'Done day', exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 1, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Set 1 of 1/);
+  put(0,135); put(1,5);
+  const d = draft();
+  d.entries[0].sets.forEach((s) => { s.done = true; });
+  (d.entries[0].warmups || []).forEach((x) => { x.done = true; });
+  localStorage.setItem(DRAFT, JSON.stringify(d));
+  await mount(SessionView(w.id));
+  ok(exText() === 'Nothing left to do' && !backBtn().disabled, `10. "Nothing left to do" with Back enabled (disabled=${backBtn().disabled})`);
+  backBtn().click(); await settle();
+  ok(/Set 1 of 1/.test(where()), `10. Back → the last set ("${where().trim()}")`);
+  localStorage.removeItem(DRAFT);
+}
+
+/* 3, 11, 18: a long number fits, a typo hides the bar, the name opens the picture. */
+{
+  localStorage.removeItem(DRAFT);
+  const bench = byName('Barbell Bench Press');
+  MANIFEST[bench.id] = 'webp';
+  const w = await store.saveWorkout({ name: 'Box day', exercises: [{ exerciseId: bench.id, sets: 2, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle(); await settle();
+  ok(Boolean(app().querySelector('.guide-name .ex-label-btn')), '18. the name is the button that opens its picture');
+  await walkTo(/Set 1 of 2/);
+  await settle(); await settle();
+  const barNode = () => app().querySelector('.guide .guide-bar') || { hidden: 'gone' };
+  put(0, 2250); await settle(); await settle();
+  ok(Boolean(app().querySelector('.guide .typo-warn')), 'setup: 2250 raises the typo warning');
+  ok(barNode().hidden === true, '11. and the big bar is hidden, not a wall of plates');
+  put(0, 185); await settle();
+  ok(barNode().hidden === false, '11. a real number brings the bar back');
+  const cls = () => (val(0) ? val(0).className : 'no box');
+  put(0, 1102.5); await settle();
+  ok(val(0) && val(0).value === '1102.5' && /fit-xs/.test(cls()), `3. "1102.5" gets the smallest box font (${cls()})`);
+  put(0, 1000); await settle();
+  ok(/fit-md/.test(cls()) && !/fit-(sm|xs)/.test(cls()), '3. "1000" a size down');
+  put(0, 185); await settle();
+  ok(!/fit-|no box/.test(cls()), '3. "185" at full size');
+  ok(typeof GM.boxFit === 'function' && GM.boxFit('1102.5') === 'fit-xs' && GM.boxFit('187.5') === 'fit-sm'
+     && GM.boxFit('99.5') === 'fit-md' && GM.boxFit('225') === '',
+     '3. boxFit() by character count (the sizes themselves are measured in WebKit, not here)');
+  delete MANIFEST[bench.id];
+  localStorage.removeItem(DRAFT);
+}
+
+/* 17: the assisted-lift line, and its warning. */
+{
+  localStorage.removeItem(DRAFT);
+  const { todayISO: today } = await import(BASE + 'store.js');
+  await store.logBodyWeight(180, today());
+  const w = await store.saveWorkout({ name: 'Assist guide', exercises: [{ exerciseId: byName('Assisted Pull-Up').id, sets: 2, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Set 1 of 2/, 70, 8);
+  put(0,70); await settle();
+  const line = () => { const n = app().querySelector('.guide .assist-readout'); return n && !n.hidden ? n.textContent : ''; };
+  ok(/110/.test(line()) && /70 of help|70 lbs of help/.test(line()), `17. the assist line: "${line()}"`);
+  put(0,250); await settle();
+  ok(/more help than you weigh/.test(line()), `17. and its warning: "${line()}"`);
   localStorage.removeItem(DRAFT);
 }
 

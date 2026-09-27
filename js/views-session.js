@@ -41,6 +41,7 @@ import { warmupRamp, warmupKind, generalWarmup } from './warmup.js';
 // Workout photo on the save screen (2026-09-25, onboarding-plan part C).
 import { photoField, rectFlight } from './photo.js';
 import { attachGuide } from './guide-mode.js';
+import { groupNextLabel } from './guide-steps.js';
 import { primePhoto } from './store.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -103,6 +104,12 @@ function suggestedWarmups(entry, ex) {
 /** Bring the `auto` rows in line with set 1. True if anything changed. */
 function syncAutoWarmups(entry, ex) {
   if (entry.warmAuto === false) return false;
+  // 🆕 2026-09-27 (Auto-guide review): WARM-UPS ARE BEFORE THE WORK. Once a
+  // working set is Finished nothing is suggested, grown or moved any more —
+  // a ramp that appeared after you started was never shown to you before you
+  // lifted, and would be saved as warm-ups nobody did (a joint workout typed
+  // set 1 for you while the guide was on your partner). One rule, both views.
+  if ((entry.sets || []).some((s) => s && (s.done || s.locked))) return false;
   const cur = Array.isArray(entry.warmups) ? entry.warmups : [];
   const plan = suggestedWarmups(entry, ex);
   const next = [];
@@ -1777,14 +1784,9 @@ export async function SessionView(workoutId) {
     // The label has to say what actually happens next, because mid-superset
     // "Next exercise" is both true and useless — the thing you need to know is
     // that you do not rest first.
-    let label = 'Next exercise';
-    if (next) {
-      if (step && step.group != null && next.group === step.group && next.round === step.round) {
-        label = 'Straight into ' + state.entries[next.entryIndex].exerciseName;
-      } else if (step && step.group != null && next.group === step.group) {
-        label = `Round ${next.round + 1} of ${next.rounds}`;
-      }
-    }
+    // The words are `groupNextLabel()` (js/guide-steps.js), shared with the
+    // Auto-guide's button since 2026-09-27.
+    const label = groupNextLabel(step, next, (i) => state.entries[i].exerciseName) || 'Next exercise';
 
     setChildren(footer,
       el('button', {
@@ -2105,6 +2107,88 @@ export async function SessionView(workoutId) {
     return Promise.all([ratingsFor(name), ownRowsFor(name)]);
   }
 
+  /* ================================================================== *
+   * THE LINES ABOUT AN EXERCISE — one copy, two views (2026-09-27).
+   *
+   * The pane (renderPane) and the Auto-guide both show the coach's note, "Last
+   * time", the plan's sentence and the "No opening weight" refusal. They were
+   * written inline in the pane; they live here now so the guide asks for the
+   * same nodes instead of keeping a second wording that could drift. Each call
+   * builds fresh nodes (a node can sit in one place only). The reasoning for
+   * each line stays beside its slot in renderPane.
+   * ================================================================== */
+  function exerciseLines(entry) {
+    return {
+      note: entry.notes
+        ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
+        : null,
+      last: entry.hadHistory
+        ? el('div', { class: 'prefill-note' }, icon('check', 16),
+            el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
+        : null,
+      targets: entry.targets
+        ? el('div', { class: 'session-ex-meta', text: entry.targets.withheld === null
+            ? `Plan: ${summariseTargets(entry.targets.percents)} of your `
+              + `${units.withUnit(entry.targets.fromWeight)} × ${entry.targets.fromReps}`
+              + (entry.targets.source === 'benchmark' ? ' test' : '')
+            : entry.targets.withheld === 'bodyweight'
+              ? `Plan asks for ${summariseTargets(entry.targets.percents)} — a percentage `
+                + 'cannot be worked out for a lift your own body weight is part of.'
+              : `Plan asks for ${summariseTargets(entry.targets.percents)} — nothing recorded `
+                + 'on this lift yet to take a percentage of.' })
+        : null,
+      repPlan: entry.repPlan
+        ? el('div', { class: 'session-ex-meta', text: entry.repPlan.withheld === null
+            ? `Plan: ${summariseReps(entry.repPlan.specs)} with 1–2 left in the tank, off your `
+              + `${units.withUnit(entry.repPlan.fromWeight)} × ${entry.repPlan.fromReps}`
+              + (entry.repPlan.source === 'benchmark' ? ' test' : '')
+            : entry.repPlan.withheld === 'too-many-reps'
+              ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — too many to work a weight `
+                + 'back from, so the reps are set and the weight is yours.'
+              : entry.repPlan.withheld === 'bodyweight'
+                ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — a weight cannot be worked `
+                  + 'out for a lift your own body weight is part of.'
+                : `Plan asks for ${summariseReps(entry.repPlan.specs)} — nothing recorded on this `
+                  + 'lift yet to work a weight back from.' })
+        : null,
+      opening: state.forName == null
+        && !entry.hadHistory
+        && entry.openingWithheld
+        && entry.fields.includes('weight')
+        && !entry.sets.some((s) => Number(s.weight) > 0)
+        ? el('div', { class: 'session-ex-meta', text:
+            'No opening weight — nothing you have recorded points to this lift closely enough.' })
+        : null,
+    };
+  }
+
+  /** The general warm-up ("Dynamic stretch · …"), once a session: on the
+   * first solo lift that gets a ramp. null anywhere else. */
+  function stretchWords(entryIndex) {
+    const firstWarmIdx = state.entries.findIndex((e) => e.group == null && warmupKind(exMap.get(e.exerciseId)));
+    const e = state.entries[entryIndex];
+    return firstWarmIdx === entryIndex && e ? generalWarmup(exMap.get(e.exerciseId)) : null;
+  }
+
+  /** The assisted-lift readout's words for `totalResistance()`'s answer — see
+   * renderAssist() in renderPane for why each sentence reads as it does. */
+  function assistWords(res) {
+    if (!res) return el('span', { class: 'is-warn', text: 'That is more help than you weigh — check the number.' });
+    if (!(res.added > 0)) {
+      return el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — no help set, so this is a pull-up');
+    }
+    return el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — your ',
+      `${units.fmtWeight(res.base)} less ${units.fmtWeight(res.added)} of help`);
+  }
+
+  /** The same readout for the Auto-guide: the words for `weight` on `ex`, or
+   * null where the pane shows none (not an assisted lift, or no weigh-in). */
+  function assistFor(ex, weight) {
+    const spec = ex ? bodyWeightFractionFor(ex) : null;
+    if (!(spec && spec.assist && state.bodyWeight > 0)) return null;
+    return assistWords(totalResistance(ex, weight, state.bodyWeight));
+  }
+
   function renderPane(opts) {
     const keepScroll = Boolean(opts && opts.keepScroll);
     const wasAt = pane.scrollTop;
@@ -2149,8 +2233,7 @@ export async function SessionView(workoutId) {
     const setList = el('div', { class: 'set-list' });
     // The general warm-up, once a session: on the first solo lift that gets a
     // ramp, above its W rows, and only while there are any.
-    const firstWarmIdx = state.entries.findIndex((e) => e.group == null && warmupKind(exMap.get(e.exerciseId)));
-    const warmWords = firstWarmIdx === step.entryIndex ? generalWarmup(ex) : null;
+    const warmWords = stretchWords(step.entryIndex);
     const warmLine = warmWords ? el('div', { class: 'session-ex-meta warm-general', text: warmWords }) : null;
     if (warmLine) warmLine.hidden = !warms.length;
 
@@ -2586,17 +2669,8 @@ export async function SessionView(workoutId) {
       // make an unintuitive number clear. Found by looking at it; no test would
       // have called that wrong. At zero the machine is not helping and the
       // honest reading is that this is a pull-up.
-      if (!res) {
-        setChildren(assistLine,
-          el('span', { class: 'is-warn', text: 'That is more help than you weigh — check the number.' }));
-      } else if (!(res.added > 0)) {
-        setChildren(assistLine,
-          el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — no help set, so this is a pull-up'));
-      } else {
-        setChildren(assistLine,
-          el('span', {}, el('b', { text: units.withUnit(res.load) }), ' on you — your ',
-            `${units.fmtWeight(res.base)} less ${units.fmtWeight(res.added)} of help`));
-      }
+      // The words are `assistWords()` (2026-09-27), shared with the Auto-guide.
+      setChildren(assistLine, assistWords(res));
     }
     renderAssist();
 
@@ -2768,6 +2842,7 @@ export async function SessionView(workoutId) {
     );
 
     renderSets();
+    const lines = exerciseLines(entry);
 
     setChildren(pane,
       // The superset banner is the first thing on the screen, above the
@@ -2893,9 +2968,9 @@ export async function SessionView(workoutId) {
               : ' · kept on your phone, never mixed into your own training.'),
       ),
 
-      entry.notes
-        ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
-        : null,
+      // The lines below are built by `exerciseLines()` (2026-09-27), shared
+      // with the Auto-guide so the two views can never word one differently.
+      lines.note,
 
       /* ⚠️ ONE LINE OF PROSE ON THIS SCREEN, AND IT IS A MEASUREMENT.
        *
@@ -2918,10 +2993,7 @@ export async function SessionView(workoutId) {
        * recording rather than an inference, and it is the one thing on the
        * screen that says where the numbers in front of you came from. Removing
        * it with the rest would have left the sets looking self-evident. */
-      entry.hadHistory
-        ? el('div', { class: 'prefill-note' }, icon('check', 16),
-            el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
-        : null,
+      lines.last,
 
       /* 🚨 WHERE A PRESCRIBED WEIGHT CAME FROM — 2026-09-18.
        *
@@ -2940,17 +3012,7 @@ export async function SessionView(workoutId) {
        * ⚠️ AND THE TWO REFUSALS SAY SO IN WORDS rather than leaving a blank
        * box under a workout that plainly asked for a number. Same argument as
        * `openingWithheld` directly below, arriving from a different door. */
-      entry.targets
-        ? el('div', { class: 'session-ex-meta', text: entry.targets.withheld === null
-            ? `Plan: ${summariseTargets(entry.targets.percents)} of your `
-              + `${units.withUnit(entry.targets.fromWeight)} × ${entry.targets.fromReps}`
-              + (entry.targets.source === 'benchmark' ? ' test' : '')
-            : entry.targets.withheld === 'bodyweight'
-              ? `Plan asks for ${summariseTargets(entry.targets.percents)} — a percentage `
-                + 'cannot be worked out for a lift your own body weight is part of.'
-              : `Plan asks for ${summariseTargets(entry.targets.percents)} — nothing recorded `
-                + 'on this lift yet to take a percentage of.' })
-        : null,
+      lines.targets,
 
       /* 🆕 THE SAME SENTENCE FOR A REP PRESCRIPTION — 2026-09-20.
        *
@@ -2964,20 +3026,7 @@ export async function SessionView(workoutId) {
        * ⚠️ AND THE THIRD BRANCH IS A REFUSAL WITH THE REPS STILL ON SCREEN.
        * The rep target is the author's own words; only the WEIGHT needed a
        * curve, and only the weight is withheld. */
-      entry.repPlan
-        ? el('div', { class: 'session-ex-meta', text: entry.repPlan.withheld === null
-            ? `Plan: ${summariseReps(entry.repPlan.specs)} with 1–2 left in the tank, off your `
-              + `${units.withUnit(entry.repPlan.fromWeight)} × ${entry.repPlan.fromReps}`
-              + (entry.repPlan.source === 'benchmark' ? ' test' : '')
-            : entry.repPlan.withheld === 'too-many-reps'
-              ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — too many to work a weight `
-                + 'back from, so the reps are set and the weight is yours.'
-              : entry.repPlan.withheld === 'bodyweight'
-                ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — a weight cannot be worked `
-                  + 'out for a lift your own body weight is part of.'
-                : `Plan asks for ${summariseReps(entry.repPlan.specs)} — nothing recorded on this `
-                  + 'lift yet to work a weight back from.' })
-        : null,
+      lines.repPlan,
 
       /* 🚨 THE OTHER HALF OF THAT SENTENCE: WHY THERE IS NO NUMBER (2026-09-06).
        *
@@ -3025,14 +3074,7 @@ export async function SessionView(workoutId) {
        * does not re-render the pane, so the line cannot vanish out from under a
        * thumb mid-set and shove the set list up; it is simply gone the next time
        * this exercise is drawn. */
-      state.forName == null
-        && !entry.hadHistory
-        && entry.openingWithheld
-        && entry.fields.includes('weight')
-        && !entry.sets.some((s) => Number(s.weight) > 0)
-        ? el('div', { class: 'session-ex-meta', text:
-            'No opening weight — nothing you have recorded points to this lift closely enough.' })
-        : null,
+      lines.opening,
 
       // The add button rides on the "Sets" heading rather than sitting under the
       // list. Full-width and below, it was as loud as the sets themselves and it
@@ -4926,9 +4968,18 @@ export async function SessionView(workoutId) {
     renderRunner: () => renderAll({ keepScroll: true }),
     finish: openSaveScreen,
     startRest,
-    hide: [peopleBar, progress, pane, footer],
+    // The thin workout progress bar stays on show (2026-09-27 review): the
+    // guide repaints it as it moves.
+    hide: [peopleBar, pane, footer],
+    renderProgress,
     captions: captionParts,
     captionData: () => captionDataFor(state.forName),
+    // An exercise opened by the guide gets its suggested warm-ups first, by
+    // the pane's own rule — so the guide walks them before set 1.
+    prepare: (entry) => syncAutoWarmups(entry, exMap.get(entry.exerciseId)),
+    lines: (entry, entryIndex) => ({ ...exerciseLines(entry), stretch: stretchWords(entryIndex) }),
+    assist: assistFor,
+    exerciseLabel,
   });
 
   const screen = el('div', { class: 'screen no-nav' },
@@ -4960,6 +5011,9 @@ export async function SessionView(workoutId) {
     restEnabled ? restBar : null,
     footer,
   );
+
+  // While guiding, the rest bar sits above Back / Next (2026-09-27 review).
+  if (restEnabled) guide.placeRest(restBar);
 
   // "Save Legs first": this workout's own save screen, as the route's screen.
   // Its back arrow still returns to `screen` above, the running workout.
