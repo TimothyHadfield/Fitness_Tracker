@@ -21,6 +21,7 @@ import {
 } from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 import { photoField } from './photo.js';
+import { warmupChips } from './workout-card.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -168,6 +169,11 @@ export async function EditSessionView(sessionId) {
         ),
       );
 
+      // Warm-ups (2026-09-27): SHOWN above set 1, read-only — save carries
+      // them through untouched (below), and they are never a numbered set.
+      const warmChips = warmupChips(entry, fields, loadType);
+      const warmRow = warmChips.length ? el('div', { class: 'detail-sets edit-warms' }, ...warmChips) : null;
+
       const setRows = entry.sets.flatMap((set, si) => [
         numberBlock(set, {
           label: `Set ${si + 1}`,
@@ -208,6 +214,7 @@ export async function EditSessionView(sessionId) {
             onConfirm: () => { draft.entries.splice(ei, 1); renderList(); },
           })),
         ),
+        warmRow,
         ...setRows,
         el('button', {
           class: 'btn block', onClick: () => {

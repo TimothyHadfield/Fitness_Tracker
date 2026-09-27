@@ -7586,3 +7586,22 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
   .m-name-btn:hover { text-decoration-color: var(--accent); }
 }
 /* === end Motion 2 · Additions === */
+
+/* === Warm-ups in history (2026-09-27) ====================================
+   Tim: *"Also add the warm-up sets in the workout history and day view."*
+   Same signals as the runner's W rows (.set-warm above): a dashed "W" where a
+   set number goes, and quieter text. No fill, so a warm-up chip never reads
+   as one of the working-set chips beside it. Shown, never counted. */
+.detail-set.is-warm { background: transparent; color: var(--ink-faint); }
+.detail-set .warm-mark {
+  display: inline-grid; place-items: center;
+  min-width: 1.5em; padding: 0 3px;
+  border: 1px dashed var(--ink-faint); border-radius: 4px;
+  color: var(--ink-soft); font-weight: var(--fw-bold);
+  line-height: 1.35;
+}
+.feed-ex-warm {
+  flex: none; color: var(--ink-faint); font-size: var(--fs-sm);
+  white-space: nowrap; align-self: center;
+}
+/* === end Warm-ups in history === */

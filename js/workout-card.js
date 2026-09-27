@@ -28,8 +28,8 @@
    / `name` split would otherwise have leaked into the view.
    ========================================================================== */
 
-import { el, icon, relativeDay } from './ui.js';
-import { sessionStats, setsLabel } from './session-stats.js';
+import { el, icon, relativeDay, fmtSet } from './ui.js';
+import { sessionStats, setsLabel, recordedSetCount } from './session-stats.js';
 import { BUILT_IN_EXERCISES } from './exercises.js';
 // 🆕 Motion 2 · Moments (docs/motion2-plan.md package E) — see the end of file.
 import { spring, springTransform, simulate, rubberBand } from './spring.js';
@@ -134,9 +134,41 @@ export function sessionToCard(session) {
     entries: (session.entries || []).map((e) => ({
       exerciseId: (e && e.exerciseId) || null,
       name: (e && (e.exerciseName || e.name)) || 'Exercise',
+      // Warm-ups ride along on YOUR card only; a friend's projection has none
+      // (social.js does not publish them) and the card reads either shape.
+      ...(recordedWarmups(e).length ? { warmups: recordedWarmups(e) } : {}),
       sets: (e && e.sets) || [],
     })),
   };
+}
+
+/* ==========================================================================
+   WARM-UPS IN THE HISTORY (2026-09-27). Tim: *"Also add the warm-up sets in
+   the workout history and day view."*
+
+   🚨 SHOWN, NEVER COUNTED. They live in `entry.warmups`, never `entry.sets`
+   (views-session.js), and every count on these screens — the card's "N sets",
+   its Sets stat, the day's "N sets" line — reads `sets` only. Nothing here
+   changes that; these helpers only draw them. Marked the way the runner marks
+   them: a dashed "W" where a set number would go, in quieter text.
+   ========================================================================== */
+
+const WARM_MEASURED = ['weight', 'reps', 'time', 'distance'];
+
+/** An entry's warm-ups that carry a number — the ones that were done. */
+export function recordedWarmups(entry) {
+  const list = entry && Array.isArray(entry.warmups) ? entry.warmups : [];
+  return list.filter((w) => w && typeof w === 'object'
+    && WARM_MEASURED.some((f) => Number(w[f]) > 0));
+}
+
+/** One chip per warm-up, for a set-by-set list (the day view, the edit form).
+ *  Same chip as a working set's, with "W" where "Set N" would be. */
+export function warmupChips(entry, fields, loadType) {
+  return recordedWarmups(entry).map((w) => el('div', { class: 'detail-set is-warm' },
+    el('b', { class: 'warm-mark', text: 'W', title: 'Warm-up' }),
+    el('span', { text: fmtSet(w, fields, loadType) }),
+  ));
 }
 
 /**
@@ -176,12 +208,22 @@ export function cardBody(a) {
    * in exactly that case. */
   const selfNamed = names.length === 1 && said.length === 0;
   const rows = selfNamed ? [] : stats.byExercise;
+  // How many warm-ups each listed row had, in the SAME order and by the same
+  // filter `sessionStats()` builds `byExercise` with. Only your own sessions
+  // carry any; a friend's projection reads 0 for every row.
+  const warmCounts = (a.entries || []).filter((e) => recordedSetCount(e) > 0)
+    .map((e) => recordedWarmups(e).length);
 
   const did = rows.length
     ? el('div', { class: 'feed-exs' },
-        ...rows.slice(0, FEED_EX_LIMIT).map((x) => el('div', { class: 'feed-ex' },
+        ...rows.slice(0, FEED_EX_LIMIT).map((x, i) => el('div', { class: 'feed-ex' },
           el('span', { class: 'feed-ex-sets', text: setsLabel(x.sets) }),
           el('span', { class: 'feed-ex-name', text: x.name }),
+          // Beside the name, muted, and never inside the set count.
+          warmCounts[i]
+            ? el('span', { class: 'feed-ex-warm',
+                text: `+ ${warmCounts[i]} warm-up${warmCounts[i] === 1 ? '' : 's'}` })
+            : null,
         )),
         rows.length > FEED_EX_LIMIT
           ? el('div', { class: 'feed-ex is-quiet', text:

@@ -38,6 +38,7 @@ import { minisOf, groupLabel, miniLabel } from './set-types.js';
 import { yearsToShow, buildYear, daysLabel, publishedDaysLabel, DOW_LABELS } from './year-grid.js';
 import * as units from './units.js';
 import { photoBox } from './photo.js';
+import { warmupChips } from './workout-card.js';
 import { spring, springTransform, velocityTracker, rubberBand } from './spring.js';
 import { arrivePane, motionAllowed } from './motion.js';
 
@@ -1393,6 +1394,9 @@ export async function DayView(date) {
         loadType ? loadBadge(loadType) : null,
       ),
       el('div', { class: 'detail-sets' },
+        // Warm-ups first (2026-09-27), marked "W", never numbered or counted —
+        // they live in `entry.warmups`, not `sets` (see workout-card.js).
+        ...warmupChips(e, fields, loadType),
         // A set and its drops are ONE run, so a wrap can never leave a drop
         // sitting next to the wrong set number.
         ...e.sets.map((set, i) => el('div', { class: 'detail-set-run' },
