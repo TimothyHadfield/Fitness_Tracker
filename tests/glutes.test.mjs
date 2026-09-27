@@ -13,7 +13,7 @@
 // Three causes, all in js/muscle-evidence.js, each pinned below:
 //   1. rateMuscle() dropped every stand-in once ANY direct reading existed, so
 //      one light machine set (q 0.35) silenced a key-lift RDL and squat.
-//      → BLEND_STAND_INS (Glutes): stand-ins stay in the 1/σ² blend.
+//      → stand-ins stay in the 1/σ² blend (Glutes 2026-09-26, every muscle 2026-09-27).
 //   2. Lunges / split squats / leg press are Quads q 0.35–0.40, under the 0.45
 //      floor, so they never reached the glutes. → `minQuality` 0.30 on the
 //      Glutes←Quads hop only (isolations stay out).
@@ -24,11 +24,10 @@
 // Glutes 70.9 → 291.3, confidence 0.413 → 0.654. Demo year: only the Glutes row
 // of the golden table moves (353.40 → 350.42, −0.8 %).
 //
-// ⚠️ THE SAME SHUT-OUT ON OTHER MUSCLES WAS MEASURED, NOT CHANGED. Blending
-// stand-ins for EVERY muscle on the demo year (no sex / male): Triceps +12.0 %
-// / +5.4 % (bench stands in beside pushdowns), Hamstrings +0.8 % / +1.1 %,
-// Biceps 0 / +0.8 %, Shoulders ±0.1 %, the rest 0. Triceps' size is why it was
-// left to Tim rather than generalised here.
+// 🔄 2026-09-27 — MADE GENERAL AT TIM'S WORD ("Every muscle"). Measured on the
+// demo year first (no sex / male): Triceps +12.0 % / +5.4 % (bench stands in
+// beside pushdowns), Hamstrings +0.8 % / +1.1 %, Biceps 0 / +0.8 %, Shoulders
+// ±0.1 %, the rest 0. The triceps and hamstrings cases at the bottom pin it.
 
 const { BUILT_IN_EXERCISES } = await import('../js/exercises.js');
 const { buildObservations } = await import('../js/strength-observations.js');
@@ -138,13 +137,32 @@ const TIM = [
   const squatOnly = rate([{ date: day(3), entries: [entry('Back Squat', [[225, 5]])] }], 'Glutes').rating;
   ok(squatOnly && squatOnly.kind === 'fallback', 'a squat-only lifter\'s glutes are still a stand-in-only rating');
 
-  // Other muscles keep the 2026-08-17 rule: a leg curl still shuts the squat out of Hamstrings.
+  // 🔄 2026-09-27, Tim: "Every muscle" — the blend is general now. A leg curl no
+  // longer shuts the squat out of Hamstrings.
   const ham = rate([
     { date: day(4), entries: [entry('Back Squat', [[315, 5]])] },
     { date: day(3), entries: [entry('Lying Leg Curl', [[60, 10]])] },
   ], 'Hamstrings').rating;
-  ok(ham && ham.pooled.length === 1 && ham.pooled[0].exerciseName === 'Lying Leg Curl',
-     'Hamstrings still rate from direct work only — the blend is Glutes-only until Tim says otherwise');
+  const hamNames = (ham && ham.pooled || []).map((p) => p.exerciseName);
+  ok(hamNames.includes('Lying Leg Curl') && hamNames.includes('Back Squat') && ham.kind === 'direct',
+     `Hamstrings blend the squat beside the leg curl, still a direct rating (${hamNames.join(', ')})`);
+}
+
+// ── Every muscle (2026-09-27): a heavy bench counts beside light pushdowns ──
+{
+  const tri = [
+    { date: day(6), entries: [entry('Barbell Bench Press', [[225, 5], [225, 5]]), entry('Triceps Pushdown', [[40, 12], [40, 12]])] },
+    { date: day(2), entries: [entry('Barbell Bench Press', [[230, 4]]), entry('Triceps Pushdown', [[45, 10]])] },
+  ];
+  const { rating, obs } = rate(tri, 'Triceps');
+  const names = (rating && rating.pooled || []).map((p) => p.exerciseName);
+  const push = rating && rating.pooled.find((p) => p.exerciseName === 'Triceps Pushdown');
+  const bench = rating && rating.pooled.find((p) => p.exerciseName === 'Barbell Bench Press');
+  ok(obs.some((o) => o.kind === 'fallback') && names.includes('Barbell Bench Press') && names.includes('Triceps Pushdown'),
+     `🚨 Triceps: the bench stands in beside the pushdowns instead of being dropped (${names.join(', ')})`);
+  ok(rating && push && bench && rating.estimate > push.value && rating.estimate < bench.value,
+     `and the number lands between what each says (${push && push.value.toFixed(1)} < ${rating && rating.estimate.toFixed(1)} < ${bench && bench.value.toFixed(1)})`);
+  ok(rating && rating.kind === 'direct', 'still a direct rating, so no stand-in-only cap');
 }
 
 // ── Autumn's case (2026-09-23): one abduction day no longer shuts out her RDL ─

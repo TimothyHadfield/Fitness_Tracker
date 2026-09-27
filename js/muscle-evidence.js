@@ -1512,10 +1512,14 @@ export const STAND_IN_QUALITY = 0.40;
  * Fallback: what a big lift says about the muscles it also works
  * ------------------------------------------------------------------ */
 
-// Tim's call, 2026-08-17: a compound rates a secondary muscle ONLY when that
-// muscle has no direct evidence at all. That keeps grey meaningful — grey still
-// answers "what am I not training" — while stopping a full week of work from
-// leaving muscles blank.
+// ~~Tim's call, 2026-08-17: a compound rates a secondary muscle ONLY when that
+// muscle has no direct evidence at all.~~ 🔄 REVERSED 2026-09-27 AT TIM'S WORD
+// (*"Every muscle"*), after the glutes case of 2026-09-26: a compound now stands
+// in for a secondary muscle ALWAYS, and rateMuscle() blends it beside the direct
+// work at its own precision (1/σ²) instead of dropping it the moment one direct
+// set exists. What the old rule protected still holds: grey still answers "what
+// am I not training" (a muscle nothing trains has no evidence at all), and a
+// rating built only from stand-ins is still `kind: 'fallback'`, capped at Fair.
 //
 // The conversion between two muscles is not written down here. It falls out of
 // the published medians in strength-standards.js: if the median lifter benches
@@ -1581,21 +1585,12 @@ const SECOND_MUSCLE = {
 // confidently wrong numbers" the estimate plan warns about.
 export const FALLBACK_MIN_QUALITY = 0.45;
 
-/* 🆕 2026-09-26 — MUSCLES WHOSE STAND-INS ARE BLENDED WITH DIRECT EVIDENCE rather
- * than dropped the moment any direct reading exists (rateMuscle(), the pool
- * line). Glutes only, because that is what Tim asked for and the glutes are
- * where the shut-out bit hardest: their direct work is mostly machines and
- * isolations (hip thrust machine, abduction, kickbacks, all q ≤ 0.40) while the
- * compounds that train them — RDL, squat — are key lifts of OTHER muscles.
- * Autumn's 2026-09-23 case (one abduction set shutting out her RDL) is the same
- * shape and is fixed by the same line.
- *
- * ⚠️ THE SAME SHUT-OUT EXISTS ELSEWHERE AND WAS MEASURED, NOT FIXED: a leg curl
- * shuts squats/deadlifts out of Hamstrings, a pushdown shuts the bench out of
- * Triceps, a curl shuts rows out of Biceps. Adding a muscle here is one word;
- * its effect on the demo year is in tests/glutes.test.mjs's header. That is
- * Tim's call (it reverses the 2026-08-17 rule for that muscle). */
-export const BLEND_STAND_INS = new Set(['Glutes']);
+/* ~~🆕 2026-09-26 — `BLEND_STAND_INS = new Set(['Glutes'])`~~: stand-ins were
+ * blended beside direct evidence for the glutes only (Tim's hip-thrust-machine
+ * case). 🔄 2026-09-27, Tim: *"Every muscle"* — the set is gone and the rule is
+ * general (rateMuscle(), the pool line). Measured on the demo year before he
+ * chose: Triceps +12 % (the bench beside the pushdowns), Hamstrings ~+1 %,
+ * Biceps ≤ +0.8 %, the rest ~0. */
 
 // The population conversion between two muscles' key lifts, taken from the
 // medians.
@@ -2694,23 +2689,26 @@ export function rateMuscle(observations, muscle = null) {
     }
   } catch (_) { quarantined = []; }
 
-  // Direct evidence decides the rating. A compound only stands in when there is
-  // none — Tim's call, and what keeps a grey muscle meaningful.
-  /* 🔄 EXCEPT FOR THE MUSCLES IN `BLEND_STAND_INS` — 2026-09-26, Tim, from his
+  // ~~Direct evidence decides the rating. A compound only stands in when there is
+  // none — Tim's call, and what keeps a grey muscle meaningful.~~ Reversed
+  // 2026-09-27 at Tim's word, *"Every muscle"*: stand-ins stay in the pool for
+  // every muscle. The glutes case that started it:
+  /* 🔄 2026-09-26 (Glutes only until 2026-09-27) — Tim, from his
    * own training: *"This machine hip thrust set is the only thing the glutes are
    * getting based off of, even though I've done Romanian deadlifts, stiff-leg
    * deadlifts, squats, and lunges."* One light machine set (q 0.35) was direct,
    * so it shut out an RDL and a squat (key lifts, q 1.00, hopping at 0.40) and
-   * rated his glutes a 71 lb deadlift against ~300 from the hinge work. For
-   * these muscles the stand-ins STAY IN, and the blend below weighs everything
+   * rated his glutes a 71 lb deadlift against ~300 from the hinge work. The
+   * stand-ins now STAY IN, and the blend below weighs everything
    * at 1/σ² as it already does — a Deadlift (σ 0.05) still carries its muscle
    * almost alone; a machine or isolation reading (σ ~0.3) now meets a compound
    * of about its own precision instead of silencing it. `kind` still says
    * 'direct' whenever anything direct exists, so the Fair cap on a stand-in-only
-   * rating and grey for "no evidence at all" are unchanged. Other muscles keep
-   * the 2026-08-17 rule — see BLEND_STAND_INS for why and what it would do. */
+   * rating and grey for "no evidence at all" are unchanged. The same holds for a
+   * pushdown beside a bench (Triceps), a leg curl beside a squat (Hamstrings),
+   * a curl beside a row (Biceps). */
   const direct = admissible.filter((o) => o.kind === 'direct');
-  const pool = direct.length && !BLEND_STAND_INS.has(muscle) ? direct : admissible;
+  const pool = admissible;
   const kind = direct.length ? 'direct' : 'fallback';
 
   /* One value per exercise per day. Every other set that day is a warm-up, a

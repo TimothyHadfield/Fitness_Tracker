@@ -3110,15 +3110,33 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    *                                        exercises 1 -> 5, confidence 0.8587 ->
    *                                        0.9126 (depth and a second opinion)
    *   every other muscle             0     byte-identical rows */
+  /* 🔄 RE-BASELINED 2026-09-27, ON ITS OWN — STAND-INS BLEND FOR EVERY MUSCLE.
+   * Tim, asked whether compounds should count beside direct work everywhere
+   * (reversing his 2026-08-17 rule): *"Every muscle"*. rateMuscle()'s pool is
+   * now every admissible reading; tests/glutes.test.mjs pins a triceps case.
+   *
+   *   Triceps    182.03 -> 203.88  +12.0 %  bench, incline DB bench, OHP and DB
+   *                                         shoulder press stand in beside the
+   *                                         pushdown (168) and overhead extension;
+   *                                         the stand-ins hold ~59 % of the blend.
+   *                                         conf 0.5761 -> 0.7461, 2 -> 6 exercises
+   *   Hamstrings 262.13 -> 264.36   +0.8 %  deadlift and squat join the RDL and
+   *                                         curls (13 % / 2 %); conf 0.8954 -> 0.9065
+   *   Shoulders  142.32 -> 142.44   +0.1 %  bench + incline join (8 %); conf
+   *                                         0.7976 -> 0.9207 (depth, agreement)
+   *   Biceps     110.7546 -> 110.7540  0.0 % rows join (20 %) and agree; conf
+   *                                         0.8049 -> 0.7816 (the row reads 94)
+   *   every other muscle             0      Glutes already blended; the rest have
+   *                                         no stand-ins beside direct work */
   const GOLDEN = [
     ['Back', 720, 190.4488, 0.7899, 212, 4],
-    ['Biceps', 904, 110.7546, 0.8049, 125, 2],
+    ['Biceps', 904, 110.7540, 0.7816, 273, 5],
     ['Calves', 336, 255.5901, 0.9793, 84, 2],
     ['Chest', 465, 228.2494, 0.9450, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
     ['Forearms', 904, 105.2254, 0.5777, 273, 5],
     ['Glutes', 882, 350.4209, 0.9126, 275, 5],
-    ['Hamstrings', 882, 262.1308, 0.8954, 146, 3],
+    ['Hamstrings', 882, 264.3583, 0.9065, 275, 5],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is
     // thin, not your training". That is `standardQuality` 0.4 doing exactly what
@@ -3126,9 +3144,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     // Beginner.
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
     ['Quads', 571, 287.5293, 0.9424, 171, 4],
-    ['Shoulders', 1093, 142.3222, 0.7976, 192, 4],
+    ['Shoulders', 1093, 142.4388, 0.9207, 322, 6],
     ['Traps', 529, 301.8867, 0.5618, 148, 3],
-    ['Triceps', 1100, 182.0321, 0.5761, 125, 2],
+    ['Triceps', 1100, 203.8770, 0.7461, 345, 6],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
@@ -4550,13 +4568,18 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(me.rateMuscle([]) === null, 'nothing in, nothing out');
   ok(me.rateMuscle([obs({ reps: 30 })]) === null, 'a single 30-rep set produces no rating');
 
-  // Direct evidence decides; a fallback only fills a gap. Tim's call.
+  // ~~Direct evidence decides; a fallback only fills a gap. Tim's call.~~
+  // 🔄 2026-09-27, Tim: "Every muscle" — a fallback now joins the blend beside
+  // direct work at its own precision. Against a key-lift-grade direct reading
+  // (σ 0.05) a q 0.4 stand-in (σ ~0.26) and a 4x number still barely moves it:
+  // the winsoriser clips it to median × 1.25 and its weight is a few percent.
   const mixed = me.rateMuscle([
     obs({ estimate: 100, kind: 'direct', exerciseId: 'direct' }),
     obs({ estimate: 400, kind: 'fallback', quality: 0.4, exerciseId: 'fall' }),
   ]);
-  ok(mixed.kind === 'direct' && near(mixed.estimate, 100, 1e-9),
-     'a fallback never outvotes direct evidence, however big its number');
+  ok(mixed.kind === 'direct' && mixed.estimate > 100 && mixed.estimate < 102,
+     `a fallback now counts beside direct evidence, but cannot outvote it however big its number (${mixed.estimate.toFixed(2)})`);
+  ok(mixed.pooled.length === 2, 'and both readings are in the blend');
   ok(me.rateMuscle([obs({ estimate: 400, kind: 'fallback', quality: 0.4 })]).kind === 'fallback',
      'but it does stand in when there is nothing direct');
 
@@ -9548,9 +9571,20 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        + 'sit on the SAME percentile, because the key-lift equivalent of the recorded set is the '
        + 'rating (total ÷ ratio) and the converted number is the rating × 1.00');
     const ohp = byLift(r.core, 'Overhead Press');
+    /* 🔄 2026-09-27 (Tim: "Every muscle" — stand-ins blend beside direct work).
+     * The Shoulders rating now rests on the dumbbell shoulder press AND the
+     * dumbbell bench standing in, so the converted OHP no longer sits on the
+     * shoulder press's own percentile (48.5 vs 44.7, both Novice). What still
+     * holds is the rule itself: the converted row IS the rating × 1.00, and its
+     * `from` names both lifts it rests on. The exact-percentile consistency is
+     * still pinned by the bench above, whose muscle has one source. */
+    const dbsp = byLift(r.other, 'Dumbbell Shoulder Press');
     ok(ohp.source === 'converted' && ohp.level && ohp.level.key === 'novice'
-       && near(ohp.percentile, byLift(r.other, 'Dumbbell Shoulder Press').percentile, 1e-9),
-       'and the same for the overhead press off the dumbbell press — Novice on both rows');
+       && dbsp.level && dbsp.level.key === 'novice'
+       && near(ohp.oneRM, muscles.get('Shoulders').estimate, 1e-9)
+       && ohp.from.includes('Dumbbell Shoulder Press') && ohp.from.includes('Dumbbell Bench Press'),
+       'and the overhead press off the dumbbell press — Novice on both rows, the rating × 1.00, '
+       + `resting on both lifts that rate Shoulders (${ohp.from.join(', ')})`);
     ok(bench.band && typeof bench.confidence === 'number' && bench.confidence < 1,
        'a converted row carries estimateOneRM()’s own confidence and band, untouched — the rating’s '
        + 'credence times the conversion’s quality, never a ± figure');
