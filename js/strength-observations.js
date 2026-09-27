@@ -288,6 +288,8 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
         quality: c.quality,
         kind: c.kind,
         via: c.via,
+        // 2026-09-27: a stand-in's two doubts, read by sigmaFor() (absent on direct).
+        ...(c.kind === 'fallback' && c.baseQuality > 0 ? { baseQuality: c.baseQuality, hopQuality: c.hopQuality } : {}),
         // ⚠️ A SECOND FIELD, NOT A SECOND MEANING FOR `via`. `via` is the muscle
         // a fallback came through; this is the library exercise a USER matched
         // their own exercise to. See contributionsFor() for why they are not one

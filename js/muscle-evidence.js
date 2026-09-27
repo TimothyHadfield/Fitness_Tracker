@@ -2015,6 +2015,14 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
       // a dumbbell row a 429 lb wrist curl and an Elite forearm rating off one
       // set — caught by reading the numbers, not by any test.
       add(target, base.ratio * cross, base.quality * src.q, 'fallback', base.muscle);
+      // 🆕 2026-09-27: the two halves of a stand-in's doubt, kept apart so
+      // `sigmaFor()` can price the BASE reading as its own direct reading would
+      // be priced and the hop on top — see the note there.
+      const made = out[out.length - 1];
+      if (made && made.muscle === target && made.kind === 'fallback') {
+        made.baseQuality = base.quality;
+        made.hopQuality = src.q;
+      }
       break;
     }
   }
@@ -2190,10 +2198,46 @@ const GEARED = /Machine|Cable|Pec Deck|Pulldown|Smith|Assisted|Lever|Hack Squat|
  * The `q` bridge (plan §6.4: `q = exp(−σ/0.25)`, inverted here) covers every
  * entry with no published page, so nothing loses its meaning in the change.
  */
+const qBridge = (q) => (q > 0 ? Math.min(SIGMA_MAX, Math.max(SIGMA_SOURCE, -0.25 * Math.log(q))) : SIGMA_MAX);
+
 export function sigmaFor(o) {
   if (!o) return SIGMA_MAX;
+  /* 🆕 2026-09-27 — A STAND-IN IS ITS BASE READING'S DOUBT PLUS THE HOP'S, and
+   * a key-lift base can no longer be priced as LESS precise than a converted one.
+   *
+   * What it fixed, measured on the demo's Triceps: the incline dumbbell bench
+   * (a converted chest lift) stood in at σ 0.131 and carried 29 % of the rating,
+   * the barbell bench — the chest's key lift — at σ 0.259 and 11 %. The old path
+   * below prices a fallback by the FIRST hop's drift when the exercise has one
+   * (small for a good dumbbell swap) and otherwise by the bridge of the WHOLE
+   * product q (base × hop), then adds SIGMA_CROSS on top of both. So a key
+   * lift, which has no drift entry, paid for the hop twice (bridge of 0.40 and
+   * 0.12), while a converted lift paid for it once (0.12) and never for its q.
+   *
+   * Now: σ_base is what this exercise's own DIRECT reading of the base muscle
+   * would be priced at (the key lift → the sourcing floor; a drift-listed lift →
+   * its drift as below; otherwise the bridge of the base q), and the hop is the
+   * bridge of the hop's own q from the FALLBACK table — the one number that says
+   * how well muscle A predicts muscle B. In quadrature, as every other doubt
+   * here. Since σ_base is floored at SIGMA_SOURCE and the key lift sits ON that
+   * floor, a key-lift base is ≥ every converted base for the same hop, by
+   * construction (tests/glutes.test.mjs sweeps the library).
+   *
+   * An observation without the two fields (a caller that predates them) keeps
+   * the old arithmetic below exactly. */
+  if (o.kind === 'fallback' && Number(o.baseQuality) > 0 && Number(o.hopQuality) > 0) {
+    const bq = Number(o.baseQuality);
+    const isKeyBase = bq === 1 && o.via && keyLiftMuscle(o.exerciseName) === o.via;
+    const d = o.levelMatched === true ? 0 : RATIO_DRIFT.get(o.exerciseName);
+    const g = GEARED.test(String(o.exerciseName || '')) ? SIGMA_GEARING : 0;
+    const sBase = isKeyBase
+      ? SIGMA_SOURCE
+      : (Number.isFinite(d) ? Math.sqrt(d * d + SIGMA_SOURCE * SIGMA_SOURCE + g * g) : qBridge(bq));
+    const sHop = qBridge(Number(o.hopQuality));
+    return Math.min(SIGMA_MAX, Math.sqrt(sBase * sBase + sHop * sHop));
+  }
   const q = Number(o.quality);
-  const bridge = q > 0 ? Math.min(SIGMA_MAX, Math.max(SIGMA_SOURCE, -0.25 * Math.log(q))) : SIGMA_MAX;
+  const bridge = qBridge(q);
   /* 🔄 2026-09-23 — A LEVEL-MATCHED READING CARRIES NO DRIFT TERM. The drift is
    * `|ln r80 − ln r20| / 1.68` (js/ratio-sigma.js's header): by its own
    * definition it is the error of applying ONE ratio across the strength range,

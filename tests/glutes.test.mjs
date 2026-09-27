@@ -165,6 +165,45 @@ const TIM = [
   ok(rating && rating.kind === 'direct', 'still a direct rating, so no stand-in-only cap');
 }
 
+// ── A borrowed reading is never more precise than its base (2026-09-27) ─────
+// The demo's Triceps had the incline dumbbell bench (a CONVERTED chest lift)
+// carrying 29 % against the barbell bench's 11 % — the key lift itself — because
+// sigmaFor() priced a fallback from the converted lift's small ratio drift but
+// priced one from the key lift off the hop's q. Same muscle, same hop: the key
+// lift's stand-in must be trusted at least as much.
+{
+  const { sigmaFor } = await import('../js/muscle-evidence.js');
+  const tri = [
+    { date: day(8), entries: [entry('Barbell Bench Press', [[225, 5]]), entry('Incline Dumbbell Bench Press', [[75, 8]]), entry('Triceps Pushdown', [[45, 10]])] },
+    { date: day(3), entries: [entry('Barbell Bench Press', [[225, 5]]), entry('Incline Dumbbell Bench Press', [[75, 8]]), entry('Triceps Pushdown', [[45, 10]])] },
+  ];
+  const { rating, obs } = rate(tri, 'Triceps');
+  const share = (n) => { const p = rating && rating.pooled.find((x) => x.exerciseName === n); return p ? p.share : -1; };
+  ok(share('Barbell Bench Press') >= share('Incline Dumbbell Bench Press'),
+     `🚨 the barbell bench (key lift) carries at least the incline DB bench's share of Triceps `
+     + `(${(share('Barbell Bench Press') * 100).toFixed(0)} % vs ${(share('Incline Dumbbell Bench Press') * 100).toFixed(0)} %)`);
+  const o = (n) => obs.find((x) => x.exerciseName === n && x.kind === 'fallback');
+  const sBench = sigmaFor(o('Barbell Bench Press')), sIncl = sigmaFor(o('Incline Dumbbell Bench Press'));
+  ok(sBench <= sIncl, `and its conversion σ is no larger (${sBench.toFixed(3)} vs ${sIncl.toFixed(3)})`);
+  // The same across every fallback in the library: a key-lift base is never
+  // priced as less precise than any converted base standing in for the same muscle.
+  const worstKey = new Map(), bestConv = new Map();
+  for (const ex of BUILT_IN_EXERCISES) {
+    for (const c of contributionsFor(ex, { sex: 'male', bodyWeight: 175 })) {
+      if (c.kind !== 'fallback') continue;
+      const s = sigmaFor({ ...c, exerciseName: ex.name, reps: 5 });
+      const key = `${c.muscle}<${c.via}`;
+      const isKey = contributionsFor(ex, { sex: 'male' }).some((d) => d.kind === 'direct' && d.muscle === c.via && d.ratio === 1 && d.quality === 1);
+      const m = isKey ? worstKey : bestConv;
+      const prev = m.get(key);
+      m.set(key, isKey ? Math.max(prev || 0, s) : Math.min(prev ?? Infinity, s));
+    }
+  }
+  const bad = [...worstKey].filter(([k, s]) => bestConv.has(k) && s > bestConv.get(k) + 1e-12).map(([k]) => k);
+  ok(worstKey.size > 0 && bad.length === 0,
+     `across the library, no converted lift's stand-in beats its muscle's key lift on σ (${bad.join(', ') || 'none'})`);
+}
+
 // ── Autumn's case (2026-09-23): one abduction day no longer shuts out her RDL ─
 {
   const autumn = [

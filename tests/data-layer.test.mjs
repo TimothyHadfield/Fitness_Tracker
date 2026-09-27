@@ -3128,15 +3128,32 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    *                                         0.8049 -> 0.7816 (the row reads 94)
    *   every other muscle             0      Glutes already blended; the rest have
    *                                         no stand-ins beside direct work */
+  /* 🔄 RE-BASELINED 2026-09-27, ON ITS OWN — A STAND-IN'S σ IS ITS BASE'S PLUS
+   * THE HOP'S (`sigmaFor()`). A converted lift standing in (incline DB bench,
+   * σ 0.131) was priced as MORE precise than the key lift itself (barbell
+   * bench, σ 0.259); now the base is priced as its own direct reading would be
+   * and the hop by its FALLBACK q (bench 0.234, incline 0.235). Weights only —
+   * every count and every confidence is unchanged.
+   *
+   *   Traps      301.89 -> 294.14  -2.6 %  all stand-ins (from Back), re-weighted
+   *                                        among themselves by the new σ
+   *   Triceps    203.88 -> 199.41  -2.2 %  bench 11 -> 17 %, incline 29 -> 12 %,
+   *                                        pushdown 26 -> 33 %
+   *   Forearms   105.23 -> 104.21  -1.0 %  all stand-ins, same reason as Traps
+   *   Hamstrings 264.36 -> 263.13  -0.5 %  deadlift stand-in 13 -> 5 %
+   *   Glutes     350.42 -> 351.30  +0.3 %
+   *   Biceps     110.75 -> 110.57  -0.2 %  rows 20 -> 8 %
+   *   Shoulders  142.44 -> 142.43   0.0 %
+   *   every other muscle             0     no stand-ins */
   const GOLDEN = [
     ['Back', 720, 190.4488, 0.7899, 212, 4],
-    ['Biceps', 904, 110.7540, 0.7816, 273, 5],
+    ['Biceps', 904, 110.5714, 0.7816, 273, 5],
     ['Calves', 336, 255.5901, 0.9793, 84, 2],
     ['Chest', 465, 228.2494, 0.9450, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
-    ['Forearms', 904, 105.2254, 0.5777, 273, 5],
-    ['Glutes', 882, 350.4209, 0.9126, 275, 5],
-    ['Hamstrings', 882, 264.3583, 0.9065, 275, 5],
+    ['Forearms', 904, 104.2077, 0.5777, 273, 5],
+    ['Glutes', 882, 351.3042, 0.9126, 275, 5],
+    ['Hamstrings', 882, 263.1274, 0.9065, 275, 5],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
     // which was the previous floor and was itself built to say "the standard is
     // thin, not your training". That is `standardQuality` 0.4 doing exactly what
@@ -3144,9 +3161,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     // Beginner.
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
     ['Quads', 571, 287.5293, 0.9424, 171, 4],
-    ['Shoulders', 1093, 142.4388, 0.9207, 322, 6],
-    ['Traps', 529, 301.8867, 0.5618, 148, 3],
-    ['Triceps', 1100, 203.8770, 0.7461, 345, 6],
+    ['Shoulders', 1093, 142.4293, 0.9207, 322, 6],
+    ['Traps', 529, 294.1446, 0.5618, 148, 3],
+    ['Triceps', 1100, 199.4095, 0.7461, 345, 6],
   ];
   ok(byMuscle.size === GOLDEN.length,
      `the demo year is evidence for ${GOLDEN.length} muscles (${byMuscle.size})`);
