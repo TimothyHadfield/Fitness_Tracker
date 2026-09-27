@@ -437,5 +437,43 @@ if (!toggle()) {
   localStorage.removeItem(DRAFT);
 }
 
+/* The two captions (2026-09-27, Tim: "the % of 1RM and estimated number of
+ * reps should also be shown in the auto-guide") — the runner's own, word for
+ * word, and none on a warm-up. */
+{
+  localStorage.removeItem(DRAFT);
+  const bench = byName('Barbell Bench Press');
+  await store.saveSession({
+    workoutName: 'Earlier', date: '2026-09-01', startedAt: '2026-09-01T18:00:00.000Z',
+    finishedAt: '2026-09-01T19:00:00.000Z', isBenchmark: false,
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 185, reps: 5 }] }],
+  });
+  const w = await store.saveWorkout({ name: 'Caption day', exercises: [{ exerciseId: bench.id, sets: 2, notes: '' }] });
+  await mount(SessionView(w.id));
+  toggle().click();
+  await settle(); await settle();
+  const caps = () => [...app().querySelectorAll('.guide .step-est')].map((n) => n.textContent.trim());
+  if (/Warm-up/i.test(where())) {
+    ok(caps().every((t) => t === ''), `no "% of max" or "to failure" on a warm-up (${JSON.stringify(caps())})`);
+  }
+  for (let g = 0; g < 8 && !/Set 1 of 2/.test(where()); g++) { nextBtn().click(); await settle(); }
+  ok(/Set 1 of 2/.test(where()), `reached set 1 ("${where().trim()}")`);
+  type(app().querySelector('.guide .step-value'), 175);
+  await settle(); await settle();
+  const [wCap, rCap] = caps();
+  ok(/^\d+% of your estimated max/.test(wCap || ''), `the weight shows its % of max ("${wCap}")`);
+  ok(/^maybe \d+(–\d+)?\+? to failure/.test(rCap || ''), `the reps show the estimate to failure ("${rCap}")`);
+  type(app().querySelector('.guide .step-value'), 135);
+  await settle();
+  const [wCap2, rCap2] = caps();
+  ok(wCap2 !== wCap && rCap2 !== rCap, `a new weight moves both lines ("${wCap2}" / "${rCap2}")`);
+  // Edit: the runner's pane says exactly the same about the same set.
+  toggle().click();
+  await settle(); await settle();
+  const paneCaps = [...app().querySelectorAll('.pane-scroll .step-est')].map((n) => n.textContent.trim());
+  ok(paneCaps[0] === wCap2 && paneCaps[1] === rCap2, `the normal view agrees (${JSON.stringify(paneCaps)})`);
+  localStorage.removeItem(DRAFT);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

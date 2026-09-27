@@ -1940,6 +1940,171 @@ export async function SessionView(workoutId) {
     return ownRowsByPerson.get(key);
   }
 
+  /* THE TWO CAPTIONS' CONTENT — the "% of your estimated max" line under the
+   * weight and the "maybe 8 to failure" line under the reps, for one open set.
+   * One copy for the runner's pane and the Auto-guide (2026-09-27, Tim: "the %
+   * of 1RM and estimated number of reps should also be shown in the
+   * auto-guide"), so the two views can never disagree about the same set.
+   * Returns null when the set gets no captions; otherwise `{ typo, weight,
+   * reps }` where each line is a node or '' (nothing to say yet). */
+  function captionParts(entry, ex, target, onWarm) {
+    // Only a lift with BOTH a weight and a rep count gets them: "% of max" on
+    // a plank is meaningless and a rep guess on a carry is worse. `ex` can be
+    // missing for an exercise deleted from the library since the draft was
+    // written. Not on a warm-up: "% of your max" and "maybe 8 to failure" are
+    // about a set that counts, and a warm-up is deliberately far from both.
+    const fields = entry.fields || [];
+    if (!ex || onWarm || !fields.includes('weight') || !fields.includes('reps')) return null;
+    const assistSpec = bodyWeightFractionFor(ex);
+    const ratings = ratingsReady.get(personKey(state.forName));
+    /* 🚨 THIS LIFT'S OWN BEST SET FIRST, THE MUSCLE RATING ONLY AFTER
+     * (2026-09-13, plan §3.4, Tim's decision d).
+     *
+     * The caption used to read the muscle rating converted back out through
+     * the ratio table — always, even for somebody who had tested this exact
+     * lift two days ago. With a 215 x 3 bench benchmark on record the runner
+     * said "102 % — at or above what we think your max is" at 215, and
+     * "maybe 1 to failure" at 205 where the lifter had just done five,
+     * because the muscle's seat had gone to a 185 x 12 back-off set.
+     *
+     * Profile has argued since 2026-09-10 that a lift you have done shows
+     * YOUR OWN best set. The argument is stronger here: this is the screen
+     * where the number is acted on, with a bar already loaded.
+     *
+     * The rating is still the answer for a lift never performed — that is the
+     * whole point of the conversion — and the caption says which it is: one
+     * resting on your own set names it ("from your 215 x 3"), one resting on
+     * the rating names nothing (2026-09-27, Tim: "Too wordy"). */
+    const rows = historyReady.get(personKey(state.forName));
+    const own = rows ? ownBestSet(ex, rows, state.date) : null;
+    // Only the owner's gender is known; a guest's ratings stay sex-unknown.
+    const est = ratings
+      ? estimateOneRM(ex, ratings, state.bodyWeight,
+        state.forName == null && ownerSex ? { sex: ownerSex } : undefined)
+      : null;
+    const oneRM = own && own.e1rm > 0 ? own.e1rm : (est ? est.oneRM : 0);
+    const fromOwn = Boolean(own && own.e1rm > 0);
+    const w = Number(target.weight) || 0;
+    /* ⚠️ THE LOAD, NOT THE NUMBER IN THE BOX. On a bodyweight or assisted lift
+     * the box holds what was ADDED or how much HELP was taken, and the rating
+     * it is being compared against was built from the total on the body —
+     * `totalResistance()` is the one copy of that sum. It returns null for
+     * more help than you weigh, which is the same "check the number" case
+     * `renderAssist()` already names, and no caption is right beside it. A
+     * plain lift is the number itself, doubled for a per-side entry because
+     * `oneRM` is total load. */
+    let totalW = 0;
+    if (assistSpec) {
+      const res = w >= 0 && state.bodyWeight > 0 ? totalResistance(ex, w, state.bodyWeight) : null;
+      totalW = res ? res.load : 0;
+    } else {
+      totalW = entry.loadType === 'per_side' ? w * 2 : w;
+    }
+    // ⚠️ NO ARITHMETIC ON NOTHING — the benchmark form's rule, and it is
+    // sharper here: every never-done set opens at a derived or blank weight,
+    // and "0 % of your estimated max" over a blank field reads as a reading.
+    const live = oneRM > 0 && totalW > 0;
+    /* 🆕 THE TYPO WARNING (2026-09-23, Open work 1). Tim: *"I think a typo
+     * warning or something would be a good improvement."* The ratings hold a
+     * wildly high set aside until another day agrees (the typo screen in
+     * muscle-evidence.js) — correctly, but silently at the moment it matters.
+     * So the lifter is told HERE, while the number can still be fixed.
+     * 1.5× an estimated max is past anything a real set produces (a genuine
+     * best arrives at ≤ ×1.13 of the standing estimate, strength-estimate.js
+     * PLAUSIBLE_GAIN) and well short of the ×10 slip it exists to catch.
+     * Advisory only: nothing is blocked, nothing is changed. */
+    const typo = live && totalW >= oneRM * TYPO_WARN_RATIO;
+    let weight = '';
+    if (typo) {
+      weight = el('span', { class: 'typo-warn' },
+        el('b', { text: `${(totalW / oneRM).toFixed(1)}×` }), ' your estimated max — typo?');
+    } else if (live) {
+      const pct = percentOfMax(oneRM, totalW);
+      // ⚠️ Capped at 100. Above the max the honest words are the rep
+      // caption's, and "133 % of your estimated max" is a number pretending
+      // to a precision the thing it divides by does not have.
+      weight = el('span', {}, el('b', { text: `${Math.min(100, Math.round(pct))}%` }),
+        ' of your estimated max',
+        // Rule 5's anchor, in four words: which set this rests on.
+        // 🔄 2026-09-27 only when it IS a set of yours. Tim: *"remove the
+        // "(from your other lifts)" below the weight detail. Too wordy.
+        // Keep it simple."* A lift never done now just stops at "max".
+        fromOwn && own.reps
+          ? ` (from your ${units.fmtWeight(own.perSide ? own.perSideWeight : own.weight)}`
+            + `${own.perSide ? '/side' : ''} × ${own.reps})`
+          : '');
+    }
+    // `{ exercise }` so a bench or leg press reads its own column of the
+    // table, not the pooled one (review, 2026-09-24).
+    const p = live ? repPrediction(oneRM, totalW, { exercise: ex }) : null;
+    /* ⚠️ AND THE PREDICTION FALLS ACROSS A RUN OF SETS (2026-09-13, plan
+     * §5.1-5.2). "maybe 8 to failure" was printed identically on set 1 and
+     * set 4, and the literature is unambiguous that it should not be: at
+     * two minutes' rest a set to failure returns about 72 % of set 1's reps
+     * on set 2 and 55 % on set 3, PROPORTIONALLY — the same fraction at
+     * 50 % of a max as at 80 %, which is what makes it a multiplier on the
+     * fresh number rather than a second model.
+     *
+     * `blendedMultipliers()` shrinks the published column toward this
+     * lifter's own decrement as soon as they have run three sets at one
+     * load, and every multiplier is <= 1, so a wrong constant can only make
+     * the caption easier to beat.
+     *
+     * The set index is its position in the LEADING RUN at this weight: a
+     * weight change means a fresh effort and resets it, which is what
+     * `leadingRun` measures. Drops and myo-reps are excluded — a ten-second
+     * rest is a different regime and the table says nothing about it. */
+    let mult = null;
+    let setIdx = 0;
+    // `entry.active` is the set the steppers point at — the one this
+    // caption is about. A drop or mini-set is never the subject: those sit
+    // inside a set and follow a ten-second rest, which the table does not
+    // describe (`entry.activeDrop` non-null means the editor is on one).
+    if (p && !p.over && !entry.setType && entry.group == null && entry.activeDrop == null) {
+      const run = leadingRun(entry.sets);
+      const active = Number(entry.active) || 0;
+      if (active < run.length) {
+        setIdx = active;
+        if (setIdx > 0) {
+          const personal = rows
+            ? personalDecrement(rows.sessions, entry.exerciseId)
+            : null;
+          // ⚠️ The rest TARGET, not a measured rest — the app records no
+          // per-set timing, and this is the only signal it has about how
+          // long this lifter takes. Zero (the default, timer off) means
+          // "unknown", and rep-decrement.js answers that with the two-minute
+          // column, which is the defensible central assumption.
+          mult = blendedMultipliers(personal, Number(settings.restTarget) || 0);
+        }
+      }
+    }
+    const fresh = p && !p.over ? p.reps : null;
+    const here = mult ? repsAtSet(fresh, setIdx, mult) : fresh;
+    const freshLow = p && p.low ? p.low : null;
+    const freshHigh = p && p.high ? p.high : null;
+    const hereLow = mult && freshLow ? repsAtSet(freshLow, setIdx, mult) : freshLow;
+    const hereHigh = mult && freshHigh ? repsAtSet(freshHigh, setIdx, mult) : freshHigh;
+    const reps = !p
+      ? ''
+      : p.over
+        ? el('span', { text: 'at or above what we think your max is' })
+        : el('span', {},
+            'maybe ',
+            el('b', { text: hereLow && hereHigh && hereLow !== hereHigh
+              ? `${hereLow}–${hereHigh}${p.atLeast ? '+' : ''}`
+              : `${here}${p.atLeast ? '+' : ''}` }),
+            ' to failure',
+            // The fresh figure stays visible, so a lower number on set 3
+            // reads as fatigue rather than as the app changing its mind.
+            mult && here !== fresh ? ` on this set (${fresh} fresh)` : '');
+    return { typo: Boolean(typo), weight, reps };
+  }
+
+  /** Start both lazy loads for the person on screen; resolves when both land. */
+  function captionDataFor(name) {
+    return Promise.all([ratingsFor(name), ownRowsFor(name)]);
+  }
+
   function renderPane(opts) {
     const keepScroll = Boolean(opts && opts.keepScroll);
     const wasAt = pane.scrollTop;
@@ -2435,169 +2600,26 @@ export async function SessionView(workoutId) {
     }
     renderAssist();
 
-    /* The two captions — see the block above `ratingsFor()`. Only a lift with
-     * BOTH a weight and a rep count gets them: "% of max" on a plank is
-     * meaningless and a rep guess on a carry is worse. `ex` can be missing for
-     * an exercise deleted from the library since the draft was written. */
+    /* The two captions — see the block above `ratingsFor()`; the content is
+     * `captionParts()`, shared with the Auto-guide. */
     const capSlots = {};
-    // Not on a warm-up: "% of your max" and "maybe 8 to failure" are about a
-    // set that counts, and a warm-up is deliberately far from both.
     const wantsCaptions = Boolean(ex) && !onWarm && entry.fields.includes('weight') && entry.fields.includes('reps');
     function renderCaptions() {
       if (!wantsCaptions) return;
-      const ratings = ratingsReady.get(personKey(state.forName));
-      /* 🚨 THIS LIFT'S OWN BEST SET FIRST, THE MUSCLE RATING ONLY AFTER
-       * (2026-09-13, plan §3.4, Tim's decision d).
-       *
-       * The caption used to read the muscle rating converted back out through
-       * the ratio table — always, even for somebody who had tested this exact
-       * lift two days ago. With a 215 x 3 bench benchmark on record the runner
-       * said "102 % — at or above what we think your max is" at 215, and
-       * "maybe 1 to failure" at 205 where the lifter had just done five,
-       * because the muscle's seat had gone to a 185 x 12 back-off set.
-       *
-       * Profile has argued since 2026-09-10 that a lift you have done shows
-       * YOUR OWN best set. The argument is stronger here: this is the screen
-       * where the number is acted on, with a bar already loaded.
-       *
-       * The rating is still the answer for a lift never performed — that is the
-       * whole point of the conversion — and the caption says which it is: one
-       * resting on your own set names it ("from your 215 x 3"), one resting on
-       * the rating names nothing (2026-09-27, Tim: "Too wordy"). */
-      const rows = historyReady.get(personKey(state.forName));
-      const own = rows ? ownBestSet(ex, rows, state.date) : null;
-      // Only the owner's gender is known; a guest's ratings stay sex-unknown.
-      const est = ratings
-        ? estimateOneRM(ex, ratings, state.bodyWeight,
-          state.forName == null && ownerSex ? { sex: ownerSex } : undefined)
-        : null;
-      const oneRM = own && own.e1rm > 0 ? own.e1rm : (est ? est.oneRM : 0);
-      const fromOwn = Boolean(own && own.e1rm > 0);
-      const w = Number(target.weight) || 0;
-      /* ⚠️ THE LOAD, NOT THE NUMBER IN THE BOX. On a bodyweight or assisted lift
-       * the box holds what was ADDED or how much HELP was taken, and the rating
-       * it is being compared against was built from the total on the body —
-       * `totalResistance()` is the one copy of that sum. It returns null for
-       * more help than you weigh, which is the same "check the number" case
-       * `renderAssist()` already names, and no caption is right beside it. A
-       * plain lift is the number itself, doubled for a per-side entry because
-       * `oneRM` is total load. */
-      let totalW = 0;
-      if (assistSpec) {
-        const res = w >= 0 && state.bodyWeight > 0 ? totalResistance(ex, w, state.bodyWeight) : null;
-        totalW = res ? res.load : 0;
-      } else {
-        totalW = entry.loadType === 'per_side' ? w * 2 : w;
-      }
-      // ⚠️ NO ARITHMETIC ON NOTHING — the benchmark form's rule, and it is
-      // sharper here: every never-done set opens at a derived or blank weight,
-      // and "0 % of your estimated max" over a blank field reads as a reading.
-      const live = oneRM > 0 && totalW > 0;
-      /* 🆕 THE TYPO WARNING (2026-09-23, Open work 1). Tim: *"I think a typo
-       * warning or something would be a good improvement."* The ratings hold a
-       * wildly high set aside until another day agrees (the typo screen in
-       * muscle-evidence.js) — correctly, but silently at the moment it matters.
-       * So the lifter is told HERE, while the number can still be fixed.
-       * 1.5× an estimated max is past anything a real set produces (a genuine
-       * best arrives at ≤ ×1.13 of the standing estimate, strength-estimate.js
-       * PLAUSIBLE_GAIN) and well short of the ×10 slip it exists to catch.
-       * Advisory only: nothing is blocked, nothing is changed. */
-      const typo = live && totalW >= oneRM * TYPO_WARN_RATIO;
-      /* ⚠️ AND THE PLATE LIST GOES WHILE IT SHOWS (review, 2026-09-24). A ×10
-       * slip is a weight that wraps to four lines of plates under the number,
-       * explaining in detail how to load a bar nobody is going to load. The
-       * stepper repaints its hint before calling back here, so hiding it on
-       * every pass is enough; only a plate list is hidden, never the hint. */
+      const c = captionParts(entry, ex, target, onWarm);
+      if (!c) return;
+      /* ⚠️ AND THE PLATE LIST GOES WHILE A TYPO SHOWS (review, 2026-09-24). A
+       * ×10 slip is a weight that wraps to four lines of plates under the
+       * number, explaining in detail how to load a bar nobody is going to
+       * load. The stepper repaints its hint before calling back here, so
+       * hiding it on every pass is enough; only a plate list is hidden, never
+       * the hint. */
       if (capSlots.weight && capSlots.weight.parentNode) {
         const hint = capSlots.weight.parentNode.querySelector('.step-unit');
-        if (hint) hint.hidden = Boolean(typo) && hint.classList.contains('is-plates');
+        if (hint) hint.hidden = c.typo && hint.classList.contains('is-plates');
       }
-      if (capSlots.weight && typo) {
-        setChildren(capSlots.weight, el('span', { class: 'typo-warn' },
-          el('b', { text: `${(totalW / oneRM).toFixed(1)}×` }), ' your estimated max — typo?'));
-      } else if (capSlots.weight) {
-        const pct = live ? percentOfMax(oneRM, totalW) : null;
-        // ⚠️ Capped at 100. Above the max the honest words are the rep
-        // caption's, and "133 % of your estimated max" is a number pretending
-        // to a precision the thing it divides by does not have.
-        setChildren(capSlots.weight, pct === null
-          ? ''
-          : el('span', {}, el('b', { text: `${Math.min(100, Math.round(pct))}%` }),
-              ' of your estimated max',
-              // Rule 5's anchor, in four words: which set this rests on.
-              // 🔄 2026-09-27 only when it IS a set of yours. Tim: *"remove the
-              // "(from your other lifts)" below the weight detail. Too wordy.
-              // Keep it simple."* A lift never done now just stops at "max".
-              fromOwn && own.reps
-                ? ` (from your ${units.fmtWeight(own.perSide ? own.perSideWeight : own.weight)}`
-                  + `${own.perSide ? '/side' : ''} × ${own.reps})`
-                : ''));
-      }
-      if (capSlots.reps) {
-        // `{ exercise }` so a bench or leg press reads its own column of the
-        // table, not the pooled one (review, 2026-09-24).
-        const p = live ? repPrediction(oneRM, totalW, { exercise: ex }) : null;
-        /* ⚠️ AND THE PREDICTION FALLS ACROSS A RUN OF SETS (2026-09-13, plan
-         * §5.1-5.2). "maybe 8 to failure" was printed identically on set 1 and
-         * set 4, and the literature is unambiguous that it should not be: at
-         * two minutes' rest a set to failure returns about 72 % of set 1's reps
-         * on set 2 and 55 % on set 3, PROPORTIONALLY — the same fraction at
-         * 50 % of a max as at 80 %, which is what makes it a multiplier on the
-         * fresh number rather than a second model.
-         *
-         * `blendedMultipliers()` shrinks the published column toward this
-         * lifter's own decrement as soon as they have run three sets at one
-         * load, and every multiplier is <= 1, so a wrong constant can only make
-         * the caption easier to beat.
-         *
-         * The set index is its position in the LEADING RUN at this weight: a
-         * weight change means a fresh effort and resets it, which is what
-         * `leadingRun` measures. Drops and myo-reps are excluded — a ten-second
-         * rest is a different regime and the table says nothing about it. */
-        let mult = null;
-        let setIdx = 0;
-        // `entry.active` is the set the steppers point at — the one this
-        // caption is about. A drop or mini-set is never the subject: those sit
-        // inside a set and follow a ten-second rest, which the table does not
-        // describe (`entry.activeDrop` non-null means the editor is on one).
-        if (p && !p.over && !entry.setType && entry.group == null && entry.activeDrop == null) {
-          const run = leadingRun(entry.sets);
-          const active = Number(entry.active) || 0;
-          if (active < run.length) {
-            setIdx = active;
-            if (setIdx > 0) {
-              const personal = rows
-                ? personalDecrement(rows.sessions, entry.exerciseId)
-                : null;
-              // ⚠️ The rest TARGET, not a measured rest — the app records no
-              // per-set timing, and this is the only signal it has about how
-              // long this lifter takes. Zero (the default, timer off) means
-              // "unknown", and rep-decrement.js answers that with the two-minute
-              // column, which is the defensible central assumption.
-              mult = blendedMultipliers(personal, Number(settings.restTarget) || 0);
-            }
-          }
-        }
-        const fresh = p && !p.over ? p.reps : null;
-        const here = mult ? repsAtSet(fresh, setIdx, mult) : fresh;
-        const freshLow = p && p.low ? p.low : null;
-        const freshHigh = p && p.high ? p.high : null;
-        const hereLow = mult && freshLow ? repsAtSet(freshLow, setIdx, mult) : freshLow;
-        const hereHigh = mult && freshHigh ? repsAtSet(freshHigh, setIdx, mult) : freshHigh;
-        setChildren(capSlots.reps, !p
-          ? ''
-          : p.over
-            ? el('span', { text: 'at or above what we think your max is' })
-            : el('span', {},
-                'maybe ',
-                el('b', { text: hereLow && hereHigh && hereLow !== hereHigh
-                  ? `${hereLow}–${hereHigh}${p.atLeast ? '+' : ''}`
-                  : `${here}${p.atLeast ? '+' : ''}` }),
-                ' to failure',
-                // The fresh figure stays visible, so a lower number on set 3
-                // reads as fatigue rather than as the app changing its mind.
-                mult && here !== fresh ? ` on this set (${fresh} fresh)` : ''));
-      }
+      if (capSlots.weight) setChildren(capSlots.weight, c.weight);
+      if (capSlots.reps) setChildren(capSlots.reps, c.reps);
     }
 
     const steppers = entry.fields.map((f) => {
@@ -4893,8 +4915,8 @@ export async function SessionView(workoutId) {
 
   /* 🆕 AUTO-GUIDE — 2026-09-27, js/guide-mode.js. One step at a time with one
    * button; it drives THIS runner's own fields through the hooks below, so
-   * Edit lands on the same set. `estimatedMax` is the caption's own max (this
-   * lift's best set first, the rating after) for the "typo?" warning. */
+   * Edit lands on the same set. `captions` is the pane's own caption content
+   * (`captionParts()`), so the guide shows the same "% of max" and reps. */
   const guide = attachGuide({
     getState: () => state,
     exMap,
@@ -4905,20 +4927,8 @@ export async function SessionView(workoutId) {
     finish: openSaveScreen,
     startRest,
     hide: [peopleBar, progress, pane, footer],
-    typoRatio: TYPO_WARN_RATIO,
-    estimatedMax: (entry, ex) => {
-      if (!ex) return 0;
-      const key = personKey(state.forName);
-      if (!historyReady.has(key)) ownRowsFor(state.forName);
-      if (!ratingsReady.has(key)) ratingsFor(state.forName);
-      const rows = historyReady.get(key);
-      const own = rows ? ownBestSet(ex, rows, state.date) : null;
-      if (own && own.e1rm > 0) return own.e1rm;
-      const ratings = ratingsReady.get(key);
-      const est = ratings ? estimateOneRM(ex, ratings, state.bodyWeight,
-        state.forName == null && ownerSex ? { sex: ownerSex } : undefined) : null;
-      return est ? est.oneRM : 0;
-    },
+    captions: captionParts,
+    captionData: () => captionDataFor(state.forName),
   });
 
   const screen = el('div', { class: 'screen no-nav' },

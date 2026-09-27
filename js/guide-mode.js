@@ -23,8 +23,9 @@
 //     finish(),        the runner's Finish → save screen
 //     startRest(),     optional — the runner's rest timer (off unless enabled)
 //     hide: [nodes],   the normal view's parts to hide while guiding
-//     estimatedMax,    optional (entry, ex) => total-load 1RM or 0 — for "typo?"
-//     typoRatio,       optional — the runner's TYPO_WARN_RATIO
+//     captions,        optional (entry, ex, target, onWarm) => null | { typo, weight, reps }
+//                      — the runner's captionParts(): "% of max" / "maybe N to failure"
+//     captionData,     optional () => Promise that resolves when the captions' data is in
 //   }) → { node, toggle, enter(), exit(), active() }
 //
 // ⚠️ THE DRAFT IS THE ONLY STATE. The step on screen is always written into the
@@ -195,18 +196,19 @@ export function attachGuide(ctx) {
       ? plateLoad(lbs, { inventory: inventoryFor(units.units()), bar: loading.bar, points: loading.points })
       : null);
     drawBar(Number(target.weight) || 0);
+    // The runner's own two captions — "% of your estimated max" and "maybe 8
+    // to failure" (2026-09-27, Tim: "the % of 1RM and estimated number of reps
+    // should also be shown in the auto-guide"). Same function as the pane's,
+    // so the two views never disagree about one set; a weight change moves both.
+    const caps = {};
+    const paintCaps = () => {
+      const c = ctx.captions ? ctx.captions(entry, ex, target, onWarm) : null;
+      for (const f of ['weight', 'reps']) if (caps[f]) setChildren(caps[f], c ? c[f] : '');
+    };
     const nodes = (entry.fields || []).map((f) => {
-      const cap = f === 'weight' && !onWarm && ctx.estimatedMax ? el('div', { class: 'step-est' }) : null;
-      const paintCap = () => {
-        if (!cap) return;
-        const max = Number(ctx.estimatedMax(entry, ex)) || 0;
-        const w = Number(target.weight) || 0;
-        const load = entry.loadType === 'per_side' ? w * 2 : w;
-        const typo = !assistSpec && max > 0 && load >= max * (ctx.typoRatio || 1.5);
-        setChildren(cap, typo
-          ? el('span', { class: 'typo-warn' }, el('b', { text: `${(load / max).toFixed(1)}×` }), ' your estimated max — typo?')
-          : '');
-      };
+      const cap = (f === 'weight' || f === 'reps') && ctx.captions && ctx.captions(entry, ex, target, onWarm)
+        ? el('div', { class: 'step-est' }) : null;
+      if (cap) caps[f] = cap;
       const s = stepper({
         field: f,
         value: target[f],
@@ -222,15 +224,12 @@ export function attachGuide(ctx) {
           if (onWarm) delete target.auto;
           else target.touched = true;
           ctx.save();
-          paintCap();
+          paintCaps();
           if (f === 'weight') drawBar(v);
           setBack();
         },
       });
-      if (cap) {
-        s.node.insertBefore(cap, s.node.querySelector('.stepper-controls'));
-        paintCap();
-      }
+      if (cap) s.node.insertBefore(cap, s.node.querySelector('.stepper-controls'));
       // The bar follows the number while it is being typed, not only when the
       // box is left (the stepper commits on blur, as it always has).
       if (f === 'weight' && loading) {
@@ -243,6 +242,16 @@ export function attachGuide(ctx) {
       return s.node;
     });
     setChildren(steps, ...nodes);
+    paintCaps();
+    // The person's ratings and own sets load lazily; paint again when they
+    // land, if this step is still the one on screen.
+    if (ctx.captionData && (caps.weight || caps.reps)) {
+      const shown = cur;
+      ctx.captionData().then(() => {
+        const live = caps.weight || caps.reps;
+        if (cur === shown && live && live.isConnected) paintCaps();
+      }).catch(() => {});
+    }
     setLabel(nextLabel(state, cur, aheadStep() || peekNext(state, cur)));
     setBack();
   }
