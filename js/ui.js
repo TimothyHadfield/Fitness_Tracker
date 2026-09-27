@@ -2063,7 +2063,10 @@ export function relativeDay(iso) {
  * run, a swim), not a timed set. A bare number is then minutes, ± moves a
  * minute, and the keyboard can type a colon for "1:05:00". Off by default, so
  * a plank's seconds in the runner read exactly as before. */
-export function stepper({ field, value, onChange, suffix, exercise, duration = false }) {
+/* 🆕 `plates: false` (2026-09-27) — the Auto-guide draws the whole bar big
+ * above its steppers (js/bar-view.js), so its weight stepper shows the plain
+ * steps hint instead of a second, small drawing. */
+export function stepper({ field, value, onChange, suffix, exercise, duration = false, plates = true }) {
   const meta = FIELD_META[field];
   // Weight is STORED in pounds and SHOWN in the user's unit, so the stepper
   // works entirely in display units — a nudge is then a clean 2.5 kg rather
@@ -2121,7 +2124,7 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
   /* ---- the line under the number: plates when there are plates ---- */
   // Resolved ONCE — it is a property of the exercise, and asking per keystroke
   // would put a Set lookup on the tap-and-hold repeat at 90ms.
-  const loading = isWeight && exercise ? plateLoadFor(exercise) : null;
+  const loading = isWeight && exercise && plates ? plateLoadFor(exercise) : null;
 
   // ⚠️ REBUILT ON EVERY CHANGE, not once. The list is a function of the number,
   // which is the whole feature — the label has to follow the ± buttons. It is a

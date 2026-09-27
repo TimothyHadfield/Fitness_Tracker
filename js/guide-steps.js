@@ -146,6 +146,71 @@ export function nextStep(d, cur) {
 }
 
 /**
+ * The step BEFORE `cur` in guide order, or null on the very first one — what
+ * Back does when the screen has no trail of its own (just entered, or after a
+ * reload). Tim: *"Also there's no back button for the auto-guide like there
+ * should be."* Read-only: nothing is un-finished, so the numbers on that step
+ * stay as logged, and Next from there marks it done again and carries on.
+ *
+ * nextStep's order run backwards:
+ *   1. mid-round in a superset: the same person's previous member this round;
+ *   2. the start of a turn in a joint workout: the person before in pill order
+ *      whose last finished item here is from this round or the one before
+ *      (someone further behind already had their turn skipped);
+ *   3. this person's previous item on the block;
+ *   4. the previous block: the last finished item there, person before first;
+ *      if nobody finished anything there, this person's last item of it.
+ * Only finished items count in 2 and 4 — Back goes where somebody has been.
+ */
+export function prevStep(d, cur) {
+  const people = peopleInOrder(d);
+  const n = people.length;
+  const pos = Math.max(0, people.findIndex((p) => p.name === nameOf(cur.name)));
+  const me = people[pos];
+  const mine = me.entries;
+  const here = mine[cur.entryIndex];
+  if (!here) return null;
+  const items = blockItems(mine, cur.entryIndex);
+  const at = items.findIndex((it) => it.entryIndex === cur.entryIndex && it.kind === cur.kind && it.index === cur.index);
+  const it = items[at];
+  const lastDone = (entries, i) => {
+    const list = blockItems(entries, i).filter((x) => itemDone(entries, x));
+    return list.length ? list[list.length - 1] : null;
+  };
+
+  // 1. Mid-round in a superset.
+  if (it && it.round != null) {
+    const before = items.slice(0, at).reverse().find((x) => x.round === it.round);
+    if (before) return asStep(me.name, before);
+  }
+  // 2. The start of a turn: the person before, if their turn was just now.
+  for (let k = 1; k < n; k++) {
+    const p = people[(pos - k + n) % n];
+    const i = locate(p.entries, cur.entryIndex, here.exerciseId);
+    const last = i >= 0 ? lastDone(p.entries, i) : null;
+    if (!last) continue;
+    const recent = last.kind === cur.kind ? last.index >= cur.index - 1
+      : last.kind === 'warm' && cur.kind === 'set' && cur.index === 0;
+    if (recent) return asStep(p.name, last);
+  }
+  // 3. This person's previous item on the block.
+  if (at > 0) return asStep(me.name, items[at - 1]);
+  // 4. The previous block.
+  const start = blockRange(mine, cur.entryIndex)[0];
+  if (start <= 0) return null;
+  const j = blockRange(mine, start - 1)[0];
+  const exId = mine[j].exerciseId;
+  for (let k = 1; k <= n; k++) {
+    const p = people[(pos - k + n) % n];
+    const i = locate(p.entries, j, exId);
+    const last = i >= 0 ? lastDone(p.entries, i) : null;
+    if (last) return asStep(p.name, last);
+  }
+  const all = blockItems(mine, j);
+  return all.length ? asStep(me.name, all[all.length - 1]) : null;
+}
+
+/**
  * Where the guide opens: the active person's first unfinished item on the
  * block the runner is on (warm-ups first), else the step after it.
  */

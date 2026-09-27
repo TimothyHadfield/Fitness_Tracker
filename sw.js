@@ -88,6 +88,7 @@ const SHELL = [
   './js/session-draft.js',
   './js/guide-steps.js',
   './js/guide-mode.js',
+  './js/bar-view.js',
   './js/warmup.js',
   './js/live-session.js',
   './js/strength-observations.js',

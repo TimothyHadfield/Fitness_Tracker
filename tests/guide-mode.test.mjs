@@ -183,6 +183,50 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
   ok(s2 && s2.kind === 'set' && s2.index === 1, 'unfinished warm-ups are skipped once a working set is finished');
 }
 
+/* ============ 0b. Back: prevStep (pure) ============
+ * Tim: "Also there's no back button for the auto-guide like there should be."
+ * The screen keeps a trail of the steps it showed; prevStep is what Back does
+ * when that trail is empty (just entered, or a reload): the step before this
+ * one in guide order, walked the way the guide itself walks. */
+if (typeof G.prevStep !== 'function') {
+  ok(false, 'guide-steps.js exports prevStep()');
+} else {
+  const same = (a, b) => a && b && (a.name ?? null) === (b.name ?? null) && a.entryIndex === b.entryIndex && a.kind === b.kind && a.index === b.index;
+  const show = (s) => (s ? `${s.name ?? 'You'} e${s.entryIndex} ${s.kind}${s.index + 1}` : 'null');
+  /** Walk forward; at every step, prevStep must name the step just before it. */
+  const backWalk = (label, d) => {
+    let cur = G.startStep(d);
+    let prev = null;
+    const bad = [];
+    for (let guard = 0; cur && guard < 60; guard++) {
+      const got = G.prevStep(d, cur);
+      if (prev ? !same(got, prev) : got !== null) bad.push(`${show(cur)} → ${show(got)} (want ${show(prev)})`);
+      G.markDone(d, cur);
+      prev = cur;
+      cur = G.nextStep(d, cur);
+    }
+    ok(bad.length === 0, `prevStep, ${label}: every step's Back is the step before it${bad.length ? '\n      ' + bad.join('\n      ') : ''}`);
+  };
+  backWalk('solo with warm-ups, two exercises', { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(3), { warmups: W(2) }), ent('b', Sx(2))] });
+  backWalk('two people alternating', { forName: null, guestNames: ['Rae'], index: 0,
+    entries: [ent('a', Sx(2), { warmups: W(1) }), ent('b', Sx(1))],
+    others: [{ name: 'Rae', index: 0, entries: [ent('a', Sx(2), { warmups: W(1) }), ent('b', Sx(1))] }] });
+  backWalk('two people, uneven set counts', { forName: null, guestNames: ['Rae'], index: 0,
+    entries: [ent('a', Sx(4))], others: [{ name: 'Rae', index: 0, entries: [ent('a', Sx(2))] }] });
+  backWalk('superset, solo', { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(2), { group: 1 }), ent('b', Sx(2), { group: 1 }), ent('c', Sx(1))] });
+  const mk = () => [ent('a', Sx(2), { group: 1 }), ent('b', Sx(2), { group: 1 })];
+  backWalk('superset, two people', { forName: null, guestNames: ['Rae'], index: 0, entries: mk(), others: [{ name: 'Rae', index: 0, entries: mk() }] });
+  // After Back, Next carries on from there: prevStep is read-only.
+  const d = { forName: null, guestNames: [], others: [], index: 0, entries: [ent('a', Sx(3))] };
+  G.markDone(d, { name: null, entryIndex: 0, kind: 'set', index: 0 });
+  const snap = JSON.stringify(d);
+  const p = G.prevStep(d, { name: null, entryIndex: 0, kind: 'set', index: 1 });
+  ok(same(p, { name: null, entryIndex: 0, kind: 'set', index: 0 }) && JSON.stringify(d) === snap,
+     'prevStep changes nothing on the draft (set 1 stays done, its numbers kept)');
+}
+
 /* ============ 1+. the real runner ============ */
 const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
 const settle = () => new Promise((r) => setTimeout(r, 30));
@@ -202,6 +246,7 @@ const guide = () => app().querySelector('.guide');
 const guideOn = () => Boolean(guide() && !guide().hidden);
 const where = () => (app().querySelector('.guide-where') || {}).textContent || '';
 const nextBtn = () => app().querySelector('.guide-next');
+const backBtn = () => app().querySelector('.guide-back');
 const rows = () => [...app().querySelectorAll('.set-list .set-item:not(.set-warm)')];
 const openAt = () => { const o = app().querySelector('.set-open'); return o ? rows().indexOf(o.closest('.set-item')) : -1; };
 async function addGuest(name) {
@@ -255,14 +300,45 @@ if (!toggle()) {
   ok(/Next set/.test(nextBtn().textContent), `bottom button: "${nextBtn().textContent.trim()}"`);
   ok(draft().view === 'guide', 'the view is remembered on the draft');
 
+  ok(Boolean(backBtn()) && backBtn().disabled, 'Back is there on the first step, and disabled (nothing before it)');
+
   type(app().querySelector('.guide .step-value'), 135);
   await settle();
   ok(entriesOf(null)[0].sets[0].weight === 135, 'typing in the guide lands in the draft');
+
+  // The big bar: exactly ONE drawing on the guide, labelled with the sentence.
+  const bars = app().querySelectorAll('.guide .guide-bar');
+  ok(bars.length === 1 && !bars[0].hidden, 'the guide draws the big bar');
+  ok(app().querySelectorAll('.guide svg.plate-draw').length === 0, 'and the small in-stepper drawing is not there too');
+  ok(app().querySelectorAll('.guide svg').length - app().querySelectorAll('.guide .btn svg, .guide .step-btn svg').length === 1,
+     'exactly one drawing in the guide');
+  ok(bars[0].getAttribute('aria-label') === 'bar + 45 each side', `its label is the plate sentence ("${bars[0].getAttribute('aria-label')}")`);
+  app().querySelectorAll('.guide .step-btn')[1].dispatchEvent(new window.Event('pointerdown', { cancelable: true }));
+  app().querySelectorAll('.guide .step-btn')[1].dispatchEvent(new window.Event('pointerup'));
+  await settle();
+  ok(/bar \+ 45, 2\.5 each side/.test(bars[0].getAttribute('aria-label') || ''), `+ redraws the bar ("${bars[0].getAttribute('aria-label')}")`);
+  type(app().querySelector('.guide .step-value'), 135);
+  await settle();
+  ok(app().querySelector('.guide .guide-bar') === bars[0], 'the same drawing is kept across changes (so plates can move)');
 
   nextBtn().click();
   await settle();
   ok(entriesOf(null)[0].sets[0].done === true, 'Next marks set 1 Finished (the runner\'s own flag)');
   ok(/Set 2 of 3/.test(where()), 'and moves to set 2');
+  ok(app().querySelectorAll('.guide .guide-bar').length === 1, 'still one bar on the next step');
+
+  // Back: to set 1, its number kept, still Finished; Next carries on to set 2.
+  ok(!backBtn().disabled, 'Back is enabled on set 2');
+  backBtn().click();
+  await settle();
+  ok(/Set 1 of 3/.test(where()), `Back → set 1 ("${where().trim()}")`);
+  ok(app().querySelector('.guide .step-value').value === '135' && entriesOf(null)[0].sets[0].done === true,
+     'set 1 keeps its 135 and its Finished flag');
+  ok(backBtn().disabled, 'Back is disabled again on the first step');
+  ok(/Next set/.test(nextBtn().textContent), `and Next still reads "${nextBtn().textContent.trim()}"`);
+  nextBtn().click();
+  await settle();
+  ok(/Set 2 of 3/.test(where()), 'Next from there → set 2 again');
   // Warm-ups: set 1 now has a weight, so the runner's suggested ramp exists.
   const warms = (entriesOf(null)[0].warmups || []).length;
   ok(!entriesOf(null)[0].warmups || entriesOf(null)[0].warmups.every((x) => !x.done),
@@ -337,6 +413,23 @@ if (!toggle()) {
   ok(/You/.test(where()) && /Set 2 of 2/.test(where()), `→ back to You, set 2 ("${where().trim()}")`);
   ok(entriesOf(null)[0].sets[0].weight === 155 && entriesOf('Rae')[0].sets[0].weight === 95,
      'each number landed on the right person');
+  // Back hands the turn back to the person before.
+  backBtn().click();
+  await settle();
+  ok(/Rae/.test(where()) && /Set 1 of 2/.test(where()) && draft().forName === 'Rae'
+     && app().querySelector('.guide .step-value').value === '95', `Back → Rae, set 1, her 95 kept ("${where().trim()}")`);
+  backBtn().click();
+  await settle();
+  ok(/You/.test(where()) && /Set 1 of 2/.test(where()) && draft().forName == null, 'Back again → You, set 1');
+  nextBtn().click(); await settle();
+  nextBtn().click(); await settle();
+  ok(/You/.test(where()) && /Set 2 of 2/.test(where()), 'Next, Next → You, set 2 again');
+  // A reload empties the trail: Back falls back to guide order (prevStep).
+  await mount(SessionView(draft().workoutId));
+  backBtn().click();
+  await settle();
+  ok(/Rae/.test(where()) && /Set 1 of 2/.test(where()), `after a reload Back still goes to Rae, set 1 ("${where().trim()}")`);
+  nextBtn().click(); await settle();
   toggle().click();
   await settle();
   const pressed = [...app().querySelectorAll('.person-chip')].find((b) => b.getAttribute('aria-pressed') === 'true');

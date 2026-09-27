@@ -34,13 +34,29 @@
 // `state.view === 'guide'` — a string, dropped with the draft at save.
 //
 // ⚠️ NO MOTION BETWEEN STEPS. This is the logging path (Rule 7): the button's
-// press answers back, and the next step is simply there.
+// press answers back, and the next step is simply there. The ONE exception is
+// the big bar (js/bar-view.js, Tim asked for it): its plates slide on and off
+// as the weight changes, including between steps; every word and number is
+// already in place before they move.
+//
+// 🆕 BACK (2026-09-27). Tim: *"Also there's no back button for the auto-guide
+// like there should be."* Back goes to the step you were on just before
+// (design rule "back goes where you just were"): the screen keeps a TRAIL of
+// the steps it showed; with none (just entered, or a reload) it asks
+// guide-steps.js `prevStep()`. Going back un-finishes nothing — the numbers
+// stay — and Next from there retraces the steps you backed out of (the
+// `ahead` list), then carries on as usual. Both lists live only on this
+// screen; the draft is still the only state (the step shown is written into
+// the runner's own fields by apply(), as always).
 
 import { el, icon, setChildren, toast, stepper } from './ui.js';
-import { LOAD_LABEL, loggingNoteFor, bodyWeightFractionFor } from './exercises.js';
+import { LOAD_LABEL, loggingNoteFor, bodyWeightFractionFor, plateLoadFor } from './exercises.js';
 import { stepsFor } from './set-types.js';
+import { plateLoad, inventoryFor } from './plates.js';
+import * as units from './units.js';
+import { barView } from './bar-view.js';
 import {
-  startStep, nextStep, peekNext, markDone, stepWords, nextLabel, targetOf, walkIndexFor, blockItems,
+  startStep, nextStep, prevStep, peekNext, markDone, stepWords, nextLabel, targetOf, walkIndexFor, blockItems,
 } from './guide-steps.js';
 
 /** Does this step end a turn (a solo set, or the last member of a round)? */
@@ -86,9 +102,18 @@ export function attachGuide(ctx) {
   // `.steppers` only while the guide is showing: the runner keeps exactly one
   // set of controls on screen, and a hidden empty copy would be a second.
   const steps = el('div', { class: 'guide-steppers' });
-  const body = el('div', { class: 'guide-body' }, where, exName, exNote, steps);
+  // The whole bar, big (Tim, 2026-09-27) — kept across steps so plates move.
+  const bar = barView();
+  const body = el('div', { class: 'guide-body' }, where, exName, exNote, bar.node, steps);
   const nextBtn = el('button', { class: 'btn primary lg guide-next', type: 'button', onClick: () => advance() });
-  const foot = el('div', { class: 'session-footer guide-footer' }, nextBtn);
+  // Always in the footer, disabled when there is nothing before: it never
+  // appears or vanishes, so Next never changes width under a thumb.
+  const backBtn = el('button', {
+    class: 'btn lg guide-back', type: 'button', 'aria-label': 'Back to the step before', onClick: () => back(),
+  }, icon('left'), 'Back');
+  const foot = el('div', { class: 'session-footer guide-footer' }, backBtn, nextBtn);
+  let trail = [];   // the steps shown before this one, oldest first
+  let ahead = [];   // the steps backed out of, nearest last
   const node = el('div', { class: 'guide', hidden: true }, el('div', { class: 'guide-scroll' }, body), foot);
 
   const toggle = el('button', {
@@ -143,7 +168,9 @@ export function attachGuide(ctx) {
       exName.textContent = 'Nothing left to do';
       exNote.textContent = '';
       setChildren(steps);
+      bar.update(null);
       setLabel(null);
+      setBack();
       return;
     }
     const entry = state.entries[cur.entryIndex];
@@ -161,6 +188,13 @@ export function attachGuide(ctx) {
 
     const target = targetOf(state, cur);
     const assistSpec = ex ? bodyWeightFractionFor(ex) : null;
+    // The big bar, from the same rule the stepper's small drawing used
+    // (plateLoadFor: which lifts have plates, bar or peg) — null hides it.
+    const loading = ex && (entry.fields || []).includes('weight') ? plateLoadFor(ex) : null;
+    const drawBar = (lbs) => bar.update(loading
+      ? plateLoad(lbs, { inventory: inventoryFor(units.units()), bar: loading.bar, points: loading.points })
+      : null);
+    drawBar(Number(target.weight) || 0);
     const nodes = (entry.fields || []).map((f) => {
       const cap = f === 'weight' && !onWarm && ctx.estimatedMax ? el('div', { class: 'step-est' }) : null;
       const paintCap = () => {
@@ -177,6 +211,8 @@ export function attachGuide(ctx) {
         field: f,
         value: target[f],
         exercise: ex,
+        // The big bar above is the drawing here; a second, small one would repeat it.
+        plates: false,
         suffix: f === 'weight' && entry.loadType
           ? (assistSpec && assistSpec.assist ? 'assistance' : assistSpec ? 'added' : LOAD_LABEL[entry.loadType])
           : null,
@@ -187,16 +223,58 @@ export function attachGuide(ctx) {
           else target.touched = true;
           ctx.save();
           paintCap();
+          if (f === 'weight') drawBar(v);
+          setBack();
         },
       });
       if (cap) {
         s.node.insertBefore(cap, s.node.querySelector('.stepper-controls'));
         paintCap();
       }
+      // The bar follows the number while it is being typed, not only when the
+      // box is left (the stepper commits on blur, as it always has).
+      if (f === 'weight' && loading) {
+        const box = s.node.querySelector('.step-value');
+        if (box) box.addEventListener('input', () => {
+          const typed = parseFloat(box.value);
+          if (Number.isFinite(typed) && typed >= 0) drawBar(units.fromDisplay(typed));
+        });
+      }
       return s.node;
     });
     setChildren(steps, ...nodes);
-    setLabel(nextLabel(state, cur, peekNext(state, cur)));
+    setLabel(nextLabel(state, cur, aheadStep() || peekNext(state, cur)));
+    setBack();
+  }
+
+  /** The step Next would retrace to after a Back, if it is still there. */
+  function aheadStep() {
+    while (ahead.length && !targetOf(S(), ahead[ahead.length - 1])) ahead.pop();
+    return ahead.length ? ahead[ahead.length - 1] : null;
+  }
+
+  /** Where Back would go: the trail, else guide order. */
+  function backTarget() {
+    if (!cur) return null;
+    for (let i = trail.length - 1; i >= 0; i--) if (targetOf(S(), trail[i])) return { step: trail[i], at: i };
+    const p = prevStep(S(), cur);
+    return p ? { step: p, at: -1 } : null;
+  }
+
+  function setBack() {
+    const can = Boolean(backTarget());
+    backBtn.disabled = !can;
+    backBtn.setAttribute('aria-disabled', can ? 'false' : 'true');
+  }
+
+  function back() {
+    commitTyping(node);
+    const to = backTarget();
+    if (!to) return;
+    trail = to.at >= 0 ? trail.slice(0, to.at) : [];
+    ahead.push(cur);
+    apply(to.step);
+    paint();
   }
 
   function setLabel(label) {
@@ -211,7 +289,11 @@ export function attachGuide(ctx) {
     if (!cur) { ctx.finish(); return; }
     if (!markDone(state, cur)) { toast('Put in a number first'); return; }
     const done = cur;
-    const next = nextStep(state, done);
+    // After a Back, Next retraces the steps backed out of before walking on.
+    const retrace = aheadStep();
+    if (retrace) ahead.pop();
+    const next = retrace || nextStep(state, done);
+    if (next) trail.push(done);
     // Rest after a set that ends a turn — never mid-superset, never a warm-up.
     if (ctx.startRest && done.kind === 'set' && endsTurn(state.entries, done)) ctx.startRest();
     ctx.save();
@@ -236,6 +318,7 @@ export function attachGuide(ctx) {
     state.view = 'guide';
     const step = startStep(state);
     cur = null;
+    trail = []; ahead = [];
     if (step) apply(step); else ctx.save();
     show(true);
     paint();
@@ -256,6 +339,7 @@ export function attachGuide(ctx) {
     const state = S();
     const step = startStep(state);
     cur = null;
+    trail = []; ahead = [];
     if (step) apply(step);
     show(true);
     paint();

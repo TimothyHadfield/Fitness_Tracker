@@ -7692,4 +7692,44 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 .guide .step-btn { height: 60px; }
 .guide-footer { justify-content: center; }
 .guide-footer .btn { flex: 1; max-width: 460px; }
+/* Back (2026-09-27, Tim: "there's no back button for the auto-guide like
+   there should be"): the runner's own secondary grey, left of Next, as
+   narrow as its words. Always there — disabled on the first step — so Next
+   never changes width under a thumb. */
+.guide-footer .guide-back { flex: none; padding: 0 14px 0 10px; }
+
+/* The big bar (2026-09-27, js/bar-view.js). Tim: "a much larger and more
+   detailed display of the bar with weights on it on both sides rather than
+   the tiny display on the main screen. also annimate the plates moving on and
+   off the bar." One fixed 360×150 box scaled to the column's width, so the
+   screen never moves when plates do. Metal takes the theme's inks (as the
+   small drawing does); the plate hues are the small drawing's calibrated
+   colours, repeated here because those rules are scoped to `.plate-draw`.
+   Plates move on the `snap` spring in bar-view.js; reduced motion swaps them. */
+.guide-bar { width: 100%; margin: 12px auto 0; }
+.guide-bar[hidden] { display: none; }
+.bar-draw { display: block; width: 100%; height: auto; aspect-ratio: 360 / 150; overflow: visible; }
+.guide-bar.is-empty .bar-draw { opacity: .35; }
+.bar-draw .bv-shaft,
+.bar-draw .bv-sleeve { fill: var(--ink-faint); }
+.bar-draw .bv-collar,
+.bar-draw .bv-cap,
+.bar-draw .bv-frame,
+.bar-draw .bv-clip-body { fill: var(--ink-soft); }
+.bar-draw .bv-knurl-line { fill: #000; fill-opacity: .38; }
+.bar-draw .bv-plate-body { stroke: var(--ink-faint); stroke-opacity: .55; stroke-width: .75; }
+.bar-draw .bv-label {
+  font-size: var(--fs-md); font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.bar-draw .bv-label.is-light { fill: #FFFFFF; }
+.bar-draw .bv-label.is-dark  { fill: #15171A; }
+.bar-draw .bv-label.is-ink   { fill: var(--ink); }
+.bar-draw .pd-red    { fill: #D9463B; }
+.bar-draw .pd-blue   { fill: #3673D6; }
+.bar-draw .pd-yellow { fill: #E9C23A; }
+.bar-draw .pd-green  { fill: #2F9E57; }
+.bar-draw .pd-white  { fill: #F4F4F0; }
+.bar-draw .pd-black  { fill: #1E2022; }
+.bar-draw .pd-chrome { fill: #B4BAC0; }
 /* === end Auto-guide === */

@@ -283,7 +283,6 @@ const round = (n) => Math.round(n * 100) / 100;
  * goes (across the plate, along it, or beside it) — a pixel off either way
  * moves a borderline plate from one placement to the next, nothing worse. */
 const LABEL_PX = 11.5;
-const labelWidth = (t) => round([...t].reduce((s, ch) => s + (ch === '.' ? 0.3 : 0.6) * LABEL_PX, 0));
 const LABEL_TALL = round(0.72 * LABEL_PX);
 
 /**
@@ -391,7 +390,9 @@ export function plateDrawing(load, { maxWidth = 166 } = {}) {
  *             side by side never write over each other.
  * A plate thinner than even that (a sleeve past ~900 lb in a phone's width) is
  * the one case left without a number, and the sentence still has it. */
-function plateLabels(drawn, width) {
+function plateLabels(drawn, width, m = { drawH: DRAW_H, px: LABEL_PX, tall: LABEL_TALL }) {
+  const { drawH, tall } = m;
+  const labelW = (t) => round([...t].reduce((s, ch) => s + (ch === '.' ? 0.3 : 0.6) * m.px, 0));
   const labels = [];
   let nextAbove = true;
   // Where a number written beside plate i may start, on one side, so that it
@@ -408,29 +409,177 @@ function plateLabels(drawn, width) {
   for (let i = 0; i < drawn.length; i++) {
     const p = drawn[i];
     const text = fmtPlate(p.plate);
-    const tw = labelWidth(text);
+    const tw = labelW(text);
     const box = (place, x, y, w, h, tone) => labels.push({ part: 'label', plate: p.plate, text, place, tone,
       x: round(x), y: round(y), w: round(w), h: round(h) });
     const mid = p.x + p.w / 2;
-    if (p.w >= tw + 2 && p.h >= LABEL_TALL + 4) {
-      box('across', mid - tw / 2, DRAW_H / 2 - LABEL_TALL / 2, tw, LABEL_TALL, PLATE_TONE[p.colour]);
+    if (p.w >= tw + 2 && p.h >= tall + 4) {
+      box('across', mid - tw / 2, drawH / 2 - tall / 2, tw, tall, PLATE_TONE[p.colour]);
       continue;
     }
-    if (p.w >= LABEL_TALL + 1 && p.h >= tw + 6) {
-      box('along', mid - LABEL_TALL / 2, DRAW_H / 2 - tw / 2, LABEL_TALL, tw, PLATE_TONE[p.colour]);
+    if (p.w >= tall + 1 && p.h >= tw + 6) {
+      box('along', mid - tall / 2, drawH / 2 - tw / 2, tall, tw, PLATE_TONE[p.colour]);
       continue;
     }
-    const aboveY = p.y - 2 - LABEL_TALL;
+    const aboveY = p.y - 2 - tall;
     const belowY = p.y + p.h + 2;
     const sides = [
-      { place: 'above', y: aboveY, x: aboveY >= 0 ? besideX(i, tw, aboveY, aboveY + LABEL_TALL) : null },
-      { place: 'below', y: belowY, x: belowY + LABEL_TALL <= DRAW_H ? besideX(i, tw, belowY, belowY + LABEL_TALL) : null },
+      { place: 'above', y: aboveY, x: aboveY >= 0 ? besideX(i, tw, aboveY, aboveY + tall) : null },
+      { place: 'below', y: belowY, x: belowY + tall <= drawH ? besideX(i, tw, belowY, belowY + tall) : null },
     ].filter((s) => s.x !== null);
     if (!sides.length) continue;
     // Alternate, so two thin plates side by side write on opposite sides.
     const side = sides.find((s) => (s.place === 'above') === nextAbove) || sides[0];
-    box(side.place, side.x, side.y, tw, LABEL_TALL, 'ink');
+    box(side.place, side.x, side.y, tw, tall, 'ink');
     nextAbove = side.place !== 'above';
   }
   return labels;
+}
+
+/* ------------------------------------------------------------------ *
+ * The big drawing — the WHOLE bar, both sides (Auto-guide, 2026-09-27)
+ * ------------------------------------------------------------------ */
+
+/* Tim, 2026-09-27: *"For the Auto-guide, show a much larger and more detailed
+ * display of the bar with weights on it on both sides rather than the tiny
+ * display on the main screen. also annimate the plates moving on and off the
+ * bar as you change the weight."*
+ *
+ * A front-on view of the whole barbell in ONE fixed box (BIG_W × BIG_H user
+ * units; the page scales it to its width), so the screen never moves when the
+ * plates do. Pure, like everything above: js/bar-view.js draws and animates it.
+ *
+ * WHAT IS TO SCALE AND WHAT IS NOT. One unit ≈ 3.36 mm: the plate DIAMETERS
+ * (PLATE_SIZE.dia, 450 mm = 134 units), the bar (28 mm → 9), the sleeve
+ * (50 mm → 16, 415 mm long → 124) are real. The SHAFT between the collars is
+ * not — 1310 mm would leave no room for plates — so it is cut to 84 units with
+ * a knurl hint. Plate THICKNESS is the small drawing's rule scaled up: heavier
+ * is thicker, and wide enough for its number, as a bumper 45 is against a
+ * 2.5 change plate.
+ *
+ * Plates are keyed `<side><slot>:<plate>` ("R0:45" = the 45 against the right
+ * collar). A plate keeps its key while it stays in its slot, so `plateDiff()`
+ * can tell which plates to leave alone, which to slide on and which off. */
+export const BIG_W = 360;
+export const BIG_H = 150;
+const BIG_MAX_PLATE = 134;
+const BIG_PX = Object.freeze({ red: 24, blue: 23, yellow: 21, green: 19, white: 18, black: 13, chrome: 10 });
+const BIG_GAP = 2;
+// `.bar-draw .bv-label` is var(--fs-md) = 13px bold — copied, as LABEL_PX is.
+const BIG_LABEL = Object.freeze({ drawH: BIG_H, px: 13, tall: round(0.72 * 13) });
+
+/**
+ * The whole bar for `load` (plateLoad()'s answer), or null when there is no
+ * load at all (a dumbbell: the caller draws nothing).
+ *
+ * Returns { kind: 'bar'|'peg', width, height, label, parts, plates, clips }:
+ *   label   plateLabel(load) — null when no plates make the weight, and then
+ *           `plates` is empty: the bare bar is drawn, never a near miss.
+ *   parts   the fixed metal, { part, x, y, w, h }: bar → shaft, knurl ×2,
+ *           sleeve ×2, collar ×2, cap ×2; peg → frame, sleeve (the horn).
+ *   plates  { key, side: 'L'|'R', slot, plate, colour, x, y, w, h, offX,
+ *           label: { text, tone, place, x, y, w, h } | null } — `offX` is
+ *           where the plate sits when it is OFF the bar, just past its own
+ *           sleeve end: where it slides on from and off to.
+ *   clips   { key, side, x, y, w, h } — one per loaded side of a bar.
+ * The left side is the right side mirrored about the centre. A peg has one
+ * horn, loaded from the post outward (the sentence says "each side" or "on
+ * one end"; the picture is the same one horn either way, as the small one is).
+ */
+export function barLayout(load) {
+  if (!load) return null;
+  const label = plateLabel(load);
+  const colours = PLATE_COLOURS[load.unit] || PLATE_COLOURS.lbs;
+  const W = BIG_W, H = BIG_H, cy = H / 2;
+  const hasBar = load.bar > 0;
+  const parts = [];
+  let firstX, room, endX, offBase;
+
+  if (hasBar) {
+    const M = 2, CAP = 5, SLEEVE = 124, COLLAR = 7, CLIP = 6, TAIL = 5;
+    const capR = W - M - CAP;
+    const sleeveR = capR - SLEEVE;
+    const collarR = sleeveR - COLLAR;
+    const shaftL = W - collarR;             // the left collar's inner face, mirrored
+    parts.push({ part: 'shaft', x: shaftL, y: round(cy - 4.5), w: collarR - shaftL, h: 9 });
+    // Two knurled hand grips on the shaft, smooth between and at the collars.
+    const kw = 32;
+    parts.push({ part: 'knurl', x: shaftL + 3, y: round(cy - 4.5), w: kw, h: 9 });
+    parts.push({ part: 'knurl', x: collarR - 3 - kw, y: round(cy - 4.5), w: kw, h: 9 });
+    for (const side of ['L', 'R']) {
+      const mir = (x, w) => (side === 'R' ? x : W - x - w);
+      parts.push({ part: 'sleeve', side, x: mir(sleeveR, SLEEVE), y: round(cy - 8), w: SLEEVE, h: 16 });
+      parts.push({ part: 'collar', side, x: mir(collarR, COLLAR), y: round(cy - 15), w: COLLAR, h: 30 });
+      parts.push({ part: 'cap', side, x: mir(capR, CAP), y: round(cy - 9), w: CAP, h: 18 });
+    }
+    firstX = sleeveR + 1;
+    room = capR - TAIL - CLIP - 1.5 - firstX;
+    endX = capR + CAP;
+    offBase = { clipW: CLIP, clipH: 26 };
+  } else {
+    const FRAME = 10, HORN = 190, LIP = 6;
+    const ox = round((W - FRAME - HORN) / 2);
+    parts.push({ part: 'frame', x: ox, y: 5, w: FRAME, h: H - 10 });
+    parts.push({ part: 'sleeve', side: 'R', x: ox + FRAME, y: round(cy - 8), w: HORN, h: 16 });
+    firstX = ox + FRAME + 2;
+    endX = ox + FRAME + HORN;
+    room = endX - LIP - firstX;
+    offBase = null;
+  }
+
+  const each = label === null ? [] : load.each;
+  const sized = each.map((plate) => {
+    const colour = colours[plate] || 'chrome';
+    return { plate, colour, h: round(BIG_MAX_PLATE * PLATE_SIZE[colour].dia / 450), px: BIG_PX[colour] };
+  });
+  const natural = sized.reduce((s, p) => s + p.px, 0) + BIG_GAP * Math.max(0, sized.length - 1);
+  const squeeze = natural > room ? room / natural : 1;
+  const right = [];
+  let x = firstX;
+  for (const p of sized) {
+    const w = round(Math.max(1, p.px * squeeze));
+    right.push({ part: 'plate', plate: p.plate, colour: p.colour, x: round(x), y: round(cy - p.h / 2), w, h: p.h });
+    x += w + BIG_GAP * squeeze;
+  }
+  const labelsR = plateLabels(right, W, BIG_LABEL);
+  const labelOf = (i) => {
+    // plateLabels skips a plate it cannot label, so match by position, not index.
+    const p = right[i];
+    const same = right.slice(0, i + 1).filter((q) => q.plate === p.plate).length;
+    const l = labelsR.filter((q) => q.plate === p.plate)[same - 1];
+    return l ? { text: l.text, tone: l.tone, place: l.place, x: l.x, y: l.y, w: l.w, h: l.h } : null;
+  };
+
+  const plates = [];
+  const clips = [];
+  const sides = hasBar ? ['L', 'R'] : ['R'];
+  for (const side of sides) {
+    const mir = (px, w) => (side === 'R' ? px : round(W - px - w));
+    right.forEach((p, slot) => {
+      const l = labelOf(slot);
+      plates.push({
+        key: `${side}${slot}:${p.plate}`, side, slot, plate: p.plate, colour: p.colour,
+        x: mir(p.x, p.w), y: p.y, w: p.w, h: p.h,
+        offX: side === 'R' ? round(endX + 2) : round(W - endX - 2 - p.w),
+        label: l ? { ...l, x: mir(l.x, l.w) } : null,
+      });
+    });
+    if (offBase && right.length) {
+      const last = right[right.length - 1];
+      const cx = round(last.x + last.w + 1.5);
+      clips.push({ key: `clip${side}`, side, x: mir(cx, offBase.clipW), y: round(cy - offBase.clipH / 2), w: offBase.clipW, h: offBase.clipH });
+    }
+  }
+  return { kind: hasBar ? 'bar' : 'peg', width: W, height: H, label, parts, plates, clips };
+}
+
+/** Which plate keys stay, which go on, which come off — `barLayout().plates[].key`. */
+export function plateDiff(prevKeys, nextKeys) {
+  const before = new Set(prevKeys || []);
+  const after = new Set(nextKeys || []);
+  return {
+    keep: [...after].filter((k) => before.has(k)),
+    add: [...after].filter((k) => !before.has(k)),
+    remove: [...before].filter((k) => !after.has(k)),
+  };
 }
