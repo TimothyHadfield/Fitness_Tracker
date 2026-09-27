@@ -187,6 +187,13 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **Firestore refuses an array inside an array, and BOTH test backends accept one** (§0.22). One bad
   field loses a whole collection document. → the data-layer suite walks every collection for nested
   arrays; never "tidy" `reps` back from `{lo, hi}` to `[lo, hi]`.
+- **Wesley Hadfield is a REAL account, not a test one** (Tim's late brother, added 2026-09-27 at Tim's
+  request: login timhadfield7+wesley@gmail.com, uid eJfV6emvgbSQx7O9VVrVSK5VkhG3, two "Trainer
+  benchmark" sessions 2026-03-17 / 2026-08-20, weigh-ins 230/215/190). Never delete, "clean up" or
+  write to it without Tim; its app never opens again, so Tim was pre-added to its connections.
+- **`saveProfile({gender})` then an immediate `saveSettings()` LOST the gender live** (seen once,
+  2026-09-27, scripted: read-back showed gender null; a second saveProfile stuck). Reasoned: a
+  settings read-modify-write race. Not investigated; a real user tapping fast could hit it.
 - **A local reproduction cannot clear a cloud path.** Latency and write validation differ; so does
   every race latency opens. → never tell Tim his data is fine off a `LocalBackend` run.
 - **`npm i --no-save` REPLACES what is installed.** → one command: `npm i --no-save jsdom jsqr
@@ -244,6 +251,9 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## Decisions
 - **Locked decisions D1–D33 live in `docs/handbook.md` §6** and design Rules 1–9 in §5. Recent,
   not yet D-numbered:
+- 2026-09-27 · Auto-guide draws the whole bar, both sides (`js/bar-view.js`, only in the guide; the
+  runner keeps its small one-side hint); plates slide on/off with the `snap` spring. Back sits left of
+  Next, greyed on the first step; it walks a history stack, else `prevStep()` in guide order (b67b8c2).
 - 2026-09-27 · a notification links to `#/me/workouts/<sessionId>`, not `#/day/<date>` (a day can hold
   two sessions) and not a new screen (views-social.js refuses an owner-side twin).
 - 2026-09-27 · your workouts and a friend's feed share one card (`js/workout-card.js`); `alwaysOpen`

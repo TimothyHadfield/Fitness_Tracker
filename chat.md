@@ -722,3 +722,19 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Verified how:** full no-Chrome suite 0 FAIL (8,104 incl. ok-style suites) before the Auto-guide
   commit; WebKit 393×659 + 1366 shots of Auto-guide (warm-ups → sets, Edit back), no page scroll.
 - **Open:** see progress.md Authorized "2026-09-27 evening" choices list.
+
+## 2026-09-27 (night) · Big animated bar + Back in Auto-guide; Wesley's account
+- **Asked:** a much larger two-sided bar in the Auto-guide with plates animating on/off; a Back
+  button; and (Tim's late brother) create Wesley Hadfield as a user with two trainer benchmarks and
+  friend him to Tim.
+- **Built:** b67b8c2 (`js/bar-view.js`, `prevStep()`, Back left of Next). Wesley created LIVE through
+  the app's own modules in headless WebKit (scripts in session scratchpad/wesley): email
+  timhadfield7+wesley@gmail.com (plain address is Tim's own login), male, weigh-ins 230 (2025-02-20,
+  from "lost 40 in 1.5 years") / 215 / 190, sessions with Deadlift, Leg Press, Barbell Bench, Lat
+  Pulldown, Triceps Pushdown, Barbell Curl, Running 1.5 mi. Directory has no "timhadfield7": Tim is
+  "Timothy Hadfield" (only Hadfield match) → request sent, Tim pre-added on Wesley's side.
+- **Verified how:** bar-view 61/0, guide-mode 70/0, render 1733/0 (builder: full suite 0 FAIL); live
+  read-back as Wesley: 2 sessions, 14 benchmarks, 3 weigh-ins, published copy viewers = Tim, gender
+  male after a second save (first was lost — progress.md Traps).
+- **Open:** Tim accepts the request; picks to confirm (pushdown vs other triceps, barbell curl vs
+  dumbbell, leg press counted as plates only).
