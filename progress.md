@@ -261,9 +261,10 @@ can check._
 - **2026-09-26:** Autumn's cause (no gender / no weigh-in in her Body details) is REASONED — her data
   was never read. Hip thrust machine ratio 0.60 is reasoned (lever brands vary). Warm-up set COUNT
   rule is judgement, not from a paper. Plate drawing in kg only checked in a stepper panel.
-- **Offered, not decided (2026-09-26):** apply the glutes blend to every muscle (demo Triceps +12 %,
-  Hamstrings ~+1 %, Biceps ≤ +0.8 %) — reverses his 2026-08-17 rule, so his call; Smith hip thrust
-  probably ~0.90 not 1.00; own-map sentence in Compare still wrongly lists "age".
+- **2026-09-27 Tim chose "Every muscle"**: fallbacks blend beside direct work everywhere (6787ff2;
+  the 2026-08-17 rule is reversed), then `sigmaFor()` fixed so a key-lift base is never trusted less
+  than a converted one (next commit; Tim's synthetic glutes 278.3). Still open: Smith hip thrust
+  probably ~0.90 not 1.00; own-map sentence in Compare still wrongly lists "age" (wording = his).
 - **No predicted number has ever been checked against a real attempt** (Open work 19 — Tim's). Don't
   describe any estimate as accurate.
 - **Review wave 2 (81fada0):** the checker's "N more" is only test-checked (demo has no checker
