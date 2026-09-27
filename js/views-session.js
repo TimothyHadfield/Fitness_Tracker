@@ -2,6 +2,9 @@
 
 import { store, social, muscleStrength, muscleRatings, todayISO, uid, DEFAULT_SETS } from './store.js';
 import { LOAD_LABEL, bodyWeightFractionFor, loggingNoteFor } from './exercises.js';
+import {
+  LEVERAGE_OPTIONS, isLeveragePickable, leverageChoice, setLeverageChoices, withLeverageChoice,
+} from './machine-mechanics.js';
 import { totalResistance, bodyWeightOn } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
@@ -2733,6 +2736,12 @@ export async function SessionView(workoutId) {
           loggingNoteFor(ex) ? ' · ' : '',
           `Exercise ${step.entryIndex + 1} of ${state.entries.length}`,
         ),
+        /* 🆕 2026-09-27 — THE ONE-TIME LEVERAGE PICK (Tim: "Both"). Only on a
+         * lever machine, whose plates hang further from the pivot than the pad
+         * and so count for MORE than bar plates. Blank means "Not sure", which
+         * reads at 2.5×. Saved per exercise in settings (`leverage`, a flat map
+         * of numbers) and handed to the rating straight away. */
+        ex && isLeveragePickable(ex) ? leveragePick(ex) : null,
 
         /* ⚠️ THESE THREE ARE LOUD NOW, AND THAT REVERSES A DECISION THIS FILE
          * ARGUED FOR. Tim, 2026-08-31: *"Make the swap and remove boxes in a
@@ -5529,4 +5538,42 @@ export function restoreFlight(screen, ghost) {
     { from: { x: t.x, y: t.y, scale: t.scale, opacity: 0.35 } });
   ctl.done.then(() => { screen.classList.remove('m-restoring'); ghost.remove(); });
   return true;
+}
+
+/**
+ * The lever machine's one-time leverage pick (2026-09-27, Tim's answers:
+ * "Both" and "Not sure"). A quiet line under the exercise's meta line, in the
+ * same small type — it is set once per machine, not every set, so it must not
+ * compete with the steppers. Blank is "Not sure" and reads at the 2.5× default.
+ *
+ * Stored in settings as `leverage: { [exerciseId]: k }` — a flat map of
+ * numbers, which the Firestore rules accept (no arrays in arrays). The rating
+ * reads it synchronously from machine-mechanics.js's registry, seeded at boot.
+ */
+function leveragePick(ex) {
+  const current = leverageChoice(ex.id);
+  const label = (k) => (k === 1 ? 'Same as a bar' : `${k}×`);
+  const select = el('select', {
+    class: 'input compact lever-pick-select',
+    'aria-label': 'Leverage: how much heavier a plate is here than on a barbell',
+    title: 'Plates further from the pivot than the pad count for more than bar plates',
+    onChange: async (e) => {
+      const v = e.target.value === '' ? null : Number(e.target.value);
+      try {
+        const s = await store.getSettings();
+        const next = withLeverageChoice(s.leverage, ex.id, v);
+        setLeverageChoices(next);
+        await store.saveSettings({ leverage: next });
+        toast(v === null ? 'Leverage: not sure (reads at 2.5×)' : `Leverage saved: ${label(v)}`);
+      } catch (_) {
+        toast('Could not save the leverage');
+      }
+    },
+  },
+    ...LEVERAGE_OPTIONS.map((k) => el('option', { value: String(k), text: label(k) })),
+    el('option', { value: '', text: 'Not sure' }),
+  );
+  select.value = current ? String(current) : '';
+  return el('label', { class: 'session-ex-meta lever-pick' },
+    el('span', { text: 'Leverage' }), select);
 }

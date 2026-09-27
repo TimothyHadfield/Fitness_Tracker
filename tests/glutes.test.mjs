@@ -19,6 +19,12 @@
 //      Glutes←Quads hop only (isolations stay out).
 //   3. Machine Hip Thrust read lever plates as a deadlift at 1.00.
 //      → 0.60 at q 0.25 (reasoned; Smith kept at 1.00).
+//      🔄 2026-09-27 REPLACED at Tim's word: a lever machine's plates are
+//      HEAVIER than bar plates, not lighter ("over 2-3x"). Now every hip thrust
+//      design converts at the barbell hip thrust's ratio after its own
+//      mechanics (js/machine-mechanics.js): lever k 2.5 + 20, plates-at-hips
+//      k 1 + 15, weight stack k 0.8, Smith + its bar. Pinned in
+//      tests/machine-conversion.test.mjs.
 //
 // Measured on this synthetic case (male, 175 lb, 8 sessions over 4 weeks):
 // Glutes 70.9 → 291.3, confidence 0.413 → 0.654. Demo year: only the Glutes row
@@ -90,13 +96,14 @@ const TIM = [
 // ── The machine itself ──────────────────────────────────────────────────────
 {
   const m = contrib('Machine Hip Thrust', 'Glutes');
-  ok(m && Math.abs(m.ratio - 0.60) < 1e-9 && Math.abs(m.quality - 0.25) < 1e-9,
-     `a lever hip thrust machine converts at 0.60 and q 0.25, not as a deadlift at 1.00 (${m && m.ratio}, ${m && m.quality})`);
+  ok(m && m.lever && m.lever.k === 2.5 && Math.abs(m.quality - 0.30) < 1e-9,
+     `a lever hip thrust machine reads its plates at 2.5x through the lever, q 0.30 (${m && m.lever && m.lever.k}, ${m && m.quality})`);
   const s = contrib('Smith Machine Hip Thrust', 'Glutes');
-  ok(s && s.ratio === 1 && s.quality === 0.35,
-     'the Smith hip thrust (plates over the hips) keeps its own 1.00 / 0.35 rather than falling into the lever rule');
+  ok(s && Math.abs(s.ratio - 0.96) < 1e-9 && s.quality === 0.35 && s.lever && s.lever.k === 1 && s.lever.A > 0,
+     'the Smith hip thrust (plates over the hips) reads like a barbell hip thrust plus its bar, q 0.35');
   const bar = contrib('Hip Thrust', 'Glutes');
-  ok(bar && bar.ratio > m.ratio, 'and a barbell hip thrust is still the heavier conversion per pound logged');
+  ok(bar && !bar.lever && m.lever.k * 100 + m.lever.A > 2 * 100,
+     'and a lever pound now counts for more than a barbell pound, as Tim said');
 }
 
 // ── What may and may not reach the glutes ───────────────────────────────────

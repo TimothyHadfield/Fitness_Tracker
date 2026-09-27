@@ -32,6 +32,7 @@ import { setE1rm } from './set-e1rm.js';
 import { contributionsFor, rankBlockedReason, fatigueFactor, toKeyLift } from './muscle-evidence.js';
 import { MUSCLE_LIFTS } from './strength-standards.js';
 import { volumeContributions } from './volume-map.js';
+import { plateE1rm } from './machine-mechanics.js';
 import { recordedSetCount } from './session-stats.js';
 
 /**
@@ -269,6 +270,20 @@ export function buildObservations({ sessions, benchmarks, exMap, bodyWeights, to
       // direction this whole change is being careful about.
       if (!(at > 0) || !(was > 0)) return;
       raw *= at / was;
+    }
+    /* 🆕 2026-09-27 — A MACHINE'S REP CURVE RUNS ON THE LOAD THE BODY MOVED.
+     * Where the exercise has mechanics (`lever`: a hip thrust design, a Smith
+     * bar — js/machine-mechanics.js), the curve is applied to k × plates + A,
+     * not to the plates: 45 × 10 on a 2.5× arm is ten reps at 132.5 lb. The
+     * answer comes back in PLATES (`plateE1rm()`), so `toKeyLift()` below turns
+     * it into exactly e1rm(k × plates + A, reps) ÷ ratio. Every contribution of
+     * one exercise carries the same lever (a stand-in copies its base's), so one
+     * `raw` still serves them all. D5 was already enforced by `scored` above. */
+    const lever = (contributions.find((c) => c.lever) || {}).lever;
+    if (lever) {
+      const p = plateE1rm(lever, Number(weight), r);
+      if (!(p > 0)) return;
+      raw = p;
     }
 
     for (const c of contributions) {

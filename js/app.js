@@ -26,6 +26,7 @@ import {
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { MeRouteView } from './views-me.js';
 import { setUnits } from './units.js';
+import { setLeverageChoices } from './machine-mechanics.js';
 // 🆕 First-paint motion and the tab pop (2026-09-25, docs/polish-plan.md M).
 import { arriveScreen, tabPop } from './motion.js';
 // 🆕 Screens that move like objects: push, back, tabs, the Record card, the
@@ -813,6 +814,9 @@ function followSidebarLine() {
   // Seeded once, here, because the stepper and the set formatter are synchronous
   // and are called mid-render — they cannot await the store for the unit.
   setUnits(settings.units);
+  // Same reason: the muscle map rates sets synchronously, so a lever machine's
+  // picked leverage (machine-mechanics.js) is handed over once, here.
+  setLeverageChoices(settings.leverage);
   if (!location.hash) location.hash = '#/home';
   await render();
   registerServiceWorker();

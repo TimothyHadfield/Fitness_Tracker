@@ -70,6 +70,8 @@ import { MUSCLE_LIFTS, standardQualityFor, fitSigma, medianFor } from './strengt
 import { RATIO_DRIFT } from './ratio-sigma.js';
 import { EXERCISE_STANDARDS } from './exercise-standards.js';
 import { repSigma } from './rep-sigma.js';
+// 2026-09-27: a machine's own mechanics (lever k, starting load A) — see there.
+import { mechanicsFor, leverageChoice, effectiveLoad, loggedFromEffective } from './machine-mechanics.js';
 
 /* ------------------------------------------------------------------ *
  * Load
@@ -858,12 +860,33 @@ const RATIOS = {
      * drops to 0.25 (the table's "carried" floor): on a lifter with any hinge or
      * squat work the compounds now carry most of the glute reading (the blend
      * rule in rateMuscle()). If a real lever-machine table appears, replace this. */
-    // Smith: plates over the hips, logged "Plates only, no bar" — NOT a lever, so
-    // it keeps the old number exactly rather than falling into the rule below.
-    // (~0.90 is arguably closer — plates only, counterbalanced bar — not changed
-    // here because nobody asked; flagged 2026-09-26.)
-    [/^Smith Machine Hip Thrust$/, 1.00, 0.35],
-    [/Machine Hip Thrust/, 0.60, 0.25],
+    // ~~Smith: plates over the hips … keeps the old number exactly~~
+    // `[/^Smith Machine Hip Thrust$/, 1.00, 0.35]` and
+    // ~~`[/Machine Hip Thrust/, 0.60, 0.25]`~~ until 2026-09-27.
+    /* 🔄 2026-09-27 — BY MECHANICS, NOT BY A FACTOR (docs/machine-conversion-plan.md).
+     * Tim: *"the 45lbs for the machine hip thrust matches to a lot more than 45lbs
+     * with a barbell … I wouldn't be supprised if the equivilant weight was over
+     * 2-3x … I don't want you to do a single conversion like 'machine weights are
+     * 60% of free weight counterparts'."* 0.60 sat in the middle of a ~6× spread
+     * across designs and was right for almost nobody.
+     *
+     * Every hip thrust machine now converts the load its ARM puts on the hips
+     * (k × plates + A, js/machine-mechanics.js — one row per design, and the lever
+     * machine takes the user's own leverage pick) against the BARBELL hip thrust's
+     * sourced ratio below, 0.96 m / 1.16 f. The ratio here IS that barbell ratio;
+     * the q is the design's "not sure" quality, and `buildContributions()` swaps in
+     * the design's own (a step higher once the user has picked a leverage).
+     *   Machine Hip Thrust (the original id — long lever, Tim's machine): k 2.5, A 20
+     *   … (Plates at Hips): k 1, A 15 (Glute Drive's published starting resistance)
+     *   … (Weight Stack): k 0.8, A 0
+     *   Smith Machine Hip Thrust: k 1, A = the Smith bar (20, reasoned)
+     * No level curve: none of them has a published row, and the barbell row's
+     * shape is not borrowed (that would be a second re-baseline inside this one).
+     * Tim's 45 × 10, male: 118 → 193 lb deadlift at 2.5× (163 at 2×, 223 at 3×). */
+    [/^Smith Machine Hip Thrust$/, { m: 0.96, f: 1.16 }, 0.35],
+    [/^Machine Hip Thrust \(Plates at Hips\)$/, { m: 0.96, f: 1.16 }, 0.35],
+    [/^Machine Hip Thrust \(Weight Stack\)$/, { m: 0.96, f: 1.16 }, 0.25],
+    [/^Machine Hip Thrust$/, { m: 0.96, f: 1.16 }, 0.30],
     // 2026-08-26 sweep, the second entry that ran the OTHER way: SL hip
     // thrust 129/218/335/478/639 over deadlift 201/268/348/438/535 →
     // 0.64/0.81/0.96/1.09/1.19, median 0.96. The reasoned 1.15 was
@@ -902,6 +925,15 @@ const RATIOS = {
      *
      * q rises to 0.30 — these are real pages now — but stays low: they are
      * 2020-era with small samples, and a machine's leverage is its own. */
+    /* 🆕 2026-09-27 — THE MACHINE KICKBACK STOPS BORROWING A DOUBLED RATIO
+     * (docs/machine-conversion-plan.md §4, "quick fixes"). The 0.63 below is on
+     * the cable's DOUBLED per-side number; a machine kickback is logged as the
+     * stack for ONE leg, never doubled, so through /Kickback/ it read half the
+     * credit of the same load on a cable. Same page, one-leg convention: SL's
+     * single-leg cable median ~110 over the 348 deadlift = 0.32 (the number
+     * exercises.js's FORCE_PER_SIDE note already names). Carried, not a machine
+     * page; the pad lever is the brand's, so q a step lower. */
+    [/^Machine Glute Kickback$/, 0.32, 0.25],
     [/Kickback/, 0.63, 0.30],
     [/Hip Abduction Machine/, { m: 0.61, f: 0.79 }, 0.30],
     [/Hip Adduction Machine/, { m: 0.66, f: 0.74 }, 0.30],
@@ -1789,9 +1821,16 @@ function effectiveRatioAtLoad(level, load) {
  * The one place that conversion is done: `raw / c.ratio` where there is no level
  * curve (byte-identical to before), percentile-matched where there is.
  */
+/* 🆕 2026-09-27 — A MACHINE'S OWN MECHANICS COME FIRST (`c.lever`, from
+ * js/machine-mechanics.js). Where a contribution carries one, the logged
+ * plates' max becomes the load the body moved — k × plates + A — and THAT is
+ * what the ratio (and a level curve, for a Smith lift that has one) converts.
+ * Without `lever` both functions are byte-for-byte what they were. */
 export function toKeyLift(c, load) {
-  const x = Number(load);
+  let x = Number(load);
   if (!c || !(x > 0) || !(c.ratio > 0)) return null;
+  if (c.lever) x = effectiveLoad(c.lever, x);
+  if (!(x > 0)) return null;
   if (!c.level) return x / c.ratio;
   return x / effectiveRatioAtLoad(c.level, x);
 }
@@ -1806,6 +1845,12 @@ export function toKeyLift(c, load) {
 export function fromKeyLift(c, key) {
   const y = Number(key);
   if (!c || !(y > 0) || !(c.ratio > 0)) return null;
+  // The machine's mechanics undone LAST: the free-lift load first, then plates.
+  // Null when the key lift is below what the empty machine already weighs.
+  if (c.lever) {
+    const { lever, ...plain } = c;
+    return loggedFromEffective(lever, fromKeyLift(plain, y));
+  }
   if (!c.level) return y * c.ratio;
   const curves = c.level.curves;
   if (curves.length === 1) return y * ratioAtZ(curves[0], zOnKey(curves[0], y));
@@ -1971,9 +2016,16 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
   //    ⚠️ The level curve rides on THIS contribution only — see the block above
   //    `toKeyLift()`. The key-lift branch above has nothing to convert, and the
   //    fallbacks below keep their fixed median-to-median hop.
+  //    🆕 2026-09-27: and a machine's mechanics ride on it too (`lever`, see
+  //    toKeyLift()) — the hip thrust designs with the user's own leverage pick,
+  //    and the Smith bar. The design's quality replaces the rule's where it has
+  //    one (a picked leverage earns a step). Anything else: no `lever`, unchanged.
+  const mech = rule ? mechanicsFor(exercise, leverageChoice(exercise.id)) : null;
   if (rule) {
-    add(exercise.muscle, rule.ratio, rule.quality, 'direct', null,
+    add(exercise.muscle, rule.ratio, mech && mech.q > 0 ? mech.q : rule.quality, 'direct', null,
       levelCurveFor(exercise.name, exercise.muscle, rule.entry, sex, bodyWeight));
+    const made = out.find((c) => c.muscle === exercise.muscle && c.kind === 'direct');
+    if (made && mech) made.lever = { k: mech.k, A: mech.A };
   }
 
   // 2b. 🆕 2026-09-26 — a hinge filed under Back that is ALSO a glute lift, read
@@ -2022,6 +2074,9 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
       if (made && made.muscle === target && made.kind === 'fallback') {
         made.baseQuality = base.quality;
         made.hopQuality = src.q;
+        // 2026-09-27: the base's machine mechanics travel with it — a Smith
+        // squat standing in for the glutes still has its bar.
+        if (base.lever) made.lever = { ...base.lever };
       }
       break;
     }

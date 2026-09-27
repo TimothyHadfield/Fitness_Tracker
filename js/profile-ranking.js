@@ -174,6 +174,7 @@ import {
   MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, withAssumptions,
 } from './strength-standards.js';
 import { bodyWeightFractionFor } from './exercises.js';
+import { plateE1rm } from './machine-mechanics.js';
 
 /**
  * Past this many days a recorded row's set is old enough that the screen says
@@ -333,7 +334,13 @@ function rowFor(exercise, rec, ctx, muscle) {
       row.confidence = Math.max(0, Math.min(1, repFactor(own.reps) * via.quality));
       // 🔄 2026-09-23: `toKeyLift()` — `own.total / via.ratio` unless the lift
       // has a published level curve (percentile matching, muscle-evidence.js).
-      row.percentile = percentileFor(toKeyLift(via, own.total), via.muscle, ranked);
+      // 🆕 2026-09-27: a machine with mechanics (`via.lever`, machine-mechanics.js)
+      // runs its rep curve on k × plates + A, exactly as the muscle map does, so
+      // this row and the map cannot disagree about Tim's 45 × 10.
+      const keyIn = via.lever && Number(own.weight) > 0 && Number(own.reps) > 0
+        ? plateE1rm(via.lever, Number(own.weight), Number(own.reps))
+        : own.total;
+      row.percentile = keyIn > 0 ? percentileFor(toKeyLift(via, keyIn), via.muscle, ranked) : null;
       row.level = row.percentile === null ? null : levelFor(row.percentile);
       if (row.percentile === null) row.why = 'no-standard';
     } else {

@@ -312,7 +312,13 @@ const RAW = [
   ['Single-Leg Hip Thrust', 'Glutes', 'Bodyweight', 'wr'],
   ['B-Stance Hip Thrust', 'Glutes', 'Barbell', 'wr'],
   ['Glute Bridge', 'Glutes', 'Barbell', 'wr'],
+  // 🔄 2026-09-27: three hip thrust machines, because they convert differently
+  // (js/machine-mechanics.js). The plain name is the LONG-LEVER design — it keeps
+  // its id, so every set already logged on it re-reads as that one (Tim's
+  // choice). The other two are new. Names are Tim's to change.
   ['Machine Hip Thrust', 'Glutes', 'Machine', 'wr'],
+  ['Machine Hip Thrust (Plates at Hips)', 'Glutes', 'Machine', 'wr'],
+  ['Machine Hip Thrust (Weight Stack)', 'Glutes', 'Machine', 'wr'],
   ['Smith Machine Hip Thrust', 'Glutes', 'Machine', 'wr'],
   ['Cable Kickback', 'Glutes', 'Cable', 'wr'],
   ['Machine Glute Kickback', 'Glutes', 'Machine', 'wr'],
@@ -955,6 +961,10 @@ const LOGGING_NOTES = {
   // Machine and bar weight.
   ...Object.fromEntries(['Leg Press', 'Leg Press Calf Raise', 'Hack Squat', 'Pendulum Squat']
     .map((n) => [n, 'Plates only, no sled'])),
+  // 2026-09-27: the two plate-loaded hip thrust machines. The arm's or the
+  // carriage's own weight is added by the conversion (js/machine-mechanics.js),
+  // so the number typed is the plates. The stack design needs no note.
+  'Machine Hip Thrust': 'Plates only', 'Machine Hip Thrust (Plates at Hips)': 'Plates only',
   'Sled Push': 'Plates only, no sled', 'Sled Drag': 'Plates only, no sled',
   ...Object.fromEntries(['Seated Leg Press', 'Belt Squat', 'Standing Calf Raise',
     'Seated Calf Raise', 'Donkey Calf Raise'].map((n) => [n, 'No machine weight'])),

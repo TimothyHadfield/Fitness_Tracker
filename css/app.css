@@ -1798,6 +1798,18 @@ select.input {
 /* How to count this exercise ("Reps per leg"), inside the grey meta line. */
 .session-ex-meta .ex-note { color: var(--ink); font-weight: var(--fw-med); }
 
+/* A lever machine's one-time leverage pick (2026-09-27), on its own quiet line
+   under the meta line: same grey type, a small select that still keeps a 44px
+   touch height. Set once per machine, so it must not compete with the steppers. */
+.lever-pick { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.lever-pick .lever-pick-select {
+  width: auto;
+  flex: none;
+  min-height: 44px;
+  padding: 7px 34px 7px 10px;
+  font-size: var(--fs-md);
+}
+
 /* "+ Warm-up" sits to the LEFT of "+ Add set" (warm-ups come first), both on
    the right of the heading. */
 .sets-head > .section-label { order: -2; margin-right: auto; }

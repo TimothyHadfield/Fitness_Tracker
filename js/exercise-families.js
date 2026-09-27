@@ -268,6 +268,7 @@ export const FAMILIES = [
     id: 'hip-thrust',
     label: 'Hip thrusts and bridges',
     members: ['Hip Thrust', 'Single-Leg Hip Thrust', 'Glute Bridge', 'Machine Hip Thrust',
+      'Machine Hip Thrust (Plates at Hips)', 'Machine Hip Thrust (Weight Stack)',
       'Frog Pump', 'B-Stance Hip Thrust', 'Smith Machine Hip Thrust'],
   },
   {
