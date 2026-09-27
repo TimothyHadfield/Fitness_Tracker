@@ -3,6 +3,34 @@
 A lifting tracker built to be better than a spreadsheet: pick or build a programme, log it
 one-handed while you're mid-set, and see what your training is actually doing to your strength.
 
+**[▶ Open the live app](https://timothyhadfield.github.io/Fitness_Tracker/)** · works on phone and laptop · no account needed (Account → *View demo account* to try it with a made-up year of training)
+
+<p align="center">
+  <img src="docs/screenshots/desktop-strength-map.png" alt="Body map on a laptop: every muscle coloured by strength level, with the biceps panel open showing its estimated one-rep max and the sets it came from" width="68%">
+  &nbsp;
+  <img src="docs/screenshots/phone-logging.png" alt="Logging a bench press set on a phone, pre-filled with last time's weight and reps" width="24%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/phone-graph.png" alt="Back squat strength graph over a year, up 48 percent" width="24%">
+  &nbsp;
+  <img src="docs/screenshots/phone-volume.png" alt="Weekly sets per muscle shown on the body illustration" width="24%">
+</p>
+<p align="center"><sub>Screenshots use the built-in demo account (invented data).</sub></p>
+
+## Features
+- **Strength body map** — every muscle rated from every exercise that trains it, coloured by where you rank against a comparison group you choose, and faded when there's little evidence. Tap a muscle for its numbers.
+- **One-thumb logging** — each exercise pre-filled with last time's sets, big +/− buttons, 318 built-in exercises, supersets, drop sets and a rest timer.
+- **Ready-made programmes** — nine to start from, each rated for growth, strength, days a week and minutes a session, or build your own.
+- **Graphs and calendar** — strength trends for any lift you've done twice, weekly volume per muscle, and a year-at-a-glance calendar.
+- **Friends feed** — mutual friends only, kudos and comments, compare a lift or a whole body map side by side. No streaks, no leaderboards.
+- **Goals** — pick a muscle and a strength level; it shows what that costs and whether your training is on track.
+- **Offline and private by default** — works with no account and no connection; sign in only to sync between devices. Installs to the iPhone home screen.
+
+## Built with
+Plain HTML, CSS and JavaScript (ES modules, no build step, no dependencies), a service worker for offline use, and Firebase Auth + Firestore for optional sync. Hosted on GitHub Pages.
+
+---
+
 **No build step and no dependencies in the app** — plain ES modules and one stylesheet. Serve the
 folder and it runs.
 
@@ -64,6 +92,8 @@ it.
 Anybody who can see your account reads a **published copy** of your training, never your own data —
 so what is shared is decided when it is written, and the rules decide who may read it. Those are two
 independent gates and neither is allowed to become the only one.
+
+## For developers
 
 ## Run it locally
 
