@@ -7649,3 +7649,47 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
   white-space: nowrap; align-self: center;
 }
 /* === end Warm-ups in history === */
+
+/* === Auto-guide (2026-09-27) ==============================================
+   Tim: *"an "auto-guide" button you could press which would just show you the
+   single set you should be on … and then just a single button at the bottom."*
+   js/guide-mode.js. One step, centred in the space between the top bar and
+   the button: who and which set, the exercise, the same two steppers the list
+   uses (bigger — they are the only thing on the screen), one button.
+   ⚠️ No motion between steps: this is the logging path (Rule 7).
+   ⚠️ `hidden` needs saying: `.session-footer` and friends set `display`, which
+   beats the UA's [hidden]. */
+.screen > .guide[hidden],
+.screen > .people-bar[hidden],
+.screen > .session-progress[hidden],
+.screen > .pane-scroll[hidden],
+.screen > .session-footer[hidden] { display: none; }
+
+.guide { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.guide-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; }
+.guide-body {
+  margin: auto; width: 100%; max-width: 460px;
+  padding: 16px var(--pad);
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  text-align: center;
+}
+.guide-where {
+  display: flex; justify-content: center; align-items: baseline; gap: 6px;
+  font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--ink-soft);
+}
+.guide-who { color: var(--accent); }
+.guide-dot { color: var(--ink-faint); }
+.guide-set.is-warm { color: var(--ink-faint); }
+.guide-ex {
+  margin: 0; font-size: 26px; font-weight: var(--fw-bold);
+  letter-spacing: -0.028em; line-height: 1.15; text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.guide-note { font-size: var(--fs-md); font-weight: var(--fw-bold); color: var(--ink-soft); }
+.guide-note[hidden] { display: none; }
+.guide-steppers { margin-top: 18px; text-align: left; }
+.guide .step-value { font-size: 38px; }
+.guide .step-btn { height: 60px; }
+.guide-footer { justify-content: center; }
+.guide-footer .btn { flex: 1; max-width: 460px; }
+/* === end Auto-guide === */

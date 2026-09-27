@@ -40,6 +40,7 @@ import * as units from './units.js';
 import { warmupRamp, warmupKind, generalWarmup } from './warmup.js';
 // Workout photo on the save screen (2026-09-25, onboarding-plan part C).
 import { photoField, rectFlight } from './photo.js';
+import { attachGuide } from './guide-mode.js';
 import { primePhoto } from './store.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -4890,6 +4891,36 @@ export async function SessionView(workoutId) {
 
   renderAll();
 
+  /* 🆕 AUTO-GUIDE — 2026-09-27, js/guide-mode.js. One step at a time with one
+   * button; it drives THIS runner's own fields through the hooks below, so
+   * Edit lands on the same set. `estimatedMax` is the caption's own max (this
+   * lift's best set first, the rating after) for the "typo?" warning. */
+  const guide = attachGuide({
+    getState: () => state,
+    exMap,
+    save: () => saveDraft(state),
+    switchTo,
+    syncWalk,
+    renderRunner: () => renderAll({ keepScroll: true }),
+    finish: openSaveScreen,
+    startRest,
+    hide: [peopleBar, progress, pane, footer],
+    typoRatio: TYPO_WARN_RATIO,
+    estimatedMax: (entry, ex) => {
+      if (!ex) return 0;
+      const key = personKey(state.forName);
+      if (!historyReady.has(key)) ownRowsFor(state.forName);
+      if (!ratingsReady.has(key)) ratingsFor(state.forName);
+      const rows = historyReady.get(key);
+      const own = rows ? ownBestSet(ex, rows, state.date) : null;
+      if (own && own.e1rm > 0) return own.e1rm;
+      const ratings = ratingsReady.get(key);
+      const est = ratings ? estimateOneRM(ex, ratings, state.bodyWeight,
+        state.forName == null && ownerSex ? { sex: ownerSex } : undefined) : null;
+      return est ? est.oneRM : 0;
+    },
+  });
+
   const screen = el('div', { class: 'screen no-nav' },
     el('header', { class: 'topbar' },
       /* ⚠️ A DOWN ARROW, NOT AN ✕ — and the glyph is the whole message. An ✕
@@ -4909,10 +4940,12 @@ export async function SessionView(workoutId) {
           dateNote,
         ),
       ),
+      guide.toggle,
     ),
     peopleBar,
     progress,
     pane,
+    guide.node,
     // Off by default (Tim, 2026-08-28) — the bar simply is not on the screen.
     restEnabled ? restBar : null,
     footer,

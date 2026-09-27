@@ -86,6 +86,8 @@ const SHELL = [
   './js/photo.js',
   './js/public-figures.js',
   './js/session-draft.js',
+  './js/guide-steps.js',
+  './js/guide-mode.js',
   './js/warmup.js',
   './js/live-session.js',
   './js/strength-observations.js',
