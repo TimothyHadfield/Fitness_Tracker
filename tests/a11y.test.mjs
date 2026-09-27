@@ -561,6 +561,46 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      '🛑 and none of them declares motion — the drawing re-solves on every tap of ± (Rule 7)');
   ok(/\.plate-draw \.pd-plate\s*\{[^}]*stroke:\s*var\(--ink-faint\)/.test(CSS),
      'every plate carries a theme-coloured outline, so black reads on dark and white on light');
+
+  /* 🆕 2026-09-27 each plate carries its number (Tim: "each plate actually has
+     the label on it"). The number's ink is picked per plate colour in plates.js
+     (PLATE_TONE); measured here against the stylesheet's real hexes, so a
+     nudged plate hue that makes its number unreadable fails. */
+  {
+    const hexOf = (sel) => {
+      const m = CSS.match(new RegExp(sel.replace(/[.]/g, '\\.') + '\\s*\\{[^}]*fill:\\s*(#[0-9A-Fa-f]{6})'));
+      return m ? m[1] : null;
+    };
+    const lum = (hex) => {
+      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+    const light = hexOf('.plate-draw .pd-label.is-light');
+    const dark = hexOf('.plate-draw .pd-label.is-dark');
+    ok(Boolean(light && dark), `(guard) the plate numbers have a light and a dark ink (${light}, ${dark})`);
+    const TONE = { red: 'light', blue: 'light', black: 'light', yellow: 'dark', green: 'dark', white: 'dark', chrome: 'dark' };
+    for (const [colour, tone] of Object.entries(TONE)) {
+      const plate = hexOf(`.plate-draw .pd-${colour}`);
+      const mine = contrast(plate, tone === 'light' ? light : dark);
+      const other = contrast(plate, tone === 'light' ? dark : light);
+      ok(Boolean(plate) && mine >= other && mine >= 4,
+         `the number on a ${colour} plate uses the higher-contrast ink (${tone} ${mine.toFixed(2)} vs ${other.toFixed(2)})`);
+    }
+  }
+
+  /* 🆕 2026-09-27 the weight and reps numbers sit level (Tim: "make sure the
+     two numbers on reps and weight align with each other"). jsdom has no
+     layout, so the MEASUREMENT is a browser's (scratch shots, top offsets
+     equal to 0.1px); what is pinned here is the mechanism: each stepper takes
+     four shared rows from the pair, the caption in row 2 and the number in 3. */
+  ok(/\.steppers > \.stepper\s*\{[^}]*grid-template-rows:\s*subgrid[^}]*\}/.test(CSS)
+     && /\.steppers > \.stepper\s*\{[^}]*grid-row:\s*span 4/.test(CSS),
+     '🆕 each stepper borrows the pair\'s rows (subgrid, four rows), so the tallest caption sets both');
+  ok(/\.steppers > \.stepper > \.step-est\s*\{[^}]*grid-row:\s*2/.test(CSS)
+     && /\.steppers > \.stepper > \.stepper-controls\s*\{[^}]*grid-row:\s*3/.test(CSS),
+     'and the caption always lands in row 2 and the number in row 3 — present, empty or missing');
 }
 
 /* ================================================================== *

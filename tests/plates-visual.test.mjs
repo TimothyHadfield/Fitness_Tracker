@@ -142,6 +142,81 @@ for (const [lb, maxWidth, why] of [[900, 160, '900 lb deadlift (12 plates a side
      'a crowded sleeve draws its 45s thinner than an uncrowded one — the width gives, not the line');
 }
 
+/* ---- 🆕 2026-09-27 every plate carries its number, and the bar has an END ----
+ * Tim: *"the plate visual … is colored but extreamly unclear. Could you
+ * instead make it so that it takes up some more space and each plate actually
+ * has the label on it (45, 35, 25, 10, 5, etc)? Also make the design more
+ * clear its the end of a plate."* */
+{
+  const labelsOf = (d) => d.parts.filter((p) => p.part === 'label');
+  const overlap = (a, b) => a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 && a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9;
+  const inside = (a, b) => a.x >= b.x - 1e-9 && a.y >= b.y - 1e-9 && a.x + a.w <= b.x + b.w + 1e-9 && a.y + a.h <= b.y + b.h + 1e-9;
+  const CASES = [
+    [135, LB, '135 lb'], [225, LB, '225 lb'], [315, LB, '315 lb'], [405, LB, '405 lb'],
+    [495, LB, '495 lb'], [600, LB, '600 lb (45 x6, 5, 2.5)'], [280, LB, '280 lb (45, 45, 25, 2.5)'],
+    [270, LB, '270 lb (45, 45, 10, 10, 2.5)'], [255, LB, '255 lb (45, 45, 10, 5)'],
+    [900, LB, '900 lb (12 plates a side)'],
+    [270, { ...LB, bar: false }, 'a 270 lb sled'], [135, { ...LB, bar: false, points: 1 }, 'a 135 lb T-bar'],
+    [KG_TO_LB(85), KG, '85 kg (25, 5, 2.5)'], [KG_TO_LB(177.5), KG, '177.5 kg (25, 25, 25, 2.5, 1.25)'],
+    [KG_TO_LB(20 + 2 * 78.75), KG, '177.5 kg again'], [KG_TO_LB(20 + 2 * (20 + 15 + 10)), KG, '110 kg (20, 15, 10)'],
+  ];
+  for (const [lb, opts, why] of CASES) {
+    const load = plateLoad(lb, opts);
+    const d = plateDrawing(load);
+    const ps = platesOf(d);
+    const ls = labelsOf(d);
+    ok(d.height >= 40, `${why}: the drawing takes more room than the old 22px line (${d.height}px)`);
+    ok(ls.length === ps.length && ls.every((l, i) => l.plate === ps[i].plate && Number(l.text) === ps[i].plate),
+       `${why}: every plate has its own number, in order (${ls.map((l) => l.text)} for ${ps.map((p) => p.plate)})`);
+    ok(ls.every((l, i) => (l.place === 'across' || l.place === 'along') ? inside(l, ps[i]) : !overlap(l, ps[i])),
+       `${why}: a number is either written on its plate (inside it) or beside it (clear of it) (${ls.map((l) => l.place)})`);
+    ok(ls.every((a, i) => ls.every((b, j) => i === j || !overlap(a, b))),
+       `${why}: no two numbers overlap`);
+    ok(ls.every((l, i) => (l.place === 'above' || l.place === 'below')
+         ? l.tone === 'ink'
+         : l.tone === ({ red: 'light', blue: 'light', black: 'light' }[ps[i].colour] || 'dark')),
+       `${why}: white on red/blue/black, dark on yellow/green/white/chrome, the page's ink beside a plate`);
+  }
+  // The common lifts get their numbers written straight across the plate.
+  for (const [lb, why] of [[135, '135'], [225, '225'], [315, '315'], [405, '405'], [255, '255 (…10, 5)']]) {
+    const ls = labelsOf(plateDrawing(plateLoad(lb, LB)));
+    ok(ls.every((l) => l.place === 'across'), `${why} lb: every number reads across its plate (${ls.map((l) => l.place)})`);
+  }
+  {
+    const ls = labelsOf(plateDrawing(plateLoad(280, LB)));
+    ok(ls[3].place === 'above' || ls[3].place === 'below',
+       `a 2.5 is too thin to write on, so its number sits beside it (${ls[3].place})`);
+  }
+  {
+    // Two thin plates side by side (kg 2.5 then 1.25) alternate above / below.
+    const ls = labelsOf(plateDrawing(plateLoad(KG_TO_LB(177.5), KG)));
+    ok(ls[3].place !== ls[4].place && ['above', 'below'].includes(ls[3].place) && ['above', 'below'].includes(ls[4].place),
+       `the kg 2.5 and 1.25 write their numbers on opposite sides (${ls[3].place}, ${ls[4].place})`);
+  }
+  // The end of the bar: clip after the last plate, bare sleeve past it, a cap.
+  for (const [lb, why] of [[135, '135 lb'], [405, '405 lb'], [600, '600 lb']]) {
+    const d = plateDrawing(plateLoad(lb, LB));
+    const ps = platesOf(d);
+    const last = ps[ps.length - 1];
+    const clip = d.parts.find((p) => p.part === 'clip');
+    const cap = d.parts.find((p) => p.part === 'cap');
+    const sleeve = d.parts.find((p) => p.part === 'sleeve');
+    ok(clip && clip.x >= last.x + last.w && cap && sleeve.x + sleeve.w > clip.x + clip.w + 4
+       && cap.x >= sleeve.x + sleeve.w - 1e-9 && Math.abs(cap.x + cap.w - d.width) < 1e-6,
+       `${why}: a clip holds the plates, the bare sleeve runs on past it, and a cap ends the bar`);
+  }
+  {
+    const sled = plateDrawing(plateLoad(270, { ...LB, bar: false }));
+    ok(!sled.parts.some((p) => p.part === 'clip' || p.part === 'cap'),
+       'a machine\'s horn has no barbell clip or cap — the peg drawing is unchanged in kind');
+  }
+  // 405–600 lb fits a phone's slot (~166px at 375–393 wide) with nothing squeezed off.
+  for (const lb of [405, 495, 600]) {
+    const d = plateDrawing(plateLoad(lb, LB));
+    ok(d.width <= 166, `${lb} lb fits the 166px slot (${d.width}px)`);
+  }
+}
+
 /* ---- and the sentence is untouched (it is the drawing's label now) ---- */
 ok(plateLabel(plateLoad(275, LB)) === 'bar + 45, 45, 25 each side', 'plateLabel still reads "bar + 45, 45, 25 each side"');
 

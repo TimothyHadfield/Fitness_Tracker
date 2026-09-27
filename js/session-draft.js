@@ -175,3 +175,42 @@ export function draftRecordedSets(d) {
   if (!d) return 0;
   return walk(d.entries) + (d.others || []).reduce((n, o) => n + walk(o.entries), 0);
 }
+
+/**
+ * 🆕 WHOSE TURN IS IT NEXT — 2026-09-27. Tim: *"if you're in a group workout
+ * and you click finish for one set for one person, have it automatically go to
+ * the next person's details on their next set, makeing the alternating between
+ * the two people really easy."*
+ *
+ * `people` is everybody in PILL ORDER (You, then guests as added), each
+ * `{ entries }`. The person at `from` just finished a set of `exerciseId`,
+ * which sits at `entryIndex` in their own list. Returns the next person after
+ * them, wrapping round, who still has an unfinished working set of that
+ * exercise — `{ pos, entryIndex, set }` — or null when nobody else does (the
+ * caller then keeps the solo behaviour).
+ *
+ * ⚠️ THEIR ENTRY IS THE ONE AT THE SAME POSITION when it is the same exercise
+ * (a synced list — and in a superset that is the same member), otherwise
+ * their first entry of that exercise with a set left, because a "Just for"
+ * edit can leave the lists different shapes. Warm-ups live in `entry.warmups`,
+ * never in `sets`, so they can never be "the next set". `locked` is a
+ * pre-2026-09-23 draft's word for `done`.
+ */
+export function nextPersonTurn(people, from, exerciseId, entryIndex) {
+  const n = (people || []).length;
+  const openSet = (e) => (e && e.exerciseId === exerciseId && Array.isArray(e.sets)
+    ? e.sets.findIndex((s) => !(s && (s.done || s.locked)))
+    : -1);
+  for (let k = 1; k < n; k++) {
+    const pos = (from + k) % n;
+    const entries = (people[pos] && people[pos].entries) || [];
+    // The same entry only, when it is this exercise — never a second copy of
+    // the lift further down the workout.
+    const same = entries[entryIndex] && entries[entryIndex].exerciseId === exerciseId;
+    for (const i of same ? [entryIndex] : entries.keys()) {
+      const set = openSet(entries[i]);
+      if (set !== -1) return { pos, entryIndex: i, set };
+    }
+  }
+  return null;
+}

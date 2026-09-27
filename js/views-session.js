@@ -13,7 +13,7 @@ import {
 } from './ui.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
-  hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds,
+  hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds, nextPersonTurn,
 } from './session-draft.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
@@ -1204,7 +1204,7 @@ export async function SessionView(workoutId) {
     return buildEntry(newEx, shape, sessions, null, name);
   }
 
-  function switchTo(name) {
+  function switchTo(name, renderOpts) {
     if (name === state.forName) return;
     const at = state.others.findIndex((o) => o.name === name);
     if (at < 0) return;
@@ -1227,7 +1227,44 @@ export async function SessionView(workoutId) {
     // answer is different for the owner, a friend and a name on this phone.
     state.historySource = incoming.historySource || null;
     saveDraft(state);
-    renderAll();
+    renderAll(renderOpts);
+  }
+
+  /* 🆕 FINISHED HANDS THE TURN ON — 2026-09-27. Tim: *"if you're in a group
+   * workout and you click finish for one set for one person, have it
+   * automatically go to the next person's details on their next set, makeing
+   * the alternating between the two people really easy."*
+   *
+   * The next person in pill order (wrapping) who still has a set of THIS
+   * exercise left — `nextPersonTurn` — with that set open, through the same
+   * `switchTo` a pill tap uses. Their walk is pointed at the step holding it
+   * (in a superset, the same member's round), and `keepScroll` brings the
+   * opened set on screen. Returns false when nobody else has a set left, and
+   * the caller does what a solo workout does. */
+  let openOnRender = null;
+  function passTurn(entryIndex, exerciseId) {
+    if (!state.guestNames.length) return false;
+    const names = [null, ...state.guestNames];
+    const people = names.map((n) => (n === state.forName
+      ? { entries: state.entries }
+      : state.others.find((o) => o.name === n) || { entries: [] }));
+    const turn = nextPersonTurn(people, names.indexOf(state.forName), exerciseId, entryIndex);
+    if (!turn) return false;
+    const theirs = people[turn.pos];
+    const e = theirs.entries[turn.entryIndex];
+    e.active = turn.set;
+    e.activeDrop = null;
+    e.activeWarm = null;
+    e.editing = true;
+    const walk = stepsFor(theirs.entries.map((x) => ({ sets: x.sets.length, group: x.group })));
+    let at = walk.findIndex((st) => st.entryIndex === turn.entryIndex && st.round === turn.set);
+    if (at < 0) at = walk.findIndex((st) => st.entryIndex === turn.entryIndex);
+    if (at >= 0) theirs.index = at;
+    // `select()` fills an empty set from the one above it on open; that
+    // closure belongs to the pane being torn down, so the next paint does it.
+    openOnRender = e;
+    switchTo(names[turn.pos], { keepScroll: true });
+    return true;
   }
 
   /**
@@ -1912,6 +1949,12 @@ export async function SessionView(workoutId) {
     const nested = isNested(entry.setType);
 
     if (entry.active >= entry.sets.length) entry.active = entry.sets.length - 1;
+    // A set opened by Finished handing the turn over (`passTurn`) is filled on
+    // open exactly as a tapped one is — before `activeSet`, which it replaces.
+    if (openOnRender) {
+      if (openOnRender === entry) { fillOnOpen(entry.active); saveDraft(state); }
+      openOnRender = null;
+    }
     const activeSet = entry.sets[entry.active] || entry.sets[0];
     // What the steppers are pointed at: the set itself, or one of its drops.
     const minis = minisOf(activeSet);
@@ -2266,15 +2309,22 @@ export async function SessionView(workoutId) {
                 select(i, null);
               }
             : () => {
+                // A number still in a box is committed first: iOS keeps focus
+                // on the input when a button is tapped, so its blur (which is
+                // what saves it) would otherwise never run before the handover.
+                const typing = document.activeElement;
+                if (typing && typing.tagName === 'INPUT' && pane.contains(typing)) typing.blur();
                 // The button is hidden on a set with nothing in it, so this
                 // cannot be a tap that silently does nothing.
                 if (!setIsRecorded(s, entry.fields)) return;
                 s.done = true;
                 delete s.locked;
                 // Finishing the OPEN set moves on to the next unfinished one
-                // of this exercise, if any (see the block above `goToStep`).
+                // of this exercise, if any (see the block above `goToStep`) —
+                // in a group workout, the NEXT PERSON's (`passTurn`, 2026-09-27).
                 if (entry.active === i) {
                   entry.activeDrop = null;
+                  if (passTurn(step.entryIndex, entry.exerciseId)) return;
                   const next = entry.sets.findIndex((x, j) => j > i && !isDone(x));
                   if (next !== -1) { select(next, null); return; }
                 }
@@ -2410,8 +2460,9 @@ export async function SessionView(workoutId) {
        * where the number is acted on, with a bar already loaded.
        *
        * The rating is still the answer for a lift never performed — that is the
-       * whole point of the conversion — and the caption says which it is, so
-       * "from your 215 x 3" and "from your other lifts" are never confused. */
+       * whole point of the conversion — and the caption says which it is: one
+       * resting on your own set names it ("from your 215 x 3"), one resting on
+       * the rating names nothing (2026-09-27, Tim: "Too wordy"). */
       const rows = historyReady.get(personKey(state.forName));
       const own = rows ? ownBestSet(ex, rows, state.date) : null;
       // Only the owner's gender is known; a guest's ratings stay sex-unknown.
@@ -2473,10 +2524,13 @@ export async function SessionView(workoutId) {
           : el('span', {}, el('b', { text: `${Math.min(100, Math.round(pct))}%` }),
               ' of your estimated max',
               // Rule 5's anchor, in four words: which set this rests on.
+              // 🔄 2026-09-27 only when it IS a set of yours. Tim: *"remove the
+              // "(from your other lifts)" below the weight detail. Too wordy.
+              // Keep it simple."* A lift never done now just stops at "max".
               fromOwn && own.reps
                 ? ` (from your ${units.fmtWeight(own.perSide ? own.perSideWeight : own.weight)}`
                   + `${own.perSide ? '/side' : ''} × ${own.reps})`
-                : (fromOwn ? '' : ' (from your other lifts)')));
+                : ''));
       }
       if (capSlots.reps) {
         // `{ exercise }` so a bench or leg press reads its own column of the
@@ -3039,14 +3093,14 @@ export async function SessionView(workoutId) {
     else if (er.top < pr.top) pane.scrollTop -= pr.top - er.top + 8;
   }
 
-  function renderAll() {
+  function renderAll(paneOpts) {
     // Clamp FIRST. Deleting a set can shrink the walk, and renderProgress ran
     // before renderPane did the clamping — so the bar drew every dot as done
     // with no current step until something else forced a redraw.
     currentStep();
     renderPeople();
     renderProgress();
-    renderPane();
+    renderPane(paneOpts);
     renderFooter();
     // ⚠️ The exercises sheet is a view of `state.entries` like any other, so it
     // repaints with everything else rather than at each of the four call sites

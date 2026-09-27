@@ -2132,8 +2132,18 @@ ok(!data.querySelector('.rep-target'),
        `🆕 it DRAWS one sleeve: two blue 45s and a green 25, collar outward (${plates.map((r) => r.getAttribute('class'))})`);
     ok(h.querySelector('.pd-shaft') && h.querySelector('.pd-collar') && !h.querySelector('.pd-frame'),
        'a barbell drawing has the bar stub and collar, not a machine post');
-    ok(h.textContent === '' && h.getAttribute('role') === 'img' && h.getAttribute('title') === 'bar + 45, 45, 25 each side',
+    ok(!/each side|bar \+/.test(h.textContent) && h.getAttribute('role') === 'img' && h.getAttribute('title') === 'bar + 45, 45, 25 each side',
        'the sentence is no longer printed — it is the picture\'s label and hover title, so a screen reader still hears the plates');
+    /* 🆕 2026-09-27, Tim: "each plate actually has the label on it (45, 35,
+     * 25, 10, 5, etc)". One number per plate, in the plates' order. */
+    const nums = [...h.querySelectorAll('svg.plate-draw text.pd-label')].map((t) => t.textContent);
+    ok(nums.join(',') === '45,45,25',
+       `🆕 every plate is numbered on the drawing, collar outward (${nums.join(',')})`);
+    ok([...h.querySelectorAll('text.pd-label')].every((t) => /\bis-light\b/.test(t.getAttribute('class'))
+         || /\bis-dark\b/.test(t.getAttribute('class'))),
+       'and each number is written ON its plate, light or dark ink by the plate\'s colour');
+    ok(h.querySelector('.pd-clip') && h.querySelector('.pd-cap'),
+       '🆕 and the bar END is drawn — a clip after the plates and a cap on the sleeve');
     ok(h.querySelector('svg').getAttribute('aria-hidden') === 'true',
        'and the svg itself is hidden, so the label is read once rather than as a pile of rectangles');
   }
@@ -6459,8 +6469,11 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   rows()[0].querySelector('.set-done-btn').click();
   await settle();
-  const rae = (draft().others || []).find((o) => o.name === 'Rae');
-  ok(draft().forName === null && draft().entries[0].sets[0].done === true,
+  // Since 2026-09-27 Finished hands the turn to Rae (tests/group-advance.test.mjs),
+  // so the owner is the parked one now and Rae is on screen.
+  const owner = (draft().others || []).find((o) => o.name == null);
+  const rae = draft().forName === 'Rae' ? draft() : (draft().others || []).find((o) => o.name === 'Rae');
+  ok(Boolean(owner) && owner.entries[0].sets[0].done === true,
      'the owner\'s set 1 is finished when the owner taps Finished');
   ok(Boolean(rae) && !rae.entries[0].sets[0].done,
      '🚨 and Rae\'s is NOT — a finish is per person\'s own sets and is never broadcast');
@@ -7429,6 +7442,37 @@ ok(!data.querySelector('.rep-target'),
      'while the OWNER, on the same bar, still gets one — the guest\'s blank is a decision, not a '
      + 'broken caption');
 
+  localStorage.removeItem(DRAFT);
+  await store.clearAll();
+}
+
+/* 🆕 2026-09-27 · A LIFT NEVER DONE: THE CAPTION STOPS AT "estimated max".
+ * Tim: *"could you remove the "(from your other lifts)" below the weight
+ * detail. Too wordy. Keep it simple."* The owner has rowed with a barbell but
+ * never done a T-bar row, so the T-bar's caption rests on the Back rating —
+ * the case that used to add "(from your other lifts)". */
+{
+  const { store, clearReadCache } = await import(BASE + 'store.js');
+  const { SessionView } = await import(BASE + 'views-session.js');
+  const DRAFT = 'ftrack:v1:draftSession';
+  const row = byName('Barbell Row');
+  const tbar = byName('T-Bar Row');
+  await store.clearAll();
+  await store.importAll({ sessions: ['2026-08-10', '2026-08-17'].map((date, i) => ({
+    id: `oth-${date}`, date, workoutName: 'Pull',
+    entries: [{ exerciseId: row.id, exerciseName: row.name, sets: [{ weight: 135 + 5 * i, reps: 8 }] }],
+  })) });
+  clearReadCache('seeded rows directly through importAll');
+  const w = await store.saveWorkout({ name: 'T-bar day', exercises: [{ exerciseId: tbar.id, sets: 1, notes: '' }] });
+  localStorage.removeItem(DRAFT);
+  const s = await mount(SessionView(w.id));
+  const input = s.querySelector('.set-open .step-value');
+  input.value = '90';
+  input.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  const capOf = () => ((s.querySelector('.set-open .step-est') || {}).textContent || '').replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < 120 && !capOf(); i++) await settle();
+  ok(/^\d+% of your estimated max$/.test(capOf()),
+     `🆕 a lift never done reads just "N% of your estimated max" — no "(from your other lifts)" (${capOf()})`);
   localStorage.removeItem(DRAFT);
   await store.clearAll();
 }

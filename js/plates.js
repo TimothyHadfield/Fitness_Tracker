@@ -239,26 +239,52 @@ export const PLATE_COLOURS = Object.freeze({
   lbs: Object.freeze({ 55: 'red', 45: 'blue', 35: 'yellow', 25: 'green', 10: 'white', 5: 'black', 2.5: 'chrome' }),
 });
 
-/* Real calibrated plates, in millimetres: diameter and thickness, by colour.
- * A 25 and a 20 are both full 450 mm discs; below that each is smaller. The
- * thicknesses are rounded, and are only ever compared with each other. */
+/* Real calibrated plates: diameter in millimetres, by colour. A 25 and a 20
+ * are both full 450 mm discs; below that each is smaller, and the drawing's
+ * plate HEIGHTS follow these exactly.
+ *
+ * 🔄 2026-09-27 the THICKNESS is no longer real. Tim: *"the plate visual …
+ * is colored but extreamly unclear. Could you instead make it so that it
+ * takes up some more space and each plate actually has the label on it."* A
+ * real 45 is 23 mm and a 2.5 is 9 mm; drawn to scale the 45 was 9px wide and
+ * no number fits on that. `px` is the drawn thickness when there is room,
+ * chosen so the weight's number fits ACROSS the plate on everything from a 5
+ * up — heavier still means thicker, which is the ordering that matters. The
+ * two thinnest (a 2.5 lb / 1.25 kg chrome and a 2.5 kg black) carry their
+ * number just above or below the plate instead, where their small diameter
+ * leaves room. */
 const PLATE_SIZE = Object.freeze({
-  red:    { dia: 450, mm: 27 },
-  blue:   { dia: 450, mm: 23 },
-  yellow: { dia: 400, mm: 20 },
-  green:  { dia: 325, mm: 17 },
-  white:  { dia: 230, mm: 14 },
-  black:  { dia: 190, mm: 11 },
-  chrome: { dia: 160, mm: 9 },
+  red:    { dia: 450, px: 20 },
+  blue:   { dia: 450, px: 19 },
+  yellow: { dia: 400, px: 18 },
+  green:  { dia: 325, px: 17 },
+  white:  { dia: 230, px: 16 },
+  black:  { dia: 190, px: 12 },
+  chrome: { dia: 160, px: 9 },
 });
 
-// The picture, in CSS pixels. 22 tall is the old text line plus a few pixels —
-// enough for a 1.25 to be told from a 2.5 at arm's length.
-const DRAW_H = 22;
-const PX_PER_MM = 0.4;   // a 45 lb plate ≈ 9px thick when there is room
-const GAP = 1;           // between plates, so two blues read as two
-const MIN_SLEEVE = 30;   // an empty sleeve still looks like one
+/* Which ink the number on each plate takes: dark on the pale plates, white on
+ * the deep ones — whichever has the higher contrast against that hue. */
+const PLATE_TONE = Object.freeze({
+  red: 'light', blue: 'light', black: 'light',
+  yellow: 'dark', green: 'dark', white: 'dark', chrome: 'dark',
+});
+
+// The picture, in CSS pixels. 48 tall (was 22) so a number fits on a plate
+// and a 1.25 still reads as a small disc beside a 25.
+const DRAW_H = 48;
+const GAP = 1.5;         // between plates, so two blues read as two
+const MIN_SLEEVE = 34;   // an empty sleeve still looks like one
 const round = (n) => Math.round(n * 100) / 100;
+
+/* ⚠️ THE LABEL METRICS ARE THE STYLESHEET'S, COPIED. `.pd-label` is
+ * var(--fs-sm) = 11.5px bold with tabular figures; a digit there is ≈ 0.6 em
+ * and the figures stand ≈ 0.72 em tall. Only used to decide WHERE a number
+ * goes (across the plate, along it, or beside it) — a pixel off either way
+ * moves a borderline plate from one placement to the next, nothing worse. */
+const LABEL_PX = 11.5;
+const labelWidth = (t) => round([...t].reduce((s, ch) => s + (ch === '.' ? 0.3 : 0.6) * LABEL_PX, 0));
+const LABEL_TALL = round(0.72 * LABEL_PX);
 
 /**
  * The picture of ONE loading point, or null exactly when `plateLabel()` is
@@ -271,54 +297,140 @@ const round = (n) => Math.round(n * 100) / 100;
  *
  * Returns { width, height, kind: 'bar'|'peg', parts }, every part a rectangle
  * { part, x, y, w, h } in px, drawn in order:
- *   bar: shaft (a stub of the bar) · collar · sleeve · plates
- *   peg: frame (the machine / landmine post) · sleeve (its horn) · plates
+ *   bar: shaft (a stub of the bar) · sleeve · collar (the sleeve's inner
+ *        flange) · plates · clip (the spring collar holding them) · cap (the
+ *        bar's end)
+ *   peg: sleeve (the horn) · frame (the machine / landmine post) · plates
+ *   then one `label` per plate, its box being where its number is written.
  * A plate part also carries { plate, colour }. Plates go from the collar
  * outward, biggest first, as `each` already is — that is how they are loaded.
+ * A label carries { plate, text, tone: 'light'|'dark'|'ink', place:
+ * 'across'|'along'|'above'|'below' } — `along` is written up the plate, for a
+ * sleeve so crowded the number no longer fits across it; `ink` is the page's
+ * own text colour, for a number written beside the plate rather than on it.
+ *
+ * ⚠️ The bar end is drawn on purpose: the sleeve runs on past the last plate
+ * and the clip, and stops at a cap, so the picture reads as the END of a bar
+ * with plates on it rather than a row of coloured blocks.
  *
  * ⚠️ No `bar` weight means no bar drawn: a sled's horn and a landmine's end
  * look alike here on purpose, and the sentence (the element's label) still
  * says which is "each side" and which is "on one end".
  */
-export function plateDrawing(load, { maxWidth = 160 } = {}) {
+export function plateDrawing(load, { maxWidth = 166 } = {}) {
   if (plateLabel(load) === null) return null;
   const colours = PLATE_COLOURS[load.unit] || PLATE_COLOURS.lbs;
   const cy = DRAW_H / 2;
-  const parts = [];
   const hasBar = load.bar > 0;
-  let x = 0;
+  const under = [];      // drawn before the plates
+  const over = [];       // drawn after them
+  let x;
 
   if (hasBar) {
-    parts.push({ part: 'shaft', x: 0, y: round(cy - 1.25), w: 10, h: 2.5 });
-    parts.push({ part: 'collar', x: 10, y: round(cy - 4.5), w: 3, h: 9 });
-    x = 13;
+    under.push({ part: 'shaft', x: 0, y: round(cy - 2.5), w: 9, h: 5 });
+    x = 9;
   } else {
-    parts.push({ part: 'frame', x: 0, y: 2, w: 3, h: DRAW_H - 4 });
-    x = 3;
+    x = 4;
   }
+  const inner = x;                     // where the sleeve starts
+  if (hasBar) x += 6;                  // the collar flange
+  const firstPlateX = x + (hasBar ? 1 : 1.5);
 
   const plates = load.each.map((plate) => {
     const colour = colours[plate] || 'chrome';
     const size = PLATE_SIZE[colour];
-    return { plate, colour, h: round(DRAW_H * size.dia / 450), mm: size.mm };
+    return { plate, colour, h: round(DRAW_H * size.dia / 450), px: size.px };
   });
-  // Fit: the plates share whatever the fixed parts and the sleeve's lip leave.
-  const LIP = 4;
-  const room = maxWidth - x - GAP - LIP;
-  const natural = plates.reduce((s, p) => s + p.mm * PX_PER_MM, 0) + GAP * Math.max(0, plates.length - 1);
+  // What sits past the plates: on a bar a gap, the clip, bare sleeve and the
+  // cap; on a machine horn just its tip.
+  const CLIP_W = 4, TAIL = 8, CAP_W = 3, LIP = 6;
+  const after = hasBar ? (plates.length ? 1.5 + CLIP_W : 0) + TAIL + CAP_W : LIP;
+  const room = maxWidth - firstPlateX - after;
+  const natural = plates.reduce((s, p) => s + p.px, 0) + GAP * Math.max(0, plates.length - 1);
   const squeeze = natural > room ? room / natural : 1;
   const gap = GAP * squeeze;
 
-  let px = x + GAP;
+  const drawn = [];
+  let px = firstPlateX;
   for (const p of plates) {
-    const w = round(Math.max(1, p.mm * PX_PER_MM * squeeze));
-    parts.push({ part: 'plate', plate: p.plate, colour: p.colour, x: round(px), y: round(cy - p.h / 2), w, h: p.h });
+    const w = round(Math.max(1, p.px * squeeze));
+    drawn.push({ part: 'plate', plate: p.plate, colour: p.colour, x: round(px), y: round(cy - p.h / 2), w, h: p.h });
     px += w + gap;
   }
-  const stack = plates.length ? px - gap - x : 0;
-  const sleeveLen = round(Math.min(maxWidth - x, Math.max(MIN_SLEEVE, stack + LIP)));
-  // Drawn under the plates, so it goes in before them.
-  parts.splice(hasBar ? 2 : 1, 0, { part: 'sleeve', x, y: round(cy - 2.25), w: sleeveLen, h: 4.5 });
+  const stackEnd = plates.length ? px - gap : firstPlateX;
 
-  return { width: round(x + sleeveLen), height: DRAW_H, kind: hasBar ? 'bar' : 'peg', parts };
+  let sleeveEnd;
+  if (hasBar) {
+    let tail = stackEnd;
+    if (plates.length) {
+      over.push({ part: 'clip', x: round(stackEnd + 1.5), y: round(cy - 7), w: CLIP_W, h: 14 });
+      tail = stackEnd + 1.5 + CLIP_W;
+    }
+    sleeveEnd = round(Math.max(inner + MIN_SLEEVE, tail + TAIL));
+    over.push({ part: 'cap', x: sleeveEnd, y: round(cy - 5.5), w: CAP_W, h: 11 });
+  } else {
+    sleeveEnd = round(Math.max(inner + MIN_SLEEVE, stackEnd + LIP));
+  }
+  const width = round(sleeveEnd + (hasBar ? CAP_W : 0));
+
+  under.push({ part: 'sleeve', x: inner, y: round(cy - 4.5), w: round(sleeveEnd - inner), h: 9 });
+  if (hasBar) under.push({ part: 'collar', x: inner, y: round(cy - 9), w: 6, h: 18 });
+  else under.push({ part: 'frame', x: 0, y: 2, w: 4, h: DRAW_H - 4 });
+
+  return { width, height: DRAW_H, kind: hasBar ? 'bar' : 'peg', parts: [...under, ...drawn, ...over, ...plateLabels(drawn, width)] };
+}
+
+/* Every plate gets its number (Tim: "each plate actually has the label on it
+ * (45, 35, 25, 10, 5, etc)"). In order of preference:
+ *   across  — written normally on the plate, when it is wide enough;
+ *   along   — written up the plate, when a crowded sleeve has thinned it but
+ *             it is still tall and a figure's height wide;
+ *   above / below — beside a plate too thin for either. Only small plates end
+ *             up here, and a small plate is a short one, so the space above and
+ *             below it is free. Consecutive ones alternate, so two thin plates
+ *             side by side never write over each other.
+ * A plate thinner than even that (a sleeve past ~900 lb in a phone's width) is
+ * the one case left without a number, and the sentence still has it. */
+function plateLabels(drawn, width) {
+  const labels = [];
+  let nextAbove = true;
+  // Where a number written beside plate i may start, on one side, so that it
+  // clears the bigger plate before it and any taller one after it; null if the
+  // gap is too narrow. Centred on its plate when that already clears.
+  const besideX = (i, tw, top, bottom) => {
+    const p = drawn[i];
+    const clashes = (q) => q && q.y < bottom && q.y + q.h > top;
+    const lo = clashes(drawn[i - 1]) ? drawn[i - 1].x + drawn[i - 1].w + 0.5 : 0;
+    const hi = clashes(drawn[i + 1]) ? drawn[i + 1].x - 0.5 : width;
+    if (hi - lo < tw) return null;
+    return Math.min(Math.max(lo, p.x + p.w / 2 - tw / 2), hi - tw);
+  };
+  for (let i = 0; i < drawn.length; i++) {
+    const p = drawn[i];
+    const text = fmtPlate(p.plate);
+    const tw = labelWidth(text);
+    const box = (place, x, y, w, h, tone) => labels.push({ part: 'label', plate: p.plate, text, place, tone,
+      x: round(x), y: round(y), w: round(w), h: round(h) });
+    const mid = p.x + p.w / 2;
+    if (p.w >= tw + 2 && p.h >= LABEL_TALL + 4) {
+      box('across', mid - tw / 2, DRAW_H / 2 - LABEL_TALL / 2, tw, LABEL_TALL, PLATE_TONE[p.colour]);
+      continue;
+    }
+    if (p.w >= LABEL_TALL + 1 && p.h >= tw + 6) {
+      box('along', mid - LABEL_TALL / 2, DRAW_H / 2 - tw / 2, LABEL_TALL, tw, PLATE_TONE[p.colour]);
+      continue;
+    }
+    const aboveY = p.y - 2 - LABEL_TALL;
+    const belowY = p.y + p.h + 2;
+    const sides = [
+      { place: 'above', y: aboveY, x: aboveY >= 0 ? besideX(i, tw, aboveY, aboveY + LABEL_TALL) : null },
+      { place: 'below', y: belowY, x: belowY + LABEL_TALL <= DRAW_H ? besideX(i, tw, belowY, belowY + LABEL_TALL) : null },
+    ].filter((s) => s.x !== null);
+    if (!sides.length) continue;
+    // Alternate, so two thin plates side by side write on opposite sides.
+    const side = sides.find((s) => (s.place === 'above') === nextAbove) || sides[0];
+    box(side.place, side.x, side.y, tw, LABEL_TALL, 'ink');
+    nextAbove = side.place !== 'above';
+  }
+  return labels;
 }

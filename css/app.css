@@ -1272,6 +1272,29 @@ select.input {
 
 .stepper { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
+/* 🆕 2026-09-27 THE BIG NUMBERS SIT ON ONE LINE. Tim: "make sure the two
+   numbers on reps and weight align with each other. Right now they're a
+   little off of each other depending on the detials above them." A caption
+   above one field (a % target that wraps to two lines, a reps guess, none)
+   pushed only that field's number down. Each stepper now borrows four shared
+   rows from the pair — name · caption · number · plates — so the tallest
+   caption sets the caption row for BOTH and the number rows start level.
+   The margins reproduce the old 5px flex gaps exactly (an empty caption slot
+   still costs its 5px, as it did), so nothing else moves.
+   Browsers without subgrid keep the flex column above. */
+@supports (grid-template-rows: subgrid) {
+  .steppers > .stepper {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+  }
+  .steppers > .stepper > .stepper-label    { grid-row: 1; align-self: end; margin-bottom: 5px; }
+  .steppers > .stepper > .step-est         { grid-row: 2; align-self: end; margin-bottom: 5px; }
+  .steppers > .stepper > .stepper-controls { grid-row: 3; }
+  .steppers > .stepper > .step-unit        { grid-row: 4; align-self: start; margin-top: 5px; }
+}
+
 .stepper-label {
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
@@ -1340,17 +1363,38 @@ select.input {
    the nearest kilo plate) — fixed hues, not theme tokens, because a blue 20 is
    blue in every gym. A thin --ink-faint outline is what lets the black plate
    read on the dark ground and the white one on the light.
+   🔄 2026-09-27, Tim: "extreamly unclear … make it so that it takes up some
+   more space and each plate actually has the label on it (45, 35, 25, 10, 5,
+   etc)? Also make the design more clear its the end of a plate." 48px tall
+   (was 22), every plate carries its number, corners rounded so each plate is
+   its own disc, and the bar END is drawn: clip, bare sleeve, cap.
+   Numbers: white on red / blue / black, near-black on yellow / green / white /
+   chrome — whichever contrasts more with that hue; a number written beside a
+   thin plate (`is-ink`) takes the page's --ink. ⚠️ plates.js copies this
+   font size (11.5px = --fs-sm) to decide where each number fits.
    🛑 NO MOTION: rebuilt on every tap of ± (Rule 7). */
 .step-unit.has-plates {
-  min-height: 22px;
+  min-height: 48px;
   display: flex; align-items: center; justify-content: center;
 }
-.plate-draw { display: block; max-width: 100%; overflow: visible; }
+/* The steps hint in a plate slot (a weight no plates make) sits at the top,
+   level with the reps field's own "1 rep steps" beside it. */
+.step-unit.has-plates:not(.is-plates) { align-items: flex-start; }
+.plate-draw { display: block; max-width: 100%; height: auto; overflow: visible; }
 .plate-draw .pd-shaft,
 .plate-draw .pd-sleeve { fill: var(--ink-faint); }
 .plate-draw .pd-collar,
+.plate-draw .pd-clip,
+.plate-draw .pd-cap,
 .plate-draw .pd-frame  { fill: var(--ink-soft); }
 .plate-draw .pd-plate  { stroke: var(--ink-faint); stroke-opacity: .55; stroke-width: .75; }
+.plate-draw .pd-label  {
+  font-size: var(--fs-sm); font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.plate-draw .pd-label.is-light { fill: #FFFFFF; }
+.plate-draw .pd-label.is-dark  { fill: #15171A; }
+.plate-draw .pd-label.is-ink   { fill: var(--ink); }
 .plate-draw .pd-red    { fill: #D9463B; }
 .plate-draw .pd-blue   { fill: #3673D6; }
 .plate-draw .pd-yellow { fill: #E9C23A; }
