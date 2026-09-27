@@ -263,8 +263,16 @@ can check._
   rule is judgement, not from a paper. Plate drawing in kg only checked in a stepper panel.
 - **2026-09-27 Tim chose "Every muscle"**: fallbacks blend beside direct work everywhere (6787ff2;
   the 2026-08-17 rule is reversed), then `sigmaFor()` fixed so a key-lift base is never trusted less
-  than a converted one (next commit; Tim's synthetic glutes 278.3). Still open: Smith hip thrust
-  probably ~0.90 not 1.00; own-map sentence in Compare still wrongly lists "age" (wording = his).
+  than a converted one (Tim's synthetic glutes 278.3).
+- **2026-09-27 later, live:** (a) Tim: *"I don't want it to be our job to fix anything"* → an assumed
+  map IS published now with `assumed` + a reader line (reverses 2026-09-06); legacy docs show saved
+  levels (b48c924). Autumn must open the new build once; building her map on the viewer's phone was
+  NOT done (two rankings could disagree) — offered. (b) Machines by mechanics
+  (`docs/machine-conversion-plan.md`, `js/machine-mechanics.js`): Tim chose split entries + a
+  "Leverage" picker, 2.5× default, Smith bar added in conversion, old hip thrust sets re-read as lever.
+  Names "Machine Hip Thrust (Plates at Hips)/(Weight Stack)", "Leverage", "Same as a bar" = his to
+  check. Picker surviving a reload NOT verified (demo saves nothing). Pendulum squat, reverse hyper,
+  Smith bench ratio still reasoned/left.
 - **No predicted number has ever been checked against a real attempt** (Open work 19 — Tim's). Don't
   describe any estimate as accurate.
 - **Review wave 2 (81fada0):** the checker's "N more" is only test-checked (demo has no checker

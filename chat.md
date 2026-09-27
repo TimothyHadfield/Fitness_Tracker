@@ -701,3 +701,12 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   393/1280 shots in session scratchpad (plates/, warmup/).
 - **Open:** see progress.md NOT verified 2026-09-26 (blend-everywhere offer, Smith hip thrust, own-map
   "age" sentence). Set 1 sits partly below the fold on a phone with 3 warm-ups showing.
+
+## 2026-09-27 · Every-muscle blend, friend maps never blank, machines by mechanics
+- **Asked/decided:** "Every muscle" (blend fallbacks everywhere, 6787ff2) + sigmaFor fix (bfdb881);
+  Tim corrected Claude's backwards explanation of the hip thrust ratio and refused one blanket machine
+  number → research plan (2fba1a8) → his answers: both, not sure (2.5×), add Smith bar, re-read old
+  sets → built. Autumn: *"fix the code on your end"* → assumed maps publish with a caveat (b48c924).
+- **Verified how:** full no-Chrome suite 7,756 PASS / 0 FAIL after the machine build; WebKit 393px
+  shots of the Leverage picker and the assumed-friend Compare line (scratch copies).
+- **Open:** see progress.md "2026-09-27 later".
