@@ -196,7 +196,7 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   pattern in bodyWeight/goals/systems, and two tabs/devices can race (needs a Firestore transaction).
 - **Group workouts are auto-added by the RECIPIENT's app** (`social.autoApplyHandoffs()`, run from
   app.js on start/sign-in/resume ≤1/min and before Home/Friends list offers); setting
-  `askBeforeHandoff` (off by default) keeps Add/No; non-friends' offers wait; saved id `s-<offer id>`.
+  `askBeforeGroupWorkouts` (off by default) keeps Add/No; non-friends' offers wait; saved id `s-<offer id>`.
 - **Landmine press / T-bar row / landmine row / landmine squat bar handling is doubtful** (5df2aaa
   notes): SL's landmine beginner (41 lb) is lighter than the bar; not checked for the others.
 - **A local reproduction cannot clear a cloud path.** Latency and write validation differ; so does
