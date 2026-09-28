@@ -809,3 +809,20 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   forced `signOut()` via the SDK on `#/record`, uid changed, `#/me` loaded normally, no errors.
 - **Open:** if the brother had a real account, he must sign in again from Account (the drop is
   Firebase's). Test runs left ~3 stray anonymous users in fitness-tracker-th (harmless).
+
+## 2026-09-28 (cont.) · "Investigate how people log in and anticipate other problems"
+- **Did:** 3 read-only reviewers (auth layer, sign-in screens, iPhone/Safari environment), then fixed
+  the clear bugs: 14c5c1a + 49fb4da (list in the 14c5c1a message). Biggest: sign-in warning now
+  counts a guest's CLOUD rows; "You were signed out" card + pre-filled email when Firebase drops a
+  real account; Google delete re-confirms BEFORE the purge; no dead-end redirect; 15 s start-up stall
+  limit; cache epoch on account switch; "Continue in this window" button was ALWAYS visible (.btn
+  beat [hidden]) — hidden now.
+- **Verified how:** suite 9532/0 (auth-keeper test extended; render mock fixed to real
+  `offline:true` shape); live WebKit 393px `#/account` with a seeded droppedAccount shows the card,
+  1366px `#/signin` clean, no overflow/errors.
+- **Left for Tim (his calls):** Safari's 7-day storage wipe loses guest data → nudge to secure the
+  account after the first workout?; "Add to Home Screen" hint implies data comes along (it doesn't —
+  separate storage); merge guest workouts on sign-in (D: never on sign-in, 2026-09-08); email
+  verification / typo check; reset toast wording + spam hint; sign-out doesn't clear the workout draft
+  (shared phones); moving hosting so Google redirect works; App Store needs native Google + Apple
+  sign-in. Not checked: Google delete popup after awaits on iOS (if blocked, nothing is deleted).
