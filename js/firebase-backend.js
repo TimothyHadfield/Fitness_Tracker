@@ -75,7 +75,43 @@ function notify() {
  * Connection
  * ------------------------------------------------------------------ */
 
+/* 🚨 NOBODY SIGNED IN AFTER START-UP IS REPAIRED, NOT REPORTED — 2026-09-28.
+ * Tim's brother, on an iPhone: "Something went wrong · Not signed in." on
+ * Record, Account and more, and "Could not load your profile" on Profile.
+ * Start-up signs a visitor in anonymously, but Firebase can drop that user
+ * LATER (the saved account was deleted or its token refused), and the
+ * listener then left `user` null for the rest of the visit, so every call
+ * threw. Now any moment with no user takes a fresh anonymous account, once
+ * (concurrent askers share one sign-in), and every call waits for it. */
+let keepUser = null;
+
 async function init() {
+  const c = await connect();
+  if (!user) await keepUser();
+  return c;
+}
+
+/**
+ * The one place an anonymous sign-in happens. Pure over its arguments so the
+ * "two askers, one account" rule is testable without the SDK.
+ */
+export function createUserKeeper({ auth, authClient, getUser, setUser, onSigned }) {
+  let pending = null;
+  return function ensure() {
+    if (getUser()) return Promise.resolve(getUser());
+    // The SDK may already hold a user the listener has not told us about yet.
+    if (authClient.currentUser) { setUser(authClient.currentUser); return Promise.resolve(getUser()); }
+    if (!pending) {
+      pending = Promise.resolve()
+        .then(() => auth.signInAnonymously(authClient))
+        .then((res) => { setUser(res.user); if (onSigned) onSigned(); return res.user; })
+        .finally(() => { pending = null; });
+    }
+    return pending;
+  };
+}
+
+async function connect() {
   if (ctxPromise) return ctxPromise;
 
   ctxPromise = (async () => {
@@ -140,20 +176,28 @@ async function init() {
 
     // Keep a live subscription — the uid can change at any time (sign in, sign
     // out, link) and the data layer has to follow it.
+    keepUser = createUserKeeper({
+      auth, authClient,
+      getUser: () => user,
+      setUser: (u) => { user = u; },
+      onSigned: notify,
+    });
+
     let settleFirst;
     const first = new Promise((resolve) => { settleFirst = resolve; });
     auth.onAuthStateChanged(authClient, (u) => {
       user = u;
-      if (settleFirst) { settleFirst(u); settleFirst = null; }
+      if (settleFirst) { settleFirst(u); settleFirst = null; return notify(); }
       notify();
+      // Dropped after start-up (see the header above init): take a guest account.
+      if (!u) keepUser().catch((err) => console.error('Anonymous re-sign-in failed', err));
     }, (err) => {
       console.error('Auth state error', err);
       if (settleFirst) { settleFirst(null); settleFirst = null; }
     });
 
-    let signedIn = await first;
-    if (!signedIn) signedIn = (await auth.signInAnonymously(authClient)).user;
-    user = signedIn;
+    await first;
+    await keepUser();
 
     ctx = { app, db, authClient, fs, auth };
     return ctx;
@@ -1447,9 +1491,10 @@ export const FirebaseBackend = {
   async signOut() {
     const c = await init();
     await c.auth.signOut(c.authClient);
-    const res = await c.auth.signInAnonymously(c.authClient);
-    user = res.user;
-    notify();
+    // Through the keeper: the listener asks for a guest account at the same
+    // moment, and two asks must not make two accounts.
+    user = null;
+    await keepUser();
     return describeUser(user);
   },
 
@@ -1518,9 +1563,8 @@ export const FirebaseBackend = {
     await c.auth.deleteUser(u);
 
     // Leave a working anonymous account behind so the app still runs.
-    const res = await c.auth.signInAnonymously(c.authClient);
-    user = res.user;
-    notify();
+    user = null;
+    await keepUser();
     return describeUser(user);
   },
 };
