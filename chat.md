@@ -758,3 +758,22 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   hand then doubled, ratio 0.98 (70×10: 378→271 lb); landmine press unchanged (premise wrong: no bar
   was added). Auto-added group workouts + "Ask before adding group workouts" switch (handoff-auto 18
   failed first). No rules change. Suite 8,161 / 0, exit codes 0.
+
+## 2026-09-27 late — the overhaul (analysis → 3 build waves)
+- **Asked:** Tim's in-depth analysis of estimates, interaction, design (glass, fonts, colours,
+  textures), the intro, wordy sections (shorten or move behind ?), missing scenarios, preferences into
+  Settings with the smoothest default; *"Make your own executive decisions on every single aspect…
+  Deploy many many sub-agents… Don't stop working for any reason."*
+- **Decided:** all in `docs/overhaul-plan.md` (decisions, shared contracts, owners, must-not-change).
+- **Built:** 9 analysts → wave 1 (15 builders: estimate caps, Harbo age, 28-day cycle, deload, typo
+  guard, Settings regrouped, auto theme, weight steps/plates, keep screen on, intro 4 paths + About you
+  + 5-stop tour + first-save nudge, friendly errors/undo toast, lazy views + skeleton, word cuts) 69cd88d
+  → wave 2 (runner: equipment today, lighter week, update workout, empty workout, sit out; editor
+  keeps 5+; Look 3 glass/Barlow/grain/ember, Settings+Goals fit, 44px taps; chrome observer; metal
+  plates; lifting-history CSV import Strong/Hevy/generic + "Bring my history"; shared-map caps)
+  88353d8, bc07d2c, 1eb1545 → wave 3 running (two-device merge, word-cap test, sw-update, review, QA).
+- **Verified how:** full no-Chrome suite 9,185 PASS / 0 FAIL at 1eb1545; rules test under the emulator
+  all pass; WebKit 393×659 + 1366×820 demo on 15 routes: no page/side overflow, no console errors.
+- **Open:** wave 3 results; report to Tim with the choices he hasn't seen (Barlow font, glass 80/78 %,
+  grain + ember glow, sidebar mark, Settings layout, new labels incl. "Bring my history", "Lighter
+  week", "Equipment today", "Empty workout", "Update <Workout>", "Sit out").

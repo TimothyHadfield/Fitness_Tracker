@@ -1,7 +1,10 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-25 night, checkpoint (motion pass 2 DONE and live through 7cc8d43 —
+_Last updated 2026-09-27 late: **OVERHAUL in progress** (Tim: analyse estimates, interaction, design,
+intro, words, scenarios; "Deploy many many sub-agents… Don't stop working"). Plan + contracts + owners:
+`docs/overhaul-plan.md`. Wave 1 live 69cd88d, wave 2 live 88353d8/bc07d2c/1eb1545; wave 3 running
+(two-device merge, sitewide word cap, deploy-notice test, code review, visual QA). Earlier: 2026-09-25 night, checkpoint (motion pass 2 DONE and live through 7cc8d43 —
 `docs/motion2-plan.md`; addition ideas waiting on Tim in `docs/additions-ideas.md`; previous version of
 this file: `docs/archive/progress-2026-09-25.md`). Before that 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
 40 built and live through 81fada0, 2 skipped; picks page
@@ -95,6 +98,11 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 (or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
+- **2026-09-27 overhaul — authorized in full, Claude decides every aspect** (Tim, verbatim: "Make your
+  own executive decisions on every single aspect so that it really fits well… Deploy many many
+  sub-agents… Don't stop working for any reason… You have permission for every single aspect").
+  Waves, owners and decisions: `docs/overhaul-plan.md`. Remaining after wave 3: act on the review and
+  visual-QA findings, then report to Tim with the list of choices he hasn't seen.
 - **2026-09-27 evening: ALL DONE and live** — 16 machine ratios reworked (7 left with reasons), warm-ups
   in history/day/edit, labelled 48px plates + aligned numbers + wording cut, group Finished hands over
   to the next person, and **Auto-guide** (`js/guide-steps.js` order, `js/guide-mode.js` view; toggle
@@ -281,6 +289,13 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## NOT verified
 _Tim's rule bans device warnings ("not verified on a phone"). This list is only for claims no screen
 can check._
+- **2026-09-27 overhaul:** the blur itself (headless WebKit on Windows doesn't paint backdrop-filter;
+  computed styles checked) · wake lock, share sheet, `persist()` on a real iPhone · the live cloud
+  stranded-write merge · the first-save nudge in real anonymous cloud mode · a real Strong/Hevy export
+  (fixtures from published headers; Strong 6 warm-up marker "W" assumed) · thousands-row imports
+  against real Firestore/phone storage · `--chrome-b` tracking a footer that grows mid-set (jsdom
+  wiring only) · `tests/sw-update.test.mjs` failed 3 checks even at a9a92c7 (pre-overhaul) — wave 3
+  SWUPDATE is on it.
 - **2026-09-26:** Autumn's cause (no gender / no weigh-in in her Body details) is REASONED — her data
   was never read. Hip thrust machine ratio 0.60 is reasoned (lever brands vary). Warm-up set COUNT
   rule is judgement, not from a paper. Plate drawing in kg only checked in a stepper panel.
