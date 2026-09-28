@@ -8476,17 +8476,9 @@ p > .help-dot { margin: -9px -9px -9px 4px; }
 }
 
 /* ── 12. Hit areas without moving anything ────────────────────────────────
-   `.set-del` painted 21×21 and hit 21×21. A 44px invisible square around it
-   (a later neighbour still wins where they overlap). `.m-name-btn` gets a
-   44px floor for short names. `.help-dot` already hits 44×44 (its ::after). */
-.set-del { position: relative; }
-.set-del::before {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 44px; height: 44px;
-  transform: translate(-50%, -50%);
-}
+   `.set-del` stays 21×21 on purpose (overhaul plan "must not change": delete
+   should not be easy to hit by accident). `.m-name-btn` gets a 44px floor for
+   short names. `.help-dot` already hits 44×44 (its ::after). */
 .m-name-btn::after { inset: -13px auto; left: 50%; width: max(100% + 8px, 44px); transform: translateX(-50%); }
 
 /* ── 13. Profile (laptop): a best lift's source line wraps to two lines ────
