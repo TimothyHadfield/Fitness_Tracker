@@ -24,8 +24,10 @@ import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 9378;
-const CDP_PORT = 9377;
+// The DevTools port, free at the moment of asking (see the note at listen()).
+const CDP_PORT = await new Promise((r) => {
+  const s = createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); });
+});
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 let fails = 0;
@@ -63,7 +65,12 @@ const server = createServer((req, res) => {
   });
   res.end(body);
 });
-await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
+// ⚠️ A FREE PORT, not a fixed one. On Windows the fixed port sat in TIME_WAIT
+// for minutes after a run, so a second run in a row died with EADDRINUSE
+// (measured 2026-09-27). Each run has its own Chrome profile, so a new origin
+// per run costs nothing.
+await new Promise((r) => server.listen(0, '127.0.0.1', r));
+const PORT = server.address().port;
 
 /* ---------- drive Chrome ---------- */
 
@@ -100,14 +107,32 @@ const js = async (expression) => {
   const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
   return r.result && r.result.result && r.result.result.value;
 };
+// ⚠️ POLL for the positive states, never a fixed sleep. The install precaches
+// ~100 files and took 3–15 s in headless Chrome here (measured 2026-09-27), so
+// a fixed 2.5 s made "the worker controls the page" a coin toss — and when it
+// lost, every check after it was testing an uncontrolled page.
+const waitFor = async (expression, ms = 20000) => {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (await js(expression).catch(() => false)) return true;
+    await sleep(250);
+  }
+  return false;
+};
+// The worker is installed and active, with no newer one still on its way in.
+const WORKER_SETTLED = `navigator.serviceWorker.getRegistration().then((r) =>
+  !!(r && r.active && r.active.state === 'activated' && !r.installing && !r.waiting))`;
+const BOOTED = "!!document.querySelector('#app .screen')";
 
 await send('Page.enable');
 await send('Runtime.enable');
 const URL_ = `http://127.0.0.1:${PORT}/`;
 
 // First load installs the worker; the second is controlled by it.
-await send('Page.navigate', { url: URL_ }); await sleep(2500);
-await send('Page.navigate', { url: URL_ }); await sleep(2500);
+await send('Page.navigate', { url: URL_ });
+await waitFor(WORKER_SETTLED, 30000);
+await send('Page.navigate', { url: URL_ });
+await waitFor(BOOTED); await sleep(1500);
 
 ok(await js('!!navigator.serviceWorker.controller'),
    'the service worker takes control on the second load');
@@ -118,12 +143,21 @@ ok(!(await js("!!document.querySelector('.update-bar')")),
 
 appendFileSync(join(dir, 'css', 'app.css'), '\n/* deploy marker */\n');
 await sleep(1200);
-await send('Page.navigate', { url: URL_ }); await sleep(3000);
+await send('Page.navigate', { url: URL_ });
+await waitFor(BOOTED); await waitFor("!!document.querySelector('.update-bar')", 8000);
 
 ok(await js("!!document.querySelector('.update-bar')"),
    'after a deploy the page OFFERS a refresh');
 ok(/new version/i.test(await js("(document.querySelector('.update-bar')||{}).textContent||''")),
    'and says plainly what it is');
+// SW_SHOT=path.png saves what the page looks like with the notice up.
+if (process.env.SW_SHOT) {
+  await send('Emulation.setDeviceMetricsOverride', { width: 393, height: 659, deviceScaleFactor: 2, mobile: true });
+  await sleep(500);
+  const shot = await send('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(process.env.SW_SHOT, Buffer.from(shot.result.data, 'base64'));
+  await send('Emulation.clearDeviceMetricsOverride');
+}
 ok(await js("!!document.querySelector('.update-bar .btn')"), 'with a Refresh button');
 // The important negative: a worker must never reload somebody mid-set.
 ok(await js("!!document.querySelector('#app .screen')"),
@@ -133,9 +167,14 @@ await js("document.querySelector('.update-bar [aria-label=Dismiss]')?.click()");
 await sleep(300);
 ok(!(await js("!!document.querySelector('.update-bar')")), 'dismissing it removes it');
 
-await send('Page.navigate', { url: URL_ }); await sleep(2500);
+// The load after tapping Refresh. The worker's flag is per page load, so the
+// load that is already on the new files must not be told again.
+await send('Page.navigate', { url: URL_ });
+await waitFor(BOOTED); await sleep(2000);
 ok(await js("fetch('css/app.css').then(r=>r.text()).then(t=>t.includes('deploy marker'))"),
    'and the next load really does serve the new file');
+ok(!(await js("!!document.querySelector('.update-bar')")),
+   'and does not offer the refresh again — Refresh must not bring the bar back');
 
 /* ---------- ⚠️ THE RESUMED APP — a deploy spotted with NO page load ----------
    Everything above navigates, and navigating is the one thing an installed
@@ -146,14 +185,21 @@ ok(await js("fetch('css/app.css').then(r=>r.text()).then(t=>t.includes('deploy m
    Tim reported exactly this on 2026-08-22 — a feature live for hours that his
    phone had simply never asked about. So: deploy a change and then, WITHOUT
    navigating, do what coming back to the app does. */
-// ⚠️ A fresh worker generation first. `announceUpdate` deliberately speaks ONCE
-// per worker lifetime — a deploy changes a dozen files and the user needs one
-// sentence, not twelve — so the phase above has already spent this worker's
-// announcement. Editing sw.js itself installs a new one, which is the only
-// honest way to get back to a state where an update can still be announced.
+// A fresh worker generation first, so this phase also proves a changed sw.js
+// is picked up and starts quiet. (The flag behind `announceUpdate` now lasts
+// one page load, cleared on each navigation — see sw.js.)
 appendFileSync(join(dir, 'sw.js'), '\n// new worker generation\n');
-await send('Page.navigate', { url: URL_ }); await sleep(3000);
-await send('Page.navigate', { url: URL_ }); await sleep(2500);
+await send('Page.navigate', { url: URL_ });
+await waitFor(BOOTED);
+// ⚠️ Ask for the new sw.js explicitly and wait for that job, THEN for the new
+// worker to settle. Polling "settled" alone could pass before the browser had
+// even noticed sw.js changed; the new worker then installed DURING the resume
+// check below, refreshed the shared cache first, and the check found nothing
+// (measured 2026-09-27: 1 run in 6 failed, always with `installing: true`).
+await js('navigator.serviceWorker.getRegistration().then((r) => r.update()).then(() => true, () => true)');
+await waitFor(WORKER_SETTLED, 30000);
+await send('Page.navigate', { url: URL_ });
+await waitFor(BOOTED); await sleep(2000);
 ok(!(await js("!!document.querySelector('.update-bar')")),
    'a fresh worker with nothing new to report says nothing');
 
@@ -164,10 +210,15 @@ ok(!(await js("!!document.querySelector('.update-bar')")),
 
 // What coming back to an installed app does — and nothing else. No navigation,
 // which is the whole point: that is what iOS does not do on resume.
-await js(`(async () => {
-  document.dispatchEvent(new Event('visibilitychange'));
-  await new Promise((r) => setTimeout(r, 2500));
-})()`);
+// Polled: the worker revalidates ~100 files, six at a time, and on a slow run
+// that alone outlasted a fixed 2.5 s wait.
+if (process.env.SW_DEBUG) console.log('      before resume:', await js(`navigator.serviceWorker.getRegistration().then((r) => JSON.stringify({
+  vis: document.visibilityState, ctl: !!navigator.serviceWorker.controller,
+  active: r && r.active && r.active.state, installing: !!(r && r.installing), waiting: !!(r && r.waiting) }))`));
+const resumedAt = Date.now();
+await js("document.dispatchEvent(new Event('visibilitychange'))");
+await waitFor("!!document.querySelector('.update-bar')", 15000);
+if (process.env.SW_DEBUG) console.log(`      (resume check answered in ${Date.now() - resumedAt} ms)`);
 
 ok(await js("!!document.querySelector('.update-bar')"),
    '⚠️ reopening the app finds a deploy with NO navigation at all — the installed-PWA case');

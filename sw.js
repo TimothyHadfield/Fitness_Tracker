@@ -289,6 +289,13 @@ self.addEventListener('fetch', (e) => {
   // the network so a deploy lands promptly, and fall back to the shell — that
   // fallback is the whole point of the file.
   if (req.mode === 'navigate') {
+    // ⚠️ A new page load starts with no news. The flag answers ONE question —
+    // "was THIS load served something older than the server has?" — and the
+    // page now asks it on every boot. Left set for the worker's lifetime, the
+    // load after tapping Refresh (already on the new files) would be told
+    // again and the bar would come straight back. Anything this load still
+    // finds different sets it again below.
+    sawUpdate = false;
     e.respondWith((async () => {
       try {
         const fresh = await fetch(req);
@@ -362,6 +369,9 @@ function isDifferent(cached, fresh) {
 // Both paths are needed. The flag survives the race; the broadcast catches the
 // later ones without the page having to poll.
 let sawUpdate = false;
+//
+// The page asks for the flag on boot ('has-update', js/app.js), and a
+// navigation clears it (see the fetch handler), so it means "this page load".
 async function announceUpdate() {
   if (sawUpdate) return;      // a deploy changes a dozen files; say it once
   sawUpdate = true;

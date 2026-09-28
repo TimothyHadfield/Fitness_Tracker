@@ -1118,6 +1118,12 @@ function followSidebarLine() {
   const settings = await store.getSettings();
   applyLook(settings);
   rememberLook();
+  // ⚠️ The boot's own writes above happened with no observer to consume their
+  // marker, so a boot that resolved Auto to 'light' left `selfThemeWrite` set
+  // for ever — and tapping Light later read as "our own write", so the phone
+  // kept driving the theme (review item 10). Nothing before this line is
+  // observed, so nothing is pending.
+  selfThemeWrite = null;
   try {
     new MutationObserver(onLookMutation).observe(document.documentElement,
       { attributes: true, attributeFilter: ['data-theme', 'data-palette', 'data-glass'] });
@@ -1231,6 +1237,16 @@ function registerServiceWorker() {
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data === 'assets-updated') offerRefresh();
   });
+
+  // ⚠️ ASK FOR THE FLAG, AFTER the listener above exists. The load that
+  // follows a deploy revalidates app.css and app.js from <head>, so the worker
+  // spots the change and broadcasts it before this code has run — to nobody.
+  // sw.js keeps a `sawUpdate` flag for exactly that race and answers
+  // 'has-update', but for five weeks nothing ever asked, so the notice after a
+  // plain reload never appeared (measured 2026-09-27: the flag was set, the
+  // bar was missing). A deploy spotted later still arrives by broadcast.
+  const controller = navigator.serviceWorker.controller;
+  if (controller) controller.postMessage('has-update');
 
   /**
    * ⚠️ ASK AGAIN WHENEVER THE APP COMES BACK TO THE FOREGROUND.
