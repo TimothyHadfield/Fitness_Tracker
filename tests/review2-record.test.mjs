@@ -113,8 +113,10 @@ async function mount(viewPromise) {
 
   const before = await mount(StartPickerView());
   const labelsBefore = [...before.querySelectorAll('.row-start')].map((n) => n.textContent.trim());
-  ok(labelsBefore.length === 2 && labelsBefore.every((t) => t === 'Start'),
-     `(guard) with nothing open every row says Start (${labelsBefore.join(', ')})`);
+  // Wave 2: two workout rows plus the "Empty workout" row (EMPTY_WORKOUT on).
+  const emptyRow = [...before.querySelectorAll('.row')].find((r) => /Empty workout/.test(r.textContent));
+  ok(labelsBefore.length === 3 && labelsBefore.every((t) => t === 'Start') && Boolean(emptyRow),
+     `(guard) with nothing open every row says Start, Empty workout included (${labelsBefore.join(', ')})`);
 
   const run = await mount(SessionView(legs.id));
   type(run.querySelectorAll('.step-value')[0], 225); await settle();

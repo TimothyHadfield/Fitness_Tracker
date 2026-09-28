@@ -147,9 +147,25 @@ function sameReps(a, b) {
     const mine = normalizeRepSpec(x[Math.min(i, x.length - 1)]);
     const other = normalizeRepSpec(y[Math.min(i, y.length - 1)]);
     if (!mine || !other) return false;
+    /* 🔒 Wave 2: `plus` ("5+", an as-many-as-you-can set) is NOT compared, on
+     * purpose. Only `lo` and `hi` are the rep target; marking a set "5+" is
+     * how the lifter runs it, so "5+" against a preset's "5" is neither an
+     * update to offer nor an edit that blocks one. applyPresetPlan keeps the
+     * lifter's "+" when it does write a new target. */
     if (mine[0] !== other[0] || mine[1] !== other[1]) return false;
   }
   return true;
+}
+
+/* A new rep list from the original, keeping the lifter's own "+" on any set
+ * that had one and is still a single number (a range cannot be "5+"). Only
+ * the same set number carries it: a set the original added is its own. */
+function keepPlus(next, prev) {
+  if (!Array.isArray(next) || !Array.isArray(prev) || !prev.length) return next;
+  return next.map((spec, i) => {
+    const old = i < prev.length ? normalizeRepSpec(prev[i]) : null;
+    return old && old.plus && spec && spec.lo === spec.hi ? { ...spec, plus: true } : spec;
+  });
 }
 
 function sameText(a, b) {
@@ -426,7 +442,7 @@ export function applyPresetPlan({ plan, preset, workouts, byName }) {
       if (c.now) ex.targets = c.now.slice();
       else delete ex.targets;
     } else if (c.kind === 'reps') {
-      if (c.now) ex.reps = cloneReps(c.now);
+      if (c.now) ex.reps = keepPlus(cloneReps(c.now), ex.reps);
       else delete ex.reps;
     } else if (c.kind === 'sets') {
       ex.sets = c.now;

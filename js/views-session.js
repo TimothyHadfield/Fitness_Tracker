@@ -9,8 +9,9 @@ import { totalResistance, bodyWeightOn } from './e1rm.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
   fmtSet, confirmSheet, fmtDateLong, openSheet, exerciseLabel, goBack, refreshRoute,
-  parkScreen, helpDot, fmtTime,
+  parkScreen, helpDot, fmtTime, friendlyError,
 } from './ui.js';
+import { alternativesFor } from './exercise-families.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
   hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds, nextPersonTurn,
@@ -164,10 +165,96 @@ function syncAutoWarmups(entry, ex) {
  * other workout opening first, and the runner opens as normal. */
 let saveOnOpen = null;
 
+/* 🆕 EMPTY WORKOUT (overhaul S-03, wave 2): `#/session/new-empty` opens the
+ * runner with no template. The draft carries this id so the bar above the nav
+ * can bring it back; the saved session carries NO workoutId (plan decision). */
+export const EMPTY_SESSION_ID = 'new-empty';
+export const EMPTY_SESSION_NAME = 'Workout';
+
+/* 🆕 S-06 (wave 2): what "Equipment today" allows. Mirrors presetEquipment()'s
+ * three kinds; `full` swaps nothing. */
+export const EQUIPMENT_TODAY = {
+  full: null,
+  dumbbells: new Set(['Dumbbell', 'Bodyweight']),
+  none: new Set(['Bodyweight']),
+};
+
+/**
+ * 🆕 S-06: for each exercise that does not fit `kind`, the closest stand-in
+ * that does, by `alternativesFor`'s own ranking (same movement first). Pure,
+ * so it is tested without a runner. Returns [{ index, to }]; an exercise with
+ * no fitting stand-in is left out, and so is one already in the session.
+ */
+export function equipmentSwaps(entries, exMap, kind, alternativesFor) {
+  const allowed = EQUIPMENT_TODAY[kind];
+  if (!allowed) return [];
+  const all = [...exMap.values()];
+  const taken = new Set(entries.map((e) => e.exerciseId));
+  const out = [];
+  entries.forEach((e, index) => {
+    const ex = exMap.get(e.exerciseId);
+    if (!ex || allowed.has(ex.equipment)) return;
+    const { items } = alternativesFor(ex, all, { limit: all.length });
+    const hit = items.find((it) => allowed.has(it.exercise.equipment) && !taken.has(it.exercise.id));
+    if (!hit) return;
+    taken.add(hit.exercise.id);
+    out.push({ index, to: hit.exercise });
+  });
+  return out;
+}
+
+/**
+ * 🆕 S-07b: the exercise list to write back to the template, from today's
+ * entries. A swap that split (sets kept on the old lift) keeps only the new
+ * lift, which claims the old one's plan through `swappedFrom`. Null when the
+ * list matches the template (order included), so there is nothing to offer.
+ */
+export function templateChanges(entries, templateIds) {
+  const list = entries
+    .filter((e) => !entries.some((o) => o !== e && o.swappedFromId === e.exerciseId))
+    .map((e) => ({
+      exerciseId: e.exerciseId,
+      sets: e.plannedSets,
+      ...(e.swappedFromId ? { swappedFrom: e.swappedFromId } : {}),
+    }));
+  const ids = list.map((e) => e.exerciseId);
+  const same = ids.length === templateIds.length && ids.every((id, i) => id === templateIds[i]);
+  return same || !list.length ? null : list;
+}
+
+/** 🆕 S-08a: past gym names, newest spelling first, case-insensitive unique. */
+export function pastGyms(sessions) {
+  const seen = new Map();
+  const rows = (sessions || []).filter((s) => s && typeof s.location === 'string' && s.location.trim())
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  for (const s of rows) {
+    const name = s.location.trim();
+    const key = name.toLowerCase();
+    if (!seen.has(key)) seen.set(key, name);
+  }
+  return [...seen.values()].slice(0, 20);
+}
+
+/**
+ * 🆕 EA-1: a plan's rep range, only when every set asks for the same one —
+ * a per-set list (3–5 then 8) has no single range to progress in.
+ */
+function planRangeOf(item) {
+  const specs = expandRepSpec(item && item.reps, item && item.sets);
+  if (!specs || !specs.length) return null;
+  const pairs = specs.map((s) => normalizeRepSpec(s));
+  if (pairs.some((p) => !p)) return null;
+  const [lo, hi] = pairs[0];
+  return pairs.every((p) => p[0] === lo && p[1] === hi) ? [lo, hi] : null;
+}
+
 export async function SessionView(workoutId) {
   const wantSave = saveOnOpen !== null && saveOnOpen === workoutId;
   saveOnOpen = null;
-  const workout = await store.getWorkout(workoutId);
+  const isEmpty = workoutId === EMPTY_SESSION_ID;
+  const workout = isEmpty
+    ? { id: EMPTY_SESSION_ID, name: EMPTY_SESSION_NAME, exercises: [] }
+    : await store.getWorkout(workoutId);
   if (!workout) {
     return screenShell({
       title: 'Not found', back: () => go('#/home'),
@@ -180,7 +267,7 @@ export async function SessionView(workoutId) {
     .map((item) => ({ item, ex: exMap.get(item.exerciseId) }))
     .filter((p) => p.ex);
 
-  if (!planned.length) {
+  if (!planned.length && !isEmpty) {
     return screenShell({
       title: workout.name, back: () => go('#/home'),
       scroll: emptyState('This workout has no exercises', 'Add some before running it.',
@@ -517,6 +604,10 @@ export async function SessionView(workoutId) {
    * workout at Finish. The cost is that a reload on the save screen forgets
    * the photo (not the workout) — pick it again. */
   let pickedPhoto = null;
+  // 🆕 S-08a: the gym names already typed on past sessions, for the save
+  // screen's suggestions. Read once, in the background; none is fine.
+  let gymNames = [];
+  store.getSessions().then((all) => { gymNames = pastGyms(all); }).catch(() => {});
 
   /**
    * Everything one PERSON's copy of this workout needs: their sets, their
@@ -542,7 +633,10 @@ export async function SessionView(workoutId) {
     const rows = ownRows || { sessions, benchmarks: [], bodyWeights: [] };
     const out = [];
     for (const { item, ex } of planned) {
-      const history = historyFor(sessions, { exerciseId: ex.id, workoutId: workout.id });
+      // 🆕 wave 2: the gym (S-08b — a machine's numbers stay at its gym) and
+      // the exercise (its equipment) go to the history read.
+      const where = { exerciseId: ex.id, workoutId: workout.id, location: state && state.location, exercise: ex };
+      const history = historyFor(sessions, where);
       const last = history[0] || null;
       // Never done before: start somewhere usable instead of at zero, and mark
       // it so nothing about it can be mistaken for a record.
@@ -566,7 +660,10 @@ export async function SessionView(workoutId) {
       // withheld and last time's numbers stand, because handing somebody a
       // heavier weight than they have touched in a month is the same harm §3.1
       // exists to prevent, arriving from the other side.
-      const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: workout.id });
+      const lastDay = lastSessionDate(sessions, where);
+      // 🆕 EA-1: the plan's own rep range, when it names one, is the range
+      // progression works in.
+      const planRange = planRangeOf(item);
       const suggestion = suggestProgression({
         history,
         exercise: ex,
@@ -574,6 +671,7 @@ export async function SessionView(workoutId) {
         daysSinceLast: lastDay ? daysBetweenDays(lastDay, forDate) : null,
         bodyWeight,
         fmt: units.withUnit,
+        range: planRange,
       });
       const sets = applySuggestion(lastSets, suggestion);
       /* ⚠️ RE-STAMPED AFTER applySuggestion, NOT BEFORE. That function returns
@@ -695,8 +793,27 @@ export async function SessionView(workoutId) {
           ? prescribed.map((spec) => weightRangeForReps(spec, max, step))
           : null;
         if (applied && applied.every(Boolean)) {
+          /* 🆕 EA-1 (wave 2): THE PLAN'S WEIGHT NEVER WENT UP. It was priced
+           * off the all-time best and rounded down, so a lifter who took the
+           * prefill got 45×8 forever. Once there is history, the weight is the
+           * larger of the curve's and what progression makes of last session
+           * — but only when every set of last session reached the plan's
+           * bottom reps. The curve alone is for the first session. */
+          const lastRows = (last || []).filter((s) => s && Number(s.reps) > 0);
+          const reachedBottom = lastRows.length > 0 && lastRows.every((s, i) => {
+            const lo = (normalizeRepSpec(prescribed[Math.min(i, prescribed.length - 1)]) || [0])[0];
+            return Number(s.reps) >= lo;
+          });
           applied.forEach((a, i) => {
             if (!sets[i]) return;
+            const progressed = reachedBottom ? Number(sets[i].weight) || 0 : 0;
+            if (progressed > 0 && progressed >= a.weight) {
+              // Progression's own reps, held inside the plan's range.
+              const r = normalizeRepSpec(prescribed[i]) || a.reps;
+              sets[i].weight = progressed;
+              sets[i].reps = Math.min(r[1], Math.max(r[0], Number(sets[i].reps) || r[0]));
+              return;
+            }
             sets[i].weight = a.weight;
             // The reps the author asked for. A range fills its BOTTOM — the
             // rep count you are certain to be asked for — and the lifter adds
@@ -914,7 +1031,8 @@ export async function SessionView(workoutId) {
     };
     // 🆕 2026-09-27 (overhaul ST-15): a new workout opens in the view the last
     // one was left in. Absent is the list, as before.
-    if (settings.runnerView === 'guide') state.view = 'guide';
+    // An empty workout has nothing to guide through yet, so it opens on the list.
+    if (settings.runnerView === 'guide' && !isEmpty) state.view = 'guide';
 
     // Read once for the whole workout rather than per exercise. The runner used
     // store.lastSetsFor(), which reads every session each time it is called;
@@ -1654,12 +1772,30 @@ export async function SessionView(workoutId) {
     const solo = !state.guestNames.length;
     // `.chip` supplies the pill, the 44px invisible hit target and the
     // aria-pressed accent state — the same control the rest chip uses.
+    /* 🆕 S-13 (wave 2): "YOU" CAN SIT OUT — a coach or a spotter logging for
+     * others. Same place as a guest's ✕ (only on the chip you are on, only
+     * with somebody else in the workout); it toggles, and nothing of yours is
+     * deleted — your sets simply are not saved while it is on. */
+    const out = ownerSitsOut();
+    const youChip = el('button', {
+      class: 'chip person-chip' + (!solo && state.forName == null ? ' has-del' : ''),
+      'aria-pressed': state.forName == null ? 'true' : 'false',
+      onClick: () => switchTo(null),
+    }, out ? 'You · out' : 'You');
+    const youNode = solo || state.forName != null ? youChip
+      : el('span', { class: 'person-wrap' }, youChip, el('button', {
+        class: 'person-del',
+        'aria-label': out ? 'Train again — save your sets' : 'Sit out — don’t save your sets',
+        title: out ? 'Train again' : 'Sit out today',
+        onClick: () => {
+          state.ownerOut = !out;
+          saveDraft(state);
+          renderAll({ keepScroll: true });
+          toast(state.ownerOut ? 'Sitting out — only the others are saved' : 'Training again — your sets save');
+        },
+      }, icon(out ? 'plus' : 'x', 13)));
     setChildren(peopleBar,
-      el('button', {
-        class: 'chip person-chip',
-        'aria-pressed': state.forName == null ? 'true' : 'false',
-        onClick: () => switchTo(null),
-      }, 'You'),
+      youNode,
       ...state.guestNames.map((n) => {
         // ⚠️ A FRIEND'S CHIP SAYS SO, because the two are not the same promise.
         // A guest's sets stop here; a friend's are going to be offered to their
@@ -1842,6 +1978,15 @@ export async function SessionView(workoutId) {
     // The words are `groupNextLabel()` (js/guide-steps.js), shared with the
     // Auto-guide's button since 2026-09-27.
     const label = groupNextLabel(step, next, (i) => state.entries[i].exerciseName) || 'Next exercise';
+
+    // 🆕 Empty workout with nothing in it yet: the one thing to do is add.
+    if (!all.length) {
+      setChildren(footer,
+        el('button', { class: 'nav-arrow', 'aria-label': 'Previous', disabled: true }, icon('left')),
+        el('button', { class: 'btn primary', onClick: pickFirstExercise }, icon('plus'), 'Add exercise'),
+      );
+      return;
+    }
 
     setChildren(footer,
       el('button', {
@@ -2299,10 +2444,16 @@ export async function SessionView(workoutId) {
     const keepScroll = Boolean(opts && opts.keepScroll);
     const wasAt = pane.scrollTop;
     const step = currentStep();
-    if (!step) return;
+    if (!step) {
+      // 🆕 Empty workout (wave 2): the footer's "Add exercise" is the action.
+      setChildren(pane, emptyState('No exercises yet', 'Add one to start.'));
+      return;
+    }
     const entry = state.entries[step.entryIndex];
     const ex = exMap.get(entry.exerciseId);
     const nested = isNested(entry.setType);
+    // 🆕 S-07a: an exercise that has been on screen counts as opened.
+    if (!entry.seen) { entry.seen = true; saveDraft(state); }
 
     if (entry.active >= entry.sets.length) entry.active = entry.sets.length - 1;
     // A set opened by Finished handing the turn over (`passTurn`) is filled on
@@ -3351,7 +3502,10 @@ export async function SessionView(workoutId) {
     // repaints with everything else rather than at each of the four call sites
     // that can change the list underneath it. Null unless it is open.
     if (refreshWorkoutSheet) refreshWorkoutSheet();
+    // An empty workout has nothing to guide through yet (wave 2).
+    if (guideToggle) guideToggle.disabled = !state.entries.length;
   }
+  let guideToggle = null;
 
   /**
    * 🆕 2026-09-27 (overhaul R-4 / I-5): a deleted set, warm-up or drop can be
@@ -3420,9 +3574,11 @@ export async function SessionView(workoutId) {
    * prescription 0e exists to forbid.
    */
   function readingFrom(ex, sessions, bodyWeight) {
-    const history = historyFor(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
+    // 🆕 wave 2: the gym and the exercise, as at session start (S-08b).
+    const where = { exerciseId: ex.id, workoutId: state.workoutId, location: state.location, exercise: ex };
+    const history = historyFor(sessions, where);
     const last = history[0] || null;
-    const lastDay = lastSessionDate(sessions, { exerciseId: ex.id, workoutId: state.workoutId });
+    const lastDay = lastSessionDate(sessions, where);
     const suggestion = suggestProgression({
       history,
       exercise: ex,
@@ -3538,6 +3694,9 @@ export async function SessionView(workoutId) {
       openingFrom: opening ? opening.from : null,
       openingWithheld: forName == null && openingWithheld.has(newEx.id),
       ...(shape.swappedFrom ? { swappedFrom: shape.swappedFrom } : {}),
+      // 🆕 S-07b: which planned exercise this replaced, by id, so "Update
+      // <Workout>" can give it that exercise's sets and notes.
+      ...(shape.swappedFromId ? { swappedFromId: shape.swappedFromId } : {}),
       ...(shape.addedToday ? { addedToday: true } : {}),
     };
   }
@@ -3620,6 +3779,7 @@ export async function SessionView(workoutId) {
       setType: entry.setType,
       plannedMinis: entry.plannedMinis,
       swappedFrom: entry.exerciseName,
+      swappedFromId: entry.swappedFromId || entry.exerciseId,
     });
 
     /* 🚨 EVERYBODY ELSE SWAPS TOO (Tim, 2026-09-10), each against their own
@@ -3638,6 +3798,7 @@ export async function SessionView(workoutId) {
         setType: theirs.setType,
         plannedMinis: theirs.plannedMinis,
         swappedFrom: theirs.exerciseName,
+        swappedFromId: theirs.swappedFromId || theirs.exerciseId,
       });
       swapIn(slot, index, newEx, built);
     }
@@ -3727,7 +3888,8 @@ export async function SessionView(workoutId) {
   function removeExercise(index) {
     const entry = state.entries[index];
     if (!entry) return;
-    if (state.entries.length <= 1) {
+    // An empty workout may go back to empty: it was built here, one add at a time.
+    if (state.entries.length <= 1 && !isEmpty) {
       // 🆕 2026-09-27 (overhaul words P7): the runner's top-left control is ↓.
       toast('This is the only exercise — use ↓ up top to leave the workout.');
       return;
@@ -3932,6 +4094,42 @@ export async function SessionView(workoutId) {
    * silently make a two-exercise block into a three-exercise one and change
    * what the banner tells somebody to do with their next thirty seconds.
    */
+  /**
+   * 🆕 S-06: "Equipment today". Every exercise that needs gear not listed is
+   * swapped — through `swapExercise`, the Swap button's own path, so recorded
+   * sets split off and everybody in a joint workout follows — to the top
+   * stand-in that fits. No fitting stand-in: left as it is. "Gym" swaps
+   * nothing back; it only stops asking for less.
+   */
+  async function setEquipmentToday(kind) {
+    state.equipmentToday = kind;
+    saveDraft(state);
+    const plan = equipmentSwaps(state.entries, exMap, kind, alternativesFor);
+    // By entry, not index: a split inserts a row and moves everything after it.
+    const targets = plan.map((p) => ({ entry: state.entries[p.index], to: p.to }));
+    for (const t of targets) {
+      const at = state.entries.indexOf(t.entry);
+      if (at >= 0) await swapExercise(at, t.to);
+    }
+    renderAll({ keepScroll: true });
+    const left = kind === 'full' ? 0 : state.entries.filter((e) => {
+      const ex = exMap.get(e.exerciseId);
+      return ex && !EQUIPMENT_TODAY[kind].has(ex.equipment) && !(e.sets || []).some((s) => isDone(s) || s.touched);
+    }).length;
+    if (kind === 'full') toast('Full gym — nothing swapped');
+    else toast(`${targets.length} swapped${left ? ` · ${left} with no match kept` : ''}`);
+  }
+
+  /** The empty workout's "Add exercise": the same picker the sheet uses. */
+  function pickFirstExercise() {
+    openExercisePicker({
+      exMap,
+      title: 'Add to today',
+      closeOnPick: true,
+      onPick: (picked) => { addExerciseToday(picked); },
+    });
+  }
+
   async function addExerciseToday(newEx) {
     if (!newEx) return false;
     // Refused for the same reason the builder refuses it: two entries with one
@@ -4178,7 +4376,21 @@ export async function SessionView(workoutId) {
       });
 
       setChildren(list, ...rows);
+      const kit = state.equipmentToday || 'full';
+      const kitChip = (key, text) => el('button', {
+        type: 'button', class: 'chip', 'aria-pressed': String(kit === key), text,
+        onClick: () => { setEquipmentToday(key); },
+      });
       setChildren(body,
+        /* 🆕 S-06 (wave 2): EQUIPMENT TODAY. Travelling with dumbbells, or a
+         * gym without a machine: every exercise that needs what is not here is
+         * swapped to its closest stand-in at once, today only. */
+        el('div', { class: 'switch-row set-chips equip-today' },
+          el('div', { class: 'help-line' }, el('label', { text: 'Equipment' }),
+            helpDot('So a trip or a missing machine isn’t one swap at a time. Today only.',
+              { label: 'Why equipment', title: 'Equipment today' })),
+          el('div', { class: 'chips tight' },
+            kitChip('full', 'Gym'), kitChip('dumbbells', 'Dumbbells'), kitChip('none', 'None'))),
         // ⚠️ ONE LINE. The first version was four, explaining the handle, the
         // arrows, that recorded sets travel and that the template is untouched
         // — all true, and all readable off the rows themselves. Tim's note on
@@ -4302,9 +4514,10 @@ export async function SessionView(workoutId) {
 
   async function finish() {
     // Everybody in the session — whoever is active plus everyone parked.
+    // 🆕 S-07a: "Leave out" drops the exercises nobody opened.
     const people = [
-      { name: state.forName, entries: state.entries },
-      ...state.others.map((o) => ({ name: o.name, entries: o.entries })),
+      { name: state.forName, entries: keptEntries(state.entries) },
+      ...state.others.map((o) => ({ name: o.name, entries: keptEntries(o.entries) })),
     ];
     const owner = people.find((p) => p.name == null) || { entries: [] };
     const guests = people
@@ -4312,7 +4525,8 @@ export async function SessionView(workoutId) {
       .map((p) => ({ name: p.name, meta: metaFor(p.name) || {}, cleaned: cleanedEntriesOf(p.entries) }))
       .filter((p) => p.cleaned.length);
 
-    const cleaned = cleanedEntriesOf(owner.entries);
+    // 🆕 S-13: "You" sat out — the session saves only for the others.
+    const cleaned = ownerSitsOut() ? [] : cleanedEntriesOf(owner.entries);
 
     if (!cleaned.length && !guests.length) {
       toast('Nothing recorded — enter at least one number');
@@ -4394,12 +4608,15 @@ export async function SessionView(workoutId) {
       if (cleaned.length) {
         await store.saveSession({
           id: state.saveIds.you,
-          workoutId: state.workoutId,
+          // An empty workout has no template, so no workoutId (plan decision).
+          ...(isEmpty ? {} : { workoutId: state.workoutId }),
           workoutName: state.workoutName,
           date: state.date,
           startedAt: state.startedAt,
           finishedAt,
           isBenchmark: Boolean(state.isBenchmark),
+          // 🆕 S-09: a lighter week — next time's numbers skip it.
+          ...(state.deload ? { deload: true } : {}),
           // Absent rather than '' when there is none — one case for every
           // reader, the same contract startedAt set in the projection.
           ...(state.location ? { location: state.location } : {}),
@@ -4431,7 +4648,7 @@ export async function SessionView(workoutId) {
           // Who this really was, so a later read does not have to match a name.
           ...(g.meta.personId ? { personId: g.meta.personId } : {}),
           ...(g.meta.uid ? { forUid: g.meta.uid } : {}),
-          workoutId: state.workoutId,
+          ...(isEmpty ? {} : { workoutId: state.workoutId }),
           workoutName: state.workoutName,
           date: state.date,
           startedAt: state.startedAt,
@@ -4442,6 +4659,17 @@ export async function SessionView(workoutId) {
     } catch (err) {
       saveFailed(err);
       return;
+    }
+
+    /* 🆕 S-07b: "Update <Workout>" — today's adds, removes and swaps go into the
+     * template. After the workout has landed and never able to undo it: a
+     * failure is a toast, the session is already safe. */
+    if (state.updateTemplate && !isEmpty) {
+      const changes = templateChanges(ownerShape(), workout.exercises.map((e) => e.exerciseId));
+      if (changes) {
+        try { await store.updateWorkoutExercises(state.workoutId, changes); }
+        catch (err) { toast(friendlyError(err, `${state.workoutName} was not updated.`), { error: true }); }
+      }
     }
 
     /* THE PHOTO GOES AFTER THE WORKOUT HAS LANDED, AND IT CANNOT UNDO IT
@@ -4457,7 +4685,7 @@ export async function SessionView(workoutId) {
       const row = (await store.getSessions().catch(() => [])).find((s) => s.id === sid);
       primePhoto(sid, null, pic);
       store.savePhoto(sid, pic).catch(async (err) => {
-        toast(`The workout is saved, but its photo is not: ${(err && err.message) || 'it could not be uploaded.'}`);
+        toast(`The workout is saved, but its photo is not: ${friendlyError(err, 'it could not be uploaded.')}`, { error: true });
         if (row) {
           const { photo, ...rest } = row;
           await store.saveSession(rest).catch(() => {});
@@ -4490,7 +4718,7 @@ export async function SessionView(workoutId) {
         g.sent = true;
       } catch (err) {
         g.sent = false;
-        g.sendError = (err && err.message) || 'Could not send it just now.';
+        g.sendError = friendlyError(err, 'Could not send it just now.');
       }
     }
 
@@ -4502,6 +4730,56 @@ export async function SessionView(workoutId) {
 
     clearDraft();
     showFinished(cleaned, guests, prs);
+    // 🆕 O-13 (wave 2): after the FIRST saved workout only, "Keep your
+    // training". Held until the finish sequence has played (FINISH_PR_LAST).
+    if (cleaned.length) {
+      setTimeout(() => {
+        import('./first-save.js').then((m) => m.maybeFirstSaveNudge()).catch(() => {});
+      }, 1200);
+    }
+  }
+
+  /** 🆕 S-07a: an entry list with the unopened exercises left out, if chosen. */
+  function keptEntries(entries) {
+    return state.leaveOutUnopened ? (entries || []).filter((e) => !isUnopened(e)) : (entries || []);
+  }
+
+  /* 🆕 wave 2: an on/off switch on the save screen — the markup and classes of
+   * Settings' `onOffSwitch` (views-data.js), so it needs no new style. */
+  function saveSwitch(label, on, onChange, help) {
+    const id = `sw-save-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`;
+    const sw = el('button', {
+      type: 'button', class: 'switch', role: 'switch', id,
+      'aria-checked': String(Boolean(on)),
+      onClick: () => {
+        const next = sw.getAttribute('aria-checked') !== 'true';
+        sw.setAttribute('aria-checked', String(next));
+        onChange(next);
+      },
+    }, el('span', { class: 'switch-knob', 'aria-hidden': 'true' }));
+    const name = el('label', { for: id, text: label });
+    return el('div', { class: 'switch-row' },
+      help ? el('div', { class: 'help-line' }, name, helpDot(help, { label: `Why ${label.toLowerCase()}`, title: label }))
+        : name,
+      sw,
+    );
+  }
+
+  /** The owner's entries, wherever they are parked right now. */
+  function ownerShape() {
+    if (state.forName == null) return state.entries;
+    const o = state.others.find((x) => x.name == null);
+    return o ? o.entries : [];
+  }
+
+  /** 🆕 S-13: "You" is sitting this one out (only meaningful with others in it). */
+  function ownerSitsOut() {
+    return Boolean(state.ownerOut) && state.guestNames.length > 0;
+  }
+
+  /** 🆕 S-07a: never on screen and no set touched or finished. */
+  function isUnopened(e) {
+    return !e.seen && !(e.sets || []).some((s) => isDone(s) || s.touched);
   }
 
   /* ================================================================== *
@@ -4568,11 +4846,65 @@ export async function SessionView(workoutId) {
      * owner and every guest and Discard deletes all of it. Sets are summed
      * over the same people `finish()` walks; exercises are counted once each,
      * because a joint workout is one workout. */
-    const everyone = [state.entries, ...state.others.map((o) => o.entries)]
-      .map((es) => cleanedEntriesOf(es || []));
-    const sets = everyone.reduce((n, es) => n + es.reduce((m, e) => m + e.sets.length, 0), 0);
-    const exerciseCount = new Set(everyone.flatMap((es) => es.map((e) => e.exerciseId))).size;
+    // 🆕 S-13: "You", sitting out, is not counted — `finish()` saves nothing for you.
+    const slots = [{ name: state.forName, entries: state.entries },
+      ...state.others.map((o) => ({ name: o.name, entries: o.entries }))]
+      .filter((s) => !(s.name == null && ownerSitsOut()));
+    const counts = () => {
+      const everyone = slots.map((s) => cleanedEntriesOf(keptEntries(s.entries || [])));
+      return {
+        sets: everyone.reduce((n, es) => n + es.reduce((m, e) => m + e.sets.length, 0), 0),
+        exercises: new Set(everyone.flatMap((es) => es.map((e) => e.exerciseId))).size,
+      };
+    };
+    const { sets, exercises: exerciseCount } = counts();
     const guestNames = state.guestNames.slice();
+    /* 🆕 S-07a: exercises nobody opened still save with last time's numbers
+     * (Tim's decision, kept). One line says so, with "Leave out". */
+    const unopenedIds = new Set(slots.flatMap((s) => (s.entries || [])
+      .filter((e) => isUnopened(e) && cleanedEntriesOf([e]).length)
+      .map((e) => e.exerciseId)));
+    const setsValue = el('div', { class: 'save-stat-value', text: String(sets) });
+    const exValue = el('div', { class: 'save-stat-value', text: String(exerciseCount) });
+    const unopenedText = el('span', { class: 'field-help' });
+    const unopenedBtn = el('button', {
+      type: 'button', class: 'link-btn save-unopened-btn',
+      onClick: () => {
+        state.leaveOutUnopened = !state.leaveOutUnopened;
+        saveDraft(state);
+        paintUnopened();
+      },
+    });
+    function paintUnopened() {
+      const n = unopenedIds.size;
+      const out = Boolean(state.leaveOutUnopened);
+      unopenedText.textContent = out
+        ? `${n} not opened — left out.`
+        : `${n} exercise${n === 1 ? '' : 's'} not opened — saved as last time.`;
+      unopenedBtn.textContent = out ? 'Keep' : 'Leave out';
+      const c = counts();
+      setsValue.textContent = String(c.sets);
+      exValue.textContent = String(c.exercises);
+    }
+    const unopenedLine = unopenedIds.size
+      ? el('div', { class: 'help-line save-unopened' }, unopenedText,
+        helpDot('Untouched numbers count, since last time’s may be exactly what you did.',
+          { label: 'Why they count', title: 'Not opened' }),
+        unopenedBtn)
+      : null;
+    if (unopenedLine) paintUnopened();
+
+    /* 🆕 S-09 and S-07b: two switches, both off by default. */
+    const lighterRow = saveSwitch('Lighter week', Boolean(state.deload), (on) => {
+      state.deload = on; saveDraft(state);
+    }, 'So a planned light week never lowers next time’s numbers.');
+    const changes = isEmpty ? null
+      : templateChanges(ownerShape(), workout.exercises.map((e) => e.exerciseId));
+    const updateRow = changes
+      ? saveSwitch(`Update ${state.workoutName}`, Boolean(state.updateTemplate), (on) => {
+        state.updateTemplate = on; saveDraft(state);
+      }, 'So a swap for an injury or a new gym isn’t redone every session. Sets and reps stay.')
+      : null;
     const secs = activeSeconds(state, Date.now());
     /* 🆕 DURATION IS A BOX, 2026-09-23. Autumn, via Tim: *"she forgot to turn
      * it off after she finished until long after she finished"* — and she had
@@ -4626,8 +4958,13 @@ export async function SessionView(workoutId) {
     });
     noteBox.value = state.note || '';
 
+    // 🆕 S-08a: past gym names, so "LA Fitness" does not drift to "la fitness".
+    const gymList = gymNames.length
+      ? el('datalist', { id: 'gym-names' }, ...gymNames.map((g) => el('option', { value: g })))
+      : null;
     const locBox = el('input', {
       class: 'input', type: 'text', maxlength: '80', autocomplete: 'off',
+      list: gymList ? 'gym-names' : null,
       placeholder: 'Gold’s Gym, home, the park…',
       'aria-label': 'Where this workout happened',
       onInput: (e) => {
@@ -4702,9 +5039,14 @@ export async function SessionView(workoutId) {
               el('div', { class: 'save-stat-label', text: 'Duration' }),
               el('div', { class: 'save-dur-row' }, durBox, el('span', { class: 'save-dur-unit', text: 'min' })))
             : stat('Duration', '—'),
-          stat('Sets', String(sets)),
-          stat('Exercises', String(exerciseCount)),
+          el('div', { class: 'save-stat' },
+            el('div', { class: 'save-stat-label', text: 'Sets' }), setsValue),
+          el('div', { class: 'save-stat' },
+            el('div', { class: 'save-stat-label', text: 'Exercises' }), exValue),
         ),
+        unopenedLine,
+        lighterRow,
+        updateRow,
         // 🆕 One photo per workout (Tim, 2026-09-25). Written on Save, after
         // the workout itself — see finish().
         // It goes on YOUR workout; a guest row never carries one.
@@ -4727,6 +5069,7 @@ export async function SessionView(workoutId) {
         el('div', { class: 'field' },
           el('label', { text: 'Gym' }),
           locBox,
+          gymList,
           // 🆕 2026-09-27 (overhaul words P7): 26 words → 7.
           el('div', { class: 'field-help', text: 'Typed, never GPS. Used again next time.' }),
         ),
@@ -4779,7 +5122,7 @@ export async function SessionView(workoutId) {
 
   // Said on the screen, not in a toast, and it stays until the save works.
   function saveFailed(err) {
-    const msg = (err && err.message) || 'Could not save this workout.';
+    const msg = friendlyError(err, 'Could not save this workout.');
     setChildren(saveError,
       el('strong', { text: 'Not saved. ' }),
       el('span', { text: `${msg} Your numbers are still here — nothing has been thrown away. `
@@ -5256,7 +5599,11 @@ export async function SessionView(workoutId) {
     captionData: () => captionDataFor(state.forName),
     // An exercise opened by the guide gets its suggested warm-ups first, by
     // the pane's own rule — so the guide walks them before set 1.
-    prepare: (entry) => syncAutoWarmups(entry, exMap.get(entry.exerciseId)),
+    prepare: (entry) => {
+      // 🆕 S-07a: shown by the guide counts as opened, as in the list.
+      entry.seen = true;
+      return syncAutoWarmups(entry, exMap.get(entry.exerciseId));
+    },
     lines: (entry, entryIndex) => ({ ...exerciseLines(entry), stretch: stretchWords(entryIndex) }),
     assist: assistFor,
     exerciseLabel,
@@ -5272,6 +5619,19 @@ export async function SessionView(workoutId) {
       store.saveSettings({ runnerView: v }).catch(() => {});
     },
   });
+
+  guideToggle = guide.toggle;
+  guideToggle.disabled = !state.entries.length;
+
+  /* 🆕 O-11 (wave 2): the first time the runner opens, one bubble on the open
+   * set. Once per browser (tour.js keeps the flag); never in the Auto-guide,
+   * where the set list is hidden and the hint simply waits for next time. */
+  if (state.entries.length && state.view !== 'guide') {
+    import('./tour.js')
+      .then((t) => t.hintOnce('ftrack:v1:hint-runner', '.set-list .is-open',
+        'Set the weight with ±, then tap Finished.'))
+      .catch(() => {});
+  }
 
   /* 🆕 2026-09-27 (overhaul R-2): PHONE STORAGE FULL. When the draft cannot be
    * written (and clearing the cloud caches did not make room), the sets typed
@@ -5441,7 +5801,7 @@ export async function ActivityLogView(presetName) {
         }],
       });
     } catch (err) {
-      toast((err && err.message) || 'Could not save this activity.');
+      toast(friendlyError(err, 'Could not save this activity.'), { error: true });
       return;
     }
     toast('Activity saved');
@@ -5723,12 +6083,18 @@ export async function BenchmarkView() {
     if (!state.exercise) { toast('Pick an exercise first'); return; }
     if (!Object.values(state.values).some((v) => Number(v) > 0)) { toast('Enter at least one number'); return; }
 
-    await store.saveBenchmark({
-      date: state.date,
-      exerciseId: state.exercise.id,
-      exerciseName: state.exercise.name,
-      values: { ...state.values },
-    });
+    // 🆕 wave 2: a failed save says why, in plain words (it used to say nothing).
+    try {
+      await store.saveBenchmark({
+        date: state.date,
+        exerciseId: state.exercise.id,
+        exerciseName: state.exercise.name,
+        values: { ...state.values },
+      });
+    } catch (err) {
+      toast(friendlyError(err, 'Could not save this benchmark.'), { error: true });
+      return;
+    }
 
     toast('Benchmark saved');
     go('#/day/' + state.date);

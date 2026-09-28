@@ -223,11 +223,11 @@ for (const pick of [pA, pB]) {
   location.hash = '#/home';
 }
 
-/* ============ Empty workout row: hidden until the runner side lands ============ */
+/* ============ Empty workout row: on since wave 2 (runner side landed) ============ */
 {
-  ok(VW.EMPTY_WORKOUT === false && VW.EMPTY_WORKOUT_ROUTE === '#/session/new-empty', 'Empty workout flag is off, route named');
+  ok(VW.EMPTY_WORKOUT === true && VW.EMPTY_WORKOUT_ROUTE === '#/session/new-empty', 'Empty workout flag is on, route named');
   const start = await mount(VW.StartPickerView());
-  ok(!/Empty workout/.test(txt(start)), 'Empty workout row is not shown while the flag is off');
+  ok(/Empty workout/.test(txt(start)), 'Empty workout row is shown now the flag is on');
 }
 
 /* ============ S-04: "Find me a program" in the switcher ============ */

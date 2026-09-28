@@ -13,7 +13,7 @@ import {
   TARGET_STEP, clampTarget, normalizeTargets, targetsApply, summariseTargets,
 } from './set-targets.js';
 import {
-  parseRepText, expandRepSpec, normalizeRepSpec, summariseReps,
+  parseRepText, expandRepSpec, normalizeRepSpec, summariseReps, repSpecToStored,
 } from './set-reps.js';
 // The workout checker — built and tested in 2026-09, shown since the 2026-09-24
 // review. Its normal answer is `[]`, and then nothing is drawn at all.
@@ -89,12 +89,14 @@ const totalSets = (w) => w.exercises.reduce((n, e) => n + e.sets, 0);
  * set reads "3 × 8" / "1 × 3–5"; targets that differ per set are listed
  * ("8 / 8 / 6"), which says the count too. No reps stored: "3 sets", as before.
  * Takes a stored exercise (`reps` per set) or a preset's (`reps` for all). */
-function setsByReps(item) {
+export function setsByReps(item) {
   const per = expandRepSpec(item.reps, item.sets);
   if (!per) return plural(item.sets, 'set');
+  // 🆕 Wave 2: an AMRAP set ("5+", `plus: true`) keeps its "+" here too, so
+  // "3 × 5+" and "5 / 5 / 5+" read the way the program wrote them.
   const words = per.map((r) => {
     const p = normalizeRepSpec(r);
-    return p[0] === p[1] ? String(p[0]) : `${p[0]}–${p[1]}`;
+    return p[0] === p[1] ? `${p[0]}${p.plus ? '+' : ''}` : `${p[0]}–${p[1]}`;
   });
   return new Set(words).size === 1 ? `${item.sets} × ${words[0]}` : words.join(' / ');
 }
@@ -1557,10 +1559,10 @@ async function programWords(system, workouts, preset) {
  * laptop no longer scrolls to reach "Indirect work counts half a set". On a
  * phone it is a column with the pane's own gap, and nothing moves. Nothing in
  * it → no column at all, so an empty one cannot leave a gap. */
-/* 🚧 The "Empty workout" row (S-03/O-18). The runner half — `#/session/new-empty`
- * opening with no template — lands in wave 2; until then the row stays off so
- * nobody taps into a route that cannot open. Flip this with the runner. */
-export const EMPTY_WORKOUT = false;
+/* The "Empty workout" row (S-03/O-18). The runner half — `#/session/new-empty`
+ * opening with no template (views-session.js, SessionView('new-empty') via
+ * app.js's `session` route) — landed in wave 2, so the row is on. */
+export const EMPTY_WORKOUT = true;
 export const EMPTY_WORKOUT_ROUTE = '#/session/new-empty';
 
 function emptyWorkoutRow() {
@@ -1760,12 +1762,11 @@ export async function StartPickerView({ tab = false } = {}) {
             'Pick a ready-made program, or build your own.',
             el('button', { class: 'btn primary', text: 'Pick a program', onClick: () => go('#/explore') })),
           el('button', { class: 'btn block', onClick: () => go('#/system/new') },
-            icon('plus'), 'Build my own instead'),
+            icon('plus'), 'Build my own'),
         ];
 
   // 🆕 Overhaul 2026-09-27 (S-03/O-18): a session with no template, as the
-  // LAST row — the list above stays the common case. Hidden until the runner
-  // side (wave 2) can open `#/session/new-empty`.
+  // LAST row — the list above stays the common case. Opens `#/session/new-empty`.
   const empty = emptyWorkoutRow();
   if (empty) scroll.push(empty);
 
@@ -1904,7 +1905,7 @@ export function openSetTypeSheet(item, onChange) {
   };
   draw();
 
-  openSheet({ title: 'How are these sets done?', body });
+  openSheet({ title: 'Set type', body });
 }
 
 /* ------------------------------------------------------------------ *
@@ -1965,7 +1966,7 @@ export function openTargetSheet(item, ex, onChange) {
 
     rows.push(el('div', { class: 'help-line' },
       el('span', { class: 'section-label',
-        text: 'Percent of your best recorded set on this lift' }),
+        text: '% of best set' }),
       helpDot(
         'It is your own best set on this exercise, converted to a one-rep max — not an '
         + 'estimate borrowed from your other lifts. That is why a lift you have never done '
@@ -1985,7 +1986,7 @@ export function openTargetSheet(item, ex, onChange) {
         },
       },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'Set a target for every set' }),
+          el('div', { class: 'row-title', text: 'Target every set' }),
           el('div', { class: 'row-sub wrap',
             text: 'Starts every set at 75 %. Change any of them below.' }),
         ),
@@ -2024,7 +2025,7 @@ export function openTargetSheet(item, ex, onChange) {
   };
   draw();
 
-  openSheet({ title: ex ? ex.name : 'Weight for each set', body });
+  openSheet({ title: ex ? ex.name : 'Weight per set', body });
 }
 
 /* ------------------------------------------------------------------ *
@@ -2037,10 +2038,12 @@ export function openTargetSheet(item, ex, onChange) {
  * ------------------------------------------------------------------ */
 export function openRepsSheet(item, ex, onChange) {
   const body = el('div', { class: 'list' });
-  const toStored = (pair) => ({ lo: pair[0], hi: pair[1] });
+  // 🆕 Wave 2: "5+" (an as-many-as-you-can set) survives the round trip —
+  // parseRepText reads it as `plus`, and both the save and the field keep it.
+  const toStored = (pair) => repSpecToStored(pair);
   const shown = (spec) => {
     const p = normalizeRepSpec(spec);
-    return p ? (p[0] === p[1] ? String(p[0]) : `${p[0]}–${p[1]}`) : '';
+    return p ? (p[0] === p[1] ? `${p[0]}${p.plus ? '+' : ''}` : `${p[0]}–${p[1]}`) : '';
   };
 
   const repField = (label, aria, value, onGood) => {
@@ -2061,7 +2064,7 @@ export function openRepsSheet(item, ex, onChange) {
     const per = expandRepSpec(item.reps, item.sets);
     const perSetInputs = [];
     const rows = [
-      el('div', { class: 'section-label', text: 'Reps for each set' }),
+      el('div', { class: 'section-label', text: 'Reps per set' }),
       repField('All sets', 'Reps, all sets', per ? shown(per[0]) : '', (pair) => {
         item.reps = Array.from({ length: item.sets }, () => toStored(pair));
         perSetInputs.forEach((i) => { i.value = shown(pair); i.removeAttribute('aria-invalid'); });
@@ -2095,7 +2098,7 @@ export function openRepsSheet(item, ex, onChange) {
   };
   draw();
 
-  openSheet({ title: ex ? ex.name : 'Reps for each set', body });
+  openSheet({ title: ex ? ex.name : 'Reps per set', body });
 }
 
 /* ================================================================== *
@@ -2354,10 +2357,12 @@ async function ownSystemRating(systemId, workouts, systemRow) {
     // Coverage in words, never folded into the score — "a good programme that
     // skips calves" should read as exactly that, and it is the most actionable
     // thing on the screen.
+    // Wave 2 wording: the list stays on screen; why 4 is the line moved behind the ?.
     under.length
-      ? el('div', { class: 'field-help', text:
-          `Under 4 sets a week, which is the least that produces a measurable change: `
-          + `${under.join(', ')}.` })
+      ? el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text: `Under 4 sets a week: ${under.join(', ')}.` }),
+          helpDot('4 sets a week is the least that produces a measurable change.',
+            { label: 'Why 4 sets' }))
       : el('div', { class: 'field-help', text:
           'Every muscle group gets at least the minimum effective dose.' }),
     // ⚠️ The two things these numbers do not know, on the screen where somebody
@@ -2642,7 +2647,7 @@ export async function ExploreDetailView(id) {
       return [
         el('div', { class: 'field-help', text:
           `Added — you have ${copies.length} separate copies of this in your programs.` }),
-        el('button', { class: 'btn block', text: 'Open the first one',
+        el('button', { class: 'btn block', text: 'Open first copy',
           onClick: () => go('#/system/' + copies[0].id) }),
         el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
         el('div', { class: 'field-help', text:
@@ -2703,7 +2708,7 @@ export async function ExploreDetailView(id) {
       // figure, and printing it as one would overstate or understate every
       // programme by a different factor.
       el('div', { class: 'field-help', text:
-        `${preset.goal} · ${preset.daysPerWeek} days a week · around ${preset.minutes} minutes a `
+        `${preset.goal} · ${preset.daysPerWeek} days a week · ~${preset.minutes} min a `
         + `session · ${preset.level} · ${presetSetCount(preset)} sets across `
         + `${plural(preset.workouts.length, 'workout')}` }),
 
@@ -2914,7 +2919,7 @@ async function SystemDetailView(id) {
      */
     top: isCurrent
       ? el('div', { class: 'field-help', text:
-          'This is your current program — it is what the Workouts tab and Record show.' })
+          'Your current program — Workouts and Record show it.' })
       : el('button', {
           class: 'btn block',
           onClick: async () => {
@@ -3795,7 +3800,7 @@ export function openCustomExerciseSheet(onPick) {
   const help = el('div', { class: 'field-help', text: LOAD_HELP[loadType] });
 
   const loadField = el('div', { class: 'field' },
-    el('label', { text: 'How is the weight counted?' }),
+    el('label', { text: 'Weight counted as' }),
     el('div', { class: 'chips' },
       ['total', 'per_side'].map((lt) =>
         el('button', {
@@ -3860,7 +3865,7 @@ export function openCustomExerciseSheet(onPick) {
           'Optional. Your sets rate through it, marked as a match.' }),
       ),
       el('div', { class: 'field' },
-        el('label', { text: 'What do you want to track?' }),
+        el('label', { text: 'What to track' }),
         fieldChips,
         el('div', { class: 'field-help', text: 'These become the steppers you see during a workout.' }),
       ),
