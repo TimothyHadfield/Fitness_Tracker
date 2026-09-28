@@ -2585,13 +2585,13 @@ ok(!data.querySelector('.rep-target'),
     const detail = await mount(SystemRouteView(current.id));
     ok(detail.textContent.includes(current.name),
        '#/system/<id> still opens a programme that is not the current one');
-    ok(/Make this my current program/.test(detail.textContent),
+    ok(/Make this current/.test(detail.textContent),
        '🚨 and offers to make it current — the one thing that screen has which the tab does not need');
     ok(mine.every((w) => detail.textContent.includes(w.name)),
        '⚠️ drawn by the same systemBody() as the tab, so the two cannot drift — same workouts, same wording');
 
     const makeCurrent = [...detail.querySelectorAll('button')]
-      .find((b) => /Make this my current program/.test(b.textContent));
+      .find((b) => /Make this current/.test(b.textContent));
     makeCurrent.click();
     await settle();
     ok((await store.currentSystem()).id === current.id,
@@ -4150,7 +4150,8 @@ ok(!data.querySelector('.rep-target'),
     values: { weight: 245, reps: 3 },
   });
   const moved = text(await mount(GoalsView()));
-  ok(/has gone from/i.test(moved),
+  // 🔄 2026-09-27 (word cap): "it has gone from A to B —" reads "Since …: A → B,".
+  ok(/Since [^:]+: [\d.,]+ \w+ → [\d.,]+ \w+, [\d.,]+ \w+ (higher|lower)/.test(moved),
      '🚨 and once the estimate really moves it prints the change — the screen used to explain why '
      + 'it would not judge and then say nothing at all');
   ok(/estimate/i.test(moved) && /not a tested max|neither is a tested max/i.test(moved),
@@ -4184,7 +4185,7 @@ ok(!data.querySelector('.rep-target'),
 
   const stalls = await mount(GoalRouteView('stalls'));
   const stallText = text(stalls);
-  ok(/What the app can measure/i.test(stallText) && /What it cannot see/i.test(stallText),
+  ok(/What the app measures/i.test(stallText) && /What it cannot see/i.test(stallText),
      'the stalls screen keeps the measurable and unmeasurable reasons apart');
   {
     // 🔄 2026-09-27 (overhaul): the row shows a short line; the detail is behind its ?.
@@ -4259,7 +4260,7 @@ ok(!data.querySelector('.rep-target'),
 
   const inDemo = await mount(AccountView());
   const demoText = text(inDemo);
-  ok(/You are in the demo account/i.test(demoText),
+  ok(/You're in the demo/i.test(demoText),
      'the Account screen becomes the demo screen rather than showing account controls');
   ok(!/Delete account|Sign out|Upload/i.test(demoText),
      'and offers no account controls at all — none of them would mean anything here');
@@ -8263,7 +8264,7 @@ ok(!data.querySelector('.rep-target'),
     ok(/own sex, body weight and age/.test(text),
        '🚨 the screen states that each body is on its OWN sex, body weight and age — the three '
        + `axes, not the two that were never in doubt (${text.slice(text.indexOf('Each body'), text.indexOf('Each body') + 90)})`);
-    ok(/vs\. people like each of them/.test(text),
+    ok(/vs\. people like them/.test(text) && /each against their own sex/.test(text),
        '⚠️ and the header names the per-person group rather than one population — a caption naming '
        + 'a population the colours were not computed against is the fault this label exists to prevent');
     ok(/never "who lifts more"|who is lifting more/.test(await dotText(cmp.querySelector('.vol-notes'))),

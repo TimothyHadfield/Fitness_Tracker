@@ -87,7 +87,7 @@ ok(Boolean(await store.activeGoal()), 'and it has a running goal');
   ok(iProgress > 0 && iMeasured === iProgress + 1,
      `SC-2: "What you are actually doing" comes straight after the bar (${iProgress}, ${iMeasured})`);
   ok(iReqs === iMeasured + 1, `   then the requirements (${iReqs})`);
-  ok(/What you are actually doing/.test(flat(kids[iMeasured])), '   and the measured block has loaded');
+  ok(/What you're actually doing/.test(flat(kids[iMeasured])), '   and the measured block has loaded');
 
   const reqs = kids[iReqs];
   const inReqs = reqs ? [...reqs.children] : [];
@@ -208,7 +208,7 @@ ok(Boolean(await store.activeGoal()), 'and it has a running goal');
   ok(!/Almost everybody who trains/.test(t), 'W-11: the intro is cut');
   ok(st.querySelectorAll('.stall-row').length === 6, '   six reasons still');
   ok(/This screen never blames your training\./.test(t), '   the point is still said outright');
-  const effort = [...st.querySelectorAll('.stall-row')].find((r) => /close enough to failure/.test(flat(r)));
+  const effort = [...st.querySelectorAll('.stall-row')].find((r) => /close to failure/.test(flat(r)));
   const effortWhy = await openDot(effort && effort.querySelector('.help-dot'));
   ok(/reps-in-reserve/.test(effortWhy),
      '   and the invisible one that matters most — no reps-in-reserve field — is behind its ?');

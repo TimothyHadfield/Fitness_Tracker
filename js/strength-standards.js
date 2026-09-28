@@ -1054,7 +1054,8 @@ export function comparisonLabel(profile) {
    * "sex is now handled" and assuming the other two are shared. */
   if (c.sex === 'own' && (profile && profile.whose) === 'each') {
     return {
-      main: c.pool === 'lifters' ? 'vs. people like each of them' : 'vs. adults like each of them',
+      // ≤4 words (word cap 2026-09-27); `sub` still spells out "each against their own".
+      main: c.pool === 'lifters' ? 'vs. people like them' : 'vs. adults like them',
       sub: 'each against their own sex, body weight and age',
       pool: c.pool,
       assumed,

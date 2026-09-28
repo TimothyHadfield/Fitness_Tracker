@@ -318,7 +318,7 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
       },
       {
         key: 'effort',
-        label: 'How hard the sets are',
+        label: 'How hard sets are',
         value: 'Within 1–2 reps of failure',
         // ⚠️ `phrase: true` is a LAYOUT fact the model owns, and it is here
         // rather than in the view because only the model knows which of these
@@ -855,10 +855,11 @@ export function stallReasons({ requirements, measured, muscle }) {
   return [
     {
       key: 'volume',
-      reason: 'Not enough sets on this muscle',
+      // Labels ≤4 words (word cap, 2026-09-27); "this muscle" is the screen's own title.
+      reason: 'Not enough sets',
       heading: heading(volume.status, {
-        ok: 'Enough sets on this muscle',
-        short: 'Not enough sets on this muscle',
+        ok: 'Enough sets',
+        short: 'Not enough sets',
         unknown: 'Sets on this muscle',
       }),
       visible: true,
@@ -867,11 +868,11 @@ export function stallReasons({ requirements, measured, muscle }) {
     },
     {
       key: 'frequency',
-      reason: 'Not training it often enough',
+      reason: 'Not often enough',
       heading: heading(frequency.status, {
-        ok: 'Training it often enough',
-        short: 'Not training it often enough',
-        unknown: 'How often you train it',
+        ok: 'Often enough',
+        short: 'Not often enough',
+        unknown: 'How often you train',
       }),
       visible: true,
       source: null, // docs/research.md §6.3
@@ -879,7 +880,7 @@ export function stallReasons({ requirements, measured, muscle }) {
     },
     {
       key: 'effort',
-      reason: 'Sets not taken close enough to failure',
+      reason: 'Not close to failure',
       visible: false,
       status: 'invisible',
       value: null,
@@ -913,7 +914,7 @@ export function stallReasons({ requirements, measured, muscle }) {
     },
     {
       key: 'life',
-      reason: 'Stress, illness, and everything else',
+      reason: 'Stress, illness, everything else',
       visible: false,
       status: 'invisible',
       value: null,

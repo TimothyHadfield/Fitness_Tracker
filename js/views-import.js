@@ -95,7 +95,7 @@ function intro(pick) {
         + 'your calendar and feed. Weigh-ins join your body-weight history.',
       'What comes in'),
     el('button', { class: 'btn primary block', onClick: pick }, icon('plus'), 'Choose a CSV file'),
-    el('div', { class: 'section-label', text: 'Where to get the file' }),
+    el('div', { class: 'section-label', text: 'Getting the file' }),
     source('Strong', 'Settings › Export Strong Data'),
     source('Hevy', 'Profile › Settings › Export & Import Data › Export Workouts'),
     source('Strava', 'Settings › My Account › Download or Delete Your Account › Request your '

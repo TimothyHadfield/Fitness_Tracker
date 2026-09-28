@@ -108,7 +108,7 @@ function demoScreen() {
        * somebody tapping it. */
       el('div', { class: 'card' },
         el('div', { class: 'help-line' },
-          el('div', { class: 'section-label', text: 'You are in the demo account' }),
+          el('div', { class: 'section-label', text: 'You\'re in the demo' }),
           // 🔄 98 words → 28, 2026-09-27 (overhaul words W-22). Same three facts.
           helpDot(el('div', {},
             el('p', {}, 'A generated year of training, so every screen has something in it. '
@@ -1753,7 +1753,7 @@ export async function SignInView() {
 
   const resetBtn = el('button', {
     class: 'btn ghost block',
-    text: 'Send a password reset email',
+    text: 'Email a reset link',
     onClick: async () => {
       const e = email.value.trim();
       if (!e) { toast('Enter your email first'); return; }
@@ -1762,7 +1762,7 @@ export async function SignInView() {
         toast('Reset email sent');
       });
       resetBtn.disabled = false;
-      resetBtn.textContent = 'Send a password reset email';
+      resetBtn.textContent = 'Email a reset link';
     },
   });
 

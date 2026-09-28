@@ -608,10 +608,12 @@ ok(unknown.filter((r) => r.visible).every((r) => r.status === 'unknown' && r.val
    not been told. Rule 6 forbids unearned opinions, and an unearned NEGATIVE one
    is the same fault; this was the single screen in the app holding measured
    proof that a user was doing the work. */
-ok(fineReasons.find((r) => r.key === 'volume').heading === 'Enough sets on this muscle'
-   && fineReasons.find((r) => r.key === 'frequency').heading === 'Training it often enough',
+// 🔄 2026-09-27 (word cap, labels ≤4 words): "… on this muscle" / "Training it
+// …" dropped — the screen's title already names the muscle.
+ok(fineReasons.find((r) => r.key === 'volume').heading === 'Enough sets'
+   && fineReasons.find((r) => r.key === 'frequency').heading === 'Often enough',
    '⚠️ a user who is MEETING the target is told so, not told the opposite in bold');
-ok(shortReasons.find((r) => r.key === 'volume').heading === 'Not enough sets on this muscle',
+ok(shortReasons.find((r) => r.key === 'volume').heading === 'Not enough sets',
    'and somebody genuinely short still reads that they are short');
 ok(unknown.filter((r) => r.visible).every((r) => !/^Not /.test(r.heading)),
    'and "not measured yet" is never headlined as a failure either');
@@ -620,7 +622,7 @@ ok(unknown.filter((r) => r.visible).every((r) => !/^Not /.test(r.heading)),
 // progress stalls" a row names a CAUSE, and a cause is called by its name
 // whether or not it is happening to you.
 ok(fineReasons.every((r) => typeof r.reason === 'string' && r.reason)
-   && fineReasons.find((r) => r.key === 'volume').reason === 'Not enough sets on this muscle',
+   && fineReasons.find((r) => r.key === 'volume').reason === 'Not enough sets',
    'while the cause name is unchanged, so the stalls screen still reads as a list of causes');
 
 /* ================================================================== *

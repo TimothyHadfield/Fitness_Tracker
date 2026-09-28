@@ -2407,7 +2407,13 @@ async function rateAllPresets(presets) {
  * whole summary is on the programme's own screen. */
 function firstSentence(text) {
   const s = sentencesOf(text);
-  return s.length ? s[0] : String(text || '');
+  let first = s.length ? s[0] : String(text || '');
+  /* Word cap (2026-09-27): a first sentence over 15 words stops at its dash in
+   * the list — what comes after is detail, and the programme's own screen still
+   * has every word. */
+  const count = first.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  if (count > 15 && first.includes(' — ')) first = first.slice(0, first.indexOf(' — ')).replace(/[,;:]$/, '') + '.';
+  return first;
 }
 
 export async function ExploreView() {
@@ -2927,7 +2933,7 @@ async function SystemDetailView(id) {
             toast('Now your current program');
             refreshRoute();
           },
-        }, icon('check'), 'Make this my current program'),
+        }, icon('check'), 'Make this current'),
     scroll: await systemBody(existing, workouts),
   });
 }

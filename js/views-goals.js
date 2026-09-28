@@ -810,7 +810,8 @@ function movedSince(goal, p, m, stale) {
   const since = fmtDateShort(goal.startDate);
   const moved = step === 0
     ? `Since ${since} it is unchanged to the nearest ${unitWord}, at ${from}.`
-    : `Since ${since} it has gone from ${from} to ${to} — `
+    // Word cap (2026-09-27): the arrow carries "has gone from … to", ≤15 words.
+    : `Since ${since}: ${from} → ${to}, `
       + `${step} ${units.units()} ${delta > 0 ? 'higher' : 'lower'} (${pctText}).`;
 
   // ⚠️ The comparison against the yardstick is arithmetic, not a judgement:
@@ -971,7 +972,7 @@ function requirementsBlock(goal, req, ...after) {
      * with a bigger goal." is CUT and its ? — why only some of these grow —
      * sits on this heading instead, beside the rows it explains. */
     el('div', { class: 'help-line goal-reqs-head' },
-      el('h2', { class: 'section-head', text: 'What this asks of you' }),
+      el('h2', { class: 'section-head', text: 'What this asks' }),
       helpDot(SCALES_WHY(), { label: 'Why only some of these grow with the goal' })),
     el('div', { class: 'list' }, req.rows.map((r) => reqRow(r, req))),
 
@@ -1038,7 +1039,7 @@ function measuredBlock(goal, req, measured) {
   const why = measuredFooterWhy(measured);
 
   return el('div', { class: 'card' },
-    el('h2', { class: 'section-head', text: 'What you are actually doing' }),
+    el('h2', { class: 'section-head', text: 'What you\'re actually doing' }),
     // ⚠️ `heading`, not `reason` — this section says what you ARE doing, so a
     // row that is being met must not be titled with the thing that goes wrong.
     // *Why progress stalls* keeps `reason`, because there the row names a cause.
@@ -1151,7 +1152,7 @@ function moreRows() {
     ),
     el('button', { class: 'row', onClick: () => go('#/goal/systems') },
       el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: 'Programs that fit this goal' }),
+        el('div', { class: 'row-title', text: 'Programs that fit' }),
         el('div', { class: 'row-sub wrap', text: 'Best for this muscle first' }),
       ),
       chevron(),
@@ -1465,7 +1466,7 @@ async function GoalStallsView() {
       // 🔄 OVERHAUL W-11 (2026-09-27): the intro is CUT — the title says it.
       // Each row is its reason, one short line and a ? holding the model's
       // sentence (same helper as the goal screen's measured rows).
-      el('h2', { class: 'section-head', text: 'What the app can measure' }),
+      el('h2', { class: 'section-head', text: 'What the app measures' }),
       el('div', { class: 'list' }, seen.map((r) => measuredRow(r, r.reason, req, measured))),
 
       el('h2', { class: 'section-head', text: 'What it cannot see' }),

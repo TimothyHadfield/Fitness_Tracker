@@ -414,8 +414,9 @@ export function rateUserSystem(workouts, exMap, {
   });
 
   const CAPTIONS = {
-    measured: observed && `Based on the ${observed.sessions} session${observed.sessions === 1 ? '' : 's'} `
-      + `you have logged in the last ${Math.round(observed.spanDays / 7)} weeks — about `
+    // Word cap (2026-09-27): was 18 words; the same three facts in 11.
+    measured: observed && `From your last ${Math.round(observed.spanDays / 7)} weeks: `
+      + `${observed.sessions} session${observed.sessions === 1 ? '' : 's'}, about `
       + `${observed.daysPerWeek.toFixed(1)} days a week.`,
     declared: `Based on this programme's ${declaredDaysPerWeek} days a week. Once you have logged a `
       + 'couple of weeks, this switches to what you actually do.',

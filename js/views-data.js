@@ -812,8 +812,10 @@ export function ownCalendar(activity, today, opts = {}) {
   // is the only shape of check that catches `daysLabel` being wired back in by
   // accident. A caveat that quotes the forbidden phrase to disown it would blunt
   // the one guard that cannot be fooled.
-  const CAVEAT_YEARS = `${CAVEAT_MONTHS} Days outside that window are blank whether or `
-    + 'not they trained, and the number beside each year counts published days only.';
+  // Word cap (2026-09-27): one 21-word sentence became two short ones — both
+  // still on screen, since they say what the picture IS.
+  const CAVEAT_YEARS = `${CAVEAT_MONTHS} Days outside it are blank whether or not they `
+    + 'trained. Each year\'s number counts published days only.';
   const caveat = friend ? el('div', { class: 'field-help', text: CAVEAT_MONTHS }) : null;
 
   const tabs = [['months', 'Months'], ['years', 'Years']].map(([m, label]) =>
