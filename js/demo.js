@@ -349,8 +349,13 @@ export function unresolvedDemoExercises() {
  *                             mode reads as a bug
  * @param {string} opts.palette same reasoning again — the colour choice
  *                             (2026-08-26) follows the person into the demo
+ * @param {boolean} opts.glass  and the glass switch (overhaul V-6, wave 2):
+ *                             false is written as `glass: false`; true stays
+ *                             ABSENT, the settings contract's "on"
  */
-export function buildDemoData({ today, units = 'lbs', theme = 'dark', palette = 'gold' } = {}) {
+export function buildDemoData({
+  today, units = 'lbs', theme = 'dark', palette = 'gold', glass = true,
+} = {}) {
   const byName = exerciseIndex();
   const random = rng(DEMO_SEED);
 
@@ -552,6 +557,7 @@ export function buildDemoData({ today, units = 'lbs', theme = 'dark', palette = 
     units,
     theme,
     palette,
+    ...(glass === false ? { glass: false } : null),
     gender: 'male',
     birthYear,
   };

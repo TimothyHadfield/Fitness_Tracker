@@ -112,10 +112,14 @@ const MemoryBackend = {
     const data = buildDemoData({
       today: todayISO(),
       units: current.units === 'kg' ? 'kg' : 'lbs',
-      theme: current.theme === 'light' ? 'light' : 'dark',
+      // 'auto' (wave 1's follow-the-phone theme) carries too; before wave 2
+      // it fell through to 'dark' and a light-phone Auto user flipped to dark.
+      theme: current.theme === 'light' || current.theme === 'auto' ? current.theme : 'dark',
       // Same reasoning as units and theme: a demo that flips somebody's
       // colour palette reads as the app breaking, not as a demo starting.
       palette: ['teal', 'indigo', 'ember'].includes(current.palette) ? current.palette : 'gold',
+      // And the glass switch (design V-6): off stays off. Absent = on.
+      glass: current.glass !== false,
     });
     for (const c of COLLECTIONS) this.rows.set(c, data[c] ? structuredClone(data[c]) : []);
     })();
@@ -4733,6 +4737,9 @@ async function ratedFromRows(rows, profile) {
       basis: rating.kind,
       contributors: rating.used,
       contributorCount: rating.contributorCount,
+      // E-3b (wave 2): distinct session DATES — what the 1-session Fair / 2-session
+      // Good cap reads, and what the panel's "1 session" line counts.
+      sessionCount: rating.sessionCount,
       exerciseCount: rating.exerciseCount,
       hint: raiseConfidenceHint(muscle, rating),
       /* ⚠️ THE MUSCLE'S OWN CAVEAT, AND IT TRAVELS WITH THE NUMBER RATHER THAN
@@ -4848,6 +4855,9 @@ export async function buildStrengthShare(rows = null, asProfile = null) {
       band: m.band ? m.band.name : null,
       basis: m.basis,
       contributorCount: m.contributorCount,
+      // E-3b (wave 2): published so a friend's map caps and counts sessions
+      // exactly as the owner's does (js/shared-map.js).
+      sessionCount: m.sessionCount,
       exerciseCount: m.exerciseCount,
       contributors: (m.contributors || []).map((c) => ({
         exerciseName: c.exerciseName,
@@ -5204,6 +5214,9 @@ async function computeMuscleStrength() {
       basis: rating.kind,
       contributors: rating.used,
       contributorCount: rating.contributorCount,
+      // E-3b (wave 2): distinct session DATES (the Fair/Good cap and the
+      // panel's session line read this, not the exercise-day count above).
+      sessionCount: rating.sessionCount,
       // How many DIFFERENT exercises had a say, as opposed to how many sessions
       // were counted. The two used to be conflated, and the difference is the
       // whole of whether a reading is corroborated.

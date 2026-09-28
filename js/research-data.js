@@ -15,8 +15,9 @@
 // (85.4/85.3/85.6 % at 15; 39.2/39.1/38.9 % at 90). Drawing eleven lines from
 // that source would be drawing the same line eleven times and labelling the
 // copies as if they were findings. The app's own age grading
-// (strength-standards.js ageCoefficient — McCulloch/Foster) is the same kind
-// of thing: one curve for all lifts, from powerlifting age-grading tables.
+// (strength-standards.js ageCoefficient) is the same kind of thing: one curve
+// for all lifts. Since 2026-09-27 it is Harbo's bands below (1.10 at 50, 1.17
+// at 60, 1.35 at 70, 1.50 at 80), with Foster's junior rows under 23.
 //
 // So the per-group curves come from the one study that measured every major
 // muscle group in the same people on the same machine:

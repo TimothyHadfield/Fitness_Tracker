@@ -331,9 +331,10 @@ function weekSection(sessions) {
   return weekBlock({ ...weekSummary(sessions), onOpen: openCalendarMonths });
 }
 
-/* The Calendar screen, on Months. `setCalMode` is views-data.js's to export
- * (the mode is its module state); until it does, the Months tab is tapped once
- * the screen is up — the same thing a reader would do. */
+/* The Calendar screen, on Months. `setCalMode` is views-data.js's export (the
+ * mode is its module state; wave 2), set BEFORE the route so the screen draws
+ * on Months at once. Guarded: a views-data.js without it still gets Months by
+ * the tab being tapped once the screen is up. */
 function openCalendarMonths(e) {
   if (e && e.preventDefault) e.preventDefault();
   if (typeof dataViews.setCalMode === 'function') {

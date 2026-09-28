@@ -1472,8 +1472,10 @@ The tails are not — above roughly the 97th percentile the data thins and estim
 weight and training tier. Barbell Medicine's 90th percentile bench: 1.95× bodyweight male vs 1.35×
 female.
 
-**Age.** 🟢 Strength peaks ~23–40 and declines after. Powerlifting age-grades with the **McCulloch
-coefficients** (1.00 at 40, 1.130 at 50, 1.381 at 60) and **Foster** coefficients for ages 14–23.
+**Age.** 🟢 Strength peaks ~23–40 and declines after. Powerlifting age-grades with the McCulloch
+coefficients (1.00 at 40, 1.130 at 50, 1.381 at 60), which have no published derivation (§16.9). **The
+app grades above 40 from Harbo 2012's measured bands** (1.00 at 40, 1.10 at 50, 1.17 at 60, 1.35 at
+70, 1.50 at 80; since 2026-09-27) and uses **Foster** coefficients for ages 14–23.
 Trained populations decline substantially more slowly than untrained ones. Note this is *absolute
 strength* — distinct from Nuzzo et al. (§2) finding age did not moderate the reps–%1RM relationship.
 

@@ -28,6 +28,7 @@
 
 import {
   LEVELS, levelFor, nextLevelAfter, levelProgress, compareKey, keyLiftFor, REF_BW,
+  standardQualityFor,
 } from './strength-standards.js';
 import { tintFor, confidenceBand } from './muscle-evidence.js';
 import { withUnitRounded } from './units.js';
@@ -81,6 +82,37 @@ function readableContributor(c) {
   return out;
 }
 
+/* 🆕 E-3b / E-2 ON THE READ SIDE (overhaul wave 2, 2026-09-27). The owner's
+ * device caps confidence before publishing — one session date at most Fair, two
+ * at most Good, a stand-in-only reading at most Fair (rateMuscle() in
+ * js/muscle-evidence.js). A document published by an older build carries the
+ * uncapped number, so a friend's map could read High where the owner's own map
+ * now reads Fair. Capping again here is a no-op on a new document (the value is
+ * already under the cap) and the same rule on an old one.
+ *
+ * ⚠️ The ceilings mirror muscle-evidence.js's CAP_FAIR / CAP_GOOD (not exported;
+ * just under the Good 0.55 and High 0.72 band floors), times the muscle's
+ * standard quality, exactly as the owner's number is built.
+ *
+ * `sessionCount` is absent on old documents. `contributorCount` (exercise-days)
+ * is never smaller than the session count, so a count of 1 or 2 there is a safe
+ * upper bound for the cap; anything larger says nothing and caps nothing. */
+const SHARED_CAP_FAIR = 0.5499;
+const SHARED_CAP_GOOD = 0.7199;
+
+function cappedConfidence(m) {
+  const c = m.confidence;
+  if (!Number.isFinite(c)) return c;
+  const sessions = Number.isFinite(m.sessionCount) ? m.sessionCount
+    : (Number.isFinite(m.contributorCount) && m.contributorCount <= 2 ? m.contributorCount : null);
+  let cap = Infinity;
+  if (sessions != null && sessions <= 1) cap = SHARED_CAP_FAIR;
+  else if (sessions != null && sessions <= 2) cap = SHARED_CAP_GOOD;
+  if (m.basis === 'fallback') cap = Math.min(cap, SHARED_CAP_FAIR);
+  if (cap === Infinity) return c;
+  return Math.min(c, cap * standardQualityFor(m.muscle));
+}
+
 /**
  * One published map, read under one comparison group.
  *
@@ -116,6 +148,7 @@ export function ratingsFromShared(strength, compare) {
     const contributors = (Array.isArray(m.contributors) ? m.contributors : [])
       .map(readableContributor);
     const top = contributors[0] || null;
+    const confidence = cappedConfidence(m);
 
     out.set(m.muscle, {
       muscle: m.muscle,
@@ -124,16 +157,19 @@ export function ratingsFromShared(strength, compare) {
       // it can be, so a reader's own library stays the source of truth for it.
       lift: keyLiftFor(m.muscle) || (m.lift ? { name: m.lift } : null),
       estimate: m.estimate,
-      confidence: m.confidence,
+      confidence,
       // ⚠️ REBUILT FROM THE NUMBER, NOT READ FROM THE STRING. The document
       // carries the band's name for readers that only want to print it; the
       // panel wants the object, and deriving it here means one definition of
       // where the boundaries are rather than two that can disagree.
-      band: Number.isFinite(m.confidence) ? confidenceBand(m.confidence) : null,
-      tint: Number.isFinite(m.confidence) ? tintFor(m.confidence) : 1,
+      band: Number.isFinite(confidence) ? confidenceBand(confidence) : null,
+      tint: Number.isFinite(confidence) ? tintFor(confidence) : 1,
       basis: m.basis,
       contributors,
       contributorCount: m.contributorCount,
+      // E-3b: absent on documents published before it; the panel then falls
+      // back to contributorCount (views-muscles.js).
+      ...(Number.isFinite(m.sessionCount) ? { sessionCount: m.sessionCount } : null),
       exerciseCount: m.exerciseCount,
       hint: m.hint || null,
       confident: m.confident === true,
