@@ -796,3 +796,16 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - 2026-09-28: Tim asked for an overview by category (given in chat: estimates, using the app, look,
   intro, words, Settings, new features, behind the scenes), then "prepare md files for chat reset".
   Nothing new authorized; waiting on his reaction to the unseen choices above.
+
+## 2026-09-28 · Brother's "Not signed in" screens
+- **Asked:** Tim's brother (iPhone) got "Something went wrong · Not signed in." on Record/Account and
+  "Could not load your profile" on Profile; Tim: check and fix.
+- **Cause (reasoned, then reproduced):** start-up signs in anonymously, but when Firebase drops the
+  user later (saved account deleted / token refused) the listener left `user` null for the visit.
+- **Built (9511103):** `createUserKeeper()` in firebase-backend.js — any no-user moment takes ONE
+  fresh guest account (shared promise); `init()` waits on it; signOut/deleteAccount use it.
+  `tests/auth-keeper.test.mjs` fails on the old code, passes now.
+- **Verified how:** no-Chrome suite 9336 PASS / 0 FAIL (+ plates-visual 186); live WebKit iPhone:
+  forced `signOut()` via the SDK on `#/record`, uid changed, `#/me` loaded normally, no errors.
+- **Open:** if the brother had a real account, he must sign in again from Account (the drop is
+  Firebase's). Test runs left ~3 stray anonymous users in fitness-tracker-th (harmless).
