@@ -3685,7 +3685,11 @@ export async function SettingsView() {
   function setTheme(theme, e) {
     const shown = theme === 'auto' ? phoneTheme() : theme;
     const was = document.documentElement.getAttribute('data-theme');
-    const apply = () => document.documentElement.setAttribute('data-theme', shown);
+    // ⚠️ 'auto' ITSELF, not the phone's current answer. Writing the resolved
+    // 'dark'/'light' here made app.js record a fixed choice, so Auto stopped
+    // following the phone until a relaunch (review item 9). app.js's observer
+    // resolves 'auto' in a microtask, before the next paint.
+    const apply = () => document.documentElement.setAttribute('data-theme', theme);
     if (was === shown) apply();
     else revealTheme(apply, e.currentTarget || e.target);
     saveAndSeed({ theme });
@@ -3994,16 +3998,18 @@ export async function SettingsView() {
        * a scope it does not have yet would be a promise the switch cannot keep.
        */
       group('Data',
-        onOffSwitch('More details', settings.moreDetails === true, setMoreDetails),
+        // The ? sits beside its label, like every other row (review item 16).
+        onOffSwitch('More details', settings.moreDetails === true, setMoreDetails, {
+          help: 'The rankings are Beginner through Elite, and they are worked out from the same '
+            + 'percentile whichever way this is set. It only decides how much of the working you '
+            + 'see.',
+          helpLabel: 'What more details actually changes',
+        }),
         /* 🚨 "YOUR RANKING DOESN'T CHANGE" DOES NOT GO BEHIND THE ?, and that is
          * the whole reason this switch is honest. It changes what the reader
          * thinks the ranking IS — somebody who believes turning this off gives
          * them a gentler level has been misled by a setting. */
-        el('div', { class: 'help-line' },
-          el('span', { class: 'field-help', text: 'Adds the percentile. Your ranking doesn\'t change.' }),
-          helpDot('The rankings are Beginner through Elite, and they are worked out from the same '
-            + 'percentile whichever way this is set. It only decides how much of the working you '
-            + 'see.', { label: 'What more details actually changes' })),
+        el('div', { class: 'field-help', text: 'Adds the percentile. Your ranking doesn\'t change.' }),
         doorRow('Compared to', compareValue, openCompare),
       ),
 
