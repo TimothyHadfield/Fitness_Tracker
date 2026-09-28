@@ -3683,6 +3683,12 @@ export async function SettingsView() {
       .catch((err) => toast(err.message));
   }
 
+  // Whether a group workout a friend logs for you waits for Add (2026-09-27).
+  function setAskGroup(on) {
+    store.saveSettings({ askBeforeGroupWorkouts: on });
+    toast(on ? 'Group workouts wait for you' : 'Group workouts are added for you');
+  }
+
   // Changing units re-labels the app; it does NOT touch a single stored number.
   // Everything is kept in pounds, so switching back and forth is lossless.
   function setUnits(u, e) {
@@ -3831,6 +3837,19 @@ export async function SettingsView() {
             el('p', { text: 'Only your display name is ever listed — never your email, and '
               + 'nothing about your training.' }),
           ), { label: 'What being findable means' })),
+      ),
+
+      /* 🆕 ASK BEFORE ADDING GROUP WORKOUTS — OFF BY DEFAULT (Tim, 2026-09-27:
+       * group workouts apply "automatically … they don't need to accept it",
+       * plus "a setting (that is off by default) that makes it so the user does
+       * have to accept"). Off: a workout a friend logs for you is added on its
+       * own (social.autoApplyHandoffs). On: it waits on the Friends screen for
+       * Add, as before. Sits beside Findable by name, the other friends switch. */
+      el('div', { class: 'field' },
+        onOffSwitch('Ask before adding group workouts',
+          settings.askBeforeGroupWorkouts === true, setAskGroup),
+        el('div', { class: 'field-help', text:
+          'On: a workout a friend logs for you waits for you to tap Add.' }),
       ),
 
       el('div', { class: 'section-label', text: 'You' }),

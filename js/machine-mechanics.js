@@ -82,12 +82,20 @@ const SMITH_SL_SOURCED = new Set([
  * carries it. Before this, a median T-bar lifter (185 on the page = 141 of
  * plates) read 141 ÷ 0.93 = 152 lb of barbell row, ~30th percentile.
  *
- * 🛑 TOTAL-LOAD LIFTS ONLY. Meadows Row and Landmine Press are logged per arm and
- * doubled, and the rep curve in strength-observations.js runs `plateE1rm()` on
- * the LOGGED (undoubled) number, so a lever on a per-side lift would convert
- * half the load. They keep their plain ratios until that path doubles first. */
+ * 🆕 ONE ARM — 2026-09-27, third pass. Meadows Row is logged per arm and
+ * doubled. The hand holds the plates plus HALF the bar (the physics above, not
+ * a page convention: no Meadows-row page exists), and that per-hand load is
+ * rated as a one-arm row. ORDER: the bar's half goes on PER HAND, the rep curve
+ * runs on that, THEN the result is doubled — so the bar counts 44 once across
+ * both hands (2 × 22), never 44 per arm (2 × 44). `perSide: true` marks it;
+ * `A` stays the both-hands total so toKeyLift()'s k × total + A is unchanged.
+ *
+ * 🛑 Landmine Press gets NO bar: its page (landmine-press, checked 2026-09-27)
+ * prints the same "include the bar" line but a male beginner of 41 lb — below
+ * a 44 lb bar — so its lifters log without it, as the app does. */
 export const LANDMINE_BAR_SL = 44;
 const LANDMINE_SL_SCALE = new Set(['T-Bar Row', 'Landmine Row', 'Landmine Squat']);
+const LANDMINE_PER_ARM = new Set(['Meadows Row']);
 
 /* The leverage a person can pick for their own lever machine: "the plates sit
  * this many times as far from the pivot as the pad". 1 = the same distance.
@@ -167,6 +175,9 @@ export function mechanicsFor(exercise, picked) {
   if (LANDMINE_SL_SCALE.has(name)) {
     return { design: 'landmine', k: 1, A: LANDMINE_BAR_SL, q: null, picked: false };
   }
+  if (LANDMINE_PER_ARM.has(name)) {
+    return { design: 'landmine', k: 1, A: LANDMINE_BAR_SL, q: null, picked: false, perSide: true };
+  }
   return null;
 }
 
@@ -204,6 +215,15 @@ export function loggedFromEffective(lever, effective) {
  * observation's own units stay what the lifter typed.
  */
 export function plateE1rm(lever, logged, reps) {
+  /* A per-side lever (Meadows row): `logged` is ONE hand's plates. The curve
+   * runs on one hand's real load (k × plates + A/2), and the answer is handed
+   * back as DOUBLED plates, the per-side convention every total in the rating
+   * speaks — so toKeyLift()'s k × p + A = 2 × e1rm(k × plates + A/2, reps). */
+  if (lever && lever.perSide) {
+    const half = { k: lever.k, A: lever.A / 2 };
+    const one = plateE1rm(half, logged, reps);
+    return one === null ? null : 2 * one;
+  }
   const eff = effectiveLoad(lever, logged);
   if (eff === null) return null;
   const top = e1rm(eff, reps);

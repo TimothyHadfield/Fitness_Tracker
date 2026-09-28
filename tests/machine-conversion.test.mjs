@@ -310,8 +310,41 @@ const readSet = (n, muscle, weight, reps, sex = 'male') => {
   both('Pendulum Squat', 'Quads', 1.05, 1.05);
   both('Reverse Hyperextension', 'Back', 0.55, 0.55);
   both('Donkey Calf Raise', 'Calves', 1.05, 1.05);
-  both('Meadows Row', 'Back', 0.55, 0.55);
-  ok(!contrib('Meadows Row', 'Back')?.lever, 'a per-side landmine lift gets no bar offset (see machine-mechanics.js)');
+  // Meadows row — 2026-09-27 (third pass). A one-arm landmine row: the hand
+  // holds the plates plus HALF the bar (its centre is half way to the floor
+  // pivot), and that per-hand load is a one-arm row — the dumbbell row's own
+  // sourced 0.98 on the same doubled convention. Was a reasoned 0.55 on bare
+  // plates: 70 × 10 read a 378 lb barbell row.
+  both('Meadows Row', 'Back', 0.98, 0.98);
+  {
+    const c = contrib('Meadows Row', 'Back');
+    ok(c?.lever?.perSide === true && c.lever.k === 1 && c.lever.A === mech.LANDMINE_BAR_SL,
+       `Meadows row: a per-side lever, k 1, A ${c?.lever?.A} across both hands = ${mech.LANDMINE_BAR_SL / 2} lb of bar per hand`);
+    const o = readSet('Meadows Row', 'Back', 70, 10);
+    const want = 2 * e1rm(70 + mech.LANDMINE_BAR_SL / 2, 10) / 0.98;
+    ok(o && near(o.estimate, want, 0.01),
+       `🚨 70 × 10 Meadows row = 2 × e1rm(70 + 22, 10) ÷ 0.98 = ${want.toFixed(1)} lb barbell row (reads ${o && o.estimate.toFixed(1)})`);
+    ok(o && o.estimate < 2 * e1rm(70 + mech.LANDMINE_BAR_SL, 10) / 0.98 - 1,
+       'the bar is NOT doubled: the whole 44 per arm would read higher');
+    ok(o && o.weight === 70, 'the logged number is untouched: still 70 lb per arm');
+    // The rep curve on the per-hand load, then doubled: plateE1rm hands back
+    // doubled plates, so k × p + A is the doubled per-hand max.
+    const p = mech.plateE1rm(c.lever, 70, 10);
+    ok(near(p + c.lever.A, 2 * e1rm(92, 10), 1e-9), 'plateE1rm on a per-side lever: k × p + A = 2 × e1rm(plates + 22, reps)');
+    ok(near(fromKeyLift(c, toKeyLift(c, p)), p, 1e-6), 'and fromKeyLift inverts it (doubled plates back)');
+  }
+  // Landmine Press — LEFT with no bar. Its own page (strength-standards/
+  // landmine-press, checked 2026-09-27) prints "include the bar, 44 lb" but its
+  // male beginner is 41 lb, BELOW the bar: its lifters do not add it, so the
+  // app's plates-only number is already on the page's scale.
+  ok(!contrib('Landmine Press', 'Shoulders')?.lever, 'Landmine Press keeps no bar offset (its page\'s beginner 41 lb is below a 44 lb bar)');
+  // No per-side exercise may carry a lever that adds the bar per arm in full.
+  {
+    const bad = BUILT_IN_EXERCISES.filter((e) => e.loadType === 'per_side')
+      .flatMap((e) => contributionsFor(e, { sex: 'male', bodyWeight: 180 }).filter((c) => c.lever && !c.lever.perSide)
+        .map((c) => `${e.name}→${c.muscle}`));
+    ok(bad.length === 0, `every per-side exercise with a bar offset splits it per hand (bad: ${bad.join(', ') || 'none'})`);
+  }
   ok(contrib('Smith Machine Overhead Press', 'Shoulders')?.ratio === 1.05, 'Smith OHP keeps its reasoned 1.05');
 }
 

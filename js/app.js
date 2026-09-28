@@ -1,6 +1,6 @@
 // Router + boot.
 
-import { store, demo, warmReadCache, social, todayISO } from './store.js';
+import { store, demo, warmReadCache, social, auth, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
@@ -22,6 +22,7 @@ import { EditSessionView } from './views-edit-session.js';
 import {
   SocialView, FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView,
   FriendSessionView, InviteView, FindView, AddView, CompareBodiesView,
+  applyOfferedWorkouts,
 } from './views-social.js';
 import { GoalsView, GoalRouteView } from './views-goals.js';
 import { MeRouteView } from './views-me.js';
@@ -833,8 +834,25 @@ function followSidebarLine() {
   // is published is older than what is recorded. Never awaited, cannot fail
   // loudly; see social.healStalePublish().
   social.healStalePublish().catch(() => {});
+  watchGroupWorkouts();
   firstRun();
 })();
+
+/* 🆕 GROUP WORKOUTS A FRIEND LOGGED FOR YOU ARE ADDED ON THEIR OWN — Tim,
+ * 2026-09-27 (off with Settings → "Ask before adding group workouts"). The
+ * sender cannot write your training, so this app does it: now, on sign-in, and
+ * each time the app comes back to the foreground (a home-screen app is resumed,
+ * not reloaded). Throttled to one look a minute on resume; never awaited, never
+ * loud — `applyOfferedWorkouts()` toasts only when something was added. */
+function watchGroupWorkouts() {
+  let last = 0;
+  const look = () => { last = Date.now(); applyOfferedWorkouts().catch(() => {}); };
+  look();
+  try { auth.onChange(() => look()); } catch (_) { /* local mode: no accounts */ }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - last > 60e3) look();
+  });
+}
 
 /* 🆕 A BRAND-NEW ACCOUNT GETS THE QUESTIONS, THEN THE TOUR — 2026-09-25
  * (docs/onboarding-plan.md). Never awaited and cannot fail loudly: the app is

@@ -214,6 +214,19 @@ async function adoptLocalData(mod) {
   }
 }
 
+/* 🚨 EVERY READ-MODIFY-WRITE OF THE SETTINGS ROW RUNS ONE AT A TIME — 2026-09-27.
+ * The row is one document; two overlapping merges each start from the same old
+ * copy and the later write drops the earlier one's field (Wesley's gender). A
+ * promise chain per tab: each job starts after the previous one SETTLES, and a
+ * rejection goes to its own caller without jamming the queue. Nothing queued
+ * may call saveSettings itself, or it would wait on itself forever. */
+let settingsTail = Promise.resolve();
+function inSettingsQueue(job) {
+  const run = settingsTail.then(job);
+  settingsTail = run.catch(() => {});
+  return run;
+}
+
 /**
  * The same job at the other moment: somebody has just CREATED an account, and
  * anything logged on this device is theirs.
@@ -242,11 +255,20 @@ async function absorbThisDevice() {
     for (const c of COLLECTIONS) {
       const local = await LocalBackend.read(c);
       if (!local.length) continue;
-      const remote = await impl.read(c);
       // Settings is a single row and not worth fighting over — an existing
       // cloud preference wins, because it reflects a device already signed in.
-      const merged = c === 'settings' ? (remote.length ? remote : local) : mergeRows(remote, local);
-      await impl.write(c, merged);
+      // ⚠️ So an existing cloud row is LEFT ALONE, not written back (2026-09-27):
+      // writing back what was just read is a read-modify-write that can erase
+      // a saveSettings landing in between. In the settings queue for the same
+      // reason. See saveSettings.
+      if (c === 'settings') {
+        await inSettingsQueue(async () => {
+          if (!(await impl.read(c)).length) await impl.write(c, local);
+        });
+        continue;
+      }
+      const remote = await impl.read(c);
+      await impl.write(c, mergeRows(remote, local));
     }
     // The rows just changed underneath every getter, and the sign-up that
     // triggered this has already cleared and possibly refilled the cache.
@@ -2041,10 +2063,21 @@ export const store = {
     // could silently drop a field changed on another device. Every other
     // mutation in this store already reads straight from the backend; this was
     // the only one going through a cached getter.
-    const current = await backend.read('settings').then((r) => r[0] || {});
-    const next = { ...current, ...patch, id: 'settings' };
-    await backend.write('settings', [next]);
-    return next;
+    //
+    // 🚨 AND ONE AT A TIME — 2026-09-27, after Wesley's gender vanished (a
+    // saveProfile followed by a saveSettings; read-back had no gender). Two of
+    // these in flight at once both read the same old row, and whichever lands
+    // last writes its stale copy over the other's field. The app fires plenty
+    // in the background (the first publish's `sharedTiersCleared`, onboarding's
+    // `onboardedAt`, theme/units/leverage toggles), so an overlap is ordinary on
+    // Firestore's latency and invisible on LocalBackend's.
+    // tests/settings-race.test.mjs holds the reproduction.
+    return inSettingsQueue(async () => {
+      const current = await backend.read('settings').then((r) => r[0] || {});
+      const next = { ...current, ...patch, id: 'settings' };
+      await backend.write('settings', [next]);
+      return next;
+    });
   },
 
   /* --- how full the cloud is --- */
@@ -2885,6 +2918,9 @@ async function readGraphCached(impl) {
   };
 }
 
+// The one auto-apply of group workouts in flight (social.autoApplyHandoffs).
+let handoffApplying = null;
+
 /** What every mutation uses. Never cached, and it drops the cache behind it. */
 async function readGraphFresh(impl) {
   const graph = normalizeSocialGraph(await impl.readGraph());
@@ -3681,29 +3717,92 @@ export const social = {
    * the owner-only rules that have not changed. Nothing about accepting needs a
    * foreign permission — which is the entire reason the feature has this shape.
    *
-   * ⚠️ A FRESH ID, not the sender's. The sender's id belongs to a row in THEIR
+   * ⚠️ NOT the sender's id. The sender's id belongs to a row in THEIR
    * guestSessions, and reusing it would tie two people's records together by a
    * key neither of them controls — so deleting one would look like it should
    * affect the other. The offer is a message, not a shared object.
    *
+   * 🔄 BUT DERIVED FROM THE OFFER'S ID since 2026-09-27 (group workouts now
+   * apply on their own — see autoApplyHandoffs). Two appliers racing — two
+   * tabs, a phone and a laptop, an auto-apply and a tap on Add — can each read
+   * the offer before either deletes it. With a random id that was two copies
+   * of one workout; with `s-<offer id>` the second save is an upsert of the
+   * same row, and a row already saved is not written again.
+   *
    * ⚠️ And the offer is deleted only after the session is safely saved. The
    * other order loses somebody's training if the save fails.
    */
-  async acceptHandoff(id) {
+  async acceptHandoff(id, known = null) {
     const impl = requireRemote();
-    const rows = await impl.listHandoffs(impl.currentUid());
-    const row = rows.find((r) => r.id === id);
+    const row = known && known.id === id ? known
+      : (await impl.listHandoffs(impl.currentUid())).find((r) => r.id === id);
     if (!row || !row.session) throw new Error('That workout is no longer here.');
 
-    const saved = await store.saveSession({
+    const sid = `s-${id}`;
+    const existing = (await backend.read('sessions')).find((s) => s && s.id === sid);
+    const saved = existing || await store.saveSession({
       ...row.session,
-      id: uid('s'),
+      id: sid,
       acceptedFrom: row.from || null,
     });
     await impl.deleteHandoff(impl.currentUid(), id).catch(() => {});
     // It is my training now, so my friends should see it like any other.
     await republish().catch(() => {});
     return saved;
+  },
+
+  /**
+   * 🆕 GROUP WORKOUTS APPLY ON THEIR OWN — Tim, 2026-09-27: *"change the group
+   * workouts so it automatically applies to the friend's workout system, and
+   * they don't need to accept it, however, also make a setting (that is off by
+   * default) that makes it so the user does have to accept the workout before
+   * it is automatically applied to their system."*
+   *
+   * ⚠️ STILL THE RECIPIENT'S OWN CLIENT, through acceptHandoff() — the sender
+   * cannot write my sessions (owner-only rules, unchanged), so "automatic"
+   * means my app accepts every waiting offer for me when it next looks: boot,
+   * sign-in, coming back to the foreground, and whenever Home or Friends reads
+   * the offers. Same saved shape, same delete, same republish as tapping Add.
+   *
+   * ⚠️ FRIENDS ONLY. An offer from somebody no longer on my friends list is
+   * left where it is, for me to Add or turn down by hand on the Friends screen
+   * — dropping it would lose a workout logged in good faith, and applying it
+   * would let an ex-friend keep writing into my training.
+   *
+   * `askBeforeGroupWorkouts` (Settings, off by default) turns all of this off:
+   * every offer waits for Add, exactly as before. Offers sent before this
+   * shipped follow the same setting.
+   *
+   * Returns the offers THIS call applied (the caller says so on screen); a
+   * call that joins one already running gets [], so the notice shows once.
+   * Never throws.
+   */
+  async autoApplyHandoffs() {
+    if (handoffApplying) { await handoffApplying.catch(() => {}); return []; }
+    handoffApplying = (async () => {
+      if (demo.active()) return [];
+      const impl = requireRemote();
+      if (!impl.currentUid()) return [];
+      const settings = await store.getSettings();
+      if (settings.askBeforeGroupWorkouts === true) return [];
+      const rows = await impl.listHandoffs(impl.currentUid());
+      if (!rows.length) return [];
+      const S = await socialMod();
+      const graph = S.normalizeGraph(await readGraphCached(impl));
+      const friends = new Set(graph.connections.map((c) => c.uid));
+      const applied = [];
+      for (const row of rows) {
+        if (!row || !row.session || !row.from || !friends.has(row.from)) continue;
+        try {
+          const saved = await this.acceptHandoff(row.id, row);
+          applied.push({ id: row.id, fromName: row.fromName || '', session: saved });
+        } catch (_) { /* left waiting; the next look tries again */ }
+      }
+      return applied;
+    })();
+    try { return await handoffApplying; }
+    catch (_) { return []; }
+    finally { handoffApplying = null; }
   },
 
   /** Turn one down. Nothing is written to my training. */

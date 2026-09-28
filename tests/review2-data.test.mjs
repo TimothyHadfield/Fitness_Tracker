@@ -260,8 +260,10 @@ const { muscles } = await muscleStrength();
   const node = await mount(SettingsView(), 200);
   const sw = [...node.querySelectorAll('button.switch[role="switch"]')];
   const labels = sw.map((b) => flat(node.querySelector(`label[for="${b.id}"]`)));
-  ok(sw.length === 3 && ['More details', 'Rest timer', 'Findable by name'].every((l) => labels.includes(l)),
-     `8. three switches (${labels.join(', ')})`);
+  // A fourth since 2026-09-27: "Ask before adding group workouts" (handoff-auto.test.mjs).
+  ok(sw.length === 4 && ['More details', 'Rest timer', 'Findable by name',
+    'Ask before adding group workouts'].every((l) => labels.includes(l)),
+     `8. four switches (${labels.join(', ')})`);
   const rest = sw[labels.indexOf('Rest timer')];
   if (rest) {
     const before = rest.getAttribute('aria-checked');

@@ -600,14 +600,17 @@ const RATIOS = {
      * the DUMBBELL page, above). So it carries the machine row's pair at a lower
      * q: 0.95 was flattering it ~20 %. */
     [/Chest-Supported Row/, { m: 1.18, f: 1.20 }, 0.35],
-    /* 🛑 LEFT AT 0.55, AND IT IS PROBABLY FLATTERING — flagged, not fixed
-     * (2026-09-27). A Meadows row is a one-arm landmine row, logged per arm and
-     * doubled; the one-arm pulldown page says a doubled one-arm number runs
-     * ~1.36× the two-arm lift, which would put it near 0.93 × 1.36 = 1.26 plus a
-     * bar per arm. It needs the landmine bar offset, and the rep curve applies
-     * an offset to the UNDOUBLED logged number (strength-observations.js), so
-     * it cannot take one yet. Same for Landmine Press in Shoulders. */
-    [/Meadows Row/, 0.55, 0.45],
+    /* ~~0.55, reasoned, on bare plates~~ — 2026-09-27, third pass: it read
+     * 70 × 10 as a 378 lb barbell row. A Meadows row is a ONE-ARM ROW whose hand
+     * holds the plates plus half the landmine bar (the bar's centre is half way
+     * to the floor pivot: 22 of 44 lb — machine-mechanics.js, `perSide`). That
+     * per-hand load, curved and then doubled, is exactly what the one-arm
+     * dumbbell row's sourced 0.98 converts on the same doubled convention, so
+     * it takes that ratio: 70 × 10 now reads 2 × e1rm(92, 10) ÷ 0.98 = 271 lb.
+     * No Meadows-row page exists (no /meadows-row/ slug), hence q stays 0.45.
+     * (The 0.93 × 1.36 route off the T-bar was the alternative; the dumbbell
+     * row is the same posture and hand, so no one-arm factor has to be carried.) */
+    [/Meadows Row/, 0.98, 0.45],
     // ~~Carried across the T-Bar anchor (1.05): a landmine row is a T-bar row
     // without the pad and without the machine, so it moves a little less.~~
     // `1.00, 0.40` until 2026-09-27. There is no pad and no machine on either:
@@ -1116,9 +1119,11 @@ const RATIOS = {
     // press 40/72/117/172/236 (m) over OHP → median 0.90 on the app's doubled
     // reading, and 0.89 (f). Was 0.60, a reasoned number, flattering by a third:
     // a 70 lb landmine press read Shoulders 99.6th percentile.
-    // 🚩 2026-09-27: the page also says "include the bar, normally 44 lb" and
-    // the app logs plates per arm, doubled — the T-bar's bar offset belongs here
-    // too, and cannot go on a per-side lift yet (see Meadows Row in Back). Left.
+    // 🚩 2026-09-27: the page also says "include the bar, normally 44 lb" — but
+    // its own male beginner is 41 lb, BELOW the bar (re-checked 2026-09-27), so
+    // its lifters log without it, as the app does. NO bar offset, on purpose
+    // (unlike the Meadows row, whose ratio is not a landmine page's). Open: the
+    // page does not say one arm or two; the 0.90 assumes the app's doubled read.
     [/Landmine Press/, { m: 0.90, f: 0.89 }, 0.35],
     // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
     // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
@@ -2164,7 +2169,8 @@ function buildContributions(exercise, qualityScale, sex, bodyWeight) {
     add(exercise.muscle, rule.ratio, mech && mech.q > 0 ? mech.q : rule.quality, 'direct', null,
       levelCurveFor(exercise.name, exercise.muscle, rule.entry, sex, bodyWeight));
     const made = out.find((c) => c.muscle === exercise.muscle && c.kind === 'direct');
-    if (made && mech) made.lever = { k: mech.k, A: mech.A };
+    // `perSide`: the bar's share goes on per hand before the doubling (Meadows row).
+    if (made && mech) made.lever = mech.perSide ? { k: mech.k, A: mech.A, perSide: true } : { k: mech.k, A: mech.A };
   }
 
   // 2b. 🆕 2026-09-26 — a hinge filed under Back that is ALSO a glute lift, read

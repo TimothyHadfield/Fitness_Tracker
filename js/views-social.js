@@ -323,6 +323,24 @@ export async function SocialView() {
   return screen;
 }
 
+/**
+ * 🆕 Add every group workout a friend logged for me, then say so — 2026-09-27
+ * (see social.autoApplyHandoffs for the rule and the setting). Called at boot,
+ * sign-in and resume (app.js) and before Home or Friends reads the offers, so
+ * what those screens list is only what still waits. The toast is the notice:
+ * a workout never lands in your training without a word. Never throws.
+ */
+export async function applyOfferedWorkouts() {
+  const added = await social.autoApplyHandoffs().catch(() => []);
+  if (!added.length) return added;
+  const one = added[0];
+  toast(added.length === 1
+    ? `Added ${(one.session && one.session.workoutName) || 'a workout'}`
+      + ` from ${one.fromName || 'a friend'} to your training.`
+    : `Added ${added.length} group workouts to your training.`);
+  return added;
+}
+
 async function fillSocial(body, state) {
   const parts = [];
 
@@ -335,7 +353,9 @@ async function fillSocial(body, state) {
   // screen, and a failed invite fetch must not blank it.
   const [invites, offers, departed, requests, joined] = await Promise.all([
     social.invites().catch(() => []),
-    social.handoffs().catch(() => []),
+    // Friends' group workouts are added first (unless the setting asks); what
+    // is listed below is only what still waits for Add.
+    applyOfferedWorkouts().then(() => social.handoffs()).catch(() => []),
     // ⚠️ ACTING ON DEPARTURES HAPPENS HERE, on the screen where somebody would
     // notice the result, rather than on a timer. Open work 0j: this is the half
     // that makes a disconnect mutual — the other person left a note, and this
@@ -381,7 +401,12 @@ async function fillSocial(body, state) {
    * has been written into my training yet; this is an offer sitting in a
    * subtree of my account, and until I tap Add my sessions are untouched. That
    * is also why the sender's name is on it — I should know whose word I am
-   * taking before I take it. */
+   * taking before I take it.
+   *
+   * 🔄 2026-09-27: a friend's offer is now added on its own (applyOfferedWorkouts
+   * above) unless Settings → "Ask before adding group workouts" is on. So this
+   * list holds offers only when that switch is on, or from somebody who is no
+   * longer a friend. */
   if (offers.length) {
     parts.push(el('h2', { class: 'section-head', text: 'Recorded for you' }));
     for (const o of offers) {

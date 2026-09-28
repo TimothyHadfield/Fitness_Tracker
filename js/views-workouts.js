@@ -48,6 +48,8 @@ import { liveDraft, draftRecordedSets } from './session-draft.js';
 // Workout photos (2026-09-25) — the box, and the store's cached read.
 import { photoBox } from './photo.js';
 import { knownPhoto } from './store.js';
+// Friends' group workouts are added on their own before Home counts offers.
+import { applyOfferedWorkouts } from './views-social.js';
 
 /* A built-in exercise by NAME, for the ready-made-system screens — those list
  * their exercises by name (`preset-systems.js` references them that way on
@@ -394,7 +396,9 @@ async function fillFeed(body) {
 async function waitingLine() {
   const [requests, offers, invites] = await Promise.all([
     social.requests().catch(() => []),
-    social.handoffs().catch(() => []),
+    // 2026-09-27: friends' group workouts are added first (unless Settings
+    // says ask), so this counts only the ones still waiting for Add.
+    applyOfferedWorkouts().then(() => social.handoffs()).catch(() => []),
     social.invites().catch(() => []),
   ]);
   const claims = (invites || []).filter((i) => i && i.claimedBy).length;
