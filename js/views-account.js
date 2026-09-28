@@ -144,7 +144,9 @@ async function run(button, label, fn) {
     await fn();
   } catch (err) {
     const { authErrorMessage } = await import('./firebase-backend.js');
-    toast(authErrorMessage(err));
+    // Error style (stays longer): a 2-second toast after a wrong password
+    // looked like the button did nothing.
+    toast(authErrorMessage(err), { error: true });
     button.disabled = false;
     button.textContent = original;
     return false;
@@ -1170,7 +1172,8 @@ export async function AccountView() {
     if (pending) setTimeout(() => go(pending), 0);
   }
   return user.isAnonymous
-    ? anonymousScreen(await personalSections({ mode: 'anonymous' }), settings)
+    ? anonymousScreen(await personalSections({ mode: 'anonymous' }), settings,
+        await auth.droppedAccount().catch(() => null))
     : signedInScreen(user, await personalSections({ mode: 'cloud-secured' }), settings);
 }
 
@@ -1368,7 +1371,7 @@ function googleButton({ label, className, onDone }) {
     // — and on 2026-08-22 a real iPhone completed exactly that sign-in in the
     // installed app. Telling somebody their browser cannot do the thing it just
     // failed at once is a worse error than telling them it failed.
-    return 'That did not complete. Use an email and password below — it works '
+    return 'That did not complete. Use an email and password instead — it works '
       + 'everywhere, and it keeps everything you have already logged.';
   }
 
@@ -1395,7 +1398,8 @@ function googleButton({ label, className, onDone }) {
           say('The sign-in window closed before finishing. ' + await offerFallback());
           return;
         }
-        if (res && res.status === 'signed-in') toast('Account secured');
+        // Only a NEW account is "secured"; an existing one was signed into.
+        if (res && res.status === 'signed-in') toast(res.created ? 'Account secured' : 'Signed in');
       } catch (err) {
         // ⚠️ The code goes ON THE SCREEN. Everything above is inference about a
         // device nobody here can run; the code is the fact. Without it the next
@@ -1429,7 +1433,7 @@ function googleButton({ label, className, onDone }) {
  * Anonymous — the upgrade path
  * ------------------------------------------------------------------ */
 
-function anonymousScreen(sections = [], settings = {}) {
+function anonymousScreen(sections = [], settings = {}, dropped = null) {
   const email = el('input', { class: 'input', type: 'email', autocomplete: 'email', placeholder: 'you@example.com' });
   const password = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'At least 6 characters' });
 
@@ -1458,6 +1462,18 @@ function anonymousScreen(sections = [], settings = {}) {
     title: 'Account',
     back: () => go('#/home'),
     scroll: [
+      /* 🆕 2026-09-28: Firebase signed a REAL account out from under this
+       * person (a password reset elsewhere, say). Without this they saw an empty
+       * guest account and nothing saying why. */
+      dropped && dropped.email
+        ? el('div', { class: 'card' },
+            el('div', { class: 'section-label', text: 'You were signed out' }),
+            el('div', { class: 'field-help' }, 'Sign in as ', el('b', { text: dropped.email }),
+              ' to get your data back.'),
+            el('button', { class: 'btn primary block', text: 'Sign in', onClick: () => go('#/signin') }),
+          )
+        : null,
+
       /* ⚠️ THE ONE BLOCK ON THIS SCREEN THAT DID NOT GO BEHIND A "?" — and the
        * module header says why: this screen must never imply data is safe when
        * it is not, so the risk is stated rather than asked for. What moved is
@@ -1725,9 +1741,15 @@ export async function SignInView() {
 
   const state = await auth.state();
   const wasAnonymous = state.mode === 'cloud' && state.user && state.user.isAnonymous;
-  const hasLocal = Object.values(await auth.localRowCounts()).reduce((n, v) => n + v, 0);
+  // A guest's workouts are in their anonymous CLOUD account, not only on the
+  // device — counting device rows alone showed 0 and hid the warning below.
+  const hasLocal = wasAnonymous
+    ? Object.values(await auth.guestRowCounts().catch(() => ({}))).reduce((n, v) => n + v, 0)
+    : 0;
+  const dropped = await auth.droppedAccount().catch(() => null);
 
   const email = el('input', { class: 'input', type: 'email', autocomplete: 'email', placeholder: 'you@example.com' });
+  if (dropped && dropped.email) email.value = dropped.email;
   const password = el('input', { class: 'input', type: 'password', autocomplete: 'current-password', placeholder: 'Password' });
 
   const signInBtn = el('button', {

@@ -846,8 +846,15 @@ const bumpGeneration = (collection) =>
 // change made on another device shows up within a minute of ordinary use.
 const REVALIDATE_MS = 30000;
 
+/* 🚨 WHOSE CACHE THIS IS, COUNTED — 2026-09-28 (sign-in review). A read issued
+ * before a sign-in, sign-out or account switch can resolve AFTER the cache was
+ * cleared, and used to write the previous account's rows back into it. Every
+ * read notes the epoch it started in and keeps its rows only if it is unchanged. */
+let cacheEpoch = 0;
+
 /** Drop everything. Anything that changes WHOSE data this is must call it. */
 export function clearReadCache() {
+  cacheEpoch++;
   readCache.clear();
   lastRead.clear();
   // ⚠️ The social cache goes with it, wired HERE rather than at each call site,
@@ -891,7 +898,9 @@ async function readCached(collection) {
     // done; it is the list that is now long-lived.
     return readCache.get(collection).slice();
   }
+  const epoch = cacheEpoch;
   const rows = await backend.read(collection);
+  if (epoch !== cacheEpoch) return rows;   // another account's read; never cache it
   readCache.set(collection, rows.slice());
   lastRead.set(collection, Date.now());
   return rows;
@@ -909,8 +918,10 @@ function maybeRevalidate(collection) {
   revalidating.add(collection);
   // The generation as it was when this read was ISSUED. See writeGeneration.
   const issuedAt = writeGeneration.get(collection) || 0;
+  const epoch = cacheEpoch;
   backend.read(collection)
     .then((rows) => {
+      if (epoch !== cacheEpoch) return;   // the account changed mid-read
       /* 🚨 A WRITE LANDED WHILE THIS READ WAS IN FLIGHT, so these rows are
        * older than what is in the cache and must be thrown away. `write()` has
        * already put the authoritative list there — it does not guess, it
@@ -3073,6 +3084,8 @@ export const auth = {
   // every entry. Same fault, same fix, as COLLECTIONS vs knownCollection().
   async deleteAccount(currentPassword) {
     const impl = requireRemote();
+    // Identity FIRST (Google has no password): nothing is removed unless it passes.
+    await impl.confirmIdentity(currentPassword);
     await impl.removeDirectory().catch(() => {});
     return impl.deleteAccount(currentPassword, COLLECTIONS);
   },
@@ -3084,6 +3097,28 @@ export const auth = {
   // account absorbs these rows without being asked (`absorbThisDevice`), so the
   // only screen that still counts them is the one where they are about to be
   // left behind: signing in to an account that already exists.
+  /** The real account Firebase signed out from under this person, or null. */
+  async droppedAccount() {
+    if (!remoteImpl) return null;
+    const mod = await import('./firebase-backend.js');
+    return mod.droppedAccount();
+  },
+
+  /* 🚨 WHAT A GUEST WOULD LEAVE BEHIND BY SIGNING IN — 2026-09-28 (sign-in
+   * review). localRowCounts() alone sees only rows kept on this device while the
+   * cloud was away; a guest's workouts live in their anonymous CLOUD account, so
+   * the "Before you sign in" warning counted 0 and never showed. Counts both. */
+  async guestRowCounts() {
+    const out = await this.localRowCounts();
+    const st = await this.state();
+    if (st.mode !== 'cloud' || !st.user || !st.user.isAnonymous) return out;
+    for (const c of ['sessions', 'bodyWeight', 'goals']) {
+      const rows = await readCached(c).catch(() => []);
+      if (rows.length) out[c] = Math.max(out[c] || 0, rows.length);
+    }
+    return out;
+  },
+
   async localRowCounts() {
     const out = {};
     for (const c of COLLECTIONS) {
@@ -3378,7 +3413,7 @@ export const feedback = {
     if (demo.active()) return { available: false, reason: 'demo', developer: false };
     const a = await auth.state();
     if (a.mode !== 'cloud') {
-      return { available: false, reason: a.reason === 'offline' ? 'offline' : 'local', developer: false };
+      return { available: false, reason: a.offline ? 'offline' : 'local', developer: false };
     }
     /* ⚠️ `isAnonymous`, NOT `anonymous`, AND THE WRONG ONE READ AS WORKING.
      * The first version of this guard tested `a.user.anonymous`, which is

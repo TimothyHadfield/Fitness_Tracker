@@ -1725,7 +1725,10 @@ ok(!data.querySelector('.rep-target'),
      '🚨 an anonymous account gets no box…');
   ok(/nobody to reply to/.test(anon.textContent), '…and is told why, in terms of the fix');
 
-  auth.state = async () => ({ mode: 'local', user: null, reason: 'offline' });
+  // The REAL shape (store.js auth.state sets `offline`, never `reason`) — this
+  // mock said `reason: 'offline'`, matching the consumer's typo, so an offline
+  // signed-in person was told notes need an account (fixed 2026-09-28).
+  auth.state = async () => ({ mode: 'local', user: null, degraded: true, offline: true });
   const off = await mount(AccountView());
   await settle();
   ok(/rather than queued/.test(off.textContent),

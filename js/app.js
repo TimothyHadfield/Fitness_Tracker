@@ -684,6 +684,9 @@ async function render() {
           // Plain words, never the raw error (overhaul R-7).
           el('p', { text: friendlyError(err, 'That screen could not be opened.') }),
           el('a', { class: 'btn primary', href: '#/home', text: 'Back to home' }),
+          // 🆕 2026-09-28: a way out when Home ITSELF failed (the link above
+          // goes nowhere then) and in the installed app, which has no reload.
+          el('button', { class: 'btn ghost', text: 'Try again', onClick: () => location.reload() }),
         ),
       ),
     );
@@ -1147,6 +1150,15 @@ function followSidebarLine() {
   // of one per collection per tab. Nothing waits for it and it cannot fail
   // loudly: this screen already works without it.
   warmReadCache();
+  // 🆕 2026-09-28: ask the browser not to evict this site's storage (Safari
+  // wipes it after 7 days unvisited, taking a guest's sign-in with it). A
+  // no-op where unsupported or refused; never awaited. Not on Firefox, which
+  // answers it with a permission prompt.
+  try {
+    if (navigator.storage && navigator.storage.persist && !/Firefox\//.test(navigator.userAgent)) {
+      navigator.storage.persist().catch(() => {});
+    }
+  } catch (_) {}
   // ⚠️ Repair stale published copies — the "Autumn's muscle map froze at the
   // moment she connected" bug. Reads a few documents, writes only when what
   // is published is older than what is recorded. Never awaited, cannot fail

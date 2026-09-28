@@ -94,7 +94,7 @@ export function openNudge({ ios = false } = {}) {
       try {
         const res = await auth.signInGoogle();
         if (res && res.status === 'signed-in') {
-          toast('Account secured');
+          toast(res.created ? 'Account secured' : 'Signed in');
           sheet.close();
           return;
         }

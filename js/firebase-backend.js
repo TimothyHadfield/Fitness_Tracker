@@ -84,6 +84,24 @@ function notify() {
  * threw. Now any moment with no user takes a fresh anonymous account, once
  * (concurrent askers share one sign-in), and every call waits for it. */
 let keepUser = null;
+let unsubAuth = null;
+// When OUR sign-out / delete last dropped the user. A time, not a flag: the SDK
+// may tell the listener after signOut() has already resolved.
+let leftAt = 0;
+const leaving = () => Date.now() - leftAt < 10000;
+
+/* The account Firebase signed out from under the person, if any. Read by
+ * Account and Sign in; cleared by any sign-in, sign-up or sign-out. */
+const DROPPED_KEY = 'ftrack:v1:droppedAccount';
+function rememberDropped(email) {
+  try { if (email) localStorage.setItem(DROPPED_KEY, JSON.stringify({ email })); } catch (_) {}
+}
+export function droppedAccount() {
+  try { const raw = localStorage.getItem(DROPPED_KEY); return raw ? JSON.parse(raw) : null; } catch (_) { return null; }
+}
+export function forgetDropped() {
+  try { localStorage.removeItem(DROPPED_KEY); } catch (_) {}
+}
 
 async function init() {
   const c = await connect();
@@ -185,9 +203,17 @@ async function connect() {
 
     let settleFirst;
     const first = new Promise((resolve) => { settleFirst = resolve; });
-    auth.onAuthStateChanged(authClient, (u) => {
+    // One listener, ever: a failed start used to leave its listener behind and
+    // every retry added another.
+    if (unsubAuth) unsubAuth();
+    unsubAuth = auth.onAuthStateChanged(authClient, (u) => {
+      const prev = user;
       user = u;
       if (settleFirst) { settleFirst(u); settleFirst = null; return notify(); }
+      // A REAL account dropped by Firebase (password reset elsewhere, account
+      // removed), not by our own sign-out: remember who, so Account can say
+      // "you were signed out" instead of just showing an empty guest.
+      if (!u && prev && !prev.isAnonymous && !leaving()) rememberDropped(prev.email);
       notify();
       // Dropped after start-up (see the header above init): take a guest account.
       if (!u) keepUser().catch((err) => console.error('Anonymous re-sign-in failed', err));
@@ -196,7 +222,13 @@ async function connect() {
       if (settleFirst) { settleFirst(null); settleFirst = null; }
     });
 
-    await first;
+    // ⏱ WebKit's IndexedDB can hang (firebase-js-sdk #8250), and then the first
+    // auth answer never comes and every screen waits forever. After 15 s give
+    // up; the store falls back to this device and "Try again" reconnects.
+    let stall;
+    await Promise.race([first, new Promise((_, reject) => {
+      stall = setTimeout(() => reject(new Error('Could not reach your account.')), 15000);
+    })]).finally(() => clearTimeout(stall));
     await keepUser();
 
     ctx = { app, db, authClient, fs, auth };
@@ -1440,11 +1472,13 @@ export const FirebaseBackend = {
       const cred = c.auth.EmailAuthProvider.credential(email, password);
       const res = await c.auth.linkWithCredential(user, cred);
       user = res.user;
+      forgetDropped();
       notify();
       return describeUser(user);
     }
     const res = await c.auth.createUserWithEmailAndPassword(c.authClient, email, password);
     user = res.user;
+    forgetDropped();
     notify();
     return describeUser(user);
   },
@@ -1453,6 +1487,7 @@ export const FirebaseBackend = {
     const c = await init();
     const res = await c.auth.signInWithEmailAndPassword(c.authClient, email, password);
     user = res.user;
+    forgetDropped();
     notify();
     return describeUser(user);
   },
@@ -1477,10 +1512,12 @@ export const FirebaseBackend = {
       currentUser: user,
       anon: Boolean(user && user.isAnonymous),
       preferRedirect: forceRedirect || prefersRedirect(FIREBASE_CONFIG),
+      canRedirect: forceRedirect || redirectCanComplete(FIREBASE_CONFIG),
     });
     if (out.cancelled) return { status: 'cancelled' };
     if (!out.user) return { status: 'redirecting' };
     user = out.user;
+    forgetDropped();
     notify();
     return { status: 'signed-in', user: describeUser(user), created: Boolean(out.created) };
   },
@@ -1490,6 +1527,8 @@ export const FirebaseBackend = {
   // which is why the UI warns before signing out of one.
   async signOut() {
     const c = await init();
+    forgetDropped();
+    leftAt = Date.now();
     await c.auth.signOut(c.authClient);
     // Through the keeper: the listener asks for a guest account at the same
     // moment, and two asks must not make two accounts.
@@ -1498,9 +1537,35 @@ export const FirebaseBackend = {
     return describeUser(user);
   },
 
+  // The link in the email leads back to Sign in here, not to a Firebase page
+  // with no way home. If Firebase refuses that address, send the plain email.
   async sendPasswordReset(email) {
     const c = await init();
-    await c.auth.sendPasswordResetEmail(c.authClient, email);
+    const url = typeof location !== 'undefined'
+      ? location.origin + location.pathname + '#/signin' : null;
+    try {
+      await c.auth.sendPasswordResetEmail(c.authClient, email, url ? { url } : undefined);
+    } catch (err) {
+      if (!url || !/continue-uri|unauthorized-domain/.test(String(err && err.code))) throw err;
+      await c.auth.sendPasswordResetEmail(c.authClient, email);
+    }
+  },
+
+  /* 🔒 PROVE IT IS YOU, BEFORE ANYTHING IS DELETED — 2026-09-28. A Google
+   * account has no password, so the delete used to purge every row and THEN
+   * have deleteUser() refused as "requires recent login" — data gone, account
+   * kept. The check now comes first; a refused or blocked popup deletes nothing. */
+  async confirmIdentity(currentPassword) {
+    const c = await init();
+    const u = c.authClient.currentUser;
+    if (!u) throw new Error('Not signed in.');
+    if (currentPassword && u.email) {
+      await c.auth.reauthenticateWithCredential(
+        u, c.auth.EmailAuthProvider.credential(u.email, currentPassword));
+      return;
+    }
+    const google = (u.providerData || []).some((p) => p && p.providerId === 'google.com');
+    if (google) await c.auth.reauthenticateWithPopup(u, new c.auth.GoogleAuthProvider());
   },
 
   // Changing a password or deleting an account are "recent login" operations.
@@ -1560,6 +1625,7 @@ export const FirebaseBackend = {
     // longer exists.
     const gone = localShardCache();
     for (const name of SHARDED_COLLECTIONS) gone.clear(u.uid, name);
+    leftAt = Date.now();
     await c.auth.deleteUser(u);
 
     // Leave a working anonymous account behind so the app still runs.
@@ -1692,7 +1758,7 @@ export function isUserCancelled(err) {
  * the account rather than a convenience for the UI.
  */
 export async function googleSignInFlow({
-  auth, authClient, provider, currentUser, anon, preferRedirect,
+  auth, authClient, provider, currentUser, anon, preferRedirect, canRedirect = true,
 }) {
   const goRedirect = async () => {
     if (anon) await auth.linkWithRedirect(currentUser, provider);
@@ -1730,6 +1796,10 @@ export async function googleSignInFlow({
         return { cancelled: true };
 
       case 'redirect':
+        // ⚠️ Only where a redirect can finish (redirectCanComplete). Here it
+        // cannot, and bouncing to Google and back to nothing is worse than the
+        // screen's own "that did not complete" line, which the throw reaches.
+        if (!canRedirect) throw err;
         return goRedirect();
 
       case 'credential': {
@@ -1752,6 +1822,7 @@ export async function googleSignInFlow({
         }
         // No credential on the error. Redirect rather than reopening a popup,
         // because it is the one route a popup blocker cannot touch.
+        if (!canRedirect) throw err;
         return goRedirect();
       }
 
