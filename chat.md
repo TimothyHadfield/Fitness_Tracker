@@ -743,3 +743,12 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   guide (`ctx.captions` / `ctx.captionData`, replacing `estimatedMax`/`typoRatio`). guide-mode 76/0
   (the 4 new checks failed on HEAD first); full no-Chrome suite 8,015 PASS / 0 FAIL, exit codes 0;
   WebKit 393×659 + 1366 demo shots: both lines show, no page scroll, Next on screen.
+- **Then:** *"analyze the auto-guide system and really think if we're missing anything"* → 2 read-only
+  reviewers (bugs; parity) → 3defd9d fixed 11 bugs + 9 omissions (warm-ups per exercise via `prepare`
+  hook, `setIsRecorded` on Next, box font by length, ramp frozen once a working set is done — BOTH
+  views, wrap-around to anyone's unfinished work, drop/myo steps, rest only on first finish, 400 ms
+  double-tap guard, `lastStep()`, bar hidden on typo, shared line builders). Tim's picks (question
+  box): Swap+Skip, carry changed weight, "Next: <exercise>", + Set; plus *"show the weights and reps of
+  the past and future sets … upper left"* → e66346b (`skipped` flag, `setIsRecorded` refuses it;
+  carry also moves untouched plan/last-time sets — flagged). Suite 8,114 PASS / 0 FAIL; new checks
+  failed on HEAD first (45); shots in session scratchpad guide-fix/ and guide-new/.
