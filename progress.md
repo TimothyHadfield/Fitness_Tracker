@@ -232,6 +232,8 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **The rules emulator dies silently on the Oracle JDK** → `JAVA_HOME` = Temurin 21 (§0.9).
 - **`render`'s "the exercise line chart draws an SVG" + "gridlines" failed once in four runs
   (2026-09-23)** — a settle-timing flake; rerun before believing it.
+- **Git worktrees fail under OneDrive** (leftovers in `.claude/worktrees/`, untracked; leave them).
+  Parallel builders share the main checkout on disjoint files instead.
 - **`tests/sw-update.test.mjs` is flaky on this machine**; don't report it as reliably passing or
   weaken it. It and `rules` are not in the 25-suite total.
 - **`git worktree add` fails under OneDrive** ("Could not reset index file") → work in the main
@@ -393,11 +395,12 @@ can check._
 - `docs/handbook.md` · how to work · `docs/state.md` · what the app does · `docs/direction.md` · what
   Tim wants (overrules) · `docs/history.md` · dated log · `docs/archive/` · old progress snapshots ·
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
-- **Tests:** `node tests/<name>.test.mjs` for each of 25 no-Chrome suites (needs `npm i --no-save jsdom
-  jsqr`); `rules` needs the emulator + Temurin 21; `sw-update` needs Chrome (fails the same on HEAD
-  here). **Last run 2026-09-25 checkpoint: 50 files, 48 run, 7,563 PASS, 0 FAIL, all exit 0.** Check
+- **Tests:** `node tests/<name>.test.mjs` for each no-Chrome suite (needs `npm i --no-save jsdom
+  jsqr`); `rules` and `sync-merge` need the emulator + Temurin 21; `sw-update` needs Chrome.
+  **Last run 2026-09-27 at 0668e46/cc48761: 9,325 PASS, 0 FAIL, all exit 0; rules 274/0 and
+  sync-merge 14/0 under the emulator.** Check
   EXIT CODES too — a crashed suite prints no FAIL. All at once (PowerShell):
-  `$global:tp=0;$global:tf=0; Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs' } | % { $o = node $_.FullName 2>&1 | Out-String; $p=([regex]::Matches($o,'(?m)^\s*PASS')).Count; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; $global:tp+=$p; $global:tf+=$f; if($f -or $LASTEXITCODE){ "$($_.Name): $f FAIL exit $LASTEXITCODE" } }; "TOTAL PASS $tp FAIL $tf"`
+  `$global:tp=0;$global:tf=0; Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs','sync-merge.test.mjs' } | % { $o = node $_.FullName 2>&1 | Out-String; $p=([regex]::Matches($o,'(?m)^\s*PASS')).Count; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; $global:tp+=$p; $global:tf+=$f; if($f -or $LASTEXITCODE){ "$($_.Name): $f FAIL exit $LASTEXITCODE" } }; "TOTAL PASS $tp FAIL $tf"`
 - **Live:** https://timothyhadfield.github.io/Fitness_Tracker/ · GitHub Pages from `main` (deploy =
   push; ~45 s) · Firebase project `fitness-tracker-th` · run locally `python -m http.server 8765`
   (ES modules don't load over `file://`).

@@ -793,3 +793,6 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Verified how:** no-Chrome suite 9325 PASS / 0 FAIL; rules 274/0 and sync-merge 14/0 under the
   emulator; WebKit smoke 30 routes at 393×659 + 1366×820, no overflow/errors; screenshots looked at.
 - **Open:** NOT verified list in progress.md (real iPhone, real exports, SDK versions).
+- 2026-09-28: Tim asked for an overview by category (given in chat: estimates, using the app, look,
+  intro, words, Settings, new features, behind the scenes), then "prepare md files for chat reset".
+  Nothing new authorized; waiting on his reaction to the unseen choices above.
