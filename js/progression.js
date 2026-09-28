@@ -221,14 +221,21 @@ export function trainingRange(history) {
    * whose best set is more than twice the MEDIAN of the others is left out.
    * It needs two others to have a median worth the name; with fewer, nothing is
    * dropped and the old reading stands. The newest-session half of this rule
-   * lives in suggestProgression (it returns null on a rep jump). */
+   * lives in suggestProgression (it returns null on a rep jump).
+   *
+   * 🆕 EST-FIX (2026-09-27): A REPEATED NUMBER IS A CHANGE OF RANGE, NOT A TYPO.
+   * [135 × 11, 135 × 11, 185 × 5, 185 × 5] had both 11s dropped against a median
+   * of 5, so a lifter who had moved to 8–12 was told "+5 lbs, back to 3 reps".
+   * That narrowed the range, which the maximum rule above forbids. A session is
+   * dropped only when no other session in the window is also that high. */
   const kept = rows.length >= 3
     ? rows.filter((r, i) => {
       const others = rows.filter((_, j) => j !== i).map((o) => o.bestAtTop).sort((a, b) => a - b);
       const mid = others.length % 2
         ? others[(others.length - 1) / 2]
         : (others[others.length / 2 - 1] + others[others.length / 2]) / 2;
-      return !(r.bestAtTop > 2 * mid);
+      if (!(r.bestAtTop > 2 * mid)) return true;
+      return others.some((b) => b > 2 * mid);
     })
     : rows;
   const best = kept.reduce((m, r) => Math.max(m, r.bestAtTop), 0);
@@ -499,10 +506,28 @@ export function suggestProgression({
    * at twice the previous one's weight, or twice its best reps, gets no
    * suggestion at all: the runner falls back to plain last time's numbers,
    * which the lifter can see and correct. A refusal, never a number. */
+  /* 🆕 EST-FIX (2026-09-27): NEVER REFUSE REAL PROGRESS TO CATCH A TYPO. A
+   * weighted pull-up going from +10 to +20 lb is 190 → 200 lb of real load, not a
+   * doubling; an assist machine's number is help, so more of it is easier; and a
+   * light day after a heavy one has more reps at LESS weight. So the weight test
+   * compares total resistance (skipped on assist machines, and on body-weight
+   * lifts with no weigh-in, where the total is unknown), and the reps test runs
+   * only when the weight is unchanged. */
   const prevSummary = sessionSummary((history || [])[1]);
   if (prevSummary) {
-    if (prevSummary.topWeight > 0 && last.topWeight >= 2 * prevSummary.topWeight) return null;
-    if (prevSummary.bestAtTop > 0 && last.bestAtTop > 2 * prevSummary.bestAtTop) return null;
+    const spec = bodyWeightFractionFor(exercise);
+    if (!(spec && spec.assist)) {
+      const loadOf = (w) => {
+        if (!spec) return w;
+        const r = totalResistance(exercise, w, bodyWeight);
+        return r ? r.load : null;
+      };
+      const lastLoad = loadOf(last.topWeight);
+      const prevLoad = loadOf(prevSummary.topWeight);
+      if (lastLoad != null && prevLoad > 0 && lastLoad >= 2 * prevLoad) return null;
+    }
+    if (sameWeight(last.topWeight, prevSummary.topWeight)
+      && prevSummary.bestAtTop > 0 && last.bestAtTop > 2 * prevSummary.bestAtTop) return null;
   }
 
   // ⚠️ Across the history, never from `last` alone — see trainingRange(). Read
@@ -704,8 +729,16 @@ export function suggestProgression({
   /* 🆕 EA-9 (2026-09-27): SINGLES AND DOUBLES ARE NOT A RANGE TO CLIMB. 405 × 1
    * came back as "405 × 2", and asking for a double at somebody's max is the
    * one suggestion this module says it must never make. With no RIR field
-   * (D28) a logged single is often a max, so the answer is the same again. */
-  if (last.bestAtTop <= 2) {
+   * (D28) a logged single is often a max, so the answer is the same again.
+   *
+   * 🆕 EST-FIX (2026-09-27): ONLY ON A LOADED LIFT. A beginner's 2 pull-ups at
+   * body weight, or 2 reps with 60 lb of help, are not a max single — they are
+   * where somebody starts, and "the same again" held them there for good. So
+   * this applies to a lift with added weight that is not an assist machine and
+   * has no body-weight base, or when the plan's own range tops out at 2. */
+  const planTopsLow = Boolean(givenRange(planRange)) && range[1] <= 2;
+  const loadedLift = last.topWeight > 0 && !assisted && !bwSpec;
+  if (last.bestAtTop <= 2 && (loadedLift || planTopsLow)) {
     return {
       ...base,
       kind: 'repeat',

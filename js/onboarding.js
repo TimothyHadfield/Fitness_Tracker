@@ -87,6 +87,17 @@ export function defaultUnitsFor(locale) {
   return LBS_REGIONS.includes(region) ? 'lbs' : 'kg';
 }
 
+/**
+ * Where the About-you lbs/kg toggle starts. An existing account keeps its own
+ * unit, lbs by absence — never the phone's guess (MISC-FIX w4). A first run
+ * guesses from the locale, unless the account already says kg (the store
+ * answers 'lbs' for "no settings yet", so an lbs there proves nothing).
+ */
+export function startingUnits(accountUnits, firstRun, locale = localeNow()) {
+  if (!firstRun) return accountUnits === 'kg' ? 'kg' : 'lbs';
+  return accountUnits === 'kg' ? 'kg' : defaultUnitsFor(locale);
+}
+
 function localeNow() {
   try {
     const nav = typeof navigator !== 'undefined' && (navigator.languages && navigator.languages[0] || navigator.language);
@@ -257,10 +268,17 @@ let openNow = null;
 
 export function openOnboarding({ onDone } = {}) {
   if (openNow) return openNow;
+  // Read BEFORE markSeen(): only the very first showing on this device is a
+  // first run. Reopened from Settings ("Find me a program") it is not.
+  const firstRun = !seenHere();
   markSeen();
 
   const answers = { focus: [] };
   const about = { gender: null, birthYear: '', weight: '', units: null };
+  // 🔄 MISC-FIX w4: the lbs/kg toggle is written back ONLY once somebody taps
+  // it. Before, an untouched toggle saved its locale guess, so an lbs account
+  // on an en-GB phone turned kg just by passing through "Find me a program".
+  let unitsTouched = false;
   let path = null;       // PATHS key once the start screen is answered
   // 'start' · 0..5 (the questions) · 'about' · 'building' · 'result'
   let step = 'start';
@@ -269,9 +287,11 @@ export function openOnboarding({ onDone } = {}) {
   let saving = false;
 
   // The unit toggle starts on what the account already says (someone reopening
-  // this from Settings must not have their unit flipped by a guess), else on
-  // the locale's (O-2). Read once, before the About screen can be reached.
-  store.getSettings().then((s) => { if (!about.units && s && s.units) about.units = s.units; }).catch(() => {});
+  // this from Settings must not have their unit flipped by a guess). An account
+  // with no unit saved reads lbs by absence, so that is what it shows. Only a
+  // first run guesses from the phone's locale (O-2) — app.js firstRunUnits has
+  // already saved that guess when it is kg. Read once, before About you.
+  store.getSettings().then((s) => { if (!about.units) about.units = startingUnits(s && s.units, firstRun); }).catch(() => {});
   store.getProfile().then((p) => {
     if (!p) return;
     if (about.gender == null && p.gender) about.gender = p.gender;
@@ -491,7 +511,7 @@ export function openOnboarding({ onDone } = {}) {
   /* About you (O-1, O-2). Every field optional; Next saves whatever is there. */
   const aboutScreen = () => {
     const screen = el('section', { class: 'ob-screen ob-about' });
-    if (!about.units) about.units = defaultUnitsFor(localeNow());
+    if (!about.units) about.units = startingUnits(null, firstRun);
 
     const genderChips = el('div', { class: 'chips' }, [['male', 'Male'], ['female', 'Female']].map(([value, label]) =>
       el('button', {
@@ -520,6 +540,7 @@ export function openOnboarding({ onDone } = {}) {
         class: 'chip', type: 'button', 'aria-pressed': String(about.units === value), text: label,
         onClick: (e) => {
           about.units = value;
+          unitsTouched = true;
           for (const c of e.currentTarget.parentElement.children) c.setAttribute('aria-pressed', String(c === e.currentTarget));
           weight.placeholder = value === 'kg' ? 'e.g. 82' : 'e.g. 180';
         },
@@ -545,10 +566,12 @@ export function openOnboarding({ onDone } = {}) {
 
   /* Everything About you gathered, through the public store methods only (the
    * settings queue orders them; store.js inSettingsQueue). Units are written
-   * even untouched — the toggle's guess becomes the account's unit (O-2). */
+   * ONLY when the toggle was tapped (MISC-FIX w4): an untouched toggle shows
+   * what the account already has, or a first run's guess that app.js
+   * firstRunUnits has already saved. */
   async function saveAbout() {
     const u = about.units === 'kg' ? 'kg' : 'lbs';
-    units.setUnits(u);
+    if (unitsTouched) units.setUnits(u);
     const intro = {
       path,
       ...(path === 'build' ? {
@@ -558,13 +581,14 @@ export function openOnboarding({ onDone } = {}) {
       age: ageFrom(about.birthYear),
       at: new Date().toISOString(),
     };
-    const jobs = [store.saveSettings({ units: u, intro })];
+    const jobs = [store.saveSettings(unitsTouched ? { units: u, intro } : { intro })];
     const profile = {};
     if (about.gender) profile.gender = about.gender;
     if (ageFrom(about.birthYear)) profile.birthYear = Number(about.birthYear);
     if (Object.keys(profile).length) jobs.push(store.saveProfile(profile));
     const w = Number(about.weight);
-    if (w > 0) jobs.push(store.logBodyWeight(units.fromDisplay(w)));
+    // Typed in the unit the toggle shows, whatever the app is set to.
+    if (w > 0) jobs.push(store.logBodyWeight(u === 'kg' ? w * units.LB_PER_KG : w));
     const out = await Promise.allSettled(jobs);
     for (const r of out) if (r.status === 'rejected') console.warn('About you not fully saved.', r.reason);
   }

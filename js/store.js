@@ -228,18 +228,16 @@ async function adoptLocalData(mod) {
  * false. Now every such write sets STRANDED_KEY, and the next successful
  * cloud connection merges each local collection into the cloud.
  *
- * ⚠️ ADD-ONLY, THE SAME `mergeRows` AS `absorbThisDevice`: keyed by id, the
- * newer copy wins, so it can never remove a cloud row. It never writes an
- * empty list (a collection with nothing local is skipped), so the zero-guard
- * and the sharded backend's mass-delete guard are never approached. Settings
- * is left alone when the cloud already has a row.
+ * ⚠️ THE SAME `mergeRows` AS `absorbThisDevice`: keyed by id, the newer copy
+ * wins. The only rows it removes are ones deleted offline (wave 4), one per
+ * write, and never from a wipe or restore. Settings merge field by field.
  *
  * ⚠️ SAME ACCOUNT ONLY. The flag records the uid last connected on this
  * device; if a different account connects, nothing is merged into it.
  *
  * Only the rows written while stranded are carried (by id, see markStranded),
- * and only those leave this device once their collection merged; older local
- * rows are never touched. The flag is cleared only when every collection
+ * and only those the cloud took leave this device; older local rows and copies
+ * that lost to a newer cloud edit stay. The flag is cleared only when every collection
  * merged; a failure leaves it and the rows for the next connect.
  * Failure is swallowed: this must never stop the app loading.
  */
@@ -251,7 +249,16 @@ const LAST_UID_KEY = NS + 'lastCloudUid';
  * and merging the whole collection would bring back anything deleted in the
  * cloud since. So each degraded write records the ids it added or changed,
  * and only those rows are carried up. */
-function markStranded(collection, ids) {
+/* 🚨 WAVE 4 (2026-09-27): EDITS, DELETES AND SETTINGS FIELDS TOO. The first
+ * version carried only added/changed ids, so an offline delete came back, and
+ * an edited row lost to the cloud's copy (no `updatedAt`, a tie, cloud wins).
+ * The flag now also holds:
+ *   deleted[c]   { id: when }   rows removed offline; applied unless the cloud
+ *                               copy was edited after that moment
+ *   fields       { key: when }  settings fields changed offline; each wins over
+ *                               the cloud row unless the cloud row is newer
+ * tests/stranded-w4.test.mjs holds the reproductions. */
+function markStranded(collection, ids, change = {}) {
   try {
     let flag = null;
     try { flag = JSON.parse(localStorage.getItem(STRANDED_KEY) || 'null'); } catch (_) { flag = null; }
@@ -259,12 +266,73 @@ function markStranded(collection, ids) {
       flag = { at: new Date().toISOString(), uid: localStorage.getItem(LAST_UID_KEY) || null, ids: {} };
     }
     if (!flag.ids || typeof flag.ids !== 'object') flag.ids = {};
+    const at = new Date().toISOString();
     const known = new Set(flag.ids[collection] || []);
     for (const id of ids) known.add(id);
     flag.ids[collection] = [...known];
+    const deleted = { ...((flag.deleted && flag.deleted[collection]) || {}) };
+    // A row written again (an undo, a re-add) is no longer deleted.
+    for (const id of ids) delete deleted[id];
+    for (const id of change.deleted || []) deleted[id] = at;
+    if (Object.keys(deleted).length) flag.deleted = { ...(flag.deleted || {}), [collection]: deleted };
+    else if (flag.deleted) delete flag.deleted[collection];
+    if (change.fields && change.fields.length) {
+      flag.fields = { ...(flag.fields || {}) };
+      for (const k of change.fields) flag.fields[k] = at;
+    }
     localStorage.setItem(STRANDED_KEY, JSON.stringify(flag));
   } catch (_) { /* storage full: the rows themselves are what matters */ }
 }
+
+/** Ids in `before` that `rows` no longer holds. */
+function removedIds(before, rows) {
+  const now = new Set();
+  for (const r of Array.isArray(rows) ? rows : []) if (r && r.id != null) now.add(r.id);
+  const out = [];
+  for (const r of Array.isArray(before) ? before : []) if (r && r.id != null && !now.has(r.id)) out.push(r.id);
+  return out;
+}
+
+/** Settings keys whose value differs between two rows (id/updatedAt aside). */
+function changedFields(a, b) {
+  const x = a || {}, y = b || {};
+  const out = [];
+  for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
+    if (k === 'id' || k === 'updatedAt') continue;
+    let same = false;
+    try { same = JSON.stringify(x[k]) === JSON.stringify(y[k]); } catch (_) { same = false; }
+    if (!same) out.push(k);
+  }
+  return out;
+}
+
+/**
+ * Every changed row gets a fresh `updatedAt` unless its caller already moved
+ * it. The safety net under the explicit stamps in the save paths: without it
+ * an edited row ties with the cloud copy and the cloud wins (wave 4).
+ */
+function stampChanged(before, rows) {
+  if (!Array.isArray(rows)) return rows;
+  const prev = new Map();
+  for (const r of Array.isArray(before) ? before : []) if (r && r.id != null) prev.set(r.id, r);
+  const changed = new Set(changedIds(before, rows));
+  if (!changed.size) return rows;
+  const now = new Date().toISOString();
+  return rows.map((r) => {
+    if (!r || r.id == null || !changed.has(r.id)) return r;
+    const p = prev.get(r.id);
+    if (r.updatedAt && (!p || r.updatedAt !== p.updatedAt)) return r;   // caller stamped it
+    return { ...r, updatedAt: now };
+  });
+}
+
+/* How many rows one offline write may remove and still be carried to the
+ * cloud as deletes. A session delete removes one session and its handful of
+ * derived benchmarks; a bigger removal is treated like a wipe and not carried,
+ * because nothing could snapshot the cloud first. */
+const CARRY_DELETE_MAX = 20;
+/** True while clearAll() runs; its deletes are never carried (see above). */
+let wiping = false;
 
 /** Ids in `rows` that are new or different from `before` (both row lists). */
 function changedIds(before, rows) {
@@ -301,30 +369,91 @@ export async function absorbStrandedWrites(remote, opts) {
   }
   const merged = [], failed = [];
   const ids = flag.ids && typeof flag.ids === 'object' ? flag.ids : {};
+  const deletedAll = flag.deleted && typeof flag.deleted === 'object' ? flag.deleted : {};
+  const rowTime = (r) => Date.parse((r && (r.updatedAt || r.createdAt)) || '');
+  const json = (r) => { try { return JSON.stringify(r); } catch (_) { return null; } };
   for (const c of COLLECTIONS) {
     try {
       const wanted = new Set(Array.isArray(ids[c]) ? ids[c] : []);
-      if (!wanted.size) continue;
-      const all = await opts.readLocal(c);
-      const local = (Array.isArray(all) ? all : []).filter((r) => r && wanted.has(r.id));
-      if (!local.length) { merged.push(c); continue; }
+      const gone = new Map(Object.entries(deletedAll[c] && typeof deletedAll[c] === 'object' ? deletedAll[c] : {}));
+      if (!wanted.size && !gone.size) continue;
+      const read = await opts.readLocal(c);
+      const all = Array.isArray(read) ? read : [];
+      const local = all.filter((r) => r && wanted.has(r.id));
+      // Still on this device means it was put back: not a delete.
+      for (const r of all) if (r && r.id != null) gone.delete(String(r.id));
+
       if (c === 'settings') {
-        await inSettingsQueue(async () => {
-          if (!(await remote.read(c)).length) await remote.write(c, local);
-        });
+        // ⚠️ NOT in inSettingsQueue, deliberately. This runs inside active(),
+        // and every other settings read-modify-write awaits active() before it
+        // touches a backend, so none can interleave. Queueing here would
+        // deadlock when a saveSettings is the first backend call of a page
+        // load: its job waits on active(), active() waits on this job.
+        const row = local[0];
+        if (row) {
+          const cloudRow = (await remote.read(c))[0];
+          if (!cloudRow) {
+            await remote.write(c, [row]);
+          } else {
+            // Field by field: a field changed offline wins unless the cloud row
+            // changed after it. An old flag without `fields` falls back to every
+            // field on the device row, timed at the flag.
+            const fields = flag.fields && typeof flag.fields === 'object' ? flag.fields : null;
+            const keys = fields ? Object.keys(fields) : Object.keys(row).filter((k) => k !== 'id' && k !== 'updatedAt');
+            const cloudAt = Date.parse(cloudRow.updatedAt || '');
+            const next = { ...cloudRow };
+            let changed = false;
+            for (const k of keys) {
+              const at = Date.parse((fields && fields[k]) || flag.at || row.updatedAt || '');
+              if (Number.isFinite(cloudAt) && !(at > cloudAt)) continue;
+              if (Object.prototype.hasOwnProperty.call(row, k)) {
+                if (json(next[k]) !== json(row[k])) { next[k] = row[k]; changed = true; }
+              } else if (Object.prototype.hasOwnProperty.call(next, k)) {
+                delete next[k]; changed = true;
+              }
+            }
+            if (changed) {
+              next.updatedAt = new Date().toISOString();
+              await remote.write(c, [next]);
+            }
+          }
+        }
+        // The device keeps its settings row either way: it is what this
+        // device shows the next time it is offline.
       } else {
         const cloud = await remote.read(c);
-        const next = opts.mergeRows(cloud, local);
-        // Add-only: never shorter than what the cloud holds, never empty. A
-        // merge that would shrink it (cloud rows without ids) is refused and
-        // the local copy kept for a later try.
-        if (!next.length || next.length < cloud.length) throw new Error('merge would shrink ' + c);
-        if (!sameRows(next, cloud)) await remote.write(c, next);
+        let next = cloud.slice();
+        if (local.length) {
+          next = opts.mergeRows(cloud, local);
+          // Add-only: never shorter than what the cloud holds, never empty. A
+          // merge that would shrink it (cloud rows without ids) is refused and
+          // the local copy kept for a later try.
+          if (!next.length || next.length < cloud.length) throw new Error('merge would shrink ' + c);
+          if (!sameRows(next, cloud)) await remote.write(c, next);
+        }
+        // Offline deletes, ONE ROW PER WRITE so the sharded backend's
+        // mass-delete guard is never approached. A row edited elsewhere after
+        // the delete is kept: that keeps somebody's work (same rule as R-14).
+        for (const [id, at] of gone) {
+          const row = next.find((r) => r && String(r.id) === id);
+          if (!row) continue;
+          if (rowTime(row) > Date.parse(at)) continue;
+          next = next.filter((r) => r !== row);
+          await remote.write(c, next);
+        }
+        // Only rows the cloud now holds exactly leave this device. A copy that
+        // lost to a newer cloud edit stays here; nothing is deleted unseen.
+        const took = new Set(local
+          .filter((l) => { const n = next.find((r) => r && r.id === l.id); return n && json(n) === json(l); })
+          .map((l) => l.id));
+        const left = all.filter((r) => !(r && took.has(r.id)));
+        if (left.length) storage.setItem(NS + c, JSON.stringify(left));
+        else storage.removeItem(NS + c);
       }
-      // Only the carried rows leave this device; anything older stays put.
-      const left = all.filter((r) => !(r && wanted.has(r.id)));
-      if (left.length) storage.setItem(NS + c, JSON.stringify(left));
-      else storage.removeItem(NS + c);
+      // Done with this collection: a later retry must not redo it.
+      if (flag.ids) delete flag.ids[c];
+      if (flag.deleted) delete flag.deleted[c];
+      if (c === 'settings') delete flag.fields;
       merged.push(c);
     } catch (err) {
       failed.push(c);
@@ -332,6 +461,7 @@ export async function absorbStrandedWrites(remote, opts) {
     }
   }
   if (!failed.length) storage.removeItem(STRANDED_KEY);
+  else { try { storage.setItem(STRANDED_KEY, JSON.stringify(flag)); } catch (_) { /* keeps the old flag */ } }
   return { merged, failed };
 }
 
@@ -458,12 +588,20 @@ const backend = {
     const impl = await active();
     const stranded = impl === LocalBackend && wantRemote();
     const before = stranded ? await LocalBackend.read(collection) : null;
+    // Offline, every changed row carries a fresh updatedAt, or it ties with the
+    // cloud copy on reconnect and loses (wave 4).
+    if (stranded) rows = stampChanged(before, rows);
     const okay = await impl.write(collection, rows, opts);
     // Meant for the cloud but landed on this device: carry it up on the next
     // connection (R-1b, absorbStrandedWrites). Only after the write succeeded.
     if (stranded) {
       const ids = changedIds(before, rows);
-      if (ids.length) markStranded(collection, ids);
+      // Deletes are carried too, except from a wipe or a restore (nothing
+      // could snapshot the cloud first) or an outsized removal.
+      let deleted = removedIds(before, rows);
+      if ((opts && opts.replace) || wiping || deleted.length > CARRY_DELETE_MAX) deleted = [];
+      const fields = collection === 'settings' ? changedFields(before && before[0], rows && rows[0]) : [];
+      if (ids.length || deleted.length) markStranded(collection, ids, { deleted, fields });
     }
     // We have just decided what this collection contains, so the cache is not
     // guessing — it is recording. Set AFTER the await: a write that threw has
@@ -1931,7 +2069,10 @@ export const store = {
     const rows = await backend.read('sessions');
     const row = normalizeSession({ ...session });
     if (!row.id) row.id = uid('s');
-    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    // updatedAt on every save (wave 4): an edit must beat the older copy on
+    // another device or in the cloud, and createdAt never moves.
+    row.updatedAt = new Date().toISOString();
+    if (!row.createdAt) row.createdAt = row.updatedAt;
     await backend.write('sessions', upsert(rows, row));
     // Benchmarks derived from this session are rebuilt from scratch every save,
     // so editing the date, changing a set or clearing the flag can never leave a
@@ -2049,7 +2190,8 @@ export const store = {
     const rows = await backend.read('guestSessions');
     const row = { ...session };
     if (!row.id) row.id = uid('g');
-    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    row.updatedAt = new Date().toISOString();
+    if (!row.createdAt) row.createdAt = row.updatedAt;
     await backend.write('guestSessions', upsert(rows, row));
     return row;
   },
@@ -2112,7 +2254,8 @@ export const store = {
       if (existing) return existing;
       row.id = uid('p');
     }
-    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    row.updatedAt = new Date().toISOString();
+    if (!row.createdAt) row.createdAt = row.updatedAt;
     await backend.write('people', upsert(rows, row));
     return row;
   },
@@ -2134,7 +2277,7 @@ export const store = {
     const next = rows.map((r) => {
       if (!want.has(r.id)) return r;
       hit++;
-      return { ...r, lastUsedAt: stamp };
+      return { ...r, lastUsedAt: stamp, updatedAt: new Date().toISOString() };
     });
     if (!hit) return 0;
     await backend.write('people', next);
@@ -2162,7 +2305,8 @@ export const store = {
     const rows = await backend.read('benchmarks');
     const row = { ...mark };
     if (!row.id) row.id = uid('b');
-    if (!row.createdAt) row.createdAt = new Date().toISOString();
+    row.updatedAt = new Date().toISOString();
+    if (!row.createdAt) row.createdAt = row.updatedAt;
     await backend.write('benchmarks', upsert(rows, row));
     schedulePublish();
     return row;
@@ -2235,7 +2379,7 @@ export const store = {
     };
     const others = rows.map((g) => (g.id === row.id || g.status !== 'active'
       ? g
-      : { ...g, status: 'ended', endedAt: now, endedReason: 'replaced' }));
+      : { ...g, status: 'ended', endedAt: now, endedReason: 'replaced', updatedAt: now }));
     await backend.write('goals', upsert(others, row));
     return row;
   },
@@ -2244,7 +2388,7 @@ export const store = {
     const rows = await backend.read('goals');
     const now = new Date().toISOString();
     await backend.write('goals', rows.map((g) => (g.id === id
-      ? { ...g, status: 'ended', endedAt: now, endedReason: reason }
+      ? { ...g, status: 'ended', endedAt: now, endedReason: reason, updatedAt: now }
       : g)));
   },
 
@@ -2277,7 +2421,9 @@ export const store = {
     // tests/settings-race.test.mjs holds the reproduction.
     return inSettingsQueue(async () => {
       const current = await backend.read('settings').then((r) => r[0] || {});
-      const next = { ...current, ...patch, id: 'settings' };
+      // updatedAt (wave 4): lets an offline change be weighed against the
+      // cloud row field by field on reconnect (absorbStrandedWrites).
+      const next = { ...current, ...patch, id: 'settings', updatedAt: new Date().toISOString() };
       await backend.write('settings', [next]);
       return next;
     });
@@ -2680,7 +2826,12 @@ export const store = {
     // No `replace` here (R-14): the snapshot above has just read every
     // collection, so the cloud merge removes exactly the rows it saw. Only a
     // row another device adds during the clear survives it.
-    for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
+    // `wiping`: an offline Clear all stays on this device, never carried to
+    // the cloud as deletes (no snapshot is possible offline). See backend.write.
+    wiping = true;
+    try {
+      for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
+    } finally { wiping = false; }
   },
 };
 

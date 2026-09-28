@@ -165,7 +165,11 @@ function heldKeys(sessions, exerciseId, exerciseName, exercise) {
   const all = observations(sessions, exerciseId, exerciseName);
   const keys = new Set();
   if (all.length < 2) return keys;
-  const loaded = all.some((o) => Number(o.weight) > 0);
+  // 🆕 EST-FIX (2026-09-27): on an ASSIST machine the number is help, so a jump
+  // from 40 to 90 is a much easier set, not a slip. Only the reps test applies.
+  const spec = exercise ? bodyWeightFractionFor(exercise) : null;
+  const assist = Boolean(spec && spec.assist);
+  const loaded = !assist && all.some((o) => Number(o.weight) > 0);
   const held = holdTypos(all, loaded ? { exercise: exercise || null } : { metric: 'reps' });
   for (const o of held) keys.add(obsKey(o.date, o));
   return keys;

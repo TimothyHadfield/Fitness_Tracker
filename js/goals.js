@@ -636,6 +636,55 @@ export function goalProgress(goal, currentWeight, today, { daysAtTarget } = {}) 
   };
 }
 
+/**
+ * 🆕 EST-FIX (2026-09-27): THE DAY-BY-DAY SERIES `daysAtOrAbove()` COUNTS, from
+ * a muscle's observations (strength-observations.js buildObservations: each set
+ * already converted to the key lift). One point per date: the best reading that
+ * day. Days the rating set aside as a typo (`quarantined`) are left out, so one
+ * slip cannot confirm a goal.
+ */
+export function goalDaySeries(observations, { since = null, quarantined = null } = {}) {
+  const held = new Set((quarantined || []).map((q) => `${q && q.date}|${q && q.exerciseId}`));
+  const best = new Map();
+  for (const o of Array.isArray(observations) ? observations : []) {
+    if (!o || typeof o.date !== 'string') continue;
+    if (since && o.date < since) continue;
+    if (held.has(`${o.date}|${o.exerciseId}`)) continue;
+    const v = Number(o.estimate);
+    if (!(v > 0)) continue;
+    if (!(best.get(o.date) >= v)) best.set(o.date, v);
+  }
+  return [...best].map(([date, estimate]) => ({ date, estimate })).sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+/**
+ * 🆕 EST-FIX: `goalProgress()`'s `daysAtTarget`, for a screen that holds the rows.
+ *
+ * ⚠️ ONLY WORKED OUT WHEN IT CAN MATTER. It is needed only when today's estimate
+ * is already at the target, which is rare, so every other render pays nothing.
+ * Then it walks only the sessions since the goal began (≤ 12 weeks), not the
+ * whole history. Returns undefined (the old one-reading test) when it cannot
+ * be counted, so a failure never hides a goal the lifter really reached.
+ */
+export async function goalDaysAtTarget(goal, currentWeight, rows = {}) {
+  if (!goal || !(Number(currentWeight) >= Number(goal.targetWeight))) return undefined;
+  if (!Array.isArray(rows.sessions)) return undefined;
+  try {
+    const since = goal.startDate || null;
+    const recent = (list) => (Array.isArray(list) ? list : []).filter((r) => r && (!since || String(r.date) >= since));
+    const { buildObservations } = await import('./strength-observations.js');
+    const { byMuscle } = buildObservations({
+      sessions: recent(rows.sessions), benchmarks: recent(rows.benchmarks),
+      exMap: rows.exMap || new Map(), bodyWeights: rows.bodyWeights || [],
+      sex: rows.sex || null, today: rows.today,
+    });
+    const series = goalDaySeries(byMuscle.get(goal.muscle) || [], { since, quarantined: rows.quarantined });
+    return daysAtOrAbove(series, goal.targetWeight, since);
+  } catch (_) {
+    return undefined;
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * Why progress stalls
  * ------------------------------------------------------------------ */

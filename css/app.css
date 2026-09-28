@@ -1642,6 +1642,23 @@ select.input {
    pushes the button off the right edge, which is the same `minmax(auto, 1fr)`
    trap the year grid's month strip hit. */
 .session-head-row { display: flex; align-items: flex-start; gap: 10px; }
+/* Wave 4 (manager): the exercise name sticks to the top of the runner's pane,
+   so a long warm-up list can scroll the open set into view without losing
+   which exercise it is. `display: contents` lifts the row out of its 85px
+   column so it sticks against the pane, not inside its own parent. */
+/* Wave 4 (MISC-FIX, measured at 1366): the phone lists stretched to 940px left
+   Start ~880px from its label, and feed weights ~880px from their names. */
+@media (min-width: 860px) { .feed-exs { max-width: 460px; } }
+@media (min-width: 1024px) {
+  .list.pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
+  .list.pick-grid > :nth-child(2) { border-top: 0; }
+}
+.pane-scroll > .session-head { display: contents; }
+.pane-scroll > .session-head > .session-head-row {
+  position: sticky; top: 0; z-index: 3;
+  background: var(--ground);
+  margin-bottom: 3px;
+}
 .session-head-row .session-ex-name { flex: 1; min-width: 0; }
 .swap-btn {
   flex: none;

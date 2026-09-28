@@ -3591,7 +3591,8 @@ export async function FindView() {
   });
 
   const empty = () => setChildren(results, el('p', { class: 'field-help', text:
-    'Type a name. Anyone can turn this off in Settings.' }));
+    // "Findable by name" moved to Account → Who can see you (MISC-FIX w4).
+    'Type a name. Anyone can turn this off in Account → Who can see you.' }));
   empty();
 
   /* ⚠️ DEBOUNCED, AND A STALE ANSWER IS DISCARDED. Two keystrokes can be in

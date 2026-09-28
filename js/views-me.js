@@ -61,7 +61,7 @@ import { ownCalendar, chartLift } from './views-data.js';
 import * as dataViews from './views-data.js';
 import { sessionStats } from './session-stats.js';
 // 🆕 Profile's goal row prints how far along it is (review, 2026-09-24).
-import { goalProgress, modelChangedSince } from './goals.js';
+import { goalProgress, modelChangedSince, goalDaysAtTarget } from './goals.js';
 // 🆕 Motion 2 · Additions: the Goals screen's own bar and spring, reused.
 import { springFill } from './views-goals.js';
 // 🆕 "What are my best lifts, ever?" — the question the app could not answer
@@ -209,6 +209,16 @@ async function fill(body) {
     sessions, benchmarks, bodyWeights, sex: (profile && profile.gender) || null,
   }).catch(failed(new Map()));
 
+  // 🆕 EST-FIX (2026-09-27): "Reached" needs two days at the target. Worked out
+  // only when today's estimate is already there, from the rows read above.
+  const goalMuscle = goal && muscles && muscles.get ? muscles.get(goal.muscle) : null;
+  const daysAtTarget = goal
+    ? await goalDaysAtTarget(goal, goalMuscle ? goalMuscle.estimate : null, {
+      sessions, benchmarks, exMap, bodyWeights, sex: (profile && profile.gender) || null,
+      today: todayISO(), quarantined: goalMuscle ? goalMuscle.quarantined : null,
+    })
+    : undefined;
+
   const workouts = sessions.length;
   // ⚠️ `connections` only exists on an available state. Off the cloud there is
   // no graph to count, and showing 0 would be a claim rather than an absence.
@@ -254,7 +264,7 @@ async function fill(body) {
         : null,
 
     weekSection(sessions),
-    goalSection(goal, muscles),
+    goalSection(goal, muscles, daysAtTarget),
     bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile, bodyWeights }, dataKey),
     calendarSection(activity),
     bodySection(profile),
@@ -443,9 +453,10 @@ function bodySection(profile) {
  * facts about the goal. The row used to ignore both and read "By Oct 29" for a
  * goal already reached or already over.
  * ------------------------------------------------------------------ */
-export function goalLine(goal, muscles, today = todayISO()) {
+export function goalLine(goal, muscles, today = todayISO(), { daysAtTarget } = {}) {
   const m = muscles && muscles.get ? muscles.get(goal.muscle) : null;
-  const p = goalProgress(goal, m ? m.estimate : null, today);
+  // 🆕 EST-FIX: two days at the target before "Reached" (goals.js, EA-12).
+  const p = goalProgress(goal, m ? m.estimate : null, today, { daysAtTarget });
   if (p.reached) return 'Reached';
   if (p.expired) return `Ended ${fmtDateShort(goal.endDate)}`;
   const by = `by ${fmtDateShort(goal.endDate)}`;
@@ -462,9 +473,9 @@ export function goalLine(goal, muscles, today = todayISO()) {
  * Motion 2 · Additions). Same fraction, same markup, same spring on first show
  * (its own key, so each screen fills once a session). Nothing when Goals would
  * draw nothing: no current estimate, or a goal rated under an older model. */
-function goalBar(goal, muscles) {
+function goalBar(goal, muscles, daysAtTarget) {
   const m = muscles && muscles.get ? muscles.get(goal.muscle) : null;
-  const p = goalProgress(goal, m ? m.estimate : null, todayISO());
+  const p = goalProgress(goal, m ? m.estimate : null, todayISO(), { daysAtTarget });
   if (p.currentWeight === null || p.fraction === null || modelChangedSince(goal)) return null;
   const pct = (p.fraction || 0) * 100;
   return el('div', { class: 'to-next-bar me-goal-bar', 'aria-hidden': 'true' },
@@ -472,8 +483,8 @@ function goalBar(goal, muscles) {
       pct, `me-goal:${goal.id || goal.muscle}`));
 }
 
-function goalSection(goal, muscles) {
-  const line = goal ? goalLine(goal, muscles) : null;
+function goalSection(goal, muscles, daysAtTarget) {
+  const line = goal ? goalLine(goal, muscles, todayISO(), { daysAtTarget }) : null;
   const row = el('a', { class: 'row', href: '#/goals' },
     el('div', { class: 'row-main' },
       goal
@@ -483,7 +494,7 @@ function goalSection(goal, muscles) {
       el('div', { class: 'row-sub wrap', text: goal
         ? line
         : 'Move a muscle up a strength level' }),
-      goal ? goalBar(goal, muscles) : null,
+      goal ? goalBar(goal, muscles, daysAtTarget) : null,
     ),
     el('span', { class: 'row-chev' }, chevron()),
   );

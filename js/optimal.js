@@ -370,9 +370,17 @@ export function observedDaysPerWeek(dates, todayISO, windowDays = OBSERVE_WINDOW
   // first date inside the window made a steady Mon/Wed/Fri lifter read 3.00 to
   // 3.23 days a week depending on the weekday, and "% optimal" jumped every
   // Friday. With older history the span is the whole window.
-  const olderExists = (dates || []).map(dayNumber)
-    .some((d) => d !== null && d <= today - windowDays);
-  const spanDays = olderExists ? windowDays : today - Math.min(...days) + 1;
+  //
+  // 🆕 EST-FIX (2026-09-27): ONLY WHEN THAT OLDER SESSION IS NEAR THE WINDOW'S
+  // START. Three sessions in June, a three-month break, then six in the last two
+  // weeks read 1.5 a week over 28 days instead of 3 over 14 — the break was
+  // counted as if they had been training through it. So the whole window is
+  // used only when the newest older session sits within a week of its start;
+  // after a longer break the span starts at the first session back.
+  const windowStart = today - windowDays + 1;
+  const older = (dates || []).map(dayNumber).filter((d) => d !== null && d < windowStart);
+  const olderNear = older.length > 0 && Math.max(...older) >= windowStart - 7;
+  const spanDays = olderNear ? windowDays : today - Math.min(...days) + 1;
   if (spanDays < MIN_OBSERVED_SPAN_DAYS) return null;
 
   const perWeek = days.length / (spanDays / 7);

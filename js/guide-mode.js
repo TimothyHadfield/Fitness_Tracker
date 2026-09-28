@@ -298,8 +298,14 @@ export function attachGuide(ctx) {
     // the first warm-up only — it is what you do before it.
     const how = ex ? loggingNoteFor(ex) : null;
     const lines = ctx.lines ? ctx.lines(entry, cur.entryIndex) : {};
-    const stretch = onWarm && cur.index === 0 && lines.stretch
-      ? el('div', { class: 'session-ex-meta warm-general', text: lines.stretch }) : null;
+    // 🆕 2026-09-27 (wave 4 visual QA): on the LATER warm-ups the line is
+    // still there, invisible, so the bar and steppers do not jump ~15px when
+    // Skip or Finish moves on (Tim: "nothing moves when you tap").
+    const stretch = onWarm && lines.stretch
+      ? el('div', cur.index === 0
+        ? { class: 'session-ex-meta warm-general', text: lines.stretch }
+        : { class: 'session-ex-meta warm-general', text: ' ', 'aria-hidden': 'true' })
+      : null;
     const noteNodes = [
       how ? el('div', { class: 'guide-how', text: how }) : null,
       lines.note, stretch, lines.targets, lines.repPlan, lines.last, lines.opening,

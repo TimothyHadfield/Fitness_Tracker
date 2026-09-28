@@ -15,7 +15,7 @@ import { alternativesFor } from './exercise-families.js';
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
   hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds, nextPersonTurn,
-  draftStorageFull, onDraftStorage, stepsBackFromHere, stampTrail,
+  draftStorageFull, onDraftStorage, stepsBackFromHere, stampTrail, EMPTY_SESSION_ID,
 } from './session-draft.js';
 import { keepAwake } from './wake-lock.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
@@ -168,7 +168,9 @@ let saveOnOpen = null;
 /* 🆕 EMPTY WORKOUT (overhaul S-03, wave 2): `#/session/new-empty` opens the
  * runner with no template. The draft carries this id so the bar above the nav
  * can bring it back; the saved session carries NO workoutId (plan decision). */
-export const EMPTY_SESSION_ID = 'new-empty';
+// Defined in session-draft.js since wave 4, so the Record screen can ask "is the
+// open draft the Empty workout?" without loading the runner.
+export { EMPTY_SESSION_ID };
 export const EMPTY_SESSION_NAME = 'Workout';
 
 /* 🆕 S-06 (wave 2): what "Equipment today" allows. Mirrors presetEquipment()'s
@@ -178,6 +180,16 @@ export const EQUIPMENT_TODAY = {
   dumbbells: new Set(['Dumbbell', 'Bodyweight']),
   none: new Set(['Bodyweight']),
 };
+
+/* 🆕 2026-09-27 (wave 4 review): AN "OTHER" EXERCISE WITH NO WEIGHT FITS
+ * EVERY CHOICE. With "None" picked, Sprint Intervals and Shadow Boxing became
+ * Mountain Climber and Tire Flip became Burpee: they need no gym kit, but their
+ * equipment is "Other", not "Bodyweight". One that takes a weight (sled, wall
+ * ball, medicine ball) still needs its kit and is still swapped. */
+function fitsEquipment(ex, allowed) {
+  if (allowed.has(ex.equipment)) return true;
+  return ex.equipment === 'Other' && !(ex.fields || []).includes('weight');
+}
 
 /**
  * 🆕 S-06: for each exercise that does not fit `kind`, the closest stand-in
@@ -193,9 +205,9 @@ export function equipmentSwaps(entries, exMap, kind, alternativesFor) {
   const out = [];
   entries.forEach((e, index) => {
     const ex = exMap.get(e.exerciseId);
-    if (!ex || allowed.has(ex.equipment)) return;
+    if (!ex || fitsEquipment(ex, allowed)) return;
     const { items } = alternativesFor(ex, all, { limit: all.length });
-    const hit = items.find((it) => allowed.has(it.exercise.equipment) && !taken.has(it.exercise.id));
+    const hit = items.find((it) => fitsEquipment(it.exercise, allowed) && !taken.has(it.exercise.id));
     if (!hit) return;
     taken.add(hit.exercise.id);
     out.push({ index, to: hit.exercise });
@@ -3423,7 +3435,9 @@ export async function SessionView(workoutId) {
     if (!keepScroll) {
       rowAnchor = null;
       pane.scrollTop = 0;
-      revealOpenRow(editor.parentNode ? editor.parentNode : null, { whole: true });
+      revealOpenRow(editor.parentNode ? editor.parentNode : null, {
+        whole: true, keepHead: headAbove(editor),
+      });
       return;
     }
     pane.scrollTop = wasAt;
@@ -3459,20 +3473,48 @@ export async function SessionView(workoutId) {
    * animation). With `whole`, a node taller than the pane keeps its top on
    * screen. Waits (a few frames at most) for a pane not yet in the document.
    */
-  function revealOpenRow(node, { whole } = {}, tries = 0) {
+  /** The exercise name heading that owns `node` (the nearest one up the tree). */
+  function headAbove(node) {
+    for (let n = node; n && n !== pane.parentNode; n = n.parentNode) {
+      const h = typeof n.querySelector === 'function' ? n.querySelector('.session-ex-name') : null;
+      if (h) return h;
+    }
+    return null;
+  }
+
+  function revealOpenRow(node, { whole, keepHead } = {}, tries = 0) {
     if (!node || typeof node.getBoundingClientRect !== 'function') return;
     if (!pane.isConnected) {
       if (tries < 30 && typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(() => { if (node.isConnected || !pane.isConnected) revealOpenRow(node, { whole }, tries + 1); });
+        requestAnimationFrame(() => { if (node.isConnected || !pane.isConnected) revealOpenRow(node, { whole, keepHead }, tries + 1); });
       }
       return;
     }
     if (!node.isConnected) return;
     const er = node.getBoundingClientRect();
-    const pr = pane.getBoundingClientRect();
+    const box = pane.getBoundingClientRect();
+    // Look 3: the footer floats over the pane's bottom (`--chrome-b`), so the
+    // visible bottom is above the pane's own edge.
+    const chrome = typeof getComputedStyle === 'function'
+      ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chrome-b')) || 0
+      : 0;
+    const pr = { top: box.top, bottom: box.bottom - chrome, height: box.height };
     if (!er.height || !pr.height) return;
     if (er.bottom > pr.bottom) {
-      pane.scrollTop += Math.min(er.bottom - pr.bottom + 8, Math.max(0, er.top - pr.top - (whole ? 8 : 0)));
+      let by = Math.min(er.bottom - pr.bottom + 8, Math.max(0, er.top - pr.top - (whole ? 8 : 0)));
+      // 🆕 2026-09-27 (wave 4 visual QA): ON LANDING, THE EXERCISE'S NAME STAYS
+      // ON SCREEN. Measured at 393×659: revealing Back Squat's open set put
+      // "Back Squat" 36px above the pane — the runner opened without saying
+      // which exercise you were on. The name stays only while the open row
+      // still fits whole: the steppers are the thing being used, so when both
+      // cannot fit (a long warm-up list) the row wins and the sticky exercise
+      // heading (app.css, `.ex-head` sticky) keeps the name in view (manager).
+      const head = keepHead && keepHead.isConnected ? keepHead.getBoundingClientRect() : null;
+      if (head && head.height) {
+        const withHead = Math.min(by, Math.max(0, head.top - pr.top));
+        if (er.bottom - withHead <= pr.bottom) by = withHead;
+      }
+      pane.scrollTop += by;
     }
     else if (er.top < pr.top) pane.scrollTop -= pr.top - er.top + 8;
   }
@@ -3521,6 +3563,12 @@ export async function SessionView(workoutId) {
         run: () => {
           const d = loadDraft();
           if (!d || d.startedAt !== state.startedAt) return;
+          // 🆕 2026-09-27 (wave 4 review): THE TOAST OUTLIVES THIS RUNNER. Leave
+          // with ↓, reopen from the live bar, log two sets — that is a NEW
+          // runner on the same draft, and this one's `state` is stale. Undoing
+          // here wrote the stale state over the newer sets (measured: 4 → 3).
+          // Only the runner still on screen may undo.
+          if (!pane.isConnected) return;
           restore();
           saveDraft(state);
           renderAll({ keepScroll: true });
@@ -4993,9 +5041,16 @@ export async function SessionView(workoutId) {
      * another day says so the whole way through, rather than springing it on
      * you at the end* — and this one is what makes the screen a true summary of
      * what is about to be written. */
+    /* 🆕 2026-09-27 (wave 4 visual QA): THE FIELD READS AS A DAY, NOT
+     * "2026-09-27". The words on show are fmtDateLong's, as on every other
+     * screen; the real date input lies over them, invisible, so a tap still
+     * opens the phone's own date wheel. showPicker() is for a laptop, where a
+     * click on the input's text would only focus a digit. */
     const saveDate = el('input', {
       class: 'session-date', type: 'date', value: state.date, max: todayISO(),
       'aria-label': 'Day this workout is recorded for',
+      style: 'position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;border:0',
+      onClick: (e) => { try { if (typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (_) { /* focus is enough */ } },
       onChange: (e) => {
         state.date = e.target.value || todayISO();
         saveDraft(state);
@@ -5003,8 +5058,12 @@ export async function SessionView(workoutId) {
         paintDayNote();
       },
     });
+    const saveDateText = el('span', { class: 'session-date save-date-text', 'aria-hidden': 'true' });
+    const saveDateBox = el('span', { style: 'position:relative;display:inline-block;align-self:flex-start' },
+      saveDate, saveDateText); // input first: `.session-date` still finds it; positioned, it paints on top
     const dayNote = el('div', { class: 'field-help' });
     function paintDayNote() {
+      saveDateText.textContent = fmtDateLong(state.date);
       dayNote.textContent = state.date === todayISO()
         ? 'Today.'
         : `Not today — this is being recorded for ${fmtDateLong(state.date)}.`;
@@ -5075,7 +5134,7 @@ export async function SessionView(workoutId) {
         ),
         el('div', { class: 'field' },
           el('label', { text: 'Date' }),
-          saveDate,
+          saveDateBox,
           dayNote,
         ),
         guestNames.length

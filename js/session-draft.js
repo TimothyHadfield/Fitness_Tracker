@@ -19,6 +19,13 @@ import { minisOf } from './set-types.js';
 
 const DRAFT_KEY = 'ftrack:v1:draftSession';
 
+/* 🆕 The Empty workout's draft id (`#/session/new-empty`). Here, not only in
+ * the runner, so the Record screen can say "Resume" for an open Empty workout
+ * without loading the runner (wave 4). views-session.js re-exports it. */
+export const EMPTY_SESSION_ID = 'new-empty';
+/** Is this draft an open Empty workout? (No saved workout carries its id.) */
+export const isEmptyDraft = (d) => Boolean(d && d.workoutId === EMPTY_SESSION_ID);
+
 /**
  * ⚠️ THE DEMO ACCOUNT DOES NOT WRITE DRAFTS TO DISK.
  *
@@ -100,13 +107,25 @@ export function saveDraft(d) {
   }
   setFull(true);
   // Not loaded yet: clear and retry once it is, with whatever is newest then.
-  loadClearer().then(() => {
-    if (!storageFull || !clearCaches) return;
-    try { clearCaches(); } catch (_) { /* nothing to clear */ }
-    if (writeDraft(raw)) setFull(false);
-  });
+  // 🆕 2026-09-27 (wave 4): ONE retry, of the NEWEST draft. Each failed save
+  // used to queue its own retry holding its own `raw`; the first (the OLDEST
+  // draft) won, set the flag false, and the newer ones then did nothing — so
+  // the disk kept v1 of three. Only the latest failed draft is remembered.
+  const first = pendingRaw === null;
+  pendingRaw = raw;
+  if (first) {
+    loadClearer().then(() => {
+      const newest = pendingRaw;
+      pendingRaw = null;
+      if (newest === null || !storageFull || !clearCaches) return;
+      try { clearCaches(); } catch (_) { /* nothing to clear */ }
+      if (writeDraft(newest)) setFull(false);
+    });
+  }
   return false;
 }
+/* The newest draft a save could not write while the clearer was loading. */
+let pendingRaw = null;
 
 export function loadDraft() {
   try { const r = draftStore().getItem(DRAFT_KEY); return r ? JSON.parse(r) : null; } catch (_) { return null; }

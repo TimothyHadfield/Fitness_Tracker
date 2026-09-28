@@ -348,7 +348,21 @@ function localDay(stamp) {
 async function activeGoalScreen(goal, profile, muscles) {
   const m = muscles.get(goal.muscle);
   const current = m ? m.estimate : null;
-  const p = goalProgress(goal, current, todayISO());
+  /* 🆕 EST-FIX (2026-09-27): "Reached" needs two different days at the target,
+   * not one good estimate. Counted only when today's estimate is there at all
+   * (goalDaysAtTarget returns at once otherwise), so an ordinary open pays nothing. */
+  const daysAtTarget = await goalsModel.goalDaysAtTarget(goal, current, {
+    ...(Number(current) >= Number(goal.targetWeight)
+      ? await Promise.all([store.getSessions(), store.getBenchmarks(), store.getExerciseMap(),
+        store.getBodyWeights()])
+        .then(([sessions, benchmarks, exMap, bodyWeights]) => ({ sessions, benchmarks, exMap, bodyWeights }))
+        .catch(() => ({}))
+      : {}),
+    sex: (profile && profile.gender) || null,
+    today: todayISO(),
+    quarantined: m ? m.quarantined : null,
+  });
+  const p = goalProgress(goal, current, todayISO(), { daysAtTarget });
   const req = requirementsFor(goal.ambition, { bodyWeight: profile.bodyWeight });
   // Was the target frozen under the model that is rating "now"? Decided once,
   // here, and handed to every block that prints a subtraction — so the notice
@@ -366,7 +380,7 @@ async function activeGoalScreen(goal, profile, muscles) {
     /* 🔄 OVERHAUL I-11 (2026-09-27): "Change or end this goal" opened a sheet
      * that could only END it, so changing meant ending first. "Change goal"
      * now opens the picker, whose pick already asks "Replace your goal?" and
-     * keeps the old one in history. Ending stays one quiet link away, through
+     * keeps the old one in history. Ending is the quiet button beside it, through
      * the same sheet as before. One row (the app's `.btn-row`), so the
      * footer costs no more height than the single button did. */
     bottom: el('div', { class: 'btn-row goal-bottom' },
@@ -374,8 +388,10 @@ async function activeGoalScreen(goal, profile, muscles) {
         class: 'btn block', text: 'Change goal',
         onClick: () => go('#/goal/new'),
       }),
+      // 🔄 EST-FIX (2026-09-27): the same quiet button as "Change goal" beside
+      // it, not an underlined link — two equal choices, one look.
       el('button', {
-        type: 'button', class: 'text-link goal-end-link', text: 'End this goal',
+        type: 'button', class: 'btn block goal-end-link', text: 'End this goal',
         onClick: () => endSheet(goal, p),
       }),
     ),

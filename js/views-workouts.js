@@ -980,9 +980,10 @@ async function shareActivity(e) {
  * mid-gym loop it sits in front of by more than the one tap Tim priced in.
  */
 export async function RecordChooserView() {
-  const [systems, workouts, sessions, exMap] = await Promise.all([
+  const [systems, workouts, sessions, exMap, settings] = await Promise.all([
     store.getSystems(), store.getWorkouts(), store.getSessions(),
     store.getExerciseMap().catch(() => null),
+    store.getSettings().catch(() => null),
   ]);
   /* 🚨 SCOPED TO THE CURRENT PROGRAM, EXACTLY AS #/start IS — overhaul
    * 2026-09-27 (systems S-01). Measured: after switching to Upper/Lower, this
@@ -991,7 +992,7 @@ export async function RecordChooserView() {
    * as StartPickerView now, so the two cannot disagree. */
   const current = await store.currentSystem({ systems, workouts, sessions }).catch(() => null);
   const mine = current ? workouts.filter((w) => w.systemId === current.id) : [];
-  const next = current && mine.length
+  const next = current && mine.length && programInPlay(current, mine, settings, sessions)
     ? suggestNext({ systems: [current], workouts: mine, sessions, today: todayISO(), exMap })
     : null;
   /* 🆕 THE BIG BUTTON STARTS IT — overhaul 2026-09-27 (interaction I-9). It
@@ -1002,7 +1003,13 @@ export async function RecordChooserView() {
    * "Weightlifting" → the list, as before. Adding a preset never makes it
    * current, so this only ever reads the rotation somebody chose. */
   const open = liveDraft(todayISO());
-  const openW = open && open.workoutId ? workouts.find((w) => w.id === open.workoutId) : null;
+  // An open Empty workout matches no saved workout, so it is its own case:
+  // "Resume workout" — offering the next program day instead ran into the
+  // runner's "still open / Discard" (MISC-FIX w4).
+  const openEmpty = Boolean(open && open.workoutId === EMPTY_ID);
+  const openW = openEmpty
+    ? { id: EMPTY_ID, name: 'workout' }
+    : open && open.workoutId ? workouts.find((w) => w.id === open.workoutId) : null;
   const target = openW || (next ? next.workout : null);
 
   const activity = (label, exerciseName) =>
@@ -1074,7 +1081,9 @@ export async function RecordChooserView() {
         el('div', { class: 'section-label', text: 'Or log an activity' }),
         helpDot('They go on your calendar and feed. Muscle ratings still come from lifting only.',
           { label: 'Are activities rated?', title: 'Activities' })),
-      el('div', { class: 'list' },
+      // `pick-grid`: two columns on a laptop (css), so a label and its chevron
+      // are not 900px apart. A phone keeps the one column.
+      el('div', { class: 'list pick-grid' },
         activity('Run', 'Running'),
         activity('Walk or hike', 'Walking'),
         activity('Swim', 'Swimming'),
@@ -1563,15 +1572,33 @@ async function programWords(system, workouts, preset) {
  * opening with no template (views-session.js, SessionView('new-empty') via
  * app.js's `session` route) — landed in wave 2, so the row is on. */
 export const EMPTY_WORKOUT = true;
-export const EMPTY_WORKOUT_ROUTE = '#/session/new-empty';
+// = views-session.js EMPTY_SESSION_ID. A literal, not an import: session-draft.js
+// does not export it (yet), and importing the runner here would load it early.
+const EMPTY_ID = 'new-empty';
+export const EMPTY_WORKOUT_ROUTE = '#/session/' + EMPTY_ID;
 
-function emptyWorkoutRow() {
+/**
+ * Is this program really the one being run? The store's currentSystem() falls
+ * back to any program with workouts, so a preset only BROWSED (added, never
+ * chosen, never trained) would get Record's one-tap Start — against "adding a
+ * preset does not make it current" (MISC-FIX w4). Chosen, or trained, says yes.
+ */
+export function programInPlay(system, mine, settings, sessions) {
+  if (!system) return false;
+  if (settings && settings.currentSystemId === system.id) return true;
+  const ids = new Set((mine || []).map((w) => w.id));
+  return (sessions || []).some((s) => s && ids.has(s.workoutId));
+}
+
+function emptyWorkoutRow(isOpen = false) {
   if (!EMPTY_WORKOUT) return null;
-  return el('div', { class: 'list' },
+  // `pick-grid` like the workout rows above it, so on a laptop its Start sits
+  // in the same column as theirs.
+  return el('div', { class: 'list pick-grid' },
     el('button', { class: 'row', onClick: () => go(EMPTY_WORKOUT_ROUTE) },
       el('div', { class: 'row-main' },
         el('div', { class: 'row-title', text: 'Empty workout' })),
-      el('span', { class: 'row-start' }, 'Start', icon('play', 12))));
+      el('span', { class: 'row-start' }, isOpen ? 'Resume' : 'Start', icon('play', 12))));
 }
 
 function sideColumn(...parts) {
@@ -1679,7 +1706,19 @@ export async function StartPickerView({ tab = false } = {}) {
   // When the suggestion IS the open workout, it says so instead of offering it
   // as the next fresh start.
   const openSets = open ? draftRecordedSets(open) : 0;
-  const suggestion = next && next.workout.id === openId
+  const openEmpty = openId === EMPTY_ID;
+  const suggestion = openEmpty
+    ? [
+        el('div', { class: 'section-label', text: 'Open now' }),
+        el('button', {
+          class: 'btn primary lg block',
+          onClick: () => go(EMPTY_WORKOUT_ROUTE),
+        }, icon('play'), 'Resume workout'),
+        el('div', { class: 'field-help', text: openSets
+          ? `${plural(openSets, 'set')} recorded so far.`
+          : 'Started, nothing recorded yet.' }),
+      ]
+    : next && next.workout.id === openId
     ? [
         el('div', { class: 'section-label', text: 'Open now' }),
         el('button', {
@@ -1729,7 +1768,8 @@ export async function StartPickerView({ tab = false } = {}) {
         systemSwitcher({ system: current, systems, workouts, currentId: current.id }),
         // Untouched: the same rows, in the same order, each still starting a
         // session and still carrying its `~N min`.
-        el('div', { class: 'list' }, mine.map(row)),
+        // `pick-grid`: two columns on a laptop (css); one on a phone.
+        el('div', { class: 'list pick-grid' }, mine.map(row)),
       ]
     : current
       /* ⚠️ THE CURRENT PROGRAMME IS EMPTY AND ANOTHER ONE MAY NOT BE. Before
@@ -1767,7 +1807,7 @@ export async function StartPickerView({ tab = false } = {}) {
 
   // 🆕 Overhaul 2026-09-27 (S-03/O-18): a session with no template, as the
   // LAST row — the list above stays the common case. Opens `#/session/new-empty`.
-  const empty = emptyWorkoutRow();
+  const empty = emptyWorkoutRow(openEmpty);
   if (empty) scroll.push(empty);
 
   // A benchmark is a deliberate one-off test rather than a session, so it sits

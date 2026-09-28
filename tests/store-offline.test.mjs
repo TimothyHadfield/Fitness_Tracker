@@ -13,7 +13,8 @@
 //   - absorbStrandedWrites() merges add-only: every cloud row survives, the
 //     offline rows arrive, the newer copy of a row wins, and it NEVER writes an
 //     empty or shorter list (the zero-guard's promise);
-//   - an existing cloud settings row is left alone;
+//   - an offline settings change merges into the cloud row field by field
+//     (wave 4; tests/stranded-w4.test.mjs has the rest);
 //   - a different account connecting gets nothing;
 //   - a failed collection keeps its local copy and the flag for next time;
 //   - clearAllShardCaches() drops only shard snapshots;
@@ -120,11 +121,16 @@ function deviceWith(local, flag) {
   ok(sessions.find((s) => s.id === 'c0').updatedAt === '2026-09-01T10:00:00Z', 'an older local copy never replaces the cloud row');
   ok(cloud.data.get('workouts').find((w) => w.id === 'w2').name === 'W2 renamed', 'a newer offline edit wins');
   ok(cloud.data.get('workouts').length === 6, 'no workout is lost or duplicated');
-  ok(cloud.data.get('settings')[0].units === 'lbs', 'an existing cloud settings row is left alone');
+  // Wave 4: the offline units change wins field by field (the cloud row has no
+  // newer updatedAt); fields not changed offline are kept.
+  ok(cloud.data.get('settings')[0].units === 'kg' && cloud.data.get('settings')[0].gender === 'male',
+     'an offline settings change merges into the cloud row, other fields kept');
   ok(!cloud.writes.some((w) => !w.rows.length), 'nothing is ever written as an empty list');
   ok(!cloud.writes.some((w) => w.c === 'bodyWeight' || w.c === 'goals'), 'a collection with nothing offline is not written at all');
   ok(!device.m.has(NS + 'strandedWrites'), 'the flag is cleared once everything merged');
-  ok(!device.m.has(NS + 'sessions') && !device.m.has(NS + 'workouts'), 'the merged local copies are removed');
+  // Wave 4: only rows the cloud took leave; the stale c0 copy lost and stays.
+  ok(JSON.parse(device.m.get(NS + 'sessions') || '[]').map((s) => s.id).join() === 'c0' && !device.m.has(NS + 'workouts'),
+     'the merged local copies are removed; the one the cloud did not take stays');
   ok(out.merged.includes('sessions') && !out.failed.length, `reported: merged ${out.merged.join(', ')}`);
 
   // Running it again with no flag is a no-op.

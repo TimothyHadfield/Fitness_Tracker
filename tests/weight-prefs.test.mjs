@@ -139,7 +139,13 @@ const show = (r) => r.map((s) => `${s.weight}x${s.reps}`).join(', ') || 'none';
   const r = warmupRamp({ exercise: squat, weight: 105, reps: 5, unit: 'kg' });
   ok(r.length > 1 && r[0].weight === 20 && r.every((s) => Math.abs(s.weight / 1.25 - Math.round(s.weight / 1.25)) < 1e-9),
      `kg ramp with 1.25 steps lands on 1.25 kg targets (${show(r)})`);
-  ok(r.some((s) => s.weight % 2.5 !== 0), 'and at least one target is only reachable in 1.25s (the step really is used)');
+  // 🆕 2026-09-27 (wave 4, RUNNER-FIX): a BAR ramp stays on what the plates
+  // can load (1.25 kg smallest → 2.5 kg a pair), so the 1.25 step shows on a
+  // machine, which has no plates to honour.
+  ok(r.every((s) => s.weight % 2.5 === 0), `the bar ramp stays loadable with 1.25 kg plates (${show(r)})`);
+  const machine = BUILT_IN_EXERCISES.find((e) => e.name === 'Leg Press');
+  const rm = warmupRamp({ exercise: machine, weight: 105, reps: 5, unit: 'kg' });
+  ok(rm.some((s) => s.weight % 2.5 !== 0), `and a machine target is only reachable in 1.25s (the step really is used) (${show(rm)})`);
   const r2 = warmupRamp({ exercise: squat, weight: 105, reps: 5, unit: 'kg', step: 2.5 });
   ok(r2.every((s) => s.weight % 2.5 === 0), `a caller can still pin the step (${show(r2)})`);
 

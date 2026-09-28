@@ -162,7 +162,8 @@ ok(Boolean(await store.activeGoal()), 'and it has a running goal');
   const change = bottom && [...bottom.querySelectorAll('button')].find((b) => flat(b) === 'Change goal');
   const end = bottom && [...bottom.querySelectorAll('button')].find((b) => flat(b) === 'End this goal');
   ok(Boolean(change), 'I-11: the bottom button reads "Change goal"');
-  ok(Boolean(end) && end.classList.contains('text-link'), '   with "End this goal" as a text link');
+  ok(Boolean(end) && end.classList.contains('btn') && !end.classList.contains('text-link'),
+     '   with "End this goal" as a quiet button like Change goal (wave 4 visual QA)');
   location.hash = '#/goals';
   if (change) change.click();
   await settle();

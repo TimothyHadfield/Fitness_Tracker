@@ -60,7 +60,7 @@
 import { plateLoadFor, bodyWeightFractionFor } from './exercises.js';
 import { isCompoundLift } from './optimal.js';
 import { weightStepFor } from './units.js';
-import { inventoryFor } from './plates.js';
+import { inventoryFor, plateLoad } from './plates.js';
 
 /** The most warm-up sets ever suggested (on a bar lift). */
 export const WARMUP_MAX_SETS = 4;
@@ -109,6 +109,37 @@ function gear(kind, unit, { bar, step } = {}) {
   return { step: s, min: s, ref: kg ? 20 : 45 };
 }
 
+/**
+ * 🆕 2026-09-27 (wave 4 review): A BAR WARM-UP IS ONE YOU CAN LOAD. A 2.5 lb
+ * weight step with the standard plates (smallest 2.5, so 5 lb a pair) gave a
+ * 185 bench "97.5 × 8" and "147.5 × 3" — neither can go on a bar. The step
+ * still rounds first; a target the user's plates (Settings → Plates, via
+ * inventoryFor) cannot build moves to the nearest one they can, lower on a tie.
+ * With the default 5 lb / 2.5 kg steps every target is already loadable, so an
+ * untouched account ramps exactly as before. Returns (w, raw) → loadable w.
+ */
+function barLoader(unit, bar) {
+  const std = inventoryFor(unit);
+  const inv = std.bar === bar ? std : { ...std, bar, custom: true };
+  const can = (w) => plateLoad(w * inv.lbPer, { inventory: inv }).exact;
+  const cents = inv.plates.map((p) => Math.round(p * 100)).filter((c) => c > 0);
+  if (!cents.length) return (w) => w;
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const pair = (2 * cents.reduce(gcd)) / 100;   // the finest a bar can move
+  const tidy = (x) => Math.round(x * 1000) / 1000;
+  return (w, raw) => {
+    if (w <= bar || can(w)) return w;
+    const m0 = Math.round((raw - bar) / pair);
+    for (let d = 0; d <= 40; d++) {
+      for (const m of d ? [m0 - d, m0 + d] : [m0]) {
+        const c = tidy(bar + m * pair);
+        if (c > bar && can(c)) return c;
+      }
+    }
+    return w;
+  };
+}
+
 function setCount(ratio, reps, cap) {
   let n = ratio <= 1.3 ? 0 : ratio < 2 ? 1 : ratio < 3 ? 2 : ratio < 4.5 ? 3 : 4;
   if (reps >= 12) n -= 1;
@@ -152,11 +183,13 @@ export function warmupRamp({ exercise, weight, reps, unit = 'lbs', bar, step } =
   // light set), or 50 % when there is only one.
   const lo = kind === 'bar' ? g.min : W * (n === 1 ? 0.5 : 0.4);
   const round = (x) => Math.round(Math.round(x / g.step) * g.step * 1000) / 1000;
+  const onBar = kind === 'bar' ? barLoader(unit, g.min) : null;
 
   const out = [];
   for (let i = 0; i < n; i++) {
     const raw = n === 1 ? lo : lo + (top - lo) * (i / (n - 1));
-    const w = Math.max(g.min, round(raw));
+    let w = Math.max(g.min, round(raw));
+    if (onBar) w = onBar(w, raw);
     // Never at or above the working weight, and strictly rising: rounding can
     // make two neighbours meet, and the second one is then dropped.
     if (w >= W) continue;
