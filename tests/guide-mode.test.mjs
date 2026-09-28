@@ -84,7 +84,8 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
     'A Warm-up 2 of 2 → Next set',
     'A Set 1 of 3 → Next set',
     'A Set 2 of 3 → Next set',
-    'A Set 3 of 3 → Next exercise',
+    // 🔄 2026-09-27, Tim: "Name the exercise" — "Next: Leg Press", not "Next exercise".
+    'A Set 3 of 3 → Next: B',
     'B Set 1 of 2 → Next set',
     'B Set 2 of 2 → Finish workout',
   ];
@@ -106,7 +107,8 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
     'You A Set 1 of 2 → Next: Rae',
     'Rae A Set 1 of 2 → Next: You',
     'You A Set 2 of 2 → Next: Rae',
-    'Rae A Set 2 of 2 → Next exercise',
+    // A new exercise on another person's turn: the person first, then the exercise.
+    'Rae A Set 2 of 2 → Next: You · B',
     'You B Set 1 of 1 → Next: Rae',
     'Rae B Set 1 of 1 → Finish workout',
   ];
@@ -140,7 +142,7 @@ const fmt = (r) => `${r.who ? r.who + ' ' : ''}${r.ex} ${r.set} → ${r.label}`;
     'A Round 1 of 2 → Straight into B',
     'B Round 1 of 2 → Round 2 of 2',
     'A Round 2 of 2 → Straight into B',
-    'B Round 2 of 2 → Next exercise',
+    'B Round 2 of 2 → Next: C',
     'C Set 1 of 1 → Finish workout',
   ];
   ok(JSON.stringify(seq) === JSON.stringify(want), 'superset: A1, B1, A2, B2, in the runner\'s words (warm-ups stay hidden in a superset)\n      ' + seq.join('\n      '));
@@ -296,6 +298,82 @@ if (typeof G.prevStep !== 'function') {
      'all done: nothing to start on, and lastStep() is the last set walked');
 }
 
+/* ============ 0d. Skip and the weight carry (pure), 2026-09-27 ============
+ * Tim's answers: "Add Swap and Skip" ("Skip leaves the set unrecorded and moves
+ * on") and "Carry the change" ("Untouched later sets take your new 225. Sets
+ * you've already typed into stay as they are."). */
+{
+  const SD = await import(BASE + 'session-draft.js');
+  const F = ['weight', 'reps'];
+  const at = (i, e = 0) => ({ name: null, entryIndex: e, kind: 'set', index: i });
+  const hasSkip = typeof G.skipStep === 'function';
+  ok(hasSkip, 'guide-steps.js exports skipStep()');
+  const skip = (d, s) => (hasSkip ? G.skipStep(d, s) : false);
+
+  const d = { forName: null, guestNames: [], others: [], index: 0, entries: [ent('a', Sx(3)), ent('b', Sx(1))] };
+  G.markDone(d, at(0));
+  ok(skip(d, at(1)) === true, 'Skip on set 2 is accepted');
+  const s1 = d.entries[0].sets[1];
+  ok(s1.skipped === true && !s1.done, 'Skip marks the set skipped, not Finished');
+  ok(!SD.setIsRecorded(s1, F), 'a skipped set holding last time\'s numbers is NOT recorded (the save\'s rule)');
+  const n1 = G.nextStep(d, at(1));
+  ok(n1 && n1.entryIndex === 0 && n1.kind === 'set' && n1.index === 2, 'Skip moves on exactly as Next would (set 3)');
+  G.markDone(d, at(2));
+  const n2 = G.nextStep(d, at(2));
+  ok(n2 && n2.entryIndex === 1, 'then the next exercise');
+  G.markDone(d, n2);
+  ok(G.nextStep(d, n2) === null, 'the wrap-around never comes back to a skipped set: Finish');
+  ok(G.startStep({ ...d, index: 0 }) === null, 'and the guide does not open on it either');
+  const p = G.prevStep(d, at(2));
+  ok(p && p.entryIndex === 0 && p.index === 1, 'Back can still return to the skipped set');
+  G.markDone(d, at(1));
+  ok(s1.done === true && !('skipped' in s1) && SD.setIsRecorded(s1, F), 'Next on a skipped set un-skips it and finishes it');
+
+  // Warm-ups: skipped ones are behind you, and set 1 does not send you back to them.
+  const wd = { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(1), { warmups: W(2).map((x) => ({ ...x, auto: true })) })] };
+  const w0 = { name: null, entryIndex: 0, kind: 'warm', index: 0 };
+  skip(wd, w0);
+  const wu = wd.entries[0].warmups[0];
+  ok(wu.skipped === true && !wu.done && !wu.auto, 'a skipped warm-up is marked, and loses `auto` (the ramp cannot rewrite it back)');
+  const nw = G.nextStep(wd, w0);
+  ok(nw && nw.kind === 'warm' && nw.index === 1, 'Skip on warm-up 1 → warm-up 2');
+  skip(wd, nw);
+  const ns = G.nextStep(wd, nw);
+  ok(ns && ns.kind === 'set' && ns.index === 0, 'Skip on the last warm-up → set 1');
+  ok((G.startStep(wd) || {}).kind === 'set', 'with every warm-up skipped the guide opens on set 1');
+
+  // A drop set: skipping the top set skips its drops too.
+  const dd = { forName: null, guestNames: [], others: [], index: 0,
+    entries: [ent('a', Sx(2), { setType: 'drop', plannedMinis: 2 })] };
+  skip(dd, at(0));
+  const nd = G.nextStep(dd, at(0));
+  ok(nd && nd.kind === 'set' && nd.index === 1, 'Skip on a drop set\'s top set goes to the next SET, not its drops');
+  ok(!(dd.entries[0].sets[0].minis || []).length, 'and no drop row is made for it');
+
+  // The carry: one shared rule for both views.
+  const hasCarry = typeof G.carryWeight === 'function';
+  ok(hasCarry, 'guide-steps.js exports carryWeight()');
+  const e = ent('a', [
+    { weight: 245, reps: 5, done: true },
+    { weight: 245, reps: 5 },
+    { weight: 245, reps: 5, prefilled: true },
+    { weight: 245, reps: 6, touched: true },
+    { weight: 245, reps: 5, done: true },
+    { weight: 245, reps: 4, fromPlan: true },
+    { weight: 245, reps: 5, skipped: true },
+  ]);
+  e.sets[1].weight = 225; e.sets[1].touched = true;
+  const moved = hasCarry ? G.carryWeight(e, 1) : 0;
+  ok(e.sets.map((s) => s.weight).join() === '245,225,225,245,245,225,245',
+     `245 → 225 on set 2: untouched later sets take 225; typed, Finished and skipped keep theirs (${e.sets.map((s) => s.weight).join()})`);
+  ok(moved === 2, `carryWeight() says how many it moved (${moved})`);
+  ok(e.sets.map((s) => s.reps).join() === '5,5,5,6,5,4,5', 'reps are never carried');
+  ok(e.sets[2].prefilled === true && e.sets[5].fromPlan === true && !e.sets[2].touched,
+     'a carried set keeps its flags (a guessed set is still not a recorded one)');
+  ok(e.sets[0].weight === 245, 'sets BEFORE the changed one are never touched');
+}
+
 /* ============ 1+. the real runner ============ */
 const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
 // Next ignores a second tap within NEXT_GUARD_MS of the last (2026-09-27), so
@@ -385,7 +463,9 @@ if (!toggle()) {
   const bars = app().querySelectorAll('.guide .guide-bar');
   ok(bars.length === 1 && !bars[0].hidden, 'the guide draws the big bar');
   ok(app().querySelectorAll('.guide svg.plate-draw').length === 0, 'and the small in-stepper drawing is not there too');
-  ok(app().querySelectorAll('.guide svg').length - app().querySelectorAll('.guide .btn svg, .guide .step-btn svg').length === 1,
+  // (The icons on buttons don't count — Back / Next, the steppers, and since
+  // 2026-09-27 Swap / + Set in the top strip.)
+  ok(app().querySelectorAll('.guide svg').length - app().querySelectorAll('.guide .btn svg, .guide .step-btn svg, .guide .guide-act svg').length === 1,
      'exactly one drawing in the guide');
   ok(bars[0].getAttribute('aria-label') === 'bar + 45 each side', `its label is the plate sentence ("${bars[0].getAttribute('aria-label')}")`);
   app().querySelectorAll('.guide .step-btn')[1].dispatchEvent(new window.Event('pointerdown', { cancelable: true }));
@@ -440,7 +520,7 @@ if (!toggle()) {
 
   // Through to the next exercise and Finish.
   nextBtn().click(); await settle();
-  ok(/Set 3 of 3/.test(where()) && /Next exercise/.test(nextBtn().textContent), 'set 3: "Next exercise"');
+  ok(/Set 3 of 3/.test(where()) && /Next: Back Squat/.test(nextBtn().textContent), `set 3 names the next exercise: "${nextBtn().textContent.trim()}"`);
   nextBtn().click(); await settle();
   const exNow = app().querySelector('.guide-ex').textContent;
   ok(exNow === 'Back Squat', `next exercise: ${exNow} (${where().trim()})`);
@@ -791,6 +871,148 @@ const GM = await import(BASE + 'guide-mode.js');
   ok(/110/.test(line()) && /70 of help|70 lbs of help/.test(line()), `17. the assist line: "${line()}"`);
   put(0,250); await settle();
   ok(/more help than you weigh/.test(line()), `17. and its warning: "${line()}"`);
+  localStorage.removeItem(DRAFT);
+}
+
+/* ============ 4. Swap, Skip, the carry, Next names, + Set, the set list ============
+ * Tim (2026-09-27, question box): "Add Swap and Skip", "Carry the change",
+ * "Name the exercise", "Yes, small + Set button" — and: "Could you also show
+ * the weights and reps of the past and future sets in this same exercise in
+ * the upper left cornour small in the auto-guide view, so you have a
+ * perspective on the weights and whatnot?" */
+const q = (s) => app().querySelector(s);
+const shown = (n) => Boolean(n) && !n.hidden && !n.classList.contains('is-idle');
+const listRows = () => [...app().querySelectorAll('.guide-sets .gs-row')];
+const nowRow = () => app().querySelector('.guide-sets .gs-row.is-now');
+const rowText = (n) => (n ? [...n.children].map((c) => c.textContent).join(' ').replace(/\s+/g, ' ').trim() : '');
+{
+  const nextBtn = safeNext;
+  localStorage.removeItem(DRAFT);
+  const row = byName('Pendlay Row');
+  await store.saveSession({
+    workoutName: 'Earlier rows', date: '2026-09-03', startedAt: '2026-09-03T18:00:00.000Z',
+    finishedAt: '2026-09-03T19:00:00.000Z', isBenchmark: false,
+    entries: [{ exerciseId: row.id, exerciseName: row.name,
+      sets: [{ weight: 245, reps: 5 }, { weight: 245, reps: 5 }, { weight: 245, reps: 5 }] }],
+  });
+  const w = await store.saveWorkout({ name: 'Carry day', exercises: [
+    { exerciseId: row.id, sets: 3, notes: '' },
+    { exerciseId: byName('Back Squat').id, sets: 1, notes: '' },
+  ] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+
+  // The set list: every set of this exercise, warm-ups as W, in the corner.
+  ok(Boolean(q('.guide .guide-sets')), 'the guide has a set list');
+  const warmN = (entriesOf(null)[0].warmups || []).length;
+  ok(listRows().length === 3 + warmN, `one row per set, plus a W row per warm-up (${listRows().length} rows, ${warmN} warm-ups)`);
+  ok(listRows().filter((r) => /^W\b/.test(rowText(r))).length === warmN, 'warm-ups are marked W, as in the runner');
+  ok(Boolean(q('.guide .guide-swap')) && Boolean(q('.guide .guide-skip')), 'Swap and Skip are on the step');
+
+  await walkTo(/Set 1 of 3/);
+  ok(/Set 1 of 3/.test(where()), `reached set 1 ("${where().trim()}")`);
+  ok(nowRow() && /^1\b/.test(rowText(nowRow())), `the current set is highlighted ("${rowText(nowRow())}")`);
+  ok(!shown(q('.guide .guide-addset')), '+ Set is not offered on set 1 of 3');
+
+  // Carry: 225 on set 1 → sets 2 and 3 take it, live, in the list too.
+  put(0, 225); await settle();
+  const ws = () => entriesOf(null)[0].sets.map((s) => s.weight).join();
+  ok(ws() === '225,225,225', `the carry: 225 on set 1 → later untouched sets take it (${ws()})`);
+  const r3 = listRows()[warmN + 2];
+  ok(/225 lbs × 5/.test(rowText(r3)), `the list updates live (set 3: "${rowText(r3)}")`);
+  nextBtn().click(); await settle();
+  ok(/Set 2 of 3/.test(where()) && val(0) && val(0).value === '225', 'set 2 opens on the carried 225');
+  ok(/✓/.test(rowText(listRows()[warmN])), `set 1 is ticked in the list ("${rowText(listRows()[warmN])}")`);
+
+  // Skip: set 2 is left unrecorded and the guide moves on.
+  q('.guide .guide-skip') && q('.guide .guide-skip').click(); await settle();
+  const s2 = entriesOf(null)[0].sets[1];
+  ok(/Set 3 of 3/.test(where()) && s2.skipped === true && !s2.done, `Skip → set 3, set 2 skipped and not Finished ("${where().trim()}")`);
+  ok(listRows()[warmN + 1] && listRows()[warmN + 1].classList.contains('is-skip'), 'the skipped set is marked in the list');
+
+  // + Set on the last set; Next goes to it; then Next names the exercise.
+  ok(shown(q('.guide .guide-addset')), '+ Set is offered on the last set');
+  ok(/Next: Back Squat/.test(nextBtn().textContent), `Next names the next exercise: "${nextBtn().textContent.trim()}"`);
+  q('.guide .guide-addset') && q('.guide .guide-addset').click(); await settle();
+  ok(entriesOf(null)[0].sets.length === 4, '+ Set adds one set');
+  ok(/Set 3 of 4/.test(where()) && /Next set/.test(nextBtn().textContent), `still on set 3, now of 4, and Next says "${nextBtn().textContent.trim()}"`);
+  ok(listRows().length === 4 + warmN, 'the list grows with it');
+  nextBtn().click(); await settle();
+  ok(/Set 4 of 4/.test(where()) && val(0) && val(0).value === '225', `the next Next goes to the new set, copied from set 3 ("${where().trim()}")`);
+  const added = entriesOf(null)[0].sets[3];
+  ok(Boolean(added) && !added.prefilled, 'the added set is the runner\'s own copy (no guessed flag)');
+
+  // The carry in the NORMAL view, same rule: a typed set keeps its number.
+  toggle().click(); await settle();
+  const paneBox = () => app().querySelector('.pane-scroll .set-open .step-value');
+  // Open set 3 (Finished) — edit it: type 215, then set 4 carries only if untouched.
+  const rowsNow = rows();
+  const editBtn = rowsNow[2] && rowsNow[2].querySelector('.set-done-btn');
+  if (editBtn) editBtn.click();
+  await settle();
+  if (paneBox()) type(paneBox(), 235);
+  await settle();
+  const setW = (i) => (entriesOf(null)[0].sets[i] || {}).weight;
+  ok(setW(3) === 235, `the normal view carries too: 235 on set 3 → set 4 (${ws()})`);
+  // Now type into set 4, then change set 3 again: set 4 keeps its typed number.
+  const r4 = rows()[3] && rows()[3].querySelector('.set-pick');
+  if (r4) r4.click();
+  await settle();
+  if (paneBox()) type(paneBox(), 240);
+  await settle();
+  const r3b = rows()[2] && rows()[2].querySelector('.set-pick');
+  if (r3b) r3b.click();
+  await settle();
+  if (paneBox()) type(paneBox(), 205);
+  await settle();
+  ok(setW(2) === 205 && setW(3) === 240,
+     `a set you typed into keeps its number (${ws()})`);
+
+  // Save: the skipped set is not recorded.
+  const inDraft = entriesOf(null)[0].sets.length;
+  const skippedInDraft = entriesOf(null)[0].sets.filter((s) => s.skipped).length;
+  toggle().click(); await settle();
+  for (let g = 0; g < 12 && !onSave(); g++) {
+    if (!/Warm-up/.test(where())) { put(0, 185); put(1, 5); }
+    safeNext().click(); await settle();
+  }
+  const save = [...document.querySelectorAll('button')].find((b) => /^Save workout$/.test(b.textContent.trim()));
+  if (save) save.click();
+  await settle(); await settle();
+  const sess = (await store.getSessions()).find((x) => x.workoutName === 'Carry day');
+  const saved = sess ? sess.entries.find((x) => x.exerciseId === row.id) : null;
+  ok(inDraft === 4 && skippedInDraft === 1 && saved && saved.sets.length === 3 && saved.sets.every((s) => !('skipped' in s)),
+     `saved: 3 of the draft's ${inDraft} sets (${skippedInDraft} skipped, left out, no flag stored) — ${saved ? JSON.stringify(saved.sets) : 'no session'}`);
+  localStorage.removeItem(DRAFT);
+}
+
+/* Swap: the runner's own swap sheet, and the guide stays on the new exercise. */
+{
+  localStorage.removeItem(DRAFT);
+  const w = await store.saveWorkout({ name: 'Swap day', exercises: [
+    { exerciseId: byName('Back Squat').id, sets: 2, notes: '' },
+    { exerciseId: byName('Pendlay Row').id, sets: 1, notes: '' },
+  ] });
+  await mount(SessionView(w.id));
+  toggle().click(); await settle();
+  await walkTo(/Back Squat Set 1 of 2/, 185, 5);
+  put(0, 185); put(1, 5);
+  safeNext().click(); await settle();
+  ok(/Set 2 of 2/.test(where()), 'setup: set 1 of the squat done');
+  const sw = q('.guide .guide-swap');
+  if (sw) sw.click();
+  await settle(); await settle();
+  const pickRow = document.querySelector('.sheet .search-results .row');
+  ok(Boolean(pickRow), 'Swap opens the runner\'s swap sheet');
+  const pickedName = pickRow ? pickRow.querySelector('.row-title').textContent.trim() : '';
+  if (pickRow) pickRow.click();
+  await settle(); await settle();
+  killSheets();
+  ok(guideOn(), 'after the swap the guide is still showing');
+  ok(exText() === pickedName, `on the swapped-in exercise ("${exText()}" vs "${pickedName}")`);
+  ok(/Warm-up 1 of|Set 1 of/.test(where()), `on its first unfinished step ("${where().trim()}")`);
+  const names = entriesOf(null).map((e) => e.exerciseName);
+  ok(names[0] === 'Back Squat' && names[1] === pickedName, `the squat set already done is kept, split like the runner's swap (${names.join(', ')})`);
   localStorage.removeItem(DRAFT);
 }
 

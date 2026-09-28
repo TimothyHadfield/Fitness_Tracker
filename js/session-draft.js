@@ -164,6 +164,10 @@ export function hasNumbers(set, fields) {
  * count and the discard warnings quote the same rule the save keeps.
  */
 export function setIsRecorded(set, fields) {
+  // 🆕 2026-09-27: a set the Auto-guide's Skip left behind is not a set done
+  // (Tim: "Skip leaves the set unrecorded and moves on"), whatever numbers
+  // last time left in it — unless it was Finished after all.
+  if (set.skipped && !set.done && !set.locked) return false;
   return (!set.prefilled || Boolean(set.fromPlan))
     && (hasNumbers(set, fields) || minisOf(set).some((d) => hasNumbers(d, fields)));
 }

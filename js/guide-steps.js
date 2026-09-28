@@ -16,6 +16,8 @@
 // resumes on it. The only thing the guide adds to the draft is `view: 'guide'`
 // (a string) and a `done` flag on a warm-up row (a boolean inside its own list,
 // dropped at save by `pickFields`). A drop is the runner's own `minis` row.
+// Since 2026-09-27 also `skipped: true` on a row Skip left behind (a boolean,
+// dropped at save; the row itself is left out — see skipStep()).
 // Nothing here can put an array inside an array (handbook §0.22).
 //
 // THE ORDER, per block (a solo exercise, or a superset/tri-set walked round by
@@ -124,9 +126,13 @@ export function blockItems(entries, i) {
 export function itemDone(entries, it) {
   const e = entries[it.entryIndex];
   if (!e) return true;
-  if (it.kind === 'warm') return Boolean((warmsOf(e)[it.index] || {}).done);
+  if (it.kind === 'warm') {
+    const w = warmsOf(e)[it.index] || {};
+    return Boolean(w.done || w.skipped);
+  }
   const set = (e.sets || [])[it.index];
-  if (!set || isDoneSet(set)) return true;
+  // A skipped set (and so its drops) is behind you too — see skipStep().
+  if (!set || isDoneSet(set) || set.skipped) return true;
   const made = minisOf(set).length;
   if (it.kind === 'set') return dropCount(e, set) > 0 && made > 0;
   return made > it.mini + 1;
@@ -317,7 +323,8 @@ export function startStep(d) {
   const name = nameOf(d.forName);
   // A warm-up the runner has open is where you are, even if it is done.
   const e = entries[st.entryIndex];
-  if (e && e.group == null && e.activeWarm != null && warmsOf(e)[e.activeWarm] && !warmsOf(e)[e.activeWarm].done) {
+  if (e && e.group == null && e.activeWarm != null && warmsOf(e)[e.activeWarm]
+    && !warmsOf(e)[e.activeWarm].done && !warmsOf(e)[e.activeWarm].skipped) {
     return { name, entryIndex: st.entryIndex, kind: 'warm', index: e.activeWarm };
   }
   const open = firstOpen(entries, st.entryIndex);
@@ -389,6 +396,7 @@ export function markDone(d, cur, { force = false } = {}) {
     if (!force && !hasNumbers(row, fields)) return false;
     row.done = true;
     delete row.auto;
+    delete row.skipped;   // Next on a skipped step un-skips it
     return true;
   }
   const set = e.sets[cur.index];
@@ -401,12 +409,95 @@ export function markDone(d, cur, { force = false } = {}) {
   const drops = dropCount(e, set);
   if (cur.kind === 'drop') {
     if (!force && !hasNumbers(row, fields)) return false;
+    delete row.skipped;
+    delete set.skipped;
     if (cur.mini + 1 < drops) { ensureDrop(e, cur.index, cur.mini + 1); return true; }
     return finish();
   }
-  if (!force && !setIsRecorded(set, fields)) return false;
+  // Un-skipped before the check: `setIsRecorded` refuses a skipped set, and
+  // Next on one is the user saying they did it after all.
+  const wasSkipped = Boolean(set.skipped);
+  delete set.skipped;
+  if (!force && !setIsRecorded(set, fields)) {
+    if (wasSkipped) set.skipped = true;
+    return false;
+  }
   if (drops > 0) { delete set.prefilled; ensureDrop(e, cur.index, 0); return true; }
   return finish();
+}
+
+/**
+ * 🆕 SKIP (2026-09-27). Tim, in the question box: *"Add Swap and Skip"* —
+ * *"Skip leaves the set unrecorded and moves on."*
+ *
+ * Marks the step `skipped` (a draft-only flag, dropped at save like `done` /
+ * `touched`) and changes nothing else: no number is made real, nothing is
+ * Finished, no rest starts (the screen's job). Then Next's own order carries
+ * on, and `itemDone()` counts a skipped row as behind you, so the wrap-around
+ * ("unfinished work anywhere") never comes back to it. Back still can, and
+ * Next on it un-skips it (`markDone`).
+ *
+ *   • a warm-up: that row, and it loses `auto` so the suggested ramp cannot
+ *     swap it for a fresh, un-skipped row;
+ *   • a working set: the set — and with it any drops it would have had (one
+ *     drop set is one hard set);
+ *   • a drop: that drop row; the next one is made as Next would, or, on the
+ *     last drop, the set is Finished with the drops before it (the runner's
+ *     "a drop is finished with its set").
+ *
+ * WHAT "UNRECORDED" MEANS AT SAVE: `setIsRecorded()` refuses a skipped set
+ * that is not Finished, and the save leaves out skipped warm-up and drop rows,
+ * so last time's numbers sitting in a skipped set are not saved as work.
+ */
+export function skipStep(d, cur) {
+  const p = peopleInOrder(d).find((x) => x.name === nameOf(cur.name));
+  const e = p && p.entries[cur.entryIndex];
+  const row = targetOf(d, cur);
+  if (!e || !row) return false;
+  if (cur.kind === 'warm') {
+    row.skipped = true;
+    delete row.auto;
+    return true;
+  }
+  const set = e.sets[cur.index];
+  if (cur.kind === 'drop') {
+    row.skipped = true;
+    if (cur.mini + 1 < dropCount(e, set)) ensureDrop(e, cur.index, cur.mini + 1);
+    else { set.done = true; delete set.locked; delete set.prefilled; }
+    return true;
+  }
+  set.skipped = true;
+  return true;
+}
+
+/**
+ * 🆕 THE WEIGHT CARRY (2026-09-27) — ONE rule, used by the runner's steppers
+ * and the guide's. Tim, in the question box: *"Carry the change"* —
+ * *"Untouched later sets take your new 225. Sets you've already typed into
+ * stay as they are."*
+ *
+ * After a person changes set `from`'s weight, every LATER set of the same
+ * exercise that nobody has touched takes it. Untouched = not typed into
+ * (`touched`), not Finished, not skipped, no drops made. Reps never move
+ * (his example is weight). Flags are left exactly as they were: a guessed set
+ * (`prefilled`) stays a guess — `finish()` saves any set with numbers in it,
+ * so a carry that made later sets "real" would record sets nobody did (the
+ * reason the runner's `fillOnOpen()` fills on open, not on type).
+ * Warm-ups follow set 1 by their own rule (`syncAutoWarmups`).
+ * Returns how many sets moved.
+ */
+export function carryWeight(entry, from) {
+  if (!entry || !(entry.fields || []).includes('weight')) return 0;
+  const sets = entry.sets || [];
+  const src = sets[from];
+  if (!src || typeof src.weight !== 'number') return 0;
+  let moved = 0;
+  for (let j = from + 1; j < sets.length; j++) {
+    const s = sets[j];
+    if (!s || isDoneSet(s) || s.touched || s.skipped || minisOf(s).length) continue;
+    if (s.weight !== src.weight) { s.weight = src.weight; moved++; }
+  }
+  return moved;
 }
 
 /**
@@ -461,8 +552,14 @@ export function nextLabel(d, cur, next) {
   }
   // The same block: the same exercise, or two members of one superset.
   const sameBlock = a.exerciseId === b.exerciseId || (a.group != null && a.group === b.group);
-  if (!sameBlock) return 'Next exercise';
-  if (!samePerson) return `Next: ${next.name == null ? 'You' : next.name}`;
+  const who = next.name == null ? 'You' : next.name;
+  // 🔄 2026-09-27, Tim: *"Name the exercise"* — *"You know where to walk. In a
+  // group workout the person's name still comes first when it's their turn."*
+  // So "Next: Leg Press", and "Next: Rae · Leg Press" on somebody else's turn.
+  // (The button ellipsises a long name on one line.)
+  const exName = b.exerciseName || 'next exercise';
+  if (!sameBlock) return samePerson ? `Next: ${exName}` : `Next: ${who} · ${exName}`;
+  if (!samePerson) return `Next: ${who}`;
   if (a.group != null && a.group === b.group && next.kind !== 'drop') {
     const it = blockItems(listOf(next), next.entryIndex).find((x) => x.entryIndex === next.entryIndex);
     const label = groupNextLabel(
@@ -471,7 +568,7 @@ export function nextLabel(d, cur, next) {
       (i) => (listOf(next)[i] || {}).exerciseName || '');
     if (label) return label;
   }
-  if (a.exerciseId !== b.exerciseId) return 'Next exercise';
+  if (a.exerciseId !== b.exerciseId) return `Next: ${exName}`;
   return next.kind === 'warm' ? 'Next warm-up' : 'Next set';
 }
 

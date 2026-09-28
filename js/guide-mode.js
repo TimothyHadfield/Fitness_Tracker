@@ -66,15 +66,32 @@
 // Finished rule), and ignores a second tap on Next that lands in the same
 // breath as the first.
 
-import { el, icon, setChildren, toast, stepper } from './ui.js';
+//
+// 🆕 SWAP, SKIP, + SET, THE CARRY, NAMES ON NEXT, THE SET LIST (2026-09-27).
+// Tim's answers in the question box: "Add Swap and Skip" ("Two small buttons
+// on the step. Skip leaves the set unrecorded and moves on."), "Carry the
+// change", "Name the exercise", "Yes, small + Set button" ("Appears on the
+// last set of an exercise."). And: *"Could you also show the weights and reps
+// of the past and future sets in this same exercise in the upper left cornour
+// small in the auto-guide view, so you have a perspective on the weights and
+// whatnot?"* Swap and + Set are the runner's own code (`swap`, `addSet`
+// hooks); Skip is guide-steps.js `skipStep()`; the carry is `carryWeight()`,
+// shared with the runner's steppers. The set list is one strip across the top
+// of the guide — the sets on the left, the three small buttons on the right —
+// in the flow, so nothing is ever drawn over the step.
+//
+//     swap(entryIndex, then) — the runner's Swap sheet; `then` after it landed
+//     addSet(entryIndex)     — the runner's Add set (a round in a superset)
+
+import { el, icon, setChildren, toast, stepper, fmtSet } from './ui.js';
 import { LOAD_LABEL, loggingNoteFor, bodyWeightFractionFor, plateLoadFor } from './exercises.js';
-import { stepsFor } from './set-types.js';
+import { stepsFor, minisOf } from './set-types.js';
 import { plateLoad, inventoryFor } from './plates.js';
 import * as units from './units.js';
 import { barView } from './bar-view.js';
 import {
   startStep, nextStep, prevStep, lastStep, peekNext, markDone, stepWords, nextLabel, targetOf,
-  walkIndexFor, blockItems, itemDone, sameStep, ensureDrop,
+  walkIndexFor, blockItems, itemDone, sameStep, ensureDrop, skipStep, carryWeight,
 } from './guide-steps.js';
 
 /** A second Next inside this many ms of the last is the same tap (a double tap
@@ -173,7 +190,18 @@ export function attachGuide(ctx) {
   let ahead = [];   // the steps backed out of, nearest last
   let lastNext = -Infinity;   // when Next last moved the guide on
   let restNode = null;        // the runner's rest bar, if it is on
-  const node = el('div', { class: 'guide', hidden: true }, el('div', { class: 'guide-scroll' }, body), foot);
+  // The strip across the top: this exercise's sets (left), and Swap / Skip /
+  // + Set (right). + Set keeps its slot when it is not offered (`is-idle`,
+  // visibility only), so nothing beside it moves when it comes and goes.
+  const setsList = el('div', { class: 'guide-sets', role: 'list', 'aria-label': 'Sets of this exercise' });
+  const pill = (cls, label, aria, onClick, glyph) => el('button', {
+    class: `swap-btn pill-action guide-act ${cls}`, type: 'button', 'aria-label': aria, onClick,
+  }, glyph ? icon(glyph, 15) : null, label);
+  const addBtn = pill('guide-addset', 'Set', 'Add one more set', () => addOne(), 'plus');
+  const swapBtn = pill('guide-swap', 'Swap', 'Swap this exercise — machine taken', () => swapNow(), 'swap');
+  const skipBtn = pill('guide-skip', 'Skip', 'Skip this set — leave it unrecorded', () => advance({ skip: true }));
+  const top = el('div', { class: 'guide-top' }, setsList, el('div', { class: 'guide-acts' }, addBtn, swapBtn, skipBtn));
+  const node = el('div', { class: 'guide', hidden: true }, top, el('div', { class: 'guide-scroll' }, body), foot);
 
   const toggle = el('button', {
     class: 'btn small topbar-btn guide-toggle', type: 'button',
@@ -204,7 +232,7 @@ export function attachGuide(ctx) {
     const e = st.entries[step.entryIndex];
     if (e && forward && ctx.prepare) ctx.prepare(e);
     if (e && forward && step.kind === 'set' && e.group == null && !(e.sets || []).some(isDoneSet)) {
-      const w = (Array.isArray(e.warmups) ? e.warmups : []).findIndex((x) => !x.done);
+      const w = (Array.isArray(e.warmups) ? e.warmups : []).findIndex((x) => !x.done && !x.skipped);
       if (w >= 0) step = { name: step.name, entryIndex: step.entryIndex, kind: 'warm', index: w };
     }
     const i = walkIndexFor(st.entries, step);
@@ -245,6 +273,7 @@ export function attachGuide(ctx) {
       bar.update(null);
       setLabel(null);
       setBack();
+      paintTop();
       return;
     }
     const entry = state.entries[cur.entryIndex];
@@ -322,13 +351,19 @@ export function attachGuide(ctx) {
         onChange: (v) => {
           target[f] = v;
           delete target.prefilled;
+          // Typing into a step Skip passed over makes it real again.
+          delete target.skipped;
           if (onWarm) delete target.auto;
           else {
             // A drop's number makes its SET real, as in the runner.
             delete ownerSet.prefilled;
+            delete ownerSet.skipped;
             ownerSet.touched = true;
           }
+          // "Carry the change" — the runner's rule (`carryWeight`).
+          if (f === 'weight' && cur.kind === 'set') carryWeight(entry, cur.index);
           ctx.save();
+          paintSets();
           paintCaps();
           if (f === 'weight') { drawBar(v); paintAssist(v); }
           if (f !== 'time') fitBox(box);
@@ -369,6 +404,91 @@ export function attachGuide(ctx) {
     }
     setLabel(nextLabel(state, cur, aheadStep() || peekNext(state, cur)));
     setBack();
+    paintTop();
+  }
+
+  /**
+   * The corner list: every set of the exercise on screen, for the person on
+   * screen — the runner's own rows in miniature (W for a warm-up, ↳ for a
+   * drop, `fmtSet()` for the numbers, so units, "/side" and time read the
+   * same). Done ✓, the current one marked, the rest quieter; a skipped one is
+   * struck through. Repainted on every change, so a carry shows at once.
+   */
+  function paintSets() {
+    const entry = cur ? S().entries[cur.entryIndex] : null;
+    if (!entry) { setChildren(setsList); setsList.hidden = true; return; }
+    setsList.hidden = false;
+    const fields = entry.fields || [];
+    const row = (num, set, mods, done) => el('div', { class: `gs-row${mods}`, role: 'listitem' },
+      el('span', { class: 'gs-num', text: num }),
+      el('span', { class: 'gs-vals', text: fmtSet(set, fields, entry.loadType) }),
+      done ? el('span', { class: 'gs-tick', text: '✓' }) : null);
+    const mods = (isNow, done, skipped) => (isNow ? ' is-now' : '') + (done ? ' is-done' : '') + (skipped ? ' is-skip' : '');
+    const rows = [];
+    // Warm-ups only where the runner lists them (solo lifts, never a superset).
+    if (entry.group == null) {
+      (Array.isArray(entry.warmups) ? entry.warmups : []).forEach((w, k) => {
+        rows.push(row('W', w, ' is-warm' + mods(cur.kind === 'warm' && cur.index === k, w.done, w.skipped), Boolean(w.done)));
+      });
+    }
+    (entry.sets || []).forEach((s, i) => {
+      const done = isDoneSet(s);
+      rows.push(row(String(i + 1), s, mods(cur.kind === 'set' && cur.index === i, done, s.skipped && !done), done));
+      minisOf(s).forEach((m, j) => {
+        const here = cur.kind === 'drop' && cur.index === i && cur.mini === j;
+        rows.push(row('↳', m, ' is-drop' + mods(here, done, m.skipped), false));
+      });
+    });
+    setChildren(setsList, ...rows);
+    // Keep the current row in view when the list scrolls inside itself: two
+    // rows above it where there are, and whole rows only (never half a line).
+    const at = rows.findIndex((r) => r.classList.contains('is-now'));
+    if (at >= 0 && setsList.scrollHeight > setsList.clientHeight) {
+      const h = rows[0].offsetHeight || 16;
+      const fits = Math.max(1, Math.round(setsList.clientHeight / h));
+      const first = Math.max(0, Math.min(at - 2, rows.length - fits));
+      setsList.scrollTop = rows[first].offsetTop;
+    }
+  }
+
+  /** The strip: the list, and which of Swap / Skip / + Set apply here. */
+  function paintTop() {
+    paintSets();
+    const entry = cur ? S().entries[cur.entryIndex] : null;
+    const idle = (b, off) => {
+      b.classList.toggle('is-idle', off);
+      b.disabled = off;
+      b.setAttribute('aria-hidden', off ? 'true' : 'false');
+    };
+    idle(swapBtn, !entry || !ctx.swap);
+    idle(skipBtn, !entry);
+    // + Set: on the last working set only (the last round in a superset) —
+    // never on a warm-up or a drop.
+    const group = entry && entry.group != null;
+    const mine = group ? blockItems(S().entries, cur.entryIndex).find((x) => x.entryIndex === cur.entryIndex) : null;
+    const rounds = mine ? mine.rounds : 0;
+    const last = Boolean(entry && cur.kind === 'set' && ctx.addSet)
+      && (group ? cur.index === rounds - 1 : cur.index === (entry.sets || []).length - 1);
+    setChildren(addBtn, icon('plus', 15), group ? 'Round' : 'Set');
+    addBtn.setAttribute('aria-label', group ? 'Add one more round' : 'Add one more set');
+    idle(addBtn, !last);
+  }
+
+  /** + Set: the runner's own Add set; the next Next goes to it. */
+  function addOne() {
+    if (!cur || !ctx.addSet) return;
+    commitTyping(node);
+    ctx.addSet(cur.entryIndex);
+    ctx.save();
+    if (ctx.renderProgress) ctx.renderProgress();
+    paint();
+  }
+
+  /** Swap: the runner's own sheet; afterwards, the new exercise's first unfinished step. */
+  function swapNow() {
+    if (!cur || !ctx.swap) return;
+    commitTyping(node);
+    ctx.swap(cur.entryIndex, () => { if (active()) refresh(); });
   }
 
   /** The step Next would retrace to after a Back, if it is still there. */
@@ -404,19 +524,31 @@ export function attachGuide(ctx) {
   function setLabel(label) {
     const finishing = label === 'Finish workout' || label === null;
     nextBtn.className = 'btn lg guide-next ' + (finishing ? 'good' : 'primary');
-    setChildren(nextBtn, finishing ? icon('check') : null, label || 'Finish workout', finishing ? null : icon('right'));
+    // The words in their own span, so a long exercise name ellipsises on one
+    // line ("Next: Chest-Supported Dumbbell R…") and the arrow stays.
+    setChildren(nextBtn, finishing ? icon('check') : null,
+      el('span', { class: 'guide-next-label', text: label || 'Finish workout' }), finishing ? null : icon('right'));
+    nextBtn.title = label || 'Finish workout';
   }
 
-  function advance() {
+  /**
+   * Next — or, with `skip`, Skip: the step is left unrecorded (`skipStep`)
+   * instead of finished, no number is needed, and no rest starts; everything
+   * after that is exactly Next's (the trail, the retrace, the order).
+   */
+  function advance({ skip = false } = {}) {
     // One tap, one step: a second Next in the same breath is ignored.
     if (Date.now() - lastNext < NEXT_GUARD_MS) return;
     commitTyping(node);
     const state = S();
-    if (!cur) { ctx.finish(); return; }
+    if (!cur) { if (!skip) ctx.finish(); return; }
     // Rest starts the FIRST time a step is finished — not again when Back →
     // Next walks over it.
-    const firstTime = !itemDone(state.entries, cur);
-    if (!markDone(state, cur)) { toast('Put in a number first'); return; }
+    const firstTime = !skip && !itemDone(state.entries, cur);
+    if (skip ? !skipStep(state, cur) : !markDone(state, cur)) {
+      if (!skip) toast('Put in a number first');
+      return;
+    }
     lastNext = Date.now();
     const done = cur;
     // After a Back, Next retraces the steps backed out of before walking on.

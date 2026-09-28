@@ -41,7 +41,7 @@ import { warmupRamp, warmupKind, generalWarmup } from './warmup.js';
 // Workout photo on the save screen (2026-09-25, onboarding-plan part C).
 import { photoField, rectFlight } from './photo.js';
 import { attachGuide } from './guide-mode.js';
-import { groupNextLabel } from './guide-steps.js';
+import { groupNextLabel, carryWeight } from './guide-steps.js';
 import { primePhoto } from './store.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -2733,6 +2733,14 @@ export async function SessionView(workoutId) {
           if (!onWarm) activeSet.touched = true;
           // A suggested warm-up typed into is the user's from now on.
           if (onWarm) delete target.auto;
+          // A number typed into a row the Auto-guide's Skip left behind makes
+          // it real again (2026-09-27).
+          delete target.skipped;
+          delete ownerSet.skipped;
+          // 🆕 2026-09-27, Tim: "Carry the change" — a new weight on a working
+          // set moves the untouched sets after it (`carryWeight()`, the one
+          // rule the Auto-guide uses too). `syncSetValues()` below repaints them.
+          if (f === 'weight' && !onWarm && entry.activeDrop == null) carryWeight(entry, entry.active);
           saveDraft(state);
           renderAssist();
           renderCaptions();
@@ -2921,17 +2929,7 @@ export async function SessionView(workoutId) {
           el('button', {
             class: 'swap-btn pill-action',
             title: 'Use a different exercise for this session',
-            onClick: () => (ex ? openSwapPicker({
-              exMap,
-              current: ex,
-              inSession: state.entries.map((e) => e.exerciseId),
-              onPick: (picked) => swapExercise(step.entryIndex, picked),
-            }) : openExercisePicker({
-              exMap,
-              title: 'Swap this exercise',
-              closeOnPick: true,
-              onPick: (picked) => swapExercise(step.entryIndex, picked),
-            })),
+            onClick: () => openSwapFor(step.entryIndex),
           }, icon('swap', 15), 'Swap'),
           // Swap's sibling (2026-08-28): drop the exercise from today entirely.
           // Same contract — the saved workout is never touched.
@@ -3084,13 +3082,7 @@ export async function SessionView(workoutId) {
         el('button', {
           class: 'add-set', 'aria-label': step.group == null ? 'Add another set' : 'Add another round',
           onClick: () => {
-            // Inside a superset a set is a ROUND: adding one to a single member
-            // would leave the block ragged and the walk would skip it.
-            const targets = step.group == null ? [step.entryIndex] : step.members;
-            for (const mi of targets) {
-              const e = state.entries[mi];
-              e.sets.push(pickFields(e.sets[e.sets.length - 1] || {}, e.fields));
-            }
+            addSetAt(step.entryIndex);
             // ⚠️ On a SOLO exercise, adding a set means you are about to do it,
             // so the steppers follow it. Inside a block they must NOT: you are
             // still on round N, and moving the target to the new last set meant
@@ -3338,6 +3330,42 @@ export async function SessionView(workoutId) {
       ...(shape.swappedFrom ? { swappedFrom: shape.swappedFrom } : {}),
       ...(shape.addedToday ? { addedToday: true } : {}),
     };
+  }
+
+  /**
+   * "Add set" / "Add round" — the list's button, and since 2026-09-27 the
+   * Auto-guide's "+ Set" (Tim: "Yes, small + Set button"). One set copied from
+   * the last one's numbers; inside a superset a set is a ROUND, so every member
+   * gets one — adding to a single member would leave the block ragged and the
+   * walk would skip it. Moves nothing: the caller decides what opens.
+   */
+  function addSetAt(entryIndex) {
+    const st = steps().find((s) => s.entryIndex === entryIndex || (s.members || []).includes(entryIndex));
+    const targets = st && st.group != null ? st.members : [entryIndex];
+    for (const mi of targets) {
+      const e = state.entries[mi];
+      if (e) e.sets.push(pickFields(e.sets[e.sets.length - 1] || {}, e.fields));
+    }
+  }
+
+  /**
+   * The Swap button's sheet: the shortlist, or the whole library for an
+   * exercise missing from it. `then` runs after the swap has landed — the
+   * Auto-guide's hook (2026-09-27), which re-opens itself on the new exercise.
+   */
+  function openSwapFor(index, then) {
+    const entry = state.entries[index];
+    if (!entry) return;
+    const ex = exMap.get(entry.exerciseId);
+    const onPick = async (picked) => {
+      await swapExercise(index, picked);
+      if (then) then();
+    };
+    if (ex) {
+      openSwapPicker({ exMap, current: ex, inSession: state.entries.map((e) => e.exerciseId), onPick });
+    } else {
+      openExercisePicker({ exMap, title: 'Swap this exercise', closeOnPick: true, onPick });
+    }
   }
 
   /**
@@ -4001,7 +4029,8 @@ export async function SessionView(workoutId) {
           // (no `fromPlan`) is still refused.
           .filter((s) => setIsRecorded(s, e.fields))
           .map((s) => {
-            const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields));
+            // A drop the Auto-guide's Skip left behind is not work (2026-09-27).
+            const kept = minisOf(s).filter((d) => hasNumbers(d, e.fields) && !d.skipped);
             const out = { ...s };
             // An empty `minis: []` is noise in storage and reads as "this was a
             // drop set with no drops", which is a different claim from "this
@@ -4015,12 +4044,14 @@ export async function SessionView(workoutId) {
             delete out.done;
             delete out.locked;
             delete out.touched;    // same: a fact about this screen, 2026-09-27
+            delete out.skipped;    // same (a Finished set Skip once passed over)
             return out;
           }),
         // Warm-ups (2026-09-23) keep their own list in storage too, so no
-        // reader of `sets` can ever count one. Only ones with a number in them.
+        // reader of `sets` can ever count one. Only ones with a number in them,
+        // and not one the Auto-guide's Skip left behind (2026-09-27).
         warmups: (Array.isArray(e.warmups) ? e.warmups : [])
-          .filter((w) => hasNumbers(w, e.fields))
+          .filter((w) => hasNumbers(w, e.fields) && !w.skipped)
           .map((w) => pickFields(w, e.fields)),
       }))
       .map((e) => { if (!e.warmups.length) delete e.warmups; return e; })
@@ -4980,6 +5011,9 @@ export async function SessionView(workoutId) {
     lines: (entry, entryIndex) => ({ ...exerciseLines(entry), stretch: stretchWords(entryIndex) }),
     assist: assistFor,
     exerciseLabel,
+    // Swap and + Set (2026-09-27): the runner's own sheet and add-set code.
+    swap: openSwapFor,
+    addSet: addSetAt,
   });
 
   const screen = el('div', { class: 'screen no-nav' },

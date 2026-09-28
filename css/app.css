@@ -7762,4 +7762,38 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 .bar-draw .pd-white  { fill: #F4F4F0; }
 .bar-draw .pd-black  { fill: #1E2022; }
 .bar-draw .pd-chrome { fill: #B4BAC0; }
+
+/* The strip across the top (2026-09-27). Tim: "show the weights and reps of
+   the past and future sets in this same exercise in the upper left cornour
+   small" — and "Add Swap and Skip", "+ Set". The sets on the left, the three
+   small buttons on the right (the runner's own `.pill-action`). In the flow,
+   so it never covers the step; at most six rows, then it scrolls inside
+   itself (guide-mode.js keeps the current row in view). */
+.guide-top {
+  flex: none; display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px var(--pad) 0;
+}
+.guide-sets {
+  position: relative; flex: 1 1 auto; min-width: 0;
+  max-height: calc(6 * 16px); overflow-y: auto; overflow-x: hidden;
+  font-size: var(--fs-sm); line-height: 16px; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.guide-sets[hidden] { display: none; }
+.gs-row { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; min-width: 0; }
+.gs-num { flex: none; width: 1.1em; text-align: right; }
+.gs-vals { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.gs-tick { flex: none; color: var(--good); }
+.gs-row.is-done { color: var(--ink-soft); }
+.gs-row.is-now { color: var(--ink); font-weight: var(--fw-bold); }
+.gs-row.is-now .gs-num { color: var(--accent); }
+.gs-row.is-skip .gs-vals { text-decoration: line-through; }
+.gs-row.is-drop .gs-num { font-size: var(--fs-xs); }
+.guide-acts { flex: none; display: flex; gap: 6px; }
+.guide-act.guide-skip { padding-left: 12px; }   /* no icon: even padding */
+/* Not offered here: the slot stays, so nothing beside it moves. */
+.guide-act.is-idle { visibility: hidden; }
+/* A long exercise name on Next: one line, ellipsis, the arrow kept. */
+.guide-next { min-width: 0; }
+.guide-next-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* === end Auto-guide === */
