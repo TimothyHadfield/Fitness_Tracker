@@ -2705,6 +2705,9 @@ select.input {
    Workout/Benchmark legend went on being drawn over a Years view that paints
    neither. Anything in this file toggled by `.hidden = true` needs this. */
 .yr-readout[hidden], .legend[hidden] { display: none; }
+/* 2026-09-28: and `.btn` — "Continue in this window instead" (a redirect that
+   cannot finish on github.io) sat on every guest's Account screen and Sign in. */
+.btn[hidden] { display: none; }
 .yr-r-date { flex: none; font-weight: var(--fw-bold); color: var(--ink); }
 .yr-r-what {
   flex: 1; min-width: 0; color: var(--ink-soft);
