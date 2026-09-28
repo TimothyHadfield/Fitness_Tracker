@@ -2464,8 +2464,10 @@ export const store = {
     // makes "I restored the wrong file" recoverable; a failure aborts the
     // restore before a single collection has been touched.
     await snapshotBeforeWipe('pre-restore');
+    // `replace`: the cloud's whole-list collections otherwise MERGE a write
+    // with what other devices saved (R-14); a restore means "exactly this".
     for (const c of COLLECTIONS) {
-      await backend.write(c, Array.isArray(data[c]) ? data[c] : [], { wholesale: true });
+      await backend.write(c, Array.isArray(data[c]) ? data[c] : [], { wholesale: true, replace: true });
     }
     // ⚠️ A restored backup is the ONE way old-shape workouts — the ones with no
     // systemId — can come back after the migration has already run and latched
@@ -2675,6 +2677,9 @@ export const store = {
     // aborting costs a retry. On the local and demo backends this is a no-op —
     // there is no cloud copy to protect.
     await snapshotBeforeWipe('pre-clear');
+    // No `replace` here (R-14): the snapshot above has just read every
+    // collection, so the cloud merge removes exactly the rows it saw. Only a
+    // row another device adds during the clear survives it.
     for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
   },
 };

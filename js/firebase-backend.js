@@ -669,6 +669,155 @@ function shards(c) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 🆕 R-14 — TWO DEVICES, ONE WHOLE-LIST DOCUMENT — 2026-09-27
+ *
+ * 🚨 THE BUG: every non-sharded collection (workouts, systems, goals,
+ * bodyWeight, people, benchmarks, customExercises) was `setDoc` of the WHOLE
+ * row list. The store reads, changes one row and writes the list back, so a
+ * phone and a laptop that both read [A] and then saved [A, phone] and
+ * [A, laptop] ended with whichever landed last — the other device's new row
+ * was silently gone. An offline write was worse: Firestore queues the whole
+ * list and replays it on reconnect, over everything saved elsewhere since.
+ * tests/sync-merge.test.mjs reproduces both against the emulator.
+ *
+ * ✅ THE FIX: a write sends only WHAT THIS DEVICE CHANGED, as Firestore's own
+ * server-side array transforms — `arrayRemove` of the exact rows this device
+ * deleted or replaced, then `arrayUnion` of the rows it added or edited. The
+ * SERVER applies them to whatever the document holds at commit time, so rows
+ * another device added in between are kept, and nothing this device did not
+ * touch is written at all.
+ *
+ * WHY THIS AND NOT `runTransaction`, which the analyst suggested: a
+ * transaction needs the server and FAILS offline (D6: gyms are basements).
+ * The offline case is the one that loses the most — a queued whole list
+ * replayed on reconnect — and a transaction would have needed a second,
+ * separate offline queue to cover it. Transforms are queued by the SDK like
+ * any other write, apply locally at once (the app sees its own change
+ * offline), and merge on the server whenever they land. One path for both.
+ *
+ * WHY NO TOMBSTONES: a delete is an `arrayRemove` of the exact row, so it is
+ * gone on the server; the other device's stale copy of that row is unchanged
+ * in ITS eyes, so its later writes never mention it and cannot bring it back.
+ * The one way a deleted row returns is if the other device EDITS it after the
+ * delete — the edit wins, which keeps somebody's work rather than losing it.
+ *
+ * ⚠️ WHAT THE DIFF IS AGAINST: `base`, the exact rows this device last read
+ * (or wrote), per collection and per account. `arrayRemove` needs the value
+ * exactly as stored, which is why the base is the RAW read, duplicates and
+ * all, while callers get a de-duplicated list (see dedupeRows()).
+ *
+ * ⚠️ TWO DEVICES EDITING THE SAME ROW at once leave two copies with one id
+ * (each removed the old copy and added its own). Reads return the newer one;
+ * the next write from any device removes the other. Nothing is lost.
+ *
+ * ⚠️ STORED ORDER IS NOT KEPT: an edited row moves to the end of the array.
+ * Every getter in store.js sorts (by order/name/date), so nothing reads it.
+ *
+ * STILL A PLAIN REPLACE, deliberately:
+ *   - `settings` — one row, already serialised per tab by `inSettingsQueue`
+ *     in store.js; merging it here would leave two settings rows.
+ *   - `{ replace: true }` — Restore from backup, which means "the collection
+ *     is exactly this" and snapshots to the cloud first. (Clear all merges:
+ *     its snapshot has just read every row, so it removes exactly those.)
+ *   - a row without an id — nothing to key a merge on (never happens today).
+ * ------------------------------------------------------------------ */
+
+/** Collections written as a plain replace rather than a merge. */
+export const REPLACE_COLLECTIONS = ['settings'];
+
+/**
+ * Read/write for the whole-list collections of ONE account. Dependency-
+ * injected like createShardIO() so the emulator test can drive it with two
+ * real Firestore clients.
+ */
+export function createListIO(c, uid) {
+  const base = new Map();   // collection → raw rows as last read/written
+  const ref = (name) => c.fs.doc(c.db, 'users', uid, 'collections', name);
+
+  async function readRaw(collection) {
+    const snap = await c.fs.getDoc(ref(collection));
+    const data = snap.exists() ? snap.data() : null;
+    return data && Array.isArray(data.rows) ? data.rows : [];
+  }
+
+  async function replace(collection, rows) {
+    // Recorded before the await, dropped again if the write fails — see below.
+    base.set(collection, (rows || []).slice());
+    try {
+      await c.fs.setDoc(ref(collection), { rows, updatedAt: c.fs.serverTimestamp() });
+    } catch (err) {
+      base.delete(collection);
+      throw err;
+    }
+    return true;
+  }
+
+  return {
+    async read(collection) {
+      const raw = await readRaw(collection);
+      base.set(collection, raw);
+      return dedupeRows(raw);
+    },
+
+    async write(collection, rows, opts) {
+      if ((opts && opts.replace) || REPLACE_COLLECTIONS.includes(collection)) {
+        return replace(collection, rows);
+      }
+      // No base means no idea what this device is changing FROM. Read first,
+      // the same rule the sharded path follows.
+      if (!base.has(collection)) base.set(collection, await readRaw(collection));
+      const plan = listMergePlan(base.get(collection), rows);
+      if (!plan) return replace(collection, rows);
+      if (!plan.removes.length && !plan.adds.length) {
+        base.set(collection, (rows || []).slice());
+        return true;
+      }
+
+      const target = ref(collection);
+      const batch = c.fs.writeBatch(c.db);
+      // Removes first, then adds: an edited row is "old copy out, new copy in".
+      // Two writes to one document in one batch are applied in order, and both
+      // are `merge` sets so a missing document is created rather than refused.
+      if (plan.removes.length) {
+        batch.set(target, {
+          rows: c.fs.arrayRemove(...plan.removes), updatedAt: c.fs.serverTimestamp(),
+        }, { merge: true });
+      }
+      if (plan.adds.length) {
+        batch.set(target, {
+          rows: c.fs.arrayUnion(...plan.adds), updatedAt: c.fs.serverTimestamp(),
+        }, { merge: true });
+      }
+      // ⚠️ THE BASE MOVES BEFORE THE AWAIT, unlike the shard memo. Offline, the
+      // commit does not resolve until the connection returns, and a second
+      // edit made meanwhile must diff against THIS one, or it would remove the
+      // old copy again (a no-op) and leave this edit behind as a duplicate. A
+      // commit that fails drops the base, so the next write re-reads.
+      base.set(collection, (rows || []).slice());
+      try {
+        await batch.commit();
+      } catch (err) {
+        base.delete(collection);
+        throw err;
+      }
+      return true;
+    },
+  };
+}
+
+let listIO = null;
+let listIOUid = null;
+
+function lists(c) {
+  if (!user) throw new Error('Not signed in.');
+  if (!listIO || listIOUid !== user.uid) {
+    listIO = createListIO(c, user.uid);
+    listIOUid = user.uid;
+  }
+  return listIO;
+}
+
+/* ------------------------------------------------------------------ *
  * 🚨 DELETING AN ACCOUNT — the purge. 2026-09-10.
  *
  * ⚠️ WHAT THIS REPLACES, because the old shape is the whole argument for the
@@ -846,6 +995,9 @@ export const FirebaseBackend = {
     // Deliberately NOT caught. The store does read-modify-write, so swallowing
     // a failed read and returning [] would let the next write persist an empty
     // list over real cloud data.
+    // Whole-list collections go through createListIO(), which remembers what
+    // was read so the next write can send only the change (R-14).
+    if (!SHARDED_COLLECTIONS.includes(collection)) return lists(c).read(collection);
     const snap = await c.fs.getDoc(docRef(c, collection));
     const data = snap.exists() ? snap.data() : null;
     const legacy = data && Array.isArray(data.rows) ? data.rows : [];
@@ -857,11 +1009,8 @@ export const FirebaseBackend = {
   async write(collection, rows, opts) {
     const c = await init();
     if (SHARDED_COLLECTIONS.includes(collection)) return shards(c).write(collection, rows, opts);
-    await c.fs.setDoc(docRef(c, collection), {
-      rows,
-      updatedAt: c.fs.serverTimestamp(),
-    });
-    return true;
+    // A merge, not a whole-list setDoc: see the R-14 header above createListIO().
+    return lists(c).write(collection, rows, opts);
   },
 
   /**
@@ -1731,6 +1880,77 @@ export function inBatches(items, size = BATCH_LIMIT) {
   const out = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
   return out;
+}
+
+const rowTime = (r) => Date.parse((r && (r.updatedAt || r.createdAt)) || '');
+
+/**
+ * R-14: one row per id, for a whole-list document that two devices edited at
+ * once (see createListIO()). The newer `updatedAt`/`createdAt` wins; with no
+ * usable time the LATER copy wins, because `arrayUnion` appends, so later in
+ * the list is the more recent write. Rows without an id pass through as-is.
+ * Order is the first appearance of each id.
+ */
+export function dedupeRows(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const byId = new Map();
+  const out = [];
+  for (const r of list) {
+    if (!r || r.id == null) { out.push(r); continue; }
+    const key = String(r.id);
+    if (!byId.has(key)) { byId.set(key, out.length); out.push(r); continue; }
+    const at = byId.get(key);
+    const a = rowTime(out[at]), b = rowTime(r);
+    if (!(Number.isFinite(a) && (!Number.isFinite(b) || a > b))) out[at] = r;
+  }
+  return out;
+}
+
+/**
+ * R-14: what one device changed, as server-side array transforms.
+ *
+ * @param {Array} base  the RAW rows this device last read or wrote
+ * @param {Array} rows  what the collection should now contain, as this device sees it
+ * @returns {{removes: Array, adds: Array} | null}
+ *   `removes`: exact stored copies to `arrayRemove` — rows this device deleted,
+ *   the old copy of rows it edited, and stray duplicates of any id it wrote.
+ *   `adds`: rows to `arrayUnion` — new rows and the new copy of edited ones.
+ *   `null` when a row has no id: nothing to key on, so the caller replaces.
+ *
+ * ⚠️ A ROW UNCHANGED SINCE THE BASE IS NEVER SENT. That is what stops a device
+ * holding a stale copy of a row somebody else deleted from bringing it back.
+ */
+export function listMergePlan(base, rows) {
+  const prev = new Map();   // id → [{ row, json }]
+  for (const r of Array.isArray(base) ? base : []) {
+    if (!r || r.id == null) return null;
+    const key = String(r.id);
+    if (!prev.has(key)) prev.set(key, []);
+    prev.get(key).push({ row: r, json: JSON.stringify(r) });
+  }
+  const removes = [];
+  const adds = [];
+  const seen = new Set();
+  for (const r of Array.isArray(rows) ? rows : []) {
+    if (!r || r.id == null) return null;
+    const key = String(r.id);
+    if (seen.has(key)) { adds.push(r); continue; }   // a duplicate the caller sent: keep both
+    seen.add(key);
+    const json = JSON.stringify(r);
+    const copies = prev.get(key) || [];
+    let kept = false;
+    for (const copy of copies) {
+      // ⚠️ An exact copy is never removed: `arrayRemove` takes out EVERY equal
+      // element, so removing a second identical copy would remove the one kept.
+      if (copy.json === json) kept = true;
+      else removes.push(copy.row);
+    }
+    if (!kept) adds.push(r);
+  }
+  for (const [key, copies] of prev) {
+    if (!seen.has(key)) for (const copy of copies) removes.push(copy.row);
+  }
+  return { removes, adds };
 }
 
 // Merge local rows into cloud rows, keyed by id. The newer `updatedAt` wins;
