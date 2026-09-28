@@ -826,3 +826,7 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   verification / typo check; reset toast wording + spam hint; sign-out doesn't clear the workout draft
   (shared phones); moving hosting so Google redirect works; App Store needs native Google + Apple
   sign-in. Not checked: Google delete popup after awaits on iOS (if blocked, nothing is deleted).
+- **Then:** Tim asked whether to move off GitHub Pages (Firebase Hosting would fix Google redirect).
+  Claude: not now — popup already works in the home-screen app, a new origin strands every guest's
+  data + installs + links; do it once with the rename if ever. Tim: *"okay don't do it."*
+  Suggested cheap check for him: Continue with Google in a plain Safari tab. Then checkpoint.
