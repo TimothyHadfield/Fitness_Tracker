@@ -7797,3 +7797,533 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 .guide-next { min-width: 0; }
 .guide-next-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* === end Auto-guide === */
+
+/* === Look 3 · Glass, type and texture === */
+/* Overhaul 2026-09-27, design.md package A. Tim: "where nicer design features
+   (glassy textures, different fonts or displays, colors, and textures can be
+   implemented in across the cite". The Polish section's old line "no
+   backdrop-filter anywhere" is superseded HERE, with its reason kept:
+   a blur is only worth its layer where something passes UNDER it.
+
+   THE RULES THIS SECTION KEEPS
+   - Glass only on floating chrome and overlays: the phone tab bar, the footers
+     (runner, Auto-guide, save), the workout-in-progress strip, sheets, toasts,
+     ? boxes and the tour bubble. NEVER on scrolling content (rows, cards,
+     charts, the calendar's sticky month heads, the scrim). At most 3 blur
+     layers on screen: nav + one footer/strip + one sheet.
+   - Every blur is written twice, `-webkit-backdrop-filter` (iOS before 18)
+     and `backdrop-filter`, with literal values, not a var().
+   - `data-glass="off"`, `prefers-reduced-transparency` and an engine with no
+     backdrop-filter all get solid bars and sheets and no grain. Only PAINT is
+     switched; the floating layout is the same either way, so the Settings
+     switch moves nothing.
+   - The glass tint never drops under 76 % (design V-4: 80 % dark / 78 % light
+     measured ≥ 5.98:1 for the tab labels over any content). tests/a11y pins it.
+   - Tokens are rgb()/color-mix(), never `--x: #RRGGBB;` (the a11y parser reads
+     those as text/surface pairs). Level colours are not touched.
+   - Nothing here animates or transitions (Rule 7). */
+
+/* ── Type: Barlow Semi Condensed, self-hosted (css/fonts/, OFL) ────────────── */
+@font-face {
+  font-family: 'Barlow Semi Condensed';
+  src: url("fonts/barlow-semi-condensed-600.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow Semi Condensed';
+  src: url("fonts/barlow-semi-condensed-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --display: 'Barlow Semi Condensed', var(--sans);
+
+  /* Glass. --glass-a is the one number the contrast measurement rests on. */
+  --glass-a: 80%;
+  --glass-bar:   color-mix(in srgb, var(--surface) var(--glass-a), transparent);
+  --glass-float: color-mix(in srgb, var(--raised) 84%, transparent);
+  --glass-sheet: color-mix(in srgb, var(--ground) 92%, transparent);
+  --glass-rule:  color-mix(in srgb, var(--rule) 70%, transparent);
+  --rim: rgb(255 255 255 / .07);
+
+  /* Texture: fractal grain, its strength baked into the SVG's alpha row (no
+     opacity, no blend mode, no full-screen overlay layer). White grain on the
+     dark themes, black on the light ones. */
+  --grain-lt: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-dk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain: var(--grain-lt);
+  /* The Black Ember logo's light, from the top of the ground. Follows every
+     palette because it is the accent. */
+  --ember-glow: radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%);
+  --ground-paint: var(--ember-glow), var(--grain), var(--ground);
+}
+:root[data-theme="light"] {
+  --glass-a: 78%;
+  --glass-float: color-mix(in srgb, var(--surface) 80%, transparent);
+  --glass-sheet: color-mix(in srgb, var(--surface) 92%, transparent);
+  --rim: rgb(255 255 255 / .75);
+  --grain: var(--grain-dk);
+  --ember-glow: radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%);
+}
+
+/* Big numbers and titles only (21px and up). Body text, labels, buttons,
+   pills and chart axes stay the system sans. Condensed reads ~12 % smaller at
+   one px, so each steps up; tabular figures are measured working. */
+.topbar h1, .session-ex-name, .guide-ex, .step-value, .me-stat-n, .save-title,
+.finish-hero h2, .goal-hero-lift, .ws-title, .bench-est-num, .muscle-est, .ob-q {
+  font-family: var(--display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.topbar h1 { font-size: 22px; line-height: 1.15; }
+.session-ex-name { font-size: 25px; }
+.guide-ex { font-size: 29px; }
+.step-value { font-size: 34px; }
+.step-value.is-duration { font-size: 27px; }
+.me-stat-n { font-size: 24px; }
+.save-title { font-size: 23px; }
+.finish-hero h2 { font-size: 26px; }
+.goal-hero-lift { font-size: 28px; }
+.ws-title { font-size: 26px; }
+.bench-est-num { font-size: 29px; }
+.muscle-est { font-size: 24px; }
+.ob-q { font-size: 27px; }
+/* Condensed digits are ~0.8× as wide, so the Auto-guide's big number steps up
+   and its long-number steps (guide-mode.js boxFit) keep the same fit. */
+.guide .step-value { font-size: 44px; }
+.guide .step-value.fit-md { font-size: 32px; }
+.guide .step-value.fit-sm { font-size: 28px; }
+.guide .step-value.fit-xs { font-size: 24px; }
+@media (min-width: 860px) {
+  .topbar h1 { font-size: 26px; }
+  .step-value { font-size: 38px; }
+}
+
+/* V-12: WebKit drew number spin arrows inside the phone steppers too (the old
+   hide rule lived in the laptop query). The ± buttons are the control. */
+.step-value { -moz-appearance: textfield; appearance: textfield; }
+.step-value::-webkit-inner-spin-button,
+.step-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── Texture: the ground ───────────────────────────────────────────────────── */
+body { background: var(--ground-paint); }
+/* The header sits on the glow (nothing scrolls under it). */
+.topbar, .pane-top { background: transparent; }
+/* A surface that moves as a whole carries the same ground, so the glow does
+   not switch on at the end of a slide. */
+.screen.rises, .screen-ghost, .screen.nav-moving, .nav-snap, #app.nav-card-app {
+  background: var(--ground-paint);
+}
+/* V-14: the header's hairline only once the screen has scrolled (app.js puts
+   `is-scrolled` on <html>), or where a fixed region sits under it. A colour
+   change only: no size changes, nothing moves. */
+.topbar { border-bottom-color: transparent; }
+.is-scrolled .topbar,
+.screen:has(> .pane-top) > .topbar { border-bottom-color: var(--rule-soft); }
+
+/* ── Glass: the chrome floats over the scroller ────────────────────────────
+   Phone: the screen runs under the tab bar, and its LAST child pays the bar
+   in padding. The padding equals the extra height, so what a pane can scroll
+   (scrollHeight − clientHeight) is unchanged. */
+@media (max-width: 859px) {
+  #app > .navbar { position: relative; z-index: 20; }
+  .screen:not(.no-nav) { margin-bottom: calc(-1 * (var(--bar-h) + var(--safe-b))); }
+  .screen:not(.no-nav) > .pane-scroll:last-child { padding-bottom: calc(11px + var(--bar-h) + var(--safe-b)); }
+  .screen:not(.no-nav) > .pane-bottom:last-child { padding-bottom: calc(10px + var(--bar-h) + var(--safe-b)); }
+  .screen:not(.no-nav) > .session-mini:last-child { padding-bottom: calc(var(--bar-h) + var(--safe-b)); }
+}
+/* Both widths: the footers float too. --chrome-b is their live height (app.js,
+   ResizeObserver); 0 until measured, and padding = negative margin, so a late
+   value changes only how far the list can scroll. */
+.pane-scroll, .guide-scroll { isolation: isolate; }
+.screen > .pane-scroll:has(~ :is(.pane-bottom, .session-footer, .session-mini)),
+.guide-scroll {
+  margin-bottom: calc(-1 * var(--chrome-b, 0px));
+  padding-bottom: calc(11px + var(--chrome-b, 0px));
+  scroll-padding-bottom: var(--chrome-b, 0px);
+}
+.pane-bottom, .session-footer, .session-mini { position: relative; z-index: 10; }
+
+/* The paint. */
+.pane-bottom, .session-footer, .session-mini {
+  background-color: var(--glass-bar);
+  background-image: var(--grain);
+  -webkit-backdrop-filter: saturate(170%) blur(20px);
+  backdrop-filter: saturate(170%) blur(20px);
+  border-top-color: var(--glass-rule);
+  box-shadow: inset 0 1px 0 var(--rim);
+}
+@media (max-width: 859px) {
+  #app > .navbar {
+    background-color: var(--glass-bar);
+    background-image: var(--grain);
+    -webkit-backdrop-filter: saturate(170%) blur(20px);
+    backdrop-filter: saturate(170%) blur(20px);
+    border-top-color: var(--glass-rule);
+    box-shadow: inset 0 1px 0 var(--rim);
+  }
+}
+
+/* Overlays. The scrim stays a plain dim (a full-screen blur that fades is the
+   most expensive layer there is). */
+.sheet, .sheet-x {
+  background-color: var(--glass-sheet);
+  -webkit-backdrop-filter: saturate(170%) blur(20px);
+  backdrop-filter: saturate(170%) blur(20px);
+}
+.sheet.s2-phone::after, .sheet-x.s2-phone-x::after { background: var(--glass-sheet); }
+.help-pop, .tour-bubble {
+  background-color: var(--glass-float);
+  -webkit-backdrop-filter: saturate(170%) blur(20px);
+  backdrop-filter: saturate(170%) blur(20px);
+}
+.help-pop::before, .tour-arrow { background: var(--glass-float); }
+/* Light keeps its inverted ink toast (a note laid over the page). */
+:root:not([data-theme="light"]) :is(.toast, .toast-x) {
+  background-color: var(--glass-float);
+  -webkit-backdrop-filter: saturate(170%) blur(20px);
+  backdrop-filter: saturate(170%) blur(20px);
+}
+
+/* ── Glass off: solid bars and sheets, no grain ────────────────────────────
+   Three ways in, one answer: the Settings switch, the OS setting, and an
+   engine that cannot blur. */
+:root[data-glass="off"] {
+  --glass-bar: var(--surface); --glass-float: var(--raised); --glass-sheet: var(--ground);
+  --glass-rule: var(--rule); --grain: none;
+}
+:root[data-glass="off"][data-theme="light"] { --glass-float: var(--surface); }
+[data-glass="off"] :is(#app > .navbar, .pane-bottom, .session-footer, .session-mini, .sheet, .sheet-x,
+  .toast, .toast-x, .help-pop, .tour-bubble) {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root, :root[data-theme="light"] {
+    --glass-bar: var(--surface); --glass-float: var(--raised); --glass-sheet: var(--ground);
+    --glass-rule: var(--rule); --grain: none;
+  }
+  :root[data-theme="light"] { --glass-float: var(--surface); }
+  :is(#app > .navbar, .pane-bottom, .session-footer, .session-mini, .sheet, .sheet-x,
+    .toast, .toast-x, .help-pop, .tour-bubble) {
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root, :root[data-theme="light"] {
+    --glass-bar: var(--surface); --glass-float: var(--raised); --glass-sheet: var(--ground);
+    --glass-rule: var(--rule);
+  }
+  :root[data-theme="light"] { --glass-float: var(--surface); }
+}
+
+/* ── Metal ─────────────────────────────────────────────────────────────────
+   The runner's plate drawing takes bar-view.js's steel and plate-face
+   gradients as SVG defs in its own markup (plates.js); nothing to add here. */
+
+/* ── The laptop sidebar's mark (V-15): the Black Ember icon before the name ── */
+.nav-brand-mark { width: 22px; height: 22px; flex: none; display: block; border-radius: 5px; }
+/* The mark took the name's room: "Fitness Trac…" at 1366. Tighter gap, and the
+   condensed display face keeps the whole name on one line. */
+.nav-brand { gap: 7px; }
+.nav-brand-name { font-family: 'Barlow Semi Condensed', var(--font, system-ui), sans-serif; letter-spacing: 0; }
+/* === end Look 3 === */
+
+/* === Overhaul wave 2 · layout requests (2026-09-27) === */
+/* The CSS the wave-1 builders asked for (they could not edit this file), plus
+   the screens that had to fit. Each block names who asked. */
+
+/* ── R-11: landscape on a notched phone. iOS ignores the manifest's
+   orientation for a home-screen app; the notch side gets its inset. ── */
+#app {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ── SHELL: a toast with an action, and an error toast ── */
+.toast-action {
+  flex: none;
+  min-height: 44px;
+  margin: -12px -8px -12px 10px;
+  padding: 0 8px;
+  background: none; border: 0;
+  color: var(--accent);
+  font: inherit; font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+/* Light inverts the toast (ink ground); the light accent is too dark on it,
+   so the action takes the accent's pale tint instead. */
+:root[data-theme="light"] .toast-action { color: var(--accent-dim); }
+:root:not([data-theme="light"]) :is(.toast, .toast-x).toast-error {
+  background-color: color-mix(in srgb, var(--danger) 26%, var(--raised));
+}
+:root[data-theme="light"] :is(.toast, .toast-x).toast-error {
+  background-color: color-mix(in srgb, var(--danger) 30%, var(--ink));
+}
+
+/* ── EDIT ── */
+.field-help .help-dot { margin-left: 4px; }
+
+/* ── INTRO ── */
+.ob-overlay ~ .help-pop, .ob-overlay ~ .help-pop-x { z-index: 85; }
+.ob-icon { flex: none; width: 48px; height: 48px; border-radius: 12px; margin-top: 8px; }
+.ob-signin { margin: 4px 0 0; }
+.ob-title { align-items: center; }
+.ob-weight-row { display: flex; gap: 10px; align-items: center; }
+.ob-weight-row .input { flex: 1; min-width: 0; }
+.ob-day-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ob-day-ex { font-size: var(--fs-md); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ob-plan { margin: 2px 0 0; font-size: var(--fs-md); color: var(--ink-soft); }
+.first-save-actions { display: flex; flex-direction: column; gap: 10px; }
+.first-save-ios { display: flex; gap: 6px; align-items: center; margin: 12px 0 0; }
+
+/* ── WORKOUTS ── */
+.feed-ex-top {
+  margin-left: auto; flex: none;
+  color: var(--ink-faint); font-size: var(--fs-sm);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.feed-self-meta { margin-bottom: 6px; }
+.feed-sentinel { height: 1px; }
+.feed-offline { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink-soft); }
+.sys-more-body { display: grid; gap: 12px; }
+.sys-more-body .own-rating-head { flex-wrap: wrap; }
+
+/* ── GOALS: laptop fits 1366×820 ── */
+/* Measured at 1366×820 with the demo bar: the requirements column ran 185px
+   past the pane (the left column fits). Same words, tighter leading: the
+   column's gaps 12 → 6, rows lose their 44px floor (they are not buttons),
+   the verdict lines sit 3px apart instead of 6. */
+@media (min-width: 1200px) {
+  .goal-reqs .req-row { min-height: 34px; padding-block: 2px; }
+  .goal-screen > .goal-reqs { gap: 6px; }
+  .goal-screen > .goal-reqs .goal-verdict { gap: 2px; }
+  .goal-screen > .goal-reqs :is(.req-row .row-sub, .help-line, .field-help, .goal-verdict-body) { line-height: 1.3; }
+}
+.goal-end-link { white-space: nowrap; }
+
+/* ── ME: the compact Profile head and the week dots ── */
+.me-face.is-sm { width: 48px; height: 48px; }
+.me-head.is-compact { gap: 12px; }
+.me-head.is-compact .me-who { flex: 1; gap: 2px; }
+.me-head.is-compact .me-name { font-size: var(--fs-lg); }
+.me-head.is-compact .me-stats { display: flex; }
+.me-head.is-compact .me-stat { flex-direction: row; align-items: baseline; gap: 5px; padding: 2px 12px 2px 0; }
+.me-head.is-compact .me-stat + .me-stat { padding-left: 12px; }
+/* 17px is under the display tier: the compact figures stay the system sans. */
+.me-head.is-compact .me-stat-n { font-size: 17px; font-family: var(--sans); letter-spacing: -0.02em; }
+.me-week-dots { display: inline-flex; gap: 5px; margin-right: 12px; flex: none; }
+.me-week-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+.me-week-dot.is-on { background: var(--ink); }
+.me-week-dot.is-today { box-shadow: 0 0 0 1.5px var(--ink-faint); }
+.me-week-usual { flex: none; margin-left: 8px; font-size: var(--fs-sm); color: var(--ink-faint); }
+.feed-more { height: 1px; }
+.home-hint { margin-top: 2px; }
+
+/* ── ME: a best lift is three clean lines, not a squeezed column ──────────
+   At 393px the right-hand words ("now 228 · High confidence · Intermediate",
+   ~210px) squeezed the name into two lines and the set into three. Now:
+     name ………………………… number  ›
+     the set · the date · trained N days
+     now 228 · High confidence · Intermediate
+   The name and each line stay one line (ellipsis), the number keeps its
+   level chip, and a row with no chevron keeps the chevron's column. */
+.me-best {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "title top chev" "sub sub chev" "ever ever chev" "est est chev";
+  column-gap: 10px; row-gap: 1px;
+  align-items: baseline;
+}
+.me-best > .row-main, .me-best > .me-best-nums { display: contents; }
+.me-best .row-title {
+  grid-area: title; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+}
+.me-best .me-best-top, .me-best .me-best-none { grid-area: top; justify-self: end; text-align: right; max-width: none; }
+.me-best .row-sub.wrap {
+  grid-area: sub; min-width: 0; margin-top: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.me-best .row-sub.wrap .me-best-bit { display: inline; white-space: nowrap; max-width: none; }
+.me-best .me-best-ever { grid-area: ever; min-width: 0; margin-top: 0; }
+.me-best .me-best-est {
+  grid-area: est; text-align: left; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.me-best > .row-chev { grid-area: chev; align-self: center; }
+.list:has(> .me-best > .row-chev) > .me-best:not(:has(> .row-chev))::after { grid-area: chev; }
+
+/* ── SOCIAL SC-3: one legend shape for Muscles and Compare ── */
+.lv-key-wrap.lv-compact { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; }
+.lv-compact .lv-key, .lv-compact .lv-notes { display: contents; }
+.lv-compact .lv-chip { min-height: 18px; padding: 0 6px; font-size: 11px; line-height: 18px; }
+.lv-compact .lv-key-item { font-size: 11px; gap: 3px; }
+.lv-compact .lv-sw { width: 8px; height: 8px; }
+@media (max-width: 859px) {
+  .graph-host.is-muscles .body-wrap { flex: none; height: 300px; }
+}
+/* ── SOCIAL SC-9: the compare list ── */
+.cmp-layout { display: flex; flex-direction: column; gap: 12px; }
+.cmp-bodies { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.cmp-list { display: flex; flex-direction: column; }
+.cmp-lrow {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 6px;
+  min-height: 34px; padding: 2px 4px;
+  background: none; border: 0; border-bottom: 1px solid var(--rule-soft); border-radius: 0;
+  color: var(--ink); font: inherit; text-align: left;
+}
+.cmp-lrow-head { min-height: 22px; font-size: var(--fs-sm); color: var(--ink-soft); }
+.cmp-lrow[aria-pressed="true"] { background: var(--surface); }
+.cmp-lrow .cmp-m { font-weight: var(--fw-med); }
+.cmp-lrow .lv-chip { min-height: 20px; padding: 0 8px; font-size: var(--fs-sm); }
+.cmp-none { color: var(--ink-faint); }
+.cmp-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 860px) {
+  .cmp-layout { flex-direction: row; align-items: flex-start; }
+  .cmp-bodies { flex: 2 1 0; }
+  .cmp-list { flex: 1 1 0; max-width: 33.33%; }
+}
+
+/* ── PROG: a cycle of up to 28 days fits a phone ──────────────────────────
+   Three 92px columns made 28 days ten rows (~450px). Past 14 boxes the phone
+   lays them out a week to a row, seven across — a 28-day cycle is four rows
+   and reads as four weeks. Names wrap inside their box, never sideways. */
+@media (max-width: 859px) {
+  .plan-grid:has(> .plan-day:nth-child(15)) { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .plan-grid:has(> .plan-day:nth-child(15)) > .plan-day { padding: 4px 4px 5px; }
+  .plan-grid:has(> .plan-day:nth-child(15)) .plan-slot { font-size: var(--fs-sm); line-height: 1.2; overflow-wrap: break-word; hyphens: auto; }
+}
+
+/* ── DATA: Volume rows are one line — name · bar · number ── */
+.vol-row { flex-direction: row; align-items: center; gap: 10px; min-height: 40px; padding: 6px 0; }
+.vol-head { display: contents; }
+.vol-name { flex: 0 0 7.5em; }
+.vol-track { flex: 1; order: 1; }
+.vol-num { order: 2; min-width: 4.5em; text-align: right; }
+.vol-tick-key { font-size: var(--fs-xs); opacity: .85; }
+.vol-tick-mark { font-size: var(--fs-xs); color: var(--ink-faint); margin-right: 1px; }
+@media (max-width: 859px) {
+  .vol-figure { max-height: 260px; max-width: calc(260px * var(--body-ar, 1)); }
+  /* The key on one line: smaller chips, and it may scroll sideways inside
+     itself rather than wrap to a second row. */
+  .vol-legend { flex-wrap: nowrap; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .vol-legend::-webkit-scrollbar { display: none; }
+  .vol-legend > * { flex: none; }
+  .vol-legend .vol-chip { padding: 3px 7px; gap: 4px; font-size: var(--fs-xs); }
+  .vol-legend .vol-chip i { width: 9px; height: 9px; }
+  .vol-legend-unit { font-size: var(--fs-xs); }
+}
+@media (min-width: 1024px) {
+  .bars { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; align-content: stretch; }
+}
+
+/* ── DATA: Settings fits without a page scroll ────────────────────────────
+   Measured before: 200px over at 393×659, 54px over at 1366×820 (demo bar
+   on). Every control stays one line; rows are 32px (each control keeps a 44px
+   hit area that reaches into the row gap). On a phone the Workout group's four
+   switches sit two to a line; on a laptop the groups sit in two columns. */
+.set-group { gap: 0; }
+.set-group > .section-label { padding-top: 0; line-height: 16px; }
+.set-group .switch-row { min-height: 32px; }
+.pane-scroll:has(> .set-group) { gap: 6px; }
+.plates-sheet { display: flex; flex-direction: column; gap: 12px; }
+.set-note { margin-left: 6px; }
+.set-door-chip { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 859px) {
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px;
+  }
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) > .section-label {
+    grid-column: 1 / -1;
+  }
+  .set-group .switch-row > .help-line { min-width: 0; }
+}
+@media (min-width: 860px) {
+  .pane-scroll:has(> .set-group) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 440px));
+    justify-content: center; align-content: start;
+    column-gap: 56px; row-gap: 14px;
+  }
+  .pane-scroll.pane-scroll:has(> .set-group) > :is(.field, *) { max-width: none; width: auto; margin-inline: 0; }
+}
+/* ── RUNNER-2: the save form, the kit chips, sitting out ── */
+/* "Leave out" sat as 3px-padded faint text: a 44px-tall target now, and the
+   line never wraps it away from its ?. */
+.save-unopened { flex-wrap: nowrap; align-items: center; }
+.save-unopened > .field-help { min-width: 0; }
+.save-unopened-btn {
+  flex: none; white-space: nowrap;
+  min-height: 44px; margin-block: -12px;
+  padding: 0 4px 0 8px;
+  color: var(--accent); font-weight: var(--fw-med);
+}
+/* Equipment chips sit 4px above their hint line (the sheet's gap was 12). */
+.equip-today { min-height: 0; margin-bottom: -8px; }
+/* "You · out": the owner is sitting out, so their chip reads as off.
+   Selected by the ✕ beside it (its label flips to "Train again…"), because
+   the chip itself carries no class for it; `.is-out` works too if added. */
+.person-wrap:has(> .person-del[aria-label^="Train again"]) > .person-chip,
+.person-chip.is-out { opacity: .55; }
+/* The save form stops at the 510px measure on a laptop; Save now stops there
+   too, at the same left edge. */
+@media (min-width: 860px) {
+  .pane-scroll:has(> .save-screen) ~ .pane-bottom > * {
+    max-width: 510px; margin-inline: max(0px, (100% - 820px) / 2) auto;
+  }
+}
+@media (min-width: 1200px) {
+  .pane-scroll:has(> .save-screen) ~ .pane-bottom > * { margin-inline: max(0px, (100% - 940px) / 2) auto; }
+}
+/* === end Overhaul wave 2 · layout requests === */
+
+/* === Overhaul wave 2 · hit areas (R-5 / I-7) === */
+/* Invisible hit-slop only: the painted size of every control is unchanged, so
+   nothing moves (design-taste 9). Same pattern as `.icon-btn::before` at the
+   top of the file — ::before, because several of these already use ::after.
+   A halo that reaches a neighbour loses to it where the neighbour is later in
+   the page, so two controls never fight over one point for long.
+   `.set-del` / `.person-del` stay deliberately small (overhaul plan). */
+.add-set, .switch, .mini-btn, .link-btn, .feed-act, .session-clock,
+.move-btns button, .text-link { position: relative; }
+.add-set::before, .switch::before, .mini-btn::before, .link-btn::before,
+.feed-act::before, .move-btns button::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 44px;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
+}
+/* The workout clock is a few px of digits between the back button and the
+   date: its halo grows 44px tall, and sideways only over the dot, so it takes
+   nothing from either neighbour. The sub-line clipped it (`.topbar-sub`
+   overflow: hidden, for an ellipsis that a wrapping flex row never shows). */
+.topbar-sub.session-sub { overflow: visible; }
+.session-clock::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: -2px; right: -9px;
+  height: 44px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+/* A text link inside a line grows downward and upward only. */
+.text-link::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
+/* The avatar clips its photo (`overflow: hidden`), which also clipped its
+   ::before halo to 34px. A transparent 5px border is part of the box a finger
+   hits but not of the circle an eye sees (the photo and fill stay in the
+   padding box); the negative margin keeps its footprint 34px. */
+.topbar .avatar-btn {
+  width: 44px; height: 44px;
+  margin: -5px;
+  border: 5px solid transparent;
+  background-clip: padding-box;
+}
+/* === end Overhaul wave 2 · hit areas === */

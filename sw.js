@@ -44,6 +44,10 @@ const SHELL = [
   './icon-192.png',
   './icon-512.png',
   './css/app.css',
+  // The display face (overhaul design V-9), self-hosted so a basement still
+  // gets it: Barlow Semi Condensed, SIL OFL 1.1 (docs/licenses/barlow-OFL.txt).
+  './css/fonts/barlow-semi-condensed-600.woff2',
+  './css/fonts/barlow-semi-condensed-700.woff2',
   './img/ink-front.webp',
   './img/ink-back.webp',
   './img/ink-front-female.webp',
@@ -60,6 +64,7 @@ const SHELL = [
   './js/exercises.js',
   './js/image-crop.js',
   './js/import-file.js',
+  './js/lift-import.js',
   './js/research-data.js',
   './js/research-topics.js',
   './js/exercise-families.js',

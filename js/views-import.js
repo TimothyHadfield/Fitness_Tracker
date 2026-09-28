@@ -21,6 +21,7 @@ import { store } from './store.js';
 import { el, screenShell, toast, confirmSheet, setChildren, icon, refreshRoute, helpDot } from './ui.js';
 import * as ui from './ui.js';
 import * as imp from './import-file.js';
+import * as lift from './lift-import.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -54,7 +55,16 @@ export async function ImportView() {
       e.target.value = '';
       if (!file) return;
       try {
+        if (file.size > lift.MAX_FILE_BYTES) {
+          setChildren(body, problem('That file is too big.', 'Files up to 20 MB can be read.'));
+          return;
+        }
         const text = await file.text();
+        // 🆕 O-19 (2026-09-27): a file with an exercise column is lifting
+        // history (Strong, Hevy, a spreadsheet); anything else goes the
+        // activities / weigh-ins way below, unchanged.
+        const lifting = lift.readLiftFile(text);
+        if (lifting.format) { await showLiftPlan(body, file.name, lifting); return; }
         await showPlan(body, file.name, text);
       } catch (err) {
         toast(plainError(err, 'That file could not be read.'), { error: true });
@@ -80,18 +90,20 @@ function intro(pick) {
   const source = (name, path) => el('div', { class: 'field-help' },
     el('strong', { text: name }), ' ' + path);
   return el('div', { class: 'card' },
-    lineWithWhy('Bring in activities or weigh-ins. The file never leaves this device.',
-      'Activities land on your calendar and feed like any workout. Weigh-ins join your '
-        + 'body-weight history. Muscle ratings still come from lifting only.',
+    lineWithWhy('Bring in lifting history, activities or weigh-ins. The file never leaves this device.',
+      'Lifting history becomes your past workouts and builds your strength map. Activities land on '
+        + 'your calendar and feed. Weigh-ins join your body-weight history.',
       'What comes in'),
     el('button', { class: 'btn primary block', onClick: pick }, icon('plus'), 'Choose a CSV file'),
     el('div', { class: 'section-label', text: 'Where to get the file' }),
+    source('Strong', 'Settings › Export Strong Data'),
+    source('Hevy', 'Profile › Settings › Export & Import Data › Export Workouts'),
     source('Strava', 'Settings › My Account › Download or Delete Your Account › Request your '
       + 'archive (activities.csv)'),
     source('MacroFactor', 'Settings › Data Export'),
     source('Cronometer', 'Settings › Account › Export Data'),
     source('Apple Health', 'profile › Export All Health Data'),
-    source('Spreadsheet', 'first row names the columns'),
+    source('Spreadsheet', 'first row names the columns (lifting: date, exercise, weight, reps)'),
   );
 }
 
@@ -316,6 +328,151 @@ function describeRow(r, kind) {
   if (set.distance) bits.push(`${set.distance} mi`);
   if (set.time) bits.push(`${Math.round(set.time / 60)} min`);
   return bits.join(' · ');
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 Lifting history (O-19, docs/import-plan.md, 2026-09-27)
+ *
+ * Same shape as the rest of this screen: read everything, ask the two things a
+ * file cannot say (date order, kg or lb), show one line of what would happen,
+ * then one Import button. Unmatched exercise names get a pick-list; a change
+ * there updates the line and the button in place — nothing is rebuilt, so
+ * nothing moves under the thumb.
+ * ------------------------------------------------------------------ */
+
+async function showLiftPlan(body, fileName, file) {
+  const st = {
+    fileName,
+    file,
+    sourceName: fileName.replace(/\.[^.]+$/, '').slice(0, 40),
+    dateOrder: null,
+    weightUnit: null,
+    picks: {},
+  };
+  const order = lift.liftDateOrder(file.records, file.format);
+  if (order === 'ambiguous') {
+    const col = file.format.cols.date;
+    const sample = file.records.slice(0, 3).map((r) => r[col]).filter(Boolean);
+    const choose = (dateOrder) => { st.dateOrder = dateOrder; renderLift(body, st); };
+    setChildren(body, el('div', { class: 'card' },
+      el('div', { class: 'section-label', text: 'Which way round are the dates?' }),
+      lineWithWhy(`Dates like ${sample.join(', ')} could be either order.`,
+        'Nothing in the file says which. A wrong guess puts every workout on the wrong day.',
+        'Why this is asked'),
+      el('div', { class: 'btn-row' },
+        el('button', { class: 'btn', text: 'Day / Month', onClick: () => choose('dmy') }),
+        el('button', { class: 'btn', text: 'Month / Day', onClick: () => choose('mdy') }),
+      ),
+    ));
+    return;
+  }
+  st.dateOrder = order === 'dmy' || order === 'mdy' ? order : null;
+  await renderLift(body, st);
+}
+
+async function renderLift(body, st) {
+  const [exercises, sessions] = await Promise.all([store.getExercises(), store.getSessions()]);
+  const readOpts = () => ({
+    exercises, picks: st.picks, dateOrder: st.dateOrder || undefined,
+    weightUnit: st.weightUnit || undefined, delimiter: st.file.delimiter, sourceName: st.sourceName,
+  });
+  let read = lift.readLifting(st.file.records, st.file.format, readOpts());
+
+  // kg or lb, asked when the header does not say (Strong's bare "Weight").
+  if (read.needsWeightUnit) {
+    const choose = (u) => { st.weightUnit = u; renderLift(body, st); };
+    setChildren(body, el('div', { class: 'card' },
+      el('div', { class: 'section-label', text: 'Pounds or kilograms?' }),
+      lineWithWhy(`Which unit is “${st.file.format.cols.weight}” in?`,
+        'The file does not say. Reading kilograms as pounds would halve your whole history.',
+        'Why this is asked'),
+      el('div', { class: 'btn-row' },
+        el('button', { class: 'btn', text: 'Pounds', onClick: () => choose('lb') }),
+        el('button', { class: 'btn', text: 'Kilograms', onClick: () => choose('kg') }),
+      ),
+    ), el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen }));
+    return;
+  }
+
+  const keyOf = (r) => `${r.date}|${(r.workoutName || '').toLowerCase()}`;
+  let plan = imp.planImport(read.sessions, sessions, keyOf);
+
+  const line = el('div', { class: 'field-help lift-preview' });
+  const extra = el('div', { class: 'field-help' });
+  const importBtn = el('button', { class: 'btn primary block', onClick: () => doImport() });
+  const nothing = el('div', { class: 'field-help', text: 'Nothing new. Importing twice is safe.' });
+
+  const paint = () => {
+    line.textContent = lift.previewLine(read);
+    const bits = [];
+    if (plan.repeat) bits.push(`${plan.repeat} already imported.`);
+    const p = read.problems;
+    const skipped = p.undated + p.empty + p.implausible;
+    if (skipped) bits.push(`${skipped} ${skipped === 1 ? 'set' : 'sets'} skipped.`);
+    if (read.trimmed) bits.push(`Newest ${lift.MAX_WORKOUTS} kept.`);
+    extra.textContent = bits.join(' ');
+    // style.display, not `hidden`: `.btn` is inline-flex, which beats [hidden].
+    extra.style.display = bits.length ? '' : 'none';
+    const n = plan.fresh.length;
+    importBtn.textContent = `Import ${n} ${n === 1 ? 'workout' : 'workouts'}`;
+    importBtn.style.display = n ? '' : 'none';
+    nothing.style.display = n ? 'none' : '';
+  };
+  const recount = () => {
+    read = lift.readLifting(st.file.records, st.file.format, readOpts());
+    plan = imp.planImport(read.sessions, sessions, keyOf);
+    paint();
+  };
+
+  // One pick-list per unmatched name, biggest first. The options are the whole
+  // list (library + custom), alphabetical; a native select is the phone's wheel.
+  const sorted = exercises.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const unmatchedCard = read.unmatched.length ? el('div', { class: 'card' },
+    el('div', { class: 'section-label', text: 'Unmatched' }),
+    lineWithWhy('Pick a match, or leave it on Skip.',
+      'These names are not in the app’s list. Skipped sets stay out of your history and strength map.',
+      'Why pick'),
+    ...read.unmatched.map(({ name, sets }) => el('div', { class: 'row' },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: name }),
+        el('div', { class: 'row-sub', text: `${sets} ${sets === 1 ? 'set' : 'sets'}` })),
+      el('select', {
+        class: 'input', 'aria-label': `Match for ${name}`, style: 'width:auto;max-width:50%;flex:0 1 auto',
+        onChange: (e) => { st.picks[name] = e.target.value; recount(); },
+      },
+      el('option', { value: '', text: 'Skip' }),
+      ...sorted.map((x) => el('option', { value: x.id, text: x.name }))),
+    )),
+  ) : null;
+
+  async function doImport() {
+    if (importBtn.disabled) return;
+    importBtn.disabled = true;
+    try {
+      const r = await store.importRows('sessions', plan.fresh);
+      toast(`Imported ${r.added} ${r.added === 1 ? 'workout' : 'workouts'}`);
+      setChildren(body, el('div', { class: 'card' },
+        el('div', { class: 'section-label', text: 'Imported' }),
+        el('div', { class: 'field-help', text:
+          `${r.added} ${r.added === 1 ? 'workout' : 'workouts'} added${r.replaced ? `, ${r.replaced} updated` : ''}.` }),
+        el('a', { class: 'btn primary block', href: '#/graphs', text: 'Open Data' }),
+        el('a', { class: 'btn ghost block', href: '#/calendar', text: 'Open the calendar' }),
+      ));
+    } catch (err) {
+      importBtn.disabled = false;
+      toast(plainError(err, 'That import could not be saved.'), { error: true });
+    }
+  }
+
+  paint();
+  setChildren(body,
+    el('div', { class: 'card' },
+      el('div', { class: 'section-label', text: `Lifting history · ${st.fileName}` }),
+      line, extra, nothing),
+    importBtn,
+    unmatchedCard,
+    el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen }),
+  );
 }
 
 function problem(title, detail) {

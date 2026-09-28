@@ -479,6 +479,11 @@ export function openOnboarding({ onDone } = {}) {
         // Closes without saving anything: a returning user on a new phone is
         // on a throwaway anonymous account until they sign in (O-4).
         el('a', { href: '#/signin', text: 'I already have an account', onClick: () => finish({ skipped: true }) })),
+      /* 🆕 O-19 (2026-09-27): somebody arriving from Strong, Hevy or a
+       * spreadsheet brings their sets in (views-import.js reads them). A link,
+       * not a fifth path: the start screen stays four ways in, without scroll. */
+      el('p', { class: 'ob-alt ob-history' },
+        el('a', { href: '#/import', text: 'Bring my history', onClick: () => finish({ skipped: true }) })),
     );
     return screen;
   };

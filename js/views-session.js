@@ -1778,7 +1778,7 @@ export async function SessionView(workoutId) {
      * deleted — your sets simply are not saved while it is on. */
     const out = ownerSitsOut();
     const youChip = el('button', {
-      class: 'chip person-chip' + (!solo && state.forName == null ? ' has-del' : ''),
+      class: 'chip person-chip' + (!solo && state.forName == null ? ' has-del' : '') + (out ? ' is-out' : ''),
       'aria-pressed': state.forName == null ? 'true' : 'false',
       onClick: () => switchTo(null),
     }, out ? 'You · out' : 'You');

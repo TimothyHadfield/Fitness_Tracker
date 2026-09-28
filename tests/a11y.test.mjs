@@ -25,7 +25,8 @@ import { readFileSync, existsSync } from 'node:fs';
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'PASS  ' : 'FAIL  ') + msg); if (!cond) fails++; };
 
-const CSS = readFileSync(new URL('../css/app.css', import.meta.url), 'utf8');
+// A11Y_CSS lets a mutant stylesheet be checked (to watch a new assert fail).
+const CSS = readFileSync(process.env.A11Y_CSS || new URL('../css/app.css', import.meta.url), 'utf8');
 
 /* ---------- WCAG 2.1 relative luminance and contrast ---------- */
 
@@ -818,6 +819,147 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      || /\.graph-host\.is-muscles\s*\{[^}]*flex-direction:\s*row/.test(CSS),
      '🛑 and the figure/panel split is still its own, narrower breakpoint — the two are different '
      + 'questions and merging them is what the measurement above rejected');
+}
+
+/* ---------- Look 3 · glass (overhaul wave 2, package T) ----------
+ *
+ * Glass is a translucent bar over moving content, so the text ON it is read
+ * against a mix of the bar and whatever scrolls under. The contrast above was
+ * measured for solid surfaces; it still holds on glass only while the bar stays
+ * mostly bar. The design's measurement put that floor at 76% opacity, so:
+ *   1. --glass-a (the tab bar / footer opacity) resolves to ≥ 76% in every
+ *      theme × palette, and every glass token that mixes with transparent does
+ *      so at ≥ 76% (or through --glass-a).
+ *   2. Every blur is written twice — `-webkit-backdrop-filter` is the only one
+ *      iOS before 18 reads, `backdrop-filter` the only one others read — with
+ *      the same value, in the same rule.
+ *   3. Glass effects OFF (Settings, `data-glass="off"`) and the system's
+ *      Reduce Transparency both take the blur off EVERY element that has one,
+ *      and make the glass tokens solid.
+ */
+{
+  const SRC = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
+  // A small brace walker: every style rule with its selector, body and the
+  // at-rules it sits inside.
+  const rules = [];
+  {
+    const stack = [];
+    let buf = '';
+    for (let i = 0; i < SRC.length; i++) {
+      const c = SRC[i];
+      if (c === '{') {
+        const pre = buf.trim(); buf = '';
+        if (pre.startsWith('@') && !/^@(font-face|page)\b/.test(pre)) { stack.push(pre); continue; }
+        let depth = 1, j = i + 1;
+        while (depth && j < SRC.length) { if (SRC[j] === '{') depth++; else if (SRC[j] === '}') depth--; j++; }
+        rules.push({ sel: pre, body: SRC.slice(i + 1, j - 1), at: [...stack], order: rules.length });
+        i = j - 1;
+      } else if (c === '}') { stack.pop(); buf = ''; }
+      else if (c === ';' && !buf.includes('(')) buf = '';
+      else buf += c;
+    }
+  }
+  ok(rules.length > 1000, `the stylesheet walks into ${rules.length} rules (the checks below are not looking at nothing)`);
+
+  const decls = (body, prop) => [...body.matchAll(new RegExp(`(?:^|[;\\s{])${prop.replace(/[-]/g, '\\-')}\\s*:\\s*([^;]+)`, 'g'))]
+    .map((m) => m[1].trim());
+  const bf = (body) => [...body.matchAll(/(?:^|[;\s{])backdrop-filter\s*:\s*([^;]+)/g)].map((m) => m[1].trim());
+  const wbf = (body) => decls(body, '-webkit-backdrop-filter');
+  const top = (r) => r.at.length === 0;
+
+  /* 1. the opacity floor */
+  const pct = (v) => { const m = /^(\d+(?:\.\d+)?)%$/.exec(v.trim()); return m ? Number(m[1]) : NaN; };
+  const aDecls = rules.flatMap((r) => decls(r.body, '--glass-a'));
+  ok(aDecls.length > 0 && aDecls.every((v) => pct(v) >= 76),
+     `every --glass-a in the sheet is ≥ 76% (${aDecls.join(', ') || 'none found'})`);
+  const mixes = rules.flatMap((r) => ['--glass-bar', '--glass-float', '--glass-sheet']
+    .flatMap((p) => decls(r.body, p).map((v) => [p, v])));
+  const weak = mixes.filter(([, v]) => /transparent/.test(v))
+    .filter(([, v]) => { const m = /\)\s+(var\(--glass-a\)|\d+(?:\.\d+)?%)\s*,\s*transparent/.exec(v)
+      || /(var\(--glass-a\)|\d+(?:\.\d+)?%)\s*,\s*transparent/.exec(v);
+      return !m || (m[1] !== 'var(--glass-a)' && pct(m[1]) < 76); });
+  ok(mixes.length >= 3 && weak.length === 0,
+     `every glass token that mixes with transparent keeps ≥ 76% of its surface (${mixes.length} found`
+     + `${weak.length ? `; too thin: ${weak.map(([p, v]) => `${p}: ${v}`).join(' | ')}` : ''})`);
+  ok(mixes.every(([, v]) => !/#[0-9a-f]{3,8}\b/i.test(v)),
+     'and the glass tokens are rgb()/color-mix() of the palette tokens, never a hex literal');
+
+  // Resolve --glass-a the way the browser would, for each theme × palette.
+  const rootSel = /^:root((?:\[[\w-]+(?:="[^"]*")?\]|:not\(\[[\w-]+(?:="[^"]*")?\]\))*)$/;
+  const matches = (sel, ctx) => {
+    const m = rootSel.exec(sel.trim());
+    if (!m) return null;
+    let spec = 1;
+    for (const part of m[1].matchAll(/(:not\()?\[([\w-]+)(?:="([^"]*)")?\]\)?/g)) {
+      const [, neg, attr, val] = part;
+      const has = ctx[attr] !== undefined && (val === undefined || ctx[attr] === val);
+      if (neg ? has : !has) return null;
+      spec++;
+    }
+    return spec;
+  };
+  for (const theme of ['dark', 'light']) for (const pal of [null, 'teal', 'indigo', 'ember']) {
+    const ctx = { 'data-theme': theme };
+    if (pal) ctx['data-palette'] = pal;
+    let best = null;
+    for (const r of rules.filter(top)) {
+      const vs = decls(r.body, '--glass-a');
+      if (!vs.length) continue;
+      for (const s of r.sel.split(',')) {
+        const spec = matches(s, ctx);
+        if (spec !== null && (!best || spec >= best.spec)) best = { spec, v: vs[vs.length - 1] };
+      }
+    }
+    ok(best && pct(best.v) >= 76,
+       `--glass-a resolves to ≥ 76% in ${theme} / ${pal || 'gold'} (${best ? best.v : 'not defined'})`);
+  }
+
+  /* 2. the pairs */
+  const blurRules = rules.filter((r) => bf(r.body).length || wbf(r.body).length);
+  const unpaired = blurRules.filter((r) => JSON.stringify(bf(r.body)) !== JSON.stringify(wbf(r.body)));
+  ok(blurRules.length > 0 && unpaired.length === 0,
+     `every rule with a blur writes -webkit-backdrop-filter AND backdrop-filter, same value (${blurRules.length} rules`
+     + `${unpaired.length ? `; unpaired: ${unpaired.map((r) => r.sel).join(' | ')}` : ''})`);
+
+  /* 3. off switches */
+  const splitTop = (s, seps) => {
+    const out = []; let depth = 0, cur = '';
+    for (const ch of s) {
+      if (ch === '(') depth++; else if (ch === ')') depth--;
+      if (depth === 0 && seps.includes(ch)) { out.push(cur); cur = ''; } else cur += ch;
+    }
+    out.push(cur);
+    return out.map((x) => x.trim()).filter(Boolean);
+  };
+  // The element a selector paints: its last compound, with :is() lists opened.
+  const keys = (sel) => splitTop(sel, [',']).flatMap((part) => {
+    const last = splitTop(part, [' ', '>', '+', '~']).pop() || '';
+    const is = /^:is\(([\s\S]*)\)$/.exec(last);
+    return is ? keys(is[1]) : [last];
+  });
+  const isNone = (r) => bf(r.body).includes('none') && wbf(r.body).includes('none');
+  const reducedAt = (r) => r.at.some((a) => /prefers-reduced-transparency:\s*reduce/.test(a));
+  const blurred = new Set(blurRules
+    .filter((r) => !reducedAt(r) && !r.at.some((a) => /^@supports\s+not/.test(a)))
+    .filter((r) => bf(r.body).some((v) => v !== 'none'))
+    .flatMap((r) => keys(r.sel)));
+  const offKeys = new Set(rules.filter((r) => /\[data-glass="off"\]/.test(r.sel) && isNone(r)).flatMap((r) => keys(r.sel)));
+  const redKeys = new Set(rules.filter((r) => reducedAt(r) && isNone(r)).flatMap((r) => keys(r.sel)));
+  const missOff = [...blurred].filter((k) => !offKeys.has(k));
+  const missRed = [...blurred].filter((k) => !redKeys.has(k));
+  ok(blurred.size > 0 && missOff.length === 0,
+     `Glass effects off takes the blur off all ${blurred.size} blurred elements`
+     + `${missOff.length ? ` — still blurred: ${missOff.join(', ')}` : ''}`);
+  ok(blurred.size > 0 && missRed.length === 0,
+     `Reduce Transparency takes the blur off all ${blurred.size} blurred elements`
+     + `${missRed.length ? ` — still blurred: ${missRed.join(', ')}` : ''}`);
+  const solid = (r) => ['--glass-bar', '--glass-float', '--glass-sheet'].every((p) => {
+    const v = decls(r.body, p); return v.length && v.every((x) => !/transparent|color-mix/.test(x));
+  });
+  ok(rules.some((r) => top(r) && r.sel.trim() === ':root[data-glass="off"]' && solid(r)),
+     'Glass effects off makes --glass-bar, --glass-float and --glass-sheet solid surfaces');
+  ok(rules.some((r) => reducedAt(r) && r.sel.split(',').some((s) => s.trim() === ':root') && solid(r)),
+     'and so does Reduce Transparency');
 }
 
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');

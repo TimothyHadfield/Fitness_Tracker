@@ -26,7 +26,7 @@ import { setE1rm, shownMax } from './set-e1rm.js';
 import {
   setChildren, el, iconBtn, toast, screenShell, emptyState, confirmSheet, openSheet, miniStepper, chevron,
   fmtSet, fmtField, fmtDateLong, fmtDateShort, trimNum, fmtTime, loadBadge, exerciseLabel,
-  refreshRoute, helpDot, wireSegmented,
+  refreshRoute, helpDot, wireSegmented, arrivedByLink,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
 // Namespace, so a missing export is `undefined` and guarded rather than a load error.
@@ -91,6 +91,16 @@ let calMode = 'years'; // 'months' | 'years'
  * years should not re-pick it on every page. It is simply not the same variable
  * as mine. */
 let friendCalMode = 'years';
+
+/* 🆕 A DOOR THAT OPENS MY CALENDAR ON A CHOSEN MODE — overhaul wave 2 (the
+ * Profile "This week" row opens it on Months). Mine only: a friend's memory is
+ * never moved from outside. Anything but 'months' | 'years' is ignored, so a
+ * bad caller cannot leave the switch showing neither. */
+export function setCalMode(mode) {
+  if (mode === 'months' || mode === 'years') calMode = mode;
+  return calMode;
+}
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -2298,12 +2308,18 @@ export async function GraphView(opts = {}) {
 
   await render();
 
+  /* 🆕 MY DATA TAB REACHED BY A LINK WEARS A BACK ARROW FOR THAT VISIT — overhaul
+   * I-8a (Profile's best lift → Data: back lands on Profile). The router stamps
+   * the visit (`arrivedByLink()` in ui.js); a tab tap leaves the profile button.
+   * The arrow goes back through history; with none, it simply stays put. */
+  const linkBack = !rows && !opts.back && arrivedByLink() ? () => {} : null;
+
   return screenShell({
     // A friend's page is a fullscreen view with a back arrow and their name in
     // the title; my own is a nav-level screen whose header IS the tab bar.
-    profile: !rows,
+    profile: !rows && !linkBack,
     noNav: Boolean(rows),
-    back: opts.back,
+    back: opts.back || linkBack,
     /* 🆕 …OR A DOWN ARROW, SINCE 2026-09-16. A friend's data screen is PULLED UP
      * over their profile now (Tim: *"similar to how the 'record' screen is
      * pulled up … then if the user clicks the arrow again, it brings them back

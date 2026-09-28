@@ -613,9 +613,17 @@ export async function hintOnce(key, selector, text, { storage = globalThis.local
   place();
 
   let gone = false;
+  // A sheet opening or the target leaving (the save screen replaces the set
+  // list) puts it away too — a keyboard or scripted open has no pointerdown.
+  const watch = typeof MutationObserver === 'function'
+    ? new MutationObserver(() => {
+      if (!node.isConnected || document.querySelector('.sheet')) dismiss();
+    })
+    : null;
   const dismiss = () => {
     if (gone) return;
     gone = true;
+    watch?.disconnect();
     removeEventListener('pointerdown', outside, true);
     removeEventListener('hashchange', dismiss);
     removeEventListener('resize', place);
@@ -630,6 +638,7 @@ export async function hintOnce(key, selector, text, { storage = globalThis.local
   addEventListener('hashchange', dismiss);
   addEventListener('resize', place);
   addEventListener('keydown', onKey, true);
+  watch?.observe(document.body, { childList: true, subtree: true });
 
   void bubble.offsetWidth;
   bubble.classList.add('is-shown');

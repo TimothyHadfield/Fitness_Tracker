@@ -2,6 +2,7 @@
 
 import { FIELD_META, plateLoadFor } from './exercises.js';
 import { plateLoad, plateLabel, plateDrawing, inventoryFor } from './plates.js';
+import { plateDrawingSvg } from './bar-view.js';
 import { imageFor } from './exercise-images.js';
 import { safeAvatar } from './social.js';
 import * as units from './units.js';
@@ -2252,7 +2253,7 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
     // ⚠️ The sentence stays as the drawing's label: a screen reader, and a
     // hover on a laptop, still get "bar + 45, 45, 25 each side".
     if (label) {
-      hint.replaceChildren(plateSvg(plateDrawing(load)));
+      hint.replaceChildren(plateDrawingSvg(plateDrawing(load)));
       hint.setAttribute('role', 'img');
       hint.setAttribute('aria-label', label);
       hint.setAttribute('title', label);
@@ -2347,55 +2348,8 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
   return { node, get: () => outbound(current), set: (v) => set(inbound(v), true) };
 }
 
-/* plateDrawing()'s rectangles as an SVG (2026-09-26). The geometry and the
- * colour NAMES are plates.js's; the hues are the stylesheet's ("Plate
- * drawing"), so a theme can outline them. Hidden from screen readers — the
- * hint around it carries the sentence as its label. 🛑 No motion: it is
- * rebuilt on every tap of ± (Rule 7).
- * 🆕 2026-09-27 each plate's number is drawn too (a `label` part is the box
- * its figures fill; the baseline is that box's bottom edge), and the plates'
- * corners are rounded so each reads as its own disc. */
-function plateSvg(d) {
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('class', `plate-draw is-${d.kind}`);
-  svg.setAttribute('width', String(d.width));
-  svg.setAttribute('height', String(d.height));
-  svg.setAttribute('viewBox', `0 0 ${d.width} ${d.height}`);
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const RX = { plate: null, cap: 1.5, clip: 1, collar: 1 };
-  for (const p of d.parts) {
-    if (p.part === 'label') {
-      const t = document.createElementNS(NS, 'text');
-      t.setAttribute('class', `pd-label is-${p.tone}`);
-      const cx = p.x + p.w / 2;
-      t.setAttribute('text-anchor', 'middle');
-      if (p.place === 'along') {
-        // Written bottom-to-top up the plate, centred on it.
-        const cy = p.y + p.h / 2;
-        t.setAttribute('x', String(cx));
-        t.setAttribute('y', String(Math.round((cy + p.w / 2) * 100) / 100));
-        t.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
-      } else {
-        t.setAttribute('x', String(cx));
-        t.setAttribute('y', String(Math.round((p.y + p.h) * 100) / 100));
-      }
-      t.textContent = p.text;
-      svg.appendChild(t);
-      continue;
-    }
-    const r = document.createElementNS(NS, 'rect');
-    r.setAttribute('class', p.part === 'plate' ? `pd-plate pd-${p.colour}` : `pd-${p.part}`);
-    r.setAttribute('x', String(p.x));
-    r.setAttribute('y', String(p.y));
-    r.setAttribute('width', String(p.w));
-    r.setAttribute('height', String(p.h));
-    r.setAttribute('rx', String(p.part === 'plate' ? Math.min(3, p.w / 3) : (RX[p.part] ?? 0.75)));
-    svg.appendChild(r);
-  }
-  return svg;
-}
+/* plateDrawing()'s rectangles as an SVG: `plateDrawingSvg` in bar-view.js since
+ * 2026-09-27 (overhaul design V-10 — it wears the Auto-guide bar's metal). */
 
 function stepHint(field, meta) {
   if (field === 'time') return `${meta.step} sec steps`;

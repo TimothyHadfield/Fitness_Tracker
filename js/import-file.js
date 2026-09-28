@@ -31,7 +31,9 @@
  * shifts every column after it. Handles quoted fields, escaped quotes (""),
  * CRLF, and a leading BOM (Excel writes one and it corrupts the first header).
  */
-export function parseCSV(text) {
+export function parseCSV(text, delimiter = ',') {
+  // 🆕 2026-09-27 (lifting import): Strong 6 writes semicolons. Default unchanged.
+  const sep = delimiter === ';' || delimiter === '\t' ? delimiter : ',';
   const src = String(text || '').replace(/^﻿/, '');
   const rows = [];
   let row = [];
@@ -49,7 +51,7 @@ export function parseCSV(text) {
       field += c; i++; continue;
     }
     if (c === '"') { quoted = true; i++; continue; }
-    if (c === ',') { row.push(field); field = ''; i++; continue; }
+    if (c === sep) { row.push(field); field = ''; i++; continue; }
     if (c === '\r') { i++; continue; }
     if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
     field += c; i++;

@@ -248,6 +248,9 @@ function navbar(active) {
     // and the topbar carries the profile button instead.
     el('div', { class: 'nav-brand' },
       profileButton(),
+      // 🆕 The Black Ember mark before the name (overhaul design V-15). Laptop
+      // only, like the rest of `.nav-brand`; the name stays text.
+      el('img', { class: 'nav-brand-mark', src: 'icon.svg', alt: '', width: '22', height: '22' }),
       el('span', { class: 'nav-brand-name', text: 'Fitness Tracker' }),
     ),
     NAV.map((n) =>
@@ -750,6 +753,112 @@ function trackKeyboard() {
   });
 }
 
+/* 🆕 THE CHROME FLOATS OVER THE SCROLLER — overhaul design V-1 / V-2 / V-14
+ * (2026-09-27). On a phone the tab bar, the runner's footer, the Auto-guide's
+ * Back / Next, a save footer and the workout-in-progress strip sit OVER the
+ * list, which scrolls under them (glass). The stylesheet pays that in padding,
+ * and it needs the height, which only layout knows:
+ *
+ *   `--chrome-b` on <html> = the pixel height of everything that floats below
+ *   the active screen's scroller — the scroller's later siblings (footers, the
+ *   mini strip), plus the phone tab bar. With Auto-guide showing, the scroller
+ *   is `.guide-scroll` and the chrome is what follows it inside `.guide` (the
+ *   rest bar, Back / Next). On a laptop the sidebar is not below anything.
+ *
+ *   `is-scrolled` on <html> while that scroller's scrollTop > 4 — the topbar's
+ *   hairline shows only then (colour only; nothing moves).
+ *
+ * ⚠️ ONE ResizeObserver, re-aimed (rAF-batched) whenever #app's tree or a
+ * `hidden` changes; the value is written only when it changed. The scroll
+ * listener is ONE passive capture listener on the document (scroll does not
+ * bubble), reads one scrollTop and toggles the class only on a change — no
+ * writes that force layout inside a scroll frame. jsdom has no layout: every
+ * height is 0 there and the variable reads 0px. */
+const SCROLLED_AT = 4;
+let chromeScroller = null;
+
+/** The active screen's scroller and the elements floating below it. */
+function chromeParts() {
+  const app = document.getElementById('app');
+  if (!app) return { scroller: null, parts: [] };
+  const screens = app.querySelectorAll(':scope > .screen');
+  const screen = screens[screens.length - 1] || null;
+  const parts = [];
+  let scroller = null;
+  const guide = screen && screen.querySelector(':scope > .guide:not([hidden])');
+  if (guide) {
+    scroller = guide.querySelector(':scope > .guide-scroll');
+  } else if (screen) {
+    scroller = screen.querySelector(':scope > .pane-scroll');
+  }
+  if (scroller) {
+    for (let n = scroller.nextElementSibling; n; n = n.nextElementSibling) {
+      if (!n.hidden && !n.classList.contains('guide')) parts.push(n);
+    }
+  }
+  const nav = app.querySelector(':scope > .navbar');
+  if (nav && !sidebarAlways()) parts.push(nav);
+  return { scroller, parts };
+}
+
+function markScrolled(scroller) {
+  const on = Boolean(scroller && scroller.scrollTop > SCROLLED_AT);
+  const root = document.documentElement;
+  if (root.classList.contains('is-scrolled') !== on) root.classList.toggle('is-scrolled', on);
+}
+
+function observeChrome() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const root = document.documentElement;
+  let watched = [];
+  let queued = false;
+  let last = null;
+
+  const measure = () => {
+    const { parts } = chromeParts();
+    const h = parts.reduce((sum, n) => sum + n.getBoundingClientRect().height, 0);
+    const v = (Math.round(h * 100) / 100) + 'px';
+    if (v !== last) { last = v; root.style.setProperty('--chrome-b', v); }
+  };
+
+  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => measure()) : null;
+
+  const update = () => {
+    queued = false;
+    const { scroller, parts } = chromeParts();
+    chromeScroller = scroller;
+    if (ro && (parts.length !== watched.length || parts.some((n, i) => n !== watched[i]))) {
+      ro.disconnect();
+      parts.forEach((n) => ro.observe(n));
+      watched = parts;
+    }
+    measure();
+    markScrolled(scroller);
+  };
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(update);
+    else setTimeout(update, 16);
+  };
+
+  try {
+    new MutationObserver(schedule).observe(app,
+      { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  } catch (_) { /* no observer: the value set below stands */ }
+  document.addEventListener('scroll', (e) => {
+    if (e.target === chromeScroller) markScrolled(chromeScroller);
+  }, { capture: true, passive: true });
+  // The laptop line moves the tab bar from the bottom to the side.
+  try {
+    const mq = window.matchMedia && window.matchMedia(SIDEBAR_MQ);
+    if (mq && mq.addEventListener) mq.addEventListener('change', schedule);
+    else if (mq && mq.addListener) mq.addListener(schedule);
+  } catch (_) { /* no matchMedia (a test DOM) */ }
+  update();
+}
+
 /* 🆕 THE FIRST PAINT DOES NOT WAIT FOR THE CLOUD — review, 2026-09-24.
  *
  * `store.getSettings()` on a cloud account waits for the Firebase SDK to
@@ -1002,6 +1111,7 @@ function followSidebarLine() {
   const cached = cachedLook();
   if (cached) applyLook(cached);
   paintShell();
+  observeChrome();
   followSidebarLine();
   followSystemTheme();
   wrapSettingsSave();

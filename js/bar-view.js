@@ -44,8 +44,13 @@ function rect(p, cls, extra = {}) {
   return svgEl('rect', { class: cls, x: p.x, y: p.y, width: p.w, height: p.h, ...extra });
 }
 
-/** The shading every instance shares: metal sheen, plate face, knurl. */
-function defs(id) {
+/** The shading every instance shares: metal sheen, plate face, knurl.
+ * `${id}-metal` (lit top, shadowed underneath), `${id}-face` (a plate seen
+ * edge-on), `${id}-edge` (left-right shading), `${id}-knurl`.
+ * 🆕 EXPORTED (overhaul design V-10) so the runner's small plate drawing
+ * (`plateDrawingSvg` below) wears the same steel as this big bar: two
+ * bars, one look. Appended to `svg` when one is given; returns the <defs>. */
+export function metalDefs(svg, id) {
   const d = svgEl('defs');
   const metal = svgEl('linearGradient', { id: `${id}-metal`, x1: 0, y1: 0, x2: 0, y2: 1 });
   [[0, '#fff', 0.45], [0.45, '#fff', 0.05], [0.55, '#000', 0.05], [1, '#000', 0.35]].forEach(([o, c, a]) =>
@@ -61,7 +66,61 @@ function defs(id) {
   const knurl = svgEl('pattern', { id: `${id}-knurl`, width: 3, height: 3, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
   knurl.appendChild(svgEl('rect', { class: 'bv-knurl-line', x: 0, y: 0, width: 1, height: 3 }));
   d.append(metal, face, edge, knurl);
+  if (svg) svg.appendChild(d);
   return d;
+}
+
+/* The runner's SMALL plate drawing: plateDrawing()'s rectangles as an SVG
+ * (2026-09-26; moved here from ui.js on 2026-09-27 — plates.js stays pure, no
+ * DOM). The geometry and the colour NAMES are plates.js's; the hues are the
+ * stylesheet's ("Plate drawing"), so a theme can outline them. Hidden from
+ * screen readers — the hint around it carries the sentence as its label.
+ * 🛑 No motion: it is rebuilt on every tap of ± (Rule 7). Each plate's number
+ * is drawn too (a `label` part is the box its figures fill; the baseline is
+ * that box's bottom edge), and plate corners are rounded so each reads as a disc.
+ * 🆕 METAL (overhaul design V-10): this file's steel, so the two bars look
+ * alike. Every metal part gets a `pd-sheen` overlay (lit top, shadowed
+ * underneath; a machine's frame: its edges) and every plate a `pd-face` +
+ * `pd-edge` overlay. The overlays are translucent white/black — the IPF colours
+ * underneath are unchanged, and so is every `pd-plate` rect the tests and CSS
+ * read. */
+export function plateDrawingSvg(d) {
+  const id = `pd${++uid}`;
+  const svg = svgEl('svg', {
+    class: `plate-draw is-${d.kind}`, width: d.width, height: d.height,
+    viewBox: `0 0 ${d.width} ${d.height}`, 'aria-hidden': 'true', focusable: 'false',
+  });
+  metalDefs(svg, id);
+  const RX = { plate: null, cap: 1.5, clip: 1, collar: 1 };
+  for (const p of d.parts) {
+    if (p.part === 'label') {
+      const cx = p.x + p.w / 2;
+      const t = svgEl('text', { class: `pd-label is-${p.tone}`, 'text-anchor': 'middle', x: cx });
+      if (p.place === 'along') {
+        // Written bottom-to-top up the plate, centred on it.
+        const cy = p.y + p.h / 2;
+        t.setAttribute('y', String(Math.round((cy + p.w / 2) * 100) / 100));
+        t.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+      } else {
+        t.setAttribute('y', String(Math.round((p.y + p.h) * 100) / 100));
+      }
+      t.textContent = p.text;
+      svg.appendChild(t);
+      continue;
+    }
+    const rx = p.part === 'plate' ? Math.min(3, p.w / 3) : (RX[p.part] ?? 0.75);
+    if (p.part === 'plate') {
+      svg.append(
+        rect(p, `pd-plate pd-${p.colour}`, { rx }),
+        rect(p, 'pd-face', { rx, fill: `url(#${id}-face)` }),
+        rect(p, 'pd-edge', { rx, fill: `url(#${id}-edge)` }));
+    } else {
+      svg.append(
+        rect(p, `pd-${p.part}`, { rx }),
+        rect(p, 'pd-sheen', { rx, fill: `url(#${id}-${p.part === 'frame' ? 'edge' : 'metal'})` }));
+    }
+  }
+  return svg;
 }
 
 export function barView() {
@@ -70,7 +129,7 @@ export function barView() {
   node.className = 'guide-bar';
   node.hidden = true;
   const svg = svgEl('svg', { class: 'bar-draw', 'aria-hidden': 'true', focusable: 'false', preserveAspectRatio: 'xMidYMid meet' });
-  svg.appendChild(defs(id));
+  metalDefs(svg, id);
   const metalG = svgEl('g', { class: 'bv-metal' });
   const platesG = svgEl('g', { class: 'bv-plates' });
   const clipsG = svgEl('g', { class: 'bv-clips' });
