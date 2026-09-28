@@ -23,6 +23,8 @@ export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 export const MAX_WORKOUTS = 5000;
 const MAX_REPS = 200;
 const MAX_LB = 1500;
+/** A "Sets" count above this is a typo or a total, not 50 real sets. */
+export const MAX_SET_COUNT = 20;
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
@@ -53,6 +55,8 @@ const COLS = {
   workout: ['workoutname', 'title', 'workouttitle', 'routine', 'session', 'workout'],
   exercise: ['exercisename', 'exercisetitle', 'exercise', 'lift', 'movement'],
   setOrder: ['setorder', 'setindex', 'set', 'setnumber', 'setno'],
+  // 🆕 A spreadsheet's "Sets" column is a COUNT (3 × 5), not the set's number.
+  setCount: ['sets', 'setcount', 'numberofsets', 'numsets', 'noofsets'],
   setType: ['settype', 'type'],
   weight: ['weightkg', 'weightlbs', 'weightlb', 'weight', 'load', 'kg', 'lbs', 'lb'],
   unit: ['unit', 'units', 'weightunit'],
@@ -345,10 +349,11 @@ const round2 = (n) => Math.round(n * 100) / 100;
  *   picks       — { rawName: exerciseId | '' } the person's choices for unmatched names
  *   dateOrder   — 'dmy' | 'mdy' when the column needed asking
  *   weightUnit  — 'kg' | 'lb' when the header did not say
+ *   distanceUnit — 'mi' | 'km' when the header did not say
  *   delimiter   — the file's, for decimal commas
  *   sourceName  — short label kept on each row as `importedFrom`
  *
- * Returns { sessions, needsWeightUnit, workouts, exercises, unmatched:[{name, sets}],
+ * Returns { sessions, needsWeightUnit, needsDistanceUnit, workouts, exercises, unmatched:[{name, sets}],
  *           problems:{undated, empty, implausible, skipped}, trimmed }.
  */
 export function readLifting(records, format, opts = {}) {
@@ -365,11 +370,18 @@ export function readLifting(records, format, opts = {}) {
   const workouts = new Map();        // workout key → { date, time, name, entries: Map }
   const order = [];
 
+  // ⚠️ Strong's classic "Distance" states no unit (it is the app's setting),
+  // so it is ASKED like the weight — never dropped in silence, never guessed.
+  // Only asked when some row really has a distance: an all-zero column is not
+  // worth a question.
+  const distanceUnit = opts.distanceUnit || format.distanceUnit;
+  const needsDistanceUnit = Boolean(cols.distance) && !distanceUnit
+    && records.some((r) => liftNumber(r[cols.distance], delim) > 0);
   const distMiles = (v) => {
     if (!(v > 0)) return null;
-    if (format.distanceUnit === 'km') return v * 0.621371;
-    if (format.distanceUnit === 'm') return v * 0.000621371;
-    if (format.distanceUnit === 'mi') return v;
+    if (distanceUnit === 'km') return v * 0.621371;
+    if (distanceUnit === 'm') return v * 0.000621371;
+    if (distanceUnit === 'mi') return v;
     return null;
   };
 
@@ -441,14 +453,14 @@ export function readLifting(records, format, opts = {}) {
       entry = { exerciseId: ex.id, exerciseName: ex.name, sets: [] };
       wk.entries.set(ex.id, entry);
     }
-    if (kind === 'warmup') {
-      (entry.warmups || (entry.warmups = [])).push(set);
-    } else if (kind === 'drop' && entry.sets.length) {
-      const prev = entry.sets[entry.sets.length - 1];
-      (prev.minis || (prev.minis = [])).push(set);
-    } else {
-      entry.sets.push(set);
-    }
+    // A "Sets" count (a spreadsheet's 3 × 5) repeats the row, capped.
+    const cnt = cols.setCount ? liftNumber(r[cols.setCount], delim) : null;
+    const times = cnt >= 1 ? Math.min(MAX_SET_COUNT, Math.round(cnt)) : 1;
+    const into = kind === 'warmup' ? (entry.warmups || (entry.warmups = []))
+      : kind === 'drop' && entry.sets.length
+        ? (entry.sets[entry.sets.length - 1].minis || (entry.sets[entry.sets.length - 1].minis = []))
+        : entry.sets;
+    for (let k = 0; k < times; k++) into.push(k ? { ...set } : set);
   }
 
   // Newest first, capped. A workout whose every set was a warm-up still counts:
@@ -481,6 +493,7 @@ export function readLifting(records, format, opts = {}) {
   return {
     sessions,
     needsWeightUnit,
+    needsDistanceUnit,
     workouts: sessions.length,
     exercises: exIds.size,
     unmatched: [...unmatched.entries()].map(([name, sets]) => ({ name, sets }))

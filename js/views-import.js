@@ -258,19 +258,17 @@ async function renderPlan(body, fileName, headers, records, cols, opts) {
   // saying so would be a wrong answer to a question the app itself just asked.
   const pending = needsDistanceUnit || needsWeightUnit;
 
-  if (!willAdd && !pending) {
-    parts.push(el('div', { class: 'card' },
-      el('div', { class: 'field-help', text: 'Nothing new — importing twice is safe.' }),
-    ));
-  } else if (willAdd) {
-    parts.push(el('button', {
+  // The buttons live in a card, so they keep its gutter on a phone (as direct
+  // children of `.list` they ran edge to edge).
+  parts.push(el('div', { class: 'card' },
+    !willAdd && !pending ? el('div', { class: 'field-help', text: 'Nothing new — importing twice is safe.' }) : null,
+    willAdd ? el('button', {
       class: 'btn primary block',
       text: `Import ${willAdd} ${willAdd === 1 ? 'record' : 'records'}`,
       onClick: () => confirmImport(body, actPlan, weightPlan),
-    }));
-  }
-  parts.push(el('button', { class: 'btn ghost block', text: 'Choose a different file',
-    onClick: reopen }));
+    }) : null,
+    el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen }),
+  ));
 
   setChildren(body, ...parts);
 }
@@ -347,6 +345,8 @@ async function showLiftPlan(body, fileName, file) {
     sourceName: fileName.replace(/\.[^.]+$/, '').slice(0, 40),
     dateOrder: null,
     weightUnit: null,
+    distanceUnit: null,
+    keepCollisions: false,
     picks: {},
   };
   const order = lift.liftDateOrder(file.records, file.format);
@@ -374,31 +374,55 @@ async function renderLift(body, st) {
   const [exercises, sessions] = await Promise.all([store.getExercises(), store.getSessions()]);
   const readOpts = () => ({
     exercises, picks: st.picks, dateOrder: st.dateOrder || undefined,
-    weightUnit: st.weightUnit || undefined, delimiter: st.file.delimiter, sourceName: st.sourceName,
+    weightUnit: st.weightUnit || undefined, distanceUnit: st.distanceUnit || undefined, delimiter: st.file.delimiter, sourceName: st.sourceName,
   });
   let read = lift.readLifting(st.file.records, st.file.format, readOpts());
+  const again = () => el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen });
+
+  // The two things a file may not say, asked one at a time. The buttons sit
+  // INSIDE the card, so they keep its gutter on a phone.
+  const ask = (title, question, why, choices) => setChildren(body, el('div', { class: 'card' },
+    el('div', { class: 'section-label', text: title }),
+    lineWithWhy(question, why, 'Why this is asked'),
+    el('div', { class: 'btn-row' },
+      ...choices.map(([text, onClick]) => el('button', { class: 'btn', text, onClick }))),
+    again(),
+  ));
 
   // kg or lb, asked when the header does not say (Strong's bare "Weight").
   if (read.needsWeightUnit) {
     const choose = (u) => { st.weightUnit = u; renderLift(body, st); };
-    setChildren(body, el('div', { class: 'card' },
-      el('div', { class: 'section-label', text: 'Pounds or kilograms?' }),
-      lineWithWhy(`Which unit is “${st.file.format.cols.weight}” in?`,
-        'The file does not say. Reading kilograms as pounds would halve your whole history.',
-        'Why this is asked'),
-      el('div', { class: 'btn-row' },
-        el('button', { class: 'btn', text: 'Pounds', onClick: () => choose('lb') }),
-        el('button', { class: 'btn', text: 'Kilograms', onClick: () => choose('kg') }),
-      ),
-    ), el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen }));
+    ask('Pounds or kilograms?', `Which unit is “${st.file.format.cols.weight}” in?`,
+      'The file does not say. Reading kilograms as pounds would halve your whole history.',
+      [['Pounds', () => choose('lb')], ['Kilograms', () => choose('kg')]]);
+    return;
+  }
+  // Miles or km, asked when the header does not say (Strong's bare "Distance").
+  if (read.needsDistanceUnit) {
+    const choose = (u) => { st.distanceUnit = u; renderLift(body, st); };
+    ask('Miles or kilometres?', `Which unit is “${st.file.format.cols.distance}” in?`,
+      'The file does not say. Reading kilometres as miles makes every run 61% too long.',
+      [['Miles', () => choose('mi')], ['Kilometres', () => choose('km')]]);
     return;
   }
 
+  // ⚠️ A day already logged by hand under the same workout name is SKIPPED by
+  // default: adding it too would count that workout twice in every chart and
+  // in the strength map. One tap brings them in anyway.
   const keyOf = (r) => `${r.date}|${(r.workoutName || '').toLowerCase()}`;
+  const logged = new Set(sessions.map(keyOf));
   let plan = imp.planImport(read.sessions, sessions, keyOf);
+  const toAdd = () => (st.keepCollisions ? plan.fresh : plan.fresh.filter((r) => !logged.has(keyOf(r))));
 
   const line = el('div', { class: 'field-help lift-preview' });
   const extra = el('div', { class: 'field-help' });
+  const collideText = el('span');
+  const collideBtn = el('button', { type: 'button', class: 'btn ghost small', style: 'margin-left:6px', onClick: () => {
+    st.keepCollisions = !st.keepCollisions; paint();
+  } });
+  const collideLine = el('div', { class: 'field-help lift-collides' }, collideText, ' ',
+    helpDot('Same day and name as a workout already here. Adding both counts it twice.',
+      { label: 'Why skipped' }), ' ', collideBtn);
   const importBtn = el('button', { class: 'btn primary block', onClick: () => doImport() });
   const nothing = el('div', { class: 'field-help', text: 'Nothing new. Importing twice is safe.' });
 
@@ -413,7 +437,12 @@ async function renderLift(body, st) {
     extra.textContent = bits.join(' ');
     // style.display, not `hidden`: `.btn` is inline-flex, which beats [hidden].
     extra.style.display = bits.length ? '' : 'none';
-    const n = plan.fresh.length;
+    const c = plan.collides;
+    collideText.textContent = `${c} ${c === 1 ? 'day' : 'days'} already logged — `
+      + `${st.keepCollisions ? 'added too' : 'skipped'}.`;
+    collideBtn.textContent = st.keepCollisions ? 'Skip them' : 'Add them anyway';
+    collideLine.style.display = c ? '' : 'none';
+    const n = toAdd().length;
     importBtn.textContent = `Import ${n} ${n === 1 ? 'workout' : 'workouts'}`;
     importBtn.style.display = n ? '' : 'none';
     nothing.style.display = n ? 'none' : '';
@@ -449,7 +478,7 @@ async function renderLift(body, st) {
     if (importBtn.disabled) return;
     importBtn.disabled = true;
     try {
-      const r = await store.importRows('sessions', plan.fresh);
+      const r = await store.importRows('sessions', toAdd());
       toast(`Imported ${r.added} ${r.added === 1 ? 'workout' : 'workouts'}`);
       setChildren(body, el('div', { class: 'card' },
         el('div', { class: 'section-label', text: 'Imported' }),
@@ -468,10 +497,8 @@ async function renderLift(body, st) {
   setChildren(body,
     el('div', { class: 'card' },
       el('div', { class: 'section-label', text: `Lifting history · ${st.fileName}` }),
-      line, extra, nothing),
-    importBtn,
+      line, extra, collideLine, nothing, importBtn, again()),
     unmatchedCard,
-    el('button', { class: 'btn ghost block', text: 'Choose a different file', onClick: reopen }),
   );
 }
 
