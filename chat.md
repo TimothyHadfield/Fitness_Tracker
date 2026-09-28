@@ -752,3 +752,9 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   the past and future sets … upper left"* → e66346b (`skipped` flag, `setIsRecorded` refuses it;
   carry also moves untouched plan/last-time sets — flagged). Suite 8,114 PASS / 0 FAIL; new checks
   failed on HEAD first (45); shots in session scratchpad guide-fix/ and guide-new/.
+- **Then:** *"Do 1 and 5 now"* (settings race; Meadows row/landmine over-credit) + *"change the group
+  workouts so it automatically applies to the friend's workout system … make a setting (that is off
+  by default)"* → 5df2aaa. Settings queue (settings-race 5 failed first); Meadows row = half bar per
+  hand then doubled, ratio 0.98 (70×10: 378→271 lb); landmine press unchanged (premise wrong: no bar
+  was added). Auto-added group workouts + "Ask before adding group workouts" switch (handoff-auto 18
+  failed first). No rules change. Suite 8,161 / 0, exit codes 0.

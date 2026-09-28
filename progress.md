@@ -191,9 +191,14 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   request: login timhadfield7+wesley@gmail.com, uid eJfV6emvgbSQx7O9VVrVSK5VkhG3, two "Trainer
   benchmark" sessions 2026-03-17 / 2026-08-20, weigh-ins 230/215/190). Never delete, "clean up" or
   write to it without Tim; its app never opens again, so Tim was pre-added to its connections.
-- **`saveProfile({gender})` then an immediate `saveSettings()` LOST the gender live** (seen once,
-  2026-09-27, scripted: read-back showed gender null; a second saveProfile stuck). Reasoned: a
-  settings read-modify-write race. Not investigated; a real user tapping fast could hit it.
+- **Settings writes go through ONE queue (`inSettingsQueue`, store.js, 5df2aaa)** — overlapping
+  read-modify-writes lost Wesley's gender live. Never write settings around it. Still open: same
+  pattern in bodyWeight/goals/systems, and two tabs/devices can race (needs a Firestore transaction).
+- **Group workouts are auto-added by the RECIPIENT's app** (`social.autoApplyHandoffs()`, run from
+  app.js on start/sign-in/resume ≤1/min and before Home/Friends list offers); setting
+  `askBeforeHandoff` (off by default) keeps Add/No; non-friends' offers wait; saved id `s-<offer id>`.
+- **Landmine press / T-bar row / landmine row / landmine squat bar handling is doubtful** (5df2aaa
+  notes): SL's landmine beginner (41 lb) is lighter than the bar; not checked for the others.
 - **A local reproduction cannot clear a cloud path.** Latency and write validation differ; so does
   every race latency opens. → never tell Tim his data is fine off a `LocalBackend` run.
 - **`npm i --no-save` REPLACES what is installed.** → one command: `npm i --no-save jsdom jsqr
