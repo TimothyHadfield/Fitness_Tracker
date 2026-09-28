@@ -168,8 +168,7 @@ export function routineFromSession(session, exMap, opts = {}) {
   // Conditional on purpose — a session of bodyweight work has no weights to
   // leave behind, and a line about weights not carrying would be noise on it.
   if (sawWeight) {
-    warnings.push('Their weights are not copied. A workout holds the plan — how many sets, in '
-      + 'what order — and your own numbers come from your own last session.');
+    warnings.push("Weights aren't copied; yours come from your last session.");
   }
 
   if (!exercises.length) {

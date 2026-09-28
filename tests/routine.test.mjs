@@ -94,8 +94,21 @@ const entry = (exerciseId, name, sets, extra = {}) => ({ exerciseId, name, sets,
   };
   const { workout, warnings } = routineFromSession(session, MY, { from: 'Autumn' });
   ok(workout.exercises[0].sets === 3, 'a bodyweight set is a set — three of them copy as three');
-  ok(!warnings.some((w) => /weights are not copied/i.test(w)),
+  ok(!warnings.some((w) => /weights (are not|aren't) copied/i.test(w)),
      'and no line about weights not copying on a session that had none — that would be noise');
+}
+
+/* The same regex must still find the line on a weighted session, or the
+ * negative check above would pass on any wording (overhaul W P8). */
+{
+  const session = {
+    date: '2026-08-30', name: 'Pull',
+    entries: [entry('bb-row', 'Barbell Row', [set(135, 10), set(135, 10)])],
+  };
+  const { warnings } = routineFromSession(session, MY, {});
+  const line = warnings.find((w) => /weights (are not|aren't) copied/i.test(w));
+  ok(Boolean(line), 'a weighted session says its weights are not copied');
+  ok(line && line.split(/\s+/).length < 15, `and says it in under 15 words ("${line}")`);
 }
 
 /* ---------- an exercise I do not have ---------- */

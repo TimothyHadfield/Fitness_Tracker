@@ -7,26 +7,9 @@ import {
   // 🔄 `markFriendTrail` was imported here until 2026-09-16 — see the note where
   // it used to be called, in `render()`.
   markRoute, takeRiseRequest, navDirection, navRevisit, currentNavIndex, markTabNav, takeFall,
-  closeSurfaces,
+  closeSurfaces, markLinkNav, friendlyError,
 } from './ui.js';
-import {
-  HomeView, RecordChooserView, StartPickerView, WorkoutsView, SystemRouteView,
-  WorkoutRouteView, ExploreView, ExploreDetailView,
-} from './views-workouts.js';
-import { SessionView, BenchmarkView, ActivityLogView } from './views-session.js';
-import { CalendarView, DayView, GraphView, SettingsView } from './views-data.js';
-import { AccountView, SignInView, NotesView } from './views-account.js';
-import { ImportView } from './views-import.js';
-import { ProfileView } from './views-profile.js';
-import { EditSessionView } from './views-edit-session.js';
-import {
-  SocialView, FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView,
-  FriendSessionView, InviteView, FindView, AddView, CompareBodiesView,
-  applyOfferedWorkouts,
-} from './views-social.js';
-import { GoalsView, GoalRouteView } from './views-goals.js';
-import { MeRouteView } from './views-me.js';
-import { setUnits } from './units.js';
+import * as unitsMod from './units.js';
 import { setLeverageChoices } from './machine-mechanics.js';
 // 🆕 First-paint motion and the tab pop (2026-09-25, docs/polish-plan.md M).
 import { arriveScreen, tabPop } from './motion.js';
@@ -34,7 +17,35 @@ import { arriveScreen, tabPop } from './motion.js';
 // back swipe, the tab bar's sliding selection (2026-09-25, motion2 package B).
 import {
   beginNav, settleNavigation, flightLead, syncTabIndicator, initGestures, rememberScroll, restoreScroll, canMove,
+  rememberTabScroll, restoreTabScroll,
 } from './gestures.js';
+
+/* 🆕 SCREENS LOAD WHEN THEY ARE FIRST OPENED — overhaul I-13 / R-8 (2026-09-27).
+ * Every view was a static import of this file, so all ~70 modules (3.2 MB)
+ * were fetched and parsed before Home could draw (measured: first paint 2.4 s
+ * at 4× CPU). Home needs views-workouts and what it imports; the rest load on
+ * the first visit to a route that needs them.
+ *
+ * ⚠️ OFFLINE IS UNCHANGED: sw.js still precaches every one of these files (the
+ * data-layer precache test still guards it), so a first open in a basement
+ * reads from the cache. A failed load is forgotten, so the next try fetches
+ * again instead of replaying the failure. */
+function lazy(load) {
+  let p = null;
+  return () => (p || (p = load().catch((err) => { p = null; throw err; })));
+}
+const VIEWS = {
+  workouts: lazy(() => import('./views-workouts.js')),
+  session: lazy(() => import('./views-session.js')),
+  data: lazy(() => import('./views-data.js')),
+  account: lazy(() => import('./views-account.js')),
+  import: lazy(() => import('./views-import.js')),
+  profile: lazy(() => import('./views-profile.js')),
+  edit: lazy(() => import('./views-edit-session.js')),
+  social: lazy(() => import('./views-social.js')),
+  goals: lazy(() => import('./views-goals.js')),
+  me: lazy(() => import('./views-me.js')),
+};
 
 /**
  * FIVE TABS, AND THE MIDDLE ONE IS THE POINT.
@@ -269,54 +280,67 @@ function refreshNavbar(nav, active) {
 
 /** Is this hash a tab's own root — a screen with nowhere to go back to? */
 function isTabRoot(hash) {
-  const h = (hash || '').replace(/\/$/, '') || '#/home';
-  return NAV.some((n) => n.hash === h);
+  return NAV.some((n) => n.hash === tabRootKey(hash));
+}
+/** The hash a tab root is known by ('#/', '' and '#/home' are all Home). */
+function tabRootKey(hash) {
+  const h = (hash || '').replace(/\/$/, '');
+  return h === '' || h === '#' ? '#/home' : h;
+}
+/** Which tab lights up for a route name (null for none). */
+function tabKeyFor(name) {
+  const n = NAV.find((t) => t.match.includes(name));
+  return n ? n.hash : null;
 }
 
 async function resolve(route) {
+  const { workouts, session, data, account, import: importing, profile, edit, social, goals, me } = VIEWS;
   switch (route.name) {
-    case 'home':      return HomeView();
+    case 'home':      return (await workouts()).HomeView();
     // The Record tab is the CATEGORY CHOOSER since 2026-08-26 — weightlifting
     // plus the activities. The full lifting recorder lives behind it at
     // #/start, which is also the old deep link, still working.
-    case 'record':    return RecordChooserView();
-    case 'start':     return StartPickerView({ tab: false });
+    case 'record':    return (await workouts()).RecordChooserView();
+    case 'start':     return (await workouts()).StartPickerView({ tab: false });
     // #/activity/<exercise name> prefills; bare #/activity opens the picker.
-    case 'activity':  return ActivityLogView(route.param);
-    case 'workouts':  return WorkoutsView();
+    case 'activity':  return (await session()).ActivityLogView(route.param);
+    case 'workouts':  return (await workouts()).WorkoutsView();
     // #/system/<id> reads it, #/system/<id>/edit and #/system/new are the form.
-    case 'system':    return SystemRouteView(route.param);
+    case 'system':    return (await workouts()).SystemRouteView(route.param);
     // #/explore lists them, #/explore/<id> is one of them.
-    case 'explore':   return route.param ? ExploreDetailView(route.param) : ExploreView();
+    case 'explore': {
+      const m = await workouts();
+      return route.param ? m.ExploreDetailView(route.param) : m.ExploreView();
+    }
     // #/workout/<id> reads it and starts it; /edit and new/<systemId> build it.
-    case 'workout':   return WorkoutRouteView(route.param);
-    case 'session':   return SessionView(route.param);
-    case 'benchmark': return BenchmarkView();
-    case 'calendar':  return CalendarView();
-    case 'day':       return DayView(route.param);
-    case 'edit':      return EditSessionView(route.param);
-    case 'graphs':    return GraphView();
-    case 'settings':  return SettingsView();
-    case 'account':   return AccountView();
+    case 'workout':   return (await workouts()).WorkoutRouteView(route.param);
+    case 'session':   return (await session()).SessionView(route.param);
+    case 'benchmark': return (await session()).BenchmarkView();
+    case 'calendar':  return (await data()).CalendarView();
+    case 'day':       return (await data()).DayView(route.param);
+    case 'edit':      return (await edit()).EditSessionView(route.param);
+    case 'graphs':    return (await data()).GraphView();
+    case 'settings':  return (await data()).SettingsView();
+    case 'account':   return (await account()).AccountView();
     // The developer's inbox. Reachable by anybody who types it and empty for
     // everybody but Tim, because firestore.rules refuses the read rather than
     // the router refusing the route (2026-09-04).
-    case 'notes':     return NotesView();
-    case 'import':    return ImportView();
-    case 'signin':    return SignInView();
-    case 'profile':   return ProfileView();
+    case 'notes':     return (await account()).NotesView();
+    case 'import':    return (await importing()).ImportView();
+    case 'signin':    return (await account()).SignInView();
+    case 'profile':   return (await profile()).ProfileView();
     /* ⚠️ `me` IS THE PROFILE TAB AND `profile` IS THE DETAILS FORM. Both keep
      * their own name because both are linked from elsewhere and neither may
      * 404 — see the NAV comment. One route owns the whole section so that
      * #/me/friends and #/me/workouts are sub-screens rather than entries in
      * this table — as are the two names #/me/friends used to have. */
-    case 'me':        return MeRouteView(route.param);
-    case 'social':    return SocialView();
-    case 'goals':     return GoalsView();
+    case 'me':        return (await me()).MeRouteView(route.param);
+    case 'social':    return (await social()).SocialView();
+    case 'goals':     return (await goals()).GoalsView();
     // #/goal/new, #/goal/new/<muscle>, #/goal/stalls, #/goal/systems — the
     // whole tail is passed through and dispatched there, the same way `invite`
     // keeps its two-part parameter together.
-    case 'goal':      return GoalRouteView(route.param);
+    case 'goal':      return (await goals()).GoalRouteView(route.param);
     /* #/friend/<uid> is their page; #/friend/<uid>/<sessionId> is one workout.
      *
      * ⚠️ IT HANGS OFF THE FRIEND ROUTE RATHER THAN BEING A ROUTE OF ITS OWN, and
@@ -326,6 +350,9 @@ async function resolve(route) {
      * nothing to catch it if they were not. Same shape as `invite`, which keeps
      * its two-part parameter together for the same reason. */
     case 'friend': {
+      const {
+        FriendView, FriendDataView, FriendPeopleView, FriendWorkoutsView, FriendSessionView,
+      } = await social();
       const [fuid, sid] = (route.param || '').split('/');
       /* ⚠️ TWO RESERVED SECOND SEGMENTS SINCE 2026-09-03 — `volume` and `graph`,
        * a friend's own version of the Data tab's screens (Tim: *"I also want a
@@ -374,14 +401,14 @@ async function resolve(route) {
     }
     /* Two bodies, side by side — #/compare/<uid> against yourself, or
      * #/compare/<uid>/<uid> for two other people. Tim, 2026-09-03. */
-    case 'compare':   return CompareBodiesView(route.param || '');
+    case 'compare':   return (await social()).CompareBodiesView(route.param || '');
     // #/invite/<ownerUid>/<token> — the whole param is passed through, because
     // parse() joins the rest back together and the token is the second half.
-    case 'invite':    return InviteView(route.param);
+    case 'invite':    return (await social()).InviteView(route.param);
     // Finding somebody: by name, or by landing on their code (2026-08-29).
-    case 'find':      return FindView();
-    case 'add':       return AddView(decodeURIComponent(route.param || ''));
-    default:          return HomeView();
+    case 'find':      return (await social()).FindView();
+    case 'add':       return (await social()).AddView(decodeURIComponent(route.param || ''));
+    default:          return (await workouts()).HomeView();
   }
 }
 
@@ -398,8 +425,9 @@ function demoBar() {
   return el('div', { class: 'demo-bar', role: 'status' },
     el('span', { class: 'demo-bar-dot' }),
     el('span', { class: 'demo-bar-text' },
-      el('b', { text: 'Demo account.' }),
-      ' Made-up data — change anything you like, nothing is saved.',
+      // Words P6 (overhaul W-22): 12 words on every screen → 6.
+      el('b', { text: 'Demo' }),
+      ' · made-up data, nothing is saved.',
     ),
     el('button', {
       class: 'btn small', text: 'Leave',
@@ -450,10 +478,19 @@ async function render() {
    * tab bar would, rather than sliding in as if it were deeper. Only a NEW
    * entry is marked; a real history back or forward keeps its own direction. */
   const st = window.history && window.history.state;
+  const tabTapped = Boolean(lastTabTap && Date.now() - lastTabTap < 1500);
   const tabByLink = isTabRoot(location.hash) && !(st && typeof st.navIndex === 'number')
-    && !(lastTabTap && Date.now() - lastTabTap < 1500);
+    && !tabTapped;
   lastTabTap = 0;
   if (tabByLink) markTabNav();
+  /* 🆕 …AND ONE REACHED FROM ANOTHER TAB'S SCREEN IS STAMPED AS SUCH (overhaul
+   * I-8a), so its view can offer a back arrow for this visit — Profile's best
+   * lift → Data. Not from a pushed, bar-less screen ("Back to home" off the
+   * finish screen is leaving, not a detour), and not within the same tab. */
+  if (tabByLink && prevHash && !FULLSCREEN.includes(parse(prevHash).name)
+      && tabKeyFor(parse(prevHash).name) !== tabKeyFor(parse(location.hash).name)) {
+    markLinkNav();
+  }
 
   // Where this screen sits in the visit, so the back arrow can go BACK rather
   // than to a hard-coded parent. See markRoute() in ui.js.
@@ -535,6 +572,8 @@ async function render() {
   const fromHash = prevHash;
   prevHash = location.hash;
   if (leaving) rememberScroll(fromIndex, leaving);
+  // Each tab's root keeps its own place for the next tab tap (overhaul I-8b).
+  if (leaving && fromHash && isTabRoot(fromHash)) rememberTabScroll(tabRootKey(fromHash), leaving);
   /* 🔄 THE OUTGOING SCREEN IS PARKED HERE, BEFORE `resolve()`, FOR EVERY
    * MOVEMENT NOW (2026-09-25, js/gestures.js) — not just the rises. Same trick,
    * same reason as above: it stays on screen while the store reads, and then
@@ -593,6 +632,8 @@ async function render() {
     if (move) move.play(screen);
     // Back (or forward) to a list you scrolled: it is where you left it.
     if (navRevisit()) restoreScroll(screen, currentNavIndex());
+    // A tab tapped again: its list is where you left it (overhaul I-8b).
+    else if (tabTapped && isTabRoot(location.hash)) restoreTabScroll(screen, tabRootKey(location.hash));
     // ⚠️ Every screen, here rather than in screenShell, for the same reason the
     // demo bar is: no route may be reached without it. See associateLabels()
     // and autoGrowTextareas().
@@ -637,7 +678,8 @@ async function render() {
       el('div', { class: 'pane-scroll' },
         el('div', { class: 'empty' },
           el('div', { class: 'empty-title', text: 'Something went wrong' }),
-          el('p', { text: err.message || 'That screen could not be opened.' }),
+          // Plain words, never the raw error (overhaul R-7).
+          el('p', { text: friendlyError(err, 'That screen could not be opened.') }),
           el('a', { class: 'btn primary', href: '#/home', text: 'Back to home' }),
         ),
       ),
@@ -723,9 +765,65 @@ function trackKeyboard() {
  * light-theme user does not get a dark flash first. */
 const LOOK_KEY = 'ftrack:v1:look';
 
+/* 🆕 THEME "AUTO" FOLLOWS THE PHONE — overhaul ST-10 / I-19 (2026-09-27). The
+ * default stays Dark (absence = dark, "easier to read under gym lighting").
+ * `data-theme` is always the RESOLVED 'dark' | 'light' the stylesheet knows;
+ * the choice itself is `data-theme-pref="auto"` while Auto is on, and a
+ * matchMedia listener re-resolves it when the phone switches.
+ *
+ * ⚠️ A VIEW THAT SETS `data-theme="auto"` DIRECTLY (Settings' chip does, the
+ * same way it sets 'dark' and 'light') is resolved by the observer in boot(),
+ * before the next paint — MutationObserver callbacks are microtasks. */
+const LIGHT_MQ = '(prefers-color-scheme: light)';
+let themePref = 'dark';
+let selfThemeWrite = null;
+
+function systemTheme() {
+  try { return window.matchMedia && window.matchMedia(LIGHT_MQ).matches ? 'light' : 'dark'; } catch (_) { return 'dark'; }
+}
+
+function resolveTheme(pref) {
+  return pref === 'auto' ? systemTheme() : pref === 'light' ? 'light' : 'dark';
+}
+
+function setThemePref(pref) {
+  themePref = pref === 'auto' || pref === 'light' ? pref : 'dark';
+  const root = document.documentElement;
+  if (themePref === 'auto') root.setAttribute('data-theme-pref', 'auto');
+  else root.removeAttribute('data-theme-pref');
+  const want = resolveTheme(themePref);
+  if (root.getAttribute('data-theme') !== want) {
+    selfThemeWrite = want;
+    root.setAttribute('data-theme', want);
+  }
+}
+
+/* The browser's own chrome follows the theme the app is SHOWING, not the
+ * system's (overhaul R-10): one theme-color = the current ground, and on iOS
+ * dark status-bar icons on Light (white ones were invisible on its header). */
+function paintChrome() {
+  const root = document.documentElement;
+  try {
+    const ground = getComputedStyle(root).getPropertyValue('--ground').trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && ground) meta.setAttribute('content', ground);
+    const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (bar) bar.setAttribute('content', root.getAttribute('data-theme') === 'light' ? 'default' : 'black-translucent');
+  } catch (_) { /* no computed style (a test DOM): nothing to paint */ }
+}
+
+/* `settings.glass === false` turns the glass textures off (overhaul contract);
+ * the stylesheet reads `<html data-glass="off">`. Absent = on. */
+function applyGlass(look) {
+  const root = document.documentElement;
+  if (look && look.glass === false) root.setAttribute('data-glass', 'off');
+  else root.removeAttribute('data-glass');
+}
+
 function applyLook(look) {
   const root = document.documentElement;
-  root.setAttribute('data-theme', look && look.theme === 'light' ? 'light' : 'dark');
+  setThemePref(look && look.theme);
+  applyGlass(look);
   // The colour palette (Tim's pick of all three options, 2026-08-26). The
   // attribute is only SET for a non-default choice: the default palette is
   // bare :root, and an unrecognised stored value degrades to it — the same
@@ -735,26 +833,126 @@ function applyLook(look) {
   } else {
     root.removeAttribute('data-palette');
   }
+  paintChrome();
 }
 
 function cachedLook() {
   try { return JSON.parse(localStorage.getItem(LOOK_KEY) || 'null'); } catch (_) { return null; }
 }
 
+/* ⚠️ index.html's head script reads this same key before the first paint —
+ * keep the shape { theme: 'dark'|'light'|'auto', palette, glass } in step. */
 function rememberLook() {
   if (demo.active()) return;
   const root = document.documentElement;
   try {
     localStorage.setItem(LOOK_KEY, JSON.stringify({
-      theme: root.getAttribute('data-theme') || 'dark',
+      theme: themePref === 'auto' ? 'auto' : (root.getAttribute('data-theme') || 'dark'),
       palette: root.getAttribute('data-palette') || null,
+      ...(root.getAttribute('data-glass') === 'off' ? { glass: false } : {}),
     }));
   } catch (_) { /* private mode: the next boot just starts dark */ }
 }
 
+/* Any change to the look attributes, by this file or by a view: resolve an
+ * 'auto', keep the choice, repaint the browser chrome, remember it. */
+function onLookMutation() {
+  const root = document.documentElement;
+  const shown = root.getAttribute('data-theme');
+  if (shown === 'auto') {
+    setThemePref('auto');
+  } else if (selfThemeWrite !== null && shown === selfThemeWrite) {
+    selfThemeWrite = null; // our own resolution of 'auto' — the choice stands
+  } else if (shown === 'dark' || shown === 'light') {
+    selfThemeWrite = null;
+    if (themePref !== shown) setThemePref(shown);
+  }
+  paintChrome();
+  rememberLook();
+}
+
+function followSystemTheme() {
+  let mq = null;
+  try { mq = window.matchMedia && window.matchMedia(LIGHT_MQ); } catch (_) { mq = null; }
+  if (!mq) return;
+  const onChange = () => { if (themePref === 'auto') setThemePref('auto'); };
+  if (mq.addEventListener) mq.addEventListener('change', onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+}
+
+/* Settings that other modules read synchronously mid-render are handed over
+ * here: at boot, and after EVERY settings save (the store's saveSettings is
+ * wrapped once in boot), so a Settings row, the intro or anything else that
+ * saves never leaves a stale copy behind. */
+function applySettings(settings) {
+  if (!settings) return;
+  if (settings.units) unitsMod.setUnits(settings.units);
+  // units.js's weight steps / bar / plates (the WEIGHTS builder's contract).
+  if (typeof unitsMod.setWeightPrefs === 'function') {
+    try { unitsMod.setWeightPrefs(settings); } catch (_) { /* today's defaults stand */ }
+  }
+  setLeverageChoices(settings.leverage);
+  applyGlass(settings);
+}
+
+function wrapSettingsSave() {
+  const save = store.saveSettings;
+  if (typeof save !== 'function' || save.__applies) return;
+  const wrapped = async function (patch) {
+    const next = await save.call(this, patch);
+    try { applySettings(next); } catch (_) { /* the save itself succeeded */ }
+    return next;
+  };
+  wrapped.__applies = true;
+  store.saveSettings = wrapped;
+}
+
+/* 🆕 THE FIRST RUN PICKS UNITS FROM THE PHONE'S REGION — overhaul ST-9. kg for
+ * everyone except the US, Liberia and Myanmar, so a kg lifter's first set is
+ * not logged as "60 lb". 🛑 ONLY behind the intro's own gate (a new account
+ * with nothing recorded), and only when no unit was ever chosen: existing
+ * accounts are lbs by absence and are never touched. The intro's About-you
+ * shows this as its default and can change it; this is what stands when the
+ * intro is skipped. */
+const LBS_REGIONS = ['US', 'LR', 'MM'];
+function regionUnits(locale) {
+  const m = /[-_]([A-Za-z]{2}|\d{3})(?:[-_]|$)/.exec(String(locale || ''));
+  if (!m) return null;
+  return LBS_REGIONS.includes(m[1].toUpperCase()) ? 'lbs' : 'kg';
+}
+function phoneLocale() {
+  try {
+    return (navigator.languages && navigator.languages[0]) || navigator.language
+      || Intl.DateTimeFormat().resolvedOptions().locale || '';
+  } catch (_) { return ''; }
+}
+// The store's answer when NO settings row exists yet — nothing was chosen.
+const unitsNeverChosen = (s) => !s || !s.units
+  || (s.units === 'lbs' && s.theme === 'dark' && Object.keys(s).every((k) => ['id', 'units', 'theme'].includes(k)));
+
+async function firstRunUnits(onboarding) {
+  try {
+    const s = await store.getSettings();
+    if (!unitsNeverChosen(s)) return;
+    // The intro's own reading when it has one (it also resolves a bare "de"
+    // to Germany), so the two can never disagree; this file's otherwise.
+    const pick = onboarding && typeof onboarding.defaultUnitsFor === 'function'
+      ? onboarding.defaultUnitsFor(phoneLocale())
+      : regionUnits(phoneLocale());
+    if (pick !== 'kg') return; // lbs is already what an unset account reads
+    unitsMod.setUnits(pick);
+    store.saveSettings({ units: pick }).catch(() => {});
+  } catch (_) { /* a welcome, never a wall */ }
+}
+
 function paintShell() {
   const app = document.getElementById('app');
-  if (!app || app.children.length) return;
+  if (!app) return;
+  /* 🆕 index.html paints a static copy of this frame before any module loads
+   * (overhaul R-8c). It is swapped here for the real one — the same markup, so
+   * nothing on screen changes — which the router then keeps and re-lights. */
+  if (app.hasAttribute('data-skel')) { app.removeAttribute('data-skel'); clear(app); }
+  if (app.children.length) return;
   const route = parse(location.hash);
   // `boot-shell` so render() does not treat it as a screen to rise over.
   const shell = el('div', { class: 'screen boot-shell' });
@@ -805,22 +1003,26 @@ function followSidebarLine() {
   if (cached) applyLook(cached);
   paintShell();
   followSidebarLine();
+  followSystemTheme();
+  wrapSettingsSave();
   const settings = await store.getSettings();
   applyLook(settings);
   rememberLook();
   try {
-    new MutationObserver(rememberLook).observe(document.documentElement,
-      { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+    new MutationObserver(onLookMutation).observe(document.documentElement,
+      { attributes: true, attributeFilter: ['data-theme', 'data-palette', 'data-glass'] });
   } catch (_) { /* no observer: the look is refreshed at every boot anyway */ }
   // Seeded once, here, because the stepper and the set formatter are synchronous
   // and are called mid-render — they cannot await the store for the unit.
-  setUnits(settings.units);
   // Same reason: the muscle map rates sets synchronously, so a lever machine's
-  // picked leverage (machine-mechanics.js) is handed over once, here.
-  setLeverageChoices(settings.leverage);
+  // picked leverage (machine-mechanics.js) is handed over once, here — and the
+  // weight steps, bar and plates the same way (applySettings).
+  unitsMod.setUnits(settings.units);
+  applySettings(settings);
   if (!location.hash) location.hash = '#/home';
   await render();
   registerServiceWorker();
+  keepStorage();
   // ⚠️ AFTER the first screen is on the page, and never awaited. Every tab
   // needs some of the same collections, and left to the screens those reads
   // happen a few at a time, per visit — the Goals tab alone asked for seven,
@@ -836,7 +1038,34 @@ function followSidebarLine() {
   social.healStalePublish().catch(() => {});
   watchGroupWorkouts();
   firstRun();
+  /* 🆕 …AND ON THE FIRST ARRIVAL AT HOME, for anyone who came in through an
+   * invite or add link (overhaul O-16). One listener, gone after it fires; the
+   * gate's own checks still decide. */
+  if (!isHomeHash(location.hash)) {
+    const onFirstHome = () => {
+      if (!isHomeHash(location.hash)) return;
+      window.removeEventListener('hashchange', onFirstHome);
+      firstRun();
+    };
+    window.addEventListener('hashchange', onFirstHome);
+  }
 })();
+
+function isHomeHash(hash) { return ['', '#', '#/', '#/home'].includes(hash || ''); }
+
+/* 🆕 ASK THE BROWSER TO KEEP THIS SITE'S STORAGE — overhaul R-3. Safari clears
+ * the storage of a site unused for 7 days (the anonymous account key with it);
+ * a persisted origin is exempt where the browser grants it. Once per boot,
+ * never awaited, silent either way. */
+function keepStorage() {
+  try {
+    const s = navigator.storage;
+    if (!s || typeof s.persist !== 'function') return;
+    const ask = () => s.persist().catch(() => {});
+    if (typeof s.persisted === 'function') s.persisted().then((yes) => { if (!yes) ask(); }).catch(() => {});
+    else ask();
+  } catch (_) { /* nothing to keep */ }
+}
 
 /* 🆕 GROUP WORKOUTS A FRIEND LOGGED FOR YOU ARE ADDED ON THEIR OWN — Tim,
  * 2026-09-27 (off with Settings → "Ask before adding group workouts"). The
@@ -846,7 +1075,11 @@ function followSidebarLine() {
  * loud — `applyOfferedWorkouts()` toasts only when something was added. */
 function watchGroupWorkouts() {
   let last = 0;
-  const look = () => { last = Date.now(); applyOfferedWorkouts().catch(() => {}); };
+  // Loaded on demand like the screens (it is Home's module's neighbour anyway).
+  const look = () => {
+    last = Date.now();
+    VIEWS.social().then((m) => m.applyOfferedWorkouts()).catch(() => {});
+  };
   look();
   try { auth.onChange(() => look()); } catch (_) { /* local mode: no accounts */ }
   document.addEventListener('visibilitychange', () => {
@@ -866,8 +1099,11 @@ async function firstRun() {
   try {
     const m = await import('./onboarding.js');
     if (!(await m.shouldOnboard())) return;
+    await firstRunUnits(m);
+    // One Skip ends the whole intro — no tour after it (overhaul O-9).
     m.openOnboarding({
-      onDone: () => import('./tour.js').then((t) => t.startTour && t.startTour()).catch(() => {}),
+      onDone: (r) => (r && r.skipped ? null
+        : import('./tour.js').then((t) => t.startTour && t.startTour()).catch(() => {})),
     });
   } catch (_) { /* the questions are a welcome, never a wall */ }
 }

@@ -13,7 +13,9 @@ import {
   el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron, refreshRoute,
   setChildren, fmtDateShort, helpDot,
 } from './ui.js';
-import { cloudFullWarning } from './views-data.js';
+// `onOffSwitch`: the Settings screen's switch, so the three "Who can see you"
+// switches look and behave like every other one (2026-09-27).
+import { cloudFullWarning, onOffSwitch } from './views-data.js';
 /* ⚠️ THE SHEETS ARE IMPORTED, NEVER RE-DRAWN HERE. Both of these are the same
  * control the Friends screen offers, and a second copy of a visibility picker is
  * a second place for the words about who can see somebody's training to drift.
@@ -26,7 +28,6 @@ import {
 // ⚠️ `units` LEFT WITH THE PROFILE READOUT on 2026-09-11 — this screen prints no
 // weight of its own any more. The one on Profile does the converting.
 import * as crop from './image-crop.js';
-import { startTour } from './tour.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -80,33 +81,17 @@ function settingsRow() {
   return el('a', { class: 'row', href: '#/settings' },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: 'Settings' }),
-      el('div', { class: 'row-sub', text: 'Appearance, units, rest timer' }),
+      // 🔄 2026-09-27 (overhaul settings S-13): the groups Settings has now.
+      el('div', { class: 'row-sub', text: 'Theme, units, workout' }),
     ),
     el('span', { class: 'row-chev' }, chevron()),
   );
 }
 
-/* 🆕 THE TOUR AND THE QUESTIONS, AGAIN — 2026-09-25 (docs/onboarding-plan.md).
- * Both run once on a new account; these are the way back to them, under the
- * Settings row. ⚠️ `onboarding.js` is loaded only when tapped, and a failed load
- * says so rather than doing nothing. */
-function guideRows() {
-  const row = (title, sub, onClick) => el('button', { class: 'row as-button', onClick },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: title }),
-      el('div', { class: 'row-sub', text: sub }),
-    ),
-    chevron(),
-  );
-  return [
-    row('Take the tour', 'A quick look around the app', () => startTour()),
-    row('Find me a program', 'A few questions, then a plan', () => {
-      import('./onboarding.js')
-        .then((m) => m.openOnboarding({}))
-        .catch(() => toast('Could not open that just now'));
-    }),
-  ];
-}
+/* ✂️ ~~"Take the tour" / "Find me a program" LIVED HERE~~ — moved to the Help
+ * group at the bottom of Settings on 2026-09-27 (overhaul O-12). The tour
+ * itself says "Settings… Replay this tour from here", and Account is
+ * logistics; one door each, and it is the one the tour names. */
 
 /** What the Account screen becomes while the demo is on. */
 function demoScreen() {
@@ -124,15 +109,11 @@ function demoScreen() {
       el('div', { class: 'card' },
         el('div', { class: 'help-line' },
           el('div', { class: 'section-label', text: 'You are in the demo account' }),
+          // 🔄 98 words → 28, 2026-09-27 (overhaul words W-22). Same three facts.
           helpDot(el('div', {},
-            el('p', {}, 'None of this is real — it is a generated year of training, so that the '
-              + 'programs, the calendar, the graphs, the muscle map and the goal all have '
-              + 'something in them.'),
-            el('p', {}, 'Nothing here is saved anywhere. Edit a workout, delete a program, log a '
-              + 'session — it lives in this tab and nowhere else, and reloading the page '
-              + 'starts it over from the same beginning.'),
-            el('p', {}, 'Social is switched off while you are in here, because publishing '
-              + 'invented workouts to real friends would be worse than not being able to try it.'),
+            el('p', {}, 'A generated year of training, so every screen has something in it. '
+              + 'Reloading starts it over. Social is switched off so invented workouts never '
+              + 'reach real people.'),
           ), { label: 'What the demo account is', title: 'The demo account' })),
       ),
       el('button', {
@@ -140,8 +121,8 @@ function demoScreen() {
         onClick: () => demo.exit(),
       }),
       el('div', { class: 'field-help', style: 'text-align:center' },
-        'Your own account and everything in it is exactly where you left it.'),
-      el('div', { class: 'list' }, settingsRow(), ...guideRows()),
+        'Your account is untouched.'),
+      el('div', { class: 'list' }, settingsRow()),
     ],
   });
 }
@@ -548,10 +529,8 @@ function openAvatarCropper(input, size) {
             icon('person', 24),
           ),
           el('div', { class: 'field-help', text: zoomable
-            ? 'Drag the photo to move it, and use the slider to zoom. Whatever is inside the '
-              + 'circle is what your profile picture will be.'
-            : 'Drag the photo to move it. Whatever is inside the circle is what your profile '
-              + 'picture will be. This image is too small to zoom.' }),
+            ? 'Drag to move, slide to zoom. The circle is your picture.'
+            : 'Drag to move. The circle is your picture.' }),
         ),
         footer: el('div', { class: 'btn-row' },
           el('button', { class: 'btn ghost', text: 'Cancel', onClick: () => close() }),
@@ -643,13 +622,11 @@ function renderCrop(img, rect, size) {
  * "Public" here, which is precisely the screen-and-database disagreement the
  * comment above exists to prevent.
  */
+// 🔄 Each ≤12 words since 2026-09-27 (overhaul words §2b); same next step each.
 const SHARING_UNAVAILABLE = {
-  local: 'This copy of the app keeps everything in this browser, so there is no account for '
-    + 'anybody to find or follow.',
-  offline: 'You are offline. Who can see your account is a setting on the account itself, so it '
-    + 'cannot be checked or changed until you are back online.',
-  anonymous: 'Choosing who can see you needs a real account. Add an email or Google sign-in and '
-    + 'you can set it here.',
+  local: 'Everything stays in this browser, so there’s no account to find.',
+  offline: 'Offline — who can see you can’t be checked until you’re back.',
+  anonymous: 'Add an email or Google sign-in to choose who sees you.',
 };
 
 /**
@@ -679,6 +656,7 @@ async function sharingRows() {
   }
 
   const visibility = normalizeVisibility(state.visibility);
+  const settings = await store.getSettings().catch(() => ({}));
 
   return [
     heading,
@@ -726,7 +704,166 @@ async function sharingRows() {
       ),
       chevron(),
     ),
+
+    ...privacySwitches(state, settings),
   ];
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 THE THREE SWITCHES ABOUT OTHER PEOPLE — 2026-09-27 (overhaul, settings
+ * S-1, S-2b, S-3). All three are about who can reach you, so they sit here
+ * under "Who can see you" rather than in Settings (how the app looks):
+ *
+ *   · Findable by name — moved from Settings, same key, same words behind ?.
+ *   · Share body weight — NEW on screen: `social.setShareBodyWeight` has had
+ *     no caller since 2026-09-03, so no one could turn it on. Off by default;
+ *     friends only, never public (`assertAudienceClean` in social.js).
+ *   · Approve group workouts — moved from Settings ("Ask before adding group
+ *     workouts", 5 words), same key `askBeforeGroupWorkouts`, off by default.
+ *
+ * ⚠️ A SWITCH THAT COULD NOT SAVE SPRINGS BACK. The switch flips itself before
+ * the save; if the save throws, it is set to whatever is actually stored (a
+ * directory or republish failure after the setting DID save keeps it on), so
+ * the control never shows a state nothing holds. Only drawn when sharing is
+ * available — the reason line above covers the rest.
+ * ------------------------------------------------------------------ */
+function privacySwitch(label, on, { save, stored, said }) {
+  const row = onOffSwitch(label, on, async (next) => {
+    try {
+      await save(next);
+      toast(said(next));
+    } catch (err) {
+      let now = !next;
+      try { now = Boolean(await stored()); } catch (_) { /* keep the old state */ }
+      const sw = row.querySelector('[role="switch"]');
+      if (sw) sw.setAttribute('aria-checked', String(now));
+      if (now !== next) toast((err && err.message) || 'Couldn’t save that. Try again.', { error: true });
+      else toast(said(next));
+    }
+  });
+  return row;
+}
+
+function privacySwitches(state, settings) {
+  const read = async () => store.getSettings();
+
+  const groupRow = privacySwitch('Approve group workouts', settings.askBeforeGroupWorkouts === true, {
+    save: (on) => store.saveSettings({ askBeforeGroupWorkouts: on }),
+    stored: async () => (await read()).askBeforeGroupWorkouts === true,
+    said: (on) => (on ? 'Group workouts wait for you' : 'Group workouts are added for you'),
+  });
+  // The ? beside the label: the switch's name says WHAT, this says what On does.
+  const groupLabel = groupRow.querySelector('label');
+  if (groupLabel) {
+    // Put the wrapper in the label's place FIRST, then move the label into it:
+    // building the wrapper around the label detaches it, and replaceWith on a
+    // node already inside its own replacement throws (caught by a test).
+    const wrap = el('div', { class: 'help-line' });
+    groupLabel.replaceWith(wrap);
+    wrap.append(groupLabel,
+      helpDot('On: a workout a friend logs for you waits for you to tap Add.',
+        { label: 'What approving group workouts means' }));
+  }
+
+  return [
+    el('div', { class: 'field' },
+      privacySwitch('Findable by name', settings.listedInDirectory !== false, {
+        save: (on) => social.setListed(on),
+        stored: async () => (await read()).listedInDirectory !== false,
+        said: (on) => (on ? 'People can find you by name' : 'You are no longer findable'),
+      }),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'People can find you by name. You still accept.' }),
+        helpDot(el('div', {},
+          el('p', { text: 'Off takes your name out of that search. Your code and invite '
+            + 'links keep working.' }),
+          el('p', { text: 'Only your display name is ever listed — never your email, and '
+            + 'nothing about your training.' }),
+        ), { label: 'What being findable means' })),
+    ),
+    el('div', { class: 'field' },
+      privacySwitch('Share body weight', state.shareBodyWeight === true, {
+        save: (on) => social.setShareBodyWeight(on),
+        stored: async () => (await read()).shareBodyWeight === true,
+        said: (on) => (on ? 'Friends can see your body weight' : 'Your body weight is private'),
+      }),
+      el('div', { class: 'field-help', text: 'Friends only, never public.' }),
+    ),
+    el('div', { class: 'field' }, groupRow),
+  ];
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 R-13 (overhaul 2026-09-27): THE BACKUP GOES THROUGH THE SHARE SHEET ON A
+ * PHONE. A blob `<a download>` from a home-screen app on an iPhone opens a
+ * preview with no way back, or nothing at all (reasoned; robustness.md). The
+ * share sheet offers "Save to Files". Only on a touch screen that can share a
+ * file — a laptop keeps the plain download it has always had — and the old
+ * link is the fallback everywhere else, or when the share itself fails.
+ * "Backup ready" is said only once the share succeeded; closing the sheet on
+ * purpose says nothing, because nothing went wrong.
+ * ------------------------------------------------------------------ */
+export function canShareFile(file, nav = (typeof navigator !== 'undefined' ? navigator : null),
+  win = (typeof window !== 'undefined' ? window : null)) {
+  if (!nav || typeof nav.share !== 'function' || typeof nav.canShare !== 'function') return false;
+  const coarse = Boolean(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
+  if (!coarse) return false;
+  try { return nav.canShare({ files: [file] }); } catch (_) { return false; }
+}
+
+export async function saveBackupFile(text, name) {
+  if (typeof File === 'function') {
+    const file = new File([text], name, { type: 'application/json' });
+    if (canShareFile(file)) {
+      try {
+        await navigator.share({ files: [file], title: 'Fitness Tracker backup' });
+        toast('Backup ready');
+        return 'shared';
+      } catch (err) {
+        if (err && err.name === 'AbortError') return 'cancelled';
+        // Anything else: the download below.
+      }
+    }
+  }
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = el('a', { href: url, download: name });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Backup downloaded');
+  return 'downloaded';
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 R-3 (overhaul 2026-09-27): SAFARI IN A TAB FORGETS A SITE AFTER 7 DAYS.
+ * Its cap on what a website may store applies to tabs, not to a home-screen
+ * app — and this app is anonymous-first, so a stranger trying it in Safari who
+ * comes back after a week has lost the account their rows belong to. One line,
+ * only in iOS Safari outside the home-screen app; the ? says why and how.
+ * ------------------------------------------------------------------ */
+export function wantsHomeScreenHint(nav = (typeof navigator !== 'undefined' ? navigator : null),
+  win = (typeof window !== 'undefined' ? window : null)) {
+  if (!nav) return false;
+  const ua = String(nav.userAgent || '');
+  // iPadOS reports a Mac; a Mac has no touch points.
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && Number(nav.maxTouchPoints) > 1);
+  if (!ios) return false;
+  const standalone = nav.standalone === true
+    || Boolean(win && win.matchMedia && win.matchMedia('(display-mode: standalone)').matches);
+  return !standalone;
+}
+
+function homeScreenHint() {
+  if (!wantsHomeScreenHint()) return null;
+  return el('div', { class: 'help-line home-hint' },
+    el('span', { class: 'field-help', text: 'Add to Home Screen so your iPhone keeps your data' }),
+    helpDot(el('div', {},
+      el('p', { text: 'Safari clears websites you haven’t opened for 7 days. An app on your '
+        + 'Home Screen is kept.' }),
+      el('p', { text: 'Tap Share, then Add to Home Screen.' }),
+    ), { label: 'Why add it to the Home Screen' }));
 }
 
 /** Everything personal that used to live in Settings: profile, data, delete. */
@@ -758,14 +895,7 @@ async function personalSections({ mode }) {
 
   async function doExport() {
     const data = await store.exportAll();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = el('a', { href: url, download: `fitness-tracker-backup-${todayISO()}.json` });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('Backup downloaded');
+    await saveBackupFile(JSON.stringify(data, null, 2), `fitness-tracker-backup-${todayISO()}.json`);
   }
 
   const fileInput = el('input', {
@@ -827,7 +957,6 @@ async function personalSections({ mode }) {
       el('span', { class: 'row-chev' }, chevron()),
     ),
     settingsRow(),
-    ...guideRows(),
 
     /* ⚠️ WITH THE PERSON, NOT WITH THE DATA CONTROLS — directly under "Your
      * details" and far from "Delete all data". Who can see you and what they
@@ -852,6 +981,9 @@ async function personalSections({ mode }) {
         : 'Clearing your browsing data, losing this device or switching phones erases it, and '
           + 'nothing can recover it. An account fixes that; a downloaded backup is the other way.',
       { label: 'What happens to your data' })),
+    // Only where losing the browser's storage loses the data: a signed-in
+    // account is in the cloud and a cleared tab only signs it out.
+    mode === 'cloud-secured' ? null : homeScreenHint(),
     el('div', { class: 'card' },
       cloudFullWarning(cloud),
       el('button', { class: 'btn block', text: 'Download backup', onClick: doExport }),
@@ -957,8 +1089,7 @@ function noteToDeveloper() {
         setChildren(host,
           el('div', { class: 'section-label', text: 'Sent — thank you' }),
           el('div', { class: 'field-help', text:
-            'It goes straight to the developer. There is no reply here, so if you want an answer, '
-            + 'leave a way to reach you in the note itself.' }),
+            'Sent. No replies here — put a way to reach you in the note.' }),
           el('button', { class: 'btn ghost block', text: 'Write another', onClick: draw }),
         );
       } catch (err) {
@@ -994,7 +1125,7 @@ function noteToDeveloper() {
 }
 
 const FEEDBACK_UNAVAILABLE = {
-  offline: 'You are offline. Notes are sent straight away rather than queued, so come back when you have a connection.',
+  offline: 'Offline — notes are sent live rather than queued. Try again online.',
   local: 'Sending a note needs an account, so there is somebody to reply to.',
   anonymous: 'Add an email to your account to send a note — otherwise there is nobody to reply to.',
 };
@@ -1058,17 +1189,18 @@ function offlineScreen(state, sections = [], settings = {}) {
   // anyone here is an SDK that would not load, which is essentially always
   // connectivity — leading with "your account" sent Tim looking for a bug in
   // the app when his wi-fi was off.
+  /* 🔄 2026-09-27 (overhaul words §2b, robustness R-1c). "It uploads" is TRUE
+   * again since the same wave: rows written to this device while the cloud was
+   * unreachable are flagged and merged into the account on the next connect
+   * (store.js, the stranded-writes merge). Before it, they stayed here. */
   const OFFLINE = {
     heading: 'You’re offline',
-    body: 'This device has no internet connection, so the app can’t reach your account right '
-      + 'now. Keep logging — everything is saved here and uploads by itself when you’re '
-      + 'back online.',
+    // The heading already says "offline"; the line is what to do.
+    body: 'Keep logging — it uploads when you’re back.',
   };
   const UNREACHABLE = {
     heading: 'Can’t connect',
-    body: 'The app can’t reach the network at the moment. This is a connection problem rather '
-      + 'than anything wrong with your account. Keep logging — everything is saved on this '
-      + 'device and uploads once the connection returns.',
+    body: 'Keep logging — it uploads when the connection is back.',
   };
 
   const headingEl = el('div', { class: 'section-label' });
@@ -1132,7 +1264,7 @@ function offlineScreen(state, sections = [], settings = {}) {
         status,
 
         el('div', { class: 'field-help' },
-          'Your workouts are safe either way. Download backup below keeps a copy on this device.'),
+          'Your workouts are safe. Download backup keeps a copy.'),
 
         retryBtn,
 
@@ -1341,8 +1473,7 @@ function anonymousScreen(sections = [], settings = {}) {
             + 'account\'s data instead.',
           { label: 'What happens to what you have logged' })),
         el('div', { class: 'field-help' },
-          'Everything you have logged lives only in this browser. Clear your browsing data, switch '
-          + 'phones or lose this device and it is gone.'),
+          'Only in this browser — clearing it, or a new phone, loses it.'),
       ),
 
       googleBtn,

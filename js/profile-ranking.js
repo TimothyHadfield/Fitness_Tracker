@@ -168,13 +168,14 @@
    ========================================================================== */
 
 import { bestLifts } from './profile-records.js';
-import { estimateOneRM } from './exercise-estimate.js';
+import { estimateOneRM, ownBestSet } from './exercise-estimate.js';
 import { contributionsFor, confidenceBand, repFactor, toKeyLift } from './muscle-evidence.js';
 import {
   MUSCLE_LIFTS, keyLiftFor, percentileFor, levelFor, withAssumptions,
 } from './strength-standards.js';
 import { bodyWeightFractionFor } from './exercises.js';
-import { plateE1rm } from './machine-mechanics.js';
+import { plateE1rm, addedLoadNote } from './machine-mechanics.js';
+import { MAX_EVIDENCE_REPS } from './e1rm.js';
 
 /**
  * Past this many days a recorded row's set is old enough that the screen says
@@ -266,10 +267,34 @@ function anchorOf(own) {
  *   converted branch), sex, today }
  * @param {string|null} muscle    the core muscle this row stands for, or null
  */
+/**
+ * 🆕 2026-09-27 (overhaul EB-7): ONE "YOUR MAX" FOR PROFILE AND THE RUNNER.
+ *
+ * The runner's caption reads `ownBestSet()` — recent beats old (180 days), a
+ * low-rep set and a benchmark beat a long workout set — and Profile read the
+ * ever-best e1RM. After a break the runner dropped to 201.8 while Profile held
+ * 258.6 for ever; in the demo, Row read 182.2 here and 167.5 there. Profile now
+ * ranks the runner's pick, in the ever-best's shape, and the ever-best rides out
+ * as `bestEver` (dated) only when it is a different number.
+ */
+function runnerPick(exercise, rec, ctx) {
+  if (!exercise || !rec || !rec.estimatedMax) return null;
+  const pick = ownBestSet(exercise, ctx.rows || {}, ctx.today || null);
+  if (!pick) return null;
+  return {
+    kind: 'e1rm', value: pick.perSide ? pick.e1rm / 2 : pick.e1rm, total: pick.e1rm,
+    weight: Number(pick.weight) > 0 ? Number(pick.weight) : null, reps: pick.reps,
+    date: pick.date || null, source: pick.source, assisted: Boolean(pick.assist),
+    estimated: true, perSide: Boolean(pick.perSide), bodyIncluded: Boolean(pick.bodyIncluded),
+    bodyWeight: pick.bodyWeight || undefined, bodyWeightQuality: pick.bodyWeightQuality || undefined,
+  };
+}
+
 function rowFor(exercise, rec, ctx, muscle) {
   const { muscles, ranked, bodyWeight, sex, today } = ctx;
   const name = (rec && rec.name) || (exercise && exercise.name) || 'Exercise';
-  const own = rec && rec.estimatedMax;
+  const ever = rec && rec.estimatedMax;
+  const own = runnerPick(exercise, rec, ctx) || ever;
   const perSide = own ? Boolean(own.perSide) : Boolean(exercise && exercise.loadType === 'per_side');
   const bodyIncluded = own ? Boolean(own.bodyIncluded) : Boolean(exercise && bodyWeightFractionFor(exercise));
 
@@ -302,7 +327,20 @@ function rowFor(exercise, rec, ctx, muscle) {
     // Why there is no number, when there is none. Keys, not sentences: the
     // screen owns the words.
     why: null,
+    // 🆕 EB-7: the ever-best e1RM, dated, when it is NOT the number above (a
+    // "best ever" line for the screen). Null when the two agree to the pound.
+    bestEver: null,
+    // 🆕 EB-8: '+ bar' when the level counts a bar the shown number leaves out
+    // (machine-mechanics.js `addedLoadNote`). Null everywhere else.
+    addedLoad: null,
   };
+  if (own && ever && own !== ever && Math.round(ever.total) !== Math.round(own.total)) {
+    row.bestEver = {
+      value: ever.value, total: ever.total, weight: ever.weight, reps: ever.reps,
+      date: ever.date, source: ever.source, perSide: Boolean(ever.perSide),
+      bodyIncluded: Boolean(ever.bodyIncluded), estimated: true,
+    };
+  }
 
   /* ── RECORDED: the lift's own best set, through the app's own curve ──────
    *
@@ -343,6 +381,8 @@ function rowFor(exercise, rec, ctx, muscle) {
       row.percentile = keyIn > 0 ? percentileFor(toKeyLift(via, keyIn), via.muscle, ranked) : null;
       row.level = row.percentile === null ? null : levelFor(row.percentile);
       if (row.percentile === null) row.why = 'no-standard';
+      // EB-8, Rule 5: the level above counts the bar (via.lever.A); the number shown does not.
+      if (row.percentile !== null && via.lever) row.addedLoad = addedLoadNote(exercise);
     } else {
       // A number with nothing to rank it against: the pounds are theirs and
       // the rep curve is the only inference, so that is the only doubt priced.
@@ -387,10 +427,15 @@ function rowFor(exercise, rec, ctx, muscle) {
     const via = ratioFor(exercise, { sex, bodyWeight });
     const rating = via ? muscles.get(via.muscle) : null;
     row.muscle = via ? via.muscle : muscle;
+    // 🆕 EB-3: every set behind the rating is past D5's 15 reps — a key of its
+    // own, because "record the lift" is not the fix; a set of 15 or fewer is.
+    const used = rating ? (rating.contributors || rating.used || []) : [];
+    const longOnly = used.length > 0 && used.every((u) => Number(u && u.reps) > MAX_EVIDENCE_REPS);
     row.why = !via ? 'no-conversion'
       : !rating ? 'no-evidence'
         : rating.kind === 'fallback' ? 'stand-in-only'
-          : 'no-evidence';
+          : longOnly ? 'high-reps-only'
+            : 'no-evidence';
     return row;
   }
 
@@ -443,7 +488,13 @@ function byRank(a, b) {
  *            ageDays (days from `best.date` to `today`, or null),
  *            source: 'recorded' | 'converted' | null, from: string[],
  *            ratio, why: null | 'no-evidence' | 'stand-in-only' |
- *            'no-conversion' | 'no-standard' }
+ *            'no-conversion' | 'no-standard' | 'high-reps-only',
+ *            bestEver (EB-7: the ever-best e1RM { value, total, weight,
+ *              reps, date, … } when it differs from `oneRM`, else null),
+ *            addedLoad ('+ bar' | null — EB-8) }
+ *
+ *   🔄 2026-09-27: a recorded row's number is `ownBestSet()`'s pick — the
+ *   runner's "your max" (recent beats old) — not the ever-best.
  *
  *   `core` always has exactly CORE_LIFTS.length rows — a core lift is never
  *   dropped, it comes back with `oneRM: null` and a `why`. `other` is every
@@ -465,7 +516,15 @@ export function rankedLifts({
   // ⚠️ THE SEX THE PERCENTILE IS COMPUTED AGAINST, assumed or not — so the ratio
   // hop and the percentile hop of one row read the same population, and when
   // it was assumed the screen already says so from `assumed`.
-  const ctx = { muscles: ratings, ranked, bodyWeight: bw, sex: ranked.gender || null, today: today || null };
+  const ctx = {
+    muscles: ratings, ranked, bodyWeight: bw, sex: ranked.gender || null, today: today || null,
+    // EB-7: the rows the runner's `ownBestSet()` reads, so both screens pick one set.
+    rows: {
+      sessions: Array.isArray(sessions) ? sessions : [],
+      benchmarks: Array.isArray(benchmarks) ? benchmarks : [],
+      bodyWeights: Array.isArray(bodyWeights) ? bodyWeights : [],
+    },
+  };
 
   const recorded = bestLifts(sessions, { exMap: map, benchmarks, limit: 0, bodyWeights }).lifts;
 

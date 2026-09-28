@@ -112,7 +112,9 @@ export function leadingRun(sets) {
     if (r === null) break;
     const sw = weightOf(s);
     if (w === null) w = sw;
-    else if (sw !== w) break;
+    // 🆕 EA-7: within 0.01 lb, the tolerance progression.sameWeight uses. A
+    // suggested 25 kg and a typed 25 kg differ in the last float bits.
+    else if (Math.abs(sw - w) >= 0.01) break;
     out.push(r);
     if (minisOf(s).length) break;
   }

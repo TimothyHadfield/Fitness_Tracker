@@ -3,7 +3,7 @@
 import {
   store, auth, social, seriesForExercise, chartableExercises, activityByDate, todayISO,
   normalizedSeries, defaultTargetReps, bodyWeightSeries, SOURCE_LABEL, currentBests,
-  CLOUD_WARN_AT, weeklyVolumeByMuscle, weightRepObservations,
+  CLOUD_WARN_AT, weeklyVolumeByMuscle, weightRepObservations, muscleStrength,
 } from './store.js';
 import {
   hypertrophyTier, strengthTier, INDIRECT_NOTE_WEEKLY, SESSION_CEILING,
@@ -29,6 +29,10 @@ import {
   refreshRoute, helpDot, wireSegmented,
 } from './ui.js';
 import { muscleGroupsPane } from './views-muscles.js';
+// Namespace, so a missing export is `undefined` and guarded rather than a load error.
+import * as muscleViews from './views-muscles.js';
+import * as plates from './plates.js';
+import { normalizeCompare, matchesPreset } from './strength-standards.js';
 import { ageStrengthSeries, appGradingCurve, AGE_SOURCE, NOT_COVERED } from './research-data.js';
 import {
   TOPICS, CONFIDENCE, CONFIDENCE_ORDER, SECTIONS, SECTION_ORDER, topicSources,
@@ -922,7 +926,7 @@ export function ownCalendar(activity, today, opts = {}) {
         setChildren(host, friend
           ? emptyState('Nothing to draw yet', `${who} has not published any sessions you can read.`)
           : emptyState('No training recorded yet',
-            'Every workout you finish fills in its day here, month by month.'));
+            'Each workout you finish fills in its day.'));
         return;
       }
       setChildren(host,
@@ -1334,9 +1338,8 @@ function handoffRow(guest, date) {
         title: 'Send this to whom?',
         body: el('div', { class: 'list' },
           el('div', { class: 'field-help', text:
-            `They will be offered “${guest.workoutName || 'Workout'}” from ${fmtDateLong(date)} `
-            + 'and can add it to their own training. ⚠️ Nothing is written into their account '
-            + 'unless they accept it, and your copy stays here either way.' }),
+            `They'll be offered “${guest.workoutName || 'Workout'}” from ${fmtDateLong(date)}. `
+            + 'Nothing is added unless they accept; your copy stays.' }),
           ...state.connections.map((c) => el('button', {
             class: 'row', style: 'width:100%;text-align:left',
             onClick: async (e) => {
@@ -1726,8 +1729,7 @@ export async function GraphView(opts = {}) {
       // and are worth showing — telling someone who has just logged a full
       // workout that there is "nothing to chart" reads as the app having lost
       // their data (Tim, 2026-08-17).
-      setChildren(host, bestsPane(bests, 'A line needs the same lift on two different days. '
-        + 'Until then, here is where everything stands.'));
+      setChildren(host, bestsPane(bests, 'Record a lift on two different days to draw a line.'));
       return;
     }
     if (!graphChoice.exerciseId || !trendOptions.find((o) => o.id === graphChoice.exerciseId)) {
@@ -1975,7 +1977,7 @@ export async function GraphView(opts = {}) {
     setChildren(host,
       plot,
       el('div', { class: 'chart-foot' },
-        summaryStats(points, 'weight'),
+        summaryStats(points, 'weight', true, true, target),
         el('div', { class: 'chart-caption' },
           opt.loadType ? loadBadge(opt.loadType) : null,
           el('span', { class: 'pt-key' }),
@@ -2181,38 +2183,37 @@ export async function GraphView(opts = {}) {
     if (!cmp.fields.length) {
       setChildren(top);
       setChildren(host, bestsPane(bests,
-        'A bar needs the same lift recorded on two different days — as a benchmark, or in a '
-        + 'workout. Until then, here is where everything stands.'));
+        'Record a lift on two different days to draw a bar.'));
       return;
     }
     if (!compareField || !cmp.fields.includes(compareField)) compareField = cmp.fields[0];
     const barRows = cmp.byField[compareField];
 
+    /* 🔄 ~~the First/Latest legend~~ — DROPPED 2026-09-27 (screens SC-12): every
+     * row already labels its two bars Start and Now, and the legend called them
+     * something else. */
     setChildren(top,
-      el('div', { class: 'control-row' },
-        cmp.fields.length > 1
-          ? el('div', { class: 'chips tight' }, cmp.fields.map((f) =>
-              el('button', {
-                class: 'chip', 'aria-pressed': String(f === compareField),
-                text: FIELD_META[f].label,
-                onClick: () => { compareField = f; render(); },
-              })))
-          : null,
-        el('div', { class: 'bar-legend' },
-          el('span', {}, el('i', { class: 'k-start' }), 'First'),
-          el('span', {}, el('i', { class: 'k-now' }), 'Latest'),
-        ),
-      ),
+      cmp.fields.length > 1
+        ? el('div', { class: 'control-row' },
+          el('div', { class: 'chips tight' }, cmp.fields.map((f) =>
+            el('button', {
+              class: 'chip', 'aria-pressed': String(f === compareField),
+              text: FIELD_META[f].label,
+              onClick: () => { compareField = f; render(); },
+            }))))
+        : null,
     );
 
     const anyNormalized = barRows.some((r) => r.atReps);
     const usedSources = [...new Set(barRows.map((r) => r.source))];
-    const bars = barChart(barRows, compareField);
+    // 🆕 SC-12: a row names its source only when the list MIXES sources. When
+    // every row is from one, the caption says it once for all of them.
+    const bars = barChart(barRows, compareField, { sourcePerRow: usedSources.length > 1 });
     growBars(bars, '.bar-track > .bar', `${whose}|bars`);
     setChildren(host,
       bars,
       el('div', { class: 'chart-foot' },
-        el('div', { class: 'chart-caption' },
+        el('div', { class: 'chart-caption help-line' },
           el('span', {
             // ⚠️ THE CAPTION SAYS THE RULE, THE ROW SAYS THE ANSWER. When every
             // row happens to come from one source the caption can state it
@@ -2221,9 +2222,13 @@ export async function GraphView(opts = {}) {
             text: (usedSources.length === 1
               ? `${SOURCE_LABEL[usedSources[0]]} only`
               : 'One source per lift, never mixed — each row says which')
-              + (anyNormalized ? ' · @N reps means weight compared at that rep count, faded bars estimated' : '')
               + (cmp.pending ? ` · ${cmp.pending} more need a second recorded day` : ''),
-          })),
+          }),
+          // W P1: how to read "@N reps" and a faded bar is WHY, so it is behind the ?.
+          anyNormalized
+            ? helpDot('@N reps = weight compared at that rep count. Faded bars are estimated.',
+              { label: 'How to read these bars', title: 'Bars' })
+            : null),
       ),
     );
   }
@@ -2448,21 +2453,25 @@ function bestsPane(bests, intro) {
             : null,
         ),
       ))),
-    el('div', { class: 'field-help', text:
-      'Best effort for each lift. "~max" is an estimate from your reps, not a weight you have lifted.'
-      + (anyAssist
-        ? ' On an assisted machine the box holds the help, so the max shown is the '
-          + 'resistance you carried — it goes UP as the help comes down.'
-        : '')
-      /* 🚨 D5, SAID RATHER THAN SILENT. A 25-rep burnout set used to produce the "~max"
-       * on this list — 135 × 25 printed "~258 max" over a real 205 × 5. It is refused
-       * now, and a reader who remembers logging that set is owed the reason: the sets
-       * are still recorded, they are just not evidence of a maximum. */
-      + (droppedRows
-        ? ` Sets over ${MAX_EVIDENCE_REPS} reps are not used for a max — they measure `
-          + `stamina more than strength. ${droppedRows === 1 ? 'One lift has' : `${droppedRows} lifts have`} `
-          + 'sets left out that way.'
-        : '') }),
+    // 🔄 words P1 (2026-09-27): shortened; the assisted-machine reading is WHY
+    // the number goes up as the help comes down, so it sits behind the ?.
+    el('div', { class: 'help-line' },
+      el('span', { class: 'field-help', text:
+        'Best effort per lift. "~max" is estimated from reps.'
+        /* 🚨 D5, SAID RATHER THAN SILENT. A 25-rep burnout set used to produce the "~max"
+         * on this list — 135 × 25 printed "~258 max" over a real 205 × 5. It is refused
+         * now, and a reader who remembers logging that set is owed the reason: the sets
+         * are still recorded, they are just not evidence of a maximum. */
+        + (droppedRows
+          ? ` Sets over ${MAX_EVIDENCE_REPS} reps are not used for a max — they measure `
+            + `stamina more than strength. ${droppedRows === 1 ? 'One lift has' : `${droppedRows} lifts have`} `
+            + 'sets left out that way.'
+          : '') }),
+      anyAssist
+        ? helpDot('On an assisted machine the box holds the help, so the max shown is the '
+          + 'resistance you carried — it goes UP as the help comes down.',
+        { label: 'Why an assisted max goes up', title: 'Assisted machines' })
+        : null),
   );
 }
 
@@ -2528,8 +2537,7 @@ function oneRecordingState({ setText, date, source, est, estFrom, flags = '', dr
     el('div', { class: 'field-help', text:
       (est ? `The "~" max is an estimate from ${estFrom}, not a weight you have lifted. ` : '')
       + (dropped ? `${dropped} ` : '')
-      + 'One point is not a line, so nothing here is drawn as a trend. Record this on another '
-      + 'day and it becomes one.' }),
+      + "One point isn't a trend. Record it again another day." }),
   );
 }
 
@@ -2556,7 +2564,7 @@ const shownValue = (field, v) =>
 
 /* ---- paired horizontal bars: where a lift started, where it is now ---- */
 
-function barChart(rows, field) {
+function barChart(rows, field, { sourcePerRow = true } = {}) {
   // A guard, not a screen anybody should reach: renderCompare() falls back to
   // bestsPane() when there is nothing to compare, because a list of where every
   // lift stands is worth more than a sentence about what to record next.
@@ -2564,8 +2572,7 @@ function barChart(rows, field) {
     return emptyState('Nothing to compare yet',
       // ⚠️ RE-SHAPED, NOT HIDDEN — an empty state is an instruction, and an
       // instruction is WHAT. `emptyState()` takes a string in any case.
-      'Record the same exercise on two different days, as a benchmark or in a workout. '
-      + 'It will then appear here.');
+      'Record it on two different days to see it here.');
   }
 
   const max = Math.max(...rows.flatMap((r) => [r.start, r.now])) || 1;
@@ -2606,7 +2613,7 @@ function barChart(rows, field) {
            * is the head's small faint qualifier slot; a new one would be a
            * visual change nobody asked for, and this needs the styling that is
            * already there, not a new look. */
-          r.source ? el('span', { class: 'bar-reps', text: SOURCE_LABEL[r.source] }) : null,
+          r.source && sourcePerRow ? el('span', { class: 'bar-reps', text: SOURCE_LABEL[r.source] }) : null,
           r.atReps ? el('span', { class: 'bar-reps mono', text: `@${r.atReps} reps` }) : null,
           el('span', { class: 'bar-delta mono' + cls, text: `${sign}${fmt(Math.abs(r.delta))}${r.pct === null ? '' : ` · ${r.delta > 0 ? '+' : ''}${r.pct.toFixed(0)}%`}` }),
         ),
@@ -3355,7 +3362,12 @@ function lineChart(points, field, W = 360, H = 220, label = null, axisTitle = nu
 
 /* ---- summary beside the graph ---- */
 
-function summaryStats(points, field, judged = field !== 'time', whole = field === 'weight') {
+/* 🆕 `atReps` (screens SC-11, 2026-09-27): on the rep-normalised chart the
+ * tiles read "Start · 5 reps" / "Now · 5 reps". Profile prints the 1RM (300)
+ * beside a Graph "Now" of 245 — the weight for 5 reps (D11) — and without the
+ * rep count on the tile the two read as a contradiction. The axis said it; the
+ * tiles did not. D11 itself is unchanged. */
+function summaryStats(points, field, judged = field !== 'time', whole = field === 'weight', atReps = null) {
   const first = points[0].value;
   const last = points[points.length - 1].value;
   const diff = last - first;
@@ -3375,8 +3387,8 @@ function summaryStats(points, field, judged = field !== 'time', whole = field ==
       : trimNum(shownValue(field, v)));
 
   return el('div', { class: 'summary-grid' },
-    stat('Start', fmt(first), '', fmtDateShort(points[0].date)),
-    stat('Now', fmt(last), '', fmtDateShort(points[points.length - 1].date)),
+    stat(atReps ? `Start · ${atReps} reps` : 'Start', fmt(first), '', fmtDateShort(points[0].date)),
+    stat(atReps ? `Now · ${atReps} reps` : 'Now', fmt(last), '', fmtDateShort(points[points.length - 1].date)),
     stat('Change', (diff > 0 ? '+' : diff < 0 ? '−' : '') + fmt(Math.abs(diff)), cls),
     stat('Change %', pct === null ? '—' : `${sign}${pct.toFixed(1)}%`, cls),
   );
@@ -3408,16 +3420,14 @@ function describeAccount(state, configured) {
     return {
       title: 'Demo account',
       sub: 'Nothing here is saved — not to this device, not to an account',
-      dataHelp: 'You are looking at made-up data. Reloading starts it over, and leaving brings '
-        + 'your real account back exactly as it was. Download backup and Delete all data below '
-        + 'act on this demo only.',
+      dataHelp: 'Backup and Delete act on this demo only.',
     };
   }
   if (!configured) {
     return {
       title: 'This device only',
       sub: 'Cloud accounts not switched on',
-      dataHelp: 'Everything is stored on this device. Download a backup regularly — and always before clearing your browser data.',
+      dataHelp: 'Stored on this device. Back up before clearing browser data.',
     };
   }
   if (state.mode === 'local') {
@@ -3427,15 +3437,12 @@ function describeAccount(state, configured) {
       ? {
           title: 'Offline',
           sub: 'Saving to this device — will sync when you reconnect',
-          dataHelp: 'This device has no internet connection, so changes are being saved here. '
-            + 'They upload by themselves once you are back online.',
+          dataHelp: "Offline — saving here, uploads when you're back.",
         }
       : {
           title: 'Not connected',
           sub: 'Saving to this device — nothing is syncing',
-          dataHelp: 'Your account server cannot be reached at the moment — usually a connection '
-            + 'problem rather than anything wrong with your account. Changes are being saved here '
-            + 'and upload once it returns.',
+          dataHelp: "Can't reach your account — saving here, uploads when it's back.",
         };
   }
   const u = state.user || {};
@@ -3443,13 +3450,13 @@ function describeAccount(state, configured) {
     return {
       title: 'No account yet',
       sub: 'Your data is not backed up — tap to secure it',
-      dataHelp: 'Your data lives only in this browser. Clearing your browsing data will erase it permanently. Add an account, or download a backup.',
+      dataHelp: 'Only in this browser. Add an account or download a backup.',
     };
   }
   return {
     title: u.email || 'Signed in',
     sub: 'Synced to your account',
-    dataHelp: 'Your data syncs to your account and works offline. A downloaded backup is still the only copy you control directly.',
+    dataHelp: 'Syncs to your account and works offline.',
   };
 }
 
@@ -3516,14 +3523,19 @@ export function cloudFullWarning(usage) {
       ? 'Your account has no room for new ' + many
       : 'Your account is running out of room' }),
     ' ',
+    // 🔄 words P1 (2026-09-27): WHAT stays (full / how much room, and the one
+    // thing to do); why a backup is the answer goes behind the ?.
     full
-      ? `Your ${many} have reached the size limit for one account, so saving a new one `
-        + 'is being refused. Download a backup now — it holds everything, and it is not '
-        + 'subject to this limit.'
-      : `Your ${many} are using ${Math.round(usage.fraction * 100)} % of the space one account `
-        + `can hold — room for ${left === 1 ? `one more ${one}` : `about ${left} more`}. After `
-        + 'that, new ones stop saving to your account. Download a backup so nothing depends on '
+      ? 'New ones are being refused. Download a backup now.'
+      : `Your ${many} use ${Math.round(usage.fraction * 100)} % — room for `
+        + `${left === 1 ? `one more ${one}` : `about ${left} more`}. Download a backup.`,
+    ' ',
+    helpDot(full
+      ? `Your ${many} have reached the size limit for one account. A backup holds everything `
+        + 'and is not subject to this limit.'
+      : `After that, new ${many} stop saving to your account. A backup means nothing depends on `
         + 'the cloud copy alone.',
+    { label: 'Why download a backup', title: 'Account space' }),
   );
 }
 
@@ -3534,20 +3546,38 @@ export function cloudFullWarning(usage) {
  * label is the switch's accessible name, and `aria-checked` is its state.
  * Multi-choice settings (theme, colour, units) keep their chips.
  */
-export function onOffSwitch(label, on, onChange) {
+/* 🆕 A SAVE THAT FAILS PUTS THE KNOB BACK — overhaul 2026-09-27 (settings ST-2a).
+ * The switch flips the moment it is tapped (nothing waits on a network), and
+ * `onChange` may now return a promise. If that promise rejects, the knob springs
+ * back to where it was: in the demo "Findable by name" used to toast an error
+ * and stay OFF though nothing had changed — a control that lied. A plain return
+ * (or a promise that resolves) keeps the new state, exactly as before.
+ * `opts.help` puts a "?" beside the label (Rule 9: beside its text, says WHY). */
+export function onOffSwitch(label, on, onChange, opts = {}) {
   const id = `sw-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`;
   const sw = el('button', {
     type: 'button', class: 'switch', role: 'switch', id,
     'aria-checked': String(Boolean(on)),
     onClick: () => {
       const next = sw.getAttribute('aria-checked') !== 'true';
-      sw.setAttribute('aria-checked', String(next));
-      springKnob(sw.firstChild, next);
-      onChange(next);
+      const set = (v) => { sw.setAttribute('aria-checked', String(v)); springKnob(sw.firstChild, v); };
+      set(next);
+      let result;
+      try { result = onChange(next); } catch (err) { result = Promise.reject(err); }
+      if (result && typeof result.then === 'function') {
+        result.then(null, () => {
+          // Only if nothing newer has been asked for since.
+          if (sw.getAttribute('aria-checked') === String(next)) set(!next);
+        });
+      }
     },
   }, el('span', { class: 'switch-knob', 'aria-hidden': 'true' }));
+  const name = el('label', { for: id, text: label });
   return el('div', { class: 'switch-row' },
-    el('label', { for: id, text: label }),
+    opts.help
+      ? el('div', { class: 'help-line' }, name,
+        helpDot(opts.help, { label: opts.helpLabel || `Why ${label.toLowerCase()}`, title: label }))
+      : name,
     sw,
   );
 }
@@ -3609,6 +3639,16 @@ function revealTheme(apply, from) {
   vt.finished.finally(() => root.classList.remove('m2-theme-vt'));
 }
 
+/* 🆕 The choices the Weights rows offer (overhaul 2026-09-27, settings ST-4/ST-5).
+ * ONE list, owned by units.js (the same lists `setWeightPrefs` validates
+ * against), so Settings can never offer a value the engine then refuses.
+ * The fallbacks only cover an older units.js. Values are in the unit shown. */
+const STEP_OPTIONS = units.WEIGHT_STEP_OPTIONS || { lbs: [2.5, 5], kg: [1, 1.25, 2.5] };
+const STEP_DEFAULT = units.DEFAULT_WEIGHT_STEP || { lbs: 5, kg: 2.5 };
+const BAR_OPTIONS = units.BAR_OPTIONS || { lbs: [45, 35, 15], kg: [20, 15, 10] };
+const PLATE_OPTIONS = units.PLATE_OPTIONS
+  || { lbs: [55, 45, 35, 25, 10, 5, 2.5, 1.25], kg: [25, 20, 15, 10, 5, 2.5, 1.25, 0.5] };
+
 export async function SettingsView() {
   // ⚠️ SLIMMED 2026-08-26 on Tim's instruction: the profile row, the backup /
   // restore card and Delete all data moved to the ACCOUNT screen (the profile
@@ -3620,14 +3660,37 @@ export async function SettingsView() {
   ]);
   const accountLine = describeAccount(accountState, auth.configured());
 
+  // 🆕 'auto' follows the phone (ST-10). app.js owns the live listener at boot;
+  // here the choice is painted at once, resolved against the phone right now.
+  const phoneTheme = () => (typeof window !== 'undefined' && window.matchMedia
+    && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   function setTheme(theme, e) {
+    const shown = theme === 'auto' ? phoneTheme() : theme;
     const was = document.documentElement.getAttribute('data-theme');
-    const apply = () => document.documentElement.setAttribute('data-theme', theme);
-    if (was === theme) apply();
+    const apply = () => document.documentElement.setAttribute('data-theme', shown);
+    if (was === shown) apply();
     else revealTheme(apply, e.currentTarget || e.target);
-    store.saveSettings({ theme });
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
+    saveAndSeed({ theme });
+    pressOnly(e);
+  }
+
+  // One pressed chip in a chip row — the button tapped, even if a child was hit.
+  function pressOnly(e) {
+    const chip = (e.target.closest && e.target.closest('.chip')) || e.target;
+    chip.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    chip.setAttribute('aria-pressed', 'true');
+  }
+
+  // 🚨 EVERY WRITE GOES THROUGH store.saveSettings (the queue), and the weight
+  // prefs are re-seeded from what was actually saved, so the stepper, warm-ups
+  // and plate labels read the new step or plates on the very next render.
+  // `setWeightPrefs` is the WEIGHTS builder's (units.js); guarded until it lands.
+  function saveAndSeed(patch) {
+    return store.saveSettings(patch).then((next) => {
+      Object.assign(settings, patch);
+      if (typeof units.setWeightPrefs === 'function') units.setWeightPrefs(next || settings);
+      return next;
+    });
   }
 
   // The colour direction — Tim liked all three options, so all three shipped
@@ -3636,9 +3699,8 @@ export async function SettingsView() {
   function setPalette(palette, e) {
     if (palette === 'gold') document.documentElement.removeAttribute('data-palette');
     else document.documentElement.setAttribute('data-palette', palette);
-    store.saveSettings({ palette });
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
+    saveAndSeed({ palette });
+    pressOnly(e);
   }
 
   const PALETTES = [
@@ -3655,109 +3717,244 @@ export async function SettingsView() {
   // 🔄 The three yes/no settings are switches since review 2026-09-24 (`onOffSwitch`),
   // which flips its own state, so these only save and say so.
   function setMoreDetails(on) {
-    store.saveSettings({ moreDetails: on });
     toast(on ? 'Showing percentiles' : 'Showing rankings only');
+    return saveAndSeed({ moreDetails: on });
   }
 
   // Shows or hides the rest bar on the workout screen. Nothing stored changes;
   // a draft's old restStartedAt just stops being painted.
   function setRestTimer(on) {
-    store.saveSettings({ restTimer: on });
     toast(on ? 'Rest timer on' : 'Rest timer off');
+    return saveAndSeed({ restTimer: on });
   }
 
-  /* Whether other people can find you by typing your name (2026-08-29).
-   *
-   * ⚠️ IT IS A COURTESY, NOT A PROTECTION, and the help text has to say so.
-   * The rules cannot enforce it — a client can always write its own directory
-   * row — so calling it a privacy control would be the same class of overclaim
-   * the disconnect sheet shipped with in 2026-08-24. What it genuinely does is
-   * take your row out, which is what search reads.
-   *
-   * Defaults ON by absence, unlike the rest timer, and for the opposite
-   * reason: with fewer than five accounts on the site, a directory nobody is
-   * in is a search that never finds anybody. */
-  function setListed(on) {
-    social.setListed(on)
-      .then(() => toast(on ? 'People can find you by name' : 'You are no longer findable'))
-      .catch((err) => toast(err.message));
-  }
-
-  // Whether a group workout a friend logs for you waits for Add (2026-09-27).
-  function setAskGroup(on) {
-    store.saveSettings({ askBeforeGroupWorkouts: on });
-    toast(on ? 'Group workouts wait for you' : 'Group workouts are added for you');
-  }
+  /* 🔄 ~~Findable by name~~ and ~~Ask before adding group workouts~~ LEFT
+   * SETTINGS ON 2026-09-27 (overhaul, settings ST-2b/ST-3): both are about what
+   * other people may see or put in your account, and privacy lives in Account
+   * (design taste #8). views-account.js "Who can see you" holds them now. */
 
   // Changing units re-labels the app; it does NOT touch a single stored number.
   // Everything is kept in pounds, so switching back and forth is lossless.
   function setUnits(u, e) {
     units.setUnits(u);
-    store.saveSettings({ units: u });
-    e.target.parentElement.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-    e.target.setAttribute('aria-pressed', 'true');
+    pressOnly(e);
     toast(u === 'kg' ? 'Showing kilograms' : 'Showing pounds');
+    // The steps and plates rows are per unit, so they redraw in the new one.
+    paintWeights();
+    return saveAndSeed({ units: u });
   }
 
+  /* ---- 🆕 Weights: steps and plates (ST-4, ST-5) ----
+   * Stored per unit, in that unit (`weightStep: {lbs, kg}`,
+   * `plates: {lbs: {bar, have}, kg: {…}}`), and ALWAYS written whole: the store
+   * merges one level deep, so saving `{plates: {kg: …}}` alone would wipe lbs.
+   * Absent means today's behaviour — 5 lb / 2.5 kg, and plates.js's inventories. */
+  const unitNow = () => (units.units() === 'kg' ? 'kg' : 'lbs');
+  const stepFor = (u) => {
+    const saved = settings.weightStep && Number(settings.weightStep[u]);
+    return STEP_OPTIONS[u].includes(saved) ? saved : STEP_DEFAULT[u];
+  };
+  const platesFor = (u) => {
+    const inv = u === 'kg' ? plates.KG_INVENTORY : plates.LB_INVENTORY;
+    const def = (units.DEFAULT_PLATES && units.DEFAULT_PLATES[u]) || { bar: inv.bar, have: inv.plates };
+    const saved = settings.plates && settings.plates[u];
+    const bar = saved && BAR_OPTIONS[u].includes(Number(saved.bar)) ? Number(saved.bar) : def.bar;
+    const have = saved && Array.isArray(saved.have)
+      ? PLATE_OPTIONS[u].filter((p) => saved.have.map(Number).includes(p))
+      : [...def.have];
+    return { bar, have };
+  };
+  const bothPlates = () => ({ lbs: platesFor('lbs'), kg: platesFor('kg') });
+  const platesText = (u) => {
+    const p = platesFor(u);
+    return `${trimNum(p.bar)} bar · ${p.have.length ? p.have.map(trimNum).join(' ') : 'none'}`;
+  };
+
+  function setStep(value, e) {
+    const u = unitNow();
+    pressOnly(e);
+    return saveAndSeed({ weightStep: { lbs: stepFor('lbs'), kg: stepFor('kg'), [u]: value } });
+  }
+
+  function openPlatesSheet() {
+    const u = unitNow();
+    let draft = platesFor(u);
+    const body = el('div', { class: 'plates-sheet' });
+    const save = () => {
+      const all = bothPlates();
+      all[u] = { bar: draft.bar, have: [...draft.have] };
+      settings.plates = all;      // the row repaints from what is being saved
+      paintWeights();
+      return saveAndSeed({ plates: all });
+    };
+    const draw = () => setChildren(body,
+      el('div', { class: 'field' },
+        el('div', { class: 'section-label', text: 'Bar' }),
+        el('div', { class: 'chips' }, BAR_OPTIONS[u].map((b) => el('button', {
+          class: 'chip', 'aria-pressed': String(draft.bar === b), text: `${trimNum(b)} ${u}`,
+          onClick: () => { draft = { ...draft, bar: b }; draw(); save(); },
+        })))),
+      el('div', { class: 'field' },
+        el('div', { class: 'help-line' },
+          el('div', { class: 'section-label', text: 'Plates you have' }),
+          helpDot('Plate labels and warm-ups only use plates you own.',
+            { label: 'Why plates matter', title: 'Plates you have' })),
+        plateChips()),
+    );
+    const plateChips = () => el('div', { class: 'chips' }, PLATE_OPTIONS[u].map((p) => el('button', {
+      class: 'chip', 'aria-pressed': String(draft.have.includes(p)), text: trimNum(p),
+      onClick: () => {
+        const have = draft.have.includes(p) ? draft.have.filter((x) => x !== p) : [...draft.have, p];
+        draft = { ...draft, have: PLATE_OPTIONS[u].filter((x) => have.includes(x)) };
+        draw(); save();
+      },
+    })));
+    draw();
+    openSheet({ title: `Plates (${u})`, body });
+  }
+
+  // A switch whose key is ON by absence (`!== false`), saved through the queue.
+  const onByAbsence = (key, word) => (on) => {
+    toast(`${word} ${on ? 'on' : 'off'}`);
+    return saveAndSeed({ [key]: on });
+  };
+
+  // 🆕 Glass effects (key `glass`, on by absence). app.js paints
+  // `<html data-glass="off">` at boot; this paints it at once.
+  function setGlass(on) {
+    if (on) document.documentElement.removeAttribute('data-glass');
+    else document.documentElement.setAttribute('data-glass', 'off');
+    return saveAndSeed({ glass: on });
+  }
+
+  /* ---- 🆕 Compared to — a door to the muscle map's own sheet (ST-14) ----
+   * ONE sheet and one stored value: this opens `openCompareSheet` from
+   * views-muscles.js rather than a second copy. Its row says the preset. */
+  const compareName = () => {
+    const profile = { gender: settings.gender || null };
+    if (matchesPreset(settings.compare, 'like-me', profile)) return 'Like me';
+    if (matchesPreset(settings.compare, 'everyone', profile)) return 'Everyone';
+    return 'Custom';
+  };
+  const compareValue = el('span', { class: 'set-value', text: compareName() });
+  async function openCompare() {
+    const opener = muscleViews.openCompareSheet;
+    if (typeof opener !== 'function') { toast('Could not open that just now'); return; }
+    let profile = { gender: settings.gender || null, compare: normalizeCompare(settings.compare) };
+    try { const got = await muscleStrength(); if (got && got.profile) profile = got.profile; } catch (_) { /* the plain profile still works */ }
+    opener(profile, (next) => {
+      settings.compare = next;
+      compareValue.textContent = compareName();
+    });
+  }
+
+  // A one-line row that opens a sheet: label left, and on the right a chip that
+  // shows the current value and opens the choices — the same shape as the chip
+  // rows around it, so it needs no new style.
+  const doorRow = (label, value, onClick) => el('div', { class: 'switch-row set-door' },
+    el('label', { text: label }),
+    el('button', {
+      type: 'button', class: 'chip set-door-chip', 'aria-haspopup': 'dialog', onClick,
+    }, value, el('span', { 'aria-hidden': 'true', text: ' ›' })),
+  );
+
+  // A one-line row of chips: label (and its ?) left, the chips right, and an
+  // optional short note between them (Units' "Display only.").
+  const chipRow = (label, chips, help, note = null) => el('div', { class: 'switch-row set-chips' },
+    help || note ? el('div', { class: 'help-line' }, el('label', { text: label }), help, note)
+      : el('label', { text: label }),
+    el('div', { class: 'chips tight' }, chips),
+  );
+
+  const weightsHost = el('div', { class: 'set-rows' });
+  function paintWeights() {
+    const u = unitNow();
+    setChildren(weightsHost,
+      chipRow('Units', [
+        el('button', { class: 'chip', 'aria-pressed': String(u !== 'kg'), text: 'lbs', onClick: (e) => setUnits('lbs', e) }),
+        el('button', { class: 'chip', 'aria-pressed': String(u === 'kg'), text: 'kg', onClick: (e) => setUnits('kg', e) }),
+      ], helpDot('Switching never changes anything you have recorded — weights are stored one way '
+        + 'and only the label changes.', { label: 'Why switching is safe', title: 'Units' }),
+      /* ⚠️ THE SAFETY HALF STAYS IN THE OPEN (Rule 9): it is a statement about
+       * the reader's data. HOW that is true is behind the ?. On the row itself,
+       * between the label and the chips, so it costs no line. */
+      el('span', { class: 'field-help set-note', text: 'Display only.' })),
+      chipRow('Weight steps', STEP_OPTIONS[u].map((s) => el('button', {
+        class: 'chip', 'aria-pressed': String(stepFor(u) === s), text: trimNum(s),
+        onClick: (e) => setStep(s, e),
+      })), helpDot('Smaller steps let suggestions add weight when you own micro-plates.',
+        { label: 'Why weight steps', title: 'Weight steps' })),
+      doorRow('Plates', el('span', { class: 'set-value', text: platesText(u) }), openPlatesSheet),
+    );
+  }
+  paintWeights();
+
+  const group = (label, ...rows) => el('div', { class: 'field set-group' },
+    el('div', { class: 'section-label', text: label }), ...rows);
+
+  const tourRow = el('div', { class: 'switch-row set-chips' },
+    el('div', { class: 'chips tight' },
+      el('button', {
+        class: 'chip', text: 'Take the tour',
+        onClick: () => import('./tour.js').then((m) => m.startTour())
+          .catch(() => toast('Could not open that just now')),
+      }),
+      el('button', {
+        class: 'chip', text: 'Find me a program',
+        onClick: () => import('./onboarding.js').then((m) => m.openOnboarding({}))
+          .catch(() => toast('Could not open that just now')),
+      }),
+    ));
+
+  /* 🔄 REGROUPED 2026-09-27 (overhaul, settings ST-11): Look · Weights ·
+   * Workout · Data · Help, then one Account row. Every control is ONE line —
+   * label left, control right — and the sentences that sat under each one went
+   * behind its "?" (Tim: labels 1–3 words, the ? says WHY). Two lines stay in
+   * the open because they are about the reader's data (Rule 9): Units "Display
+   * only." and More details "Your ranking doesn't change." ≤70 visible words. */
+  const theme = ['light', 'auto'].includes(settings.theme) ? settings.theme : 'dark';
   return screenShell({
     title: 'Settings',
     back: () => go('#/home'),
     scroll: [
-      el('div', { class: 'field' },
-        el('label', { text: 'Appearance' }),
-        el('div', { class: 'chips' },
-          el('button', { class: 'chip', 'aria-pressed': String(settings.theme !== 'light'), text: 'Dark', onClick: (e) => setTheme('dark', e) }),
-          el('button', { class: 'chip', 'aria-pressed': String(settings.theme === 'light'), text: 'Light', onClick: (e) => setTheme('light', e) }),
-        ),
-        el('div', { class: 'field-help', text: 'Dark is easier to read under gym lighting.' }),
+      group('Look',
+        chipRow('Theme', [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Auto']].map(([key, name]) =>
+          el('button', {
+            class: 'chip', 'aria-pressed': String(theme === key), text: name,
+            onClick: (e) => setTheme(key, e),
+          })), helpDot('Auto follows your phone, dark at night and light by day.',
+          { label: 'Why Auto', title: 'Theme' })),
+        /* The chips' swatches say which colour is which; the ? says the one
+         * thing they cannot — that this is not a second theme switch. */
+        chipRow('Colour', PALETTES.map(([key, name, swatch]) =>
+          el('button', {
+            class: 'chip palette-chip',
+            'aria-pressed': String(currentPalette === key),
+            onClick: (e) => setPalette(key, e),
+          },
+            el('span', { class: 'palette-dot', style: `background:${swatch}` }),
+            name)), helpDot('Works with both Dark and Light. Gold is the original; Teal and Indigo '
+          + 'cool the app, Ember warms it.', { label: 'What each colour does', title: 'Colour' })),
+        onOffSwitch('Glass effects', settings.glass !== false, setGlass,
+          { help: 'Off makes bars and sheets solid.' }),
       ),
 
-      el('div', { class: 'field' },
-        el('div', { class: 'help-line' },
-          el('label', { text: 'Colour' }),
-          helpDot('Gold is the original. Teal and Indigo cool the whole app down; Ember keeps the '
-            + 'gold and warms everything around it.', { label: 'What each colour does' })),
-        el('div', { class: 'chips' },
-          ...PALETTES.map(([key, name, swatch]) =>
-            el('button', {
-              class: 'chip palette-chip',
-              'aria-pressed': String(currentPalette === key),
-              onClick: (e) => setPalette(key, e),
-            },
-              el('span', { class: 'palette-dot', style: `background:${swatch}` }),
-              name)),
-        ),
-        /* ⚠️ WHAT SURVIVED THE SPLIT ABOVE (Rule 9). The one thing a reader
-         * needs before tapping is that this is NOT a second theme switch — a
-         * person who thinks it is will avoid it — and that is five words. Which
-         * of the four is warm and which is cool describes options whose
-         * swatches are already drawn on the chips, so it went behind the ? on
-         * the label rather than sitting here as a paragraph. */
-        el('div', { class: 'field-help', text: 'Works with both Dark and Light.' }),
-      ),
+      group('Weights', weightsHost),
 
-      el('div', { class: 'field' },
-        el('label', { text: 'Weight units' }),
-        el('div', { class: 'chips' },
-          el('button', {
-            class: 'chip', 'aria-pressed': String(units.units() !== 'kg'),
-            text: 'lbs', onClick: (e) => setUnits('lbs', e),
-          }),
-          el('button', {
-            class: 'chip', 'aria-pressed': String(units.units() === 'kg'),
-            text: 'kg', onClick: (e) => setUnits('kg', e),
-          }),
-        ),
-        /* ⚠️ THE SAFETY HALF STAYS IN THE OPEN. "Switching never changes
-         * anything you have recorded" is a statement about the reader's data
-         * and Rule 9 keeps those on the screen; HOW that is true — one stored
-         * unit, converted for display — is WHY. */
-        el('div', { class: 'help-line' },
-          el('span', { class: 'field-help', text:
-            'Display only. Switching never changes anything you have recorded.' }),
-          helpDot('Weights are stored the same way either way, so switching back and forth as '
-            + 'often as you like changes nothing but the label.',
-          { label: 'Why switching is safe' })),
+      group('Workout',
+        onOffSwitch('Auto warm-ups', settings.autoWarmups !== false, onByAbsence('autoWarmups', 'Auto warm-ups'),
+          { help: 'Adds warm-up sets before heavy lifts. Off: add them yourself.' }),
+        onOffSwitch('Set hints', settings.setHints !== false, onByAbsence('setHints', 'Set hints'),
+          { help: 'Off hides "% of max" and "to failure" captions. Typo warnings stay.' }),
+        /* ⚠️ REST TIMER — OFF BY DEFAULT, Tim's own read of training
+         * (2026-08-28): *"I don't love the rest timer personally."* Off means the
+         * bar is absent from the workout screen; existing accounts are off by
+         * ABSENCE too, deliberately. ST-16 (2026-09-27): the switch and default
+         * are unchanged; its sentence moved behind the ?. */
+        onOffSwitch('Rest timer', settings.restTimer === true, setRestTimer,
+          { help: 'A rest clock at the bottom of the workout. Rest starts when you log a set.' }),
+        onOffSwitch('Keep screen on', settings.keepAwake !== false, onByAbsence('keepAwake', 'Keep screen on'),
+          { help: 'Stops the phone locking mid-workout, so no unlocking with chalky hands.' }),
       ),
 
       /* ⚠️ MORE DETAILS — OFF BY DEFAULT, and the default is the point.
@@ -3778,81 +3975,24 @@ export async function SettingsView() {
        * Rolling other things under it later is Tim's stated plan; naming it for
        * a scope it does not have yet would be a promise the switch cannot keep.
        */
-      el('div', { class: 'field' },
+      group('Data',
         onOffSwitch('More details', settings.moreDetails === true, setMoreDetails),
-        /* 🚨 "THE RANKING IS THE SAME EITHER WAY" DOES NOT GO BEHIND THE ?, and
-         * that is the whole reason this switch is honest. It changes what the
-         * reader thinks the ranking IS — somebody who believes turning this off
-         * gives them a gentler level has been misled by a setting. What moved
-         * is the naming of the levels (the muscle map prints them) and the
-         * phrasing about seeing the working. */
+        /* 🚨 "YOUR RANKING DOESN'T CHANGE" DOES NOT GO BEHIND THE ?, and that is
+         * the whole reason this switch is honest. It changes what the reader
+         * thinks the ranking IS — somebody who believes turning this off gives
+         * them a gentler level has been misled by a setting. */
         el('div', { class: 'help-line' },
-          el('span', { class: 'field-help', text:
-            'Off shows your ranking and nothing else. On adds the percentile behind it — the '
-            + 'ranking is the same either way.' }),
+          el('span', { class: 'field-help', text: 'Adds the percentile. Your ranking doesn\'t change.' }),
           helpDot('The rankings are Beginner through Elite, and they are worked out from the same '
             + 'percentile whichever way this is set. It only decides how much of the working you '
             + 'see.', { label: 'What more details actually changes' })),
+        doorRow('Compared to', compareValue, openCompare),
       ),
 
-      /* ⚠️ REST TIMER — OFF BY DEFAULT, and the default is Tim's own read of
-       * training (2026-08-28): *"I don't love the rest timer personally. When
-       * I'm working out it just doesn't help and it's easy for me to feel it
-       * out myself."* Off means the bar is not on the workout screen at all —
-       * not greyed, not collapsed, absent. On restores exactly the bar that
-       * shipped: it starts when a set is logged, and its little chip cycles an
-       * optional target.
-       *
-       * ⚠️ Existing accounts flip to off too, because the setting defaults by
-       * ABSENCE. That is deliberate rather than an oversight — the person who
-       * asked for off-by-default is also the app's heaviest user, and anybody
-       * who misses the bar has a one-tap way back. */
-      el('div', { class: 'field' },
-        onOffSwitch('Rest timer', settings.restTimer === true, setRestTimer),
-        // ⚠️ RE-SHAPED, NOT HIDDEN. Every word here is what the switch DOES,
-        // and a person deciding whether to turn something on must not have to
-        // open a ? to find out what it turns on. One 22-word sentence became two.
-        el('div', { class: 'field-help', text:
-          'On shows a rest clock at the bottom of the workout screen. It starts when you log a '
-          + 'set. You can give it a target to count against.' }),
-      ),
+      /* 🆕 HELP — moved here from Account (onboarding O-12): the tour's own last
+       * stop says "Replay this tour from here". */
+      group('Help', tourRow),
 
-      /* ⚠️ FINDABLE BY NAME — the opt-out for the directory added 2026-08-29.
-       * The whole argument for the directory existing at all is above the
-       * `directory` block in firestore.rules; this is the one control a person
-       * has over it, and the help text is deliberately blunt about what it is
-       * and is not. */
-      el('div', { class: 'field' },
-        onOffSwitch('Findable by name', settings.listedInDirectory !== false, setListed),
-        /* ⚠️ WHAT THE SWITCH DOES STAYS ON THE SCREEN; the reassurance about
-         * what is listed moved behind the ? (2026-09-07). "You still have to
-         * accept" is load-bearing — it is the difference between being findable
-         * and being connected — so it survives, in five words. */
-        el('div', { class: 'help-line' },
-          el('span', { class: 'field-help', text:
-            'On: people can find you by name and ask to connect. You still accept.' }),
-          helpDot(el('div', {},
-            el('p', { text: 'Off takes your name out of that search. Your code and invite '
-              + 'links keep working.' }),
-            el('p', { text: 'Only your display name is ever listed — never your email, and '
-              + 'nothing about your training.' }),
-          ), { label: 'What being findable means' })),
-      ),
-
-      /* 🆕 ASK BEFORE ADDING GROUP WORKOUTS — OFF BY DEFAULT (Tim, 2026-09-27:
-       * group workouts apply "automatically … they don't need to accept it",
-       * plus "a setting (that is off by default) that makes it so the user does
-       * have to accept"). Off: a workout a friend logs for you is added on its
-       * own (social.autoApplyHandoffs). On: it waits on the Friends screen for
-       * Add, as before. Sits beside Findable by name, the other friends switch. */
-      el('div', { class: 'field' },
-        onOffSwitch('Ask before adding group workouts',
-          settings.askBeforeGroupWorkouts === true, setAskGroup),
-        el('div', { class: 'field-help', text:
-          'On: a workout a friend logs for you waits for you to tap Add.' }),
-      ),
-
-      el('div', { class: 'section-label', text: 'You' }),
       /* 🔄 ~~THE GOALS ROW LIVED HERE~~ **IT IS ON PROFILE SINCE 2026-09-11**,
        * step 4 of the Data/Profile split (`direction.md` §4b, `progress.md` Open
        * work 29). The old comment is worth keeping because its argument is the
@@ -3868,16 +4008,20 @@ export async function SettingsView() {
       // One pointer, not the details: profile, backup and delete moved to the
       // Account screen (2026-08-26, Tim). The row survives so somebody who has
       // always found them here is redirected rather than stranded.
+      // 🔄 ST-12 (2026-09-27): "Account", no sub-line — the old sub was
+      // migration wording from 2026-08-26.
       el('a', { class: 'row', href: '#/account' },
         el('div', { class: 'row-main' },
-          el('div', { class: 'row-title', text: 'Account & profile' }),
-          el('div', { class: 'row-sub', text: 'Photo, body details, backups — now under the profile icon' }),
+          el('div', { class: 'row-title', text: 'Account' }),
         ),
         el('span', { class: 'row-chev' }, chevron()),
       ),
 
-      el('div', { style: 'font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.5' },
-        'Fitness Tracker · ' + accountLine.sub.toLowerCase()),
+      // 🔄 W-9/W-22 (2026-09-27): no footer in the demo — the demo bar on every
+      // screen already says nothing is saved. Real accounts keep theirs.
+      accountState.mode === 'demo' ? null
+        : el('div', { style: 'font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.5' },
+          'Fitness Tracker · ' + accountLine.sub.toLowerCase()),
     ],
   });
 }
@@ -3937,13 +4081,17 @@ const fmtSets = (n) => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, '');
  * is five chances to print a window total under a weekly heading. */
 function volRow(m, scale, open, onToggle) {
   const value = m.weeklySets;
-  const tier = hypertrophyTier(m.weeklySets);
   const none = value <= 0;
 
-  const sub = none
-    ? 'Nothing logged'
-    : `${tier.label} · ${m.daysTrained ? `${fmtSets(m.sessionsPerWeek)} days a week` : 'never trained directly'}`;
-
+  /* 🔄 ONE LINE A ROW — screens SC-4, 2026-09-27. The row was three lines (name
+   * and number, bar, then tier · days a week), so thirteen muscles ran ~730px
+   * under the figure. The tier and the days a week are the WORKING, and the
+   * working has one home: the panel a tap opens (`volDetail`). The row keeps
+   * name · bar · number. A zero row still SAYS "Nothing logged" in the number's
+   * place, because a blank would read as a missing figure (zero sets IS one).
+   * The bar is painted from the same ramp as the figure and the key, so a row
+   * and its muscle on the body are the same colour. */
+  const shade = volumeShade(value);
   const btn = el('button', {
     class: 'vol-row' + (none ? ' is-none' : ''),
     'aria-pressed': String(open),
@@ -3953,19 +4101,21 @@ function volRow(m, scale, open, onToggle) {
     el('span', { class: 'vol-head' },
       el('span', { class: 'vol-name', text: m.muscle }),
       el('span', { class: 'vol-num' },
-        el('b', { text: fmtSets(value) }),
-        el('span', { class: 'vol-unit', text: ' / wk' }),
+        none ? el('span', { class: 'vol-unit', text: 'Nothing logged' }) : el('b', { text: fmtSets(value) }),
+        none ? null : el('span', { class: 'vol-unit', text: ' / wk' }),
       ),
     ),
     // Decorative: every number and every label above and below it is already
     // text, so the bar adds shape rather than meaning. A screen reader that
     // announced it would be reading the same figure twice.
     el('span', { class: 'vol-track', 'aria-hidden': 'true' },
-      el('span', { class: 'vol-fill', style: `width:${Math.min(100, (value / scale) * 100).toFixed(2)}%` }),
-      // The one threshold the source actually states.
+      el('span', {
+        class: 'vol-fill',
+        style: `width:${Math.min(100, (value / scale) * 100).toFixed(2)}%;background:var(--vol-${shade.key})`,
+      }),
+      // The one threshold the source actually states; its label is once, above the list.
       el('span', { class: 'vol-med', style: `left:${Math.min(100, (4 / scale) * 100).toFixed(2)}%` }),
     ),
-    el('span', { class: 'vol-sub', text: sub }),
   );
 
   return el('div', { class: 'vol-item' }, btn);
@@ -4002,12 +4152,11 @@ function volDetail(m, weeks) {
      * know the app looked and found nothing — that is WHAT, and it is one
      * sentence. The argument for why an empty answer is the point of the screen
      * is exactly the kind of reasoning Rule 9 puts one tap away. */
+    // 🔄 words P1 (2026-09-27): the second line argued with the reader ("that is
+    // the finding rather than a gap") and the first already states the finding.
     return el('div', { class: 'vol-detail' },
-      el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          `Nothing in this window trained ${m.muscle}, directly or through another lift.` }),
-        helpDot('That is the finding rather than a gap in the app — a muscle with no work is what '
-          + 'this screen exists to make visible.', { label: 'Why this is not a missing number' })),
+      el('div', { class: 'field-help', text:
+        `Nothing in this window trained ${m.muscle}, directly or through another lift.` }),
     );
   }
 
@@ -4016,6 +4165,9 @@ function volDetail(m, weeks) {
     // weekly figure and nothing else. That is now the only figure this screen
     // prints, which is why they are unconditional.
     el('div', { class: 'vol-tier' },
+      // 🆕 SC-4: moved here from the row's old second line.
+      el('div', { class: 'vol-tier-line' }, el('b', { text: 'Trained: ' }),
+        m.daysTrained ? `${fmtSets(m.sessionsPerWeek)} days a week.` : 'never directly — only through other lifts.'),
       el('div', { class: 'vol-tier-line' }, el('b', { text: hyp.label + '. ' }), hyp.detail),
       el('div', { class: 'vol-tier-line' }, el('b', { text: 'For strength: ' }),
         `${str.label.toLowerCase()}. ${str.detail}`),
@@ -4206,12 +4358,11 @@ export async function renderVolumePane(host, top, opts = {}) {
         `${who} has not published a session in the last ${volDays} days. Try a longer window.`)
       : emptyState(
         'Nothing recorded in this window',
-        // ⚠️ RE-SHAPED, NOT HIDDEN. `emptyState()` takes a plain string, so
-        // there is nowhere to hang a ? — and what this says is the UNIT and
-        // what it counts, which Rule 9 keeps on the screen anyway.
-        'Weekly sets per muscle, counted from the workouts you log. It fills in as you train. '
-        + 'Every set counts — the ones you got through a compound at half.',
+        // 🔄 words P1 (2026-09-27): the unit stays on screen; how a set is
+        // counted is the WHY and goes behind emptyState's new ? (ui.js).
+        'Weekly sets per muscle fill in as you train.',
         el('a', { class: 'btn primary', href: '#/start', text: 'Record a workout' }),
+        { help: 'Every set counts — work through a compound counts half.' },
       ));
     return;
   }
@@ -4325,7 +4476,7 @@ export async function renderVolumePane(host, top, opts = {}) {
     setChildren(legendHost, volumeLegend(m ? volumeShade(m.weeklySets).key : null));
     pickedWrap.classList.toggle('is-open', Boolean(m));
     hint.hidden = Boolean(m);
-    hint.textContent = 'Tap a muscle, or a row below it, to see the exercises behind its number.';
+    hint.textContent = 'Tap a muscle for its exercises.';
     if (!m) return;
     setChildren(picked,
       el('div', { class: 'vol-picked-head' },
@@ -4352,8 +4503,10 @@ export async function renderVolumePane(host, top, opts = {}) {
          * — so somebody nine days into training reads "over the last 9 days"
          * under a chip saying 4 weeks, which is the truth about the measurement
          * rather than the truth about the control. */
-        el('div', { class: 'vol-intro-main', text:
-          `${who ? `${who}: s` : 'S'}ets a week per muscle, from ${sess} over the last ${span}.` }),
+        // 🔄 words W-16 (2026-09-27): "Sets a week per muscle" was said here AND
+        // in the notes, and the key says "Sets a week" too. The facts that earn
+        // the rate — how many sessions, over what span — are what stays.
+        el('div', { class: 'vol-intro-main', text: `${who ? `${who}: ` : ''}${sess} · last ${span}` }),
         /* ⚠️ A FRIEND'S WINDOW IS NOT THEIR HISTORY, and the screen has to say
          * so. What they publish is their last sixty sessions, so a long window
          * over a busy account can be measuring a shorter stretch than it says.
@@ -4366,7 +4519,7 @@ export async function renderVolumePane(host, top, opts = {}) {
          * long window can then measure a shorter stretch is the arithmetic. */
         who ? el('div', { class: 'help-line' },
           el('span', { class: 'field-help', text:
-            `Counted from the sessions ${who} publishes — their most recent sixty.` }),
+            'Their last sixty sessions may cover less than this window.' }),
           helpDot(`If ${who} trains a lot, a long window here may reach further back than what `
             + 'they share, so it can measure a shorter stretch than the chip says.',
           { label: 'Why a long window can measure less' })) : null,
@@ -4393,7 +4546,7 @@ export async function renderVolumePane(host, top, opts = {}) {
          * behind why one session moves it is WHY and went behind the ?. */
         data.enough ? null : el('div', { class: 'help-line'},
           el('span', { class: 'field-help', text:
-            `⚠️ Measured over ${span} — a best effort, not a settled rate.` }),
+            'Under two weeks — one session moves this a lot.' }),
           helpDot(`These are the sets you really recorded over ${span}, stated per week. `
             + 'A rate settles over a fortnight, so at this length one session more or less moves it '
             + 'a long way. It steadies as the window fills.',
@@ -4411,6 +4564,10 @@ export async function renderVolumePane(host, top, opts = {}) {
       hint,
       pickedWrap,
 
+      // 🆕 SC-4: the tick on every bar is labelled ONCE, here, rather than on
+      // every row. Decorative for a screen reader: the notes line says it in words.
+      el('div', { class: 'vol-tick-key field-help', 'aria-hidden': 'true' },
+        el('span', { class: 'vol-tick-mark', text: '┃' }), ' 4 sets a week'),
       list,
 
       /* 🚨 FIVE PARAGRAPHS BECAME ONE LINE AND A "?" — 2026-09-07, Tim's ask.
@@ -4431,8 +4588,7 @@ export async function renderVolumePane(host, top, opts = {}) {
       el('div', { class: 'vol-notes' },
         el('div', { class: 'help-line'},
           el('span', { class: 'field-help', text:
-            'Sets a week per muscle. Marked warm-ups left out, indirect work counts half, '
-            + `the tick is 4 a week.` }),
+            'Marked warm-ups left out, indirect work counts half, tick at 4.' }),
           helpDot(el('div', {},
             el('p', {}, el('b', { text: 'Always a rate. ' }),
               'Sets a week, so the bands are the same at every window — 12 weeks measures longer, '
@@ -4875,7 +5031,7 @@ async function renderResearchPane(host, top) {
   function renderReadout() {
     if (state.focusBand == null) {
       setChildren(readout, el('span', { class: 'research-readout-hint',
-        text: 'Tap the chart to read one age group; tap a muscle below to follow one line.' }));
+        text: 'Tap the chart or a muscle.' }));
       return;
     }
     const i = state.focusBand;
@@ -4951,8 +5107,9 @@ async function renderResearchPane(host, top) {
           + 'population. This tab shows sources — inventing three curves to complete the set would '
           + 'be the opposite of its job.'),
         el('p', {}, el('b', { text: 'The dashed line ' }),
-          'is what this app assumes: one combined age curve for every lift, from powerlifting’s '
-          + 'published age-grading tables (McCulloch and Foster coefficients), used to place your '
+          // 🔄 2026-09-27 (E-4, MAP): the curve is Harbo's measured bands now, not McCulloch.
+          'is what this app assumes: one combined age curve for every lift, from Harbo 2012’s '
+          + 'measured bands above 40 and Foster’s junior coefficients below 23, used to place your '
           + 'lifts against people your own age. One curve for all muscles is a simplification — '
           + 'this chart is what the measured groups actually did.'),
         /* 🔄 BEHIND A "?" ON 2026-09-09, and it is the ONE paragraph on this tab

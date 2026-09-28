@@ -44,8 +44,68 @@ const draftStore = () => {
   }
 };
 
+/* 🆕 R-2 (2026-09-27): A FULL PHONE NO LONGER LOSES SETS SILENTLY.
+ *
+ * `saveDraft` used to swallow every error, so with localStorage full a tap on
+ * + changed the screen and nothing reached disk (measured: `setItem` stubbed to
+ * throw QuotaExceededError, three taps, draft unchanged, nothing shown). It now
+ * returns whether the draft is on disk. On a failure it clears the cloud's
+ * shard snapshots (`clearAllShardCaches()` in firebase-backend.js — a read
+ * shortcut the next sync rebuilds, and up to 1.5 MB each) and tries once more.
+ * If that fails too, the runner shows one line until a save works again.
+ *
+ * ⚠️ firebase-backend.js is fetched LAZILY, on the first save, never at boot:
+ * it is 80 KB the app only needs when the cloud is on. By the time storage
+ * runs out mid-workout it has long since arrived; if the very first save
+ * fails, the retry runs when it lands and tells the listener. */
+let clearCaches = null;
+let clearerLoading = null;
+function loadClearer() {
+  if (clearCaches || clearerLoading) return clearerLoading || Promise.resolve();
+  clearerLoading = import('./firebase-backend.js')
+    .then((m) => { clearCaches = typeof m.clearAllShardCaches === 'function' ? m.clearAllShardCaches : null; })
+    .catch(() => {});
+  return clearerLoading;
+}
+
+let storageFull = false;
+const draftListeners = new Set();
+/** Is the last draft write still failing? (The runner's "storage is full" line.) */
+export function draftStorageFull() { return storageFull; }
+/** Called with `true`/`false` whenever a draft write fails or recovers. Returns an unsubscribe. */
+export function onDraftStorage(fn) {
+  draftListeners.add(fn);
+  return () => draftListeners.delete(fn);
+}
+function setFull(v) {
+  if (storageFull === v) return;
+  storageFull = v;
+  for (const fn of [...draftListeners]) { try { fn(v); } catch (_) { /* a listener's bug is not a lost set */ } }
+}
+
+function writeDraft(raw) {
+  try { draftStore().setItem(DRAFT_KEY, raw); return true; } catch (_) { return false; }
+}
+
+/** Write the draft. True when it is on disk. */
 export function saveDraft(d) {
-  try { draftStore().setItem(DRAFT_KEY, JSON.stringify(d)); } catch (_) {}
+  let raw;
+  try { raw = JSON.stringify(d); } catch (_) { return false; }
+  if (writeDraft(raw)) { setFull(false); loadClearer(); return true; }
+  if (clearCaches) {
+    try { clearCaches(); } catch (_) { /* nothing to clear */ }
+    if (writeDraft(raw)) { setFull(false); return true; }
+    setFull(true);
+    return false;
+  }
+  setFull(true);
+  // Not loaded yet: clear and retry once it is, with whatever is newest then.
+  loadClearer().then(() => {
+    if (!storageFull || !clearCaches) return;
+    try { clearCaches(); } catch (_) { /* nothing to clear */ }
+    if (writeDraft(raw)) setFull(false);
+  });
+  return false;
 }
 
 export function loadDraft() {
@@ -58,6 +118,79 @@ export function clearDraft() {
   // that can no longer see it to tidy it up.
   try { sessionStorage.removeItem(DRAFT_KEY); } catch (_) {}
   try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 WHERE RECORD ROSE FROM — 2026-09-27 (overhaul I-4 / I-20).
+ *
+ * Tim, 2026-09-10: the runner's down arrow goes *"to the main page"*. It went
+ * back ONE entry, which after Home → Record → Weightlifting → Legs is the Record
+ * picker. The runner's exits now go back past the Record flow (`record`,
+ * `start`, and any other runner entry) to the screen Record rose over.
+ *
+ * ⚠️ HISTORY CANNOT BE READ BACKWARDS, so the trail is written going forwards:
+ * every entry's hash, keyed by the `navIndex` ui.js's `markRoute()` stamps on
+ * it, in sessionStorage (it lives exactly as long as the tab's history does).
+ * It is HERE because this module loads at boot with the live bar on every
+ * screen (app.js → live-session.js → here), so it sees the whole visit —
+ * the runner's own module could be loaded late. The stamp is read a tick after
+ * `hashchange`, once the router has run `markRoute()`. An entry this never saw
+ * is simply unknown, and the runner then goes back one, as before.
+ * ------------------------------------------------------------------ */
+const TRAIL_KEY = 'ftrack:v1:navTrail';
+const TRAIL_MAX = 60;
+
+function readTrail() {
+  try { const r = sessionStorage.getItem(TRAIL_KEY); const v = r ? JSON.parse(r) : null; return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
+}
+
+/** Write `hash` (default: the current one) against the current entry's navIndex. */
+export function stampTrail(hash) {
+  try {
+    const st = window.history && window.history.state;
+    if (!st || typeof st.navIndex !== 'number') return;
+    const t = readTrail();
+    t[st.navIndex] = hash || window.location.hash;
+    // Entries above this one are a forward branch nobody can reach now that a
+    // new entry sits here; and keep the map small.
+    for (const k of Object.keys(t)) {
+      if (Number(k) > st.navIndex && !hash) delete t[k];
+      else if (Number(k) < st.navIndex - TRAIL_MAX) delete t[k];
+    }
+    sessionStorage.setItem(TRAIL_KEY, JSON.stringify(t));
+  } catch (_) { /* a trail is a nicety */ }
+}
+
+/** The route name of a hash: `#/start/x` → `start`. */
+const routeOf = (hash) => String(hash || '').replace(/^#\/?/, '').split(/[/?]/)[0];
+
+/** Screens that are part of starting or running a workout, not a place to land. */
+export const RECORD_FLOW = ['record', 'start', 'session'];
+
+/**
+ * How many entries back the screen Record rose over is, from entry `at`.
+ * 0 means there is none (a cold deep link, or nothing but the Record flow
+ * behind) — go to Home. An entry the trail never saw counts as a landing.
+ * Pure over `trail` for the tests.
+ */
+export function stepsBackPastRecord(at, trail) {
+  if (!(Number.isInteger(at) && at > 0)) return 0;
+  let i = at - 1;
+  while (i >= 0 && trail[i] != null && RECORD_FLOW.includes(routeOf(trail[i]))) i--;
+  return i >= 0 ? at - i : 0;
+}
+
+/** `stepsBackPastRecord()` for the entry on screen now. */
+export function stepsBackFromHere() {
+  const st = typeof window !== 'undefined' && window.history && window.history.state;
+  if (!st || typeof st.navIndex !== 'number') return 0;
+  return stepsBackPastRecord(st.navIndex, readTrail());
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('hashchange', () => setTimeout(() => stampTrail(), 0));
+  // The first screen of the visit, and a reload.
+  setTimeout(() => stampTrail(), 0);
 }
 
 /** How long past midnight a workout started yesterday stays open (see below). */

@@ -15,9 +15,10 @@
 // change or delete anything a person owns — the runner stop points at the door
 // to the runner rather than opening a workout, because opening one makes a draft.
 //
-// ⚠️ ONE IMPORT, js/spring.js, which itself imports nothing and touches no DOM
-// at load — so the stop list and the placement maths can still be tested in
-// plain Node (tests/tour.test.mjs).
+// ⚠️ ONE STATIC IMPORT, js/spring.js, which itself imports nothing and touches
+// no DOM at load — so the stop list and the placement maths can still be tested
+// in plain Node (tests/tour.test.mjs). The end card's workout comes from
+// js/store.js through a dynamic import, inside startTour() only.
 //
 // 🆕 MOTION 2 (2026-09-25, docs/motion2-plan.md package E) — Tim: *"Put
 // professional level annimation and physics into this cite."* The hole used
@@ -35,34 +36,37 @@ const nav = (hash) => `.navbar a[href="${hash}"]`;
  * words are about, the later ones are fallbacks (usually the tab itself) for an
  * account whose screen has not got that thing. `route` is where the stop lives;
  * a stop whose route is the current one does not navigate. Words ≤ 15 each. */
+/* 🔄 FIVE STOPS SINCE 2026-09-27 (overhaul O-10), from eight. Home pointed at an
+ * empty feed, the runner stop taught ± on the Record chooser (the runner now
+ * teaches itself the first time it opens — `hintOnce` below), Data said "tap
+ * one" over an empty map, and Settings was pointed at from the Account screen. */
 export const STOPS = [
-  { id: 'home', route: '#/home',
-    targets: ['.feed > :first-child', nav('#/home')],
-    text: 'Home is your feed. Your friends’ workouts show up here.' },
   { id: 'workouts', route: '#/workouts',
     targets: ['.sys-head', '.pane-top .btn.primary', nav('#/workouts')],
-    text: 'Your current program lives in Workouts. Tap it to switch or find more.' },
+    text: 'Your program. Tap its name to switch or find more.' },
   { id: 'record', route: '#/workouts',
     targets: ['.navbar .nav-primary'],
-    text: 'Record starts a workout, a run, or any other activity.' },
-  { id: 'runner', route: '#/record',
-    targets: ['.pane-scroll .btn.primary.lg'],
-    text: 'Weightlifting opens your workouts. Set each weight with ± and tap Finished.' },
+    text: 'Record starts a workout, a run, or any activity.' },
   { id: 'data', route: '#/graphs',
     targets: ['.body-wrap', nav('#/graphs')],
-    text: 'Data shows how strong each muscle is. Tap one to see why.' },
+    text: 'How strong each muscle is. Fills in as you log.' },
   { id: 'profile', route: '#/me',
     targets: ['.me-head', nav('#/me')],
-    text: 'Profile is what you did: workouts, best lifts, calendar and friends.' },
+    text: 'What you did: workouts, best lifts, calendar.' },
   { id: 'account', route: '#/me',
     targets: ['.avatar-btn'],
-    text: 'Your account: back up your training and set a photo.' },
-  { id: 'settings', route: '#/account',
-    targets: ['a.row[href="#/settings"]'],
-    text: 'Settings holds units and theme. Replay this tour from here anytime.' },
+    text: 'Your account, settings and this tour.' },
 ];
 
-export const END = { title: 'You’re set', text: 'That’s everything. Go log your first workout.' };
+/* The end card. With a program, its one button starts the first workout
+ * (`Start <name>` → #/session/<id>, found at the card — endAction()); with none,
+ * it is `Done`. */
+export const END = { title: 'You’re set', text: 'That’s everything. Go log your first workout.', done: 'Done' };
+
+/** The end card's button: "Start Full Body A" when there is a workout, else "Done". */
+export function endLabel(workout) {
+  return workout && workout.name ? `Start ${workout.name}` : END.done;
+}
 
 export const GUTTER = 16;      // the bubble never comes closer than this to an edge
 export const GAP = 12;         // between the hole and the bubble (the arrow sits in it)
@@ -235,6 +239,16 @@ export function startTour() {
 
   const token = { dead: false };
   const origin = location.hash || '#/home';
+  // The end card's workout, looked up while the stops run. A dynamic import so
+  // this module still loads in plain Node (the tests) — the store is browser-side.
+  let firstWorkout = null;
+  import('./store.js').then(async ({ store }) => {
+    const sys = await store.currentSystem();
+    if (!sys) return;
+    const ws = await store.getWorkouts(sys.id);
+    firstWorkout = (ws || []).find((w) => w && w.id && w.exercises && w.exercises.length) || null;
+    if (index >= STOPS.length && !token.dead) nextBtn.textContent = endLabel(firstWorkout);
+  }).catch(() => { /* no program to offer: the card says Done */ });
   let index = 0;
   let target = null;
   let busy = false;
@@ -350,7 +364,7 @@ export function startTour() {
     count.textContent = final ? '' : counter(i);
     skipBtn.hidden = final;
     backBtn.hidden = i === 0;
-    nextBtn.textContent = final ? 'Done' : 'Next';
+    nextBtn.textContent = final ? endLabel(firstWorkout) : 'Next';
   }
 
   // Move without animating (first placement, a resize, a late re-render).
@@ -488,7 +502,7 @@ export function startTour() {
   }
   const observer = typeof MutationObserver === 'function' ? new MutationObserver(remeasure) : null;
 
-  function close(finished) {
+  function close(finished, dest = null) {
     if (token.dead) return;
     token.dead = true;
     removeEventListener('keydown', onKey, true);
@@ -498,13 +512,16 @@ export function startTour() {
     clearTimeout(remeasureTimer);
     root.classList.remove('is-on');
     root.classList.add('is-leaving');
-    const back = !sameHash(location.hash, origin);
+    // "Start <workout>" goes to that workout; anything else goes back to where
+    // the tour began.
+    const to = dest || origin;
+    const back = !sameHash(location.hash, to);
     const finish = () => {
       root.remove();
       active = null;
       resolveDone({ finished });
     };
-    if (back) location.hash = origin;
+    if (back) location.hash = to;
     if (reduced()) finish(); else setTimeout(finish, cssMs('--t', 170));
   }
 
@@ -516,7 +533,7 @@ export function startTour() {
 
   nextBtn.addEventListener('click', () => {
     if (busy) return;
-    if (index >= STOPS.length) close(true);
+    if (index >= STOPS.length) close(true, firstWorkout ? '#/session/' + firstWorkout.id : null);
     else go(index + 1, +1);
   });
   backBtn.addEventListener('click', () => { if (!busy && index > 0) go(Math.min(index, STOPS.length) - 1, -1); });
@@ -534,4 +551,87 @@ export function startTour() {
   active = { done };
   go(0, +1, true);
   return done;
+}
+
+/* ------------------------------------------------------------------ *
+ * One-time hints (overhaul O-11, 2026-09-27)
+ *
+ * The lesson the tour no longer gives lands where it is used: a tour-style
+ * bubble beside one thing, the FIRST time it is on screen, once per browser.
+ * No dim and nothing blocked — the page under it stays usable, and any tap
+ * outside the bubble, a route change or Escape puts it away. The runner calls
+ *   hintOnce('ftrack:v1:hint-runner', '<first set row>', 'Set the weight with ±, then tap Finished.')
+ * ------------------------------------------------------------------ */
+
+/**
+ * Show `text` beside the first visible match of `selector`, unless `key` says
+ * it was shown before. Waits up to 3 s for the thing to appear; if it never
+ * does, nothing is marked and the hint gets another chance next time.
+ * Never over the tour. Resolves true when shown, false when not.
+ */
+export async function hintOnce(key, selector, text, { storage = globalThis.localStorage, wait = WAIT_MS } = {}) {
+  if (typeof document === 'undefined' || !key || !selector || !text) return false;
+  try { if (storage.getItem(key)) return false; } catch (_) { return false; }
+  if (active || document.querySelector('.tour-hint')) return false;
+  const t0 = Date.now();
+  let node = null;
+  for (;;) {
+    node = [...document.querySelectorAll(selector)].find(visible) || null;
+    if (node || Date.now() - t0 > wait) break;
+    await sleep(60);
+  }
+  if (!node || active) return false;
+  try { storage.setItem(key, new Date().toISOString()); } catch (_) { /* private mode: shows again, harmless */ }
+
+  const root = mk('div', 'tour-hint');
+  // Structural, so it works before any stylesheet rule for it exists: one
+  // fixed layer that lets every tap through except on the bubble itself.
+  root.style.cssText = 'position:fixed;inset:0;z-index:95;pointer-events:none';
+  root.setAttribute('role', 'status');
+  const bubble = mk('div', 'tour-bubble');
+  const arrow = mk('div', 'tour-arrow');
+  const words = mk('p', 'tour-text', text);
+  const ok = mk('button', 'btn primary small', 'Got it');
+  ok.type = 'button';
+  const foot = mk('div', 'tour-foot');
+  foot.append(mk('span', 'tour-count', ''), ok);
+  bubble.append(arrow, words, foot);
+  root.append(bubble);
+  document.body.append(root);
+
+  const place = () => {
+    if (!node.isConnected) return;
+    const v = { w: innerWidth, h: innerHeight };
+    bubble.style.width = `${Math.min(300, v.w - GUTTER * 2)}px`;
+    const hole = spotRect(rectOf(node), v, clipOf(node), 2);
+    const p = placeBubble(hole, { w: bubble.offsetWidth, h: bubble.offsetHeight }, v);
+    bubble.dataset.side = p.side;
+    bubble.style.left = `${Math.round(p.x)}px`;
+    bubble.style.top = `${Math.round(p.y)}px`;
+    arrow.style.left = `${Math.round(p.arrowX)}px`;
+  };
+  place();
+
+  let gone = false;
+  const dismiss = () => {
+    if (gone) return;
+    gone = true;
+    removeEventListener('pointerdown', outside, true);
+    removeEventListener('hashchange', dismiss);
+    removeEventListener('resize', place);
+    removeEventListener('keydown', onKey, true);
+    bubble.classList.remove('is-shown');
+    setTimeout(() => root.remove(), reduced() ? 0 : cssMs('--t', 170));
+  };
+  const outside = (e) => { if (!bubble.contains(e.target)) dismiss(); };
+  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  ok.addEventListener('click', dismiss);
+  addEventListener('pointerdown', outside, true);
+  addEventListener('hashchange', dismiss);
+  addEventListener('resize', place);
+  addEventListener('keydown', onKey, true);
+
+  void bubble.offsetWidth;
+  bubble.classList.add('is-shown');
+  return true;
 }

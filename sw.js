@@ -18,9 +18,16 @@
 // one load of stale assets, and it self-heals on the next.
 //
 // CROSS-ORIGIN REQUESTS ARE NOT TOUCHED. Firestore streams over long-polling
-// and websockets to googleapis.com, and the Firebase SDK is imported from
-// gstatic. Intercepting either would be a way to break sync for no benefit;
-// when they fail offline, store.js already falls back to this device (D13).
+// and websockets to googleapis.com. Intercepting it would be a way to break
+// sync for no benefit; when it fails offline, store.js already falls back to
+// this device (D13).
+//
+// 🆕 ONE EXCEPTION, 2026-09-27 (R-1): the three Firebase SDK files, by their
+// exact versioned URLs. Without them a cold start with no signal could not
+// even load the SDK, so a signed-in person saw an empty app and their sets
+// went to this device only. The URL carries the version (10.12.2) and gstatic
+// serves it `max-age=31536000` with CORS `*`, so the file behind it never
+// changes: cache-first can never serve a stale one. Precached at install.
 
 const VERSION = 'v1';
 const CACHE = `fitness-tracker-${VERSION}`;
@@ -128,6 +135,8 @@ const SHELL = [
   './js/views-profile.js',
   './js/views-session.js',
   './js/views-workouts.js',
+  './js/wake-lock.js',
+  './js/first-save.js',
   /* ⚠️ EXERCISE PICTURES GO BELOW, AND THEY ARE GENERATED — run
    * `node tools/build-exercise-images.mjs` after dropping files into
    * img/exercises/. Never hand-edit between the markers.
@@ -139,14 +148,37 @@ const SHELL = [
   // END EXERCISE IMAGES
 ];
 
+// The Firebase SDK, exactly as js/firebase-backend.js imports it (its `SDK`
+// constant). Versioned URLs: a new SDK version is a new URL, so bump both.
+const FIREBASE_SDK = [
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js',
+];
+
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     // Individually, not addAll: addAll is atomic, so one 404 throws away the
     // whole precache and the install fails silently for every other file.
+    //
+    // ⚠️ 'no-cache', NOT 'reload' (R-9, 2026-09-27). 'reload' skipped the HTTP
+    // cache, so a first visit downloaded all ~96 files twice (~1.4 MB gzip
+    // again on cellular). 'no-cache' is a conditional GET: GitHub Pages answers
+    // 304 from its ETag, so the file is never stale and never fetched twice.
     await Promise.all(SHELL.map(async (url) => {
       try {
-        await cache.add(new Request(url, { cache: 'reload' }));
+        await cache.add(new Request(url, { cache: 'no-cache' }));
+      } catch (err) {
+        console.warn('[sw] could not precache', url, err);
+      }
+    }));
+    // The SDK is immutable at its URL, so the HTTP cache may answer outright.
+    await Promise.all(FIREBASE_SDK.map(async (url) => {
+      try {
+        if (await cache.match(url)) return;
+        const res = await fetch(new Request(url, { mode: 'cors', credentials: 'omit' }));
+        if (res && res.ok) await cache.put(url, res);
       } catch (err) {
         console.warn('[sw] could not precache', url, err);
       }
@@ -234,7 +266,19 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;   // Firestore, gstatic
+  // The versioned SDK: cache-first, see FIREBASE_SDK. Nothing else cross-origin.
+  if (FIREBASE_SDK.includes(url.href)) {
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const hit = await cache.match(url.href);
+      if (hit) return hit;
+      const res = await fetch(req);
+      if (res && res.ok) cache.put(url.href, res.clone()).catch(() => {});
+      return res;
+    })());
+    return;
+  }
+  if (url.origin !== self.location.origin) return;   // Firestore, googleapis
 
   // The app is a hash router, so every navigation is the same document. Prefer
   // the network so a deploy lands promptly, and fall back to the shell — that

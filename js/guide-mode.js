@@ -33,6 +33,8 @@
 //                      repPlan, opening } nodes and `stretch` words
 //     assist(ex, w),   optional — the pane's assisted-lift readout, or null
 //     exerciseLabel,   optional — ui.js's name-that-opens-the-picture
+//     rememberView(v), optional — 'guide' | 'list' after the toggle is tapped, so
+//                      the next new workout opens in it (settings.runnerView)
 //   }) → { node, toggle, enter(), exit(), active(), refresh(), placeRest(bar) }
 //
 // ⚠️ THE DRAFT IS THE ONLY STATE. The step on screen is always written into the
@@ -205,7 +207,11 @@ export function attachGuide(ctx) {
 
   const toggle = el('button', {
     class: 'btn small topbar-btn guide-toggle', type: 'button',
-    onClick: () => (active() ? exit() : enter()),
+    onClick: () => {
+      if (active()) exit(); else enter();
+      // 🆕 2026-09-27 (overhaul ST-15): the next workout opens in this view.
+      if (typeof ctx.rememberView === 'function') ctx.rememberView(active() ? 'guide' : 'list');
+    },
   });
 
   function active() { return S().view === 'guide'; }

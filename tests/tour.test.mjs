@@ -19,10 +19,29 @@ const words = (s) => s.trim().split(/\s+/).length;
 
 // ---- the stop list ----
 ok(typeof T.startTour === 'function', 'startTour() is exported');
-ok(STOPS.length >= 7, `the tour has its stops (${STOPS.length})`);
+// 🔄 Five stops since the 2026-09-27 overhaul (O-10), in this order. Home,
+// the runner and Settings are gone: an empty feed, a lesson taught away from
+// where it is used (the runner now teaches itself — hintOnce), a row pointed
+// at from the wrong screen.
 const ids = STOPS.map((s) => s.id);
-for (const want of ['home', 'workouts', 'record', 'runner', 'data', 'profile', 'account', 'settings']) {
-  ok(ids.includes(want), `a stop for ${want} (the plan's list)`);
+ok(JSON.stringify(ids) === JSON.stringify(['workouts', 'record', 'data', 'profile', 'account']),
+   `the tour is five stops: workouts, record, data, profile, account (${ids.join(', ')})`);
+ok(STOPS.every((s) => words(s.text) <= 12), `every new bubble is 12 words or fewer (${STOPS.map((s) => words(s.text)).join(' ')})`);
+ok(STOPS.find((s) => s.id === 'data').text.includes('Fills in as you log'),
+   'the Data stop no longer says "tap one" over an empty map');
+ok(typeof T.endLabel === 'function' && T.endLabel({ id: 'w1', name: 'Full Body A' }) === 'Start Full Body A'
+   && T.endLabel(null) === 'Done', 'the end card offers "Start <first workout>", or "Done" with no program');
+{
+  const tourSrc = readFileSync(new URL('../js/tour.js', import.meta.url), 'utf8');
+  ok(/close\(true, firstWorkout \? '#\/session\/' \+ firstWorkout\.id/.test(tourSrc),
+     'and "Start <workout>" opens that workout (#/session/<id>)');
+}
+ok(typeof T.hintOnce === 'function', 'hintOnce(key, selector, text) is exported for the runner');
+{
+  // In Node there is no document: it must answer false and touch nothing.
+  const st2 = { m: new Map(), getItem(k) { return this.m.get(k) ?? null; }, setItem(k, v) { this.m.set(k, v); } };
+  const shown = await T.hintOnce('ftrack:v1:hint-runner', '.set-row', 'Set the weight with ±, then tap Finished.', { storage: st2 });
+  ok(shown === false && st2.m.size === 0, 'without a page, hintOnce shows nothing and marks nothing');
 }
 ok(new Set(ids).size === ids.length, 'no stop id repeats');
 ok(STOPS.every((s) => Array.isArray(s.targets) && s.targets.length && s.targets.every((t) => typeof t === 'string' && t)),
@@ -46,7 +65,6 @@ const src = ['js/app.js', 'js/ui.js', 'js/views-workouts.js', 'js/views-muscles.
 for (const cls of ['feed', 'sys-head', 'nav-primary', 'body-wrap', 'me-head', 'avatar-btn', 'navbar', 'pane-scroll']) {
   ok(src.includes(`'${cls}`) || src.includes(` ${cls}'`) || src.includes(`${cls} `), `the app still draws .${cls}`);
 }
-ok(src.includes("href: '#/settings'"), 'the Settings row still links #/settings');
 
 ok(counter(2) === `3 of ${STOPS.length}`, 'the step counter reads "3 of N"');
 
@@ -99,10 +117,14 @@ try { markToured(broken); ok(hasToured(broken) === false, 'storage that throws r
 ok(!threw, 'storage that throws (private mode) never breaks the tour');
 
 // ---- the Settings rows ----
-const acct = readFileSync(new URL('../js/views-account.js', import.meta.url), 'utf8');
-ok(/Take the tour/.test(acct) && /startTour\(\)/.test(acct), 'Account has a "Take the tour" row that calls startTour()');
+// 🔄 The rows move from Account to the bottom of Settings (O-12, views-data.js)
+// in the same overhaul; either home counts, so long as one of them has both.
+const acct = ['js/views-account.js', 'js/views-data.js']
+  .map((f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8'))
+  .find((s) => /Take the tour/.test(s) && /startTour\(\)/.test(s)) || '';
+ok(/Take the tour/.test(acct) && /startTour\(\)/.test(acct), 'a "Take the tour" row calls startTour() (Account or Settings)');
 ok(/Find me a program/.test(acct) && /import\('\.\/onboarding\.js'\)/.test(acct) && /openOnboarding\(/.test(acct),
-   'and a "Find me a program" row that opens the questions');
+   'and a "Find me a program" row opens the questions');
 
 // ---- the stylesheet ----
 const css = readFileSync(new URL('../css/app.css', import.meta.url), 'utf8');

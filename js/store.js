@@ -167,6 +167,7 @@ async function active() {
       remoteImpl = mod.FirebaseBackend;
       remoteFailure = null;
       await adoptLocalData(mod);
+      await carryStrandedWrites(mod);
       return remoteImpl;
     } catch (err) {
       // Losing the cloud must never stop someone logging a set mid-workout.
@@ -211,6 +212,144 @@ async function adoptLocalData(mod) {
     console.info('Local data carried into your new cloud account.');
   } catch (err) {
     console.error('Could not carry local data into the cloud automatically.', err);
+  }
+}
+
+/* 🆕 R-1b — WRITES MADE WHILE THE CLOUD WAS UNREACHABLE — 2026-09-27.
+ *
+ * A signed-in person whose cold start could not reach the cloud falls back to
+ * this device (D13, kept). Until now those rows stayed there for good:
+ * `adoptLocalData` had already set its marker and `absorbThisDevice` runs only
+ * on account creation, so "saved on this device and will sync later" was
+ * false. Now every such write sets STRANDED_KEY, and the next successful
+ * cloud connection merges each local collection into the cloud.
+ *
+ * ⚠️ ADD-ONLY, THE SAME `mergeRows` AS `absorbThisDevice`: keyed by id, the
+ * newer copy wins, so it can never remove a cloud row. It never writes an
+ * empty list (a collection with nothing local is skipped), so the zero-guard
+ * and the sharded backend's mass-delete guard are never approached. Settings
+ * is left alone when the cloud already has a row.
+ *
+ * ⚠️ SAME ACCOUNT ONLY. The flag records the uid last connected on this
+ * device; if a different account connects, nothing is merged into it.
+ *
+ * Only the rows written while stranded are carried (by id, see markStranded),
+ * and only those leave this device once their collection merged; older local
+ * rows are never touched. The flag is cleared only when every collection
+ * merged; a failure leaves it and the rows for the next connect.
+ * Failure is swallowed: this must never stop the app loading.
+ */
+const STRANDED_KEY = NS + 'strandedWrites';
+const LAST_UID_KEY = NS + 'lastCloudUid';
+
+/* 🚨 ONLY THE ROWS WRITTEN WHILE STRANDED, BY ID. This device can still hold
+ * rows from long before (adoptLocalData copies up and leaves the originals),
+ * and merging the whole collection would bring back anything deleted in the
+ * cloud since. So each degraded write records the ids it added or changed,
+ * and only those rows are carried up. */
+function markStranded(collection, ids) {
+  try {
+    let flag = null;
+    try { flag = JSON.parse(localStorage.getItem(STRANDED_KEY) || 'null'); } catch (_) { flag = null; }
+    if (!flag || typeof flag !== 'object') {
+      flag = { at: new Date().toISOString(), uid: localStorage.getItem(LAST_UID_KEY) || null, ids: {} };
+    }
+    if (!flag.ids || typeof flag.ids !== 'object') flag.ids = {};
+    const known = new Set(flag.ids[collection] || []);
+    for (const id of ids) known.add(id);
+    flag.ids[collection] = [...known];
+    localStorage.setItem(STRANDED_KEY, JSON.stringify(flag));
+  } catch (_) { /* storage full: the rows themselves are what matters */ }
+}
+
+/** Ids in `rows` that are new or different from `before` (both row lists). */
+function changedIds(before, rows) {
+  const prev = new Map();
+  for (const r of Array.isArray(before) ? before : []) if (r && r.id != null) prev.set(r.id, r);
+  const out = [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    if (!r || r.id == null) continue;
+    const p = prev.get(r.id);
+    let same = false;
+    try { same = Boolean(p) && JSON.stringify(p) === JSON.stringify(r); } catch (_) { same = false; }
+    if (!same) out.push(r.id);
+  }
+  return out;
+}
+
+/**
+ * The merge itself, with everything it touches passed in so a test can drive
+ * it with a fake cloud. Exported for tests/store-overhaul.test.mjs.
+ *
+ * @param {object} remote  { read(c), write(c, rows) } — the cloud backend
+ * @param {object} opts    { uid, mergeRows, storage, readLocal(c) }
+ * @returns {Promise<{merged: string[], failed: string[], skipped?: string}>}
+ */
+export async function absorbStrandedWrites(remote, opts) {
+  const storage = opts.storage;
+  const raw = storage.getItem(STRANDED_KEY);
+  if (!raw) return { merged: [], failed: [] };
+  let flag = {};
+  try { flag = JSON.parse(raw) || {}; } catch (_) { flag = {}; }
+  if (flag.uid && opts.uid && flag.uid !== opts.uid) {
+    // Someone else's session is connecting now; these rows are not theirs.
+    return { merged: [], failed: [], skipped: 'other-account' };
+  }
+  const merged = [], failed = [];
+  const ids = flag.ids && typeof flag.ids === 'object' ? flag.ids : {};
+  for (const c of COLLECTIONS) {
+    try {
+      const wanted = new Set(Array.isArray(ids[c]) ? ids[c] : []);
+      if (!wanted.size) continue;
+      const all = await opts.readLocal(c);
+      const local = (Array.isArray(all) ? all : []).filter((r) => r && wanted.has(r.id));
+      if (!local.length) { merged.push(c); continue; }
+      if (c === 'settings') {
+        await inSettingsQueue(async () => {
+          if (!(await remote.read(c)).length) await remote.write(c, local);
+        });
+      } else {
+        const cloud = await remote.read(c);
+        const next = opts.mergeRows(cloud, local);
+        // Add-only: never shorter than what the cloud holds, never empty. A
+        // merge that would shrink it (cloud rows without ids) is refused and
+        // the local copy kept for a later try.
+        if (!next.length || next.length < cloud.length) throw new Error('merge would shrink ' + c);
+        if (!sameRows(next, cloud)) await remote.write(c, next);
+      }
+      // Only the carried rows leave this device; anything older stays put.
+      const left = all.filter((r) => !(r && wanted.has(r.id)));
+      if (left.length) storage.setItem(NS + c, JSON.stringify(left));
+      else storage.removeItem(NS + c);
+      merged.push(c);
+    } catch (err) {
+      failed.push(c);
+      console.error('Could not carry offline ' + c + ' into your account.', err);
+    }
+  }
+  if (!failed.length) storage.removeItem(STRANDED_KEY);
+  return { merged, failed };
+}
+
+async function carryStrandedWrites(mod) {
+  try {
+    const user = mod.FirebaseBackend.currentUser && mod.FirebaseBackend.currentUser();
+    const uid = user && user.uid ? user.uid : null;
+    if (localStorage.getItem(STRANDED_KEY)) {
+      const out = await absorbStrandedWrites(mod.FirebaseBackend, {
+        uid, mergeRows: mod.mergeRows, storage: localStorage,
+        readLocal: (c) => LocalBackend.read(c),
+      });
+      if (out.merged.length) {
+        // A "Try again" (auth.retry) can land here with the cache still
+        // holding this device's rows; the cloud is the truth from now on.
+        clearReadCache();
+        console.info('Offline changes carried into your account:', out.merged.join(', '));
+      }
+    }
+    if (uid) localStorage.setItem(LAST_UID_KEY, uid);
+  } catch (err) {
+    console.error('Could not carry offline changes into your account.', err);
   }
 }
 
@@ -312,7 +451,16 @@ const backend = {
      * it resolves, and it can only know that if the generation has already
      * moved. See writeGeneration. */
     bumpGeneration(collection);
-    const okay = await (await active()).write(collection, rows, opts);
+    const impl = await active();
+    const stranded = impl === LocalBackend && wantRemote();
+    const before = stranded ? await LocalBackend.read(collection) : null;
+    const okay = await impl.write(collection, rows, opts);
+    // Meant for the cloud but landed on this device: carry it up on the next
+    // connection (R-1b, absorbStrandedWrites). Only after the write succeeded.
+    if (stranded) {
+      const ids = changedIds(before, rows);
+      if (ids.length) markStranded(collection, ids);
+    }
     // We have just decided what this collection contains, so the cache is not
     // guessing — it is recording. Set AFTER the await: a write that threw has
     // changed nothing, and caching what we hoped to store would be a lie the
@@ -710,6 +858,41 @@ export function todayISO() {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 
+/**
+ * 🆕 R-2/R-3 (2026-09-27): ask the browser to keep this site's storage.
+ * Safari evicts script-written storage from sites unused for 7 days unless
+ * they are home-screen apps; a granted persist() also protects the draft and
+ * the offline copy from eviction under storage pressure. Called once at boot
+ * by app.js. Resolves true/false, never throws, asks only once per page.
+ */
+let persistAsked = null;
+export function persistStorage() {
+  if (persistAsked) return persistAsked;
+  persistAsked = (async () => {
+    try {
+      const s = typeof navigator !== 'undefined' ? navigator.storage : null;
+      if (!s || typeof s.persist !== 'function') return false;
+      if (typeof s.persisted === 'function' && await s.persisted()) return true;
+      return Boolean(await s.persist());
+    } catch (_) { return false; }
+  })();
+  return persistAsked;
+}
+
+/**
+ * A session row as it is stored. The row is otherwise kept as given (it always
+ * has been); this only pins the fields with a fixed type.
+ *   `deload` — 🆕 2026-09-27: a deliberate light week. Kept as `true` only;
+ *   anything else is removed, so a stray "false"/0 never reads as a deload.
+ */
+export function normalizeSession(s) {
+  if (!s || typeof s !== 'object') return s;
+  const out = { ...s };
+  if (out.deload === true) out.deload = true;
+  else delete out.deload;
+  return out;
+}
+
 function upsert(rows, row) {
   const i = rows.findIndex((r) => r.id === row.id);
   if (i === -1) rows.push(row);
@@ -954,6 +1137,22 @@ export function normalizeSystem(sys) {
   };
 }
 
+/* 🆕 2026-09-27: a rep spec `{lo, hi, plus}` — `plus: true` is "or more" (an
+ * AMRAP last set, "5+"). js/set-reps.js owns the shape; this only makes sure
+ * the flag survives every read and write here even where normalizeReps()
+ * rebuilds the spec from `lo`/`hi`. Padding repeats the last source spec's
+ * flag, the same rule normalizeReps pads by. Only `true` is ever written. */
+function keepRepPlus(reps, source) {
+  if (!Array.isArray(reps) || !Array.isArray(source) || !source.length) return reps;
+  return reps.map((spec, i) => {
+    const src = source[Math.min(i, source.length - 1)];
+    const plus = Boolean(src && typeof src === 'object' && !Array.isArray(src) && src.plus === true);
+    if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return spec;
+    const { plus: _drop, ...rest } = spec;
+    return plus || spec.plus === true ? { ...rest, plus: true } : rest;
+  });
+}
+
 // Workouts used to be a bare list of exercise ids. They now carry a planned set
 // count and notes per exercise, so older saved workouts are upgraded on read.
 export function normalizeWorkout(w) {
@@ -982,7 +1181,7 @@ export function normalizeWorkout(w) {
          * whole prescription rather than default a row). Two fields that both
          * have to agree with the set count, reconciled in the one place every
          * read passes through. js/set-reps.js */
-        const reps = normalizeReps(e.reps, sets);
+        const reps = keepRepPlus(normalizeReps(e.reps, sets), e.reps);
         return {
           exerciseId: e.exerciseId,
           sets,
@@ -1726,7 +1925,7 @@ export const store = {
 
   async saveSession(session) {
     const rows = await backend.read('sessions');
-    const row = { ...session };
+    const row = normalizeSession({ ...session });
     if (!row.id) row.id = uid('s');
     if (!row.createdAt) row.createdAt = new Date().toISOString();
     await backend.write('sessions', upsert(rows, row));
@@ -2408,6 +2607,62 @@ export const store = {
      * their next workout (Tim, comparing with Autumn). */
     schedulePublish();
     return saved;
+  },
+
+  /**
+   * 🆕 R-1c (2026-09-27): is this a cloud account running on this device's
+   * copy because the cloud could not be reached? The screens use it to say
+   * "showing only what's on this phone" instead of "No programs yet". The same
+   * test as `auth.state().degraded`, without building the rest of the state.
+   */
+  async isDegraded() {
+    const impl = await active();
+    return impl === LocalBackend && wantRemote();
+  },
+
+  /**
+   * 🆕 2026-09-27 (overhaul): the "Update <Workout> with today's changes" action.
+   * `exercises` is today's list, in today's order, each `{exerciseId,
+   * swappedFrom?, sets?}`. Only WHICH exercises the workout holds changes:
+   *   - kept    (already in the workout) keep every planned field as it was —
+   *             sets, reps, targets, notes, group, origin;
+   *   - swapped (`swappedFrom` names one it held) take over that one's plan
+   *             under the new exercise id;
+   *   - added   get `sets` if given, else DEFAULT_SETS, and nothing else;
+   *   - removed are the workout's exercises today's list no longer has.
+   * Repeats of one exercise are matched one for one, in order. Reads fresh,
+   * like every mutation here. Returns the saved workout, or null if there is
+   * no such workout or the list would leave it empty.
+   */
+  async updateWorkoutExercises(workoutId, exercises) {
+    const list = (Array.isArray(exercises) ? exercises : [])
+      .filter((e) => e && e.exerciseId != null);
+    if (!workoutId || !list.length) return null;
+    const rows = await backend.read('workouts');
+    const raw = rows.find((r) => r && r.id === workoutId);
+    if (!raw) return null;
+    const current = normalizeWorkout(raw);
+    // exerciseId -> planned entries not yet claimed, in workout order.
+    const pool = new Map();
+    for (const e of current.exercises || []) {
+      if (!pool.has(e.exerciseId)) pool.set(e.exerciseId, []);
+      pool.get(e.exerciseId).push(e);
+    }
+    const claim = (id) => {
+      const left = pool.get(id);
+      return left && left.length ? left.shift() : null;
+    };
+    const next = [];
+    // Kept ones first claim their own plan, so a swap never steals it.
+    const kept = list.map((e) => claim(e.exerciseId));
+    list.forEach((e, i) => {
+      if (kept[i]) { next.push(kept[i]); return; }
+      const from = e.swappedFrom != null ? claim(e.swappedFrom) : null;
+      if (from) { next.push({ ...from, exerciseId: e.exerciseId }); return; }
+      const sets = Number(e.sets) > 0 ? Math.floor(Number(e.sets)) : DEFAULT_SETS;
+      next.push({ exerciseId: e.exerciseId, sets, notes: '' });
+    });
+    return this.saveWorkout({ ...raw, exercises: next });
   },
 
   async clearAll() {
@@ -3983,6 +4238,21 @@ export const social = {
   },
 };
 
+/* 🆕 EB-6 (2026-09-27): THE MUSCLE MAP'S TYPO SCREEN, FOR DATA'S BESTS AND
+ * CHARTS. One rule, imported (js/personal-bests.js typoQuarantine), never a
+ * second copy here. Loaded on demand like the rating modules, so the store
+ * does not pull it into boot. If it cannot load, nothing is held — the old
+ * behaviour, never an error. */
+let typoScreenPromise = null;
+function typoScreen() {
+  if (!typoScreenPromise) {
+    typoScreenPromise = import('./personal-bests.js')
+      .then((m) => (typeof m.typoQuarantine === 'function' ? m.typoQuarantine : () => new Set()))
+      .catch(() => { typoScreenPromise = null; return () => new Set(); });
+  }
+  return typoScreenPromise;
+}
+
 /** A Firestore Timestamp, a Date or an ISO string -> milliseconds. */
 function instantOf(value) {
   if (!value) return 0;
@@ -4005,12 +4275,36 @@ export async function seriesForExercise(exerciseId, field, source = null, rows =
     : await Promise.all([store.getSessions(), store.getBenchmarks()]);
   const points = [];
 
+  /* 🆕 EB-6 (2026-09-27): every set is screened for typos first (the muscle
+   * map's rule, personal-bests.js typoQuarantine), and a held set gives no
+   * value to any field's line. Screened on the typed weight × reps with one
+   * consistent estimate (Epley), which is all the screen compares. Held sets
+   * ride on `.held` of the returned array, never deleted. */
+  const typoQuarantine = await typoScreen();
+  const setRows = [];
+  const screenRow = (date, set, isBenchmark) => {
+    const w = Number(set && set.weight), r = Number(set && set.reps);
+    if (!(w > 0) || !(r >= 1)) return;
+    setRows.push({ date, weight: w, reps: r, estimate: w * (1 + r / 30), isBenchmark, set });
+  };
+  if (source !== 'benchmark') {
+    for (const s of sessions) {
+      for (const entry of entriesFor(s, exerciseId)) for (const set of entry.sets || []) screenRow(s.date, set, false);
+    }
+  }
+  if (source !== 'workout') {
+    for (const b of benchmarks) if (b.exerciseId === exerciseId && b.values) screenRow(b.date, b.values, true);
+  }
+  let heldRows;
+  try { heldRows = typoQuarantine(setRows); } catch (_) { heldRows = new Set(); }
+  const heldSets = new Set([...heldRows].map((h) => h.set));
+
   if (source !== 'benchmark') {
     for (const s of sessions) {
       // Every entry for this exercise, not just the first — see entriesFor().
       // The day's best set is the best across all of them.
       const vals = entriesFor(s, exerciseId)
-        .flatMap((entry) => (entry.sets || []).map((set) => set[field]))
+        .flatMap((entry) => (entry.sets || []).filter((set) => !heldSets.has(set)).map((set) => set[field]))
         .filter((v) => typeof v === 'number' && !Number.isNaN(v));
       if (!vals.length) continue;
       points.push({ date: s.date, value: Math.max(...vals), source: 'workout', label: s.workoutName });
@@ -4020,6 +4314,7 @@ export async function seriesForExercise(exerciseId, field, source = null, rows =
   if (source !== 'workout') {
     for (const b of benchmarks) {
       if (b.exerciseId !== exerciseId) continue;
+      if (b.values && heldSets.has(b.values)) continue;
       const v = b.values ? b.values[field] : undefined;
       if (typeof v !== 'number' || Number.isNaN(v)) continue;
       points.push({ date: b.date, value: v, source: 'benchmark', label: 'Benchmark' });
@@ -4033,7 +4328,9 @@ export async function seriesForExercise(exerciseId, field, source = null, rows =
     if (!prev || p.value > prev.value) byDate.set(p.date, p);
   }
 
-  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const series = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  series.held = [...heldRows].map((h) => ({ date: h.date, weight: h.weight, reps: h.reps, value: h.set[field] }));
+  return series;
 }
 
 // Body weight as a chartable series, in the same {date, value} shape the line
@@ -4182,7 +4479,7 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
     return bwCache.get(date);
   };
 
-  const byDate = new Map();
+  const cands = [];
   for (const o of await weightRepObservations(exerciseId, source, rows)) {
     if (!isRankableSet(o.reps)) {
       out.dropped += 1;
@@ -4215,12 +4512,32 @@ export async function normalizedSeries(exerciseId, targetReps, source = null, ro
       bodyIncluded: est.bodyIncluded,
       assist: est.assist,
     };
+    cands.push(cand);
+  }
 
-    const prev = byDate.get(o.date);
-    if (!prev) { byDate.set(o.date, cand); continue; }
+  /* 🆕 EB-6 (2026-09-27): a set the typo screen holds (a 1350×5 slip for
+   * 135×5) is not a point: it spiked the chart and stretched its scale for
+   * good. Left out of the line, and listed on `out.held` so the chart can draw
+   * it hollow — never deleted. Lighter sets that day still make the point. */
+  const typoQuarantine = await typoScreen();
+  let held;
+  try {
+    held = typoQuarantine(cands.map((c) => ({
+      date: c.date, reps: c.reps, estimate: c.rank, isBenchmark: c.source === 'benchmark',
+      weight: c.bodyIncluded ? c.load : c.weight, cand: c,
+    })));
+  } catch (_) { held = new Set(); }
+  const heldCands = new Set([...held].map((h) => h.cand));
+  out.held = [...heldCands];
+
+  const byDate = new Map();
+  for (const cand of cands) {
+    if (heldCands.has(cand)) continue;
+    const prev = byDate.get(cand.date);
+    if (!prev) { byDate.set(cand.date, cand); continue; }
     // A real measurement at the target always outranks an estimate.
-    if (prev.actual !== cand.actual) { if (cand.actual) byDate.set(o.date, cand); continue; }
-    if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(o.date, cand);
+    if (prev.actual !== cand.actual) { if (cand.actual) byDate.set(cand.date, cand); continue; }
+    if (cand.actual ? cand.value > prev.value : cand.rank > prev.rank) byDate.set(cand.date, cand);
   }
 
   out.push(...[...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)));
@@ -4635,9 +4952,23 @@ let strengthMemo = null;
 // weigh-ins; getExerciseMap reads the custom exercises). A getter that starts
 // reading another collection must add it here.
 const STRENGTH_READS = ['sessions', 'benchmarks', 'settings', 'bodyWeight', 'customExercises'];
+/* 🆕 R-8a (2026-09-27): SETTINGS ENTER THE KEY BY THE FIELDS `getProfile()`
+ * READS, not by the row's identity. The runner and Settings write that row
+ * for things no rating reads (the last runner view, the theme, a hint seen),
+ * and each such write used to throw the kept map away, so the next runner
+ * open walked the whole history again (~130 ms, 1.4 s at 4× CPU). A field
+ * getProfile() starts reading must be added to PROFILE_FIELDS. */
+const PROFILE_FIELDS = ['gender', 'birthYear', 'units', 'compare'];
+function profileFingerprint() {
+  const rows = readCache.get('settings');
+  const row = (Array.isArray(rows) && rows[0]) || {};
+  try { return 'profile:' + JSON.stringify(PROFILE_FIELDS.map((f) => row[f] ?? null)); } catch (_) { return null; }
+}
 function strengthKey() {
   if (!STRENGTH_READS.every((c) => readCache.has(c))) return null;
-  return [todayISO(), ...STRENGTH_READS.map((c) => readCache.get(c))];
+  const profile = profileFingerprint();
+  if (!profile) return null;
+  return [todayISO(), ...STRENGTH_READS.map((c) => (c === 'settings' ? profile : readCache.get(c)))];
 }
 const sameKey = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
 
@@ -5127,6 +5458,8 @@ export async function currentBests(from = null) {
         needsWeighIn: false,
         latestDate: null,
         days: new Set(),
+        scored: [],     // every set with an estimate; the best is picked below
+        plain: null,    // the best set without reps (EB-5), with its rank
       });
     }
     return rows.get(exId);
@@ -5177,27 +5510,44 @@ export async function currentBests(from = null) {
         byEye();
         return;
       }
-      if (r.e1rmTotal === null || est.e1rm > r.e1rmTotal) {
-        r.e1rmTotal = est.e1rm;
-        r.e1rm = shownMax(est);
-        r.load = est.load;
-        r.perSide = est.perSide;
-        r.bodyIncluded = est.bodyIncluded;
-        r.assist = est.assist;
-        r.best = { weight: w > 0 ? w : 0, reps: Math.round(reps), date, source };
-      }
+      /* 🆕 EB-6 (2026-09-27): KEPT, NOT PICKED YET. The best is chosen after
+       * every set has been seen, so the typo screen (personal-bests.js
+       * typoQuarantine, the muscle map's rule) can hold a 1350×5 slip for
+       * 135×5 back first. Before this, Data's bests showed the slip for good. */
+      r.scored.push({
+        date, reps: Math.round(reps), estimate: est.e1rm, isBenchmark: source === 'benchmark',
+        // What the screen compares: the typed number, or the whole resistance
+        // for a body-weight lift (its typed number is often 0).
+        weight: spec ? est.load : w,
+        typed: w > 0 ? w : 0, est, source,
+      });
+      r.e1rmTotal = r.e1rmTotal === null ? est.e1rm : Math.max(r.e1rmTotal, est.e1rm);
       return;
     }
+    /* 🆕 EB-5 (2026-09-27): WHAT "BEST" MEANS WITHOUT REPS. It used to be the
+     * SHORTEST time for everything, so a 30 s plank beat a 120 s one, a 1-mile
+     * run beat a 5-mile one, and a farmer carry lost its load.
+     *   carry     weight + time    the heaviest load, then the longest time
+     *   distance  distance (+time) the longest distance, then the shorter time
+     *   hold      time only        the longest time
+     *   weight    weight only      the heaviest (no reps: no estimated max)
+     * ⚠️ Pace (distance ÷ time) is NOT used: whether a faster short run beats a
+     * slower long one is Tim's call. The kinds rank carry > distance > hold >
+     * weight, so one odd set of another kind cannot displace a row's best. */
+    if (r.scored.length) return;   // a scored set always stands for the lift
     const t = Number(values.time);
     const d = Number(values.distance);
-    if (t > 0 && (!r.best || !(r.best.time > 0) || t < r.best.time)) {
-      r.best = { time: t, distance: d > 0 ? d : undefined, date, source };
-    } else if (d > 0 && (!r.best || !(r.best.distance > 0))) {
-      r.best = { distance: d, date, source };
-    } else if (w > 0 && (!r.best || !(r.best.weight > 0))) {
-      // A weight with no reps still tells you something; it just cannot be
-      // turned into an estimated maximum.
-      r.best = { weight: w, date, source };
+    let cand = null;
+    if (w > 0 && t > 0) cand = { kind: 3, a: w, b: t, best: { weight: w, time: t, date, source } };
+    else if (d > 0) cand = { kind: 2, a: d, b: t > 0 ? -t : -Infinity, best: { distance: d, ...(t > 0 ? { time: t } : {}), date, source } };
+    else if (t > 0) cand = { kind: 1, a: t, b: 0, best: { time: t, date, source } };
+    else if (w > 0) cand = { kind: 0, a: w, b: 0, best: { weight: w, date, source } };
+    if (!cand) return;
+    const p = r.plain;
+    if (!p || cand.kind > p.kind || (cand.kind === p.kind
+        && (cand.a > p.a || (cand.a === p.a && cand.b > p.b)))) {
+      r.plain = cand;
+      r.best = cand.best;
     }
   };
 
@@ -5208,6 +5558,31 @@ export async function currentBests(from = null) {
   }
   for (const b of benchmarks) consider(b.exerciseId, b.values || {}, b.date, 'benchmark');
 
+  // EB-6: the typo screen first, then the heaviest estimate among what is left.
+  // A held set is never deleted: it rides along on `held` for a caption.
+  const typoQuarantine = await typoScreen();
+  for (const r of rows.values()) {
+    if (!r.scored.length) continue;
+    let held;
+    try { held = typoQuarantine(r.scored); } catch (_) { held = new Set(); }
+    let top = null;
+    for (const s of r.scored) {
+      if (held.has(s)) continue;
+      if (!top || s.estimate > top.estimate) top = s;
+    }
+    if (!top) continue;
+    r.e1rmTotal = top.est.e1rm;
+    r.e1rm = shownMax(top.est);
+    r.load = top.est.load;
+    r.perSide = top.est.perSide;
+    r.bodyIncluded = top.est.bodyIncluded;
+    r.assist = top.est.assist;
+    r.best = { weight: top.typed, reps: top.reps, date: top.date, source: top.source };
+    if (held.size) {
+      r.held = [...held].map((s) => ({ weight: s.typed, reps: s.reps, date: s.date, source: s.source }));
+    }
+  }
+
   // Noon, so a DST shift cannot turn a clean 7 days into 6.96 and round down.
   const noon = (iso) => new Date(String(iso) + 'T12:00:00');
   const today = noon(todayISO());
@@ -5215,8 +5590,9 @@ export async function currentBests(from = null) {
   for (const r of rows.values()) {
     if (!r.best) continue;
     const t = noon(r.latestDate);
+    const { scored: _s, plain: _p, ...shown } = r;
     out.push({
-      ...r,
+      ...shown,
       sessions: r.days.size,
       days: Number.isNaN(t.getTime()) ? null : Math.max(0, Math.round((today - t) / 86400000)),
     });
@@ -5303,8 +5679,23 @@ function volumeWindow(sessions, windowDays, today) {
     const n = volumeDayNum(s.date);
     return n !== null && n <= todayNum - windowDays;
   });
-  const spanDays = olderExists ? windowDays : todayNum - first + 1;
-  return { inWindow, spanDays, weeks: spanDays / 7, enough: spanDays >= 14, windowDays };
+  const rawSpan = olderExists ? windowDays : todayNum - first + 1;
+  /* 🆕 EB-13 (2026-09-27): THE FENCEPOST. Measured from the first session, a
+   * new account's span leaves out the gap that session stands for: 3 sets a
+   * week for 4 weeks (days −1, −8, −15, −22) spanned 23 days and read 3.65/wk
+   * instead of 3.0. Each training day stands for one mean gap, so the span is
+   * at least (training days × mean gap), capped at the window. Someone who
+   * stopped training still gets the longer, true span. The two-week floor
+   * (`enough`) is judged on the span as measured, exactly as before. */
+  let spanDays = rawSpan;
+  if (!olderExists) {
+    const days = [...new Set(inWindow.map((s) => volumeDayNum(s.date)))].sort((a, b) => a - b);
+    if (days.length >= 2) {
+      const meanGap = (days[days.length - 1] - days[0]) / (days.length - 1);
+      spanDays = Math.min(windowDays, Math.max(rawSpan, days.length * meanGap));
+    }
+  }
+  return { inWindow, spanDays, weeks: spanDays / 7, enough: rawSpan >= 14, windowDays };
 }
 
 /*

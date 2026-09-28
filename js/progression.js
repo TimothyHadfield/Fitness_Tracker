@@ -82,7 +82,7 @@
 // volume-map.js and optimal.js.
 
 import { volumeContributions } from './volume-map.js';
-import { totalResistance, MAX_EVIDENCE_REPS } from './e1rm.js';
+import { totalResistance, MAX_EVIDENCE_REPS, e1rm } from './e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
 
 /* ------------------------------------------------------------------ *
@@ -214,11 +214,40 @@ export function repRangeFor(reps) {
  * failure, and it is the one to have.
  */
 export function trainingRange(history) {
-  const best = (history || [])
-    .map(sessionSummary)
-    .filter(Boolean)
-    .reduce((m, r) => Math.max(m, r.bestAtTop), 0);
+  const rows = (history || []).map(sessionSummary).filter(Boolean);
+  /* 🆕 EA-8 (2026-09-27): A REP TYPO MAY NOT SET THE RANGE. "225 × 50" for
+   * "225 × 5" read as a 50-rep best and held a squat at 15–20 for three
+   * sessions of "one more rep", where the clean history earned +5 lb. A session
+   * whose best set is more than twice the MEDIAN of the others is left out.
+   * It needs two others to have a median worth the name; with fewer, nothing is
+   * dropped and the old reading stands. The newest-session half of this rule
+   * lives in suggestProgression (it returns null on a rep jump). */
+  const kept = rows.length >= 3
+    ? rows.filter((r, i) => {
+      const others = rows.filter((_, j) => j !== i).map((o) => o.bestAtTop).sort((a, b) => a - b);
+      const mid = others.length % 2
+        ? others[(others.length - 1) / 2]
+        : (others[others.length / 2 - 1] + others[others.length / 2]) / 2;
+      return !(r.bestAtTop > 2 * mid);
+    })
+    : rows;
+  const best = kept.reduce((m, r) => Math.max(m, r.bestAtTop), 0);
   return repRangeFor(best);
+}
+
+/**
+ * A rep range handed in by the caller (a plan's prescription), or null.
+ * Accepts `[lo, hi]` or `{lo, hi}`; anything else is refused rather than
+ * guessed at, and the history-read range is used instead.
+ */
+function givenRange(range) {
+  if (!range) return null;
+  const pair = Array.isArray(range) ? range : [range.lo, range.hi];
+  const lo = Math.round(Number(pair[0]));
+  const hi = Math.round(Number(pair[1]));
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+  if (lo < 1 || hi < 1 || lo > 50 || hi > 50) return null;
+  return lo <= hi ? [lo, hi] : [hi, lo];
 }
 
 /* ------------------------------------------------------------------ *
@@ -308,7 +337,19 @@ function lastLoggedEntry(session, exerciseId) {
  *
  * @param {Array} sessions  store.getSessions() — newest first
  */
-function scanSessions(sessions, { exerciseId, workoutId, limit = 4 } = {}) {
+/* 🆕 S-08b (2026-09-27): A MACHINE AT ONE GYM IS NOT THE MACHINE AT ANOTHER.
+ * Stacks, pulleys and cams differ, so 150 on one gym's cable row says little
+ * about the next gym's. Barbells and dumbbells weigh the same everywhere, so
+ * only these two travel badly. */
+const GYM_BOUND_EQUIPMENT = new Set(['Machine', 'Cable']);
+const gymOf = (s) => {
+  const g = s && (typeof s.location === 'string' ? s.location : s.gym);
+  return typeof g === 'string' && g.trim() ? g.trim().toLowerCase() : null;
+};
+
+function scanSessions(sessions, {
+  exerciseId, workoutId, limit = 4, location = null, gym = null, equipment = null, exercise = null,
+} = {}) {
   const scan = (filterFn) => {
     const out = [];
     for (const s of sessions || []) {
@@ -319,10 +360,43 @@ function scanSessions(sessions, { exerciseId, workoutId, limit = 4 } = {}) {
     }
     return out;
   };
-  const own = scan((s) => s.workoutId === workoutId);
-  return own.length ? own : scan(() => true);
+
+  /* 🆕 S-09 (2026-09-27): A LIGHTER WEEK IS NOT WHAT YOU CAN DO. A session saved
+   * with `deload: true` is skipped here, so next week's pre-fill is not the
+   * light numbers and progression does not read them as a regression. Used only
+   * when nothing else exists — a deload is still better than a blank. Volume,
+   * calendar and stats read sessions elsewhere and still count it. */
+  const chain = (base) => {
+    const here = gymOf({ location: location == null ? gym : location });
+    const kind = equipment || (exercise && exercise.equipment) || null;
+    // Only when the account really has two gyms. One gym, or none typed, and
+    // this is the old precedence byte for byte.
+    if (here && GYM_BOUND_EQUIPMENT.has(kind)) {
+      const gyms = new Set((sessions || []).map(gymOf).filter(Boolean));
+      if (gyms.size >= 2) {
+        const sameGym = (s) => base(s) && gymOf(s) === here;
+        const ownHere = scan((s) => sameGym(s) && s.workoutId === workoutId);
+        if (ownHere.length) return ownHere;
+        const anyHere = scan(sameGym);
+        if (anyHere.length) return anyHere;
+      }
+    }
+    const own = scan((s) => base(s) && s.workoutId === workoutId);
+    return own.length ? own : scan(base);
+  };
+  const full = chain((s) => !(s && s.deload === true));
+  return full.length ? full : chain(() => true);
 }
 
+/**
+ * @param {Array} sessions  store.getSessions(), newest first
+ * @param {object} opts     { exerciseId, workoutId, limit,
+ *   location — this session's gym name (S-08b; `gym` is accepted too),
+ *   equipment — or `exercise`, whose `.equipment` is read }
+ *   Machine and Cable history prefers the same gym, only when the sessions
+ *   hold two or more gym names. Deload sessions are skipped unless nothing
+ *   else exists (S-09).
+ */
 export function historyFor(sessions, opts) {
   return scanSessions(sessions, opts).map((r) => r.sets);
 }
@@ -395,10 +469,17 @@ export function smallestHonestIncrement(weight, step, ceiling = LOAD_BAND.max) {
  *                                most of the load. Unknown is fine.
  * @param {Function} fmt          weight -> display string; the view passes the
  *                                user's unit, tests get pounds
+ * @param {number[]|{lo,hi}} range  🆕 EA-1, optional. A plan's own rep range
+ *                                (`[lo, hi]` or `{lo, hi}`), used INSTEAD of
+ *                                the range read from history. It is a fact
+ *                                about the programme, not a goal or a date,
+ *                                so rule 1 holds. Omitted or unusable: the
+ *                                history-read range, exactly as before.
  * @returns {object|null}  null when there is nothing honest to say
  */
 export function suggestProgression({
   history, exercise, step = 5, daysSinceLast = null, bodyWeight = null, fmt = defaultFmt,
+  range: planRange = null,
 } = {}) {
   const fields = (exercise && exercise.fields) || [];
   // The rule is stated in reps, with load as the second lever where there is
@@ -410,10 +491,25 @@ export function suggestProgression({
   const last = sessionSummary((history || [])[0]);
   if (!last) return null;
 
+  /* 🆕 EA-3 / EA-8 (2026-09-27): A TYPO IN THE NEWEST SESSION IS THE ONE THAT
+   * FEEDS THE PRE-FILL. 1350 × 5 after a run of 135 × 5 was read as the new
+   * working weight ("the same again — 1350 × 5"), and 225 × 50 for 225 × 5 as a
+   * 50-rep best. The quarantine elsewhere only releases a slip once a LATER day
+   * disagrees, which is too late for the very next session. So a newest session
+   * at twice the previous one's weight, or twice its best reps, gets no
+   * suggestion at all: the runner falls back to plain last time's numbers,
+   * which the lifter can see and correct. A refusal, never a number. */
+  const prevSummary = sessionSummary((history || [])[1]);
+  if (prevSummary) {
+    if (prevSummary.topWeight > 0 && last.topWeight >= 2 * prevSummary.topWeight) return null;
+    if (prevSummary.bestAtTop > 0 && last.bestAtTop > 2 * prevSummary.bestAtTop) return null;
+  }
+
   // ⚠️ Across the history, never from `last` alone — see trainingRange(). Read
   // from one session, the app's own "back to 8 reps" was re-read next time as
   // the top of 6–8 and quietly moved the lifter down a band for good.
-  const range = trainingRange(history);
+  // A plan's own range, when the caller hands one in, wins (EA-1).
+  const range = givenRange(planRange) || trainingRange(history);
 
   // ⚠️ THE BAND IS A PERCENTAGE OF WHAT YOU ARE ACTUALLY LIFTING, and on a
   // pull-up most of that is you. `totalResistance()` in e1rm.js is the app's one
@@ -605,6 +701,24 @@ export function suggestProgression({
     resistance,
   };
 
+  /* 🆕 EA-9 (2026-09-27): SINGLES AND DOUBLES ARE NOT A RANGE TO CLIMB. 405 × 1
+   * came back as "405 × 2", and asking for a double at somebody's max is the
+   * one suggestion this module says it must never make. With no RIR field
+   * (D28) a logged single is often a max, so the answer is the same again. */
+  if (last.bestAtTop <= 2) {
+    return {
+      ...base,
+      kind: 'repeat',
+      nearMax: true,
+      weight: last.topWeight,
+      reps: last.repsAtTop,
+      headline: assisted || !(last.topWeight > 0)
+        ? `the same again — ${last.repsAtTop} ${atLoad}`
+        : `the same again — ${fmt(last.topWeight)} × ${last.repsAtTop}`,
+      why: 'Singles and doubles are usually close to a max. A % target is the way to programme them.',
+    };
+  }
+
   // ── 1. Below the top of the range: hold the load, take a rep ──────────
   if (!atTop) {
     const did = last.bestAtTop === last.repsAtTop
@@ -671,6 +785,62 @@ export function suggestProgression({
     : smallestHonestIncrement(resistance, step, ceiling);
 
   if (inc === null) {
+    const s = Number(step);
+    const pct = Math.round((s / resistance) * 1000) / 10;
+    const overBand = pct > LOAD_BAND.max * 100;
+
+    /* 🆕 EA-4 (2026-09-27): A WEIGH-IN MUST NEVER REMOVE A STEP. On an assist
+     * machine with a weigh-in, one stack plate can be past the band (40 kg of
+     * help on a 55 kg lifter leaves 33 lb resisted, so 2.5 kg is 16.7 %), and
+     * the rule froze her at 20 reps — while the same lifter with NO weigh-in
+     * got the plate off every time. So the plate comes off here too, reps back
+     * to the bottom, and it says the step is bigger than usual. */
+    if (assisted && s > 0 && last.topWeight > 0) {
+      const drop = Math.min(s, last.topWeight);
+      const nextAssist = last.topWeight - drop;
+      return {
+        ...base,
+        kind: 'load',
+        bigStep: true,
+        weight: nextAssist,
+        reps: range[0],
+        addedWeight: -drop,
+        pct: Math.round((drop / resistance) * 1000) / 10,
+        headline: nextAssist > 0
+          ? `less help — ${fmt(nextAssist)} and back to ${range[0]} reps`
+          : `no help — ${range[0]} unassisted reps`,
+        why: `Top of ${rangeText} twice in a row. One plate off is a bigger step than the usual `
+          + `${bandText()}, and it is the smallest the stack has. Reps back to ${range[0]}.`,
+      };
+    }
+
+    /* 🆕 EA-2 (2026-09-27): THE ONE REAL STEP, WHEN IT IS NO HARDER. A 65 lb
+     * press, a 25 lb curl and a 22 kg dumbbell bench walked 8 → 20 reps and
+     * froze, because 5 lb (2.5 kg) is past this app's cap for the lift. But on
+     * the app's own curve, the step taken at the BOTTOM of the range is no
+     * harder than what was just done at the top: 70 × 6 (e1RM 90.7) against
+     * 65 × 8 (91.2). When that holds, offer it. When it does not, HOLD at the
+     * top of the range — no extra rep past it — and name microplates or an
+     * extra set. The ceiling branch above stays the backstop. */
+    if (!assisted && s > 0 && resistance > 0) {
+      const now = e1rm(resistance, range[1]);
+      const next = e1rm(resistance + s, range[0]);
+      if (now && next && next <= now) {
+        return {
+          ...base,
+          kind: 'load',
+          bigStep: true,
+          weight: last.topWeight + s,
+          reps: range[0],
+          addedWeight: s,
+          pct,
+          headline: `+${fmt(s)}${bodyBase > 0 ? ' added' : ''} and back to ${range[0]} reps`,
+          why: `Top of ${rangeText} twice in a row. ${fmt(s)} is a ${pct} % jump, bigger than the `
+            + `usual ${bandText()}, but at ${range[0]} reps it is no harder than what you just did.`,
+        };
+      }
+    }
+
     // ⚠️ §8.2 rule 4. The plates in the room cannot make an honest step, and
     // saying that is the useful answer.
     //
@@ -680,15 +850,16 @@ export function suggestProgression({
     // refused only because this app sizes the step by the lift. Telling
     // somebody "2–10 % is the recommended step" while refusing an 8.3 % jump
     // would be a sentence contradicting itself on screen.
-    const pct = Math.round((step / resistance) * 1000) / 10;
-    const overBand = pct > LOAD_BAND.max * 100;
+    //
+    // 🔄 EA-2: it HOLDS at the top of the range now rather than adding a rep.
+    // A rep past the top walked the lift out of its own range, 8 → 20.
     return {
       ...base,
       kind: 'noIncrement',
       weight: last.topWeight,
-      reps: last.repsAtTop + 1,
+      reps: last.repsAtTop,
       smallestPct: pct,
-      headline: `another rep — ${last.repsAtTop + 1} ${atLoad}`,
+      headline: `the same again — ${last.repsAtTop} ${atLoad}`,
       // "a 8.3 % jump" reads as a typo. 8, 11 and 18 are the percentages in
       // range that are spoken with a vowel.
       //
@@ -702,8 +873,8 @@ export function suggestProgression({
           : `and that step is sized by the lift — a single-muscle exercise wants the bottom of the `
             + `${bandText()} band. `)
         + (assisted
-          ? 'A rep or an extra set are the ways up — an assist stack has no microplates.'
-          : 'A rep, an extra set, or microplates are the ways up.'),
+          ? 'An extra set is the way up — an assist stack has no microplates.'
+          : 'An extra set, or microplates, are the ways up.'),
     };
   }
 
@@ -843,14 +1014,18 @@ export function applySuggestion(sets, suggestion) {
  * word. A refusal behind a ? is still stated; a refusal reworded is not the same
  * refusal. `tests/goals.test.mjs` reads it out of the new field.
  */
+/* 🔄 TWO LINES SINCE 2026-09-27 (words W-14). Both kept word for word: they
+ * are the safety claim, and render.test reads them on the screen. The third
+ * line ("reads your last two sessions") is mechanism, so it moved to the
+ * first line of the ?. */
 export const PROGRESSION_EXPLAINER = [
   'Your goal never touches that number.',
   'Nothing gets heavier because a deadline is close.',
-  'The suggestion reads your last two sessions of that exercise — and nothing about your goal.',
 ];
 
 /** The mechanism, behind the "?" beside the block above. */
 export const PROGRESSION_WHY = [
+  'The suggestion reads your last two sessions of that exercise — and nothing about your goal.',
   'How a step is chosen. Hold the weight and add a rep until you hit the top of the range twice '
   + 'in a row. Then the weight takes the smallest step that still lands inside the 2–10 % the ACSM '
   + 'position stand recommends, and the reps drop back to the bottom.',

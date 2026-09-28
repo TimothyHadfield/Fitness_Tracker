@@ -2180,7 +2180,9 @@ pre-set prediction on machines (Steele 2017), not a training-status effect.
   GL best, DOTS second, Wilks/IPF worse. Our BW^0.67 is adequate for 130–230 lb; female bench from
   SL rows is closer to 0.5.
 - **Age**: McCulloch has no published derivation (🔴 provenance); Anton 2004 linear decline; Solberg
-  2019 peak 35 ± 7 (PL); van den Hoek > 80 y bench −33 %, squat −39 % at the 90th.
+  2019 peak 35 ± 7 (PL); van den Hoek > 80 y bench −33 %, squat −39 % at the 90th. **Since
+  2026-09-27 the app grades above 40 from Harbo 2012's bands** (research-data.js, men, 8 groups:
+  ×1.17 at 64, ×1.44 at 74) → rows 50 1.10 · 60 1.17 · 70 1.35 · 80 1.50; Foster below 23 kept.
 
 ### 16.10 Untrained adults — D21's 0.55 measured 🟢/🟡
 

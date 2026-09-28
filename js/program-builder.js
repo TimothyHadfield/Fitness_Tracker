@@ -23,8 +23,29 @@
 // ⚠️ EQUIPMENT IS READ FROM THE EXERCISE'S OWN `equipment` FIELD, never from its
 // name, so "Bodyweight only" can be proven to contain no barbell by a test.
 
+//
+// ── ADDED 2026-09-27 (overhaul) ──────────────────────────────────────────────
+//   O-5  THE BUILDER PASSES ITS OWN CHECKER. For goal muscle/both at 45 min or
+//        more, every day keeps one direct arm exercise (biceps and triceps take
+//        turns across the days), and any of the seven major muscles still
+//        trained only indirectly anywhere in the programme gets a direct
+//        exercise pulled forward on a day that has one. Measured before the
+//        change: 2,958 of 4,800 such answer sets drew "worked only indirectly"
+//        from js/template-lint.js on the screen right after the intro.
+//        tests/program-builder.test.mjs walks them all.
+//   O-6  "Dumbbells only" never gets the pull-up family (it needs a bar); the
+//        vertical pull falls to the Dumbbell Pullover instead.
+//   O-8  A beginner, or anyone 60 or over (optional `age`), starts on the
+//        easier-to-learn versions: Goblet Squat, Dumbbell Romanian Deadlift,
+//        Dumbbell Bench Press. REASONED, not measured: they need less technique
+//        and less spotting than the barbell lifts. And the deadlift slot is
+//        never prescribed above 8 reps, for anyone — a hinge taken to 12 reps
+//        falls apart in the lower back before the hamstrings are done.
+//   S-15 The seven-box plan is saved as a WEEK (Monday first), not a cycle.
+
 import { BUILT_IN_EXERCISES } from './exercises.js';
-import { PRESET_SYSTEMS } from './preset-systems.js';
+import { PRESET_SYSTEMS, presetEquipment } from './preset-systems.js';
+import { volumeContributions } from './volume-map.js';
 
 /** Which `equipment` values each answer allows. */
 export const EQUIPMENT_ALLOWED = {
@@ -53,11 +74,13 @@ const SLOTS = {
   rearDelt: { pick: ['Face Pull', 'Rear Delt Fly'] },
   hPull:    { main: true, pick: ['Barbell Row', 'Dumbbell Row', 'Inverted Row'] },
   hPull2:   { pick: ['Seated Cable Row', 'Chest-Supported Dumbbell Row', 'Pendlay Row', 'Inverted Row'] },
-  vPull:    { pick: ['Lat Pulldown', 'Pull-Up'] },
-  vPull2:   { pick: ['Close-Grip Lat Pulldown', 'Chin-Up', 'Neutral-Grip Pull-Up'] },
+  vPull:    { pick: ['Lat Pulldown', 'Pull-Up', 'Dumbbell Pullover'] },
+  vPull2:   { pick: ['Close-Grip Lat Pulldown', 'Chin-Up', 'Neutral-Grip Pull-Up', 'Dumbbell Pullover'] },
   biceps:   { pick: ['Dumbbell Curl', 'Barbell Curl', 'Chin-Up'] },
   biceps2:  { pick: ['Hammer Curl', 'EZ-Bar Curl'] },
-  triceps:  { pick: ['Triceps Pushdown', 'Overhead Dumbbell Extension', 'Skull Crusher', 'Diamond Push-Up'] },
+  // Bench Dip before Diamond Push-Up: the library files the push-up under
+  // Chest, so with no weights it was never a direct triceps exercise (O-5).
+  triceps:  { pick: ['Triceps Pushdown', 'Overhead Dumbbell Extension', 'Skull Crusher', 'Bench Dip', 'Diamond Push-Up'] },
   triceps2: { pick: ['Overhead Cable Extension', 'Dumbbell Skull Crusher', 'Close-Grip Bench Press', 'Bench Dip'] },
   core:     { pick: ['Cable Crunch', 'Reverse Crunch'] },
 };
@@ -126,15 +149,44 @@ function libraryByName() {
   return libByName;
 }
 
-function pickFor(slotKey, allowed, taken) {
-  const slot = SLOTS[slotKey];
-  for (const name of slot.pick) {
+/* O-8: the easier-to-learn first choice for a beginner or anyone 60 or over.
+ * The normal list follows, so equipment that rules the easy one out still
+ * gets a lift (a barbell-only beginner still squats with the bar). */
+const EASY_FIRST = {
+  squat: 'Goblet Squat',
+  deadlift: 'Dumbbell Romanian Deadlift',
+  hPush: 'Dumbbell Bench Press',
+};
+
+/* O-6: these need a bar to hang from, which "Dumbbells only" does not have. */
+const PULL_UP_FAMILY = new Set(['Pull-Up', 'Chin-Up', 'Neutral-Grip Pull-Up', 'Wide-Grip Pull-Up']);
+
+/* O-5: the arm slots, and the muscles the builder must never leave to
+ * indirect work alone (the ones template-lint would remark on). */
+const ARM_SLOTS = { Biceps: ['biceps', 'biceps2'], Triceps: ['triceps', 'triceps2'] };
+const MAJOR_MUSCLES = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Biceps', 'Triceps'];
+
+function pickFor(slotKey, a, taken) {
+  const allowed = EQUIPMENT_ALLOWED[a.equipment];
+  const easy = a.easy && EASY_FIRST[slotKey];
+  const names = easy ? [easy, ...SLOTS[slotKey].pick.filter((n) => n !== easy)] : SLOTS[slotKey].pick;
+  for (const name of names) {
+    if (a.equipment === 'dumbbells' && PULL_UP_FAMILY.has(name)) continue;
     const ex = libraryByName().get(name);
     if (!ex || !allowed.includes(ex.equipment) || !ex.fields.includes('reps')) continue;
     if (taken.has(ex.id)) continue;
     return ex;
   }
   return null;
+}
+
+/** The muscles an exercise trains DIRECTLY, by the same table template-lint reads. */
+function directMuscles(ex) {
+  try {
+    return (volumeContributions(ex) || []).filter((c) => c && c.kind === 'direct').map((c) => c.muscle);
+  } catch {
+    return [];
+  }
 }
 
 function clampMinutes(m) {
@@ -147,48 +199,73 @@ function clampDays(d) {
   return Math.min(6, Math.max(2, n));
 }
 
-function repsFor(goal, ex, isMain) {
+function repsFor(goal, ex, isMain, slotKey) {
   if (!ex.fields.includes('weight')) return [8, 15]; // body weight: reps are the only dial
+  let r;
   switch (goal) {
-    case 'strength': return isMain ? [3, 6] : [6, 10];
-    case 'both': return isMain ? [5, 8] : [8, 12];
-    case 'general': return isMain ? [8, 12] : [10, 15];
-    default: return [8, 12];
+    case 'strength': r = isMain ? [3, 6] : [6, 10]; break;
+    case 'both': r = isMain ? [5, 8] : [8, 12]; break;
+    case 'general': r = isMain ? [8, 12] : [10, 15]; break;
+    default: r = [8, 12];
   }
+  // O-8: a loaded deadlift-slot hinge tops out at 8 reps, whatever the goal.
+  if (slotKey === 'deadlift' && ex.equipment !== 'Bodyweight' && r[1] > 8) r = [Math.min(r[0], 6), 8];
+  return r;
 }
 
-function buildDay(key, a) {
+/** Every slot of one day resolved to a real exercise, skipping any the
+ *  equipment rules out and any already used that day. */
+function resolveDay(key, a) {
   const day = DAYS[key];
-  const allowed = EQUIPMENT_ALLOWED[a.equipment] || EQUIPMENT_ALLOWED.gym;
   const focusMuscles = new Set((a.focus || []).flatMap((f) => FOCUS_MUSCLES[f] || []));
-
-  // Resolve every slot to a real exercise, skipping any the equipment rules out
-  // and any already used today.
   const taken = new Set();
   const resolved = [];
   for (const slotKey of day.slots) {
-    const ex = pickFor(slotKey, allowed, taken);
+    const ex = pickFor(slotKey, a, taken);
     if (!ex) continue;
     taken.add(ex.id);
     resolved.push({ slotKey, ex, focus: focusMuscles.has(ex.muscle) });
   }
-
-  // How many. The first three always stay (on a full-body day that is a leg,
-  // a push and a pull — a focus must never cost the day its pull); up to two
-  // focus exercises are then pulled forward from the tail; the rest fill in order.
+  // O-6: the library files the Dumbbell Pullover under Chest. On a day with
+  // no other back exercise (Full Body B) it would leave the day with no pull
+  // at all, so there the vertical pull becomes a row instead.
+  const pullover = resolved.find((c) => c.ex.name === 'Dumbbell Pullover');
+  if (pullover && !resolved.some((c) => c.ex.muscle === 'Back')) {
+    for (const name of ['Dumbbell Row', 'Chest-Supported Dumbbell Row']) {
+      const ex = libraryByName().get(name);
+      if (ex && !taken.has(ex.id)) { pullover.ex = ex; pullover.focus = focusMuscles.has(ex.muscle); break; }
+    }
+  }
   const beginner = a.experience === 'new';
   let n = EXERCISES_PER_DAY[a.minutes];
   if (beginner) n = Math.min(n, 5);
   n = Math.min(n, resolved.length);
-  const protect = day.protect || 3;
+  return { key, day, resolved, n, protect: day.protect || 3 };
+}
+
+/* How many, and which. The first three always stay (on a full-body day that
+ * is a leg, a push and a pull — a focus must never cost the day its pull);
+ * then the `must` slots (O-5: the day's arm exercise and any coverage repair);
+ * then up to two focus exercises pulled forward from the tail; the rest fill
+ * in order. Returns resolved indices. */
+function keepFor(r, must) {
+  const { resolved, n, protect } = r;
   const keep = new Set();
   for (let i = 0; i < protect && i < n; i++) keep.add(i);
+  for (const i of [...must].sort((x, y) => x - y)) if (keep.size < n) keep.add(i);
   let promoted = 0;
   for (let i = protect; i < resolved.length && keep.size < n && promoted < 2; i++) {
-    if (resolved[i].focus) { keep.add(i); promoted++; }
+    if (resolved[i].focus && !keep.has(i)) { keep.add(i); promoted++; }
   }
   for (let i = protect; i < resolved.length && keep.size < n; i++) keep.add(i);
-  const chosen = resolved.filter((_, i) => keep.has(i));
+  return keep;
+}
+
+function buildDay(r, a, must = new Set()) {
+  const { key, day, resolved } = r;
+  const keep = keepFor(r, must);
+  const chosen = resolved.map((c, i) => ({ ...c, must: must.has(i) })).filter((_, i) => keep.has(i));
+  const beginner = a.experience === 'new';
 
   // Sets.
   const longSession = a.minutes >= 60;
@@ -206,9 +283,10 @@ function buildDay(key, a) {
       muscle: c.ex.muscle,
       equipment: c.ex.equipment,
       sets,
-      reps: repsFor(a.goal, c.ex, isMain),
+      reps: repsFor(a.goal, c.ex, isMain, c.slotKey),
       main: isMain,
       focus: c.focus,
+      must: c.must,
     };
   });
 
@@ -223,13 +301,63 @@ function buildDay(key, a) {
       while (e.sets > 2 && total() > budget) e.sets--;
     }
   }
-  while (total() > budget && exercises.length > 3) exercises.pop();
+  // Dropping from the end skips a `must` exercise: it is there on purpose.
+  while (total() > budget && exercises.length > 3) {
+    let i = exercises.length - 1;
+    while (i >= 3 && exercises[i].must) i--;
+    if (i < 3) break;
+    exercises.splice(i, 1);
+  }
 
   return {
     key,
     name: day.name,
-    exercises: exercises.map(({ main, focus, ...rest }) => rest),
+    exercises: exercises.map(({ main, focus, must: _m, ...rest }) => rest),
   };
+}
+
+/* O-5: which resolved slot each day must keep so the programme passes
+ * template-lint. Only for goal muscle/both at 45 min or more — a 30-minute day
+ * has no room, and strength/general programmes are judged on other things.
+ *
+ * Step 1: one direct arm exercise a day, biceps and triceps taking turns, so a
+ * two-day plan gets one of each. A day with only one arm family uses that one.
+ * Step 2: any major muscle still trained only indirectly across the whole
+ * programme gets the first direct exercise for it that a day has but dropped,
+ * on the first day with room. Stops when nothing changes. */
+function mustSlots(plans, a) {
+  const musts = plans.map(() => new Set());
+  if (!['muscle', 'both'].includes(a.goal) || a.minutes < 45) return musts;
+
+  const directIdx = (r, muscle) => r.resolved.findIndex((c) =>
+    ARM_SLOTS[muscle].includes(c.slotKey) && directMuscles(c.ex).includes(muscle));
+  let last = 'Triceps';
+  plans.forEach((r, d) => {
+    const order = last === 'Biceps' ? ['Triceps', 'Biceps'] : ['Biceps', 'Triceps'];
+    for (const m of order) {
+      const i = directIdx(r, m);
+      if (i >= 0) { musts[d].add(i); last = m; break; }
+    }
+  });
+
+  for (let guard = 0; guard < 12; guard++) {
+    const keeps = plans.map((r, d) => keepFor(r, musts[d]));
+    const covered = new Set();
+    plans.forEach((r, d) => keeps[d].forEach((i) => directMuscles(r.resolved[i].ex).forEach((m) => covered.add(m))));
+    const missing = MAJOR_MUSCLES.filter((m) => !covered.has(m));
+    let moved = false;
+    for (const m of missing) {
+      for (let d = 0; d < plans.length && !moved; d++) {
+        const r = plans[d];
+        if (r.protect + musts[d].size >= r.n) continue; // no room left on this day
+        const i = r.resolved.findIndex((c, j) => !keeps[d].has(j) && directMuscles(c.ex).includes(m));
+        if (i >= 0) { musts[d].add(i); moved = true; }
+      }
+      if (moved) break;
+    }
+    if (!moved) break;
+  }
+  return musts;
 }
 
 /**
@@ -239,20 +367,26 @@ function buildDay(key, a) {
  *   experience: new | under1 | 1to3 | 3plus
  *   equipment: gym | dumbbells | barbell | bodyweight
  *   focus: up to two of chest, back, shoulders, arms, legs, glutes, core
+ *   age (optional): years; 60 or over starts on the easier lifts (O-8)
  * @returns {{name, daysPerWeek, minutes, notes, plan, workouts:[{key, name,
  *   exercises:[{name, exerciseId, muscle, equipment, sets, reps:[lo,hi]}]}]}}
  */
 export function buildProgram(answers) {
+  const experience = ['new', 'under1', '1to3', '3plus'].includes(answers && answers.experience) ? answers.experience : 'under1';
+  const age = Number(answers && answers.age);
   const a = {
     goal: ['muscle', 'strength', 'both', 'general'].includes(answers && answers.goal) ? answers.goal : 'muscle',
-    experience: ['new', 'under1', '1to3', '3plus'].includes(answers && answers.experience) ? answers.experience : 'under1',
+    experience,
     days: clampDays(answers && answers.days),
     minutes: clampMinutes(answers && answers.minutes),
     equipment: EQUIPMENT_ALLOWED[answers && answers.equipment] ? answers.equipment : 'gym',
     focus: ((answers && answers.focus) || []).filter((f) => FOCUS_MUSCLES[f]).slice(0, 2),
+    easy: experience === 'new' || (Number.isFinite(age) && age >= 60 && age < 120),
   };
   const split = SPLITS[a.days];
-  const workouts = split.days.map((key) => buildDay(key, a));
+  const plans = split.days.map((key) => resolveDay(key, a));
+  const musts = mustSlots(plans, a);
+  const workouts = plans.map((r, d) => buildDay(r, a, musts[d]));
   return {
     name: `Your ${a.days}-day ${split.label}`,
     daysPerWeek: a.days,
@@ -261,23 +395,37 @@ export function buildProgram(answers) {
       + (a.equipment === 'bodyweight'
         ? 'Hit the top of the rep range, then try a harder version.'
         : 'Add weight when you reach the top of the rep range.'),
-    plan: { kind: 'cycle', slots: split.plan.slice() },
+    // S-15: seven boxes are a week (Monday first), so the plan names weekdays.
+    plan: { kind: split.plan.length === 7 ? 'week' : 'cycle', slots: split.plan.slice() },
     workouts,
   };
 }
 
 const LEVEL_FOR = { new: 'Beginner', under1: 'Beginner', '1to3': 'Intermediate', '3plus': 'Advanced' };
 
+/* Which presets each equipment answer may be offered, by the tag
+ * presetEquipment() derives from the preset's own exercises. */
+const PRESET_TAGS_FOR = {
+  gym: ['Full gym'],
+  dumbbells: ['Dumbbells', 'No equipment'],
+  bodyweight: ['No equipment'],
+  barbell: [],
+};
+
 /**
  * One or two ready-made programs from Explore that fit the answers, best first.
- * ⚠️ Only for a full gym: every ready-made program here needs one, and offering
- * a barbell program to somebody who said "bodyweight only" is worse than none.
+ * ⚠️ Only ones the person's equipment can run: offering a barbell program to
+ * somebody who said "bodyweight only" is worse than none. A full gym is offered
+ * the full-gym programs only, as before. With little equipment the choice is
+ * small, so the day-count threshold is dropped there: the right gear matters
+ * more than the right number of days.
  */
 export function matchingPresets({ days, experience, equipment }, presets = PRESET_SYSTEMS, max = 2) {
-  if (equipment && equipment !== 'gym') return [];
+  const kit = PRESET_TAGS_FOR[equipment] ? equipment : 'gym';
+  const tags = PRESET_TAGS_FOR[kit];
   const want = LEVEL_FOR[experience] || 'Beginner';
   const d = clampDays(days);
-  const scored = presets.map((p, i) => {
+  const scored = presets.filter((p) => tags.includes(presetEquipment(p))).map((p, i) => {
     const diff = Math.abs((p.daysPerWeek || 0) - d);
     let s = diff === 0 ? 4 : diff === 1 ? 1 : 0;
     if (p.level === want) s += 2;
@@ -285,7 +433,7 @@ export function matchingPresets({ days, experience, equipment }, presets = PRESE
     else if (want === 'Beginner' && p.level === 'Advanced') s -= 5;
     // Ties go to the app's own programs, then to list order.
     return { p, s, ours: p.author === 'Fitness Tracker' && !p.basedOn ? 0 : 1, i };
-  }).filter((x) => x.s >= 3);
+  }).filter((x) => kit !== 'gym' || x.s >= 3);
   scored.sort((x, y) => y.s - x.s || x.ours - y.ours || x.i - y.i);
   return scored.slice(0, max).map(({ p }) => ({ id: p.id, name: p.name, daysPerWeek: p.daysPerWeek, level: p.level }));
 }

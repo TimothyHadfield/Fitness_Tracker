@@ -32,7 +32,7 @@
 // Pure presentation: no store, no network, no clock. Everything it needs is an
 // argument.
 
-import { el, chevron, personFace, fmtDateShort, wireSegmented } from './ui.js';
+import { el, chevron, personFace, fmtDateShort, wireSegmented, helpDot } from './ui.js';
 import * as units from './units.js';
 
 /* ------------------------------------------------------------------ *
@@ -57,16 +57,73 @@ import * as units from './units.js';
  *   everything else up and the screen reads as though it failed to load. Passed
  *   rather than assumed so the old behaviour is still expressible.
  */
-export function profileHead({ avatar, name, under = null, large = false, glyph = true }) {
-  const size = large ? 56 : 44;
+/* 🆕 2026-09-27 (overhaul, screens S-5): `compact` — your own page's head is a
+ * 48px face with the name and the two counts beside it, one block instead of
+ * three stacked ones (it took ~170px before anything about your training).
+ * `stats` is the `statRow()` to put under the name; `nameHref` turns a missing
+ * name into the link that fixes it, so the head needs no second line for it. */
+export function profileHead({
+  avatar, name, under = null, large = false, glyph = true, compact = false, stats = null, nameHref = null,
+}) {
+  const size = large ? 56 : compact ? 30 : 44;
   const face = avatar || glyph
-    ? el('span', { class: 'me-face' + (large ? ' is-lg' : '') }, personFace(avatar, size))
+    ? el('span', { class: 'me-face' + (large ? ' is-lg' : compact ? ' is-sm' : '') }, personFace(avatar, size))
     : null;
-  return el('div', { class: 'me-head' },
+  return el('div', { class: 'me-head' + (compact ? ' is-compact' : '') },
     face,
     el('div', { class: 'me-who' },
-      el('div', { class: 'me-name', text: name }),
+      nameHref
+        ? el('a', { class: 'me-name text-link', href: nameHref, text: name })
+        : el('div', { class: 'me-name', text: name }),
       under,
+      stats,
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 THIS WEEK — 2026-09-27 (overhaul, screens S-5)
+ *
+ * Nothing in the app showed the current week. Seven dots Mon–Sun (filled on a
+ * trained day), what was done, and "usual N" — your own average of the four
+ * weeks before, in neutral ink. 🛑 No target, no colour for good or bad, no
+ * verdict (Rule 6; volume targets are a rejected idea): "usual" is a fact about
+ * you, not a goal. A door to the Calendar, like every other section here.
+ * ------------------------------------------------------------------ */
+
+/**
+ * @param {object} w
+ * @param {boolean[]} w.days     seven flags, Monday first
+ * @param {number}    w.todayIndex  0–6, today's dot
+ * @param {number}    w.workouts
+ * @param {number}    w.sets
+ * @param {number|null} w.usual  average workouts a week before this one, or null
+ * @param {Function}  [w.onOpen] what a tap does
+ */
+export function weekBlock({ days, todayIndex, workouts, sets, usual, onOpen }) {
+  const NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const trained = NAMES.filter((_, i) => days[i]);
+  const title = workouts
+    ? `${workouts} workout${workouts === 1 ? '' : 's'} · ${sets} set${sets === 1 ? '' : 's'}`
+    : 'Nothing yet';
+  const dots = el('span', {
+    class: 'me-week-dots', role: 'img',
+    'aria-label': trained.length ? `Trained ${trained.join(', ')}` : 'No training this week',
+  }, ...NAMES.map((n, i) => el('span', {
+    class: 'me-week-dot' + (days[i] ? ' is-on' : '') + (i === todayIndex ? ' is-today' : ''),
+    title: n,
+  })));
+  return el('div', { class: 'me-section me-week' },
+    el('div', { class: 'section-label', text: 'This week' }),
+    el('div', { class: 'list' },
+      el('a', { class: 'row me-week-row', href: '#/calendar', onClick: onOpen || null },
+        dots,
+        el('div', { class: 'row-main' },
+          el('div', { class: 'row-title', text: title }),
+        ),
+        usual ? el('span', { class: 'me-week-usual', text: `usual ${usual}` }) : null,
+        el('span', { class: 'row-chev' }, chevron()),
+      ),
     ),
   );
 }
@@ -188,9 +245,14 @@ export const NO_NUMBER = {
   'stand-in-only': 'Only a stand-in rates this muscle — record the lift, or a close one',
   'no-conversion': 'No published way to convert this one',
   'no-standard':   'No standard to rank it against',
+  // 🆕 2026-09-27 (overhaul EB-3): every set behind the muscle is over 15 reps.
+  // The ? beside it says why (HIGH_REPS_WHY) — the fix is a set of 15 or fewer.
+  'high-reps-only': 'Only high-rep sets',
 };
+const HIGH_REPS_WHY = 'Estimates need sets of 15 reps or fewer.';
 
 export const NO_NUMBER_THEIRS = {
+  'high-reps-only': 'Only high-rep sets',
   'no-evidence':   'Nothing they publish trains this muscle',
   'stand-in-only': 'Only a stand-in rates this muscle in what they publish',
   'no-conversion': 'No published way to convert this one',
@@ -222,7 +284,7 @@ export const NO_NUMBER_THEIRS = {
  * @param {object} [opts.noNumber]  which sentence map to read `why` from
  * @param {string} [opts.unranked]  what to print where the level name goes on a
  *   row that HAS a number and cannot be ranked. Defaults to "not ranked".
- * @param {string} [opts.tag]  🆕 2026-09-24 (review, second pass): one word
+ * @param {string|Function} [opts.tag]  🆕 2026-09-24 (review, second pass): one word
  *   that leads the confidence line — `#/me` passes "Best". Profile prints the
  *   best-ever set's 1RM while Goals prints the muscle's estimate NOW, and the
  *   two genuinely differ (236 vs 228 on the demo bench), so each says which.
@@ -241,23 +303,43 @@ export function liftRow(l, opts = {}) {
   // A row with nothing recorded has no line to show, so it is never a link.
   const link = opts.link && l.days > 0 ? opts.link(l) : null;
   const cls = 'row me-best' + (l.oneRM === null ? ' is-none' : '');
+  const tag = typeof opts.tag === 'function' ? opts.tag(l) : opts.tag;
 
   return el(link ? 'a' : 'div', link ? { class: cls, href: link.href, onClick: link.onClick } : { class: cls },
     el('div', { class: 'row-main' },
       el('div', { class: 'row-title', text: l.name }),
       subLine(subText(l)),
+      // 🆕 2026-09-27 (overhaul EB-7): the number above is the runner's "your
+      // max" (recent beats old); the all-time best, when it is a different
+      // number, is one dated small line under it rather than lost.
+      // Only when it is really higher (≥5 %): a 3 % gap is estimate noise and
+      // a third number on the row is clutter (manager, 2026-09-27).
+      l.bestEver && l.oneRM !== null && Number.isFinite(l.bestEver.value)
+        && l.bestEver.value >= l.oneRM * 1.05
+        ? el('div', { class: 'row-sub me-best-ever', text:
+            `Best ever ${units.withUnit(Math.round(l.bestEver.value))}${l.bestEver.perSide ? '/side' : ''}`
+            + (l.bestEver.date ? ` · ${fmtDateShort(l.bestEver.date)}` : '') })
+        : null,
     ),
     el('div', { class: 'me-best-nums' },
       l.oneRM === null
         // No number: say why, in the number's slot, so the row is not a hole.
-        ? el('span', { class: 'me-best-none', text: noNumber[l.why] || 'No estimate' })
+        // A ? only where it cannot sit inside a link (a row with nothing
+        // recorded is never one — see `link` above).
+        ? el('span', { class: 'me-best-none' }, noNumber[l.why] || 'No estimate',
+            l.why === 'high-reps-only' && !link
+              ? helpDot(HIGH_REPS_WHY, { label: 'Why there is no estimate' }) : null)
+        // EB-8: "+ bar" where the level counts a bar the number leaves out.
         : el('span', { class: 'me-best-top' + (lvKey ? ` lv-text-${lvKey}` : ''),
-            text: units.withUnit(Math.round(l.shown)) + (l.perSide ? '/side' : '') }),
+            text: units.withUnit(Math.round(l.shown)) + (l.perSide ? '/side' : '')
+              + (l.addedLoad ? ` ${l.addedLoad}` : '') }),
       // The confidence in words under the number — Tim's ask — with the
       // level's NAME beside it so the colour is never the only carrier.
+      // 🔄 2026-09-27: `tag` may be a function of the row — `#/me` says "now
+      // 228" instead of "Best" where the current estimate differs (S-1).
       l.oneRM === null ? null
         : el('span', { class: 'me-best-est', text:
-            (opts.tag ? `${opts.tag} · ` : '')
+            (tag ? `${tag} · ` : '')
             + (l.band ? `${l.band.name} confidence` : 'Estimated')
             + (lvName ? ` · ${lvName}` : ` · ${unranked}`) }),
     ),

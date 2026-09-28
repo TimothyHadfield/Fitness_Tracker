@@ -121,8 +121,19 @@ export function normalizeRepSpec(spec) {
   const lo = prescribedReps(pair[0]);
   const hi = prescribedReps(pair[1]);
   if (lo === null || hi === null) return null;
-  return lo <= hi ? [lo, hi] : [hi, lo];
+  const out = lo <= hi ? [lo, hi] : [hi, lo];
+  /* 🆕 S-10 (2026-09-27): "5+" — an as-many-as-you-can last set (5/3/1 and
+   * wave programmes). Carried as a `plus` property on the pair so the pair
+   * itself, and every `[lo, hi]` reader, is unchanged: JSON of the pair is
+   * still "[5,5]", and it prefills exactly as "5" does. It reaches disk as
+   * `{lo, hi, plus: true}` (normalizeReps / repSpecToStored), never nested. */
+  if (spec && spec.plus === true && lo === hi) out.plus = true;
+  return out;
 }
+
+/** The stored map for one normalised pair — `plus` only when it is set. */
+const storedOf = (pair) => (pair.plus ? { lo: pair[0], hi: pair[1], plus: true }
+  : { lo: pair[0], hi: pair[1] });
 
 /* ------------------------------------------------------------------ *
  * 🚨 HOW A PRESCRIPTION IS STORED, AND WHY IT IS NOT A PAIR — 2026-09-27.
@@ -161,7 +172,7 @@ export function normalizeRepSpec(spec) {
 /** `[lo, hi]` → `{lo, hi}` — the stored form. Firestore-legal, self-describing. */
 export function repSpecToStored(spec) {
   const pair = normalizeRepSpec(spec);
-  return pair ? { lo: pair[0], hi: pair[1] } : null;
+  return pair ? storedOf(pair) : null;
 }
 
 /**
@@ -185,7 +196,7 @@ export function normalizeReps(reps, sets) {
    * every read and write passes through, so this is the one place the nested
    * array has to stop. See repSpecToStored above for what Firestore refuses.
    * Readers keep taking either shape through `normalizeRepSpec`. */
-  return out.map((pair) => ({ lo: pair[0], hi: pair[1] }));
+  return out.map(storedOf);
 }
 
 /**
@@ -251,7 +262,9 @@ export function weightRangeForReps(spec, max, step) {
   const easiest = reps[1] + RIR_HIGH;
   const round = (raw) => {
     const s = Number(step);
-    return s > 0 ? Math.floor(raw / s) * s : raw;
+    // 🆕 EA-6: the 1e-9 keeps a kg step from flooring a whole plate low on
+    // float error (35 kg read back as 32.5 kg for 80 of 1695 kg answers).
+    return s > 0 ? Math.floor(raw / s + 1e-9) * s : raw;
   };
   const heavy = weightForReps(m, hardest);
   const light = weightForReps(m, easiest);
@@ -286,6 +299,7 @@ export function describeRepSpec(spec) {
   const r = normalizeRepSpec(spec);
   if (!r) return null;
   if (r[0] !== r[1]) return `${r[0]}–${r[1]} reps`;
+  if (r.plus) return `${r[0]}+ reps`;
   // "1 reps" is the kind of thing that makes a screen look machine-written, and
   // a single is a real prescription — Nippard's bench opens on one heavy set.
   return r[0] === 1 ? '1 rep' : `${r[0]} reps`;
@@ -305,6 +319,9 @@ export function describeRepSpec(spec) {
  */
 export function parseRepText(text) {
   const s = String(text == null ? '' : text).trim();
+  // 🆕 S-10: "5+" is an as-many-as-you-can set, stored {lo:5, hi:5, plus:true}.
+  const amrap = /^(\d{1,3})\s*\+$/.exec(s);
+  if (amrap) return normalizeRepSpec({ lo: Number(amrap[1]), hi: Number(amrap[1]), plus: true });
   const m = /^(\d{1,3})(?:\s*(?:-|–|—|to)\s*(\d{1,3}))?$/i.exec(s);
   if (!m) return null;
   return normalizeRepSpec(m[2] === undefined ? Number(m[1]) : [Number(m[1]), Number(m[2])]);

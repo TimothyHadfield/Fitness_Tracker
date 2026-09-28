@@ -18,10 +18,21 @@
 // it — before anything is written, not after.
 
 import { store } from './store.js';
-import { el, screenShell, toast, confirmSheet, setChildren, icon, refreshRoute } from './ui.js';
+import { el, screenShell, toast, confirmSheet, setChildren, icon, refreshRoute, helpDot } from './ui.js';
+import * as ui from './ui.js';
 import * as imp from './import-file.js';
 
 const go = (hash) => { location.hash = hash; };
+
+/* A plain sentence for a failure. `friendlyError` is ui.js's (overhaul
+ * contract); guarded so this screen still works on a ui.js without it. */
+const plainError = (err, fallback) => (typeof ui.friendlyError === 'function'
+  ? ui.friendlyError(err) : (err && err.message)) || fallback;
+
+/** A line of text with its ? right after its last word (Rule 9: the ? says
+ * WHY, beside its text — inline, so a wide screen can't push it to the edge). */
+const lineWithWhy = (text, why, label) => el('div', { class: 'field-help' },
+  text + ' ', helpDot(why, { label }));
 
 /* ⚠️ SETTING THE HASH YOU ARE ALREADY ON FIRES NO EVENT, so `go('#/import')`
  * from the import screen did precisely nothing — "Choose a different file" was
@@ -46,7 +57,7 @@ export async function ImportView() {
         const text = await file.text();
         await showPlan(body, file.name, text);
       } catch (err) {
-        toast((err && err.message) || 'That file could not be read.');
+        toast(plainError(err, 'That file could not be read.'), { error: true });
       }
     },
   });
@@ -60,27 +71,27 @@ export async function ImportView() {
   });
 }
 
+/* Overhaul W-20 (2026-09-27): four paragraphs (123 words) became one line, the
+ * button, and a list of where each app keeps its export. "What comes in" moved
+ * behind the ? beside the line; it is still said, one tap away. */
 function intro(pick) {
+  // ⚠️ Named services, because "export a CSV" is not an instruction anybody
+  // can follow. D8 — teach at the moment of use.
+  const source = (name, path) => el('div', { class: 'field-help' },
+    el('strong', { text: name }), ' ' + path);
   return el('div', { class: 'card' },
-    el('div', { class: 'field-help' },
-      'Bring in workouts you have already recorded somewhere else, or a history of weigh-ins. '
-      + 'Everything happens on this device — the file is never uploaded anywhere.'),
+    lineWithWhy('Bring in activities or weigh-ins. The file never leaves this device.',
+      'Activities land on your calendar and feed like any workout. Weigh-ins join your '
+        + 'body-weight history. Muscle ratings still come from lifting only.',
+      'What comes in'),
     el('button', { class: 'btn primary block', onClick: pick }, icon('plus'), 'Choose a CSV file'),
     el('div', { class: 'section-label', text: 'Where to get the file' }),
-    // ⚠️ Named services, because "export a CSV" is not an instruction anybody
-    // can follow. D8 — teach at the moment of use.
-    el('div', { class: 'field-help' },
-      'Strava: Settings → My Account → Download or Delete Your Account → Request your archive. '
-      + 'The file you want is activities.csv.'),
-    el('div', { class: 'field-help' },
-      'MacroFactor: Settings → Data Export. Cronometer: Settings → Account → Export Data. '
-      + 'Apple Health: your profile → Export All Health Data.'),
-    el('div', { class: 'field-help' },
-      'A spreadsheet of your own works too, as long as the first row names the columns — '
-      + 'something like date, activity, distance, time, or date and weight.'),
-    el('div', { class: 'field-help' },
-      'What comes in: activities land on your calendar and in your feed like any workout, and '
-      + 'weigh-ins join your body-weight history. Muscle ratings still come from lifting only.'),
+    source('Strava', 'Settings › My Account › Download or Delete Your Account › Request your '
+      + 'archive (activities.csv)'),
+    source('MacroFactor', 'Settings › Data Export'),
+    source('Cronometer', 'Settings › Account › Export Data'),
+    source('Apple Health', 'profile › Export All Health Data'),
+    source('Spreadsheet', 'first row names the columns'),
   );
 }
 
@@ -139,10 +150,10 @@ function askDateOrder(body, fileName, headers, records, cols) {
   };
   return el('div', { class: 'card' },
     el('div', { class: 'section-label', text: 'Which way round are the dates?' }),
-    el('div', { class: 'field-help' },
-      `This file writes dates like ${sample.join(', ')}, and that could mean either order. `
-      + 'Nothing in the file says which, and getting it wrong would put every record on the '
-      + 'wrong day without ever looking wrong — so it is worth one tap.'),
+    lineWithWhy(`Dates like ${sample.join(', ')} could be either order. Which is it?`,
+      'Nothing in the file says which, and getting it wrong would put every record on the '
+      + 'wrong day without ever looking wrong — so it is worth one tap.',
+      'Why this is asked'),
     el('div', { class: 'btn-row' },
       el('button', { class: 'btn', text: 'Day / Month', onClick: () => choose('dmy') }),
       el('button', { class: 'btn', text: 'Month / Day', onClick: () => choose('mdy') }),
@@ -195,10 +206,11 @@ async function renderPlan(body, fileName, headers, records, cols, opts) {
   if (needsDistanceUnit) {
     parts.push(el('div', { class: 'card' },
       el('div', { class: 'section-label', text: 'Miles or kilometres?' }),
-      el('div', { class: 'field-help' },
-        `The column “${cols.distance}” does not say which unit it is in. Strava exports `
-        + 'kilometres, most American apps export miles, and reading one as the other would make '
-        + 'every distance wrong by 61 % without ever looking wrong.'),
+      lineWithWhy(`Which unit is “${cols.distance}” in?`,
+        'The column does not say which unit it is in. Strava exports kilometres, most American '
+        + 'apps export miles, and reading one as the other would make every distance wrong by '
+        + '61 % without ever looking wrong.',
+        'Why this is asked'),
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn', text: 'Miles', onClick: () =>
           renderPlan(body, fileName, headers, records, cols, { ...opts, distanceUnit: 'mi' }) }),
@@ -211,10 +223,11 @@ async function renderPlan(body, fileName, headers, records, cols, opts) {
   if (needsWeightUnit) {
     parts.push(el('div', { class: 'card' },
       el('div', { class: 'section-label', text: 'Pounds or kilograms?' }),
-      el('div', { class: 'field-help' },
-        `The column “${cols.weight}” does not say which unit it is in, and the app cannot tell from `
-        + 'the numbers — reading kilograms as pounds would record you as a third of your real '
-        + 'weight, and every pull-up you have ever logged would be re-rated against it.'),
+      lineWithWhy(`Which unit is “${cols.weight}” in?`,
+        'The column does not say which unit it is in, and the app cannot tell from the numbers — '
+        + 'reading kilograms as pounds would record you as a third of your real weight, and every '
+        + 'pull-up you have ever logged would be re-rated against it.',
+        'Why this is asked'),
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn', text: 'Pounds', onClick: () =>
           renderPlan(body, fileName, headers, records, cols, { ...opts, weightUnit: 'lb' }) }),
@@ -235,9 +248,7 @@ async function renderPlan(body, fileName, headers, records, cols, opts) {
 
   if (!willAdd && !pending) {
     parts.push(el('div', { class: 'card' },
-      el('div', { class: 'field-help', text:
-        'Nothing new to bring in — everything readable in this file is already here. '
-        + 'Importing the same export twice is safe; it updates rather than duplicating.' }),
+      el('div', { class: 'field-help', text: 'Nothing new — importing twice is safe.' }),
     ));
   } else if (willAdd) {
     parts.push(el('button', {
@@ -324,10 +335,7 @@ function confirmImport(body, actPlan, weightPlan) {
 
   confirmSheet({
     title: 'Add these to your account?',
-    message: `${bits.join(' and ')} will be added.\n\n`
-      + 'This adds to what you already have — nothing is deleted or replaced, except a weigh-in on '
-      + 'a day you already have one, which is kept as a single reading per day. '
-      + 'Importing the same file again later is safe.',
+    message: `${bits.join(' and ')} will be added. Nothing is deleted; one weigh-in per day.`,
     confirmLabel: 'Import',
     danger: false,
     onConfirm: async () => {
@@ -354,7 +362,7 @@ function confirmImport(body, actPlan, weightPlan) {
         // ⚠️ Said on the screen, not swallowed. The 2026-08-22 silent-save
         // lesson: a write that fails and says nothing is worse than one that
         // fails loudly, because the user walks away believing it worked.
-        toast((err && err.message) || 'That import could not be saved.');
+        toast(plainError(err, 'That import could not be saved.'), { error: true });
       }
     },
   });

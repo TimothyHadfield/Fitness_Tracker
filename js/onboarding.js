@@ -18,18 +18,105 @@
 // (the stylesheet's blanket), and the old screen is removed on a timer as well
 // as on `animationend`, so a skipped animation can never strand it.
 
-import { el, iconBtn, toast, refreshRoute } from './ui.js';
+//
+// 🆕 OVERHAUL (2026-09-27, onboarding O-1…O-22). The flow now serves more than
+// the one person who wants a program built:
+//
+//   Start ─┬─ Build me a program → 6 questions → About you → Building → Result
+//          ├─ Pick a ready-made one → About you → #/explore
+//          ├─ Use my own program   → About you → #/system/new
+//          ├─ Just log workouts    → About you → #/record
+//          └─ "I already have an account" → #/signin (closed, nothing saved)
+//
+// About you (gender, birth year, body weight + lbs/kg) is on every path and all
+// of it is optional — without it every woman is ranked on male standards. One
+// Skip ends the WHOLE intro: `onDone({ skipped: true })` tells app.js not to
+// start the tour.
+
+import { el, iconBtn, toast, refreshRoute, helpDot } from './ui.js';
 import { store, demo, auth } from './store.js';
 import { buildProgram, matchingPresets } from './program-builder.js';
 import { springTransform, isSpringing } from './spring.js';
 import { motionAllowed } from './motion.js';
 import { expandRepSpec } from './set-reps.js';
+import * as units from './units.js';
 
 export const ONBOARDED_KEY = 'ftrack:v1:onboarded';
 
 const SLIDE_MS = 240;  // = --t-slow
 const BUILD_MS = 550;  // the "Building your program" moment; brief caps it at 600
 const PICK_MS = 100;   // a tapped answer shows lit this long before its screen leaves
+
+/** The first screen. `to` is where the path ends once About you is passed;
+ *  'build' goes through the questions instead. Labels ≤ 4 words. */
+export const PATHS = [
+  ['build', 'Build me a program', null],
+  ['preset', 'Pick a ready-made one', '#/explore'],
+  ['own', 'Use my own program', '#/system/new'],
+  ['log', 'Just log workouts', '#/record'],   // → "Empty workout" once wave 2 lands it
+];
+
+/* ⚠️ THE ? SAYS ONLY WHAT THE CODE DOES (checked 2026-09-27): store.js publishes
+ * `profile.gender` and `profile.age` (never the birth year) to friends — and to
+ * everyone on a public account — while body weight reaches a friend's copy only
+ * through its own switch (`settings.shareBodyWeight`, off by default, and never
+ * in the public copy; social.js buildProjection). */
+export const ABOUT_WHY = 'Ranks your strength against people like you. Gender and age show on your profile. '
+  + 'Body weight stays private unless you share it.';
+
+/** Countries that weigh in pounds. Everyone else starts on kg (O-2). */
+const LBS_REGIONS = ['US', 'LR', 'MM'];
+
+/**
+ * The unit a newcomer most likely reads, from a BCP-47 locale ("en-GB" → kg).
+ * A locale with no region ("en") keeps today's default, pounds.
+ */
+export function defaultUnitsFor(locale) {
+  const tag = String(locale || '');
+  let region = null;
+  try {
+    if (typeof Intl !== 'undefined' && Intl.Locale) region = new Intl.Locale(tag).maximize().region || null;
+  } catch (_) { region = null; }
+  if (!region) {
+    const m = /[-_]([A-Za-z]{2}|\d{3})(?:[-_]|$)/.exec(tag);
+    region = m ? m[1].toUpperCase() : null;
+  }
+  // A bare language ("en") maximizes to its likeliest country, which for
+  // English is the US — right, and the same answer as no region at all.
+  if (!region) return 'lbs';
+  return LBS_REGIONS.includes(region) ? 'lbs' : 'kg';
+}
+
+function localeNow() {
+  try {
+    const nav = typeof navigator !== 'undefined' && (navigator.languages && navigator.languages[0] || navigator.language);
+    if (nav) return nav;
+    return Intl.DateTimeFormat().resolvedOptions().locale;
+  } catch (_) { return ''; }
+}
+
+function ageFrom(year) {
+  const y = Number(year);
+  if (!Number.isFinite(y) || y < 1900) return null;
+  const age = new Date().getFullYear() - y;
+  return age >= 5 && age <= 120 ? age : null;
+}
+
+/** "A · rest · B · rest · C · rest · rest": a shared prefix ("Full Body ") is
+ *  dropped so the week fits one line; names that differ are kept whole. */
+export function planLine(program) {
+  if (!program || !program.plan || !Array.isArray(program.plan.slots)) return '';
+  const names = new Map(program.workouts.map((w) => [w.key, w.name]));
+  const all = program.workouts.map((w) => w.name);
+  let cut = 0;
+  if (all.length > 1) {
+    const first = all[0];
+    while (cut < first.length && all.every((n) => n[cut] === first[cut])) cut++;
+    cut = first.lastIndexOf(' ', cut) + 1;   // whole words only
+    if (all.some((n) => !n.slice(cut))) cut = 0;
+  }
+  return program.plan.slots.map((s) => (s === 'rest' ? 'rest' : (names.get(s) || '').slice(cut) || '?')).join(' · ');
+}
 
 const QUESTIONS = [
   { key: 'goal', q: 'What’s your main goal?', choices: [
@@ -45,7 +132,8 @@ const QUESTIONS = [
     [30, '30 min'], [45, '45 min'], [60, '60 min'], [75, '75+ min'],
   ] },
   { key: 'equipment', q: 'What equipment do you have?', choices: [
-    ['gym', 'Full gym'], ['dumbbells', 'Dumbbells only'], ['barbell', 'Barbell + rack at home'], ['bodyweight', 'Bodyweight only'],
+    // "+ pull-up bar" is honest about what the bodyweight program asks for (O-6).
+    ['gym', 'Full gym'], ['dumbbells', 'Dumbbells only'], ['barbell', 'Barbell + rack at home'], ['bodyweight', 'Bodyweight + pull-up bar'],
   ] },
   { key: 'focus', q: 'Anything to focus on?', sub: 'Pick up to two.', multi: true, max: 2, choices: [
     ['chest', 'Chest'], ['back', 'Back'], ['shoulders', 'Shoulders'], ['arms', 'Arms'],
@@ -172,44 +260,81 @@ export function openOnboarding({ onDone } = {}) {
   markSeen();
 
   const answers = { focus: [] };
-  let step = 0;          // 0..5 questions, 6 = result
+  const about = { gender: null, birthYear: '', weight: '', units: null };
+  let path = null;       // PATHS key once the start screen is answered
+  // 'start' · 0..5 (the questions) · 'about' · 'building' · 'result'
+  let step = 'start';
   let program = null;
   let finished = false;
   let saving = false;
 
-  const finish = () => {
+  // The unit toggle starts on what the account already says (someone reopening
+  // this from Settings must not have their unit flipped by a guess), else on
+  // the locale's (O-2). Read once, before the About screen can be reached.
+  store.getSettings().then((s) => { if (!about.units && s && s.units) about.units = s.units; }).catch(() => {});
+  store.getProfile().then((p) => {
+    if (!p) return;
+    if (about.gender == null && p.gender) about.gender = p.gender;
+    if (!about.birthYear && p.birthYear) about.birthYear = String(p.birthYear);
+  }).catch(() => {});
+
+  /* `skipped` is true when the person chose to end the intro (Skip, Not now,
+   * "I already have an account"): app.js then starts no tour (O-9). */
+  const finish = ({ skipped = false } = {}) => {
     if (finished) return;
     finished = true;
     openNow = null;
     overlay.classList.add('is-leaving');
     setTimeout(() => overlay.remove(), 200);
-    if (onDone) { try { onDone(); } catch (_) { /* the tour is optional */ } }
+    if (onDone) { try { onDone({ skipped, path }); } catch (_) { /* the tour is optional */ } }
   };
 
   const back = iconBtn('left', 'Back', () => goBack(), 'icon-btn ob-back');
-  const segments = QUESTIONS.map(() => el('span', { class: 'ob-seg' }));
   const progress = el('div', {
-    class: 'ob-progress', role: 'progressbar',
-    'aria-valuemin': '0', 'aria-valuemax': String(QUESTIONS.length), 'aria-label': 'Progress',
-  }, segments);
-  const skip = el('button', { class: 'btn small ghost ob-skip', text: 'Skip', onClick: () => finish() });
+    class: 'ob-progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-label': 'Progress',
+  });
+  let segments = [];
+  const setSegments = (n) => {
+    if (segments.length === n) return;
+    segments = Array.from({ length: n }, () => el('span', { class: 'ob-seg' }));
+    progress.replaceChildren(...segments);
+    progress.setAttribute('aria-valuemax', String(n));
+  };
+  const skip = el('button', {
+    class: 'btn small ghost ob-skip', text: 'Skip',
+    onClick: () => {
+      // The one choice already made still counts: a ready-made / own / log
+      // path goes where it said. Nothing else is saved.
+      const dest = path && step === 'about' ? (PATHS.find((p) => p[0] === path) || [])[2] : null;
+      if (dest) location.hash = dest;
+      finish({ skipped: true });
+    },
+  });
   const stage = el('div', { class: 'ob-stage' });
   const panel = el('div', { class: 'ob-panel' },
     el('div', { class: 'ob-head' }, back, progress, skip),
     stage,
   );
   const overlay = el('div', {
-    class: 'ob-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Find your program',
+    class: 'ob-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Get started',
   }, panel);
 
   const paintHead = () => {
-    const done = Math.min(step, QUESTIONS.length);
+    // The bar counts the screens of the path chosen: 6 questions + About you,
+    // or About you alone. Hidden (not removed) on the start screen, so nothing
+    // in the head shifts sideways.
+    setSegments(path === 'build' ? QUESTIONS.length + 1 : 1);
+    const done = step === 'start' ? 0
+      : typeof step === 'number' ? step
+        : step === 'about' ? (path === 'build' ? QUESTIONS.length : 0)
+          : segments.length;
     segments.forEach((s, i) => s.classList.toggle('is-done', i < done));
     progress.setAttribute('aria-valuenow', String(done));
-    // Hidden, not removed, so the progress bar never shifts sideways.
-    const noBack = step === 0 || step === 'building';
+    progress.style.visibility = step === 'start' ? 'hidden' : '';
+    const noBack = step === 'start' || step === 'building';
     back.disabled = noBack;
     back.style.visibility = noBack ? 'hidden' : '';
+    skip.textContent = step === 'result' ? 'Not now' : 'Skip';
   };
 
   // Put `node` on stage. dir: 1 = forward (from the right), -1 = back, 0 = none.
@@ -318,11 +443,141 @@ export function openOnboarding({ onDone } = {}) {
       el('div', { class: 'ob-foot' },
         el('button', {
           class: 'btn primary block lg', text: 'Next',
-          onClick: () => { if (screen.classList.contains('is-current')) build(); },
+          onClick: () => { if (screen.classList.contains('is-current')) goAbout(1); },
         })),
     );
     return screen;
   };
+
+  /* The first screen (O-3, O-4, O-22): the app mark, one question, four ways
+   * in, and a way out for somebody who already has an account. */
+  const startScreen = () => {
+    const screen = el('section', { class: 'ob-screen ob-start' });
+    const list = el('div', { class: 'ob-choices' }, PATHS.map(([key, label]) =>
+      el('button', {
+        class: 'btn block lg ob-choice',
+        'aria-pressed': path === key ? 'true' : 'false',
+        text: label,
+        onClick: (e) => {
+          if (!screen.classList.contains('is-current') || screen.dataset.picked) return;
+          path = key;
+          screen.dataset.picked = '1';
+          for (const b of screen.querySelectorAll('.ob-choice')) {
+            b.setAttribute('aria-pressed', b === e.currentTarget ? 'true' : 'false');
+          }
+          setTimeout(() => {
+            if (finished || !screen.classList.contains('is-current')) return;
+            if (key === 'build') go(0, 1); else goAbout(1);
+          }, PICK_MS);
+        },
+      })));
+    screen.append(
+      el('img', { class: 'ob-icon', src: 'icon.svg', alt: '', width: '48', height: '48' }),
+      el('h2', { class: 'ob-q', tabindex: '-1', text: 'How do you want to start?' }),
+      list,
+      el('p', { class: 'ob-alt ob-signin' },
+        // Closes without saving anything: a returning user on a new phone is
+        // on a throwaway anonymous account until they sign in (O-4).
+        el('a', { href: '#/signin', text: 'I already have an account', onClick: () => finish({ skipped: true }) })),
+    );
+    return screen;
+  };
+
+  /* About you (O-1, O-2). Every field optional; Next saves whatever is there. */
+  const aboutScreen = () => {
+    const screen = el('section', { class: 'ob-screen ob-about' });
+    if (!about.units) about.units = defaultUnitsFor(localeNow());
+
+    const genderChips = el('div', { class: 'chips' }, [['male', 'Male'], ['female', 'Female']].map(([value, label]) =>
+      el('button', {
+        class: 'chip', type: 'button', 'aria-pressed': String(about.gender === value), text: label,
+        onClick: (e) => {
+          about.gender = about.gender === value ? null : value;
+          for (const c of e.currentTarget.parentElement.children) c.setAttribute('aria-pressed', 'false');
+          if (about.gender) e.currentTarget.setAttribute('aria-pressed', 'true');
+        },
+      })));
+
+    const year = el('input', {
+      class: 'input', type: 'number', inputmode: 'numeric', placeholder: 'e.g. 1994',
+      min: '1900', max: String(new Date().getFullYear()), value: about.birthYear || '',
+      onInput: (e) => { about.birthYear = e.target.value; },
+    });
+
+    const weight = el('input', {
+      class: 'input ob-weight', type: 'number', inputmode: 'decimal', step: '0.1',
+      placeholder: about.units === 'kg' ? 'e.g. 82' : 'e.g. 180', value: about.weight || '',
+      'aria-label': 'Body weight',
+      onInput: (e) => { about.weight = e.target.value; },
+    });
+    const unitChips = el('div', { class: 'chips' }, [['lbs', 'lbs'], ['kg', 'kg']].map(([value, label]) =>
+      el('button', {
+        class: 'chip', type: 'button', 'aria-pressed': String(about.units === value), text: label,
+        onClick: (e) => {
+          about.units = value;
+          for (const c of e.currentTarget.parentElement.children) c.setAttribute('aria-pressed', String(c === e.currentTarget));
+          weight.placeholder = value === 'kg' ? 'e.g. 82' : 'e.g. 180';
+        },
+      })));
+
+    const next = el('button', {
+      class: 'btn primary block lg', text: 'Next',
+      onClick: () => { if (screen.classList.contains('is-current')) aboutDone(next); },
+    });
+
+    screen.append(
+      el('div', { class: 'help-line ob-title' },
+        el('h2', { class: 'ob-q', tabindex: '-1', text: 'About you' }),
+        helpDot(ABOUT_WHY, { label: 'Why we ask' })),
+      el('div', { class: 'field' }, el('label', { text: 'Gender' }), genderChips),
+      el('div', { class: 'field' }, el('label', { text: 'Birth year' }), year),
+      el('div', { class: 'field' }, el('label', { text: 'Body weight' }),
+        el('div', { class: 'ob-weight-row' }, weight, unitChips)),
+      el('div', { class: 'ob-foot' }, next),
+    );
+    return screen;
+  };
+
+  /* Everything About you gathered, through the public store methods only (the
+   * settings queue orders them; store.js inSettingsQueue). Units are written
+   * even untouched — the toggle's guess becomes the account's unit (O-2). */
+  async function saveAbout() {
+    const u = about.units === 'kg' ? 'kg' : 'lbs';
+    units.setUnits(u);
+    const intro = {
+      path,
+      ...(path === 'build' ? {
+        goal: answers.goal, experience: answers.experience, days: answers.days,
+        minutes: answers.minutes, equipment: answers.equipment, focus: answers.focus || [],
+      } : {}),
+      age: ageFrom(about.birthYear),
+      at: new Date().toISOString(),
+    };
+    const jobs = [store.saveSettings({ units: u, intro })];
+    const profile = {};
+    if (about.gender) profile.gender = about.gender;
+    if (ageFrom(about.birthYear)) profile.birthYear = Number(about.birthYear);
+    if (Object.keys(profile).length) jobs.push(store.saveProfile(profile));
+    const w = Number(about.weight);
+    if (w > 0) jobs.push(store.logBodyWeight(units.fromDisplay(w)));
+    const out = await Promise.allSettled(jobs);
+    for (const r of out) if (r.status === 'rejected') console.warn('About you not fully saved.', r.reason);
+  }
+
+  async function aboutDone(btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const saved = saveAbout();
+    if (path === 'build') {
+      saved.catch(() => {});
+      build();
+      return;
+    }
+    await saved.catch(() => {});
+    const dest = (PATHS.find((p) => p[0] === path) || [])[2] || '#/home';
+    location.hash = dest;
+    finish({ skipped: false });
+  }
 
   const buildingScreen = () => el('section', { class: 'ob-screen ob-building', 'aria-live': 'polite' },
     el('p', { class: 'ob-building-text', text: 'Building your program' }));
@@ -337,7 +592,7 @@ export function openOnboarding({ onDone } = {}) {
         start.disabled = true;
         try {
           await saveProgram(program);
-          finish();
+          finish({ skipped: false });
           refreshRoute();
         } catch (err) {
           console.error(err);
@@ -349,17 +604,21 @@ export function openOnboarding({ onDone } = {}) {
     });
     return el('section', { class: 'ob-screen ob-result' },
       el('h2', { class: 'ob-q', tabindex: '-1', text: program.name }),
+      // Each day names its exercises (O-7): you agree to a program you can see.
       el('ul', { class: 'ob-days' }, program.workouts.map((w) =>
         el('li', { class: 'ob-day' },
-          el('span', { class: 'ob-day-name', text: w.name }),
+          el('div', { class: 'ob-day-main' },
+            el('span', { class: 'ob-day-name', text: w.name }),
+            el('span', { class: 'ob-day-ex', text: w.exercises.map((e) => e.name).join(' · ') })),
           el('span', { class: 'ob-day-count', text: `${w.exercises.length} exercises` })))),
+      program.plan ? el('p', { class: 'ob-plan', text: `Week: ${planLine(program)}` }) : null,
       el('div', { class: 'ob-foot' },
         start,
         alts.length
           ? el('p', { class: 'ob-alt' }, 'Or try ',
             alts.map((p, i) => [
               i ? ' or ' : null,
-              el('a', { href: `#/explore/${p.id}`, text: p.name, onClick: () => finish() }),
+              el('a', { href: `#/explore/${p.id}`, text: p.name, onClick: () => finish({ skipped: false }) }),
             ]),
             '.')
           : null),
@@ -368,28 +627,55 @@ export function openOnboarding({ onDone } = {}) {
 
   function go(next, dir) {
     step = next;
-    if (next < QUESTIONS.length) show(questionScreen(next), dir);
+    if (next === 'start') show(startScreen(), dir);
+    else if (next < QUESTIONS.length) show(questionScreen(next), dir);
+  }
+
+  function goAbout(dir) {
+    step = 'about';
+    show(aboutScreen(), dir);
   }
 
   function goBack() {
-    if (step === 'building' || step === 0) return;
-    const to = step === QUESTIONS.length ? QUESTIONS.length - 1 : step - 1;
-    go(to, -1);
+    if (step === 'building' || step === 'start') return;
+    if (step === 'result') return goAbout(-1);
+    if (step === 'about') return path === 'build' ? go(QUESTIONS.length - 1, -1) : restart();
+    if (step === 0) return restart();
+    go(step - 1, -1);
+  }
+
+  // Back to the start screen: the path is chosen again there.
+  function restart() {
+    path = null;
+    go('start', -1);
   }
 
   function build() {
     step = 'building';
     show(buildingScreen(), 1);
-    program = buildProgram({ ...answers, focus: answers.focus || [] });
+    // `age` lets the builder go easier on an older beginner (O-8, program-builder.js).
+    const age = ageFrom(about.birthYear);
+    program = buildProgram({ ...answers, focus: answers.focus || [], ...(age ? { age } : {}) });
     setTimeout(() => {
       if (finished) return;
-      step = QUESTIONS.length;
+      step = 'result';
       show(resultScreen(), 1);
     }, BUILD_MS);
   }
 
+  /* ⚠️ THE ? BOX OPENS UNDER THIS OVERLAY without help: `.help-pop` sits at
+   * z-index 70 and `.ob-overlay` at 80 (measured, WebKit 1366 — the box was
+   * drawn but hidden). Lifted here until the stylesheet does it
+   * (`.ob-overlay ~ .help-pop, .ob-overlay ~ .help-pop-x { z-index: 85 }`). */
+  overlay.addEventListener('click', (e) => {
+    if (!e.target.closest || !e.target.closest('.help-dot')) return;
+    requestAnimationFrame(() => {
+      for (const p of document.querySelectorAll('.help-pop')) p.style.zIndex = '85';
+    });
+  }, true);   // capture: the dot stops its own click from bubbling
+
   document.body.append(overlay);
-  show(questionScreen(0), 0);
-  openNow = { close: finish };
+  show(startScreen(), 0);
+  openNow = { close: () => finish({ skipped: true }) };
   return openNow;
 }

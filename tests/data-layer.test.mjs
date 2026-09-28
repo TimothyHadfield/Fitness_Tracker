@@ -938,8 +938,9 @@ ok(near(ss.levelProgress(50, ss.levelFor(50)), 0, 0.001), 'progress is empty at 
 
 // Age grading. Without it a 55-year-old is measured against 25-35 year olds.
 ok(ss.ageCoefficient(30) === 1 && ss.ageCoefficient(40) === 1, 'no adjustment in the 23-40 prime');
-ok(near(ss.ageCoefficient(50), 1.13, 0.001), 'McCulloch coefficient at 50');
-ok(near(ss.ageCoefficient(60), 1.381, 0.001), 'McCulloch coefficient at 60');
+// 🔄 2026-09-27 (E-4): Harbo 2012's measured bands, not McCulloch (1.13, 1.381).
+ok(near(ss.ageCoefficient(50), 1.10, 0.001), 'Harbo coefficient at 50');
+ok(near(ss.ageCoefficient(60), 1.17, 0.001), 'Harbo coefficient at 60');
 ok(ss.ageCoefficient(55) > ss.ageCoefficient(50), 'the coefficient rises with age');
 ok(ss.ageCoefficient(18) > 1, 'juniors are graded up too (Foster)');
 ok(ss.ageCoefficient(null) === 1, 'no age means no adjustment');
@@ -3145,13 +3146,27 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
    *   Biceps     110.75 -> 110.57  -0.2 %  rows 20 -> 8 %
    *   Shoulders  142.44 -> 142.43   0.0 %
    *   every other muscle             0     no stand-ins */
+  /* 🔄 RE-BASELINED 2026-09-27, ON ITS OWN — STAND-INS CAPPED AT FAIR (E-2).
+   * Plan §3.9 decision j, approved by Tim 2026-09-14 and never coded until now:
+   * a reading with no direct exercise (`kind: 'fallback'`) is at most Fair,
+   * confidence ≤ 0.5499. CONFIDENCE ONLY — every estimate and count is
+   * byte-identical, and so is every other muscle.
+   *
+   *   Traps      conf 0.5618 -> 0.5499  Good -> Fair  all stand-ins (from Back)
+   *   Forearms   conf 0.5777 -> 0.5499  Good -> Fair  all stand-ins
+   *   every other muscle             0  direct evidence, uncapped
+   *
+   * The same overhaul's E-1 (dominance on curveWeight), EB-4 (window from the
+   * newest set), E-7 (a performed single is a floor), E-3b (one session ≤ Fair,
+   * two ≤ Good) and E-9 (nothing in the window ≤ Fair) were each checked with
+   * GOLDEN_DUMP=1 and move nothing here, for all three sexes. */
   const GOLDEN = [
     ['Back', 720, 190.4488, 0.7899, 212, 4],
     ['Biceps', 904, 110.5714, 0.7816, 273, 5],
     ['Calves', 336, 255.5901, 0.9793, 84, 2],
     ['Chest', 465, 228.2494, 0.9450, 130, 2],
     ['Core', 66, 124.1868, 0.2800, 22, 1],
-    ['Forearms', 904, 104.2077, 0.5777, 273, 5],
+    ['Forearms', 904, 104.2077, 0.5499, 273, 5],
     ['Glutes', 882, 351.3042, 0.9126, 275, 5],
     ['Hamstrings', 882, 263.1274, 0.9065, 275, 5],
     // 🚨 THE LOWEST CONFIDENCE ANY MUSCLE HAS EVER CARRIED HERE — against Core's,
@@ -3162,7 +3177,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ['Neck', 66, 46.4714, 0.1705, 22, 1],
     ['Quads', 571, 287.5293, 0.9424, 171, 4],
     ['Shoulders', 1093, 142.4293, 0.9207, 322, 6],
-    ['Traps', 529, 294.1446, 0.5618, 148, 3],
+    ['Traps', 529, 294.1446, 0.5499, 148, 3],
     ['Triceps', 1100, 199.4095, 0.7461, 345, 6],
   ];
   ok(byMuscle.size === GOLDEN.length,
@@ -4681,10 +4696,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-16' }),
     obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-15' }),
   ]);
+  // 🔄 2026-09-27 (E-3b): three DATES, like `oneLiftManyDays`. One date is one
+  // session and now reads at most Fair, which is a different claim from the
+  // one this pair tests (agreement across exercises), so both sides get three.
   const threeLifts = me.rateMuscle([
-    obs({ estimate: 200, quality: 1, exerciseId: 'a' }),
-    obs({ estimate: 200, quality: 1, exerciseId: 'b' }),
-    obs({ estimate: 200, quality: 1, exerciseId: 'c' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-15' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'b', date: '2026-08-16' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'c', date: '2026-08-17' }),
   ]);
   ok(threeLifts.confidence > oneLiftManyDays.confidence,
      `three exercises agreeing beats one exercise repeated (${threeLifts.confidence.toFixed(2)} > ${oneLiftManyDays.confidence.toFixed(2)})`);
@@ -4701,19 +4719,21 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      `a long history of one lift beats a single session of it (${manyDays.confidence.toFixed(2)} > ${oneDayOnly.confidence.toFixed(2)})`);
 
   // Confidence responds to the four things it claims to.
+  // 🔄 2026-09-27 (E-3b): the three-reading fixtures below sit on three dates,
+  // so the one-session cap (at most Fair) does not flatten the terms under test.
   const lonely = me.rateMuscle([obs({ estimate: 200, quality: 0.35, exerciseId: 'a' })]);
   const solid = me.rateMuscle([
-    obs({ estimate: 200, quality: 1, exerciseId: 'a' }),
-    obs({ estimate: 202, quality: 1, exerciseId: 'b' }),
-    obs({ estimate: 198, quality: 1, exerciseId: 'c' }),
+    obs({ estimate: 200, quality: 1, exerciseId: 'a', date: '2026-08-15' }),
+    obs({ estimate: 202, quality: 1, exerciseId: 'b', date: '2026-08-16' }),
+    obs({ estimate: 198, quality: 1, exerciseId: 'c', date: '2026-08-17' }),
   ]);
   ok(solid.confidence > lonely.confidence,
      `agreeing high-quality evidence beats one loose reading (${solid.confidence.toFixed(2)} > ${lonely.confidence.toFixed(2)})`);
 
   const disagreeing = me.rateMuscle([
-    obs({ estimate: 120, quality: 1, exerciseId: 'a' }),
-    obs({ estimate: 260, quality: 1, exerciseId: 'b' }),
-    obs({ estimate: 400, quality: 1, exerciseId: 'c' }),
+    obs({ estimate: 120, quality: 1, exerciseId: 'a', date: '2026-08-15' }),
+    obs({ estimate: 260, quality: 1, exerciseId: 'b', date: '2026-08-16' }),
+    obs({ estimate: 400, quality: 1, exerciseId: 'c', date: '2026-08-17' }),
   ]);
   ok(disagreeing.confidence < solid.confidence,
      'evidence that contradicts itself is less trustworthy than evidence that agrees');
@@ -4726,9 +4746,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(stale.confidence < solid.confidence, 'and year-old evidence is less trustworthy than fresh');
 
   const machineish = me.rateMuscle([
-    obs({ estimate: 200, quality: 0.35, exerciseId: 'a' }),
-    obs({ estimate: 202, quality: 0.35, exerciseId: 'b' }),
-    obs({ estimate: 198, quality: 0.35, exerciseId: 'c' }),
+    obs({ estimate: 200, quality: 0.35, exerciseId: 'a', date: '2026-08-15' }),
+    obs({ estimate: 202, quality: 0.35, exerciseId: 'b', date: '2026-08-16' }),
+    obs({ estimate: 198, quality: 0.35, exerciseId: 'c', date: '2026-08-17' }),
   ]);
   ok(machineish.confidence < solid.confidence,
      'and evidence that needed a shaky conversion is less trustworthy than the standard lift');
@@ -5338,12 +5358,13 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      + `(${asDone.confidence.toFixed(2)} as done, ${reversed.confidence.toFixed(2)} pulldown-first)`);
 
   /* ---------- the hint, which is worth more than the weighting ---------- */
-  ok(/cleaner reading/.test(asDone.hint || '') && /Dumbbell Row/.test(asDone.hint || ''),
+  // 🔄 2026-09-27: the line was shortened to "…Try it earlier once."; same claim.
+  ok(/Try it earlier/.test(asDone.hint || '') && /Dumbbell Row/.test(asDone.hint || ''),
      '⚠️ the panel names the lift and says doing it earlier would read better');
   ok(!/tired you were/.test(asDone.hint || ''),
      'and does not claim to know how tired he was, which nobody measured');
   const freshFirst = await rateOrder([ent('Lat Pulldown', 140, 8), AP, DR]);
-  ok(!/cleaner reading/.test(freshFirst.hint || ''),
+  ok(!/Try it earlier/.test(freshFirst.hint || ''),
      'and the hint is silent when the leading reading was taken fresh');
   /* 🔄 THE MAGNITUDE MOVED ON 2026-09-15 AND THE REASON IS THE INTERESTING PART.
    *
@@ -5425,10 +5446,11 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
      'a per-side lift reports the entered weight and says it is per side');
 
   // A time-based exercise has no estimated max and must not invent one, and its
-  // BEST is its fastest, not its longest.
+  // BEST is its longest hold (🔄 2026-09-27, EB-5: it used to be the fastest,
+  // so a 30 s plank beat a 120 s one).
   const plank = rows.find((r) => r.name === 'Plank');
   ok(plank.e1rm === null, 'a plank has no estimated one-rep max');
-  ok(plank.best.time === 90, `and its best is the fastest time (${plank.best.time})`);
+  ok(plank.best.time === 120, `and its best is the longest hold (${plank.best.time})`);
 
   // A benchmark on a later day should take over and be labelled.
   await st.saveBenchmark({ date: today, exerciseId: id('Barbell Bench Press'),
@@ -5610,7 +5632,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
   ok(newSchedule(CYCLE, 4).slots.length === 4, 'a new cycle is as long as it was asked to be');
   ok(newSchedule(CYCLE, 99).slots.length === MAX_CYCLE_DAYS
      && newSchedule(CYCLE, 1).slots.length === MIN_CYCLE_DAYS,
-     `a cycle is clamped to ${MIN_CYCLE_DAYS}–${MAX_CYCLE_DAYS} days — 14 is the top of Tim's own examples`);
+     `a cycle is clamped to ${MIN_CYCLE_DAYS}–${MAX_CYCLE_DAYS} days — ${MAX_CYCLE_DAYS} is the top`);
   ok(slotLabel(WEEK, 0) === 'Mon' && slotLabel(WEEK, 0, true) === 'Monday'
      && slotLabel(WEEK, 6) === 'Sun',
      '⚠️ the week runs Monday to Sunday, and it is NOT locale-derived — a plan whose first column moved '
@@ -6353,6 +6375,8 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ['preset-ppl', 1, 'c0df6f59fb08'],
     ['preset-upper-lower', 1, '76964db4627b'],
     ['preset-full-body', 1, '6068a42841bb'],
+    ['preset-dumbbell-home', 1, 'b15d206517a7'],
+    ['preset-bodyweight', 1, '0f831d1a6a7e'],
   ];
   const contentHash = (p) => {
     const { version, changes, ...content } = p;
@@ -7339,8 +7363,8 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'with Pull and Legs both never done, the author\'s order picks Pull — programme order survives as the tie-break');
     ok(s3.daysSince === 2, 'it knows how long ago the last one was');
     ok(s3.lastName === 'Push', 'and what the last one was');
-    ok(/Push Pull Legs/.test(describeSuggestion(s3)) && /Push/.test(describeSuggestion(s3)),
-       'the caption names the system and the last workout');
+    ok(describeSuggestion(s3) === 'Not done yet.',
+       'the caption is one short fact: Pull has never been done (S-02, overhaul 2026-09-27)');
     // The button carries the name, so the sentence under it must not repeat it.
     ok(!/\bPull\b/.test(describeSuggestion(s).replace('Push Pull Legs', '')),
        'the caption does not repeat the name already on the button');

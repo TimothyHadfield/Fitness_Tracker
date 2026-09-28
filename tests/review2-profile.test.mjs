@@ -66,9 +66,11 @@ ok(demo.active(), 'the demo is on, so nothing below passes by having no data');
   const bench = rows.find((r) => /^Barbell Bench Press/.test(flat(r.querySelector('.row-title'))));
   ok(Boolean(bench), 'the demo profile has a Barbell Bench Press row');
 
-  // 1. The figure says it is a BEST.
-  ok(/^Best\b/.test(flat(bench && bench.querySelector('.me-best-est'))),
-     `1. the best-lift figure is labelled "Best" (${flat(bench && bench.querySelector('.me-best-est'))})`);
+  // 1. The figure says it is a BEST — 🔄 2026-09-27 (overhaul S-1): or, where
+  // the muscle's estimate now differs (236 best vs 228 now on the demo bench),
+  // "now 228", the number the Goals row beside it prints.
+  ok(/^(Best|now \d+)\b/.test(flat(bench && bench.querySelector('.me-best-est'))),
+     `1. the best-lift figure is labelled "Best" or "now N" (${flat(bench && bench.querySelector('.me-best-est'))})`);
 
   // 3. The set's own date beside the set, and "trained N days" — not "last <day>".
   const sub = flat(bench && bench.querySelector('.row-sub'));

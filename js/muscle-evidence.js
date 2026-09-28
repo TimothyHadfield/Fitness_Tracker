@@ -136,8 +136,8 @@ export function rankBlockedReason(exercise, opts) {
      * leftover. */
     const target = standInFor(exercise);
     if (!target) {
-      return 'it is your own exercise, so there is no published way to compare it '
-        + 'with a barbell — it still counts toward your volume';
+      // 🔄 2026-09-27 overhaul (words): shortened; same facts, same order.
+      return 'your own exercise — no published conversion; still counts toward volume';
     }
     /* ⚠️ ASKED OF THE REAL FUNCTION, for the same reason the weighted branch at
      * the bottom of this function is. A match is not a guarantee of a rating:
@@ -154,8 +154,8 @@ export function rankBlockedReason(exercise, opts) {
   if (spec) {
     if (!Array.isArray(exercise.fields) || !exercise.fields.includes('reps')) return null;
     if (!(Number(opts && opts.bodyWeight) > 0)) {
-      return 'this one lifts your own body weight, and we don’t know what you weigh — '
-        + 'log a weigh-in and it starts counting';
+      // ⚠️ Keeps "weigh-in": strength-observations.js's `fixable` reads it.
+      return 'bodyweight lift and no weigh-in — log one to count it';
     }
     return null;
   }
@@ -178,8 +178,7 @@ export function rankBlockedReason(exercise, opts) {
    * obstacle is that a band's resistance depends on how far it is stretched and
    * on the band, and neither is recorded or recordable here. */
   if (exercise.equipment === 'Band') {
-    return 'a band’s resistance depends on how far it is stretched, so it cannot be '
-      + 'compared with a weight';
+    return 'band resistance changes with stretch';
   }
 
   /* 🚨 AND THE LAST SILENT SHAPE, CLOSED 2026-09-04 BY MAKING CORE RANKABLE.
@@ -203,8 +202,7 @@ export function rankBlockedReason(exercise, opts) {
    * how far out you go, and the app records neither that nor a weight. */
   const noLoad = !Array.isArray(exercise.fields) || !exercise.fields.includes('weight');
   if (noLoad && !bodyWeightFractionFor(exercise)) {
-    return 'this one records no weight, and how hard it is depends on leverage the app '
-      + 'cannot see — so it can’t be compared with a barbell. It still counts toward your volume';
+    return 'no weight recorded and leverage the app can’t see; still counts toward volume';
   }
 
   if (noLoad) return null;
@@ -214,7 +212,7 @@ export function rankBlockedReason(exercise, opts) {
   // "an ordinary lift is never blocked". contributionsFor() is the one place
   // that knows, and it cannot call back into here, so there is no recursion.
   if (contributionsFor(exercise, opts).length) return null;
-  return 'nobody has published a way to convert this one into a barbell lift yet';
+  return 'no published conversion yet';
 }
 
 /* ------------------------------------------------------------------ *
@@ -1116,14 +1114,18 @@ const RATIOS = {
     [/Dumbbell Shoulder Press/, 1.01, 0.60],
     [/Arnold Press/, 0.77, 0.50],
     // ⚠️ CORRECTED 2026-09-13 from SL m180/f140. Derived 2026-09-13: SL landmine
-    // press 40/72/117/172/236 (m) over OHP → median 0.90 on the app's doubled
-    // reading, and 0.89 (f). Was 0.60, a reasoned number, flattering by a third:
+    // press 40/72/117/172/236 (m) over OHP → median 0.90 on the plates as
+    // logged, undoubled, and 0.89 (f). Was 0.60, a reasoned number, flattering by a third:
     // a 70 lb landmine press read Shoulders 99.6th percentile.
     // 🚩 2026-09-27: the page also says "include the bar, normally 44 lb" — but
     // its own male beginner is 41 lb, BELOW the bar (re-checked 2026-09-27), so
     // its lifters log without it, as the app does. NO bar offset, on purpose
-    // (unlike the Meadows row, whose ratio is not a landmine page's). Open: the
-    // page does not say one arm or two; the 0.90 assumes the app's doubled read.
+    // (unlike the Meadows row, whose ratio is not a landmine page's).
+    // 🔄 2026-09-27 (overhaul EB-8): the 0.90 is on UNDOUBLED plates — one bar,
+    // the page's numbers taken as logged — and Landmine Press is `loadType:
+    // 'total'` in exercises.js since the same day. The old note here said it
+    // assumed a doubled per-side read, which over-credited it (70 × 10 read
+    // Advanced p87.7).
     [/Landmine Press/, { m: 0.90, f: 0.89 }, 0.35],
     // 2026-08-26 sweep: SL upright row 53/87/132/187/248 over OHP →
     // 0.71/0.84/0.94/1.03/1.10, median 0.94. Was 0.70 — flattering ~26 %.
@@ -2500,6 +2502,12 @@ export function readingSigma(o) {
 const WINDOW_DAYS = 84;
 const WIDEN_DAYS = 180;
 
+// Confidence ceilings just under a band's floor (CONFIDENCE_BANDS: Good 0.55,
+// High 0.72), so a capped reading can never round or compare into the band
+// above. Used by rateMuscle()'s caps (overhaul 2026-09-27: E-3b, E-9, E-2).
+const CAP_FAIR = 0.5499;
+const CAP_GOOD = 0.7199;
+
 // A set at or below this many reps is preferred for the seat, because the curve
 // extrapolates least from it. Not a gate: 8 is where docs/research.md §16.2 puts
 // the knee (SEE ~4 % at 5 reps, ~8-10 % at 10), and D5 still refuses 16+.
@@ -3056,11 +3064,18 @@ export function rateMuscle(observations, muscle = null) {
    * tie kept, so two identical sets never delete each other. Heavier-but-shorter
    * still does not dominate: that is a real trade and `seatCredit` still decides
    * it. */
+  /* 🔄 E-1 (overhaul 2026-09-27): IT COMPARES `curveWeight`, THE RESISTANCE,
+   * NOT THE TYPED NUMBER. On an assist machine the typed number is the HELP, so
+   * 90 lb of help "dominated" every set done with less and a 90 → 40 lb series
+   * rated Back off its weakest set (95.8 against 144.1, measured).
+   * exercise-estimate.js already compared the load; this is the same fix. An
+   * observation without `curveWeight` (an older friend's rows) uses `weight`. */
+  const cw = (o) => (Number.isFinite(o.curveWeight) ? o.curveWeight : o.weight);
   const dominate = (list) => {
     if (!Array.isArray(list) || list.length < 2) return list;
     const dominated = (b) => list.some((a) => a !== b
-      && a.weight >= b.weight && a.reps >= b.reps
-      && !(a.weight === b.weight && a.reps === b.reps));
+      && cw(a) >= cw(b) && a.reps >= b.reps
+      && !(cw(a) === cw(b) && a.reps === b.reps));
     const kept = list.filter((b) => !dominated(b));
     /* ⚠️ NEVER RETURN AN EMPTY POOL. Nothing above can empty it — a maximal set
      * always survives a partial order — but a later edit to the comparison could,
@@ -3188,8 +3203,18 @@ export function rateMuscle(observations, muscle = null) {
    * the golden test and a friend's published rows walk the other way. Every
    * comparison below falls through to the date and then to the id, so the
    * answer cannot depend on the order rows arrive in. */
+  /* 🔄 EB-4 (overhaul 2026-09-27): THE WINDOW RUNS BACK FROM THE NEWEST SET,
+   * NOT FROM TODAY. Measured from today it went EMPTY once the newest set was
+   * 85–96 days old, the seat fell back to all history, and an idle lifter's
+   * map jumped from 201.8 back to the old 258.6 at +85 days with no training.
+   * From the newest set the window always holds the lifter's latest work, so
+   * there is nothing left to widen to; an idle stretch is priced by
+   * `freshness()` and the fade, not by what happens to fall inside a calendar
+   * window. On a training account (the demo year) newest is ~0, so nothing
+   * moves. An exercise with nothing inside the muscle's window still keeps
+   * its own history (the `b.all` fallback below), as it always did. */
   const newest = scored.reduce((a, o) => (o.ageDays < a ? o.ageDays : a), Infinity);
-  const windowCut = newest + WINDOW_DAYS <= WIDEN_DAYS ? WINDOW_DAYS : WIDEN_DAYS;
+  const windowCut = WINDOW_DAYS;
 
   /* ⚠️ THE SEAT COMPARISON DROPS THE BENCHMARK BONUS, AND THAT IS DELIBERATE.
    * `evidenceWeight` carries it because a deliberate test IS worth more when
@@ -3274,8 +3299,8 @@ export function rateMuscle(observations, muscle = null) {
       if (today > 0 && Math.max(...then.map((o) => o.estimate)) * decay <= today) continue;
       let newestThen = Infinity;
       for (const o of scored) if (o.ageDays >= a0 && o.ageDays < newestThen) newestThen = o.ageDays;
-      const cut = (newestThen - a0) + WINDOW_DAYS <= WIDEN_DAYS ? WINDOW_DAYS : WIDEN_DAYS;
-      const inWin = then.filter((o) => o.ageDays - a0 <= cut);
+      // EB-4: the same window as today's reading — back from the newest set.
+      const inWin = then.filter((o) => o.ageDays - newestThen <= WINDOW_DAYS);
       const pool = dominate(inWin.length ? inWin : then);
       let seat = null;
       for (const o of pool) if (!seat || better(o, seat) > 0) seat = o;
@@ -3291,7 +3316,7 @@ export function rateMuscle(observations, muscle = null) {
     if (!bucket) { perExercise.set(key, { inWindow: [], all: [] }); }
     const b = perExercise.get(key);
     b.all.push(o);
-    if (o.ageDays <= windowCut) b.inWindow.push(o);
+    if (o.ageDays - newest <= windowCut) b.inWindow.push(o);
   }
   const representatives = [];
   // 🆕 2026-09-23 (Open work 10): every exercise's POOLED reading, one per
@@ -3440,8 +3465,31 @@ export function rateMuscle(observations, muscle = null) {
    * included — joins the winsorised blend at its own precision. `used` is now
    * only the three rows the panel LISTS; see TOP_N. */
   const pooled = candidates.map((c) => pooledOf.get(c)).filter(Boolean);
-  const estimate = robustAggregate(pooled.map((p) => ({ x: p.value, w: p.weight })));
+  let estimate = robustAggregate(pooled.map((p) => ({ x: p.value, w: p.weight })));
   if (!(estimate > 0)) return null;
+
+  /* 🆕 E-7 (overhaul 2026-09-27): A PERFORMED SINGLE IS A FLOOR. A max the
+   * lifter actually stood up with is a fact, not a reading (Rule 5, and the
+   * upper-envelope principle in strength-estimate.js). Measured: 460×1 and
+   * 440×2 on the last day read 455.08, because the per-day pick kept the double
+   * and the pool averaged it with a week-old 435×2.
+   *
+   * Only a single that is (a) past the typo quarantine — `admissible` is
+   * already screened — (b) inside the window, measured from the newest set as
+   * the seat's is, (c) direct evidence for this muscle and (d) the key lift or
+   * a close match (quality ≥ 0.8, the line `confidenceHint()` already draws
+   * between "the standard lift" and "close matches"). A stand-in single or a
+   * machine single is a CONVERSION of a max, not a max of this lift, so it
+   * stays a reading like any other. It can only raise the number, never lower
+   * it. */
+  const SINGLE_FLOOR_MIN_QUALITY = 0.8;
+  let singleFloor = 0;
+  for (const o of admissible) {
+    if (Number(o.reps) !== 1 || o.kind !== 'direct' || !(o.quality >= SINGLE_FLOOR_MIN_QUALITY)) continue;
+    if (!(o.ageDays - newest <= WINDOW_DAYS)) continue;
+    if (o.estimate > singleFloor) singleFloor = o.estimate;
+  }
+  if (singleFloor > estimate) estimate = singleFloor;
 
   /* ── `share` — WHAT FRACTION OF THE ANSWER EACH ROW BOUGHT ────────────────
    *
@@ -3507,6 +3555,36 @@ export function rateMuscle(observations, muscle = null) {
     u.share = p && Number.isFinite(p.share) ? p.share : 0;
   });
 
+  /* 🆕 E-3b (overhaul 2026-09-27): SESSIONS ARE DATES. `contributorCount`
+   * counts exercise-DAYS, so one workout of four back exercises was "4" and
+   * read High 0.821; one set of 135×5 read Good beside its own hint "Only one
+   * session counts so far". `depth` cannot see this — a single workout can be
+   * deep — so it is a cap, not a term: one date reads at most Fair, two at
+   * most Good. Nothing else is touched; the demo year has hundreds of dates.
+   *
+   * ⚠️ THE CAPS BOUND THE LIFTER'S HALF, BEFORE `standardQualityFor()`. They
+   * are statements about the lifter's evidence, and the standard's doubt stays
+   * a separate multiplier on top (the "two doubts" note below) — so Core still
+   * reads exactly its standardQuality × what Chest reads on the same sets. */
+  const sessionCount = new Set(scored.map((o) => o.date).filter(Boolean)).size;
+  let evidenceConfidence = confidenceOf(used, scored);
+  if (sessionCount <= 1) evidenceConfidence = Math.min(evidenceConfidence, CAP_FAIR);
+  else if (sessionCount <= 2) evidenceConfidence = Math.min(evidenceConfidence, CAP_GOOD);
+  /* 🆕 E-9: NOTHING INSIDE THE WINDOW, AT MOST FAIR. `freshness()` fades
+   * slowly on purpose, so three months off still read High 0.723 at 60 days
+   * and Good at 120 — while the panel already called it old at 42 and the
+   * "at least" floor had gone at 84. Past the 84-day window the number is a
+   * memory, and it says so. */
+  if (newest > WINDOW_DAYS) evidenceConfidence = Math.min(evidenceConfidence, CAP_FAIR);
+  /* 🆕 E-2: A STAND-IN-ONLY READING IS AT MOST FAIR — plan §3.9 decision j,
+   * approved by Tim 2026-09-14, and claimed by comments here, in
+   * views-muscles.js and in goals.js long before it was coded. Measured before
+   * this line: bench and press alone read Triceps High 0.742. A muscle with
+   * no direct exercise has been inferred, not measured (Rule 5). The only
+   * move in the golden table this overhaul makes: Traps and Forearms. */
+  if (kind === 'fallback') evidenceConfidence = Math.min(evidenceConfidence, CAP_FAIR);
+  const confidence = evidenceConfidence * standardQualityFor(muscle);
+
   return {
     estimate,
     // 🆕 2026-09-23: "AT LEAST X" — Open work 9, Tim: *"Yes I like the at least
@@ -3518,10 +3596,13 @@ export function rateMuscle(observations, muscle = null) {
     // them as one number is what lets the map fade a Core rating honestly
     // without implying the user did anything wrong, and `raiseConfidenceHint()`
     // says which of the two is in play.
-    confidence: confidenceOf(used, scored) * standardQualityFor(muscle),
+    confidence,
     used,
     kind,
     contributorCount: scored.length,
+    // E-3b: distinct DATES that reached the rating — what a reader calls a
+    // session. `contributorCount` stays exercise-days, as published rows read.
+    sessionCount,
     // How many DIFFERENT exercises had a say. One is not a failure — plenty of
     // people bench and do nothing else for chest — but it is the difference
     // between a corroborated reading and an uncorroborated one, so the panel
@@ -3645,6 +3726,9 @@ function confidenceHint(muscle, rating) {
   if (rating.newestAgeDays > 42) {
     return `Nothing recent — the newest set is ${Math.round(rating.newestAgeDays)} days old. Train it again to refresh this.`;
   }
+  // ⚠️ Still exercise-days, not E-3b's `sessionCount`, on purpose: one session
+  // of several exercises falls through to the lines below, and the fatigue line
+  // (Tim's 2026-08-24 session, pinned in data-layer) is worth more there.
   if (rating.contributorCount < 2) {
     return 'Only one session counts so far. A second would confirm it.';
   }
@@ -3688,9 +3772,9 @@ function confidenceHint(muscle, rating) {
     // about a cause nobody measured — and at a 29 % discount it is simply
     // false. What is true is that the set came after other work and that doing
     // it earlier would read better. Rule 5.
-    return `Your best reading here is ${led.exerciseName}, done after about `
-      + `${Math.round(led.priorVolume)} sets of ${muscle.toLowerCase()} work that session. `
-      + 'Doing it earlier in a session once would give it a cleaner reading.';
+    // 🔄 2026-09-27 overhaul (words W-18): 30 words → 13, same claim.
+    return `Your best ${led.exerciseName} came after ~${Math.round(led.priorVolume)} `
+      + `${muscle.toLowerCase()} sets. Try it earlier once.`;
   }
 
   const bestQuality = Math.max(...rating.used.map((u) => u.quality));
@@ -3702,8 +3786,8 @@ function confidenceHint(muscle, rating) {
   // Say what is actually holding it down rather than returning null and leaving
   // a faded colour unexplained. See the note at the top of this function.
   if (standardBound) {
-    return 'Nothing more to log — this one is held back by the standards, not by '
-      + 'your training. Fewer people publish core numbers, so the placing is rougher.';
+    // 🔄 2026-09-27 overhaul (words): shortened, same two facts.
+    return 'Held back by the standards, not your training — core data is thin.';
   }
   return null;
 }

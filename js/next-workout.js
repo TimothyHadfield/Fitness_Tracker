@@ -74,12 +74,12 @@ export function describeSuggestion(s) {
   if (s.isOnlyWorkout) return `The only workout in ${where}. You last did it ${agoWords(s.daysSince)}.`;
   // Says what was READ — the least-recently-done rule (2026-08-26) chooses on
   // how long each workout has waited, so that is the fact the sentence carries.
-  if (s.nextNeverDone) {
-    return `You haven't done this one yet — everything else in ${where} is more recent. `
-      + `You did ${s.lastName} ${agoWords(s.daysSince)}.`;
-  }
-  return `It's been longest since this one — ${agoWords(s.nextDaysSince)}. `
-    + `You did ${s.lastName} ${agoWords(s.daysSince)}.`;
+  // 🔄 Overhaul 2026-09-27 (systems S-02): ONE short fact. The old pair of
+  // sentences said the same thing twice ("…a long time ago. You did Upper A a
+  // long time ago.") in 17 words; how long THIS one has waited is the reason
+  // it was picked, and it is all the line needs.
+  if (s.nextNeverDone) return 'Not done yet.';
+  return `Last done ${agoWords(s.nextDaysSince)}.`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -161,13 +161,16 @@ export function daysBetween(fromISO, toISO) {
  *                                 programme order first, then by name)
  * @param {Array}    arg.sessions  recorded sessions, newest first
  * @param {string}   arg.today     YYYY-MM-DD
+ * @param {Map}      [arg.exMap]   exercise id → exercise. Optional; with it, a
+ *                                 cardio-only workout also counts sessions that
+ *                                 carry no workoutId (see cardioOnly below).
  *
  * @returns {null|{
  *   workout, system, reason, lastName, lastDate, daysSince,
  *   trainedToday, isStart, isOnlyWorkout
  * }}
  */
-export function suggestNext({ systems = [], workouts = [], sessions = [], today }) {
+export function suggestNext({ systems = [], workouts = [], sessions = [], today, exMap = null }) {
   if (!workouts.length) return null;
 
   // Only systems that still hold a workout can be suggested from. A system
@@ -183,6 +186,40 @@ export function suggestNext({ systems = [], workouts = [], sessions = [], today 
   const workoutById = new Map(workouts.map((w) => [w.id, w]));
   const systemById = new Map(systems.map((s) => [s.id, s]));
 
+  /* 🆕 CARDIO DAYS COUNT WHEN THE RUN WAS LOGGED ON ITS OWN — overhaul
+   * 2026-09-27 (systems S-11). A programme's conditioning day was marked done
+   * only by a session carrying its workoutId, so a run logged through Record →
+   * Run (no workoutId) never counted and the day stayed "next" for ever.
+   *
+   * ⚠️ NARROW ON PURPOSE: only a workout whose EVERY exercise is non-rep (no
+   * `reps` field — time, distance), and only a session with no workoutId that
+   * contains one of them. A lifting day is never ticked off by a stray row, and
+   * the plan still never drives anything — this changes only what counts as
+   * done. Needs the exercise map; without one nothing changes. */
+  const cardioIds = new Map();   // workout id → Set of its exercise ids
+  if (exMap && typeof exMap.get === 'function') {
+    for (const w of workouts) {
+      if (!w.systemId) continue;
+      const ids = (w.exercises || []).map((e) => e && e.exerciseId).filter(Boolean);
+      if (!ids.length) continue;
+      const allCardio = ids.every((id) => {
+        const ex = exMap.get(id);
+        return ex && Array.isArray(ex.fields) && ex.fields.length && !ex.fields.includes('reps');
+      });
+      if (allCardio) cardioIds.set(w.id, new Set(ids));
+    }
+  }
+  /** The workouts a session counts toward, in display order. */
+  const resolve = (s) => {
+    if (s.workoutId) {
+      const w = workoutById.get(s.workoutId);
+      return w ? [w] : [];
+    }
+    if (!cardioIds.size) return [];
+    const done = new Set((s.entries || []).map((e) => e && e.exerciseId).filter(Boolean));
+    return workouts.filter((w) => cardioIds.has(w.id) && [...cardioIds.get(w.id)].some((id) => done.has(id)));
+  };
+
   // Sessions newest first. `getSessions()` already sorts by date, but a caller
   // that hands them over in some other order should still get a right answer —
   // the whole function turns on "the most recent one", so it re-sorts rather
@@ -197,8 +234,8 @@ export function suggestNext({ systems = [], workouts = [], sessions = [], today 
   // skip past them rather than dead-end on the newest row.
   let last = null;
   for (const s of ordered) {
-    const w = workoutById.get(s.workoutId);
-    if (w && bySystem.has(w.systemId)) { last = { session: s, workout: w }; break; }
+    const w = resolve(s).find((x) => bySystem.has(x.systemId));
+    if (w) { last = { session: s, workout: w }; break; }
   }
 
   // ── Nothing recorded yet, or nothing recorded that still resolves ──────────
@@ -232,9 +269,10 @@ export function suggestNext({ systems = [], workouts = [], sessions = [], today 
   // Pull on Wednesday.
   const lastDone = new Map();
   for (const s of ordered) {
-    const w = workoutById.get(s.workoutId);
-    if (!w || w.systemId !== last.workout.systemId) continue;
-    if (!lastDone.has(w.id)) lastDone.set(w.id, s.date);   // ordered = newest first
+    for (const w of resolve(s)) {
+      if (w.systemId !== last.workout.systemId) continue;
+      if (!lastDone.has(w.id)) lastDone.set(w.id, s.date);   // ordered = newest first
+    }
   }
 
   // Stalest first; never-done is stalest of all. Ties break by rotation

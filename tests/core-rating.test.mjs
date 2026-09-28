@@ -241,7 +241,8 @@ function erf(x) {
   ok(rating.confidence < 0.72,
      `the reading is still not "High" confidence (${rating.confidence.toFixed(3)}) even with corroborated, `
      + 'recent, benchmarked evidence — because the standard is what is holding it');
-  ok(hint && /standards, not by your training/.test(hint),
+  // 🔄 2026-09-27: the line was shortened ("not your training"); same claim.
+  ok(hint && /standards, not (by )?your training/.test(hint),
      `🚨 and the hint says so rather than asking for another set (${hint})`);
   ok(hint && !/Record|Train it again|would confirm/.test(hint),
      '⚠️ it asks for nothing — every other hint in this app is an instruction, and an instruction here '
@@ -251,7 +252,7 @@ function erf(x) {
   // not mask advice somebody could act on.
   const thin = ME.rateMuscle([obs('Cable Crunch', 90, '2026-06-01')], 'Core');
   const thinHint = ME.raiseConfidenceHint('Core', thin);
-  ok(thinHint && !/standards, not by your training/.test(thinHint),
+  ok(thinHint && !/standards, not (by )?your training/.test(thinHint),
      `⚠️ a stale single reading still gets the ordinary, actionable advice (${thinHint})`);
 }
 

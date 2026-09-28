@@ -771,7 +771,29 @@ export function rememberScroll(index, screen) {
  * and a finger on the list ends the attempt — it never fights the reader.
  */
 export function restoreScroll(screen, index) {
-  const top = scrollMemo.get(index);
+  restoreTop(screen, scrollMemo.get(index));
+}
+
+/* 🆕 EACH TAB KEEPS ITS PLACE — overhaul I-8b (2026-09-27). A tab tap is a NEW
+ * history entry, so the per-entry memory above never answered it: Profile →
+ * Data → Profile (by the tab bar) came back at the top, the row you had
+ * scrolled to gone below the fold (measured). Keyed by the tab's own hash. */
+const tabScrollMemo = new Map();
+
+/** Remember how far down a tab's root screen was scrolled as it is left. */
+export function rememberTabScroll(key, screen) {
+  if (!key || !screen || !screen.querySelector) return;
+  const pane = screen.querySelector('.pane-scroll');
+  if (!pane) return;
+  tabScrollMemo.set(key, pane.scrollTop);
+}
+
+/** A tab tapped again: its list goes back to where it was left. */
+export function restoreTabScroll(screen, key) {
+  restoreTop(screen, tabScrollMemo.get(key));
+}
+
+function restoreTop(screen, top) {
   if (!top || !screen || !screen.querySelector) return;
   const pane = screen.querySelector('.pane-scroll');
   if (!pane) return;

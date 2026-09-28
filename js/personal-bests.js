@@ -90,12 +90,13 @@
    "up from 0" is not a thing that happened.
    ========================================================================== */
 
-import { bodyWeightOn } from './e1rm.js';
+import { bodyWeightOn, e1rm, MAX_EVIDENCE_REPS } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
 import { minisOf } from './set-types.js';
-import { screenDaily, dailyValues } from './strength-estimate.js';
+import { screenDaily, dailyValues, RELEASE_TOLERANCE } from './strength-estimate.js';
 import { QUARANTINE_MIN_RATIO } from './muscle-evidence.js';
+import { units, LB_PER_KG } from './units.js';
 
 // A bare 'YYYY-MM-DD' as a whole day number — the same count rateMuscle()'s
 // `dayNumberOf()` uses, so a verdict keyed on `dailyValues()`'s day matches.
@@ -140,20 +141,113 @@ export function typoQuarantine(rows) {
     }))));
   } catch (_) { return out; }
   const flagged = new Set(screened.filter((r) => r && r.quarantined).map((r) => r.day));
-  if (!flagged.size) return out;
-  const reference = live
-    .filter((r) => !flagged.has(dayNumberOf(r.date)))
-    .reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
-  if (!(reference > 0)) return out;
-  for (const day of flagged) {
-    const onDay = live.filter((r) => dayNumberOf(r.date) === day);
-    const worst = onDay.reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
-    if (worst < reference * QUARANTINE_MIN_RATIO) continue;
-    for (const r of onDay) if (Number(r.estimate) >= worst - 1e-9) out.add(r);
+  if (flagged.size) {
+    const reference = live
+      .filter((r) => !flagged.has(dayNumberOf(r.date)))
+      .reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
+    if (reference > 0) {
+      for (const day of flagged) {
+        const onDay = live.filter((r) => dayNumberOf(r.date) === day);
+        const worst = onDay.reduce((a, r) => Math.max(a, Number(r.estimate)), 0);
+        if (worst < reference * QUARANTINE_MIN_RATIO) continue;
+        for (const r of onDay) if (Number(r.estimate) >= worst - 1e-9) out.add(r);
+      }
+    }
   }
+  // 🆕 2026-09-27 (overhaul EA-3): a day that jumps QUARANTINE_MIN_RATIO over every
+  // earlier day is held even when its own sets agree with each other — see jumpHold().
+  for (const r of jumpHold(live, (x) => Number(x.estimate))) out.add(r);
   // 🛑 Never empty the pool — the map's rule, for the map's reason.
   if (out.size >= live.length) out.clear();
   return out;
+}
+
+/**
+ * 🆕 THE SELF-CORROBORATED SLIP — 2026-09-27 (overhaul EA-3 / EB-6).
+ *
+ * `screenDaily()` lets a day through when its own sets agree, and a slip is
+ * usually typed into every set at once (change the first set, the rest copy it):
+ * 135×5 for five sessions, then 1350×5 ×3, was never held, and the next 75 %
+ * target prefilled 1,135 lb. So, beside the screen: a day whose top reading is
+ * `QUARANTINE_MIN_RATIO` × the best of every EARLIER, unheld day is held until
+ * a LATER day reaches `RELEASE_TOLERANCE` of it. The newest day has no later
+ * day, so it is held until the next session agrees — a real PR is repeated, a
+ * slip is not. Only readings at or over the line are held; lighter sets that
+ * day stay. A first-ever day has nothing earlier and is never held.
+ *
+ * @param {Array} live    rows with a `date`
+ * @param {Function} val  row → the number compared (an e1RM, or reps)
+ * @returns {Set} rows to hold
+ */
+function jumpHold(live, val) {
+  const out = new Set();
+  const byDay = new Map();
+  for (const r of live) {
+    const d = dayNumberOf(r.date);
+    const v = val(r);
+    if (d === null || !(v > 0)) continue;
+    if (!byDay.has(d)) byDay.set(d, []);
+    byDay.get(d).push(r);
+  }
+  const days = [...byDay.keys()].sort((a, b) => a - b);
+  const top = (d) => byDay.get(d).reduce((a, r) => Math.max(a, val(r)), 0);
+  let bestEarlier = 0;
+  for (let i = 0; i < days.length; i++) {
+    const t = top(days[i]);
+    const line = bestEarlier * QUARANTINE_MIN_RATIO;
+    if (bestEarlier > 0 && t >= line) {
+      const agreed = days.slice(i + 1).some((d) => top(d) >= t * RELEASE_TOLERANCE);
+      if (!agreed) {
+        const kept = byDay.get(days[i]).filter((r) => val(r) < line);
+        for (const r of byDay.get(days[i])) if (val(r) >= line) out.add(r);
+        for (const r of kept) bestEarlier = Math.max(bestEarlier, val(r));
+        continue;
+      }
+    }
+    bestEarlier = Math.max(bestEarlier, t);
+  }
+  return out;
+}
+
+/**
+ * 🆕 ONE CALL FOR THE STORE — 2026-09-27 (overhaul EA-3 / EB-6).
+ *
+ * The same hold as `typoQuarantine()`, for a caller that has only the sets:
+ * Data's current bests, the weight and normalized charts, and compare. Rows are
+ * ONE exercise's history, `[{ date, weight, reps, estimate? }]`; any extra
+ * fields ride along untouched and the returned Set holds the caller's own row
+ * objects, so it can draw a held point hollow rather than drop it.
+ *
+ * @param {Array} rows
+ * @param {object} [opts]
+ * @param {object} [opts.exercise]     the library entry, so the estimate is
+ *   `setE1rm()`'s (per hand then doubled, assist-aware). Without it the plain
+ *   curve on the typed weight — one scale either way, which is all a ratio needs.
+ * @param {Array}  [opts.bodyWeights]  the dated weigh-ins, for a body-weight lift
+ * @param {'e1rm'|'reps'} [opts.metric='e1rm']  'reps' for a lift logged by reps
+ *   alone (push-ups): 5, 5, 5 then 50 holds the 50. Reps have no curve and no
+ *   `screenDaily()` model, so only the jump rule above applies to them.
+ * @returns {Set} the rows to hold (hollow on a chart, left out of a best)
+ */
+export function holdTypos(rows, opts = {}) {
+  const list = (rows || []).filter((r) => r && dayNumberOf(r.date) !== null);
+  if (opts.metric === 'reps') {
+    const live = list.filter((r) => Number(r.reps) > 0);
+    const out = live.length < 2 ? new Set() : jumpHold(live, (r) => Number(r.reps));
+    if (out.size >= live.length) out.clear();
+    return out;
+  }
+  const ctxOn = contextFor(opts.exercise || null, opts.bodyWeights || []);
+  const scored = list.map((r) => {
+    let estimate = Number(r.estimate) > 0 ? Number(r.estimate) : null;
+    if (estimate === null) {
+      const m = opts.exercise ? measure('e1rm', r, ctxOn(r.date)) : null;
+      estimate = m ? m.total : (Number(r.weight) > 0 && Number(r.reps) > 0
+        && Number(r.reps) <= MAX_EVIDENCE_REPS ? e1rm(Number(r.weight), Number(r.reps)) : null);
+    }
+    return { row: r, date: r.date, weight: Number(r.weight), reps: Number(r.reps), estimate, isBenchmark: Boolean(r.isBenchmark) };
+  });
+  return new Set([...typoQuarantine(scored)].map((s) => s.row));
 }
 
 /** What each kind is called on screen. The word is the Rule 5 cue. */
@@ -354,9 +448,18 @@ export function contextFor(exercise, bodyWeights) {
  *
  * The unrounded value still leaves the module; this decides only whether a
  * difference counts, never what is shown.
+ *
+ * 🔄 2026-09-27 (overhaul EB-9): THE GRAIN IS ONE DISPLAY UNIT, not one pound.
+ * A kilogram reader was told "1RM 118 kg, up from 118 kg" (260.8 vs 259.1 lb),
+ * because the screen rounds in kg and this rounded in lb. The weight kinds are
+ * now snapped in the reader's unit (units.js, seeded at boot); reps are counts.
  */
 const GRAIN = { weight: 0.1, reps: 1, volume: 0.1, e1rm: 1 };
-const snap = (n, kind) => Math.round(n / GRAIN[kind]) * GRAIN[kind];
+const snap = (n, kind, unit) => {
+  const scale = kind !== 'reps' && unit === 'kg' ? LB_PER_KG : 1;
+  const g = GRAIN[kind] * scale;
+  return Math.round(n / g);
+};
 
 /**
  * The records set by `cleaned`, against everything recorded before it.
@@ -390,6 +493,8 @@ export function personalBests(cleaned, priorSessions, priorBenchmarks, exMap, op
   const out = [];
   const bodyWeights = (opts && opts.bodyWeights) || [];
   const todayDate = (opts && opts.date) || null;
+  // The reader's unit, for the grain (EB-9). `opts.unit` wins so a test can pin it.
+  const unit = (opts && opts.unit) || units();
 
   for (const e of cleaned || []) {
     const nowSets = allSetsOf(e.sets);
@@ -467,7 +572,7 @@ export function personalBests(cleaned, priorSessions, priorBenchmarks, exMap, op
         const m = measure(kind, s, ctxOn(todayDate));
         if (m && (!best || m.value > best.value)) best = m;
       }
-      if (!best || snap(best.value, kind) <= snap(was.value, kind)) continue;
+      if (!best || snap(best.value, kind, unit) <= snap(was.value, kind, unit)) continue;
 
       const assisted = Boolean(best.assisted);
       out.push({

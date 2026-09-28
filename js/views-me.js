@@ -57,6 +57,9 @@ import {
 // ⚠️ ONE calendar, four doors. See `calendarSection` below and `ownCalendar`'s
 // own header — a second copy is the drift that function exists to prevent.
 import { ownCalendar, chartLift } from './views-data.js';
+// 🆕 2026-09-27: `setCalMode`, when views-data.js exports it (see openCalendarMonths).
+import * as dataViews from './views-data.js';
+import { sessionStats } from './session-stats.js';
 // 🆕 Profile's goal row prints how far along it is (review, 2026-09-24).
 import { goalProgress, modelChangedSince } from './goals.js';
 // 🆕 Motion 2 · Additions: the Goals screen's own bar and spring, reused.
@@ -67,7 +70,7 @@ import { springFill } from './views-goals.js';
 // formats what it hands back. `js/profile-ranking.js` has the arithmetic and
 // the argument for which number a recorded lift shows.
 import { rankedLifts } from './profile-ranking.js';
-import { comparisonLabel } from './strength-standards.js';
+import { comparisonLabel, keyLiftFor } from './strength-standards.js';
 import * as units from './units.js';
 /* 🆕 THE SECTIONS THEMSELVES MOVED OUT ON 2026-09-16, and nothing about this
  * screen changed when they did. Tim asked for a friend's page to show *"their
@@ -79,7 +82,7 @@ import * as units from './units.js';
  * between the two, and for why the row data is built per-subject rather than by
  * one function with a `friend` flag in it. */
 import {
-  profileHead, statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock, calendarBlock,
+  profileHead, statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock, calendarBlock, weekBlock,
 } from './profile-shape.js';
 import {
   el, screenShell, emptyState, chevron, setChildren, personFace, icon,
@@ -144,8 +147,7 @@ export async function MeView() {
   // visibly does nothing while the PREVIOUS screen sits under the thumb.
   fill(body).catch(() => {
     setChildren(body, emptyState('Could not load your profile',
-      'Your account could not be reached just now. Everything you have recorded is safe on '
-      + 'this device.'));
+      'Couldn’t reach your account. Everything is safe on this device.'));
   }).finally(() => body.removeAttribute('aria-busy'));
   return screen;
 }
@@ -178,7 +180,9 @@ async function fill(body) {
   const [settings, sessions, state, activity, profile, goal] = await Promise.all([
     store.getSettings(),
     store.getSessions(),
-    social.state().catch(() => ({ available: false, reason: 'offline' })),
+    // A graph read that THREW is a flaky connection, not the degraded store —
+    // the rows above may well be the cloud's — so it gets the generic line.
+    social.state().catch(() => ({ available: false, reason: 'unreachable' })),
     // 🆕 THE CALENDAR LIVES HERE SINCE 2026-09-10 — see the block below.
     activityByDate().catch(() => new Map()),
     // 🆕 STEPS 2 AND 4 OF THE SAME SPLIT, 2026-09-11. Both are reads and both
@@ -197,7 +201,13 @@ async function fill(body) {
     store.getExerciseMap().catch(failed(new Map())),
     store.getBodyWeights().catch(failed([])),
   ]);
-  const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights }).catch(failed(new Map()));
+  /* 🔄 2026-09-27 (overhaul E-5): WITH THE SEX, as the Muscles tab and the
+   * runner pass it. Without it a woman's Profile was ranked on the male
+   * standards while her map was not (row 93.3 Intermediate here, 83.1 Novice
+   * there — measured). A profile that could not be read passes none, as before. */
+  const muscles = await muscleRatings({
+    sessions, benchmarks, bodyWeights, sex: (profile && profile.gender) || null,
+  }).catch(failed(new Map()));
 
   const workouts = sessions.length;
   // ⚠️ `connections` only exists on an available state. Off the cloud there is
@@ -206,26 +216,34 @@ async function fill(body) {
 
   const name = state.name || settings.displayName || '';
 
+  const stats = statRow(
+    statTile('Workouts', workouts, '#/me/workouts'),
+    // 🔒 Off the cloud it is a DASH and not a link — local, anonymous, offline
+    // and demo have no graph, and 0 would be a claim where the truth is an
+    // absence. Unchanged by the rename; it was the right call for two numbers
+    // and it is the right call for one.
+    connections === null
+      ? statTileFlat('Friends', null, { off: true })
+      : statTile('Friends', connections.length, '#/me/friends'),
+  );
+  quietUnchangedCounts(stats);
+
+  /* 🔄 2026-09-27 (overhaul, screens S-5): THE ORDER IS WHAT A LIFTER CHECKS
+   * FIRST. A compact head (face, name and both counts in one block), then this
+   * week, the goal, the best lifts, the history — and Body details LAST: it is
+   * a door to a form, closer to logistics than to what you did. On a laptop the
+   * best lifts take the left column and the rest stack on the right (css). */
   setChildren(body,
     profileHead({
       avatar: settings.avatar,
-      name: name || 'No display name yet',
+      compact: true,
+      stats,
       // ⚠️ Says what to do about it rather than leaving a blank. The name is
-      // set on the Account screen now, not here — this screen never writes.
-      under: name ? null : el('a', { class: 'text-link', href: '#/account',
-        text: 'Add one on your account' }),
+      // set on the Account screen, not here — this screen never writes — so a
+      // missing name IS the link there, and costs no line of its own.
+      name: name || 'Add a display name',
+      nameHref: name ? null : '#/account',
     }),
-
-    statRow(
-      statTile('Workouts', workouts, '#/me/workouts'),
-      // 🔒 Off the cloud it is a DASH and not a link — local, anonymous, offline
-      // and demo have no graph, and 0 would be a claim where the truth is an
-      // absence. Unchanged by the rename; it was the right call for two numbers
-      // and it is the right call for one.
-      connections === null
-        ? statTileFlat('Friends', null, { off: true })
-        : statTile('Friends', connections.length, '#/me/friends'),
-    ),
 
     connections === null
       ? el('div', { class: 'field-help', text: OFFLINE_COUNTS[state.reason]
@@ -235,11 +253,105 @@ async function fill(body) {
         ? el('div', { class: 'field-help', text: PUBLIC_NOTE })
         : null,
 
-    bodySection(profile),
-    bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }, dataKey),
+    weekSection(sessions),
     goalSection(goal, muscles),
+    bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile, bodyWeights }, dataKey),
     calendarSection(activity),
+    bodySection(profile),
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 I-16 (overhaul 2026-09-27): A NUMBER ROLLS ONLY WHEN IT CHANGED.
+ *
+ * js/motion.js counts every headline number up from zero the first time a
+ * screen is shown in a session — so every app open rolled "0 Workouts" to 208,
+ * saying "this changed" about a number that had not. This remembers, per
+ * device, what each tile last showed; a tile showing the same number is marked
+ * seen (`data-m-seen`, motion.js's own marker) and is drawn final at once. A
+ * number that did change is left alone, and rolls as before.
+ * ------------------------------------------------------------------ */
+const SHOWN_KEY = 'ftrack:v1:meShown';
+function quietUnchangedCounts(root) {
+  let last = {};
+  try { last = JSON.parse(sessionStorage.getItem(SHOWN_KEY) || '{}') || {}; } catch (_) { last = {}; }
+  const now = {};
+  for (const tile of root.querySelectorAll('.me-stat')) {
+    const label = (tile.querySelector('.me-stat-l') || {}).textContent || '';
+    const n = tile.querySelector('.me-stat-n');
+    if (!n || !label) continue;
+    now[label] = n.textContent;
+    if (last[label] === n.textContent) n.dataset.mSeen = '1';
+  }
+  try { sessionStorage.setItem(SHOWN_KEY, JSON.stringify(now)); } catch (_) { /* private mode */ }
+}
+
+/* ------------------------------------------------------------------ *
+ * 🆕 THIS WEEK — overhaul 2026-09-27 (screens S-5). Read-only, like the rest
+ * of this screen. The week runs Monday to Sunday on the session's own local
+ * day (`date`, never the UTC `startedAt`). "usual" is the average number of
+ * workouts a week over the four weeks before this one — or over the weeks
+ * since the first workout, when that is fewer — and is left out when there is
+ * no earlier week to average. Uncoloured and never a target (Rule 6).
+ * ------------------------------------------------------------------ */
+const dayNum = (iso) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  return m ? Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000) : null;
+};
+
+export function weekSummary(sessions, today = todayISO()) {
+  const t = dayNum(today);
+  // 1970-01-01 was a Thursday: day 0 → index 3 with Monday as 0.
+  const todayIndex = (((t + 3) % 7) + 7) % 7;
+  const monday = t - todayIndex;
+  const days = [false, false, false, false, false, false, false];
+  let workouts = 0, sets = 0, first = null;
+  const before = [0, 0, 0, 0];
+  for (const s of sessions || []) {
+    const d = dayNum(s && s.date);
+    if (d === null) continue;
+    if (first === null || d < first) first = d;
+    if (d >= monday && d <= t) {
+      days[d - monday] = true;
+      workouts += 1;
+      sets += sessionStats(s.entries || []).sets || 0;
+    } else if (d < monday && d >= monday - 28) {
+      before[Math.floor((monday - 1 - d) / 7)] += 1;
+    }
+  }
+  // Only whole weeks the lifter was already training in count toward "usual".
+  const weeks = first === null || first >= monday ? 0 : Math.min(4, Math.ceil((monday - first) / 7));
+  const total = before.slice(0, weeks).reduce((a, b) => a + b, 0);
+  const usual = weeks ? Math.round(total / weeks) : null;
+  return { days, todayIndex, workouts, sets, usual: usual || null };
+}
+
+function weekSection(sessions) {
+  if (!sessions || !sessions.length) return null;
+  return weekBlock({ ...weekSummary(sessions), onOpen: openCalendarMonths });
+}
+
+/* The Calendar screen, on Months. `setCalMode` is views-data.js's to export
+ * (the mode is its module state); until it does, the Months tab is tapped once
+ * the screen is up — the same thing a reader would do. */
+function openCalendarMonths(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (typeof dataViews.setCalMode === 'function') {
+    dataViews.setCalMode('months');
+    go('#/calendar');
+    return;
+  }
+  go('#/calendar');
+  let tries = 0;
+  const pick = () => {
+    // Not Profile's own calendar (`.me-cal`), which may still be on screen for
+    // a frame while the router swaps.
+    const tab = [...document.querySelectorAll('.cal-modes [role="tab"]')]
+      .find((b) => !b.closest('.me-cal') && /^Months$/.test((b.textContent || '').trim()));
+    if (tab) { if (tab.getAttribute('aria-selected') !== 'true') tab.click(); return; }
+    if (++tries < 30) setTimeout(pick, 50);
+  };
+  setTimeout(pick, 50);
 }
 
 /* ------------------------------------------------------------------ *
@@ -462,8 +574,35 @@ function rankedLiftsKept(args, key) {
   return value;
 }
 
-function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }, dataKey = null) {
-  const r = rankedLiftsKept({ sessions, benchmarks, exMap, muscles, profile }, dataKey);
+/* 🆕 S-1 (overhaul 2026-09-27): "now 228" WHERE THE ESTIMATE MOVED. The big
+ * number is the best-ever set's 1RM (Profile is what you DID); Muscles and
+ * Goals print the lift's estimate NOW, and a reader saw 236 here and 228 there.
+ * Where the two differ by a whole display unit the small line says "now 228"
+ * — the same number the other screens print — instead of the word "Best".
+ * Only where the muscle's own key lift IS this row (the estimate is in its
+ * units), and never on a per-side or body-weight row, whose conventions differ. */
+export function nowTag(l, muscles) {
+  if (!l || l.oneRM === null || l.perSide || l.bodyIncluded || !l.muscle) return 'Best';
+  const m = muscles && muscles.get ? muscles.get(l.muscle) : null;
+  if (!m || !Number.isFinite(m.estimate)) return 'Best';
+  // `muscleRatings()` rows carry no `lift` (only muscleStrength's do): the
+  // muscle's key lift is looked up, so this works on either shape.
+  const key = m.lift || keyLiftFor(l.muscle);
+  if (!key) return 'Best';
+  const same = key.id ? key.id === l.exerciseId : key.name === l.name;
+  if (!same) return 'Best';
+  const now = Math.round(units.toDisplay(m.estimate));
+  const shown = units.toDisplay(l.shown);
+  // Only a real gap (≥3 %) earns "now N"; smaller ones are estimate noise and
+  // printed on nearly every row (manager, 2026-09-27).
+  return Math.abs(now - shown) < Math.max(1, shown * 0.03) ? 'Best' : `now ${now}`;
+}
+
+function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile, bodyWeights }, dataKey = null) {
+  /* 🔄 EB-2 (overhaul 2026-09-27): the weigh-ins and the day go in too. Without
+   * `bodyWeights` a pull-up lost its load and read "4 reps"; without `today`
+   * no row ever knew how old its set was. */
+  const r = rankedLiftsKept({ sessions, benchmarks, exMap, muscles, profile, bodyWeights, today: todayISO() }, dataKey);
   // Nothing trained at all: no section, as before. A core row with no number
   // on an account WITH history is a different case and stays, saying why.
   const trained = r.core.some((l) => l.days > 0 || l.oneRM !== null)
@@ -484,13 +623,17 @@ function bestLiftsSection({ sessions, benchmarks, exMap, muscles, profile }, dat
     // guess a sex or a body weight — what it guessed. `label.assumed` is the
     // muscle map's own wording, so two screens cannot describe one assumption
     // two ways.
-    caption: `Estimated one-rep maxes, coloured by level ${label.main} · ${label.sub}.`
+    // 🔄 2026-09-27 (overhaul EB-12 + words W-19): shorter, and it says the
+    // level is THIS LIFT's — Deadlift can read Intermediate here while Glutes
+    // reads Novice on the map, and without the word that looks like a clash.
+    caption: `Estimated one-rep maxes · level for this lift ${label.main} · ${label.sub}.`
       + (label.assumed ? ` ${label.assumed}` : ''),
   }, {
     // 🆕 2026-09-24 (review, second pass). "Best": this is the best-ever set's
     // 1RM, where Goals prints the muscle's estimate NOW — two honest numbers
     // that differ, so each is labelled. And a tap opens that lift's graph.
-    tag: 'Best',
+    // 🔄 2026-09-27: "now 228" where they differ (nowTag above).
+    tag: (l) => nowTag(l, muscles),
     link: (l) => (l.exerciseId
       ? { href: '#/graphs', onClick: () => chartLift(l.exerciseId) }
       : null),
@@ -569,7 +712,10 @@ const OFFLINE_COUNTS = {
   demo: 'Friends are off in the demo account.',
   local: 'Connecting with people needs an account.',
   anonymous: 'Add an email to your account to connect with people.',
-  offline: 'You are offline, so your friends cannot be counted.',
+  // 🔄 R-1c (overhaul 2026-09-27): `offline` is the store's DEGRADED state — a
+  // cloud account running on this device's copy — so the line says what the
+  // whole screen is showing, not only why Friends is a dash.
+  offline: 'Offline — showing only what’s on this phone.',
 };
 
 /* ------------------------------------------------------------------ *
@@ -676,6 +822,8 @@ export async function MePeopleView() {
  *   card to scroll to and mark. Ignored when it names nothing on the list,
  *   which is the ordinary outcome for a workout since deleted.
  */
+const PAGE = 20;
+
 export async function MeWorkoutsView(named) {
   const body = el('div', { class: 'feed' });
   const screen = screenShell({
@@ -723,33 +871,60 @@ export async function MeWorkoutsView(named) {
 
     const me = state.name || settings.displayName || '';
 
+    const card = (s) => {
+      const a = sessionToCard(s);
+      const slot = (s.id && reactions.get(s.id)) || null;
+      // The workout's photo, if it has one (2026-09-25): same box as the feed.
+      return attachCardPhoto(workoutCard(a, {
+        id: s.id || null,
+        /* 🔄 `self` SINCE 2026-09-27 (overhaul, screens S-7): no author row —
+         * every card on this screen is yours, and a "You" face on each of 200
+         * cards said nothing new — so the date and time are the card's top
+         * line (workout-card.js draws it). ⚠️ `meta` is handed over for that
+         * line so both sides agree on the words. */
+        self: true,
+        meta: cardMeta(a, fmtClock),
+        href: `#/day/${encodeURIComponent(s.date)}`,
+        // See workoutCard(): your own day screen exists whether or not the
+        // session has anything in it, so every card here is a way in.
+        alwaysOpen: true,
+        foot: ownFoot(a, slot, who, { me, state, names }),
+      }), { ...a, id: s.id, photo: s.photo }, null);
+    };
+
+    /* 🆕 PAGED, 2026-09-27 (overhaul, screens S-7): the demo built all 208
+     * cards at once (65,000px, measured). Twenty now, and twenty more each
+     * time the end of the list comes near. A card a notification named is
+     * always in the first batch drawn — the list pages up to it. */
+    const want = named ? rows.findIndex((s) => s.id === named) : -1;
+    let shown = Math.max(PAGE, want + 1);
+    const sentinel = el('div', { class: 'feed-more', 'aria-hidden': 'true' });
     setChildren(body,
       el('div', { class: 'field-help', text:
         `${rows.length} workout${rows.length === 1 ? '' : 's'}, newest first.` }),
-      ...rows.map((s) => {
-        const a = sessionToCard(s);
-        const slot = (s.id && reactions.get(s.id)) || null;
-        // The workout's photo, if it has one (2026-09-25): same box as the feed.
-        return attachCardPhoto(workoutCard(a, {
-          id: s.id || null,
-          /* ⚠️ NOT A LINK, and that is the one deliberate difference from the
-           * feed's head. On a friend's card the face opens their page; on
-           * yours it would open the screen you are two taps inside already. */
-          head: el('div', { class: 'feed-head' },
-            el('span', { class: 'feed-avatar' }, personFace(settings.avatar, 19)),
-            el('span', { class: 'feed-who' },
-              el('span', { class: 'feed-name', text: me || 'You' }),
-              el('span', { class: 'feed-meta', text: cardMeta(a, fmtClock) }),
-            ),
-          ),
-          href: `#/day/${encodeURIComponent(s.date)}`,
-          // See workoutCard(): your own day screen exists whether or not the
-          // session has anything in it, so every card here is a way in.
-          alwaysOpen: true,
-          foot: ownFoot(a, slot, who, { me, state, names }),
-        }), { ...a, id: s.id, photo: s.photo }, null);
-      }),
+      ...rows.slice(0, shown).map(card),
+      shown < rows.length ? sentinel : null,
     );
+    if (shown < rows.length) {
+      const more = () => {
+        const next = rows.slice(shown, shown + PAGE);
+        shown += next.length;
+        sentinel.before(...next.map(card));
+        if (shown >= rows.length) { sentinel.remove(); return false; }
+        return true;
+      };
+      if (typeof IntersectionObserver === 'function') {
+        const io = new IntersectionObserver((seen) => {
+          if (seen.some((x) => x.isIntersecting) && !more()) io.disconnect();
+        // The pane is the scroller; a margin on the page's viewport would be
+        // clipped by it and fire only once the end was already on screen.
+        }, { root: body.closest('.pane-scroll') || null, rootMargin: '800px 0px' });
+        io.observe(sentinel);
+      } else {
+        // No observer (an old engine, or jsdom): everything, as before.
+        while (more()) { /* draw the rest */ }
+      }
+    }
 
     if (named) markNamedCard(body, named);
   })().catch(() => {

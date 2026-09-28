@@ -14,7 +14,9 @@ import {
 import {
   saveDraft, loadDraft, clearDraft, liveDraft,
   hasNumbers, setIsRecorded, draftRecordedSets, activeSeconds, nextPersonTurn,
+  draftStorageFull, onDraftStorage, stepsBackFromHere, stampTrail,
 } from './session-draft.js';
+import { keepAwake } from './wake-lock.js';
 import { openExercisePicker, openSwapPicker } from './views-workouts.js';
 import {
   DROP, MYO, isNested, stepsFor, minisOf, plannedMinis, miniLabel, dropOrphanGroups,
@@ -54,7 +56,9 @@ function photoWithHelp(field, help) {
 
 // A weight this many times the lifter's estimated max reads "typo?" under the
 // number (Open work 1, 2026-09-23). See the typo block in the captions.
-export const TYPO_WARN_RATIO = 1.5;
+// 🆕 2026-09-27 (overhaul E-8): 1.5 → 1.25. A real new best is rarely more than
+// a quarter over the estimate; at 1.5 a 185 typed for a 135 max (1.37×) passed.
+export const TYPO_WARN_RATIO = 1.25;
 
 /**
  * Whole days between two stored YYYY-MM-DD days.
@@ -101,8 +105,29 @@ function suggestedWarmups(entry, ex) {
   }).map((w) => ({ weight: units.fromDisplay(w.weight), reps: w.reps }));
 }
 
+/**
+ * 🆕 2026-09-27 (overhaul EB-10): the set a 1RM record came from, AS IT WAS
+ * LOGGED. "from 0 lbs × 8" on a pull-up and "from 70 lbs × 8" on an assisted
+ * one (70 lbs of HELP) both read as something the lifter never typed; a
+ * per-side lift's number is each hand's. `p` is a personalBests() record.
+ */
+export function loggedAs(p) {
+  const w = Number(p && p.weight) || 0;
+  const r = p && p.reps;
+  if (p && p.assisted) return w > 0 ? `${r} reps with ${units.withUnit(w)} help` : `bodyweight × ${r}`;
+  if (p && p.bodyIncluded) return w > 0 ? `bodyweight + ${units.withUnit(w)} × ${r}` : `bodyweight × ${r}`;
+  if (p && p.perSide) return `${units.withUnit(w)} each × ${r}`;
+  return `${units.withUnit(w)} × ${r}`;
+}
+
+/* 🆕 2026-09-27 (overhaul ST-6): Settings → "Auto warm-ups" (`settings.autoWarmups`,
+ * on unless it is `false`). Off, nothing is ever suggested; rows already in a
+ * draft stay (they are ordinary rows). Set by the runner at mount. */
+let autoWarmupsOn = true;
+
 /** Bring the `auto` rows in line with set 1. True if anything changed. */
 function syncAutoWarmups(entry, ex) {
+  if (!autoWarmupsOn) return false;
   if (entry.warmAuto === false) return false;
   // 🆕 2026-09-27 (Auto-guide review): WARM-UPS ARE BEFORE THE WORK. Once a
   // working set is Finished nothing is suggested, grown or moved any more —
@@ -224,6 +249,9 @@ export async function SessionView(workoutId) {
   const DEFAULT_REPS = 10;
 
   const settings = await store.getSettings();
+  // 🆕 2026-09-27 (overhaul ST-6 / ST-7): both on unless explicitly `false`.
+  autoWarmupsOn = settings.autoWarmups !== false;
+  const setHintsOn = settings.setHints !== false;
 
   /**
    * A believable opening weight for each planned exercise, worked out from what
@@ -302,15 +330,17 @@ export async function SessionView(workoutId) {
   const OPENING_MIN_BELIEF = 0.35;
   let derivCtx = null;
   try {
-    const [{ muscles }, ev, e1] = await Promise.all([
+    const [{ muscles }, ev, e1, ss] = await Promise.all([
       muscleStrength(),
       import('./muscle-evidence.js'),
       import('./e1rm.js'),
+      // The Elite line, for the typo check on a lift with no estimate (E-8).
+      import('./strength-standards.js').catch(() => null),
     ]);
     const bw = await store.latestBodyWeight().catch(() => null);
     const profile = await store.getProfile().catch(() => null);
     derivCtx = {
-      muscles, ev, e1, bodyWeight: bw ? bw.weight : undefined,
+      muscles, ev, e1, ss, bodyWeight: bw ? bw.weight : undefined,
       sex: profile && profile.gender ? profile.gender : undefined,
     };
   } catch (_) { /* no estimate is a quieter screen, never an error */ }
@@ -436,8 +466,8 @@ export async function SessionView(workoutId) {
       back: () => go('#/record'),
       scroll: emptyState(
         `${name} is still open`,
-        `It has ${lost} set${lost === 1 ? '' : 's'} recorded. Starting ${workout.name} now would `
-        + 'throw that away — this app only keeps one workout open at a time.',
+        // 🆕 2026-09-27 (overhaul words P7): shorter; the why moved behind the ?.
+        `${lost} set${lost === 1 ? '' : 's'} recorded. Starting ${workout.name} would throw ${lost === 1 ? 'it' : 'them'} away.`,
         /* ⚠️ THE DESTRUCTIVE ONE IS UP HERE AND THE SAFE ONE IS THE BIG BUTTON
          * BELOW, deliberately. `.pane-bottom` is where the thumb already is on
          * every other screen in the app, and a Discard sitting in that muscle
@@ -470,6 +500,7 @@ export async function SessionView(workoutId) {
           }),
         }),
         ),
+        { help: 'This app keeps one workout open at a time, so your sets stay in one place.' },
       ),
       bottom: el('button', {
         class: 'btn primary block',
@@ -705,7 +736,29 @@ export async function SessionView(workoutId) {
         }
       }
 
+      /* 🆕 2026-09-27 (overhaul EA-5): AFTER A BREAK THE PLAN IS CAPPED TOO.
+       * Progression rule 2 holds last time's weight after LAYOFF_DAYS off, but a
+       * percentage or rep plan priced off the old max still went past it (99
+       * days off after 225×5, a 100 % target prefilled 260). The plan's
+       * weights now stop at last session's top working weight — the number the
+       * lay-off suggestion itself stands behind. Only ever lowers a number. */
+      let layoffCap = null;
+      if (suggestion && suggestion.kind === 'layoff' && suggestion.weight > 0
+        && ((targets && !targets.withheld) || (repPlan && !repPlan.withheld))) {
+        const cap = suggestion.weight;
+        let capped = false;
+        for (const s of sets) {
+          if (Number(s.weight) > cap) { s.weight = cap; capped = true; }
+        }
+        if (repPlan && Array.isArray(repPlan.range)) {
+          repPlan.range = repPlan.range.map((r) => (Array.isArray(r) ? r.map((w) => Math.min(w, cap)) : r));
+        }
+        if (capped) layoffCap = cap;
+      }
+
       out.push({
+        // Set when a lay-off held the plan's weights down (EA-5).
+        layoffCap,
         lastSets,
         suggestion,
         // The plan's percentages and what became of them — null when the
@@ -859,6 +912,9 @@ export async function SessionView(workoutId) {
        * which is what he described. */
       justForActive: false,
     };
+    // 🆕 2026-09-27 (overhaul ST-15): a new workout opens in the view the last
+    // one was left in. Absent is the list, as before.
+    if (settings.runnerView === 'guide') state.view = 'guide';
 
     // Read once for the whole workout rather than per exercise. The runner used
     // store.lastSetsFor(), which reads every session each time it is called;
@@ -1431,11 +1487,11 @@ export async function SessionView(workoutId) {
       const sheet = openSheet({
         title: 'Someone new',
         body: el('div', {},
-          el('p', { class: 'field-help', style: 'margin-top:0', text:
-            'For somebody with no account. Their sets are kept here, on your '
-            + 'account, under their name — never mixed into your own training '
-            + 'or your stats. They are saved to your list, so next time they '
-            + 'are one tap.' }),
+          // 🆕 2026-09-27 (overhaul words P7): the list half moved behind the ?.
+          el('div', { class: 'help-line', style: 'margin-top:0' },
+            el('span', { class: 'field-help', text:
+              'For someone with no account. Their sets stay under their name, never in your stats.' }),
+            helpDot('They are saved to your list, so next time they are one tap.')),
           el('div', { class: 'field' }, el('label', { text: 'Name' }), input),
         ),
         footer: el('div', { class: 'btn-row' },
@@ -1515,8 +1571,7 @@ export async function SessionView(workoutId) {
             class: 'set-del', 'aria-label': `Remove ${p.name} from your list`,
             onClick: () => confirmSheet({
               title: `Remove ${p.name}?`,
-              message: 'This only takes them off this list. Every workout you '
-                + 'recorded for them stays on your calendar exactly as it is.',
+              message: 'Only removes them from this list. Their workouts stay.',
               confirmLabel: 'Remove',
               onConfirm: async () => {
                 await store.deletePerson(p.id);
@@ -1588,8 +1643,8 @@ export async function SessionView(workoutId) {
       title: `Remove ${name}?`,
       message: `${recorded} set${recorded === 1 ? '' : 's'} recorded for them will be deleted.`
         + (meta.uid
-          ? `\n\n${name} has an account, and this workout will no longer be sent to them at the end.`
-          : '\nThey stay on your list of people — this only takes them out of today.'),
+          ? ' This workout will no longer be sent to them.'
+          : ' They stay on your list of people.'),
       confirmLabel: 'Remove',
       onConfirm: doRemove,
     });
@@ -2011,15 +2066,32 @@ export async function SessionView(workoutId) {
      * wildly high set aside until another day agrees (the typo screen in
      * muscle-evidence.js) — correctly, but silently at the moment it matters.
      * So the lifter is told HERE, while the number can still be fixed.
-     * 1.5× an estimated max is past anything a real set produces (a genuine
-     * best arrives at ≤ ×1.13 of the standing estimate, strength-estimate.js
-     * PLAUSIBLE_GAIN) and well short of the ×10 slip it exists to catch.
+     * TYPO_WARN_RATIO (1.25× since 2026-09-27) of an estimated max is past what
+     * a real set produces (a genuine best arrives at ≤ ×1.13 of the standing
+     * estimate, strength-estimate.js PLAUSIBLE_GAIN) and well short of the ×10
+     * slip it exists to catch.
      * Advisory only: nothing is blocked, nothing is changed. */
     const typo = live && totalW >= oneRM * TYPO_WARN_RATIO;
+    /* 🆕 2026-09-27 (overhaul E-8): NO ESTIMATE IS NO LONGER NO CHECK. A lift
+     * with nothing to compare against (first ever, nothing converts to it)
+     * used to take any number silently. It is now held against the Elite
+     * line for this body (strength-standards.js, percentile 95) — a number
+     * past it is a slip far more often than it is a lifter. Only once this
+     * person's data has loaded (so an estimate still on its way cannot be
+     * mistaken for none), and never on assisted or bodyweight lifts, whose box
+     * is not the load. */
+    const elite = !live && ratings && rows && !assistSpec && totalW > 0 ? eliteLoad(ex) : 0;
+    const overElite = elite > 0 && totalW > elite;
     let weight = '';
     if (typo) {
       weight = el('span', { class: 'typo-warn' },
         el('b', { text: `${(totalW / oneRM).toFixed(1)}×` }), ' your estimated max — typo?');
+    } else if (overElite) {
+      weight = el('span', { class: 'typo-warn', text: "Above an Elite lifter's max — typo?" });
+    } else if (!setHintsOn) {
+      // 🆕 2026-09-27 (overhaul ST-7): Settings → "Set hints" off hides the
+      // % and rep captions. The typo warning above is not a hint and stays.
+      return { typo: false, weight: '', reps: '' };
     } else if (live) {
       const pct = percentOfMax(oneRM, totalW);
       // ⚠️ Capped at 100. Above the max the honest words are the rep
@@ -2099,7 +2171,35 @@ export async function SessionView(workoutId) {
             // The fresh figure stays visible, so a lower number on set 3
             // reads as fatigue rather than as the app changing its mind.
             mult && here !== fresh ? ` on this set (${fresh} fresh)` : '');
+    if (overElite) return { typo: true, weight, reps: '' };
+    if (!setHintsOn) return { typo: Boolean(typo), weight, reps: '' };
     return { typo: Boolean(typo), weight, reps };
+  }
+
+  /** The Elite line (95th percentile) for `ex` as a load on this body, or 0
+   * when it cannot be worked out. Cached per exercise and person. (E-8) */
+  const eliteCache = new Map();
+  function eliteLoad(ex) {
+    if (!derivCtx || !derivCtx.ss || !ex) return 0;
+    const key = personKey(state.forName) + '|' + ex.id;
+    if (eliteCache.has(key)) return eliteCache.get(key);
+    let v = 0;
+    try {
+      const { ev, ss } = derivCtx;
+      const bodyWeight = state.bodyWeight > 0 ? state.bodyWeight : undefined;
+      const sex = state.forName == null ? (ownerSex || derivCtx.sex || undefined) : undefined;
+      const best = ev.contributionsFor(ex, { bodyWeight, sex })
+        .filter((c) => c.kind === 'direct')
+        .sort((a, b) => b.quality - a.quality)[0];
+      if (best) {
+        const line = ss.weightForPercentile(95, best.muscle, ss.withAssumptions({ gender: sex, bodyWeight }));
+        const load = line > 0 ? ev.fromKeyLift(best, line) : null;
+        // Total load, like `totalW` (a per-side entry is doubled there).
+        v = load > 0 ? load : 0;
+      }
+    } catch (_) { v = 0; }
+    eliteCache.set(key, v);
+    return v;
   }
 
   /** Start both lazy loads for the person on screen; resolves when both land. */
@@ -2118,6 +2218,15 @@ export async function SessionView(workoutId) {
    * each line stays beside its slot in renderPane.
    * ================================================================== */
   function exerciseLines(entry) {
+    /* 🆕 2026-09-27 (overhaul words P7): each plan line is one short clause; a
+     * reason that took a second sentence sits behind a ? beside it. (EA-5) A
+     * plan held down by a lay-off says so, because the number disagrees with
+     * the plan's own arithmetic for a reason you could not otherwise see. */
+    const meta = (text, why) => el('div', { class: 'session-ex-meta' },
+      why ? [text + ' ', helpDot(why)] : text);
+    const held = entry.layoffCap > 0 ? ` · held at last time's ${units.withUnit(entry.layoffCap)} after the break` : '';
+    const tSpec = entry.targets ? summariseTargets(entry.targets.percents) : '';
+    const rSpec = entry.repPlan ? summariseReps(entry.repPlan.specs) : '';
     return {
       note: entry.notes
         ? el('div', { class: 'note-card' }, el('b', { text: 'Note' }), el('span', { text: entry.notes }))
@@ -2127,37 +2236,34 @@ export async function SessionView(workoutId) {
             el('span', {}, 'Last time: ', el('b', { text: entry.lastSummary })))
         : null,
       targets: entry.targets
-        ? el('div', { class: 'session-ex-meta', text: entry.targets.withheld === null
-            ? `Plan: ${summariseTargets(entry.targets.percents)} of your `
+        ? (entry.targets.withheld === null
+            ? meta(`Plan: ${tSpec} of your `
               + `${units.withUnit(entry.targets.fromWeight)} × ${entry.targets.fromReps}`
-              + (entry.targets.source === 'benchmark' ? ' test' : '')
+              + (entry.targets.source === 'benchmark' ? ' test' : '') + held)
             : entry.targets.withheld === 'bodyweight'
-              ? `Plan asks for ${summariseTargets(entry.targets.percents)} — a percentage `
-                + 'cannot be worked out for a lift your own body weight is part of.'
-              : `Plan asks for ${summariseTargets(entry.targets.percents)} — nothing recorded `
-                + 'on this lift yet to take a percentage of.' })
+              ? meta(`Plan asks for ${tSpec} — no % when your own body weight is part of the lift.`,
+                  'The weight box holds only what is added or taken off, not the whole load.')
+              : meta(`Plan asks for ${tSpec} — nothing recorded to take % of.`))
         : null,
       repPlan: entry.repPlan
-        ? el('div', { class: 'session-ex-meta', text: entry.repPlan.withheld === null
-            ? `Plan: ${summariseReps(entry.repPlan.specs)} with 1–2 left in the tank, off your `
+        ? (entry.repPlan.withheld === null
+            ? meta(`Plan: ${rSpec} with 1–2 left in the tank, off your `
               + `${units.withUnit(entry.repPlan.fromWeight)} × ${entry.repPlan.fromReps}`
-              + (entry.repPlan.source === 'benchmark' ? ' test' : '')
+              + (entry.repPlan.source === 'benchmark' ? ' test' : '') + held)
             : entry.repPlan.withheld === 'too-many-reps'
-              ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — too many to work a weight `
-                + 'back from, so the reps are set and the weight is yours.'
+              ? meta(`Plan asks for ${rSpec} — too many reps to set a weight.`,
+                  'Past about 12 reps, a rep count says little about your max. The reps are set; the weight is yours.')
               : entry.repPlan.withheld === 'bodyweight'
-                ? `Plan asks for ${summariseReps(entry.repPlan.specs)} — a weight cannot be worked `
-                  + 'out for a lift your own body weight is part of.'
-                : `Plan asks for ${summariseReps(entry.repPlan.specs)} — nothing recorded on this `
-                  + 'lift yet to work a weight back from.' })
+                ? meta(`Plan asks for ${rSpec} — no weight when your own body weight is part of the lift.`,
+                    'The weight box holds only what is added or taken off, not the whole load.')
+                : meta(`Plan asks for ${rSpec} — nothing recorded to set a weight from.`))
         : null,
       opening: state.forName == null
         && !entry.hadHistory
         && entry.openingWithheld
         && entry.fields.includes('weight')
         && !entry.sets.some((s) => Number(s.weight) > 0)
-        ? el('div', { class: 'session-ex-meta', text:
-            'No opening weight — nothing you have recorded points to this lift closely enough.' })
+        ? meta('No opening weight — nothing you have recorded is close enough.')
         : null,
     };
   }
@@ -2428,9 +2534,12 @@ export async function SessionView(workoutId) {
      * nothing is the fault the inert back buttons taught this project. Edit
      * beside it is the row's one live thing. Nothing on a finished row is
      * registered in `liveRows`, because nothing on it can change. */
-    function setRow({ open, locked, lock, className, num, label, onOpen, onDelete, delLabel, valueText }) {
+    function setRow({ open, locked, lock, className, num, label, onOpen, onDelete, delLabel, valueText, key }) {
+      // `data-row` names the row across re-renders, so a tap can keep it still
+      // (overhaul I-2 — see `rowAnchor`).
+      const dataset = key ? { row: key } : null;
       if (locked) {
-        const row = el('div', { class: `${className} is-done` },
+        const row = el('div', { class: `${className} is-done`, dataset },
           el('div', { class: 'set-pick' }, num(), el('span', { class: 'set-vals', text: valueText() })),
           lockButton(lock),
         );
@@ -2446,7 +2555,7 @@ export async function SessionView(workoutId) {
           onClick: onOpen,
         }, num(), vals);
         const lockNode = lockButton(lock);
-        const row = el('div', { class: className },
+        const row = el('div', { class: className, dataset },
           pick,
           onDelete ? el('button', { class: 'set-del', 'aria-label': delLabel, onClick: onDelete }, icon('trash')) : null,
           lockNode,
@@ -2455,7 +2564,7 @@ export async function SessionView(workoutId) {
       }
 
       const lockNode = lockButton(lock);
-      const row = el('div', { class: `${className} active is-open` },
+      const row = el('div', { class: `${className} active is-open`, dataset },
         el('div', { class: 'set-open-head' },
           // Tapping the open row closes it, which is the other half of "click
           // off it and it goes back to normal" — the half that works when the
@@ -2490,6 +2599,7 @@ export async function SessionView(workoutId) {
           locked: false,
           lock: null,
           className: 'set-item set-warm',
+          key: 'w' + k,
           num: () => el('span', { class: 'set-num warm-num', text: 'W' }),
           label: (t) => `Warm-up ${k + 1}: ${t}`,
           valueText: () => fmtSet(wu, entry.fields, entry.loadType),
@@ -2502,6 +2612,14 @@ export async function SessionView(workoutId) {
           },
           delLabel: `Delete warm-up ${k + 1}`,
           onDelete: () => {
+            // Undo puts the whole list back as it was, suggested rows included
+            // (overhaul R-4 / I-5).
+            const before = warms.map((x) => ({ ...x }));
+            const hadAuto = entry.warmAuto;
+            offerUndo(`Warm-up ${k + 1} deleted`, () => {
+              entry.warmups = before;
+              if (hadAuto === undefined) delete entry.warmAuto; else entry.warmAuto = hadAuto;
+            });
             warms.splice(k, 1);
             // The list is the user's now: nothing suggested comes back.
             for (const x of warms) delete x.auto;
@@ -2586,17 +2704,24 @@ export async function SessionView(workoutId) {
           locked,
           lock,
           className: 'set-item',
+          key: 's' + i,
           num: () => el('span', { class: 'set-num', text: String(i + 1) }),
           label: (t) => `Set ${i + 1}: ${t}`,
           valueText: () => fmtSet(s, entry.fields, entry.loadType),
           onOpen: () => select(i, null),
           delLabel: `Delete set ${i + 1}`,
           onDelete: entry.sets.length > 1 ? () => {
+            const wasActive = entry.active;
+            offerUndo(`Set ${i + 1} deleted`, () => {
+              entry.sets.splice(Math.min(i, entry.sets.length), 0, s);
+              entry.active = wasActive;
+            });
             entry.sets.splice(i, 1);
             entry.active = Math.min(entry.active, entry.sets.length - 1);
             entry.activeDrop = null;
             saveDraft(state);
-            renderAll();
+            // 🆕 2026-09-27 (overhaul I-2): the list stays where it is.
+            renderAll({ keepScroll: true });
           } : null,
         });
         if (live) liveRows.push(live);
@@ -2615,6 +2740,7 @@ export async function SessionView(workoutId) {
             locked,
             lock: null,
             className: 'set-item set-drop',
+            key: `d${i}.${di}`,
             // Same restructure as the set row above, for the same reason: the ↳
             // is a 22px glyph and the numbers beside it are what a thumb aims at.
             num: () => el('span', { class: 'set-num drop-num', text: '↳' }),
@@ -2623,6 +2749,10 @@ export async function SessionView(workoutId) {
             onOpen: () => select(i, di),
             delLabel: `Delete ${miniLabel(entry.setType, di + 1)}`,
             onDelete: () => {
+              offerUndo(`${miniLabel(entry.setType, di + 1)} deleted`, () => {
+                if (!Array.isArray(s.minis)) s.minis = [];
+                s.minis.splice(Math.min(di, s.minis.length), 0, d);
+              });
               s.minis.splice(di, 1);
               if (!s.minis.length) delete s.minis;
               entry.activeDrop = null;
@@ -2961,8 +3091,9 @@ export async function SessionView(workoutId) {
           state.historySource === 'theirs'
             ? ' · suggestions read from the training they share with you.'
             : state.historySource === 'mine-only'
-              ? ' · they have not shared their training with you, so this starts '
-                + 'from what you record for them here. Their workout still goes to them at the end.'
+              // 🆕 2026-09-27 (overhaul words P7): shorter; the caveat is behind the ?.
+              ? [' · not shared with you, so this starts from what you record. ',
+                helpDot('Their workout still goes to them at the end, even though they do not share their training with you.')]
               : ' · kept on your phone, never mixed into your own training.'),
       ),
 
@@ -3077,7 +3208,7 @@ export async function SessionView(workoutId) {
       // The add button rides on the "Sets" heading rather than sitting under the
       // list. Full-width and below, it was as loud as the sets themselves and it
       // sat directly on top of them once the list outgrew the pane.
-      el('div', { class: 'sets-head' },
+      el('div', { class: 'sets-head', dataset: { row: 'head' } },
         el('div', { class: 'section-label', text: 'Sets' }),
         el('button', {
           class: 'add-set', 'aria-label': step.group == null ? 'Add another set' : 'Add another round',
@@ -3095,7 +3226,9 @@ export async function SessionView(workoutId) {
             }
             entry.activeDrop = null;
             saveDraft(state);
-            renderAll();
+            // 🆕 2026-09-27 (overhaul I-2): the list stays; the new set is
+            // scrolled into view only as far as it has to be.
+            renderAll({ keepScroll: true });
           },
         }, icon('plus', 15), step.group == null ? 'Add set' : 'Add round'),
         // Beside "Add set", on any solo lift with a weight — see the warm-up
@@ -3129,9 +3262,36 @@ export async function SessionView(workoutId) {
       setList,
     );
 
-    // Landing on a new exercise starts at the top; opening a set does not.
-    if (!keepScroll) { pane.scrollTop = 0; return; }
+    /* 🆕 2026-09-27 (overhaul I-1): LANDING ON AN EXERCISE STARTS AT THE TOP —
+     * AND THEN SHOWS THE OPEN SET. Measured at 393×659: with warm-ups above it,
+     * set 1's steppers sat behind the footer and every exercise began with a
+     * scroll. Now the pane (never the page) scrolls the minimum that puts the
+     * whole open row on screen, instantly (Rule 7: no motion on the logging
+     * path). The first paint runs before the screen is attached, so the reveal
+     * waits for the pane to be in the document. */
+    if (!keepScroll) {
+      rowAnchor = null;
+      pane.scrollTop = 0;
+      revealOpenRow(editor.parentNode ? editor.parentNode : null, { whole: true });
+      return;
+    }
     pane.scrollTop = wasAt;
+
+    /* 🆕 2026-09-27 (overhaul I-2): THE ROW YOU TAPPED STAYS WHERE IT WAS.
+     * Measured: tapping set 2 while set 1 was open collapsed set 1 (228→51 px)
+     * and set 2 jumped 235 px up the screen. Tim: "Content never moves or
+     * resizes when you tap something." The tap recorded the row's top
+     * (`rowAnchor`, set by the pane's capture listener); the pane is scrolled
+     * by however far that row moved in the re-render. */
+    const anchor = rowAnchor;
+    rowAnchor = null;
+    if (anchor && typeof pane.querySelector === 'function') {
+      const again = pane.querySelector(`[data-row="${anchor.key}"]`);
+      if (again && typeof again.getBoundingClientRect === 'function') {
+        const moved = again.getBoundingClientRect().top - anchor.top;
+        if (moved) pane.scrollTop += moved;
+      }
+    }
 
     /* ⚠️ AND THEN MAKE SURE THE THING THAT JUST OPENED IS ON SCREEN. The
      * controls used to be at a fixed place near the top of the pane; they now
@@ -3140,15 +3300,43 @@ export async function SessionView(workoutId) {
      * it, never more — a jump to centre would move a list that was already fine.
      * jsdom reports every rect as zero, so this is inert there and the browser
      * pass is what checks it. */
-    if (typeof editor.getBoundingClientRect !== 'function') return;
-    const er = editor.getBoundingClientRect();
+    revealOpenRow(editor, { whole: false });
+  }
+
+  /**
+   * Scroll the pane the minimum that puts `node` inside it (never the page, no
+   * animation). With `whole`, a node taller than the pane keeps its top on
+   * screen. Waits (a few frames at most) for a pane not yet in the document.
+   */
+  function revealOpenRow(node, { whole } = {}, tries = 0) {
+    if (!node || typeof node.getBoundingClientRect !== 'function') return;
+    if (!pane.isConnected) {
+      if (tries < 30 && typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => { if (node.isConnected || !pane.isConnected) revealOpenRow(node, { whole }, tries + 1); });
+      }
+      return;
+    }
+    if (!node.isConnected) return;
+    const er = node.getBoundingClientRect();
     const pr = pane.getBoundingClientRect();
     if (!er.height || !pr.height) return;
     if (er.bottom > pr.bottom) {
-      pane.scrollTop += Math.min(er.bottom - pr.bottom + 8, Math.max(0, er.top - pr.top));
+      pane.scrollTop += Math.min(er.bottom - pr.bottom + 8, Math.max(0, er.top - pr.top - (whole ? 8 : 0)));
     }
     else if (er.top < pr.top) pane.scrollTop -= pr.top - er.top + 8;
   }
+
+  /* The row a tap landed on, and where it was, read BEFORE the tap's handler
+   * re-renders (a capture listener runs first). See I-2 in `renderPane`. */
+  let rowAnchor = null;
+  pane.addEventListener('click', (e) => {
+    const t = e.target;
+    const row = t && typeof t.closest === 'function' ? t.closest('[data-row]') : null;
+    if (!row || typeof row.getBoundingClientRect !== 'function') { rowAnchor = null; return; }
+    rowAnchor = { key: row.dataset.row, top: row.getBoundingClientRect().top };
+    // A tap that re-renders nothing must not leave a stale anchor behind.
+    setTimeout(() => { rowAnchor = null; }, 0);
+  }, true);
 
   function renderAll(paneOpts) {
     // Clamp FIRST. Deleting a set can shrink the walk, and renderProgress ran
@@ -3163,6 +3351,28 @@ export async function SessionView(workoutId) {
     // repaints with everything else rather than at each of the four call sites
     // that can change the list underneath it. Null unless it is open.
     if (refreshWorkoutSheet) refreshWorkoutSheet();
+  }
+
+  /**
+   * 🆕 2026-09-27 (overhaul R-4 / I-5): a deleted set, warm-up or drop can be
+   * put back. `.set-del` stays deliberately small and one tap still deletes —
+   * the toast's Undo is the way back from a slip, not a confirm in the way.
+   * `restore` puts the item back at its old index; it is refused once the
+   * workout has been saved or discarded (no draft left to put it in).
+   */
+  function offerUndo(message, restore) {
+    toast(message, {
+      action: {
+        label: 'Undo',
+        run: () => {
+          const d = loadDraft();
+          if (!d || d.startedAt !== state.startedAt) return;
+          restore();
+          saveDraft(state);
+          renderAll({ keepScroll: true });
+        },
+      },
+    });
   }
 
   /* "…and then when you click off it it goes back to being normal" — the other
@@ -3518,7 +3728,8 @@ export async function SessionView(workoutId) {
     const entry = state.entries[index];
     if (!entry) return;
     if (state.entries.length <= 1) {
-      toast('This is the only exercise — use the ✕ up top to leave the workout instead.');
+      // 🆕 2026-09-27 (overhaul words P7): the runner's top-left control is ↓.
+      toast('This is the only exercise — use ↓ up top to leave the workout.');
       return;
     }
 
@@ -3569,7 +3780,7 @@ export async function SessionView(workoutId) {
     confirmSheet({
       title: `Remove ${entry.exerciseName}?`,
       message: `${recorded} recorded set${recorded === 1 ? '' : 's'} will be deleted with it. `
-        + 'Your saved workout is not changed — this only removes it from today.',
+        + 'Your saved workout is not changed.',
       confirmLabel: 'Remove',
       onConfirm: doRemove,
     });
@@ -3985,6 +4196,14 @@ export async function SessionView(workoutId) {
             onPick: (picked) => { addExerciseToday(picked); },
           }),
         }, icon('plus', 16), 'Add an exercise'),
+        /* 🆕 2026-09-27 (overhaul I-10): FINISHING EARLY. "Finish workout" was
+         * only on the last step, so stopping after 3 of 5 meant Next, Next.
+         * Same save screen; it already shows the count to check against.
+         * Untouched plan sets still count, as before (Tim's decision #15). */
+        el('button', {
+          class: 'btn good block', style: 'margin-top:10px',
+          onClick: () => { close(); openSaveScreen(); },
+        }, icon('check', 16), 'Finish workout'),
       );
       // ⚠️ AFTER `body` is rebuilt, not after `list` is. `setChildren(body…)`
       // takes the list out and puts it back, and an element leaving the
@@ -4508,9 +4727,8 @@ export async function SessionView(workoutId) {
         el('div', { class: 'field' },
           el('label', { text: 'Gym' }),
           locBox,
-          el('div', { class: 'field-help', text:
-            'Whatever you type is the whole location — the app never reads GPS. '
-            + 'It becomes the default for your next workout until you type a different one.' }),
+          // 🆕 2026-09-27 (overhaul words P7): 26 words → 7.
+          el('div', { class: 'field-help', text: 'Typed, never GPS. Used again next time.' }),
         ),
         el('div', { class: 'field' },
           el('label', { text: 'Date' }),
@@ -4518,9 +4736,11 @@ export async function SessionView(workoutId) {
           dayNote,
         ),
         guestNames.length
-          ? el('p', { class: 'field-help', text:
-              `${guestNames.join(' and ')} saved with this too — their sets go under their own `
-              + 'names, and a friend gets theirs offered to their account.' })
+          ? el('div', { class: 'help-line' },
+              el('span', { class: 'field-help', text:
+                `${guestNames.join(' and ')} saved too — each friend gets theirs offered.` }),
+              helpDot('Their sets go under their own names, never into your training. '
+                + 'A friend with an account can add theirs to their own.'))
           : null,
         /* ⚠️ THE ONE DESTRUCTIVE CONTROL IN THIS FLOW, AND IT IS DOWN HERE
          * BELOW EVERYTHING, not beside Save. Hevy puts Discard at the bottom of
@@ -4605,7 +4825,7 @@ export async function SessionView(workoutId) {
        * against a measurement rather than simply believed. */
       // ⚠️ `withUnitRounded` — rounded in the READER'S unit. Rounding pounds
       // and converting printed "114.8 kg" (review, 2026-09-24; plan §2.7).
-      e1rm: (p) => `${units.withUnitRounded(p.now)} from ${units.withUnit(p.weight)} × ${p.reps}`
+      e1rm: (p) => `${units.withUnitRounded(p.now)} from ${loggedAs(p)}`
         + `, up from ${units.withUnitRounded(p.was)}`,
     };
 
@@ -4752,11 +4972,25 @@ export async function SessionView(workoutId) {
             )
           : null,
       ),
-      bottom: el('button', { class: 'btn primary block', text: 'Back to home', onClick: () => go('#/home') }),
+      // 🆕 2026-09-27 (overhaul I-20): the label stays; it now goes to the
+      // screen Record rose over (Home, Workouts, a profile…), as ↓ does.
+      bottom: el('button', { class: 'btn primary block', text: 'Back to home', onClick: () => leaveRecordFlow() }),
     });
     // The demo strip, as on every other screen (see carryDemoBar()).
     carryDemoBar(finishScreen);
     putScreen(finishScreen);
+    keepAwake(false);
+    /* 🆕 2026-09-27 (overhaul I-3): THE ENTRY BECOMES THE SAVED WORKOUT. This
+     * screen is drawn without changing the hash, so it sat on `#/session/<id>`
+     * — and a reload (an iOS home-screen app reloads on resume) started a
+     * brand-new draft of the workout just saved; saving that duplicated it.
+     * The entry is re-pointed at the saved card in place (no render, no new
+     * entry, same `history.state`), so a reload shows what was saved. */
+    try {
+      const url = ownId ? '#/me/workouts/' + encodeURIComponent(ownId) : '#/home';
+      history.replaceState(history.state, '', url);
+      stampTrail(url);
+    } catch (_) { /* the screen is the job; the address is a nicety */ }
     playFinish({
       check, nums, winKey,
       prRows: prsBlock ? [...prsBlock.querySelectorAll('.finish-pr')] : [],
@@ -4796,7 +5030,22 @@ export async function SessionView(workoutId) {
      * wherever the flight cannot run. */
     const leaving = document.querySelector('#app > .screen');
     if (!minimizeFlight(leaving)) parkScreen(leaving, { falls: true });
-    goBack(() => go('#/home'));
+    leaveRecordFlow();
+  }
+
+  /**
+   * 🆕 2026-09-27 (overhaul I-4 / I-20): OUT PAST THE RECORD FLOW. Tim: ↓ goes
+   * *"to the main page"*. One step back from Home → Record → Weightlifting →
+   * Legs landed on the Record picker. Now it goes back past every Record-flow
+   * entry (`record`, `start`, a runner) to the screen Record rose over —
+   * session-draft.js keeps the trail. Nothing but the Record flow behind (a
+   * cold deep link) → Home. An entry the trail never saw → one step, as before.
+   */
+  function leaveRecordFlow() {
+    const k = stepsBackFromHere();
+    if (k <= 0) { go('#/home'); return; }
+    if (k === 1) { goBack(() => go('#/home')); return; }
+    try { history.go(-k); } catch (_) { go('#/home'); }
   }
 
   /* ---- rest timer ---- */
@@ -5014,7 +5263,39 @@ export async function SessionView(workoutId) {
     // Swap and + Set (2026-09-27): the runner's own sheet and add-set code.
     swap: openSwapFor,
     addSet: addSetAt,
+    // 🆕 2026-09-27 (overhaul ST-15): the next new workout opens in this view.
+    // Written only when it changes, through the settings queue.
+    rememberView: (view) => {
+      const v = view === 'guide' ? 'guide' : 'list';
+      if ((settings.runnerView === 'guide' ? 'guide' : 'list') === v) return;
+      settings.runnerView = v;
+      store.saveSettings({ runnerView: v }).catch(() => {});
+    },
   });
+
+  /* 🆕 2026-09-27 (overhaul R-2): PHONE STORAGE FULL. When the draft cannot be
+   * written (and clearing the cloud caches did not make room), the sets typed
+   * since are only in memory — a closed tab loses them. Said on the runner in
+   * both views, and it stays until a write works again. */
+  const storageLine = el('div', { class: 'save-error draft-full', role: 'alert', hidden: !draftStorageFull() },
+    el('strong', { text: 'Phone storage is full — save this workout now.' }));
+  const stopStorageWatch = onDraftStorage((full) => { storageLine.hidden = !full; });
+
+  /* 🆕 2026-09-27 (overhaul ST-8 / R-6): KEEP THE SCREEN ON while this workout
+   * is open (Settings → "Keep screen on", on unless `false`). Let go when the
+   * runner is left for any other route, and on Finish (showFinished). */
+  const wantAwake = settings.keepAwake !== false;
+  if (wantAwake && loadDraft()) keepAwake(true);
+  const onLeave = () => {
+    if (/^#\/session(\/|$)/.test(location.hash)) {
+      if (wantAwake && loadDraft()) keepAwake(true);
+      return;
+    }
+    keepAwake(false);
+    stopStorageWatch();
+    window.removeEventListener('hashchange', onLeave);
+  };
+  window.addEventListener('hashchange', onLeave);
 
   const screen = el('div', { class: 'screen no-nav' },
     el('header', { class: 'topbar' },
@@ -5039,6 +5320,7 @@ export async function SessionView(workoutId) {
     ),
     peopleBar,
     progress,
+    storageLine,
     pane,
     guide.node,
     // Off by default (Tim, 2026-08-28) — the bar simply is not on the screen.
@@ -5176,10 +5458,11 @@ export async function ActivityLogView(presetName) {
     ],
     scroll: [
       stepWrap,
-      el('div', { class: 'field-help', text:
-        'Saved to your calendar and shared like any workout, under whatever each friend is '
-        + 'allowed to see. It never touches your muscle map or strength ratings — those read '
-        + 'lifting only.' }),
+      // 🆕 2026-09-27 (overhaul words P7): the reasons moved behind the ?.
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'Goes on your calendar and feed. Never rated.' }),
+        helpDot('Friends see it like any workout, under whatever each is allowed to see. '
+          + 'Your muscle map and strength ratings read lifting only.')),
     ],
     bottom: saveBtn,
   });
@@ -5335,7 +5618,7 @@ export async function BenchmarkView() {
       setChildren(estLine,
         el('div', { class: 'field-help', text:
           !state.exercise ? 'Pick an exercise.'
-            : muscles ? 'No estimate for this one yet — nothing you have recorded converts to it.'
+            : muscles ? 'No estimate yet — nothing you have recorded converts to it.'
               : 'Working out what you might lift…' }));
       return;
     }
@@ -5360,18 +5643,25 @@ export async function BenchmarkView() {
        * they cannot see: which muscle stood in for which, and which exercise the
        * stand-in was then converted into. The confidence band above is capped at
        * Fair for exactly this case, so the words and the label agree. */
-      el('div', { class: 'field-help', text:
-        est.viaFallback
+      /* 🆕 2026-09-27 (overhaul words P7): one short line each; the chain of
+       * conversions — every word of it kept — sits behind the ? beside it. */
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          est.viaFallback
+            ? 'Two conversions from your own sets — a rough marker.'
+            : est.isKeyLift
+              ? `Worked out from ${from}.`
+              : `Worked out from ${from}, converted.` }),
+        helpDot(est.viaFallback
           ? `Nothing you have recorded trains ${est.muscle.toLowerCase()} directly, so ${from}`
             + `${est.standIn ? ` — ${est.standIn.toLowerCase()} work — ` : ' '}`
             + `stood in for it, and that stand-in was then converted into ${state.exercise.name}. `
-            + 'Two conversions on top of your own sets: a rough marker, not a target. '
+            + 'A rough marker, not a target. '
             + `Any direct ${est.muscle.toLowerCase()} exercise would rate it properly.`
           : est.isKeyLift
-            ? `Worked out from ${from} — nothing here was measured on this lift at a single rep.`
-            : `Worked out ${from}, converted through ${est.muscle.toLowerCase()}. `
-              + 'A conversion between exercises is an estimate on top of an estimate, which is what '
-              + 'the confidence above is about.' }),
+            ? 'Nothing here was measured on this lift at a single rep.'
+            : `Converted through ${est.muscle.toLowerCase()}. A conversion between exercises is an `
+              + 'estimate on top of an estimate, which is what the confidence above is about.')),
     );
   }
 

@@ -874,6 +874,9 @@ export function projectStrength(strength) {
       band: str(m.band, 24),
       basis: str(m.basis, 24),
       contributorCount: num(m.contributorCount),
+      // 🆕 E-3a (2026-09-27): distinct session dates, for the "1 session, 4
+      // exercises" line. Spread, so a rating built before the field carries no key.
+      ...(num(m.sessionCount) != null ? { sessionCount: num(m.sessionCount) } : null),
       exerciseCount: num(m.exerciseCount),
       // ⚠️ Rule 5 travels with the number. These name the real recorded sets the
       // estimate was converted FROM, which is the only thing that lets a reader
@@ -1494,14 +1497,13 @@ export function whyNoSharedMap(doc) {
   const current = Array.isArray(d.connections);
   const gender = safeGender(d.profile && d.profile.gender);
   if (current && !gender) {
-    return 'their Body details are missing the gender a ranking needs — their map shows here once they add it';
+    // P4 (2026-09-27): shortened fragments; each still names what is missing.
+    return 'their Body details need a gender';
   }
   if (gender) {
-    return 'they have not recorded enough for a map yet, or their Body details are missing the body weight a '
-      + 'ranking needs';
+    return 'not enough recorded yet, or no body weight in Body details';
   }
-  return 'they have not recorded enough for a map yet, or their Body details are missing the gender or body '
-    + 'weight a ranking needs';
+  return 'not enough recorded yet, or no gender or body weight in Body details';
 }
 
 /* ------------------------------------------------------------------ *

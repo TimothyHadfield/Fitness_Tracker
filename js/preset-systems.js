@@ -79,6 +79,8 @@
 // matched back to the workout it came from AFTER they have renamed it. A name
 // cannot do that job: rename "Push 1" to "Monday" and the link is gone.
 
+import { BUILT_IN_EXERCISES } from './exercises.js';
+
 export const PRESET_SYSTEMS = [
   {
     id: 'preset-nippard-ppl-2023',
@@ -873,7 +875,133 @@ export const PRESET_SYSTEMS = [
         ] },
     ],
   },
+
+  /* ── ADDED 2026-09-27 (overhaul S-05b): the two for people without a gym ──
+   * Every earlier system needs a full gym, so a home or travel lifter was
+   * offered nothing after the intro. Both are the app's own, built only from
+   * exercises already in the library, and checked by tests/program-builder:
+   * every major muscle gets direct work (template-lint stays quiet, except the
+   * one true gap below), and the equipment tag derives to what the name says. */
+  {
+    id: 'preset-dumbbell-home',
+    version: 1,
+    name: 'Dumbbell Home',
+    author: 'Fitness Tracker',
+    sourceName: null,
+    sourceUrl: null,
+    goal: 'Hypertrophy',
+    daysPerWeek: 3,
+    minutes: 50,
+    level: 'Beginner',
+    summary: 'Three full-body days with a pair of dumbbells and a bench.',
+    notes: 'Monday, Wednesday, Friday, or any three days with rest between.\n\n'
+      + 'Add weight or reps when every set reaches the top of the range.',
+    workouts: [
+      { key: 'home-a', name: 'Home A', notes: 'Squat, press, row.',
+        exercises: [
+          { name: 'Goblet Squat', sets: 3, notes: '' },
+          { name: 'Dumbbell Bench Press', sets: 3, notes: '' },
+          { name: 'Dumbbell Row', sets: 3, notes: '' },
+          { name: 'Lateral Raise', sets: 3, notes: '' },
+          { name: 'Dumbbell Curl', sets: 2, notes: '' },
+          { name: 'Dumbbell Calf Raise', sets: 3, notes: '' },
+        ] },
+      { key: 'home-b', name: 'Home B', notes: 'Hinge, overhead press, row.',
+        exercises: [
+          { name: 'Dumbbell Romanian Deadlift', sets: 3, notes: '' },
+          { name: 'Dumbbell Shoulder Press', sets: 3, notes: '' },
+          { name: 'Chest-Supported Dumbbell Row', sets: 3, notes: '' },
+          { name: 'Incline Dumbbell Bench Press', sets: 3, notes: '' },
+          { name: 'Overhead Dumbbell Extension', sets: 2, notes: '' },
+        ] },
+      { key: 'home-c', name: 'Home C', notes: 'Single-leg day.',
+        exercises: [
+          { name: 'Bulgarian Split Squat', sets: 3, notes: '' },
+          { name: 'Push-Up', sets: 3, notes: '' },
+          { name: 'Dumbbell Row', sets: 3, notes: '' },
+          { name: 'Single-Leg Romanian Deadlift', sets: 3, notes: '' },
+          { name: 'Hammer Curl', sets: 2, notes: '' },
+          { name: 'Dumbbell Skull Crusher', sets: 2, notes: '' },
+        ] },
+    ],
+  },
+
+  {
+    id: 'preset-bodyweight',
+    version: 1,
+    name: 'Bodyweight',
+    author: 'Fitness Tracker',
+    sourceName: null,
+    sourceUrl: null,
+    goal: 'General strength',
+    daysPerWeek: 3,
+    minutes: 40,
+    level: 'Beginner',
+    summary: 'Three full-body days with no equipment. Good for travel.',
+    // ⚠️ No biceps exercise: the library has none without weights, so
+    // template-lint's "Biceps: worked only indirectly" is true of this plan.
+    notes: 'Monday, Wednesday, Friday, or any three days with rest between.\n\n'
+      + 'Rows go under a sturdy table, and dips off a chair.\n\n'
+      + 'At the top of the rep range, move to a harder version.',
+    workouts: [
+      { key: 'bodyweight-a', name: 'Bodyweight A', notes: '',
+        exercises: [
+          { name: 'Bodyweight Squat', sets: 3, notes: '' },
+          { name: 'Push-Up', sets: 3, notes: '' },
+          { name: 'Inverted Row', sets: 3, notes: '' },
+          { name: 'Pike Push-Up', sets: 3, notes: '' },
+          { name: 'Slider Leg Curl', sets: 3, notes: '' },
+          { name: 'Bench Dip', sets: 2, notes: '' },
+        ] },
+      { key: 'bodyweight-b', name: 'Bodyweight B', notes: '',
+        exercises: [
+          { name: 'Cossack Squat', sets: 3, notes: '' },
+          { name: 'Decline Push-Up', sets: 3, notes: '' },
+          { name: 'Inverted Row', sets: 3, notes: '' },
+          { name: 'Single-Leg Hip Thrust', sets: 3, notes: '' },
+          { name: 'Single-Leg Calf Raise', sets: 3, notes: '' },
+          { name: 'Reverse Crunch', sets: 2, notes: '' },
+        ] },
+      { key: 'bodyweight-c', name: 'Bodyweight C', notes: '',
+        exercises: [
+          { name: 'Sissy Squat', sets: 3, notes: '' },
+          { name: 'Pike Push-Up', sets: 3, notes: '' },
+          { name: 'Inverted Row', sets: 3, notes: '' },
+          { name: 'Diamond Push-Up', sets: 3, notes: '' },
+          { name: 'Slider Leg Curl', sets: 3, notes: '' },
+          { name: 'Dead Bug', sets: 2, notes: '' },
+        ] },
+    ],
+  },
 ];
+
+/* ------------------------------------------------------------------ *
+ * What a preset needs to run — S-05a, 2026-09-27
+ *
+ * DERIVED FROM THE EXERCISES' OWN `equipment` FIELD, NEVER HAND-TYPED, so a
+ * swap inside a preset can never leave its tag saying something false.
+ *   'No equipment'  every exercise is body weight
+ *   'Dumbbells'     dumbbells and body weight only
+ *   'Full gym'      anything else — barbell, cable, machine, kettlebell — and
+ *                   any name the library does not know (never claim less gear
+ *                   than a programme might need).
+ * ------------------------------------------------------------------ */
+let equipmentByName = null;
+function libraryEquipment(name) {
+  if (!equipmentByName) {
+    equipmentByName = new Map();
+    // First wins, the same rule program-builder.js uses for duplicate names.
+    for (const e of BUILT_IN_EXERCISES) if (!equipmentByName.has(e.name)) equipmentByName.set(e.name, e.equipment);
+  }
+  return equipmentByName.get(name) || null;
+}
+
+/** 'Full gym' | 'Dumbbells' | 'No equipment' — what this preset needs. */
+export function presetEquipment(preset) {
+  const kinds = new Set(presetExerciseNames(preset || { workouts: [] }).map(libraryEquipment));
+  if ([...kinds].some((k) => k !== 'Bodyweight' && k !== 'Dumbbell')) return 'Full gym';
+  return kinds.has('Dumbbell') ? 'Dumbbells' : 'No equipment';
+}
 
 export function presetById(id) {
   return PRESET_SYSTEMS.find((p) => p.id === id) || null;
@@ -915,6 +1043,9 @@ const PRESET_PLANS = {
     'shoulders-chest', 'hamstrings-back', 'arms', R] },
   'preset-volume-landmarks': { kind: 'cycle', slots: ['upper-a', 'lower-a', R, 'upper-b', 'lower-b', R, R] },
   'preset-upper-lower': { kind: 'cycle', slots: ['upper', 'lower', R, 'upper', 'lower', R, R] },
+  // Both notes say "Monday, Wednesday, Friday", so both are weeks.
+  'preset-dumbbell-home': { kind: 'week', slots: ['home-a', R, 'home-b', R, 'home-c', R, R] },
+  'preset-bodyweight': { kind: 'week', slots: ['bodyweight-a', R, 'bodyweight-b', R, 'bodyweight-c', R, R] },
 };
 
 /** The plan a preset's own text states, as `{ kind, slots }` of workout keys — or null. */

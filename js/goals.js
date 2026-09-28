@@ -286,6 +286,9 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         // the research counted. Defined here, at the one place the target is
         // stated, and the mismatch is admitted in the measured row rather than
         // hidden. See MEASURED_SETS_CAVEAT below.
+        // 🆕 W-1 (2026-09-27): `short` is the one line the row shows; `detail`
+        // and `source` go behind the ? on the row title. Nothing is deleted.
+        short: 'Working sets, 1–3 reps in reserve.',
         detail: `On this muscle specifically. A hard set means a working set taken close to failure `
           + `— roughly one to three reps left in you. Warm-ups do not count toward it. ${a.setsWhy}`,
         source: 'Pelland et al. 2025, Table 3',
@@ -296,6 +299,7 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         label: 'Sessions a week',
         value: a.sessions[0] === a.sessions[1] ? String(a.sessions[0])
           : `${a.sessions[0]}–${a.sessions[1]}`,
+        short: 'Sessions that train this muscle.',
         detail: 'Sessions that train this muscle, not days in the gym. Frequency genuinely does '
           + 'drive strength — going from one session a week to two is the big step, and it flattens '
           + 'fast after that. It does not drive growth at all.',
@@ -306,6 +310,7 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         key: 'minutes',
         label: 'Minutes a week',
         value: `${minutes[0]}–${minutes[1]}`,
+        short: `About ${MINUTES_PER_SET} min a set, with rest.`,
         detail: `On this muscle, and it follows from the sets — about ${MINUTES_PER_SET} minutes `
           + 'each including the rest after it. Everything else in the session is on top of this.',
         source: 'Arithmetic, not a finding',
@@ -323,6 +328,8 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         // beside it into a five-word-tall stripe. Seen in a browser, invisible
         // to jsdom.
         phrase: true,
+        // No short line: the value already says it.
+        short: null,
         detail: EFFORT_LINE,
         source: 'Robinson et al. 2024',
         scales: false,
@@ -331,6 +338,8 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         key: 'consistency',
         label: 'Weeks that go to plan',
         value: `${a.weeksOnPlan} of ${HORIZON_WEEKS}`,
+        // The caveat stays visible: this number is ours.
+        short: 'Our threshold, not a published one.',
         detail: 'A bigger target has less room for a missed week. This threshold is ours, not a '
           + 'published one.',
         source: 'Our judgement',
@@ -345,6 +354,8 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         // g/kg. Both published figures are exact: 0.73 g/lb is 1.62 g/kg, the
         // breakpoint Morton reports, and 1.0 g/lb is the 2.2 g/kg top of the CI.
         perLb: a.proteinPerLb,
+        // The view prepends the rate in the reader's unit ("0.73 g/lb").
+        short: 'of body weight.',
         detail: `${a.proteinWhy} Eating more than this has not been shown to add anything — the `
           + 'higher figure buys certainty, not extra muscle.',
         source: 'Morton et al. 2018',
@@ -358,6 +369,7 @@ export function requirementsFor(ambitionKey, { bodyWeight } = {}) {
         label: 'Sleep',
         value: 'Enough of it',
         phrase: true,
+        short: 'Same at every level.',
         detail: SLEEP_LINE,
         source: 'Lamon et al. 2021',
         scales: false,
@@ -506,11 +518,16 @@ export function refreezeGoal(goal, profile, { comparison } = {}) {
 export function goalSourceRefusal(rating) {
   if (!rating) return 'Nothing recorded for this muscle yet.';
   if (rating.basis === 'fallback' || rating.kind === 'fallback') {
-    return 'Only inferred from the big lifts that also work it. Log an exercise that trains it '
-      + 'directly and a goal can start from that.';
+    // 🔄 W-12 (2026-09-27): short on the row; the reason is GOAL_SOURCE_WHY,
+    // for the ? beside it.
+    return 'Only inferred — log a direct exercise first.';
   }
   return null;
 }
+
+/** The ? beside the inferred refusal above — the words it used to say in full. */
+export const GOAL_SOURCE_WHY = 'Only inferred from the big lifts that also work it. Log an '
+  + 'exercise that trains it directly and a goal can start from that.';
 
 /**
  * The sentence describing a goal, built by the module that holds the goal — the
@@ -528,14 +545,45 @@ export function describeGoal(goal) {
  * Where you are
  * ------------------------------------------------------------------ */
 
+/** 🆕 EA-12: different training days at or above the target before "Reached". */
+export const REACHED_MIN_DAYS = 2;
+
+/**
+ * 🆕 EA-12 (2026-09-27): "Reached" off ONE estimate is a verdict inside the
+ * swing this file's own header says an estimate has day to day. Count the
+ * distinct days, from the goal's start, whose estimate is at or above target.
+ *
+ * @param {Array<{date: string, estimate: number}>} series
+ * @param {number} target
+ * @param {string} [since]  YYYY-MM-DD; days before it are not counted
+ */
+export function daysAtOrAbove(series, target, since = null) {
+  const t = Number(target);
+  if (!(t > 0)) return 0;
+  const days = new Set();
+  for (const p of Array.isArray(series) ? series : []) {
+    if (!p || typeof p.date !== 'string') continue;
+    if (since && p.date < since) continue;
+    if (Number(p.estimate) >= t - 1e-9) days.add(p.date);
+  }
+  return days.size;
+}
+
 /**
  * The measured gap. No verdict — see the header.
  *
  * @param {object} goal
  * @param {number} currentWeight  today's estimated 1RM for the key lift, or null
  * @param {string} today          YYYY-MM-DD
+ * @param {object} [opts]
+ * @param {number} [opts.daysAtTarget]  🆕 EA-12: how many DIFFERENT training
+ *   days since the goal began read at or above the target (daysAtOrAbove()
+ *   above counts it from a day-by-day series). When given, `reached` needs
+ *   REACHED_MIN_DAYS of them and `hitOnce` marks the one-day case. When
+ *   omitted, `reached` is the old single-reading test, so a caller with no
+ *   series yet behaves exactly as before.
  */
-export function goalProgress(goal, currentWeight, today) {
+export function goalProgress(goal, currentWeight, today, { daysAtTarget } = {}) {
   if (!goal) return null;
   const start = Number(goal.startWeight);
   const target = Number(goal.targetWeight);
@@ -558,6 +606,12 @@ export function goalProgress(goal, currentWeight, today) {
   const total = daysBetween(goal.startDate, goal.endDate);
   const left = daysBetween(today, goal.endDate);
 
+  const atTarget = Number.isFinite(now) && now >= target;
+  const counted = Number(daysAtTarget);
+  const confirmedKnown = daysAtTarget !== undefined && daysAtTarget !== null
+    && Number.isFinite(counted);
+  const reached = atTarget && (!confirmedKnown || counted >= REACHED_MIN_DAYS);
+
   return {
     startWeight: start,
     targetWeight: target,
@@ -567,7 +621,12 @@ export function goalProgress(goal, currentWeight, today) {
     gained,
     rawFraction: raw,
     fraction: raw === null ? null : Math.min(1, Math.max(0, raw)),
-    reached: Number.isFinite(now) && now >= target,
+    reached,
+    // Today's estimate is at the target, whether or not a second day agrees.
+    atTarget,
+    // At the target on one day only, so not "Reached" yet. Only ever true when
+    // the caller counted the days; the screen may show a neutral line for it.
+    hitOnce: atTarget && confirmedKnown && !reached,
     daysElapsed: elapsed,
     daysTotal: total,
     daysLeft: left,
@@ -665,6 +724,9 @@ export function stallReasons({ requirements, measured, muscle }) {
       return {
         status: 'unknown',
         value: total,
+        // 🆕 W-15 (2026-09-27): every row carries a `short` line for the row
+        // itself; `detail` stays whole for the ? beside it.
+        short: `${total} sets so far over ${overDays(measured.spanDays)} — a total, not a rate yet.`,
         detail: `${total} sets on ${muscle} so far — a total, counted over the `
           + `${overDays(measured.spanDays)} since your first session in this window, across `
           + `${loggedSessions(measured.sessions)}. Not a rate: under two weeks a per-week figure is `
@@ -680,6 +742,7 @@ export function stallReasons({ requirements, measured, muscle }) {
         // Reached only when the window holds no sessions at all — a short
         // window with sessions in it takes the branch above. So this says what
         // is actually true rather than the old blanket "not enough yet".
+        short: 'No sessions in this window yet.',
         detail: 'No sessions logged in the window this is measured over, so there is nothing to '
           + 'count. Log a workout and the sets it puts on this muscle show up here as a total; a '
           + 'rate per week waits for two weeks of sessions, because below that it is noise.',
@@ -690,6 +753,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       return {
         status: 'short',
         value: round(v),
+        short: `${round(v)} a week — below the 4 where change shows.`,
         detail: `${round(v)} sets a week is below the minimum effective dose of 4. That is the `
           + 'point where the evidence first sees a detectable change at all.'
           + MEASURED_SETS_CAVEAT,
@@ -699,6 +763,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       return {
         status: 'short',
         value: round(v),
+        short: `${round(v)} sets a week · goal ${req.sets[0]}–${req.sets[1]}`,
         detail: `${round(v)} sets a week against the ${req.sets[0]}–${req.sets[1]} this goal `
           + 'asks for. Enough to make progress, less than this target wants.'
           + MEASURED_SETS_CAVEAT,
@@ -713,6 +778,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       // work is being done, and if warm-ups are padding the number that is an
       // unearned positive verdict — the exact fault the headline fix on this
       // screen corrected from the other side on 2026-08-22 (Rule 6).
+      short: `${round(v)} sets a week · goal ${req.sets[0]}–${req.sets[1]}`,
       detail: `${round(v)} sets a week, against the ${req.sets[0]}–${req.sets[1]} this goal `
         + 'asks for.' + MEASURED_SETS_CAVEAT,
     };
@@ -729,6 +795,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       return {
         status: 'unknown',
         value: days,
+        short: `${days} day${days === 1 ? '' : 's'} so far — a count, not a rate yet.`,
         detail: `${days} day${days === 1 ? '' : 's'} of ${muscle} work in the `
           + `${overDays(measured.spanDays)} counted here, out of `
           + `${loggedSessions(measured.sessions)} of any kind. A count, not a rate: two weeks is `
@@ -740,6 +807,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       return {
         status: 'unknown',
         value: null,
+        short: 'No sessions in this window yet.',
         detail: 'No sessions logged in the window this is measured over, so there is nothing to '
           + 'count. Log a workout and the days it trains this muscle show up here.',
       };
@@ -750,6 +818,7 @@ export function stallReasons({ requirements, measured, muscle }) {
     return {
       status: f + 0.05 < want ? 'short' : 'ok',
       value: n,
+      short: `${n} ${n === 1 ? 'session' : 'sessions'} a week · goal ${want}`,
       detail: `About ${n} ${n === 1 ? 'session' : 'sessions'} a week `
         + `${n === 1 ? 'trains' : 'train'} ${muscle}, against the ${want} this goal asks for. `
         + 'Frequency drives strength, though not growth.',
@@ -815,6 +884,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       status: 'invisible',
       value: null,
       source: null, // docs/research.md §6.7; "not getting one" is decision D28
+      short: 'The app can\'t see effort.',
       detail: 'The app has no reps-in-reserve field and is not getting one, so it cannot see '
         + 'how hard your sets are. This is the variable that most decides whether a set grows '
         + 'anything.',
@@ -826,6 +896,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       status: 'invisible',
       value: null,
       source: null, // docs/research.md §6.9
+      short: 'The app doesn\'t track food.',
       detail: 'The app does not track food and will not — it recommends a number and never '
         + 'asks what you ate. So a shortfall here is invisible to it.',
     },
@@ -836,6 +907,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       status: 'invisible',
       value: null,
       source: null, // docs/research.md §6.10
+      short: 'The app can\'t see sleep.',
       detail: 'Invisible to the app. One night without sleep cuts muscle protein synthesis about '
         + '18 %, and nobody has measured what habitual hours do over a training block.',
     },
@@ -846,6 +918,7 @@ export function stallReasons({ requirements, measured, muscle }) {
       status: 'invisible',
       value: null,
       source: null,
+      short: 'The app can\'t see life outside the gym.',
       detail: 'Invisible to the app, and real. Training does not happen in a vacuum, and a bad '
         + 'twelve weeks outside the gym shows up inside it.',
     },
@@ -901,4 +974,14 @@ export const FIT_LABEL = {
   more: 'More than the goal asks',
   light: 'Under what the goal asks',
   under: 'Below the minimum effective dose',
+};
+
+/** 🆕 W-10 (2026-09-27): the row's short form, "{n} sets · fits". FIT_LABEL
+ * stays whole for the ?. `light` and `under` both read "under" on the row; the
+ * difference (the minimum effective dose) is in FIT_LABEL. */
+export const FIT_SHORT = {
+  fits: 'fits',
+  more: 'more than asked',
+  light: 'under',
+  under: 'under',
 };

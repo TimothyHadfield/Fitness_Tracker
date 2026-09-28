@@ -74,7 +74,7 @@ import {
 } from './optimal.js';
 import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
-  setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell,
+  setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell, goBack,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
   personFace, helpDot, parkScreen, refreshRoute, fmtClock, fmtDateShort,
 } from './ui.js';
@@ -212,7 +212,7 @@ export async function HomeView() {
   // which is the fault the 2026-08-22 read-cache pass was written to remove.
   const load = () => fillFeed(body).catch(() => {
     setChildren(body, emptyState('Could not load your feed',
-      'Your connection dropped. Everything else in the app works offline — this is the one screen that cannot.'));
+      'Offline — this screen needs a connection.'));
   }).finally(() => body.removeAttribute('aria-busy'));
   load();
   // 🆕 Motion 2: pull down at the top (phones) reads the feed again, in place.
@@ -257,6 +257,14 @@ async function fillFeed(body) {
    * Home never mentioned. Home now says it and goes straight to account setup.
    * Offline is its own answer: an account is not what is missing. */
   if (!state.available) {
+    /* 🆕 I-14 (overhaul 2026-09-27): offline, Home shows the last feed it drew
+     * for THIS account — at most FEED_CACHE_MAX cards, marked as old, reactions
+     * off. Nothing cached, or cached for someone else: the old empty state. */
+    const cached = state.reason === 'offline' ? await cachedFeedFor() : null;
+    if (cached) {
+      setChildren(body, offlineFeedLine(), ...cached.map(offlineFeedCard));
+      return;
+    }
     setChildren(body, state.reason === 'offline'
       ? emptyState('Not connected', 'Your feed needs a connection.',
           el('button', { class: 'btn', text: 'Try again', onClick: async () => {
@@ -315,6 +323,17 @@ async function fillFeed(body) {
   }));
 
   const entries = feedEntries(seen.filter(Boolean));
+
+  // Every friend's read failed: the connection dropped between the state read
+  // and the list. Same answer as offline, if this account has a saved feed.
+  if (!seen.some(Boolean)) {
+    const cached = await cachedFeedFor(state.uid);
+    if (cached) {
+      setChildren(body, ...lead, offlineFeedLine(), ...cached.map(offlineFeedCard));
+      return;
+    }
+  }
+  if (entries.length) saveFeedCache(state, entries);
 
   if (!entries.length) {
     setChildren(body, ...lead, emptyState('Nothing from anyone yet',
@@ -385,6 +404,73 @@ async function fillFeed(body) {
 
   setChildren(body, ...lead, ...(mineBlock ? [mineBlock] : []), ...first.map((e) => feedCard(withRx(e))),
     ...(shown < entries.length ? [more] : []));
+}
+
+/* ---- I-14: the last feed, kept for offline (overhaul 2026-09-27) ----
+ *
+ * ⚠️ PER ACCOUNT, AND CHECKED AGAINST THE EMAIL. The cache is keyed by uid,
+ * and offline there is no uid to ask for — only the last signed-in email
+ * (store.js lastAccount). So the pointer says whose feed was last saved, and a
+ * cache whose email is not that account's is ignored: signing out and in as
+ * someone else must never show them the first person's friends.
+ *
+ * ⚠️ NEVER IN THE DEMO — fillFeed returns before any of this runs there.
+ * Reactions are not kept (they go stale and cannot be sent offline), nor the
+ * photo size, so an offline card never asks the network for a picture. */
+export const FEED_CACHE_MAX = 20;
+const FEED_CACHE_KEY = 'ftrack:v1:feedCache:';
+const FEED_CACHE_LAST = 'ftrack:v1:feedCache:last';
+
+export function saveFeedCache(state, entries) {
+  try {
+    if (!state || !state.uid) return;
+    const email = (state.user && state.user.email) || null;
+    const keep = entries.slice(0, FEED_CACHE_MAX).map((e) => {
+      const { photo, ...act } = e.act || {};
+      // A photo face can be big; the glyph stands in when it is.
+      const avatar = typeof e.avatar === 'string' && e.avatar.length > 20000 ? null : (e.avatar || null);
+      return { uid: e.uid, name: e.name, avatar, act };
+    });
+    localStorage.setItem(FEED_CACHE_KEY + state.uid,
+      JSON.stringify({ email, at: Date.now(), entries: keep }));
+    localStorage.setItem(FEED_CACHE_LAST, state.uid);
+  } catch (_) { /* storage full or blocked — the feed still drew */ }
+}
+
+/** The saved entries for `uid` (or the last-saved account when offline), or null. */
+export async function cachedFeedFor(uid = null) {
+  try {
+    const who = uid || localStorage.getItem(FEED_CACHE_LAST);
+    if (!who) return null;
+    const raw = localStorage.getItem(FEED_CACHE_KEY + who);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (!uid) {
+      // Offline: only trust it if it belongs to the account last signed in.
+      let a = null;
+      try { a = await auth.state(); } catch (_) { a = null; }
+      const email = a && a.lastAccount && a.lastAccount.email;
+      if (!email || !saved.email || email.toLowerCase() !== String(saved.email).toLowerCase()) return null;
+    }
+    const list = Array.isArray(saved.entries) ? saved.entries.filter((e) => e && e.act && e.act.date) : [];
+    return list.length ? list.slice(0, FEED_CACHE_MAX) : null;
+  } catch (_) { return null; }
+}
+
+function offlineFeedLine() {
+  return el('div', { class: 'feed-offline' },
+    el('span', { text: 'Offline — showing the last feed' }),
+    el('button', { class: 'btn sm', type: 'button', text: 'Try again', onClick: async () => {
+      try { await auth.retry(); } catch (_) { /* the line says so again */ }
+      refreshRoute('#/home');
+    } }));
+}
+
+/** A saved card: drawn exactly as online, with Kudos and Comment switched off. */
+function offlineFeedCard(e) {
+  const card = feedCard(e);
+  card.querySelectorAll('.feed-actions .feed-act').forEach((b, i) => { if (i < 2) b.disabled = true; });
+  return card;
 }
 
 /**
@@ -635,7 +721,7 @@ export function feedActions(e) {
   // Sessions published before the projection carried ids have nothing stable
   // to react TO. Old cards, increasingly rare — but a silent no-op is the
   // fault this project keeps refusing to ship, so it says why.
-  const noAnchor = () => toast('This workout was shared before reactions existed — it cannot take one.');
+  const noAnchor = () => toast('This older workout can’t take reactions.');
 
   /* 🔄 OPTIMISTIC SINCE THE 2026-09-24 REVIEW. A tap waited for the save
    * before anything moved, so on cellular the button looked dead for a second.
@@ -892,10 +978,30 @@ async function shareActivity(e) {
  * mid-gym loop it sits in front of by more than the one tap Tim priced in.
  */
 export async function RecordChooserView() {
-  const [systems, workouts, sessions] = await Promise.all([
+  const [systems, workouts, sessions, exMap] = await Promise.all([
     store.getSystems(), store.getWorkouts(), store.getSessions(),
+    store.getExerciseMap().catch(() => null),
   ]);
-  const next = suggestNext({ systems, workouts, sessions, today: todayISO() });
+  /* 🚨 SCOPED TO THE CURRENT PROGRAM, EXACTLY AS #/start IS — overhaul
+   * 2026-09-27 (systems S-01). Measured: after switching to Upper/Lower, this
+   * screen still said "Legs" (PPL) while #/start said "Lower A" — two answers
+   * to one question, because this one was handed EVERY system. Same inputs
+   * as StartPickerView now, so the two cannot disagree. */
+  const current = await store.currentSystem({ systems, workouts, sessions }).catch(() => null);
+  const mine = current ? workouts.filter((w) => w.systemId === current.id) : [];
+  const next = current && mine.length
+    ? suggestNext({ systems: [current], workouts: mine, sessions, today: todayISO(), exMap })
+    : null;
+  /* 🆕 THE BIG BUTTON STARTS IT — overhaul 2026-09-27 (interaction I-9). It
+   * already named the next workout in its caption and then only led to a list
+   * with the same workout at the top: three taps for the app's one job. It is
+   * now "▶ Legs" and starts it; "Resume Legs" when a workout is open (the
+   * runner keeps the draft). "Other workout" opens the full list. No program:
+   * "Weightlifting" → the list, as before. Adding a preset never makes it
+   * current, so this only ever reads the rotation somebody chose. */
+  const open = liveDraft(todayISO());
+  const openW = open && open.workoutId ? workouts.find((w) => w.id === open.workoutId) : null;
+  const target = openW || (next ? next.workout : null);
 
   const activity = (label, exerciseName) =>
     el('a', { class: 'row', href: exerciseName ? `#/activity/${encodeURIComponent(exerciseName)}` : '#/activity' },
@@ -940,15 +1046,32 @@ export async function RecordChooserView() {
     title: 'Record',
     sub: 'What kind of training?',
     scroll: [
-      el('button', {
-        class: 'btn primary lg block',
-        onClick: () => go('#/start'),
-      }, icon('play'), 'Weightlifting'),
-      el('div', { class: 'field-help', text: next
-        ? `Your workouts, sets and reps. Next in your rotation: ${next.workout.name}.`
-        : 'Your workouts, sets and reps — the full recorder.' }),
+      ...(target
+        ? [
+            el('button', {
+              class: 'btn primary lg block',
+              onClick: () => go('#/session/' + target.id),
+            }, icon('play'), openW ? `Resume ${target.name}` : target.name),
+            el('div', { class: 'list' },
+              el('a', { class: 'row', href: '#/start' },
+                el('div', { class: 'row-main' },
+                  el('div', { class: 'row-title', text: 'Other workout' })),
+                el('span', { class: 'row-chev' }, chevron()))),
+          ]
+        : [
+            el('button', {
+              class: 'btn primary lg block',
+              onClick: () => go('#/start'),
+            }, icon('play'), 'Weightlifting'),
+            el('div', { class: 'field-help', text: 'The full recorder' }),
+          ]),
 
-      el('div', { class: 'section-label', text: 'Or log an activity' }),
+      // Words overhaul (W-17): the activities sentence went behind a ? beside
+      // its own label — it is WHY they are not rated, not WHAT they are.
+      el('div', { class: 'help-line' },
+        el('div', { class: 'section-label', text: 'Or log an activity' }),
+        helpDot('They go on your calendar and feed. Muscle ratings still come from lifting only.',
+          { label: 'Are activities rated?', title: 'Activities' })),
       el('div', { class: 'list' },
         activity('Run', 'Running'),
         activity('Walk or hike', 'Walking'),
@@ -957,9 +1080,6 @@ export async function RecordChooserView() {
         activity('Climb', 'Rock Climbing'),
         activity('Something else', null),
       ),
-      el('div', { class: 'field-help', text:
-        'Activities go on your calendar and into your feed like any workout. '
-        + 'Muscle ratings still come from lifting only.' }),
     ],
     bottom: el('button', { class: 'btn block', onClick: () => go('#/benchmark') },
       icon('flag'), 'Record a benchmark'),
@@ -1024,6 +1144,7 @@ export async function RecordChooserView() {
  * something else navigated.
  */
 function openSystemSwitcher({ systems, workouts, currentId }) {
+  const exploreCount = presetCountLine();
   const { close } = openSheet({
     title: 'Your programs',
     body: el('div', { class: 'list' },
@@ -1066,13 +1187,43 @@ function openSystemSwitcher({ systems, workouts, currentId }) {
           el('div', { class: 'row-title', text: 'New program' }),
           el('div', { class: 'row-sub wrap', text: 'Build a program of your own' })),
         chevron()),
+      // 🆕 Overhaul 2026-09-27 (systems S-04): the program builder was only
+      // reachable from onboarding and Account. Same words as the Account row.
+      // ⚠️ A closure, not `close` itself: the sheet is still being built here.
+      findProgramRow(() => close()),
       el('button', { class: 'row', onClick: () => { close(); go('#/explore'); } },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: 'Explore ready-made programs' }),
-          el('div', { class: 'row-sub wrap', text: 'Nine to browse and copy' })),
+          exploreCount),
         chevron()),
     ),
   });
+}
+
+/* The real count, never a typed "Nine" (systems S-05d) — the library grows.
+ * Read lazily (preset-systems.js is 65 KB and the sheet must open at once);
+ * the line fills in a beat later, in place, one line either way. */
+function presetCountLine() {
+  const line = el('div', { class: 'row-sub wrap', text: 'Browse and copy' });
+  import('./preset-systems.js')
+    .then((m) => { line.textContent = `${m.PRESET_SYSTEMS.length} to browse and copy`; })
+    .catch(() => { /* the plain words stand */ });
+  return line;
+}
+
+/** "Find me a program": the onboarding builder, from anywhere (S-04). */
+function openProgramFinder() {
+  import('./onboarding.js')
+    .then((m) => m.openOnboarding({}))
+    .catch(() => toast('Could not open that just now'));
+}
+
+function findProgramRow(close = null) {
+  return el('button', { class: 'row', onClick: () => { if (close) close(); openProgramFinder(); } },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: 'Find me a program' }),
+      el('div', { class: 'row-sub wrap', text: 'A few questions, then a plan' })),
+    chevron());
 }
 
 /**
@@ -1169,11 +1320,12 @@ function openPresetUpdate({ system, workouts, plan }) {
        * two structures, and it is the one that says WHY. */
       ...plan.notes.map((n) => el('p', { class: 'update-note', text: n.summary })),
       !plan.stamped
-        ? el('p', { class: 'update-note', text:
-            'You added this program before the app started recording which version you took, so '
-            + 'these are simply the differences between your copy and the original today. Some of '
-            + 'them may be changes you made yourself, which is why none of them can be applied for '
-            + 'you.' })
+        // Words overhaul (P3): 46 words → the fact, with the WHY behind the ?.
+        ? el('div', { class: 'help-line update-note' },
+            el('span', { text: 'Differences from today’s original. Some may be your own edits, so none are applied for you.' }),
+            helpDot('You added this program before the app started recording which version you took, '
+              + 'so these are simply the differences between your copy and the original today.',
+              { label: 'Why none can be applied' }))
         : null,
       ...plan.changes.map(line),
     ),
@@ -1340,26 +1492,63 @@ async function systemBody(system, workouts) {
                 }
               } }))
         : emptyState(`${system.name} has no workouts yet`,
-            'Add the days this program is made of — Push, Pull, Legs, or whatever you call them.'),
+            'Add its days — Push, Pull, Legs, or your own.'),
     el('button', { class: 'btn block', onClick: () => go('#/workout/new/' + system.id) },
       icon('plus'), 'New workout'),
     // The workout checker over the whole programme — nothing when it finds nothing.
     exMap ? lintBlock(lintProgramme(workouts, exMap), (id) => nameById.get(id)) : null,
-    sideColumn(
-      // Below the workouts rather than above them: this screen is opened most days
-      // to start one, and the warning was already read on Explore before adding.
-      preset && preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null,
-      // The notes are the author's own words about the programme, so they read
-      // here rather than only inside the form that happens to edit them.
-      system.notes
-        ? el('div', { class: 'preset-notes' },
-            el('div', { class: 'section-label', text: 'Notes' }),
-            // Paragraph breaks are real paragraphs, as on the programme's Explore page.
-            ...String(system.notes).split(/\n{2,}/).map((para) => el('p', { text: para })))
-        : null,
-      await ownSystemRating(system.id, workouts, system),
-    ),
+    ...(await programWords(system, workouts, preset)),
   ];
+}
+
+/* Is the laptop layout (the ≥1024px right-hand column, css "Workouts ≥1024") on? */
+function wideLayout() {
+  try { return Boolean(window.matchMedia && window.matchMedia('(min-width: 1024px)').matches); }
+  catch (_) { return false; }
+}
+
+/**
+ * The programme's words: its warning, its notes and how it rates.
+ *
+ * 🔄 ON A PHONE THE NOTES AND THE RATING ARE ONE ROW — overhaul 2026-09-27
+ * (interaction I-17). Measured: the Workouts tab scrolled 231px at 393×659, all
+ * of it the notes paragraph and the rating block under the list, and a main
+ * screen must fit (taste rule 1). They are one tap away now, in a sheet; the
+ * list, New workout and the checker stay on the screen. On a laptop they keep
+ * their right-hand column, where they always fitted.
+ *
+ * 🛑 THE UNOFFICIAL WARNING STAYS ON THE SCREEN either way — it says what the
+ * programme IS, and attribution behind a tap is not attribution (warningBlock).
+ */
+async function programWords(system, workouts, preset) {
+  // Below the workouts rather than above them: this screen is opened most days
+  // to start one, and the warning was already read on Explore before adding.
+  const warning = preset && preset.unofficial ? warningBlock(preset.warning || DEFAULT_PRESET_WARNING) : null;
+  // The notes are the author's own words about the programme, so they read
+  // here rather than only inside the form that happens to edit them.
+  const notes = system.notes
+    ? el('div', { class: 'preset-notes' },
+        el('div', { class: 'section-label', text: 'Notes' }),
+        // Paragraph breaks are real paragraphs, as on the programme's Explore page.
+        ...String(system.notes).split(/\n{2,}/).map((para) => el('p', { text: para })))
+    : null;
+  const rating = await ownSystemRating(system.id, workouts, system);
+
+  if (wideLayout()) return [sideColumn(warning, notes, rating)];
+  if (!notes && !rating) return [warning];
+
+  const label = notes && rating ? 'Notes and rating' : notes ? 'Notes' : 'How this program rates';
+  const more = el('div', { class: 'list' },
+    el('button', {
+      class: 'row sys-more',
+      onClick: () => openSheet({
+        title: notes && rating ? system.name : label,
+        body: el('div', { class: 'sys-more-body' }, notes, rating),
+      }),
+    },
+      el('div', { class: 'row-main' }, el('div', { class: 'row-title', text: label })),
+      chevron()));
+  return [warning, more];
 }
 
 /* 🆕 THE PROGRAMME'S WORDS ARE ONE COLUMN — layout pass 2026-09-25. From 1024px
@@ -1368,14 +1557,30 @@ async function systemBody(system, workouts) {
  * laptop no longer scrolls to reach "Indirect work counts half a set". On a
  * phone it is a column with the pane's own gap, and nothing moves. Nothing in
  * it → no column at all, so an empty one cannot leave a gap. */
+/* 🚧 The "Empty workout" row (S-03/O-18). The runner half — `#/session/new-empty`
+ * opening with no template — lands in wave 2; until then the row stays off so
+ * nobody taps into a route that cannot open. Flip this with the runner. */
+export const EMPTY_WORKOUT = false;
+export const EMPTY_WORKOUT_ROUTE = '#/session/new-empty';
+
+function emptyWorkoutRow() {
+  if (!EMPTY_WORKOUT) return null;
+  return el('div', { class: 'list' },
+    el('button', { class: 'row', onClick: () => go(EMPTY_WORKOUT_ROUTE) },
+      el('div', { class: 'row-main' },
+        el('div', { class: 'row-title', text: 'Empty workout' })),
+      el('span', { class: 'row-start' }, 'Start', icon('play', 12))));
+}
+
 function sideColumn(...parts) {
   const kids = parts.filter(Boolean);
   return kids.length ? el('div', { class: 'sys-side' }, ...kids) : null;
 }
 
 export async function StartPickerView({ tab = false } = {}) {
-  const [systems, workouts, sessions] = await Promise.all([
+  const [systems, workouts, sessions, exMap] = await Promise.all([
     store.getSystems(), store.getWorkouts(), store.getSessions(),
+    store.getExerciseMap().catch(() => null),
   ]);
 
   /* ⚠️ THE SUGGESTION LIVES HERE NOW — Tim, 2026-08-25: *"all of the 'suggested
@@ -1412,7 +1617,7 @@ export async function StartPickerView({ tab = false } = {}) {
   const current = await store.currentSystem({ systems, workouts, sessions });
   const mine = current ? workouts.filter((w) => w.systemId === current.id) : [];
   const next = current
-    ? suggestNext({ systems: [current], workouts: mine, sessions, today: todayISO() })
+    ? suggestNext({ systems: [current], workouts: mine, sessions, today: todayISO(), exMap })
     : null;
 
   // ⚠️ A CHEVRON USED TO SIT HERE AND IT WAS TELLING THE TRUTH ABOUT THE WRONG
@@ -1534,8 +1739,8 @@ export async function StartPickerView({ tab = false } = {}) {
       ? [
           emptyState(`${current.name} has no workouts yet`,
             systems.length > 1
-              ? 'Add the days this program is made of, or switch to another one.'
-              : 'Add the days this program is made of — Push, Pull, Legs, or whatever you call them.'),
+              ? 'Add its days, or switch to another program.'
+              : 'Add its days — Push, Pull, Legs, or your own.'),
           el('button', { class: 'btn primary block', onClick: () => go('#/workout/new/' + current.id) },
             icon('plus'), 'New workout'),
           systems.length > 1
@@ -1552,11 +1757,17 @@ export async function StartPickerView({ tab = false } = {}) {
           // brand-new user tapping the biggest button in the app lands HERE — so
           // it has to offer the same route rather than "build a workout first".
           emptyState('Nothing to run yet',
-            'Pick a ready-made program and its first workout is one tap away, or build your own.',
+            'Pick a ready-made program, or build your own.',
             el('button', { class: 'btn primary', text: 'Pick a program', onClick: () => go('#/explore') })),
           el('button', { class: 'btn block', onClick: () => go('#/system/new') },
             icon('plus'), 'Build my own instead'),
         ];
+
+  // 🆕 Overhaul 2026-09-27 (S-03/O-18): a session with no template, as the
+  // LAST row — the list above stays the common case. Hidden until the runner
+  // side (wave 2) can open `#/session/new-empty`.
+  const empty = emptyWorkoutRow();
+  if (empty) scroll.push(empty);
 
   // A benchmark is a deliberate one-off test rather than a session, so it sits
   // apart from the list rather than in it — and it is pinned, because the list
@@ -1567,7 +1778,7 @@ export async function StartPickerView({ tab = false } = {}) {
   return screenShell({
     profile: tab,
     title: 'Record',
-    sub: 'Log a session, or a one-off best',
+    sub: 'A workout or a one-off best',
     // Since 2026-08-26 the Record TAB is the category chooser and this whole
     // screen is the Weightlifting option behind it, so back goes there.
     back: tab ? null : () => go('#/record'),
@@ -1606,12 +1817,14 @@ export async function WorkoutsView() {
       top: [
         el('button', { class: 'btn primary block', onClick: () => go('#/system/new') },
           icon('plus'), 'New program'),
+        // 🆕 S-04: the builder is a door on the empty state too.
+        el('button', { class: 'btn block', onClick: () => openProgramFinder() },
+          'Find me a program'),
         el('button', { class: 'btn block', onClick: () => go('#/explore') },
           icon('search'), 'Explore ready-made programs'),
       ],
       scroll: emptyState('No programs yet',
-        'A program is a named group of workouts. Push Pull Legs, Upper/Lower, '
-        + 'whatever you follow. Build one, or start from a ready-made one.'),
+        'A program is a group of workouts, like Push Pull Legs. Build one or pick one.'),
     });
   }
 
@@ -1645,10 +1858,9 @@ export async function WorkoutsView() {
 const SET_TYPES = [
   { id: null, name: 'Straight sets', hint: 'Normal sets with a full rest between them.' },
   { id: DROP, name: 'Drop set',
-    hint: 'Take the set, strip the weight, keep going. Counts as one hard set.' },
+    hint: 'Strip weight, keep going. One hard set.' },
   { id: MYO, name: 'Myo-reps',
-    hint: 'Take the set close to failure, rest 10–15 seconds, then squeeze out short '
-      + 'mini-sets at the same weight. Counts as one hard set.' },
+    hint: 'Near failure, rest 10–15 s, mini-sets at the same weight. One hard set.' },
 ];
 
 export function openSetTypeSheet(item, onChange) {
@@ -1920,28 +2132,10 @@ export function openRepsSheet(item, ex, onChange) {
  * Behind the ?: where the number came from and why it is drawn that way.
  * ------------------------------------------------------------------ */
 
-/**
- * Cut a caveat that ships from another module into the half that stays on the
- * screen and the half that goes behind the ?.
- *
- * ⚠️ THE CONSTANT IS NEVER RE-TYPED HERE. `STRENGTH_CAVEAT` lives in optimal.js
- * beside the number it is about (and volume-map.js records what happened the one
- * time a screen hand-wrote its own paraphrase: it quietly lost "not a measured
- * fact"). This splits the real string at a marker inside it, so both halves are
- * still the words that ship with the constant.
- *
- * ⚠️ AND IF THE MARKER IS EVER GONE, EVERYTHING STAYS ON THE SCREEN. A caveat
- * may fail loud; it may never fail quiet.
- */
-function splitCaveat(text, marker) {
-  const s = String(text || '');
-  const i = s.indexOf(marker);
-  if (i < 0) return { seen: s, why: null };
-  let seen = s.slice(0, i).replace(/[\s—–,]+$/, '');
-  if (!/[.!?]$/.test(seen)) seen += '.';
-  const why = s.slice(i).replace(/^[\s—–]+/, '');
-  return { seen, why: why.charAt(0).toUpperCase() + why.slice(1) };
-}
+/* ~~splitCaveat()~~ — deleted 2026-09-27 (words W-4/W-5). It cut optimal.js's
+ * caveats into a visible half and a ? half; both callers now show one short
+ * line and put the WHOLE constant behind the ?, so the constant is still never
+ * re-typed here (the lesson it carried) and nothing is split. */
 
 /**
  * A block of prose as its sentences.
@@ -1981,14 +2175,17 @@ function sentencesOf(text) {
  * which says "indirect work counts half" on the screen and keeps the modelling
  * argument behind its ?.
  */
+/* 🔄 Words overhaul 2026-09-27 (W-4): 43 visible words became 9. The line still
+ * says what the strength number IS (it counts sets and not load — the part
+ * that changes what a reader thinks it means); the ? carries the WHOLE caveat,
+ * not only its tail, so nothing of it is lost. */
+const STRENGTH_SEEN = 'Strength % counts sets, not how heavy they are.';
+
 function ratingCaveats() {
-  const strength = splitCaveat(STRENGTH_CAVEAT, 'They are not the same');
   return [
     el('div', { class: 'help-line' },
-      el('span', { class: 'field-help', text: strength.seen }),
-      strength.why
-        ? helpDot(strength.why, { label: 'Why the weight matters for strength' })
-        : null),
+      el('span', { class: 'field-help', text: STRENGTH_SEEN }),
+      helpDot(STRENGTH_CAVEAT, { label: 'Why the weight matters for strength' })),
     el('div', { class: 'help-line' },
       el('span', { class: 'field-help', text: 'Indirect work counts half a set.' }),
       helpDot(INDIRECT_NOTE_RATING,
@@ -2139,19 +2336,21 @@ async function ownSystemRating(systemId, workouts, systemRow) {
   // CEILING DOES NOT. "Nothing real reaches 100 %" is what the percentage IS —
   // without it 55 % reads as a bad mark — while "42 hard sets per muscle every
   // week" is where that ceiling came from, which is WHY.
-  const growth = splitCaveat(explain(rating.hypertrophy), 'that would mean');
+  /* 🔄 Words overhaul 2026-09-27 (W-5): the growth sentence under the badge
+   * repeated the tile's own 55 % in fifteen more words. It is cut from the
+   * screen and its whole text — "…of the most growth stimulus the research
+   * supports. Nothing real reaches 100 %…" — is the ? beside the heading. */
   return el('div', { class: 'own-rating' },
     el('div', { class: 'own-rating-head' },
-      el('div', { class: 'section-label', text: 'How this program rates' }),
+      el('div', { class: 'help-line' },
+        el('div', { class: 'section-label', text: 'How this program rates' }),
+        helpDot(explain(rating.hypertrophy), { label: 'What the percentages mean', title: 'How this program rates' })),
       ratingBadge(rating),
     ),
     // What the number is based on — measured, declared or assumed. WHAT, in
     // full: a rating computed from an assumption and one computed from ten
     // sessions are not the same claim and must not look alike.
     el('div', { class: 'field-help', text: rating.caption }),
-    el('div', { class: 'help-line' },
-      el('span', { class: 'field-help', text: growth.seen }),
-      growth.why ? helpDot(growth.why, { label: 'Why nothing reaches 100 %' }) : null),
     // Coverage in words, never folded into the score — "a good programme that
     // skips calves" should read as exactly that, and it is the most actionable
     // thing on the screen.
@@ -2198,10 +2397,30 @@ async function rateAllPresets(presets) {
   return out;
 }
 
+/* The first sentence of a preset's summary, for the Explore LIST (words W-6).
+ * Display only — the preset text and its pinned hash are untouched, and the
+ * whole summary is on the programme's own screen. */
+function firstSentence(text) {
+  const s = sentencesOf(text);
+  return s.length ? s[0] : String(text || '');
+}
+
 export async function ExploreView() {
-  const [{ PRESET_SYSTEMS, presetSetCount }, added] = await Promise.all([
+  const [presetMod, added] = await Promise.all([
     import('./preset-systems.js'), store.addedPresetIds(),
   ]);
+  const { PRESET_SYSTEMS } = presetMod;
+  /* 🆕 WHAT GEAR IT NEEDS (systems S-05c) — derived from each preset's own
+   * exercises by preset-systems.js, never hand-typed here. Guarded: until that
+   * helper exists the line simply goes without it. */
+  const equipOf = typeof presetMod.presetEquipment === 'function'
+    ? (p) => {
+        try {
+          const v = presetMod.presetEquipment(p);
+          return typeof v === 'string' ? v || null : (v && typeof v.label === 'string' ? v.label : null);
+        } catch (_) { return null; }
+      }
+    : () => null;
   const ratings = await rateAllPresets(PRESET_SYSTEMS);
 
   return screenShell({
@@ -2217,7 +2436,7 @@ export async function ExploreView() {
       // than part of it.
       el('div', { class: 'help-line' },
         el('span', { class: 'field-help', text:
-          'Pick one and it is copied into your programs, as your own.' }),
+          'Adding one copies it into your programs.' }),
         helpDot('From then on it is yours: rename it, change the exercises, delete what you do '
           + 'not do.', { label: 'What happens when you add one' })),
       // ⚠️ WHAT THE NUMBERS MEAN, BEFORE THE NINE NUMBERS (UX review: "Explore
@@ -2230,13 +2449,18 @@ export async function ExploreView() {
       // and again in full under the list. It is said once now, here, where the
       // reader meets the first badge; the 42-sets arithmetic that was the rest
       // of that sentence is WHY and went behind this dot.
+      /* 🔄 Words overhaul 2026-09-27 (W-6): 33 words became 7. What a badge
+       * measures, that nothing real reaches 100 %, and the two assumptions
+       * that sat under the list are all the ?, word for word. */
       el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          'Each badge: how much of the growth and strength stimulus the research supports a '
+        // "Nothing real reaches 100 %" stays: without it 55 % reads as a bad mark.
+        el('span', { class: 'field-help', text: 'Scores are % of the research maximum. Nothing real reaches 100 %.' }),
+        helpDot('Each badge: how much of the growth and strength stimulus the research supports a '
           + 'program delivering, plus what it costs in days a week and minutes a session. '
-          + 'Nothing real reaches 100 %.' }),
-        helpDot('That would mean 42 hard sets per muscle every week.',
-          { label: 'Why nothing reaches 100 %' })),
+          + '100 % would mean 42 hard sets per muscle every week. '
+          + 'The percentages assume you train close to failure, and more days is not itself '
+          + 'better for growth.',
+          { label: 'What the scores mean', title: 'Scores' })),
       el('div', { class: 'list' }, PRESET_SYSTEMS.map((p) =>
         el('button', { class: 'row row-rated', onClick: () => go('#/explore/' + p.id) },
           el('div', { class: 'row-main' },
@@ -2251,29 +2475,23 @@ export async function ExploreView() {
             // noise taking width off the summary — which is the line that
             // actually tells you what the programme is.
             el('div', { class: 'row-sub wrap', text:
-              (p.author && p.author !== 'Fitness Tracker' ? `${p.author} · `
-                : p.basedOn ? `Follows ${p.basedOn.person} · ` : '')
-              + p.level }),
-            el('div', { class: 'row-sub wrap', text: p.summary }),
+              [(p.author && p.author !== 'Fitness Tracker' ? p.author
+                : p.basedOn ? `Follows ${p.basedOn.person}` : null),
+               p.level, equipOf(p)].filter(Boolean).join(' · ') }),
+            // The first sentence only (W-6); the whole summary is one tap in.
+            el('div', { class: 'row-sub wrap', text: firstSentence(p.summary) }),
           ),
           ratingBadge(ratings.get(p.id)),
           chevron(),
         ))),
-      // The two assumptions inside the percentage. Both are WHAT — they change
-      // what the reader thinks the number is a percentage OF — so neither goes
-      // behind a dot. What left this line is the "nothing reaches 100 %"
-      // sentence, which the line above the list now carries on its own.
-      el('div', { class: 'field-help', text:
-        'The percentages assume you train close to failure, and more days is not itself better '
-        + 'for growth.' }),
       // ⚠️ These two go under the list, not only in a tooltip. A `title` is
       // invisible on a phone, and this is where a stranger is comparing nine
       // strength percentages against each other — the exact moment the number's
       // blind spot matters most. Rule 9 splits each of them: the blind spot
       // itself on the screen, why it matters behind the ?.
+      // (W-6, 2026-09-27: "N to choose from, with more to come." was cut, and
+      // the failure/more-days assumptions moved into the ? above the list.)
       ...ratingCaveats(),
-      el('div', { class: 'field-help', text:
-        `${PRESET_SYSTEMS.length} to choose from, with more to come.` }),
     ],
   });
 }
@@ -2389,8 +2607,7 @@ export async function ExploreDetailView(id) {
     confirmSheet({
       title: `Remove ${copy.name}?`,
       message: inside
-        ? `${plural(inside, 'workout')} inside it will be deleted too. Workouts you have already `
-          + 'recorded stay in your history and on your calendar — only the templates go.'
+        ? `Deletes it and its ${plural(inside, 'workout')}. Recorded workouts stay in your history.`
         : 'It has no workouts in it.',
       confirmLabel: 'Remove',
       onConfirm: async () => {
@@ -2429,8 +2646,7 @@ export async function ExploreDetailView(id) {
           onClick: () => go('#/system/' + copies[0].id) }),
         el('button', { class: 'btn block', text: 'Add another copy', onClick: add }),
         el('div', { class: 'field-help', text:
-          'Remove one from its own screen — with more than one copy, this button could not know '
-          + 'which you meant.' }),
+          'Remove a copy from its own screen.' }),
       ];
     }
 
@@ -2781,11 +2997,13 @@ async function SystemEditorView(id) {
     );
     kindSelect.value = plan ? plan.kind : '';
 
+    // Words overhaul (P3): one short line; what the plan does NOT do is the ?.
     const parts = [el('div', { class: 'field' },
       el('label', { text: 'Plan' }), kindSelect,
-      el('div', { class: 'field-help', text: plan
-        ? 'Shown as boxes at the top of this program. It does not change what the app suggests next.'
-        : 'Optional. Lay this program out over a week, or over a cycle that repeats.' }),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'Optional · a week or a repeating cycle.' }),
+        helpDot('Shown as boxes on this program. It doesn’t change what the app suggests next.',
+          { label: 'What does the plan change?', title: 'Plan' })),
     )];
 
     if (plan && plan.kind === CYCLE) {
@@ -2822,8 +3040,7 @@ async function SystemEditorView(id) {
     if (plan) {
       parts.push(!workouts.length
         ? el('div', { class: 'field-help', text:
-            'This program has no workouts yet, so every day can only be Rest. '
-            + 'Add a workout and come back.' })
+            'No workouts yet, so every day is Rest.' })
         : null);
       parts.push(planRows);
     }
@@ -2877,22 +3094,27 @@ async function SystemEditorView(id) {
     confirmSheet({
       title: 'Delete this program?',
       message: workouts.length
-        ? `${plural(workouts.length, 'workout')} inside it will be deleted too. `
-          + 'Workouts you have already recorded stay in your history and on your calendar — '
-          + 'only the templates go.'
+        ? `Deletes it and its ${plural(workouts.length, 'workout')}. Recorded workouts stay in your history.`
         : 'It has no workouts in it.',
       onConfirm: async () => { await store.deleteSystem(draft.id); toast('Program deleted'); go('#/workouts'); },
     });
   }
+
+  // 🆕 I-6: what the form held when it opened, to tell an edit from a look.
+  const snapshot = () => JSON.stringify([draft.name, draft.notes || '', draft.schedule || null]);
+  const opened = snapshot();
 
   // The form is the whole screen now, so it lives in the scroll rather than
   // being pinned above a list it no longer shares the screen with. Only Save is
   // pinned — Delete moves into a danger zone at the bottom of the scroll, where
   // you have to travel to reach it, rather than sitting under the thumb of
   // somebody who came here to rename something.
-  return screenShell({
+  const screen = screenShell({
     title: isNew ? 'New program' : 'Edit program',
-    back: () => go(isNew ? '#/workouts' : '#/system/' + id),
+    // backExact: the ask comes FIRST, then the same history back (Rule 8).
+    backExact: true,
+    back: () => confirmLeave(() => snapshot() !== opened,
+      () => goBack(() => go(isNew ? '#/workouts' : '#/system/' + id))),
     scroll: [
       el('div', { class: 'field' }, el('label', { text: 'Program name' }), nameInput),
       el('div', { class: 'field' }, el('label', { text: 'Notes' }), notesInput),
@@ -2905,8 +3127,7 @@ async function SystemEditorView(id) {
         : el('div', { class: 'danger-zone' },
             el('button', { class: 'btn danger block', text: 'Delete program', onClick: remove }),
             el('div', { class: 'field-help', text: workouts.length
-              ? `Deletes this program and ${plural(workouts.length, 'workout')} inside it. `
-                + 'Workouts you have already recorded stay in your history.'
+              ? `Deletes it and its ${plural(workouts.length, 'workout')}. Recorded ones stay.`
               : 'It has no workouts in it.' }),
           ),
     ],
@@ -2914,6 +3135,41 @@ async function SystemEditorView(id) {
       class: 'btn primary block', text: isNew ? 'Create program' : 'Save changes', onClick: save,
     }),
   });
+  guardUnload(screen, () => snapshot() !== opened);
+  return screen;
+}
+
+/* ==========================================================================
+   "DISCARD CHANGES?" — overhaul 2026-09-27 (interaction I-6).
+   Measured: change a name → Back → no prompt, the edit was lost, on both
+   editors; the edge swipe presses the same back button, so it lost them too.
+   Each editor snapshots its form on open; its back asks only when something
+   differs. Unchanged → back leaves at once, exactly as before. Tab taps and
+   the OS back are not intercepted (rare in an editor, which has no tab bar).
+   🚨 `backExact: true` IS LOAD-BEARING: without it screenShell's arrow goes
+   back through history and only calls `back` when there is none — so in a
+   real browser the question was never asked (measured in WebKit; jsdom has no
+   history position and hid it). The leave itself is still `goBack`.
+   ========================================================================== */
+function confirmLeave(isDirty, leave) {
+  if (!isDirty()) { leave(); return; }
+  confirmSheet({
+    title: 'Discard changes?',
+    message: 'Your changes here aren’t saved.',
+    confirmLabel: 'Discard',
+    onConfirm: leave,
+  });
+}
+
+/** Closing the tab or reloading with unsaved edits asks the browser's own question. */
+function guardUnload(screen, isDirty) {
+  if (typeof window === 'undefined' || !window.addEventListener) return;
+  const onUnload = (e) => {
+    // The editor was left: this listener has nothing to guard any more.
+    if (!screen.isConnected) { window.removeEventListener('beforeunload', onUnload); return; }
+    if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+  };
+  window.addEventListener('beforeunload', onUnload);
 }
 
 /* ================================================================== *
@@ -2988,8 +3244,7 @@ async function WorkoutDetailView(id) {
     scroll: [
       workout.isBenchmark
         ? el('div', { class: 'field-help', text:
-            'Benchmark workout — the best set of every exercise you record here is filed as a '
-            + 'benchmark for that day.' })
+            'Benchmark workout · saves each exercise’s best set as a benchmark.' })
         : null,
       // ⚠️ blocksOf() yields `{ item, index }` WRAPPERS, not the exercises —
       // the builder needs the index to write back through. Mapping the wrapper
@@ -3042,6 +3297,8 @@ export async function WorkoutBuilderView(param) {
   // A benchmark workout turns every exercise it records into a benchmark for
   // that day. Off by default: a benchmark is meant to be a deliberate test, and
   // making every workout one would empty the word of meaning.
+  // Words overhaul (W-25): one string for both states — the chip already says
+  // which one is on.
   const benchToggle = el('button', {
     class: 'chip', 'aria-pressed': String(Boolean(draft.isBenchmark)),
     text: draft.isBenchmark ? 'Benchmark workout' : 'Normal workout',
@@ -3049,14 +3306,9 @@ export async function WorkoutBuilderView(param) {
       draft.isBenchmark = !draft.isBenchmark;
       benchToggle.setAttribute('aria-pressed', String(draft.isBenchmark));
       benchToggle.textContent = draft.isBenchmark ? 'Benchmark workout' : 'Normal workout';
-      benchHelp.textContent = draft.isBenchmark
-        ? 'Every exercise you record in this workout is saved as a benchmark for that day — the best set of each.'
-        : 'Turn this on for a testing session, where each exercise should count as a benchmark.';
     },
   });
-  const benchHelp = el('div', { class: 'field-help', text: draft.isBenchmark
-    ? 'Every exercise you record in this workout is saved as a benchmark for that day — the best set of each.'
-    : 'Turn this on for a testing session, where each exercise should count as a benchmark.' });
+  const benchHelp = el('div', { class: 'field-help', text: 'Saves each exercise’s best set as a benchmark.' });
 
   const listWrap = el('div', { class: 'list' });
   const countLabel = el('div', { class: 'section-label' });
@@ -3099,7 +3351,7 @@ export async function WorkoutBuilderView(param) {
 
     if (!draft.exercises.length) {
       listWrap.append(emptyState('No exercises yet',
-        'Add exercises below. The order here is the order you will see them in during the workout.'));
+        'Add exercises below. They run in this order.'));
       return;
     }
 
@@ -3261,10 +3513,14 @@ export async function WorkoutBuilderView(param) {
   function remove() {
     confirmSheet({
       title: 'Delete this workout?',
-      message: 'Workouts you have already recorded stay in your history and on your calendar. Only the template is removed.',
+      message: 'Recorded workouts stay in your history.',
       onConfirm: async () => { await store.deleteWorkout(draft.id); toast('Workout deleted'); go(home); },
     });
   }
+
+  // 🆕 I-6: the form as it opened (see confirmLeave).
+  const snapshot = () => JSON.stringify([draft.name, Boolean(draft.isBenchmark), draft.exercises]);
+  const opened = snapshot();
 
   // ⚠️ THE NAME FIELD CAME OUT OF `top`. Pinned, it cost 86px of every phone
   // screen for a field you touch once in the life of a workout, and it pushed
@@ -3275,9 +3531,11 @@ export async function WorkoutBuilderView(param) {
   // destructive control permanently under the thumb of somebody who is
   // rearranging exercises. It now sits past the end of the list, which is a
   // journey rather than a slip.
-  return screenShell({
+  const screen = screenShell({
     title: isNew ? 'New workout' : 'Edit workout',
-    back: () => go(isNew ? home : '#/workout/' + id),
+    backExact: true,
+    back: () => confirmLeave(() => snapshot() !== opened,
+      () => goBack(() => go(isNew ? home : '#/workout/' + id))),
     scroll: [
       el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
       el('div', { class: 'field' },
@@ -3303,15 +3561,15 @@ export async function WorkoutBuilderView(param) {
       }, icon('plus'), 'Add exercise'),
       isNew ? null : el('div', { class: 'danger-zone' },
         el('button', { class: 'btn danger block', text: 'Delete workout', onClick: remove }),
-        el('div', { class: 'field-help', text:
-          'Workouts you have already recorded stay in your history and on your calendar. '
-          + 'Only the template is removed.' }),
+        el('div', { class: 'field-help', text: 'Recorded workouts stay in your history.' }),
       ),
     ],
     bottom: el('button', {
       class: 'btn primary block', text: isNew ? 'Create workout' : 'Save changes', onClick: save,
     }),
   });
+  guardUnload(screen, () => snapshot() !== opened);
+  return screen;
 }
 
 /* ================================================================== *
@@ -3594,14 +3852,12 @@ export function openCustomExerciseSheet(onPick) {
        * and the control that changes it sits directly underneath. Reversing them
        * would make the field look like a required step. */
       el('div', { class: 'field-help', text:
-        'Custom exercises are logged, charted and counted in your weekly volume. '
-        + 'They only set a strength level if you pick the closest library exercise below.' }),
+        'Logged, charted and counted in volume. Pick a match below to rate strength.' }),
       el('div', { class: 'field' },
         el('label', { text: 'Closest library exercise' }),
         standIn,
         el('div', { class: 'field-help', text:
-          'Optional. Your sets convert through it, labelled as your match rather than '
-          + 'a measurement. Leave it blank and this exercise sets no strength level.' }),
+          'Optional. Your sets rate through it, marked as a match.' }),
       ),
       el('div', { class: 'field' },
         el('label', { text: 'What do you want to track?' }),

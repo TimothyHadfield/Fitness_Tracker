@@ -56,11 +56,12 @@ const WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const WEEK_DAYS = 7;
 // Two is the shortest thing that is a rotation at all; below it "repeat" says
-// nothing. Fourteen is the top of Tim's own examples ("even 14 day cycle"), and
-// it is also the number the boxes were laid out against — see .plan-grid in
-// css/app.css, which was measured at 360px with fourteen of them.
+// nothing. Fourteen was the top of Tim's own examples ("even 14 day cycle").
+// 🔄 28 since 2026-09-27 (S-10): 3–4-week wave and 5/3/1-style cycles need
+// 21–28 slots. ⚠️ .plan-grid in css/app.css was measured at 360px with
+// fourteen boxes; a 28-slot grid wraps to more rows.
 export const MIN_CYCLE_DAYS = 2;
-export const MAX_CYCLE_DAYS = 14;
+export const MAX_CYCLE_DAYS = 28;
 
 /** How many slots a schedule of this kind and length has. */
 export function slotCount(kind, days) {

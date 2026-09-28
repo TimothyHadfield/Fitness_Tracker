@@ -394,6 +394,10 @@ async function mount(viewPromise) {
   await settle(); await settle();
   return node;
 }
+// A new workout opens in the last view used (settings.runnerView, overhaul
+// ST-15), and these tests toggle the guide on and off. Each new workout here
+// starts in the list, as every test was written for.
+const listFirst = () => store.saveSettings({ runnerView: 'list' });
 const toggle = () => app().querySelector('.guide-toggle');
 const guide = () => app().querySelector('.guide');
 const guideOn = () => Boolean(guide() && !guide().hidden);
@@ -430,7 +434,7 @@ const entriesOf = (name) => {
       { exerciseId: byName('Back Squat').id, sets: 1, notes: '' },
     ],
   });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   ok(Boolean(toggle()) && /Auto-guide/.test(toggle().textContent), 'the runner has an Auto-guide button');
   ok(!guideOn(), 'and opens in the normal view');
 }
@@ -515,7 +519,7 @@ if (!toggle()) {
   toggle().click();
   await settle();
   ok(guideOn() && /Set 2 of 3/.test(where()), 'Auto-guide again: back on set 2');
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   ok(guideOn() && /Set 2 of 3/.test(where()), 'a reload resumes in the guide, on the same step');
 
   // Through to the next exercise and Finish.
@@ -549,7 +553,7 @@ if (!toggle()) {
     name: 'Pair guide',
     exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 2, notes: '' }],
   });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   await addGuest('Rae');
   chip('You').click();
   await settle();
@@ -604,7 +608,7 @@ if (!toggle()) {
     entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 185, reps: 5 }] }],
   });
   const w = await store.saveWorkout({ name: 'Caption day', exercises: [{ exerciseId: bench.id, sets: 2, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click();
   await settle(); await settle();
   const caps = () => [...app().querySelectorAll('.guide .step-est')].map((n) => n.textContent.trim());
@@ -676,7 +680,7 @@ const GM = await import(BASE + 'guide-mode.js');
     { exerciseId: squat.id, sets: 1, notes: 'Brace hard' },
     { exerciseId: dl.id, sets: 1, notes: '' },
   ] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   ok(/Warm-up 1 of/.test(where()) && exText() === 'Back Squat', `opens on Back Squat's first warm-up ("${where().trim()}")`);
   ok(/Brace hard/.test(noteText()), `13. the coach's note is under the name ("${noteText()}")`);
@@ -700,7 +704,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const nextBtn = safeNext;
   localStorage.removeItem(DRAFT);
   const w = await store.saveWorkout({ name: 'Press day', exercises: [{ exerciseId: byName('Leg Press').id, sets: 2, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Set 1 of 2/);
   ok(/No opening weight/.test(noteText()), `19. "No opening weight — …" is in the note slot ("${noteText()}")`);
@@ -719,7 +723,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const nextBtn = safeNext;
   localStorage.removeItem(DRAFT);
   const w = await store.saveWorkout({ name: 'Plan day', exercises: [{ exerciseId: byName('Barbell Bench Press').id, sets: 3, targets: [70, 80, 90] }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   ok(/Plan: 70\/80\/90 %/.test(noteText()), `14. the plan's line is there ("${noteText()}")`);
   await walkTo(/Set 1 of 3/);
@@ -733,7 +737,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const nextBtn = safeNext;
   localStorage.removeItem(DRAFT);
   const w = await store.saveWorkout({ name: 'Pair RDL', exercises: [{ exerciseId: byName('Romanian Deadlift').id, sets: 2, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   await addGuest('Rae');
   chip('You').click(); await settle();
   toggle().click(); await settle();
@@ -755,7 +759,7 @@ const GM = await import(BASE + 'guide-mode.js');
   localStorage.removeItem(DRAFT);
   await store.saveSettings({ restTimer: true, restTarget: 90 });
   const w = await store.saveWorkout({ name: 'Drop day', exercises: [{ exerciseId: byName('Barbell Curl').id, sets: 2, notes: '', setType: 'drop', minis: 2 }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Set 1 of 2/);
   put(0,60); put(1,10);
@@ -783,7 +787,7 @@ const GM = await import(BASE + 'guide-mode.js');
   localStorage.removeItem(DRAFT);
   await store.saveSettings({ restTimer: true, restTarget: 90 });
   const w = await store.saveWorkout({ name: 'Rest day', exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 3, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Set 1 of 3/);
   const rb = app().querySelector('.guide .rest-bar');
@@ -811,7 +815,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const backBtn = safeBack;
   localStorage.removeItem(DRAFT);
   const w = await store.saveWorkout({ name: 'Done day', exercises: [{ exerciseId: byName('Pendlay Row').id, sets: 1, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Set 1 of 1/);
   put(0,135); put(1,5);
@@ -819,7 +823,7 @@ const GM = await import(BASE + 'guide-mode.js');
   d.entries[0].sets.forEach((s) => { s.done = true; });
   (d.entries[0].warmups || []).forEach((x) => { x.done = true; });
   localStorage.setItem(DRAFT, JSON.stringify(d));
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   ok(exText() === 'Nothing left to do' && !backBtn().disabled, `10. "Nothing left to do" with Back enabled (disabled=${backBtn().disabled})`);
   backBtn().click(); await settle();
   ok(/Set 1 of 1/.test(where()), `10. Back → the last set ("${where().trim()}")`);
@@ -832,7 +836,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const bench = byName('Barbell Bench Press');
   MANIFEST[bench.id] = 'webp';
   const w = await store.saveWorkout({ name: 'Box day', exercises: [{ exerciseId: bench.id, sets: 2, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle(); await settle();
   ok(Boolean(app().querySelector('.guide-name .ex-label-btn')), '18. the name is the button that opens its picture');
   await walkTo(/Set 1 of 2/);
@@ -863,7 +867,7 @@ const GM = await import(BASE + 'guide-mode.js');
   const { todayISO: today } = await import(BASE + 'store.js');
   await store.logBodyWeight(180, today());
   const w = await store.saveWorkout({ name: 'Assist guide', exercises: [{ exerciseId: byName('Assisted Pull-Up').id, sets: 2, notes: '' }] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Set 1 of 2/, 70, 8);
   put(0,70); await settle();
@@ -899,7 +903,7 @@ const rowText = (n) => (n ? [...n.children].map((c) => c.textContent).join(' ').
     { exerciseId: row.id, sets: 3, notes: '' },
     { exerciseId: byName('Back Squat').id, sets: 1, notes: '' },
   ] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
 
   // The set list: every set of this exercise, warm-ups as W, in the corner.
@@ -993,7 +997,7 @@ const rowText = (n) => (n ? [...n.children].map((c) => c.textContent).join(' ').
     { exerciseId: byName('Back Squat').id, sets: 2, notes: '' },
     { exerciseId: byName('Pendlay Row').id, sets: 1, notes: '' },
   ] });
-  await mount(SessionView(w.id));
+  await listFirst(); await mount(SessionView(w.id));
   toggle().click(); await settle();
   await walkTo(/Back Squat Set 1 of 2/, 185, 5);
   put(0, 185); put(1, 5);

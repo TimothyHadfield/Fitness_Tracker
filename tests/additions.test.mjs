@@ -73,7 +73,11 @@ async function meGoalRow() {
     const sessions = await store.getSessions();
     const benchmarks = await store.getBenchmarks();
     const bodyWeights = await store.getBodyWeights();
-    const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights });
+    // 🔄 2026-09-27 (overhaul E-5): WITH THE SEX, as the Goals screen reads it
+    // (`muscleStrength()` passes the profile's gender). Profile passes it now
+    // too; the reference without it was the Profile's old, disagreeing number.
+    const { gender } = await store.getProfile();
+    const muscles = await muscleRatings({ sessions, benchmarks, bodyWeights, sex: gender || null });
     const m = muscles.get(goal.muscle);
     const p = goalProgress(goal, m ? m.estimate : null, todayISO());
     const bar = row.querySelector('.to-next-bar');

@@ -51,6 +51,10 @@ import {
    * how deep the walk was. See `friendBackFor()` below; the stamping half in
    * `ui.js` has no reader left. */
 } from './ui.js';
+/* 🆕 OVERHAUL 2026-09-27: `friendError` and the empty state's ? come from ui.js,
+ * read through the namespace so a missing export is `undefined` rather than a
+ * module that fails to load. Each has a local fallback below. */
+import * as ui from './ui.js';
 /* 🆕 A FRIEND'S PAGE IS A PROFILE SINCE 2026-09-16, and it is the SAME profile
  * `#/me` is. Tim: *"I want you to view their profile display, like how they see
  * it for themselves."* The sections come from `js/profile-shape.js`, which both
@@ -58,7 +62,7 @@ import {
  * which is a published document rather than the store. That file's header has
  * the argument for the split. */
 import {
-  profileHead, statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock,
+  statTile, statTileFlat, statRow, bodyBlock, bestLiftsBlock,
   calendarBlock, NO_NUMBER_THEIRS,
 } from './profile-shape.js';
 import {
@@ -90,6 +94,36 @@ import { minisOf, miniLabel, groupLabel } from './set-types.js';
  * tab (sessionStorage, which also survives Google's redirect sign-in), only for
  * an add or invite link, for an hour, and it is used once — `takePendingRoute()`
  * on the Account screen, once the account is a real one. */
+/* 🆕 OVERHAUL 2026-09-27 — A RAW `err.message` NEVER REACHES A TOAST. ui.js's
+ * `friendlyError(err)` turns one into a short plain sentence; until it exists
+ * this fallback keeps the app's own short sentences ("Choose your display name
+ * first.") and replaces anything technical. */
+export function friendly(err) {
+  if (typeof ui.friendlyError === 'function') return ui.friendlyError(err);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'You\'re offline. Try again when you\'re connected.';
+  }
+  const msg = String((err && err.message) || '').trim();
+  const technical = /firebase|firestore|permission|auth\/|\bat\b.*\(|[{}[\]<>]|undefined|null|error:/i;
+  if (msg && msg.split(/\s+/).length <= 14 && !technical.test(msg)) return msg;
+  return 'That didn\'t work. Try again.';
+}
+
+/** An empty state with its ? beside the sentence (ui.js's 4th argument; a local
+ *  fallback adds the dot itself when that argument is not there yet). */
+function emptyWithHelp(title, text, action, help) {
+  const node = emptyState(title, text, action || null, { help });
+  if (help && !node.querySelector('.help-dot')) {
+    const p = node.querySelector('p');
+    if (p) {
+      const line = el('div', { class: 'help-line' });
+      p.replaceWith(line);
+      line.append(p, helpDot(help, { label: 'Why?' }));
+    }
+  }
+  return node;
+}
+
 const PENDING_ROUTE_KEY = 'ftrack:v1:afterAccount';
 const PENDING_ROUTE_RE = /^#\/(add|invite)\/[^\s]+$/;
 const PENDING_ROUTE_MS = 60 * 60 * 1000;
@@ -113,36 +147,40 @@ export function takePendingRoute() {
 // Why social is unavailable, and what to do about it. Three different answers,
 // because "you can't use this" with no route out is the thing this app is not
 // allowed to do.
-function unavailable(reason) {
+/* 🔄 OVERHAUL 2026-09-27 (words): each answer is one short line; the reason
+ * behind it sits in the ? beside it. `opts.invite` is the invite link's own
+ * wording for the anonymous case (onboarding O-15). */
+function unavailable(reason, opts = {}) {
   // ⚠️ Not "sign in to use Social". The reason a demo user cannot be social has
   // nothing to do with their account, and telling them to sign in would be a
   // confidently wrong answer to the right question.
   if (reason === 'demo') {
-    return emptyState(
+    return emptyWithHelp(
       'Sharing is off in the demo',
+      'Leave the demo to see your friends.',
+      el('a', { class: 'btn primary', href: '#/account', text: 'Leave the demo' }),
       'Sharing publishes a copy of your training for a friend to read, and the demo account\'s '
       + 'training is invented — publishing it to real people would be worse than not being able to '
       + 'try this screen. Leave the demo and your friends come back exactly as they were.',
-      el('a', { class: 'btn primary', href: '#/account', text: 'Leave the demo' }),
     );
   }
   if (reason === 'anonymous') {
-    return emptyState(
+    return emptyWithHelp(
       'Friends need a real account',
-      'You are signed in anonymously, which lives only in this browser. Add an email or Google '
-      + 'sign-in so friends are connecting to an account that will still be here tomorrow. Your '
-      + 'training history comes with you.',
+      opts.invite
+        ? 'Your friend\'s link needs an account. Your training comes with you.'
+        : 'Add an email or Google sign-in so friends connect to an account that lasts.',
       el('a', {
         class: 'btn primary', href: '#/account', text: 'Set up my account',
         onClick: () => rememberPendingRoute(location.hash),
       }),
+      'Anonymous sign-in lives only in this browser. Your history comes with you.',
     );
   }
   if (reason === 'offline') {
     return emptyState(
       'Not connected right now',
-      'Friends needs a connection. Everything else in the app carries on working — you can log a '
-      + 'whole workout offline and it will sync when you are back.',
+      'Friends needs a connection. Logging works offline.',
       el('button', {
         class: 'btn', text: 'Try again',
         onClick: async () => { await auth.retry(); refreshRoute('#/social'); },
@@ -151,8 +189,7 @@ function unavailable(reason) {
   }
   return emptyState(
     'Friends is not switched on',
-    'This copy of the app is storing your data on this device only, so there is no account for a '
-    + 'friend to connect to.',
+    'This copy stores data on this device only — no account to connect to.',
   );
 }
 
@@ -239,7 +276,7 @@ function visibilityRow(value, after) {
         await social.setVisibility(next);
         toast(next === PUBLIC_ACCOUNT ? 'Your account is public.' : 'Your account is private.');
         if (after) after();
-      } catch (err) { toast(err.message); }
+      } catch (err) { toast(friendly(err)); }
     }),
   },
     el('div', { class: 'row-main' },
@@ -317,8 +354,7 @@ export async function SocialView() {
   // his thumb. This is the shape profileButton() and fillFeed() already use.
   fillSocial(body, state).catch(() => {
     setChildren(body, emptyState('Could not load your friends',
-      'You are signed in, but the list could not be fetched just now. It will be here when the '
-      + 'connection is back.'));
+      'Couldn\'t load the list. It\'ll be here when you\'re back online.'));
   });
   return screen;
 }
@@ -391,8 +427,8 @@ async function fillSocial(body, state) {
     // Said once, plainly. Somebody disappearing off the list with no
     // explanation is the kind of thing that reads as the app losing data.
     parts.push(el('p', { class: 'note', text: departed === 1
-      ? 'Somebody disconnected from you, so they have been removed from your friends list.'
-      : `${departed} people disconnected from you and have been removed from your friends list.` }));
+      ? 'Someone disconnected and left your friends list.'
+      : `${departed} people disconnected and left your friends list.` }));
   }
 
   /* ⚠️ WORKOUTS SOMEBODY RECORDED FOR ME — Open work 0e's friend half.
@@ -428,7 +464,7 @@ async function fillSocial(body, state) {
               await social.acceptHandoff(o.id);
               toast('Added to your training.');
               refresh();
-            } catch (err) { e.target.disabled = false; toast(err.message); }
+            } catch (err) { e.target.disabled = false; toast(friendly(err)); }
           },
         }),
         el('button', {
@@ -436,7 +472,7 @@ async function fillSocial(body, state) {
           onClick: async (e) => {
             e.target.disabled = true;
             try { await social.declineHandoff(o.id); toast('Turned down.'); refresh(); }
-            catch (err) { e.target.disabled = false; toast(err.message); }
+            catch (err) { e.target.disabled = false; toast(friendly(err)); }
           },
         }),
       ));
@@ -459,7 +495,7 @@ async function fillSocial(body, state) {
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: r.name }),
           el('div', { class: 'row-sub wrap', text:
-            'They want to connect. If you add them they can see everything you have recorded.' }),
+            'Wants to connect. If you add them, they see everything you record.' }),
         ),
         el('button', {
           class: 'btn small primary', text: 'Add',
@@ -469,7 +505,7 @@ async function fillSocial(body, state) {
               await social.acceptRequest(r.uid, r.name);
               toast(`${r.name} is on your friends list.`);
               refresh();
-            } catch (err) { e.target.disabled = false; toast(err.message); }
+            } catch (err) { e.target.disabled = false; toast(friendly(err)); }
           },
         }),
         el('button', {
@@ -477,7 +513,7 @@ async function fillSocial(body, state) {
           onClick: async (e) => {
             e.target.disabled = true;
             try { await social.declineRequest(r.uid); toast('Turned down.'); refresh(); }
-            catch (err) { e.target.disabled = false; toast(err.message); }
+            catch (err) { e.target.disabled = false; toast(friendly(err)); }
           },
         }),
       ));
@@ -502,7 +538,7 @@ async function fillSocial(body, state) {
               // social.js). "That you train" was the old light tier's promise.
               toast(`${c.claimedName || 'They'} can now see everything you log.`);
               refresh();
-            } catch (err) { e.target.disabled = false; toast(err.message); }
+            } catch (err) { e.target.disabled = false; toast(friendly(err)); }
           },
         }),
       ));
@@ -520,9 +556,10 @@ async function fillSocial(body, state) {
   parts.push(el('h2', { class: 'section-head', text: 'Friends' }));
 
   if (!state.connections.length) {
-    parts.push(el('p', { class: 'note', text:
-      'Nobody yet. Search for them by name, show them your code, or send an invite link — '
-      + 'whichever is easier. Anybody you accept sees everything you have recorded.' }));
+    parts.push(el('div', { class: 'help-line' },
+      el('p', { class: 'note', text: 'Nobody yet. Search by name, show your code or send an invite.' }),
+      helpDot('Anybody you accept sees everything you have recorded.',
+        { label: 'What a friend sees' })));
   } else {
     for (const c of state.connections) {
       const title = el('div', { class: 'row-title', text: c.name || 'Friend' });
@@ -582,7 +619,7 @@ async function fillSocial(body, state) {
           class: 'btn small ghost', text: 'Cancel',
           onClick: async () => {
             try { await social.revokeInvite(i.id || i.token); toast('Link cancelled.'); refresh(); }
-            catch (err) { toast(err.message); }
+            catch (err) { toast(friendly(err)); }
           },
         }),
       ));
@@ -606,7 +643,7 @@ function nameSetupScreen() {
     try {
       await social.setDisplayName(input.value);
       refresh();
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(friendly(err)); }
   };
 
   return screenShell({
@@ -614,8 +651,7 @@ function nameSetupScreen() {
     scroll: el('div', { class: 'form' },
       el('h2', { class: 'section-head', text: 'Pick a display name' }),
       el('p', { class: 'note', text:
-        'This is the name your friends, and anyone who finds your account, see you as. Your email '
-        + 'address is never shown to anyone.' }),
+        'Friends and anyone who finds you see this name. Never your email.' }),
       input,
       el('button', { class: 'btn primary block', text: 'Continue', onClick: save }),
     ),
@@ -664,7 +700,7 @@ export function renameSheet(current, after) {
             await social.setDisplayName(input.value);
             close();
             if (after) after(); else refresh();
-          } catch (err) { toast(err.message); }
+          } catch (err) { toast(friendly(err)); }
         },
       }),
     ),
@@ -679,7 +715,7 @@ export async function inviteSheet() {
   let made;
   try {
     made = await social.createInvite();
-  } catch (err) { toast(err.message); return; }
+  } catch (err) { toast(friendly(err)); return; }
 
   // Selectable rather than only copyable: navigator.clipboard needs a secure
   // context and permission, and a link you cannot select is a dead end when it
@@ -689,10 +725,10 @@ export async function inviteSheet() {
   openSheet({
     title: 'Invite a friend',
     body: el('div', { class: 'form' },
-      el('p', { class: 'note', text:
-        'Send them this link. It works once, expires in 7 days, and you can cancel it any time '
-        + 'before it is used. When they open it you will be asked to confirm before anything is '
-        + 'shared.' }),
+      el('div', { class: 'help-line' },
+        el('p', { class: 'note', text: 'Works once, expires in 7 days, cancel any time.' }),
+        helpDot('When they open it you\'ll be asked to confirm before anything is shared.',
+          { label: 'What happens when they open it' })),
       field,
       /* 🆕 Share, beside Copy — review 2026-09-24. On a phone the share sheet
        * is how a link actually gets to somebody. Only drawn where there is
@@ -739,16 +775,13 @@ export async function InviteView(param) {
   let state;
   try { state = await social.state(); } catch (_) { state = { available: false, reason: 'offline' }; }
   if (!state.available) {
-    return screenShell({ title: 'Invite', back, noNav: true, scroll: unavailable(state.reason) });
-  }
-  if (!state.name) {
     return screenShell({ title: 'Invite', back, noNav: true,
-      scroll: emptyState(
-        'Pick a display name first',
-        'Your friend will see this name when you accept. It takes a moment.',
-        el('a', { class: 'btn primary', href: '#/social', text: 'Choose a name' }),
-      ) });
+      scroll: unavailable(state.reason, { invite: true }) });
   }
+  /* 🔄 ~~"Pick a display name first" → #/social~~ — OVERHAUL 2026-09-27 (O-15).
+   * That button left this screen without remembering the link, so the invite
+   * was lost after naming. The name is asked for below, on this screen, and
+   * Connect saves it and accepts in one tap. */
   if (parsed.ownerUid === state.uid) {
     return screenShell({ title: 'Invite', back, noNav: true,
       scroll: emptyState('That is your own link', 'Send it to somebody else and they can open it.') });
@@ -759,7 +792,7 @@ export async function InviteView(param) {
     found = await social.openInvite(parsed.ownerUid, parsed.token);
   } catch (err) {
     return screenShell({ title: 'Invite', back, noNav: true,
-      scroll: emptyState('That link could not be opened', err.message || 'It may have been cancelled.') });
+      scroll: emptyState('That link could not be opened', friendly(err)) });
   }
 
   // Each refusal says the different thing, because "already used" and "expired"
@@ -775,26 +808,40 @@ export async function InviteView(param) {
     return screenShell({ title: 'Invite', back, noNav: true, scroll: emptyState(title, msg) });
   }
 
+  /* 🆕 O-15: NO NAME YET → THE FIELD IS HERE, prefilled from the sign-in's own
+   * name where there is one. Connect saves the name, then accepts. */
+  const needsName = !state.name;
+  const nameInput = needsName
+    ? el('input', {
+        class: 'input', maxlength: '60', placeholder: 'e.g. Tim H', 'aria-label': 'Your name',
+        value: (state.user && (state.user.name || state.user.displayName)) || '',
+      })
+    : null;
+
   const accept = async (e) => {
     e.target.disabled = true;
     try {
+      if (needsName) await social.setDisplayName(nameInput.value);
       await social.acceptInvite(parsed.ownerUid, parsed.token, 'Friend');
       toast('Connected. You can now see each other\'s training.');
-      location.hash = '#/social';
-    } catch (err) { e.target.disabled = false; toast(err.message); }
+      // After Connect: Home, where their workouts show up (O-15).
+      location.hash = '#/home';
+    } catch (err) { e.target.disabled = false; toast(friendly(err)); }
   };
 
   return screenShell({
     title: 'Invite', back, noNav: true,
     scroll: el('div', { class: 'form' },
       el('h2', { class: 'section-head', text: 'Connect' }),
+      needsName
+        ? el('div', { class: 'field' }, el('label', { text: 'Your name' }), nameInput)
+        : null,
       el('p', { class: 'note', text:
         // ⚠️ The truth since 2026-09-03 (VISIBILITY_DETAIL in social.js): a
-        // friend sees everything. Body weight is left out of the list because
-        // it is shared only when its own switch is on (shareBodyWeight). There
-        // is no per-friend choice any more, only disconnecting.
-        `You will appear to them as ${state.name}. Once connected, you each see everything the other `
-        + 'logs: workouts, weights, benchmarks and muscle map. You can disconnect whenever you like.' }),
+        // friend sees everything. Body weight is left out because it is shared
+        // only when its own switch is on (shareBodyWeight).
+        (needsName ? '' : `You'll appear as ${state.name}. `)
+        + 'You each see everything the other logs. Disconnect any time.' }),
       el('button', { class: 'btn primary block', text: 'Connect', onClick: accept }),
       el('a', { class: 'btn ghost block', href: '#/social', text: 'Not now' }),
     ),
@@ -866,8 +913,7 @@ export async function FriendView(uid) {
   if (!isFriend && !seen.doc) {
     return screenShell({ title: 'Not connected', back, noNav: true,
       scroll: emptyState('Nothing to show',
-        'You are not connected to them, and their account is private. Send them a friend request '
-        + 'and they can accept it.') });
+        'Their account is private. Send a request and they can accept.') });
   }
 
   const name = (seen.doc && seen.doc.profile && seen.doc.profile.name)
@@ -1117,6 +1163,21 @@ function viewDataButton(uid) {
   });
 }
 
+/** Is there a map of theirs to put beside mine — current grid or old levels. */
+function hasMap(doc) {
+  const s = doc && doc.strength;
+  if (!s) return false;
+  return Array.isArray(s) ? s.length > 0 : Boolean(s.muscles && s.muscles.length);
+}
+
+/** 🆕 SC-10: their body beside yours, one tap from their profile. */
+function compareButton(uid) {
+  return el('a', {
+    class: 'btn small topbar-btn', text: 'Compare',
+    href: `#/compare/${encodeURIComponent(uid)}`,
+  });
+}
+
 /**
  * Their profile — the screen `#/friend/<uid>` is, as of 2026-09-16.
  *
@@ -1158,14 +1219,16 @@ function friendProfileScreen({ uid, name, seen, conn, isFriend, state, demo = fa
     back: arrow.back,
     backExact: arrow.backExact,
     noNav: true,
-    actions: hasData ? [viewDataButton(uid)] : [],
+    // 🆕 SC-10: Compare beside View data (Tim: "compare can be against a friend
+    // or an influencer"). It was three taps away: View data → Muscles → Compare.
+    actions: [hasMap(doc) ? compareButton(uid) : null, hasData ? viewDataButton(uid) : null]
+      .filter(Boolean),
     scroll: body,
   });
 
   fillFriendProfile(body, { uid, name, seen, conn, isFriend, state, demo }).catch(() => {
     setChildren(body, emptyState('Could not load their profile',
-      'Their page could not be built just now. Nothing of yours is affected, and everything you '
-      + 'have recorded is safe on this device.'));
+      'Couldn\'t build their page. Your own data is safe.'));
   });
   return screen;
 }
@@ -1182,7 +1245,11 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
    * ornament on most accounts. A profile has a SLOT for the face — the name sits
    * beside it and the tiles sit under it — so leaving it out now moves the whole
    * screen up and reads as a page that failed to load. */
-  const parts = [profileHead({ avatar: profile.avatar || null, name, large: true })];
+  /* 🔄 SC-10 (overhaul 2026-09-27): THE NAME IS NOT PRINTED A THIRD TIME. The
+   * topbar carries it; the head is their face with the two figures beside it,
+   * on one row. With no document there are no figures, so the head is the face. */
+  const face = el('span', { class: 'me-face is-lg' }, personFace(profile.avatar || null, 56));
+  const parts = [el('div', { class: 'me-head friend-head' }, face)];
 
   /* 🔄 ~~"What they can see of yours"~~ REMOVED 2026-09-05, on Tim's
    * instruction: *"Since we talked about how that single option is only
@@ -1233,23 +1300,32 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
    * printing 0 there would be this app inventing a fact about somebody else's
    * social life out of a field that does not exist yet. */
   const connections = Array.isArray(doc.connections) ? doc.connections : null;
-  parts.push(statRow(
-    statTile('Workouts shared', acts.length, link('workouts')),
+  /* 🔄 OVERHAUL 2026-09-27 (words W-7): the two sentences that sat under the
+   * tiles are each a ? ON its tile now — the same words, one tap away. The
+   * dot's own handler stops the tap, so it never follows the tile's link. */
+  const withDot = (tile, text, label) => {
+    const l = tile.querySelector('.me-stat-l');
+    if (l) l.append(helpDot(text, { label }));
+    return tile;
+  };
+  const stats = statRow(
+    withDot(statTile('Workouts shared', acts.length, link('workouts')),
+      `Their most recent ${MAX_ACTIVITY} sessions at most — not everything they have trained.`,
+      'What workouts shared counts'),
     connections === null
-      ? statTileFlat('Friends', null, { off: true })
+      ? withDot(statTileFlat('Friends', null, { off: true }),
+        `${name}'s app has not published their friends list yet. It will the next time they open it.`,
+        'Why there is no number')
       : connections.length
         ? statTile('Friends', connections.length, link('friends'))
         // A real zero, in full ink, and not a link: "they have none" is a
         // complete answer, and a list of nobody is a screen with nothing on it.
         : statTileFlat('Friends', 0),
-  ));
-  parts.push(el('div', { class: 'field-help', text:
-    `Workouts shared is what ${name} publishes — their most recent ${MAX_ACTIVITY} sessions at most, `
-    + 'not everything they have trained.' }));
-  if (connections === null) {
-    parts.push(el('div', { class: 'field-help', text:
-      `${name}'s app has not published their friends list yet. It will the next time they open it.` }));
-  }
+  );
+  // Beside the face, one row (SC-10). `flex:1` so the tiles share the width left.
+  stats.style.flex = '1';
+  stats.style.minWidth = '0';
+  parts[0].append(stats);
 
   /* ── THEIR BODY: SEX AND AGE, NEVER WEIGHT ────────────────────────────────
    *
@@ -1376,6 +1452,8 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
  * have ranked on an assumption of its own — no gender or no weigh-in — and the
  * caption then says so, from the published `strength.assumed`.)
  * ------------------------------------------------------------------ */
+
+const OTHER_LIFTS_NOTE = 'Other lifts: worked out here, not ranked.';
 
 /** Highest level first; no percentile last; ties by name. */
 function byPercentile(a, b) {
@@ -1507,19 +1585,30 @@ async function theirBestLifts(doc, name, legacy) {
   // 2026-09-27: their app may have ranked on an assumption (no gender or no
   // weigh-in); the core eight are its ranking, so the caveat rides with them.
   const assumedLine = strength ? assumedNoteFor(strength, name) : null;
-  return bestLiftsBlock({
+  const block = bestLiftsBlock({
     label: `${name}'s best lifts`,
     core,
     other,
     repsOnly: r.repsOnly,
+    // 🔄 Overhaul 2026-09-27 (words W-7): shorter; the reasons moved into the ?.
     caption: anyCore
-      ? `Estimated one-rep maxes. The core eight are ${name}'s own app's ranking, `
-        + `coloured by level ${label.main} · ${label.sub}.${assumedLine ? ` ${assumedLine}` : ''}`
+      ? `Estimated one-rep maxes · their app's levels, ${label.main.replace(/^vs\. /, '')} · `
+        + `${label.sub}.${assumedLine ? ` ${assumedLine}` : ''}`
       : `Estimated one-rep maxes, worked out here from the sets ${name} publishes.`,
-    note: 'The other lifts are worked out on this device from the sets they publish, and are not '
-      + 'ranked: their app publishes a level per muscle rather than per lift, and one worked out '
-      + 'here would be read against a different body from the one theirs was.',
+    note: OTHER_LIFTS_NOTE,
   }, { noNumber: NO_NUMBER_THEIRS });
+  /* The note's reason goes behind a ? right after its words. profile-shape.js
+   * prints `note` as text, so the dot is added to that line here. */
+  const noteLine = [...block.querySelectorAll('.field-help')]
+    .find((n) => n.textContent === OTHER_LIFTS_NOTE);
+  if (noteLine) {
+    noteLine.classList.add('help-line');
+    noteLine.append(helpDot('The other lifts are worked out on this device from the sets they '
+      + 'publish, and are not ranked: their app publishes a level per muscle rather than per lift, '
+      + 'and one worked out here would be read against a different body from the one theirs was.',
+    { label: 'Why the other lifts are not ranked' }));
+  }
+  return block;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1569,13 +1658,12 @@ function relationshipFooter({ uid, conn, isFriend, state, demo }) {
          * anybody else. A sheet that says a link is cut when it is not is a lie
          * the user acts on, which is the whole lesson of the note above. */
         message: `${conn.name || 'They'} drops off your friends list`
+          // 🔄 Overhaul 2026-09-27 (words): shorter, no claim dropped.
           + (state.visibility === PUBLIC_ACCOUNT
-            ? ', but your account is PUBLIC — so they can carry on reading your training like '
-              + 'anybody else signed in. Make your account private if you want that to stop.'
-            : ', and will no longer be able to see anything of yours.')
-          + ' It cannot un-see anything they have already looked at.\n\n'
-          + 'They are told, so their app will drop you too the next time they open it. Until then '
-          + 'their training may still be readable by this account.',
+            ? ', but your account is public, so they can still read it like anyone signed in.'
+            : ', and will no longer see anything of yours.')
+          + '\n\nThey\'re told, and their app drops you next time it opens. '
+          + 'It can\'t un-see what they\'ve read.',
         confirmLabel: 'Disconnect',
         onConfirm: async () => {
           try {
@@ -1587,7 +1675,7 @@ function relationshipFooter({ uid, conn, isFriend, state, demo }) {
               ? 'Disconnected on your side — we could not reach them to tell them.'
               : 'Disconnected.');
             location.hash = '#/social';
-          } catch (err) { toast(err.message); }
+          } catch (err) { toast(friendly(err)); }
         },
       }),
     }),
@@ -1699,9 +1787,10 @@ export async function FriendWorkoutsView(uid) {
      * places, and none of them may read as a career total — see the tile's own
      * comment for the precedent. */
     setChildren(body,
-      el('div', { class: 'field-help', text:
-        `${acts.length} workout${acts.length === 1 ? '' : 's'} ${pre.name} has published, newest `
-        + `first — their most recent ${MAX_ACTIVITY} sessions at most.` }),
+      el('div', { class: 'help-line' },
+        el('div', { class: 'field-help', text: `${acts.length} shared · newest first` }),
+        helpDot(`Their most recent ${MAX_ACTIVITY} sessions at most — not everything they have trained.`,
+          { label: 'What shared counts' })),
       // ⚠️ `activityRow` rather than a second row shape. It is what their page
       // has always used for one of their workouts, it opens `#/friend/<uid>/<id>`,
       // and it already answers a session with no entries and one published
@@ -1733,9 +1822,10 @@ export async function FriendPeopleView(uid) {
      * something false about somebody's social life on the strength of a field
      * that did not exist when their app last ran. */
     if (people === null) {
-      setChildren(body, emptyState('Not published yet',
-        `${pre.name}'s app has not published their friends list. It will the next time they open `
-        + 'the app — until then this is a gap in what they share, not a statement about them.'));
+      setChildren(body, emptyWithHelp('Not published yet',
+        `${pre.name}'s app hasn't published their friends list yet.`, null,
+        'It will the next time they open the app — a gap in what they share, not a statement '
+        + 'about them.'));
       return;
     }
     if (!people.length) {
@@ -1809,13 +1899,15 @@ async function legacyBody(doc, name) {
       bodySvg(levels, null, () => {},
         { label: `${name}'s muscle groups, coloured by strength level`, sex })),
     muscles.legend(settings.moreDetails === true),
+    // 🔄 Overhaul 2026-09-27 (words): one line; the rest behind the ?.
     el('div', { class: 'card' },
-      el('div', { class: 'field-help', text:
-        `${name}'s app has not updated since this screen changed, so this is the last map they `
-        + 'published — the levels are theirs, and the numbers behind them are not in it yet.' }),
-      el('div', { class: 'field-help', text:
-        'Tapping a muscle, and comparing your body against theirs, both start working the next time '
-        + 'they open the app. Nothing is lost in the meantime.' }),
+      el('div', { class: 'help-line' },
+        el('div', { class: 'field-help', text:
+          'Their last published map — the numbers arrive when their app updates.' }),
+        helpDot(`${name}'s app has not updated since this screen changed, so the levels are theirs `
+          + 'and the numbers behind them are not in it yet. Tapping a muscle, and comparing your '
+          + 'body against theirs, both start working the next time they open the app. Nothing is '
+          + 'lost in the meantime.', { label: 'Why there are no numbers' })),
     ),
   );
 }
@@ -1946,7 +2038,7 @@ export async function CompareBodiesView(param) {
   const [
     { ratingsFromShared, levelMapFrom, ownSexOf, assumedOf, assumedNoteFor, levelMapFromLegacy },
     { bodySvg, bodyAspect }, muscles,
-    { comparisonLabel, comparePreset }, settings, figures, { legacyLevels },
+    { comparisonLabel, comparePreset, MUSCLE_LIFTS }, settings, figures, { legacyLevels },
   ] = await Promise.all([
     import('./shared-map.js'), import('./body-map.js'), import('./views-muscles.js'),
     import('./strength-standards.js'), store.getSettings(), import('./public-figures.js'),
@@ -2036,8 +2128,7 @@ export async function CompareBodiesView(param) {
     missing.push({
       name: (r && r.name) || 'They',
       why: r && r.legacy
-        ? 'their app has not updated since this screen changed — it starts working the next time '
-          + 'they open it'
+        ? 'works once their app updates'
         // Names the one thing their document shows is missing (never age,
         // which a ranking does not need) — see whyNoSharedMap, 2026-09-26.
         : (r && r.doc ? whyNoSharedMap(r.doc) : 'nothing of theirs is readable from here'),
@@ -2071,7 +2162,7 @@ export async function CompareBodiesView(param) {
       mineMissing
         // 🔄 2026-09-27: gender and body weight are no longer needed (an
         // assumed map is published and says so), so a set is all that is left.
-        ? 'Your own muscle map needs at least one recorded set before it can be ranked.'
+        ? 'Record one set to rank your own map.'
         : missing.length
           ? `${missing.map((m) => `${m.name}: ${m.why}`).join('. ')}.`
           : 'There is only one map to draw here.',
@@ -2132,8 +2223,7 @@ export async function CompareBodiesView(param) {
     ...sides.map((s) => {
       if (s.legacyLevels) {
         return el('div', { class: 'field-help', text:
-          `${s.name}'s app has not updated since this screen changed, so their body shows the levels `
-          + 'it last published, whatever comparison is picked above.' });
+          `${s.name}: their body shows the levels it last published.` });
       }
       const line = s.uid === null
         ? comparisonLabel({ gender: s.sex, assumed: assumedOf(s.strength) }).assumed
@@ -2161,8 +2251,9 @@ export async function CompareBodiesView(param) {
      * number, so same-sex comparisons render exactly as they did before. */
     const arMax = Math.max(...read.map((s) => bodyAspect(s.sex)));
 
-    const columns = read.map((s) => {
-      const figure = bodySvg(s.legacyLevels || levelMapFrom(s.muscles), selected, (muscle) => {
+    const levelMaps = read.map((s) => s.legacyLevels || levelMapFrom(s.muscles));
+    const columns = read.map((s, i) => {
+      const figure = bodySvg(levelMaps[i], selected, (muscle) => {
         // ⚠️ TAPPING EITHER BODY SELECTS THE SAME MUSCLE ON BOTH. Two
         // independent selections is the state where somebody reads one person's
         // chest against the other's back and never notices.
@@ -2189,8 +2280,8 @@ export async function CompareBodiesView(param) {
           s.legacyLevels
             ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
                 s.legacyLevels.has(selected)
-                  ? `${s.name}: ${s.legacyLevels.get(selected).label}. The numbers behind it are not in `
-                    + 'what their app last published — they arrive the next time they open it.'
+                  ? `${s.name}: ${s.legacyLevels.get(selected).label}. `
+                    + 'Numbers arrive when their app updates.'
                   : `${s.name}'s app has not published this muscle.` }))
           : s.missing
             ? el('div', { class: 'card' }, el('div', { class: 'field-help', text:
@@ -2200,28 +2291,46 @@ export async function CompareBodiesView(param) {
         ))
       : [];
 
+    /* 🆕 SC-9 (overhaul 2026-09-27): THE AT-A-GLANCE LIST. Every rankable muscle,
+     * in the map's own order, with each person's level chip — named, no numbers,
+     * no winner, no colour for better or worse beyond the level's own. A row is
+     * the same tap as the figure: it opens both panels below. On a laptop the
+     * list sits in the right third beside the bodies (`cmp-layout`, CSS wave 2);
+     * on a phone it sits under them. */
+    const chipFor = (lm, muscle) => {
+      const e = lm && lm.get(muscle);
+      return e && e.levelKey
+        ? el('span', { class: `lv-chip lv-${e.levelKey}`, text: e.label })
+        : el('span', { class: 'cmp-none', text: '—', 'aria-label': 'no level' });
+    };
+    const list = el('div', { class: 'cmp-list', role: 'list', 'aria-label': 'Levels, muscle by muscle' },
+      // ⚠️ `cmp-lrow`, not `cmp-row`: that class is the exercise compare sheet's.
+      el('div', { class: 'cmp-lrow cmp-lrow-head', 'aria-hidden': 'true' },
+        el('span', { class: 'cmp-m' }),
+        ...read.map((s) => el('span', { class: 'cmp-who', text: s.name }))),
+      ...Object.keys(MUSCLE_LIFTS).map((muscle) => el('button', {
+        class: 'cmp-lrow', type: 'button', role: 'listitem',
+        'aria-pressed': String(selected === muscle),
+        'data-muscle': muscle,
+        onClick: () => { selected = selected === muscle ? null : muscle; draw(); },
+      },
+        el('span', { class: 'cmp-m', text: muscle }),
+        ...levelMaps.map((lm) => el('span', { class: 'cmp-lv' }, chipFor(lm, muscle))),
+      )),
+    );
+
     setChildren(host,
-      el('div', { class: 'cmp-grid' }, ...columns),
-      muscles.legend(more),
-      selected
-        // `cmp-panels`: stacked one above the other on a phone (review
-        // 2026-09-24 — side by side, dates clipped and names wrapped to three
-        // lines at 393px). Side by side from the 860px laptop split up.
-        ? el('div', { class: 'cmp-grid cmp-panels' }, ...panels)
-        /* ⚠️ ONE INVITATION, NOT TWO — 2026-09-08. A second `.field-help` under
-         * the caption below opened *"Tap a muscle to see both estimated one-rep
-         * maxes … and the recorded sets each was worked out from"*, so with
-         * nothing selected the screen asked twice, a few pixels apart; with
-         * something selected it described the panel already open above it. What
-         * that sentence said and this one did not — that the estimate and the
-         * sets behind it are what a tap opens — is folded in here, where the tap
-         * has not happened yet. Nothing about it is lost once it has: the panel
-         * prints "Estimated 1-rep max in <lift>" over the number and names every
-         * recorded set under it. */
-        : el('div', { class: 'card' },
-            el('div', { class: 'field-help', text:
-              'Tap a muscle on either body — both open it, with each person\'s estimated '
-              + 'one-rep max and the recorded sets behind it.' })),
+      el('div', { class: 'cmp-layout' },
+        el('div', { class: 'cmp-bodies' },
+          el('div', { class: 'cmp-grid' }, ...columns),
+          muscles.legend(more)),
+        list),
+      // `cmp-panels`: stacked one above the other on a phone (review
+      // 2026-09-24 — side by side, dates clipped and names wrapped to three
+      // lines at 393px). Side by side from the 860px laptop split up.
+      // 🔄 SC-9: the "Tap a muscle on either body" card is gone — the caption
+      // below now carries the one invitation, and the list is the other door.
+      selected ? el('div', { class: 'cmp-grid cmp-panels' }, ...panels) : null,
       el('div', { class: 'vol-notes' },
         /* ⚠️ THIS SENTENCE USED TO NAME ONLY WEIGHT AND AGE, AND THAT WAS THE
            TELL. Both were per-person from the start; sex was not, and the
@@ -2239,14 +2348,21 @@ export async function CompareBodiesView(param) {
            none of it may go behind a "?". What was two blocks is one because the
            SECOND block was an invitation to tap, which the card above already
            makes; its one unique clause is the last one here. */
-        el('div', { class: 'field-help', text:
-          (compare.sex === 'own'
-            ? 'Each body is ranked against people of its own sex, body weight and age'
-            : 'Each body is ranked against people of its own body weight and age, but both '
-              + 'against the one sex you picked')
-          + ', so two people can read the same level at very different weights. The level answers '
-          + '"how far along is this person", never "who lifts more" — the estimated one-rep max '
-          + 'behind a tap is the number that does.' }),
+        /* 🔄 P4 (overhaul 2026-09-27, words.md): shortened, and the WHY moved
+           behind a ? beside it — nothing deleted. The header above already names
+           the standard; the ? keeps which population each body is on and the
+           "never who lifts more" caveat, word for word. */
+        el('div', { class: 'field-help help-line' },
+          el('span', { text: 'The same level can mean very different weights. Tap a muscle for each max.' }),
+          helpDot(
+            (compare.sex === 'own'
+              ? 'Each body is ranked against people of its own sex, body weight and age'
+              : 'Each body is ranked against people of its own body weight and age, but both '
+                + 'against the one sex you picked')
+            + ', so two people can read the same level at very different weights. The level answers '
+            + '"how far along is this person", never "who lifts more" — the estimated one-rep max '
+            + 'behind a tap is the number that does.',
+            { label: 'Why?' })),
         /* 🆕 WHERE A FAMOUS LIFTER'S NUMBERS COME FROM — behind a disclosure,
          * because it is the WHY of the map rather than the WHAT (Rule 9). Every
          * lift, its year and its source; "reported" where there is no primary
@@ -2254,9 +2370,11 @@ export async function CompareBodiesView(param) {
          * checkable, or they are a claim about him the app cannot stand behind. */
         ...read.filter((s) => s.famous).map((s) => el('details', { class: 'vol-details' },
           el('summary', { text: `Where ${s.famous.name}'s numbers come from` }),
-          el('div', { class: 'field-help', text:
-            'Lifts on public record — mostly meet results, with the weigh-in on the day — rated '
-            + 'by the same arithmetic as yours, as of their most recent one.' }),
+          // P4: shortened; the detail moved behind the ? (never deleted).
+          el('div', { class: 'field-help help-line' },
+            el('span', { text: 'Public-record lifts, mostly meets, rated like yours.' }),
+            helpDot('Meet results carry the weigh-in on the day. The map is them as of their most '
+              + 'recent lift on record, by the same arithmetic as yours.', { label: 'Why?' })),
           el('ul', { class: 'vis-list' }, ...s.famous.lifts.map((l) => el('li', {},
             `${l.exercise} ${Math.round(l.weightLb)} lb × ${l.reps}, ${l.date.slice(0, 4)}`
               + (l.reported ? ' (reported)' : '') + ' · ',
@@ -2362,9 +2480,7 @@ export async function FriendSessionView(uid, sessionId) {
   if (!a) {
     return screenShell({ title: 'Workout', back, noNav: true,
       scroll: emptyState('That workout is not here',
-        `${name} shares their most recent workouts, and this one is no longer among them — either `
-        + 'it has scrolled off the end of what they publish, or they have changed what they share '
-        + 'with you.') });
+        `No longer shared — past their last ${MAX_ACTIVITY}, or they changed sharing.`) });
   }
 
   const body = el('div', { class: 'ws' });
@@ -2502,7 +2618,7 @@ async function saveAsRoutineSheet(a, exMap, from) {
   const { workout, dropped, warnings } = routineFromSession(a, exMap, { from });
 
   if (!workout.exercises.length) {
-    toast('None of these exercises are in your library, so there is nothing to copy.');
+    toast('None of these are in your library.');
     return;
   }
 
@@ -2543,7 +2659,7 @@ async function saveAsRoutineSheet(a, exMap, from) {
         close();
         toast('Saved. Weights are yours to set.');
         location.hash = `#/workout/${encodeURIComponent(saved.id)}`;
-      } catch (err) { toast((err && err.message) || 'Could not save that.'); }
+      } catch (err) { toast(friendly(err)); }
     } }),
   });
 }
@@ -2569,7 +2685,7 @@ async function shareWorkoutPicture(a, who, stats) {
     // A share sheet that was dismissed is not an error and says nothing.
     if (r && r.downloaded) toast('Saved to your files.');
   } catch (err) {
-    toast((err && err.message) || 'Could not make that picture.');
+    toast(friendly(err));
   }
 }
 
@@ -2653,9 +2769,11 @@ async function friendRecords(a, acts, exMap, bodyWeights = []) {
       ),
       el('div', { class: 'ws-pr-line', text: line(p) }),
     )),
-    el('p', { class: 'note ws-fine', text:
-      'Measured against the workouts they share with you, not against everything they have ever '
-      + 'done — so this is their best here, which may not be their best.' }),
+    el('div', { class: 'help-line' },
+      el('p', { class: 'note ws-fine', text: 'Their best in what they share with you.' }),
+      helpDot('Measured against the workouts they share with you, not against everything they '
+        + 'have ever done — so this is their best here, which may not be their best.',
+      { label: 'Why this may not be their best' })),
   );
 }
 
@@ -2920,6 +3038,15 @@ const CAVEAT_WHY = {
 };
 
 function caveatNode(c) {
+  /* 🆕 2026-09-27 (overhaul P8, compare.js): a caveat now arrives already split —
+   * `text` is WHAT and stays on screen, `help` is WHY and goes behind the ? right
+   * beside it (Rule 9). The string-splitting below is kept only for a caveat that
+   * still comes as one sentence. */
+  if (c && c.help) {
+    return el('div', { class: 'help-line' },
+      el('span', { class: 'note ws-fine', text: c.text }),
+      helpDot(c.help, { label: (CAVEAT_WHY[c.key] && CAVEAT_WHY[c.key].label) || 'Why?' }));
+  }
   const rule = CAVEAT_WHY[c.key];
   const cut = rule ? String(c.text).indexOf(rule.at) : -1;
   if (cut <= 0) return el('p', { class: 'note ws-fine', text: c.text });
@@ -3018,7 +3145,7 @@ async function compareSheet(entry, exMap, ctx) {
       ));
   } catch (err) {
     setChildren(sheet.sheet.querySelector('.sheet-body'),
-      el('p', { class: 'note', text: (err && err.message) || 'Could not work that out.' }));
+      el('p', { class: 'note', text: friendly(err) }));
   }
 }
 
@@ -3049,7 +3176,10 @@ function trimNumber(n) {
  */
 function cmpValue(m, v) {
   if (v == null) return '—';
-  if (m.unit === 'weight') return m.estimate ? units.withUnitRounded(v) : units.withUnit(v);
+  // EB-11 (compare.js): `each` means the weight is PER HAND, so it says so.
+  if (m.unit === 'weight') {
+    return (m.estimate ? units.withUnitRounded(v) : units.withUnit(v)) + (m.each ? ' each' : '');
+  }
   return `${trimNumber(v)}${m.unit ? ` ${m.unit}` : ''}`;
 }
 
@@ -3279,16 +3409,14 @@ async function friendBody(strength, who) {
       missing
         ? el('div', { class: 'card' },
             el('div', { class: 'field-help', text:
-              `${who.name} has not published a map for that comparison. Their app publishes one when `
-              + 'they next open it — try "Like them", which every version publishes.' }))
+              'No map for that comparison yet — try "Like them".' }))
         : selected
           ? muscles.musclePanel(publishedRating(rated, strength, selected), selected,
               { compare, ...asThem }, null, more)
           : el('div', { class: 'card' },
               el('div', { class: 'field-help', text: 'Tap a muscle for their numbers.' }),
               el('div', { class: 'field-help', text:
-                'Every number here was worked out on their device from their own training, and '
-                + 'published. Nothing about their body weight is in it.' })),
+                'Their app\'s own numbers — their body weight is not in it.' })),
     );
   }
 
@@ -3437,10 +3565,10 @@ function myCodeSheet(uid, name) {
     title: 'Your code',
     body: el('div', {},
       card,
-      el('p', { class: 'field-help', text:
-        'Point their phone camera at this — no app needed, it opens straight to your '
-        + 'profile. They send you a request and you decide whether to add them. '
-        + 'The code is yours permanently; it never expires.' }),
+      el('div', { class: 'help-line' },
+        el('p', { class: 'field-help', text:
+          'Scan with any phone camera — no app needed. Your code never expires.' }),
+        helpDot('They send a request and you decide.', { label: 'What happens when they scan it' })),
     ),
   });
 }
@@ -3463,8 +3591,7 @@ export async function FindView() {
   });
 
   const empty = () => setChildren(results, el('p', { class: 'field-help', text:
-    'Type a name to look for somebody. You can only find people who are findable — '
-    + 'everybody is by default, and it can be turned off in Settings.' }));
+    'Type a name. Anyone can turn this off in Settings.' }));
   empty();
 
   /* ⚠️ DEBOUNCED, AND A STALE ANSWER IS DISCARDED. Two keystrokes can be in
@@ -3481,13 +3608,12 @@ export async function FindView() {
     if (mine !== seq) return;
     if (rows === null) {
       setChildren(results, el('p', { class: 'note', text:
-        'Could not search just now. It will work when the connection is back.' }));
+        'Couldn\'t search. Try again when you\'re back online.' }));
       return;
     }
     if (!rows.length) {
       setChildren(results, el('p', { class: 'note', text:
-        `Nobody called “${query.trim()}”. The name has to match how they typed theirs — `
-        + 'or show them your code instead.' }));
+        `Nobody called “${query.trim()}”. Names must match — or show your code.` }));
       return;
     }
     setChildren(results, ...rows.map((r) => personRow(r, () => run(input.value))));
@@ -3504,15 +3630,17 @@ export async function FindView() {
     scroll: el('div', {},
       el('div', { class: 'field' }, el('label', { text: 'Search by name' }), input),
       results,
-      el('h2', { class: 'section-head', text: 'Other ways' }),
+      // 🔄 Overhaul 2026-09-27 (words): the code-vs-link paragraph is the ?
+      // beside this heading; nothing visible under the buttons.
+      el('div', { class: 'help-line' },
+        el('h2', { class: 'section-head', text: 'Other ways' }),
+        helpDot('A code is yours permanently and anyone can scan it. An invite link works once and '
+          + 'expires after 7 days, which is the one to use if you are sending it somewhere you '
+          + 'would rather it did not sit forever.', { label: 'Code or link?' })),
       el('button', { class: 'btn block', onClick: () => myCodeSheet(state.uid, state.name) },
         icon('target', 16), 'Show my code'),
       el('button', { class: 'btn block', style: 'margin-top:8px', onClick: () => inviteSheet() },
         icon('link', 16), 'Send an invite link'),
-      el('p', { class: 'field-help', text:
-        'A code is yours permanently and anyone can scan it. An invite link works once and '
-        + 'expires after 7 days, which is the one to use if you are sending it somewhere you '
-        + 'would rather it did not sit forever.' }),
     ),
   });
 }
@@ -3535,7 +3663,7 @@ function personRow(person, after) {
           onClick: async (e) => {
             e.target.disabled = true;
             try { await social.withdrawRequest(person.uid); toast('Request taken back.'); }
-            catch (err) { toast(err.message); }
+            catch (err) { toast(friendly(err)); }
             e.target.disabled = false;
             if (after) after();
           },
@@ -3547,7 +3675,7 @@ function personRow(person, after) {
             try {
               await social.sendRequest(person.uid, person.name);
               toast(`Asked ${person.name}. They decide whether to add you.`);
-            } catch (err) { toast(err.message); }
+            } catch (err) { toast(friendly(err)); }
             e.target.disabled = false;
             if (after) after();
           },
@@ -3593,8 +3721,7 @@ export async function AddView(uid) {
   social.personByUid(uid).then((person) => {
     if (!person) {
       setChildren(body, emptyState('That code did not match anybody',
-        'They may have turned off being findable, or deleted their account. Ask them for an '
-        + 'invite link instead.'));
+        'They may be unfindable or gone. Ask for an invite link.'));
       return;
     }
     setChildren(body,
@@ -3606,8 +3733,7 @@ export async function AddView(uid) {
             ? 'You are already connected.'
             : person.state === 'asked'
               ? 'You have already asked. They decide whether to add you.'
-              : 'They get a request and decide whether to add you. Once they do, you each see '
-                + 'everything the other logs.' }),
+              : 'They decide. Once they do, you each see everything the other logs.' }),
         ),
       ),
       person.state === 'none'
@@ -3619,14 +3745,14 @@ export async function AddView(uid) {
                 await social.sendRequest(person.uid, person.name);
                 toast(`Asked ${person.name}.`);
                 location.hash = '#/social';
-              } catch (err) { e.target.disabled = false; toast(err.message); }
+              } catch (err) { e.target.disabled = false; toast(friendly(err)); }
             },
           }, 'Ask to connect')
         : el('a', { class: 'btn block', style: 'margin-top:12px', href: '#/social' }, 'Back to friends'),
     );
   }).catch(() => {
     setChildren(body, emptyState('Could not look them up',
-      'You are signed in, but the lookup failed just now. Try again when the connection is back.'));
+      'Couldn\'t search. Try again when you\'re back online.'));
   });
 
   return screen;

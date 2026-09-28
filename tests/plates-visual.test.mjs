@@ -220,5 +220,24 @@ for (const [lb, maxWidth, why] of [[900, 160, '900 lb deadlift (12 plates a side
 /* ---- and the sentence is untouched (it is the drawing's label now) ---- */
 ok(plateLabel(plateLoad(275, LB)) === 'bar + 45, 45, 25 each side', 'plateLabel still reads "bar + 45, 45, 25 each side"');
 
+/* ---- a user's own plates (Settings "Plates", 2026-09-27) draw too ---- */
+{
+  // 1.25 lb and 0.5 kg are on the Settings list but have no calibrated colour:
+  // they draw as the smallest (chrome) disc, with their number, never skipped.
+  const lbMine = Object.freeze({ ...LB_INVENTORY, bar: 35, plates: Object.freeze([45, 35, 25, 10, 5, 2.5, 1.25]), custom: true });
+  const kgMine = Object.freeze({ ...KG_INVENTORY, plates: Object.freeze([25, 20, 15, 10, 5, 2.5, 1.25, 0.5]), custom: true });
+  const labelsOf = (d) => d.parts.filter((p) => p.part === 'label');
+  const a = plateLoad(35 + 2 * 61.25, { inventory: lbMine });
+  const da = plateDrawing(a);
+  ok(plateLabel(a) === 'bar + 35, 25, 1.25 each side', `35 lb bar, 61.25 a side (${plateLabel(a)})`);
+  ok(da && platesOf(da).map((p) => p.plate).join() === '35,25,1.25' && platesOf(da)[2].colour === 'chrome',
+     'the drawing shows the 35, the 25 and a chrome 1.25');
+  ok(da && labelsOf(da).length === 3, 'and every plate has its number');
+  const b = plateLoad(KG_TO_LB(21), { inventory: kgMine });
+  const db = plateDrawing(b);
+  ok(plateLabel(b) === 'bar + 0.5 each side' && db && platesOf(db)[0].colour === 'chrome',
+     `21 kg: a 0.5 a side, drawn chrome (${plateLabel(b)})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

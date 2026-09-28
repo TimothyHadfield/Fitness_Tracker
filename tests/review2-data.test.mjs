@@ -192,11 +192,19 @@ const { muscles } = await muscleStrength();
   const captions = [...node.querySelectorAll('.chart-caption')].map(flat);
   ok(captions.length > 0 && captions.every((c) => !/· total\b/.test(c)),
      `5. no duplicate "· total" in the caption (${captions.join(' | ')})`);
+  // 🔄 SC-11 (2026-09-27): the labels carry the rep count on a rep-normalised chart.
+  const START_NOW = /^(start|now)( · \d+ reps)?$/i;
   const stats = [...node.querySelectorAll('.stat')]
-    .filter((s) => /^(start|now)$/i.test(flat(s.querySelector('.stat-label'))))
+    .filter((s) => START_NOW.test(flat(s.querySelector('.stat-label'))))
     .map((s) => flat(s.querySelector('.stat-value')));
   ok(stats.length === 2 && stats.every((v) => /^\d[\d,]*( (lbs|kg))?$/.test(v)),
      `5. START/NOW are whole units (${stats.join(', ')})`);
+
+  /* ---- 11. SC-11: "Now · 5 reps" — the tiles say which rep count they compare ---- */
+  const axisReps = title && (title.textContent.match(/for (\d+) reps$/) || [])[1];
+  const labels = [...node.querySelectorAll('.stat .stat-label')].map(flat);
+  ok(Boolean(axisReps) && labels.includes(`Start · ${axisReps} reps`) && labels.includes(`Now · ${axisReps} reps`),
+     `11. the Start/Now tiles name the chart's rep count (${labels.join(' | ')})`);
   void svg;
 
   // In kg the demo's whole-pound numbers become fractions, which is where rounding shows.
@@ -205,7 +213,7 @@ const { muscles } = await muscleStrength();
   const kgNode = await mount(GraphView(), 250);
   await tab(kgNode, 'Graph');
   const kgStats = [...kgNode.querySelectorAll('.stat')]
-    .filter((s) => /^(start|now)$/i.test(flat(s.querySelector('.stat-label'))))
+    .filter((s) => START_NOW.test(flat(s.querySelector('.stat-label'))))
     .map((s) => flat(s.querySelector('.stat-value')));
   ok(kgStats.length === 2 && kgStats.every((v) => /^\d[\d,]*( kg)?$/.test(v)),
      `5. and in kg too (${kgStats.join(', ')})`);
@@ -260,10 +268,13 @@ const { muscles } = await muscleStrength();
   const node = await mount(SettingsView(), 200);
   const sw = [...node.querySelectorAll('button.switch[role="switch"]')];
   const labels = sw.map((b) => flat(node.querySelector(`label[for="${b.id}"]`)));
-  // A fourth since 2026-09-27: "Ask before adding group workouts" (handoff-auto.test.mjs).
-  ok(sw.length === 4 && ['More details', 'Rest timer', 'Findable by name',
-    'Ask before adding group workouts'].every((l) => labels.includes(l)),
-     `8. four switches (${labels.join(', ')})`);
+  // 🔄 Overhaul 2026-09-27 (settings ST-11): six switches; Findable and the
+  // group-workout switch moved to Account (ST-2b/ST-3).
+  const SIX = ['Glass effects', 'Auto warm-ups', 'Set hints', 'Rest timer', 'Keep screen on', 'More details'];
+  ok(sw.length === 6 && SIX.every((l) => labels.includes(l)),
+     `8. six switches (${labels.join(', ')})`);
+  ok(!labels.some((l) => /Findable|group workouts/i.test(l)),
+     '8. and neither Findable nor the group-workout switch is in Settings any more');
   const rest = sw[labels.indexOf('Rest timer')];
   if (rest) {
     const before = rest.getAttribute('aria-checked');
@@ -277,6 +288,165 @@ const { muscles } = await muscleStrength();
     ok(rest.getAttribute('aria-checked') === before && String((await store.getSettings()).restTimer === true) === before,
        '8. and tapping again flips it back');
   } else ok(false, '8. no Rest timer switch');
+}
+
+/* ================================================================== *
+ * 12. OVERHAUL 2026-09-27 — builder DATA (settings ST-2a/11/12/14/16,
+ *     screens SC-4/SC-12, words P1)
+ * ================================================================== */
+
+/* ---- 12a. A save that fails puts the knob back (ST-2a) ---- */
+{
+  const { onOffSwitch } = dataMod;
+  let calls = 0;
+  const row = onOffSwitch('Test switch', false, () => { calls++; return Promise.reject(new Error('no')); });
+  document.getElementById('app').replaceChildren(row);
+  const sw = row.querySelector('button.switch');
+  sw.click();
+  ok(sw.getAttribute('aria-checked') === 'true', '12a. the switch flips the moment it is tapped');
+  await settle(20);
+  ok(calls === 1 && sw.getAttribute('aria-checked') === 'false',
+     '12a. and springs back when the save rejects');
+  const kept = onOffSwitch('Test two', false, () => Promise.resolve());
+  document.getElementById('app').replaceChildren(kept);
+  kept.querySelector('button.switch').click();
+  await settle(20);
+  ok(kept.querySelector('button.switch').getAttribute('aria-checked') === 'true',
+     '12a. a save that resolves keeps the new state');
+  const plain = onOffSwitch('Test three', true, () => undefined);
+  document.getElementById('app').replaceChildren(plain);
+  plain.querySelector('button.switch').click();
+  await settle(20);
+  ok(plain.querySelector('button.switch').getAttribute('aria-checked') === 'false',
+     '12a. a plain return still keeps the new state (views-account callers)');
+}
+
+/* ---- 12b. Settings layout: groups, Help, Account, Compared to, word cap ---- */
+{
+  const node = await mount(SettingsView(), 200);
+  const groups = [...node.querySelectorAll('.set-group > .section-label')].map(flat);
+  ok(groups.join() === 'Look,Weights,Workout,Data,Help',
+     `12b. five groups in order (${groups.join(', ')})`);
+  const chipsText = [...node.querySelectorAll('button.chip')].map(flat);
+  ok(chipsText.includes('Take the tour') && chipsText.includes('Find me a program'),
+     '12b. Help offers the tour and "Find me a program" (moved from Account)');
+  ok(['Dark', 'Light', 'Auto'].every((t) => chipsText.includes(t)), '12b. Theme offers Auto');
+  const acct = node.querySelector('a.row[href="#/account"]');
+  ok(acct && flat(acct) === 'Account', `12b. one plain "Account" row, no sub-line (${flat(acct)})`);
+  const labels = [...node.querySelectorAll('label')].map(flat);
+  ok(['Units', 'Weight steps', 'Plates', 'Compared to'].every((l) => labels.includes(l)),
+     `12b. Units, Weight steps, Plates and Compared to rows (${labels.join(', ')})`);
+  const pane = node.querySelector('.pane-scroll') || node;
+  // Counted per text node: textContent glues "Dark""Light""Auto" into one word.
+  const tw = document.createTreeWalker(pane, window.NodeFilter.SHOW_TEXT);
+  const bits = [];
+  while (tw.nextNode()) bits.push(tw.currentNode.nodeValue);
+  const words = bits.join(' ').split(/\s+/).filter((w) => w && !/^[?›┃]+$/.test(w));
+  ok(words.length <= 70, `12b. at most 70 visible words in Settings (${words.length})`);
+  ok(!/Nothing here is saved/.test(flat(node)), '12b. the demo has no footer (the demo bar says it)');
+  ok(/Display only\./.test(flat(node)) && /Your ranking doesn't change\./.test(flat(node)),
+     '12b. the two data-safety lines stay in the open (Rule 9)');
+
+  /* ---- 12c. Compared to opens the muscle map's own sheet ---- */
+  const cmpRow = [...node.querySelectorAll('.set-door')].find((r) => /Compared to/.test(flat(r)));
+  ok(cmpRow && /Like me|Everyone|Custom/.test(flat(cmpRow.querySelector('.set-door-chip'))),
+     `12c. the Compared to row names the preset (${flat(cmpRow && cmpRow.querySelector('.set-door-chip'))})`);
+  if (cmpRow && typeof musclesMod.openCompareSheet === 'function') {
+    cmpRow.querySelector('.set-door-chip').click();
+    for (let i = 0; i < 10; i++) await settle();
+    const sheet = [...document.querySelectorAll('.sheet')].pop();
+    ok(Boolean(sheet), '12c. tapping it opens a sheet');
+    document.querySelectorAll('.sheet-backdrop, .sheet').forEach((s) => s.remove());
+  }
+}
+
+/* ---- 12d. Weight steps and plates save whole, both units ---- */
+{
+  const unitsMod = await import(BASE + 'units.js');
+  const before = await store.getSettings();
+  const node = await mount(SettingsView(), 200);
+  const rowOf = (label) => [...node.querySelectorAll('.switch-row')]
+    .find((r) => [...r.querySelectorAll('label')].some((l) => flat(l) === label));
+  const stepRow = rowOf('Weight steps');
+  const chip25 = stepRow && [...stepRow.querySelectorAll('button.chip')].find((b) => flat(b) === '2.5');
+  if (chip25) chip25.click();
+  await settle(60);
+  let s = await store.getSettings();
+  ok(s.weightStep && s.weightStep.lbs === 2.5 && s.weightStep.kg === 2.5,
+     `12d. Weight steps 2.5 saves lbs and keeps kg (${JSON.stringify(s.weightStep)})`);
+  ok(typeof unitsMod.weightStepFor !== 'function' || unitsMod.weightStepFor('lbs') === 2.5,
+     '12d. and the engine is re-seeded at once (setWeightPrefs)');
+
+  const platesRow = rowOf('Plates');
+  platesRow.querySelector('.set-door-chip').click();
+  await settle(40);
+  const sheet = document.querySelector('.plates-sheet');
+  ok(Boolean(sheet), '12d. the Plates row opens a sheet');
+  const bar35 = sheet && [...sheet.querySelectorAll('button.chip')].find((b) => flat(b) === '35 lbs');
+  if (bar35) bar35.click();
+  await settle(60);
+  const p10 = [...document.querySelector('.plates-sheet').querySelectorAll('button.chip')].find((b) => flat(b) === '10');
+  if (p10) p10.click();
+  await settle(60);
+  s = await store.getSettings();
+  ok(s.plates && s.plates.lbs && s.plates.lbs.bar === 35 && !s.plates.lbs.have.includes(10),
+     `12d. the bar and a plate toggle save (${JSON.stringify(s.plates && s.plates.lbs)})`);
+  ok(s.plates && s.plates.kg && s.plates.kg.bar === 20 && s.plates.kg.have.length > 0,
+     `12d. and the kg side is written whole, untouched (${JSON.stringify(s.plates && s.plates.kg)})`);
+  ok(/35 bar/.test(flat(rowOf('Plates'))), `12d. the row shows the new bar (${flat(rowOf('Plates'))})`);
+  document.querySelectorAll('.sheet-backdrop, .sheet').forEach((x) => x.remove());
+  await store.saveSettings({ weightStep: before.weightStep, plates: before.plates });
+  if (unitsMod.setWeightPrefs) unitsMod.setWeightPrefs(await store.getSettings());
+}
+
+/* ---- 12e. Glass effects paints at once and saves ---- */
+{
+  const node = await mount(SettingsView(), 200);
+  const glass = node.querySelector('#' + 'sw-glass-effects');
+  ok(glass && glass.getAttribute('aria-checked') === 'true', '12e. Glass effects is on by absence');
+  glass.click();
+  await settle(60);
+  ok(document.documentElement.getAttribute('data-glass') === 'off' && (await store.getSettings()).glass === false,
+     '12e. off paints <html data-glass="off"> and saves glass:false');
+  glass.click();
+  await settle(60);
+  ok(!document.documentElement.hasAttribute('data-glass') && (await store.getSettings()).glass === true,
+     '12e. and on clears it');
+}
+
+/* ---- 12f. SC-12 Bars: no legend, source said once ---- */
+{
+  const node = await mount(GraphView(), 250);
+  await tab(node, 'Bars', 12);
+  ok(node.querySelector('.bar-row, .bars, .bar-track'), '12f. the demo draws bars');
+  ok(!node.querySelector('.bar-legend'), '12f. no First/Latest legend');
+  const cap = flat(node.querySelector('.chart-caption'));
+  const oneSource = /^(Workouts|Benchmarks) only/.test(cap);
+  const tags = [...node.querySelectorAll('.bar-reps')].map(flat).filter((t) => /^(Workouts|Benchmarks)$/.test(t));
+  ok(!oneSource || tags.length === 0,
+     `12f. one source: said once in the caption, not on every row (${cap} · ${tags.length} tags)`);
+  ok(!/means weight compared/.test(cap), '12f. the @N-reps reading is behind the ?, not in the caption');
+}
+
+/* ---- 12g. SC-4 Volume: one-line rows, coloured fill, labelled tick ---- */
+{
+  const node = await mount(GraphView(), 250);
+  await tab(node, 'Volume', 12);
+  const rows = [...node.querySelectorAll('.vol-row')];
+  ok(rows.length > 0 && !node.querySelector('.vol-sub'), '12g. rows have no second line');
+  ok(rows.every((r) => !/days a week|never trained directly/.test(flat(r))),
+     '12g. the tier and days a week moved out of the row');
+  const fills = [...node.querySelectorAll('.vol-fill')];
+  ok(fills.length === rows.length && fills.every((f) => /var\(--vol-/.test(f.getAttribute('style') || '')),
+     '12g. every bar is painted from the volume ramp');
+  const key = node.querySelectorAll('.vol-tick-key');
+  ok(key.length === 1 && /4 sets a week/.test(flat(key[0])), '12g. the 4-set tick is labelled once');
+  ok(flat(node.querySelector('.vol-hint')) === 'Tap a muscle for its exercises.', '12g. the short hint');
+  const live = rows.find((r) => !r.classList.contains('is-none'));
+  if (live) live.click();
+  await settle(40);
+  ok(/Trained:/.test(flat(node.querySelector('.vol-detail-wrap.is-open'))),
+     '12g. the tapped panel says how often it was trained');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

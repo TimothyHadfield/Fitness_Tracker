@@ -70,6 +70,18 @@ let pass = 0, fail = 0;
 const ok = (c, m) => { console.log((c ? 'PASS  ' : 'FAIL  ') + m); c ? pass++ : fail++; };
 const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
 const settle = () => new Promise((r) => setTimeout(r, 30));
+/* Every ? under `node`, opened and read (Rule 9: a caveat moved behind a dot is
+   still asserted — the test opens it rather than dropping the check). */
+async function dotText(node) {
+  let out = '';
+  for (const d of node.querySelectorAll('.help-dot')) {
+    d.click(); await settle();
+    const pops = document.querySelectorAll('.help-pop');
+    if (pops.length) out += ' ' + pops[pops.length - 1].textContent;
+    d.click(); await settle();
+  }
+  return out.replace(/\s+/g, ' ');
+}
 
 async function mount(viewPromise) {
   const node = await viewPromise;
@@ -87,6 +99,31 @@ async function mount(viewPromise) {
    ⚠️ It looks for Save on the DOCUMENT rather than in the node it was handed:
    the save screen replaces `#app` outright, so the runner node the caller holds
    is no longer in the page by the time this runs. */
+/* Words overhaul 2026-09-27: caveats moved behind a ? beside their text. This
+   reads a screen the way somebody who opens every ? would — the page, then each
+   ? body in turn — so an assertion about a caveat still finds it, and still
+   fails if the caveat is deleted rather than moved. */
+function withHelpText(root) {
+  const bits = [root.textContent];
+  for (const dot of root.querySelectorAll('.help-dot')) {
+    dot.click();
+    const pops = document.querySelectorAll('.help-pop');
+    if (pops.length) bits.push(pops[pops.length - 1].textContent);
+    dot.click();
+    document.querySelectorAll('.help-pop').forEach((p) => p.remove());
+  }
+  return bits.join(' ').replace(/\s+/g, ' ');
+}
+
+/* Closes every open sheet the way a person would (Escape), then drops any
+   leftover node, so a later `document.querySelector('.sheet')` finds its own. */
+function closeSheets() {
+  for (let i = 0; i < 5 && document.querySelector('.sheet'); i++) {
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  }
+  document.querySelectorAll('.sheet, .sheet-backdrop').forEach((n) => n.remove());
+}
+
 async function saveNow() {
   const save = [...document.querySelectorAll('button')]
     .find((b) => /^Save workout$/.test(b.textContent.trim()));
@@ -2723,8 +2760,8 @@ ok(!data.querySelector('.rep-target'),
     const before = sel0.value;
     grow.click();
     await settle();
-    ok(ed.querySelectorAll('.plan-row').length === 14,
-       'which is already at the 14-day ceiling, so pressing + changes nothing');
+    ok(ed.querySelectorAll('.plan-row').length === 15,
+       '🔄 the ceiling is 28 days since 2026-09-27 (3–4 week cycles), so + adds a fifteenth day');
     ok(ed.contains(grow),
        '🚨 and the stepper itself is not rebuilt by its own press — replacing the node holding focus '
        + 'gives a keyboard user exactly one press and no second one');
@@ -2958,9 +2995,10 @@ ok(!data.querySelector('.rep-target'),
      'showing all three types at once');
   // D8: teach at the moment of use. "Myo-reps" is jargon and the sheet has to
   // say what one IS, not just name it.
-  ok(/rest 10–15 seconds/i.test(sheet.textContent),
+  // Words overhaul 2026-09-27 (P3): the hints were shortened, same facts.
+  ok(/rest 10–15 s\b/i.test(sheet.textContent),
      'and explaining what a myo-rep is rather than assuming you know');
-  ok(/strip the weight/i.test(sheet.textContent), 'and what a drop set is');
+  ok(/strip weight/i.test(sheet.textContent), 'and what a drop set is');
 
   sheetRow(/Myo-reps/).click();
   await settle();
@@ -3759,8 +3797,10 @@ ok(!data.querySelector('.rep-target'),
 
   // The number cannot be left to explain itself: 55 % reads as a bad mark
   // unless the reader is told what 100 % would mean.
-  const text = screen.textContent.replace(/\s+/g, ' ');
-  ok(/Nothing real reaches 100/.test(text), 'the screen says outright that nothing reaches 100 %');
+  // 🔄 Words overhaul 2026-09-27 (W-6): the assumptions moved behind the ?
+  // beside the badge line — WHY the numbers read low. Read with the ? open.
+  const text = withHelpText(screen);
+  ok(/Nothing real reaches 100/.test(screen.textContent), 'the screen says outright that nothing reaches 100 %');
   ok(/close to failure/.test(text), 'and that the ratings assume you train close to failure (D9)');
   ok(/more days is not itself better/i.test(text),
      'and that more days is not itself better for growth — the finding Tim predicted');
@@ -3782,9 +3822,24 @@ ok(!data.querySelector('.rep-target'),
     { exerciseId: squat.id, sets: 5 },
   ] });
 
-  const screen = await SystemRouteView(sys.id);
+  /* 🔄 I-17 (overhaul 2026-09-27): on a phone — and jsdom is one, no
+     (min-width: 1024px) — notes and rating sit behind ONE row, `.sys-more`,
+     so the screen fits 393×659. The rating is the same `.own-rating`, read
+     from the sheet the row opens. The laptop keeps the side column. */
+  const ratingOf = async (page) => {
+    const more = page.querySelector('.sys-more');
+    if (!more) return page;
+    more.click();
+    await settle();
+    const bodies = document.querySelectorAll('.sys-more-body');
+    return bodies.length ? bodies[bodies.length - 1] : page;
+  };
+  const page = await SystemRouteView(sys.id);
   await settle();
-  const text = () => screen.textContent.replace(/\s+/g, ' ');
+  ok(Boolean(page.querySelector('.sys-more')) && !page.querySelector('.own-rating'),
+     'I-17 on a phone the rating sits behind one row, not on the page');
+  const screen = await ratingOf(page);
+  const text = () => withHelpText(screen);
 
   ok(screen.querySelector('.own-rating'), 'a system you built yourself gets a rating too');
   const cellText = (root, cap) => [...root.querySelectorAll('.rating-cell')]
@@ -3828,9 +3883,11 @@ ok(!data.querySelector('.rep-target'),
      is the point: one rating, one place it is built, two doors into it. */
   const { WorkoutsView } = await import(BASE + 'views-workouts.js');
   await store.setCurrentSystem(sys.id);
-  const list = await WorkoutsView();
+  const listPage = await WorkoutsView();
   await settle();
-  const listText = list.textContent.replace(/\s+/g, ' ');
+  const listText = listPage.textContent.replace(/\s+/g, ' ');
+  closeSheets();
+  const list = await ratingOf(listPage);   // I-17: behind the one row on a phone
 
   ok(list.querySelector('.own-rating'),
      'the Workouts tab shows the rating for the programme it is showing');
@@ -3841,6 +3898,7 @@ ok(!data.querySelector('.rep-target'),
   const listNums = [...cellText(list, 'growth'), ...cellText(list, 'strength')];
   ok(listNums.length === 2 && listNums.every((t) => Number(t.replace('%', '')) % 5 === 0),
      'growth and strength, banded the same as everywhere else');
+  closeSheets();   // later blocks read `document.querySelector('.sheet')`
   ok(/Upper/.test(listText) && /Lower/.test(listText),
      'and its workouts are rows on the screen rather than names in a subtitle');
 
@@ -4128,8 +4186,18 @@ ok(!data.querySelector('.rep-target'),
   const stallText = text(stalls);
   ok(/What the app can measure/i.test(stallText) && /What it cannot see/i.test(stallText),
      'the stalls screen keeps the measurable and unmeasurable reasons apart');
-  ok(/reps-in-reserve|reps in reserve/i.test(stallText),
-     'and names the invisible one that matters most');
+  {
+    // 🔄 2026-09-27 (overhaul): the row shows a short line; the detail is behind its ?.
+    const eff = [...stalls.querySelectorAll('.stall-row')]
+      .find((r) => /close enough to failure|can't see effort|effort/i.test(r.textContent));
+    const dot = eff && eff.querySelector('.help-dot');
+    if (dot) { dot.click(); await settle(); }
+    const pop = document.querySelector('.help-pop');
+    ok(Boolean(pop) && /reps-in-reserve|reps in reserve/i.test(pop.textContent),
+       'and names the invisible one that matters most (behind the effort row\'s ?)');
+    if (dot) { dot.click(); await settle(); }
+    document.querySelectorAll('.help-pop, .help-pop-x').forEach((n) => n.remove());
+  }
   ok(stalls.querySelectorAll('.stall-row').length === 6, 'six reasons in all');
 
   const fits = await mount(GoalRouteView('systems'));
@@ -4250,10 +4318,9 @@ ok(!data.querySelector('.rep-target'),
   const settings = await mount(SettingsView());
   // (The row that said "Demo account" moved to the Account screen 2026-08-26;
   // what this assertion always meant is "the screen mounts in the demo".)
-  ok(settings.querySelector('.topbar') && /Nothing here is saved/i.test(text(settings)),
+  // 🔄 2026-09-27: the demo footer on Settings was cut; the demo bar says it.
+  ok(settings.querySelector('.topbar') && /Theme/i.test(text(settings)),
      'Settings opens in the demo instead of throwing "impl.currentUser is not a function"');
-  ok(/Nothing here is saved/i.test(text(settings)),
-     'and says nothing is being stored, rather than claiming this device holds it');
   ok(!/Saving to this device/i.test(text(settings)),
      'the wrong-but-plausible answer is specifically absent');
 
@@ -5184,12 +5251,17 @@ ok(!data.querySelector('.rep-target'),
   const ex = await mount(ExploreView());
   const kids = [...ex.querySelector('.pane-scroll').children];
   const listAt = kids.findIndex((n) => n.classList.contains('list'));
-  const explainAt = kids.findIndex((n) => /stimulus the research supports/.test(n.textContent));
+  // 🔄 Words overhaul 2026-09-27 (W-6): the line is short now and the full
+  // meaning is its ?, read open here — still ABOVE the list.
+  const explainAt = kids.findIndex((n) => /research maximum/.test(n.textContent)
+    && /stimulus the research supports/.test(withHelpText(n)));
   ok(explainAt >= 0 && listAt > explainAt,
      'what the percentages mean is said ABOVE the list, before anyone compares nine of them');
   // 2026-09-24: one word, "program", so there is no swap left to bridge — the
-  // sentence still says a pick becomes a copy you own.
-  ok(/copied into your programs, as your own/.test(ex.textContent) && !/\bsystems?\b/i.test(ex.textContent),
+  // sentence still says a pick becomes a copy you own (the owning half is its ?).
+  const exAll = withHelpText(ex);
+  ok(/copies it into your programs/.test(ex.textContent) && /it is yours/.test(exAll)
+     && !/\bsystems?\b/i.test(exAll),
      'Explore says a pick is copied and yours, and never says "system"');
   ok(/Nothing real reaches 100/.test(ex.textContent),
      'and the full "what 100 % would mean" statement is still on the screen');
@@ -5333,8 +5405,8 @@ ok(!data.querySelector('.rep-target'),
   const st = await mount(SettingsView());
   ok(!/Download backup/.test(text(st)) && !/Delete all data/.test(text(st)),
      'Settings no longer carries the data controls');
-  ok(/Account & profile/.test(text(st)),
-     'but keeps one pointer row, so nobody who always found them here is stranded');
+  ok(Boolean(st.querySelector('a.row[href="#/account"]')) && /Account/.test(text(st)),
+     'but keeps one pointer row ("Account"), so nobody who always found them here is stranded');
   /* 🔄 ~~"and Goals stays — it is not an account detail"~~ **INVERTED
      2026-09-11**, step 4 of the Data/Profile split. Goals was here because
      2026-08-25 took it off the tab bar and Settings was the way in it was given;
@@ -5374,15 +5446,22 @@ ok(!data.querySelector('.rep-target'),
   const { RecordChooserView, StartPickerView } = await import(BASE + 'views-workouts.js');
   const { ActivityLogView } = await import(BASE + 'views-session.js');
 
+  /* 🔄 I-9 (overhaul 2026-09-27): with a program running, the big button IS
+     the next workout ("▶ Legs") and starts it; "Other workout" opens the list.
+     "Weightlifting" is the no-program case — both are the lifting door, and it
+     is still the biggest thing on the screen. */
   const chooser = await mount(RecordChooserView());
-  ok(/Weightlifting/.test(chooser.textContent), 'Weightlifting is one of the options');
-  const lift = [...chooser.querySelectorAll('button')].find((b) => /Weightlifting/.test(b.textContent));
+  const lift = chooser.querySelector('.btn.primary.lg');
+  ok(lift && (/Weightlifting/.test(lift.textContent)
+     || [...chooser.querySelectorAll('a.row')].some((a) => /Other workout/.test(a.textContent))),
+     'Weightlifting is one of the options (the next workout plus "Other workout" once a program runs)');
   ok(lift && lift.classList.contains('primary'),
      'and it is the biggest — lifting is still the common case and must not slow down');
   for (const label of ['Run', 'Swim', 'Cycle', 'Climb', 'Something else']) {
     ok(new RegExp(label).test(chooser.textContent), `the chooser offers ${label}`);
   }
-  ok(/never rated|ratings still come from lifting/i.test(chooser.textContent),
+  // Words overhaul (W-17): the reason sits in the ? beside "Or log an activity".
+  ok(/never rated|ratings still come from lifting/i.test(withHelpText(chooser)),
      'and says plainly that activities are recorded, not rated');
 
   /* ================= 🚨 IT COMES UP, AND THE ARROW PUTS IT BACK DOWN ==========
@@ -5426,7 +5505,12 @@ ok(!data.querySelector('.rep-target'),
        + 'whole screen that every later selector would match');
   }
 
-  lift.click();
+  // I-9: with a program running, "Other workout" is the door to the list;
+  // without one, the Weightlifting button still is. (A link: jsdom does not
+  // follow hrefs, so its target is what is read.)
+  const otherRow = [...chooser.querySelectorAll('a.row')].find((a) => /Other workout/.test(a.textContent));
+  if (otherRow) window.location.hash = otherRow.getAttribute('href');
+  else lift.click();
   await settle();
   ok(window.location.hash === '#/start', 'Weightlifting leads to the full recorder');
 
@@ -5625,7 +5709,7 @@ ok(!data.querySelector('.rep-target'),
   social.processDisconnects = async () => 2;
   const soc3 = await mount(SocialView());
   await settle(); await settle();
-  ok(/2 people disconnected from you/.test(soc3.textContent.replace(/\s+/g, ' ')),
+  ok(/2 people disconnected/.test(soc3.textContent.replace(/\s+/g, ' ')),
      'somebody leaving is SAID, not silent — a name vanishing off the list reads as lost data');
 
   /* ---- the disconnect sheet, which has been wrong before ---- */
@@ -5644,11 +5728,11 @@ ok(!data.querySelector('.rep-target'),
   await settle();
   const sheet = document.querySelector('.sheet');
   const sheetText = sheet ? sheet.textContent.replace(/\s+/g, ' ') : '';
-  ok(/no longer be able to see anything of yours/.test(sheetText),
+  ok(/no longer see anything of yours/.test(sheetText),
      'the sheet says what it does to your side');
-  ok(/They are told/.test(sheetText),
+  ok(/They're told/.test(sheetText),
      '⚠️ and that they are TOLD — the half that makes it mutual (0j, built 2026-08-27)');
-  ok(/Until then/.test(sheetText),
+  ok(/next time it opens/.test(sheetText),
      '⚠️ and that it is EVENTUAL rather than instant, because their document is theirs to rewrite');
   ok(!/only cuts YOUR side/.test(sheetText),
      'the old one-sided wording is gone, because it is no longer true');
@@ -5727,7 +5811,7 @@ ok(!data.querySelector('.rep-target'),
     ok(/Asked to connect/i.test(s.textContent),
        'an incoming request gets its own heading, separate from "Waiting for you"');
     ok(/Samira Okonkwo/.test(s.textContent), 'and names who asked');
-    ok(/can see everything you have recorded/i.test(s.textContent),
+    ok(/see everything you record/i.test(s.textContent),
        '⚠️ and says what accepting would actually give them — a request is a decision, not a '
        + 'notification to dismiss. ⚠️ IT SAYS MORE THAN IT USED TO, because accepting now gives '
        + 'more: this line read "they start on just that I trained" until 2026-09-03, and a '
@@ -6969,7 +7053,7 @@ ok(!data.querySelector('.rep-target'),
     /* 🚨 THE HONESTY LINE. We hold their last sixty published sessions, not
        their life, so calling any of this a personal record would be a claim
        about training this app has never seen. */
-    ok(/not against everything they have ever done|best here, which may not be their best/.test(p),
+    ok(/not against everything they have ever done|best here, which may not be their best|best in what they share/.test(p),
        '🚨 and it says this is their best in what they SHARE, not their best ever');
 
     // Put the single-session fixture back for the assertions below.
@@ -7073,7 +7157,7 @@ ok(!data.querySelector('.rep-target'),
   const g = gone.textContent.replace(/\s+/g, ' ');
   ok(/not here|no longer/.test(g),
      '⚠️ a session outside the published window says so — the window is 60, and an old card outlives it');
-  ok(/changed what they share|scrolled off/.test(g), 'and names both reasons it can happen');
+  ok(/past their last/.test(g) && /changed sharing/.test(g), 'and names both reasons it can happen');
 
   /* ---- and one with nothing inside it ----
    *
@@ -8182,7 +8266,7 @@ ok(!data.querySelector('.rep-target'),
     ok(/vs\. people like each of them/.test(text),
        '⚠️ and the header names the per-person group rather than one population — a caption naming '
        + 'a population the colours were not computed against is the fault this label exists to prevent');
-    ok(/never "who lifts more"|who is lifting more/.test(text),
+    ok(/never "who lifts more"|who is lifting more/.test(await dotText(cmp.querySelector('.vol-notes'))),
        'and points at the estimate as the number that does answer who lifts more');
 
     /* ⚠️ AND THE CHIPS AGREE WITH THAT CAPTION — 2026-09-09. They read "My body
@@ -8291,7 +8375,7 @@ ok(!data.querySelector('.rep-target'),
        + 'deploy to reach their phone, which is the 2026-08-28 "her data is lost" incident in a '
        + 'different costume');
     ok(/Pull/.test(t), 'and their workouts are still listed');
-    ok(/has not updated/.test(t),
+    ok(/app updates/.test(t),
        '⚠️ with one line saying why it is less than the real thing');
     ok(!fr.querySelector('.basis-btn'),
        '⚠️ AND NO COMPARISON CONTROL, because the old document cannot answer a different comparison '
@@ -8300,7 +8384,7 @@ ok(!data.querySelector('.rep-target'),
     const cmp = await mount(CompareBodiesView('u1'));
     for (let i = 0; i < 10; i++) await settle();
     const c = cmp.textContent.replace(/\s+/g, ' ');
-    ok(/Autumn/.test(c) && /has not updated/.test(c),
+    ok(/Autumn/.test(c) && /last published|app updates/.test(c),
        '🚨 and the compare screen NAMES THE PERSON AND THE REASON — it shipped saying "one of these '
        + 'two has not published a muscle map", which names neither and cannot be acted on');
 
@@ -8469,7 +8553,8 @@ ok(!data.querySelector('.rep-target'),
        `🚨 the workout tile is labelled "Workouts shared", never bare "Workouts" (${tiles.join(' / ')})`);
     ok(!tiles.some((x) => /^\s*\d+\s*Workouts\s*$/.test(x)),
        '🔒 and there is no bare "Workouts" tile beside it that could be read as a career total');
-    ok(/most recent 60 sessions at most/.test(t),
+    const profDots = await dotText(prof);
+    ok(/most recent 60 sessions at most/.test(profDots),
        '⚠️ and the window is NAMED under the pair — "shared" says the figure is bounded without '
        + 'saying by how much, and sixty is a number a reader can check an expectation against');
 
@@ -8556,7 +8641,7 @@ ok(!data.querySelector('.rep-target'),
     ok(otherRows.filter((r) => r.querySelector('.me-best-top'))
       .every((r) => /not ranked|measured, not ranked/.test(flat(r.querySelector('.me-best-est')))),
        '⚠️ every numbered "other" row says "not ranked" in words beside its estimate');
-    ok(/level per muscle rather than per lift/.test(t),
+    ok(/level per muscle rather than per lift/.test(profDots),
        '🚨 and the section says WHY nothing but the core eight is ranked — a list of unranked '
        + 'numbers with no reason reads as a feature that half-failed');
 
@@ -8591,7 +8676,7 @@ ok(!data.querySelector('.rep-target'),
       .find((n) => /Friends/.test(n.textContent));
     ok(friendTile && /—/.test(friendTile.textContent) && friendTile.tagName !== 'A',
        '🚨 and the friends figure is a DASH with no link, never 0');
-    ok(/has not published their friends list yet/.test(t),
+    ok(/has not published their friends list yet/.test(await dotText(prof)),
        '⚠️ with one line saying their app has not published it — the difference between "they '
        + 'have none" and "we have not been told" is visible to the reader, so it is stated');
 
@@ -8629,7 +8714,7 @@ ok(!data.querySelector('.rep-target'),
     social.friend = async () => ({ audience: 'friends', doc: hersDoc() });
     const gap = await mount(FriendPeopleView('u1'));
     for (let i = 0; i < 10; i++) await settle();
-    ok(/has not published/.test(gap.textContent) && !/No friends yet/.test(gap.textContent),
+    ok(/hasn't published|has not published/.test(gap.textContent) && !/No friends yet/.test(gap.textContent),
        '🚨 while an ABSENT field says their app has not published it — "No friends yet" there '
        + 'would be this app stating something false about somebody\'s social life on the strength '
        + 'of a field that did not exist when their app last ran');
@@ -8641,9 +8726,9 @@ ok(!data.querySelector('.rep-target'),
     const wk = await mount(FriendWorkoutsView('u1'));
     for (let i = 0; i < 10; i++) await settle();
     const t = flat(wk);
-    ok(/2 workouts Autumn has published/.test(t),
+    ok(/2 shared · newest first/.test(t),
        `⚠️ the count says PUBLISHED, the third place this one figure is stated and the third time it may not read as a career total (${t.slice(0, 90)})`);
-    ok(/most recent 60 sessions at most/.test(t), 'and names the window, as the tile does');
+    ok(/most recent 60 sessions at most/.test(await dotText(wk)), 'and names the window, as the tile does');
     ok(wk.querySelectorAll('.act').length === 2,
        'with one row per published workout, from the same activityRow() their page has always used');
   }
@@ -9032,6 +9117,13 @@ ok(!data.querySelector('.rep-target'),
      rounded to a real increment, and that the screen says what it is a
      percentage OF. */
   const { loadDraft: draftOf } = await import(BASE + 'session-draft.js');
+  /* 🔄 2026-09-27 (overhaul EA-5): after a 21-day break every plan weight is
+     capped at last time's top weight. The August session is now past that
+     break on the real calendar, so a same-weight session TODAY keeps this
+     block about the ramp, not about the lay-off cap (tested in runner-overhaul). */
+  const todayIso = new Date().toISOString().slice(0, 10);
+  await store.saveSession({ workoutId: 'w1', workoutName: 'Push', date: todayIso,
+    entries: [{ exerciseId: bench.id, exerciseName: bench.name, sets: [{ weight: 205, reps: 5 }] }] });
   const pct = await store.saveWorkout({
     name: 'Heavy bench', systemId: null,
     exercises: [{ exerciseId: bench.id, sets: 3, targets: [70, 80, 90] }],
@@ -9450,7 +9542,7 @@ ok(!data.querySelector('.rep-target'),
    * ⚠️ ONLY ON THE READER'S OWN MAP. A friend's or famous lifter's panel comes
    * through `musclePanel()`, which has no recent-work data to hand in, so it
    * says nothing rather than guess. */
-  ok(/Trained today — a reading today usually comes in a little low\./.test(chestPanel),
+  ok(/Trained today — may read a little low today\./.test(chestPanel),
      `🚨 the chest was trained TODAY and its panel says so (${chestPanel.slice(0, 240)})`);
   {
     const { musclePanel } = await import(BASE + 'views-muscles.js');
@@ -10379,9 +10471,12 @@ ok(!data.querySelector('.rep-target'),
 
     const benchRow = coreRows[iBench];
     const benchTop = benchRow.querySelector('.me-best-top');
-    ok(Boolean(benchTop) && /lbs/.test(benchTop.textContent) && /227/.test(benchTop.textContent),
+    /* 🔄 2026-09-27 (overhaul EB-7): Profile's number is now the SAME pick the
+       runner and Goals use (ownBestSet), which trusts the 5-rep set over the
+       10-rep one, so all screens agree: 185 × 5 → 219. */
+    ok(Boolean(benchTop) && /lbs/.test(benchTop.textContent) && /219/.test(benchTop.textContent),
        `🚨 the number on a recorded lift is its ESTIMATED 1RM (${benchTop && benchTop.textContent}), `
-       + 'off its own best set (165 × 10 → 227) rather than the heaviest set');
+       + 'the same pick the runner makes (185 × 5 → 219)');
     const lvClasses = [...benchTop.classList].filter((c) => /^lv-text-/.test(c));
     ok(lvClasses.length === 1,
        `🚨 coloured by LEVEL through the ramp's own chip class, exactly one (${lvClasses.join(',')})`);
@@ -10396,7 +10491,7 @@ ok(!data.querySelector('.rep-target'),
      *
      * The heaviest set is still available to the row as `heaviest`; what the
      * sub-line prints is the one the estimate rests on. */
-    ok(/165 lbs × 10/.test(text(benchRow)),
+    ok(/185 lbs × 5/.test(text(benchRow)),
        '🚨 and the measured set it rests on is printed in the sub-line — the set that PRODUCED the '
        + 'number, not the heaviest one, so Rule 5\'s anchor really anchors it');
     ok(/Estimated one-rep maxes/.test(text(me)) && /who lift/.test(text(me)),
@@ -12041,7 +12136,8 @@ ok(!data.querySelector('.rep-target'),
   ok(statuses.length >= 1 && statuses.every((s) => s.classList.contains('manual')),
      `every one of the ${statuses.length} row(s) is marked manual — with no record of what the `
      + 'copy arrived as, nothing here can be vouched for');
-  ok(sheet && /may be changes you made yourself/.test(sheet.textContent),
+  // Words overhaul 2026-09-27 (P3): shorter, same claim, still on the sheet.
+  ok(sheet && /may be your own edits/.test(sheet.textContent),
      '🚨 and the sheet says out loud that the differences may be the user’s own, rather than '
      + 'presenting somebody’s own edits back to them as news from the author');
   ok(sheet && ![...sheet.querySelectorAll('button')].some((b) => /Take/.test(b.textContent)),

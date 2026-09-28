@@ -64,6 +64,7 @@ import {
   candidateGoals, buildGoal, goalProgress, requirementsFor, stallReasons,
   rankSystems, FIT_LABEL, modelChangedSince, refreezeGoal, goalSourceRefusal,
 } from './goals.js';
+import * as goalsModel from './goals.js';
 import { PROGRESSION_EXPLAINER, PROGRESSION_WHY } from './progression.js';
 // ⚠️ Static, not a dynamic import, for the reason views-workouts.js states at
 // its own top: a caveat that can arrive late or not at all is the one kind of
@@ -88,27 +89,35 @@ const go = (hash) => { location.hash = hash; };
 // The two states that stop this screen before it starts, both of which have a
 // route out. An empty state with no way forward is the thing this app does not
 // do — the muscle map's own empty states are the pattern.
+/* 🔄 OVERHAUL 2026-09-27 (words W-P2): an empty state's reason goes behind a ?
+ * beside its sentence. `emptyState(title, text, action, { help })` is the shared
+ * contract (ui.js, SHELL builder); if the ui.js in this checkout does not draw
+ * the dot yet, it is added here, so the reason is never lost either way. */
+function emptyWithWhy(title, text, action, help, label) {
+  const node = emptyState(title, text, action, { help });
+  if (!node.querySelector('.help-dot')) {
+    const p = node.querySelector('p');
+    if (p) p.replaceWith(el('div', { class: 'help-line' }, p, helpDot(help, { label })));
+  }
+  return node;
+}
+
 function needsProfile(profile) {
-  return emptyState(
+  // ⚠️ RE-SHAPED, NOT HIDDEN (Rule 9): what is missing stays on the screen;
+  // why a level needs it is one tap away.
+  return emptyWithWhy(
     'Tell us about you first',
-    // ⚠️ RE-SHAPED, NOT HIDDEN (Rule 9). `emptyState()` takes a STRING, so
-    // there is nowhere to hang a ? here — and the reason is WHAT anyway: a
-    // person being asked for their sex and weight is owed why in the same
-    // breath. One 28-word sentence became two.
-    `A goal is a strength level, and a level needs your ${profile.missing.join(' and ')}. `
-    + 'Every standard is a ratio to body weight, and they differ between men and women.',
+    `A goal needs your ${profile.missing.join(' and ')}.`,
     el('a', { class: 'btn primary', href: '#/profile', text: 'Open Body details' }),
+    'Standards are a ratio to body weight and differ by sex.',
+    'Why a goal needs these',
   );
 }
 
 function needsHistory() {
   return emptyState(
     'Nothing to aim at yet',
-    // ⚠️ ONE CLAUSE DELETED, NOT MOVED — "so there has to be something recorded
-    // for it" is said twice more on this same empty state: by the sentence
-    // after it and by the button under it, which reads "Record a benchmark".
-    'A goal starts from where a muscle is now. '
-    + 'Log a workout or record a benchmark and the goals appear.',
+    'Log a workout or benchmark and goals appear.',
     el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
   );
 }
@@ -269,14 +278,13 @@ async function noGoalScreen(muscles) {
 
       el('div', { class: 'goal-intro' },
         el('h2', { class: 'goal-intro-title', text: 'Pick something to aim at' }),
-        /* ⚠️ RE-SHAPED, NOT HIDDEN. Every word of this paragraph is WHAT a goal
-         * is and what the feature then does — none of it explains where a
-         * number came from — so Rule 9 says it stays in the open. One 33-word
-         * sentence became two. */
-        el('p', { class: 'goal-intro-body', text:
-          'A goal is one muscle moving up a strength level, over twelve weeks. '
-          + 'The app says what that costs: hard sets a week, how often, how much protein. '
-          + 'Then it shows what you are actually doing against it.' }),
+        /* 🔄 OVERHAUL 2026-09-27: what a goal IS stays in the open; what the
+         * screen then does with it is one tap away. */
+        el('div', { class: 'help-line' },
+          el('p', { class: 'goal-intro-body', text: 'Move one muscle up a level in 12 weeks.' }),
+          helpDot('The app says what that costs: hard sets a week, how often, how much protein. '
+            + 'Then it shows what you are actually doing against it.',
+          { label: 'What a goal gives you' })),
         /* Said before anything is chosen, not after. The whole design rests on
          * it: a level makes no prediction, so nothing here is a promise.
          *
@@ -285,11 +293,10 @@ async function noGoalScreen(muscles) {
          * you are going to lift" are the two things a reader must not have to
          * ask for; WHY individual gains cannot be predicted is one tap away. */
         el('div', { class: 'help-line' },
-          el('p', { class: 'goal-intro-body', text:
-            'It is a target, not a promise. The app will never tell you what you are going to '
-            + 'lift.' }),
-          helpDot('Almost everybody who trains gets stronger, but how much anyone gains in three '
-            + 'months varies enormously — so a level is something to aim at, never a forecast.',
+          el('p', { class: 'goal-intro-body', text: 'A target, not a promise.' }),
+          helpDot('The app will never tell you what you are going to lift. Almost everybody who '
+            + 'trains gets stronger, but how much anyone gains in three months varies enormously '
+            + '— so a level is something to aim at, never a forecast.',
           { label: 'Why the app will not predict what you will lift' })),
       ),
 
@@ -356,10 +363,22 @@ async function activeGoalScreen(goal, profile, muscles) {
     // The fallback, as above — Profile owns Goals since 2026-09-11.
     back: () => go('#/me'),
     scroll: body,
-    bottom: el('button', {
-      class: 'btn block', text: 'Change or end this goal',
-      onClick: () => endSheet(goal, p),
-    }),
+    /* 🔄 OVERHAUL I-11 (2026-09-27): "Change or end this goal" opened a sheet
+     * that could only END it, so changing meant ending first. "Change goal"
+     * now opens the picker, whose pick already asks "Replace your goal?" and
+     * keeps the old one in history. Ending stays one quiet link away, through
+     * the same sheet as before. One row (the app's `.btn-row`), so the
+     * footer costs no more height than the single button did. */
+    bottom: el('div', { class: 'btn-row goal-bottom' },
+      el('button', {
+        class: 'btn block', text: 'Change goal',
+        onClick: () => go('#/goal/new'),
+      }),
+      el('button', {
+        type: 'button', class: 'text-link goal-end-link', text: 'End this goal',
+        onClick: () => endSheet(goal, p),
+      }),
+    ),
   });
 
   // ⚠️ THE VERDICT EXPLANATION MOVED DOWN ON 2026-08-21, and only down — it is
@@ -379,19 +398,30 @@ async function activeGoalScreen(goal, profile, muscles) {
     // as the word "null" (only `el()` drops them). It did, on every goal screen.
     ...(stale ? [staleNotice(goal, profile)] : []),
     progressBlock(goal, p, m, stale),
-    requirementsBlock(goal, req),
   );
 
   // The measured half loads after the screen is on the page. It reads every
   // session, and a goal screen that waits on that before painting anything is a
   // blank screen for as long as the read takes.
   const measuredHost = el('div', { class: 'goal-measured' });
-  // Progression sits AFTER what the goal asks and what you are doing, not
-  // between them — "what this asks of you" and "what you are actually doing" are
-  // a pair and a digression about weights in the middle of them reads as part of
-  // the requirement. It also puts the sentence that matters most — the goal does
-  // not set your weights — next to the screen's other honest limits.
-  body.append(measuredHost, verdictBlock(goal, p, m, stale), progressionBlock(), moreRows());
+
+  /* 🔄 OVERHAUL SC-2 (2026-09-27) — THE ORDER. Measured on a phone, "What you
+   * are actually doing" started ~1,400 px down, under seven requirement cards
+   * of 40–60 words each. The part about YOU now comes straight after the bar,
+   * then the requirements as one-line rows (their paragraphs behind each row's
+   * ?), then On track / what has moved / the weights, then the two links.
+   *
+   * ⚠️ The verdict and weights blocks live INSIDE the `.goal-reqs` column. On a
+   * laptop (≥1200px, css "Motion 2 · Layout") that element is the right-hand
+   * column and everything else stacks on the left, so this one DOM order gives
+   * the phone its single column and the laptop two balanced ones:
+   *   left  — hero, bar, what you are doing, the two links
+   *   right — what the goal asks, On track?, the weights. */
+  body.append(
+    measuredHost,
+    requirementsBlock(goal, req, verdictBlock(goal, p, m, stale), progressionBlock()),
+    moreRows(),
+  );
 
   trainingOrShortWindow(goal.muscle)
     .then((measured) => measuredHost.append(measuredBlock(goal, req, measured)))
@@ -438,11 +468,10 @@ function staleNotice(goal, profile) {
   return el('div', { class: 'card goal-stale' },
     el('div', { class: 'help-line' },
       el('div', { class: 'muscle-warn', text:
-        `Since you set this goal the way the app rates strength changed, so the target below `
-        + `may no longer mean ${goal.targetLevelName}. Re-set it to refresh the target.` }),
-      helpDot('The ratios that convert one lift to another, and the medians and spreads behind '
-        + 'each level, were corrected on 2026-09-13. A weight frozen before that was computed '
-        + 'from the old ones.',
+        'Strength ratings changed since you set this. Re-set to refresh the target.' }),
+      helpDot(`So the target below may no longer mean ${goal.targetLevelName}. The ratios that `
+        + 'convert one lift to another, and the medians and spreads behind each level, were '
+        + 'corrected on 2026-09-13. A weight frozen before that was computed from the old ones.',
       { label: 'What changed in the way strength is rated' })),
     next
       ? el('button', {
@@ -502,8 +531,7 @@ function progressBlock(goal, p, m, stale) {
       // ⚠️ RE-SHAPED. Both halves are WHAT — the fact that there is no current
       // estimate, and the one action that fixes it — so nothing goes behind a ?.
       el('div', { class: 'field-help', text:
-        `Nothing has trained ${goal.muscle} since this goal was set, so there is no current `
-        + 'estimate. Log a set of anything that trains it.' }),
+        `Nothing has trained ${goal.muscle} since this goal began. Log a set.` }),
     );
   }
 
@@ -528,9 +556,11 @@ function progressBlock(goal, p, m, stale) {
      * one sentence says why (Rule 5: an inference must never look like a
      * measurement, and this one has stopped being either). */
     stale
-      ? el('div', { class: 'field-help', text:
-          'How far along you are is not shown: the start figure was rated the old way and '
-          + 'today\'s the new way, so the gap between them is not a measure of training.' })
+      ? el('div', { class: 'help-line' },
+          el('span', { class: 'field-help', text:
+            'Progress hidden: start and now were rated differently.' }),
+          helpDot('The start figure was rated the old way and today\'s the new way, so the gap '
+            + 'between them is not a measure of training.', { label: 'Why progress is hidden' }))
       : [
           el('div', { class: 'to-next-bar' },
             springFill(el('div', {
@@ -540,8 +570,7 @@ function progressBlock(goal, p, m, stale) {
 
           el('div', { class: 'to-next-label', text: p.reached
             ? 'Target reached.'
-            : `${shown.toGo} ${units.units()} to go of the ${shown.needed} ${units.units()} this `
-              + 'goal asks for.' }),
+            : `${shown.toGo} ${units.units()} to go of the ${shown.needed} ${units.units()}.` }),
 
           // Going backwards is a real outcome and the screen has to be able to
           // say it without dressing it up. Rule 6 keeps it factual: no
@@ -667,8 +696,12 @@ function verdictBlock(goal, p, m, stale) {
      * than WHY: a reader who does not know the app is declining to judge will
      * read the numbers below as a verdict. What went behind the ? is why it
      * declines and what would change that. */
+    // 🔄 OVERHAUL 2026-09-27: the answer shares the label's line ("On track?
+    // Not judged yet. ?") — one line saved, and the ? sits beside the answer
+    // whose reason it gives.
     el('div', { class: 'help-line' },
       el('div', { class: 'section-label', text: 'On track?' }),
+      el('p', { class: 'goal-verdict-body', text: 'Not judged yet.' }),
       helpDot(el('div', {},
         el('p', { text: 'A day-to-day strength estimate swings several percent on sleep, food and '
           + 'what time you trained. A verdict built on that would tell you that you were behind '
@@ -683,7 +716,9 @@ function verdictBlock(goal, p, m, stale) {
     // 🔄 2026-09-24 (review, second pass): ~~"Not yet — …"~~ read like a
     // failing grade under "On track?". It means the app does not judge this
     // yet, so it now says that first.
-    el('p', { class: 'goal-verdict-body', text: 'Not judged yet — every number here is measured.' }),
+    // 🔄 OVERHAUL 2026-09-27: "Not judged yet — every number here is measured"
+    // became three words on the label's line above. "Every number here is
+    // measured" was not quite true (the moved line is two estimates).
 
     // What it CAN say: the measured change, and the size a change has to beat.
     ...movedSince(goal, p, m, stale),
@@ -729,8 +764,7 @@ function movedSince(goal, p, m, stale) {
     // says that the other does not is what the missing rating COSTS, which is
     // this measurement, and that survives in the second sentence.
     return [el('p', { class: 'goal-verdict-body', text:
-      `Nothing to measure yet: ${goal.muscle} has no current rating. There is nothing to subtract `
-      + 'the starting one from. The change appears here once one arrives.' })];
+      `Nothing to measure yet: ${goal.muscle} has no current rating.` })];
   }
 
   /* ⚠️ A THIRD CASE SINCE 2026-09-13, and it is neither of the two above. The
@@ -741,10 +775,11 @@ function movedSince(goal, p, m, stale) {
    * the sentence names the two ends so the reader knows what is missing and
    * why. The notice above the figures says how to end this state. */
   if (stale) {
-    return [el('p', { class: 'goal-verdict-body', text:
-      `What has moved since ${fmtDateLong(goal.startDate)} is not shown: the ${lift} estimate `
-      + 'this goal started from was rated the old way and today\'s is rated the new way, so the '
-      + 'difference would mix the correction with your training.' })];
+    return [el('div', { class: 'help-line' },
+      el('p', { class: 'goal-verdict-body', text: 'What has moved is hidden until the target is re-set.' }),
+      helpDot(`The ${lift} estimate this goal started from was rated the old way and today's is `
+        + 'rated the new way, so the difference would mix the correction with your training.',
+      { label: 'Why the change is hidden' }))];
   }
 
   const delta = p.gained;
@@ -768,20 +803,15 @@ function movedSince(goal, p, m, stale) {
    * so the sentence can never disagree with the numbers beside it (§2.7). */
   const step = shownFigures(p).step;
   const unitWord = units.units() === 'kg' ? 'kilo' : 'pound';
+  /* 🔄 OVERHAUL W-3 (2026-09-27): 118 words became four short lines. The start
+   * date is the only time named — ELAPSED, never remaining: `p.daysLeft` is
+   * right there and is deliberately not read (see the note above). The lift is
+   * in the hero and on the "Estimated from" line, so "it" is enough here. */
+  const since = fmtDateShort(goal.startDate);
   const moved = step === 0
-    ? `The ${lift} estimate is where it started, ${from} — unchanged to the nearest ${unitWord}.`
-    : `The ${lift} estimate has gone from ${from} then to ${to} now — `
-      + `${step} ${units.units()} ${delta > 0 ? 'higher' : 'lower'}, or ${pctText}.`;
-
-  // ⚠️ ELAPSED, NEVER REMAINING. See the note above — `p.daysLeft` is right
-  // there and is deliberately not read. Days under a fortnight, weeks after
-  // that, and nothing at all on the day the goal was set: "0 days ago" is the
-  // kind of phrase that makes a screen look like it is guessing.
-  const days = p.daysElapsed;
-  const ago = days === null || days === 0 ? ''
-    : days < 14
-      ? `, ${days} day${days === 1 ? '' : 's'} ago`
-      : `, ${p.weeksElapsed} week${p.weeksElapsed === 1 ? '' : 's'} ago`;
+    ? `Since ${since} it is unchanged to the nearest ${unitWord}, at ${from}.`
+    : `Since ${since} it has gone from ${from} to ${to} — `
+      + `${step} ${units.units()} ${delta > 0 ? 'higher' : 'lower'} (${pctText}).`;
 
   // ⚠️ The comparison against the yardstick is arithmetic, not a judgement:
   // "smaller than 12 %" is a fact about resolution, and the sentence stops
@@ -792,39 +822,30 @@ function movedSince(goal, p, m, stale) {
    * measured, not judged"* — the same sentence, on the same screen, in the
    * position the reader meets first. Rule 9: ask what else already says it. */
   const scale = step === 0
-    ? 'A flat reading and a small real change look identical at that resolution.'
+    ? 'A small real change can still read flat.'
     : pct < ESTIMATE_NOISE_PCT
-      ? `A move of ${pctText} is inside that. The app cannot tell it apart from an ordinary swing.`
-      : `A move of ${pctText} is larger than that — so the estimate has moved, not a max you have `
-        + 'hit.';
+      ? 'This move is inside that — can\'t tell yet.'
+      : 'This move is larger than that — the estimate moved.';
 
   return [
-    // ⚠️ "from your recorded sets" is dropped from this sentence and not from
-    // the screen: progressBlock() prints "Estimated from <exercise>, <weight>×<reps>"
-    // above it, and the dated line at the bottom of this block names the set
-    // again. What must not be lost — neither end is a tested max (Rule 5) —
-    // stays exactly where it was.
-    el('p', { class: 'goal-verdict-body', text:
-      `What has moved: this goal was set on ${fmtDateLong(goal.startDate)}${ago}. ${moved} `
-      + "Both ends are this app's own estimate, and neither is a tested max." }),
+    // What must not be lost — neither end is a tested max (Rule 5) — keeps its
+    // own line, straight under the numbers it qualifies.
+    el('p', { class: 'goal-verdict-body', text: moved }),
+    el('p', { class: 'goal-verdict-body', text: 'Both are estimates, not a tested max.' }),
 
     /* 🚨 THE YARDSTICK STAYS, ITS PROVENANCE MOVES (Rule 9). ±12 % is WHAT —
-     * without it the sentence under it cannot be read at all — but where the
-     * number came from, and that the estimate above carries no band of its
-     * own, is WHY. The `.req-source` line below still names the source in the
-     * open, so nothing here depends on the ? being opened. */
+     * without it the sentence cannot be read at all — but where the number came
+     * from, that it is modelled rather than measured on the reader, and that
+     * the estimate above carries no band of its own, is WHY.
+     * 🔄 OVERHAUL W-3: the `.req-source` line "the ±12 % is modelled, not
+     * measured on you" is CUT — this ? says the same thing word for word. */
     el('div', { class: 'help-line' },
       el('p', { class: 'goal-verdict-body', text:
-        `For scale: the app's uncertainty on a strength estimate is about `
-        + `±${ESTIMATE_NOISE_PCT} %. ${scale}` }),
+        `Estimates swing about ±${ESTIMATE_NOISE_PCT} %. ${scale}` }),
       helpDot(`That ±${ESTIMATE_NOISE_PCT} % is this project's own simulation of a strength `
-        + 'estimate, not a measurement of you — and the figure above carries no band of its own.',
+        + 'estimate, modelled rather than measured on you — and the figure above carries no band '
+        + 'of its own. A flat reading and a small real change look identical at that resolution.',
       { label: 'Where the ± figure comes from' })),
-
-    // Rule 5 — the yardstick names what it came from, and says it is not a
-    // measurement of this reader. Same pattern as progressionBlock's citation.
-    el('div', { class: 'req-source', text:
-      `the ±${ESTIMATE_NOISE_PCT} % is modelled, not measured on you` }),
 
     /* ⚠️ THE DATE IS THE POINT OF THIS LINE, and it is why it is not a repeat of
      * the source line progressBlock() already prints further up. That one says
@@ -845,11 +866,10 @@ function movedSince(goal, p, m, stale) {
      * conservative direction — and this sentence names the set. */
     m
       ? el('div', { class: 'field-help', text:
-          `The "now" end of that was last moved by ${m.best.exerciseName}, `
+          `Last moved by ${m.best.exerciseName} `
           + `${units.fmtWeight(m.best.weight)}${m.best.loadType === 'per_side' ? '/side' : ''}`
-          + `×${m.best.performedReps || m.best.reps} on `
-          + `${fmtDateLong(m.best.performedDate || m.best.date)} — so that is how recent this `
-          + 'comparison actually is.' })
+          + `×${m.best.performedReps || m.best.reps}, `
+          + `${fmtDateShort(m.best.performedDate || m.best.date)}.` })
       : null,
   ];
 }
@@ -929,7 +949,7 @@ const SCALES_WHY = () => figureNote([
   licence: 'CC BY 4.0',
 });
 
-function requirementsBlock(goal, req) {
+function requirementsBlock(goal, req, ...after) {
   const a = req.ambition;
   // 🔄 From the start and target the screen SHOWS, not the frozen `gainPct` —
   // 2026-09-23 (Tim: "whatever you think for all"). A re-freeze moves the target
@@ -947,27 +967,33 @@ function requirementsBlock(goal, req) {
     ),
     el('div', { class: 'field-help', text: a.blurb }),
 
-    el('h2', { class: 'section-head', text: 'What this asks of you' }),
+    /* 🔄 OVERHAUL W-14 (2026-09-27): the line "The tags say which of these grow
+     * with a bigger goal." is CUT and its ? — why only some of these grow —
+     * sits on this heading instead, beside the rows it explains. */
+    el('div', { class: 'help-line goal-reqs-head' },
+      el('h2', { class: 'section-head', text: 'What this asks of you' }),
+      helpDot(SCALES_WHY(), { label: 'Why only some of these grow with the goal' })),
     el('div', { class: 'list' }, req.rows.map((r) => reqRow(r, req))),
 
     // Two conditions of the estimate, said once and plainly. goals-plan §3.2:
     // protein and sleep are levers the app cannot see, so they are stated as
-    // assumptions rather than folded into any calculation.
-    el('div', { class: 'field-help', text:
-      'All of this assumes you are eating and sleeping enough. The app cannot see either, so '
-      + 'neither will ever be counted for or against you.' }),
-    /* 🚨 47 WORDS BECAME ELEVEN AND A "?" (Rule 9). Every row above already
-     * wears its own tag — "grows with the goal" or "a bar, not a dial" — so
-     * WHAT this paragraph told the reader is on the screen already, in the
-     * rows it describes. What only the paragraph had is WHY those tags are not
-     * a matter of taste, and that is what is behind the dot. Nothing deleted. */
+    // assumptions rather than folded into any calculation. That the app cannot
+    // see them stays in the open; what follows from it is one tap away.
     el('div', { class: 'help-line' },
       el('span', { class: 'field-help', text:
-        'The tags say which of these grow with a bigger goal.' }),
-      helpDot(SCALES_WHY(), { label: 'Why only some of these grow with the goal' })),
+        'Assumes you eat and sleep enough — the app cannot see either.' }),
+      helpDot('So neither will ever be counted for or against you.',
+        { label: 'Why food and sleep are not counted' })),
+    ...after,
   );
 }
 
+/* 🔄 OVERHAUL SC-2 / W-1 (2026-09-27): A REQUIREMENT IS LABEL, TAG, ?, VALUE,
+ * and at most one short line (the model's `short`, ≤7 words). Seven rows of
+ * 18–47 words (~250) sat between the bar and the part about you. The paragraph
+ * and its citation are unchanged and go behind the ? beside the label (Rule 9:
+ * never deleted, one tap away). A phrase value ("Within 1–2 reps of failure")
+ * keeps its own line because it does not fit the number column. */
 function reqRow(r, req) {
   const value = r.key === 'protein' && req.proteinGrams ? `${req.proteinGrams} g` : r.value;
   // Only the view knows whether this reader is in pounds or kilos, so the rate
@@ -975,22 +1001,32 @@ function reqRow(r, req) {
   const detail = r.perLb
     ? `${proteinRate(r.perLb)} of body weight. ${r.detail}`
     : r.detail;
+  const why = el('div', {},
+    el('p', { class: 'help-pop-body', text: detail }),
+    r.source ? el('p', { class: 'req-source', text: r.source }) : null);
+  // The model's `short` line (goals.js, W-1) under the label. Protein's is
+  // "of body weight." — the rate is prepended here, in the reader's unit.
+  const caveat = r.short
+    ? (r.perLb ? `${proteinRate(r.perLb)} ${r.short}` : r.short)
+    : (r.key === 'consistency' ? 'Our threshold, not a published one.' : null);
 
   return el('div', { class: 'row req-row' },
     el('div', { class: 'row-main' },
-      el('div', { class: 'row-title' },
-        r.label,
-        r.scales
-          ? el('span', { class: 'tag', text: 'grows with the goal' })
-          : r.threshold ? el('span', { class: 'tag', text: 'a bar, not a dial' }) : null,
+      // `help-line` gives the dot the app's own spacing beside its text (a
+      // bare dot's -9px side margins made it touch the tag).
+      el('div', { class: 'row-title help-line' },
+        el('span', {},
+          r.label,
+          r.scales
+            ? el('span', { class: 'tag', text: 'grows' })
+            : r.threshold ? el('span', { class: 'tag', text: 'a bar, not a dial' }) : null),
+        helpDot(why, { label: `Why: ${r.label.toLowerCase()}` }),
       ),
       // A requirement whose answer is a phrase rather than a quantity states it
-      // on its own line under the label. Putting it in the tabular column
-      // instead is what crushed the sentence beside it — the column is sized
-      // for "7–10", not for "Within 1–2 reps of failure".
+      // on its own line under the label — the number column is sized for
+      // "7–10", not for "Within 1–2 reps of failure".
       r.phrase ? el('div', { class: 'req-phrase', text: value }) : null,
-      el('div', { class: 'row-sub wrap', text: detail }),
-      r.source ? el('div', { class: 'req-source', text: r.source }) : null,
+      caveat ? el('div', { class: 'row-sub wrap', text: caveat }) : null,
     ),
     r.phrase ? null : el('div', { class: 'req-value mono', text: value }),
   );
@@ -1006,13 +1042,7 @@ function measuredBlock(goal, req, measured) {
     // ⚠️ `heading`, not `reason` — this section says what you ARE doing, so a
     // row that is being met must not be titled with the thing that goes wrong.
     // *Why progress stalls* keeps `reason`, because there the row names a cause.
-    ...rows.map((r) => el('div', { class: 'row stall-row is-' + r.status },
-      el('div', { class: 'row-main' },
-        el('div', { class: 'row-title', text: r.heading || r.reason }),
-        el('div', { class: 'row-sub wrap', text: r.detail }),
-      ),
-      el('div', { class: 'req-value mono', text: r.value === null ? '—' : String(r.value) }),
-    )),
+    ...rows.map((r) => measuredRow(r, r.heading || r.reason, req, measured)),
     // ⚠️ THE WINDOW IS PART OF THE NUMBER, so it is printed every time and it
     // says which of the three states produced the rows above — a full window, a
     // window too short to divide into weeks, or no sessions at all. The middle
@@ -1031,18 +1061,73 @@ function measuredBlock(goal, req, measured) {
   );
 }
 
+/* 🔄 OVERHAUL W-15 / W-11 (2026-09-27): A MEASURED ROW IS ITS HEADING, ITS
+ * NUMBER AND ONE SHORT LINE; the model's sentence (20–51 words, with the
+ * warm-up caveat) goes behind a ? at the end of that line. The short line is
+ * built here from the same numbers the row already prints — no new verdict,
+ * no new colour: the status class and heading are the model's, untouched
+ * (Rule 6). The invisible rows (stalls screen) get a short "can't see" line.
+ */
+const INVISIBLE_SHORT = {
+  effort: 'No reps-in-reserve field — the app can\'t see effort.',
+  protein: 'The app doesn\'t track food.',
+  sleep: 'The app can\'t see sleep.',
+  life: 'The app can\'t see life outside the gym.',
+};
+
+function measuredShort(r, req, measured) {
+  // goals.js (W-15/W-11) carries its own `short` on every row; the lines built
+  // below are only the fallback for a model that has none.
+  if (r.short) return r.short;
+  if (!r.visible) return INVISIBLE_SHORT[r.key] || null;
+  const shortWindow = Boolean(measured) && measured.enough === false;
+  const span = shortWindow ? measured.spanDays : 0;
+  const days = `${span} day${span === 1 ? '' : 's'}`;
+  if (r.key === 'volume') {
+    if (r.value === null) return 'No sessions in this window yet.';
+    if (shortWindow) return `${r.value} sets so far over ${days} — a total, not a rate yet.`;
+    if (r.value < 4) return `${r.value} sets a week — below the 4 where change shows.`;
+    return `${r.value} sets a week · goal ${req.sets[0]}–${req.sets[1]}`;
+  }
+  if (r.key === 'frequency') {
+    if (r.value === null) return 'No sessions in this window yet.';
+    if (shortWindow) return `${r.value} day${r.value === 1 ? '' : 's'} so far — a count, not a rate yet.`;
+    const want = req.sessions[0] === req.sessions[1] ? req.sessions[0]
+      : `${req.sessions[0]}–${req.sessions[1]}`;
+    return `${r.value} session${r.value === 1 ? '' : 's'} a week · goal ${want}`;
+  }
+  return null;
+}
+
+function measuredRow(r, title, req, measured) {
+  const short = measuredShort(r, req, measured);
+  const why = el('div', {},
+    el('p', { class: 'help-pop-body', text: r.detail }),
+    r.source ? el('p', { class: 'req-source', text: r.source }) : null);
+  return el('div', { class: 'row stall-row is-' + r.status },
+    el('div', { class: 'row-main' },
+      el('div', { class: 'row-title', text: title }),
+      short
+        ? el('div', { class: 'help-line' },
+            el('span', { class: 'row-sub wrap', text: short }),
+            helpDot(why, { label: `Why: ${title.toLowerCase()}` }))
+        : el('div', { class: 'row-sub wrap', text: r.detail }),
+    ),
+    el('div', { class: 'req-value mono', text: r.visible
+      ? (r.value === null ? '—' : String(r.value))
+      : '' }),
+  );
+}
+
 function measuredFooter(measured) {
-  if (!measured) {
-    return `No sessions logged in the last ${WINDOW_DAYS / 7} weeks — nothing to measure from yet.`;
-  }
+  if (!measured) return `No sessions in the last ${WINDOW_DAYS / 7} weeks.`;
   const days = measured.spanDays;
+  const sessions = `${measured.sessions} session${measured.sessions === 1 ? '' : 's'}`;
   if (measured.enough === false) {
-    return `Counted over the ${days} day${days === 1 ? '' : 's'} since your first session — `
-      + `${measured.sessions} session${measured.sessions === 1 ? '' : 's'}. `
-      + 'Under two weeks, so these are totals, not rates per week.';
+    // ⚠️ "totals" stays in the open: it changes what the numbers above ARE.
+    return `${days} day${days === 1 ? '' : 's'} · ${sessions} · totals, not weekly rates`;
   }
-  return `Measured from the last ${Math.round(days / 7)} weeks of logged sessions — `
-    + `${measured.sessions} of them.`;
+  return `Last ${Math.round(days / 7)} weeks · ${sessions}`;
 }
 
 // ⚠️ NOTHING WAS DROPPED FROM THE SENTENCE ABOVE — the window it counts inside
@@ -1060,16 +1145,14 @@ function moreRows() {
     el('button', { class: 'row', onClick: () => go('#/goal/stalls') },
       el('div', { class: 'row-main' },
         el('div', { class: 'row-title', text: 'Why progress stalls' }),
-        el('div', { class: 'row-sub wrap', text:
-          'The six reasons — and which two the app can actually see.' }),
+        el('div', { class: 'row-sub wrap', text: 'Six common reasons' }),
       ),
       chevron(),
     ),
     el('button', { class: 'row', onClick: () => go('#/goal/systems') },
       el('div', { class: 'row-main' },
         el('div', { class: 'row-title', text: 'Programs that fit this goal' }),
-        el('div', { class: 'row-sub wrap', text:
-          'Sorted by what they actually give this muscle, not by their headline rating.' }),
+        el('div', { class: 'row-sub wrap', text: 'Best for this muscle first' }),
       ),
       chevron(),
     ),
@@ -1084,8 +1167,7 @@ function endSheet(goal, p) {
       // ⚠️ BOTH SENTENCES ARE SAFETY STATEMENTS — what happens to the record —
       // so neither may go behind a ?, and a confirmSheet message is a plain
       // string with nowhere to put one anyway. Trimmed, not moved.
-      : 'It is kept in your history, and you can set a new one straight after. '
-        + 'Nothing about your training or your records changes.',
+      : 'It stays in your history. Your training and records don\'t change.',
     confirmLabel: 'End it',
     danger: !p.reached,
     onConfirm: async () => {
@@ -1135,9 +1217,7 @@ async function GoalMuscleView() {
     sub: 'Which lift',
     back: () => go('#/goals'),
     scroll: [
-      el('div', { class: 'field-help', text:
-        'Pick the muscle you want to move. The next screen shows the levels above it, and what '
-        + 'each would cost.' }),
+      el('div', { class: 'field-help', text: 'Pick a muscle.' }),
 
       el('div', { class: 'list' }, rated.filter((m) => m.next).map((m) => {
         /* ⚠️ A FALLBACK RATING IS LISTED AND REFUSED, WITH THE REASON, not
@@ -1157,7 +1237,13 @@ async function GoalMuscleView() {
               el('div', { class: 'row-title', text: m.muscle }),
               el('div', { class: 'row-sub wrap', text:
                 `${m.lift.name} · ${units.withUnitRounded(m.estimate)} now` }),
-              el('div', { class: 'muscle-warn', text: `Not available for a goal. ${refusal}` }),
+              // 🔄 OVERHAUL W-12: the fallback case is one short line; the full
+              // reason (goals.js holds it) is behind the ?.
+              fallbackRating(m)
+                ? el('div', { class: 'help-line' },
+                    el('span', { class: 'muscle-warn', text: fallbackShort(refusal) }),
+                    helpDot(fallbackWhy(refusal), { label: 'Why this muscle cannot be a goal yet' }))
+                : el('div', { class: 'muscle-warn', text: `Not available for a goal. ${refusal}` }),
             ),
             el('span', { class: 'muscle-level lv-text-' + (m.level ? m.level.key : 'below'),
               text: m.level ? m.level.name : 'Below Beginner' }),
@@ -1183,14 +1269,35 @@ async function GoalMuscleView() {
 
       // ⚠️ RE-SHAPED, NOT HIDDEN. That the target freezes is WHAT — a reader
       // about to commit to a number has to know the number will not move
-      // underneath them (D20) — so it stays in the open. One 27-word sentence
-      // became two.
+      // underneath them (D20) — so it stays in the open, in eight words. What
+      // that means for a later change of comparison is behind the ?.
       el('div', { class: 'field-help', text:
-        `${comparisonLabel(profile).main.replace(/^vs\. /, 'Levels are measured against ')} — `
-        + `${comparisonLabel(profile).sub}. A goal freezes the weight behind the level when you `
-        + 'set it. Changing that comparison later will not move a goal you are already running.' }),
+        `Levels vs. ${comparisonLabel(profile).main.replace(/^vs\. /, '')} — `
+        + `${comparisonLabel(profile).sub}.` }),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'A goal freezes the weight when you set it.' }),
+        helpDot('The weight behind the level is fixed on the day you set the goal. Changing the '
+          + 'comparison later won\'t move a running goal.',
+        { label: 'Why a goal\'s weight is frozen' })),
     ],
   });
+}
+
+// The same test goalSourceRefusal() makes in goals.js for its fallback reason.
+function fallbackRating(m) {
+  return Boolean(m) && (m.basis === 'fallback' || m.kind === 'fallback');
+}
+
+/* 🔄 OVERHAUL W-12: goals.js now returns the SHORT refusal and exports the full
+ * reason as GOAL_SOURCE_WHY for the ?. Read through the namespace so a goals.js
+ * without it still loads; then the model's sentence is the ? and the short
+ * line is written here. */
+const SHORT_INFERRED = 'Only inferred — log a direct exercise first.';
+function fallbackShort(refusal) {
+  return goalsModel.GOAL_SOURCE_WHY ? refusal : SHORT_INFERRED;
+}
+function fallbackWhy(refusal) {
+  return goalsModel.GOAL_SOURCE_WHY || refusal;
 }
 
 /* ---- step two: which level ---- */
@@ -1213,11 +1320,19 @@ async function GoalLevelView(muscle) {
   if (refusal) {
     return screenShell({
       title: muscle, back: () => go('#/goal/new'),
-      scroll: emptyState(
-        'Not available for a goal yet',
-        refusal,
-        el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
-      ),
+      scroll: fallbackRating(m)
+        ? emptyWithWhy(
+            'Not available for a goal yet',
+            fallbackShort(refusal),
+            el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
+            fallbackWhy(refusal),
+            'Why this muscle cannot be a goal yet',
+          )
+        : emptyState(
+            'Not available for a goal yet',
+            refusal,
+            el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
+          ),
     });
   }
 
@@ -1228,9 +1343,12 @@ async function GoalLevelView(muscle) {
     sub: `Now ${m.level ? m.level.name : 'below Beginner'}`,
     back: () => go('#/goal/new'),
     scroll: [
-      el('div', { class: 'field-help', text:
-        `${m.lift.name} is the standard ${muscle} is measured against. Every exercise that trains `
-        + `it counts toward the estimate — right now that is ${units.withUnitRounded(m.estimate)}.` }),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text:
+          `Measured on ${m.lift.name} · now ${units.withUnitRounded(m.estimate)}.` }),
+        helpDot(`${m.lift.name} is the standard ${muscle} is measured against. Every exercise `
+          + 'that trains it counts toward the estimate.',
+        { label: 'Why this lift' })),
 
       el('div', { class: 'list' }, options.map((o) => goalOption(o, m, profile, goal))),
 
@@ -1239,8 +1357,7 @@ async function GoalLevelView(muscle) {
       // sentence, so it is never something to ask for. Whose judgement drew the
       // bands is provenance — Rule 9's "where the number came from" exactly.
       el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          'The percentage beside each is what you would have to add to your estimated max.' }),
+        el('span', { class: 'field-help', text: '% = what you\'d add to your max.' }),
         helpDot('That is what decides how much the goal asks of you. The bands are ours, but '
           + 'everything each one then asks for comes from the research.',
         { label: 'Where these bands come from' })),
@@ -1253,10 +1370,9 @@ async function GoalLevelView(muscle) {
        * that stops a target being read as a forecast; why nobody can predict a
        * twelve-week gain is one tap away. */
       el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          'None of these is a prediction. It is what would count as hitting the target, not what '
-          + 'you will lift.' }),
-        helpDot('Individual gains over twelve weeks vary enormously, so no app can tell you where '
+        el('span', { class: 'field-help', text: 'None of these is a prediction.' }),
+        helpDot('Each is what would count as hitting the target, not what you will lift. '
+          + 'Individual gains over twelve weeks vary enormously, so no app can tell you where '
           + 'you will be in three months.',
         { label: 'Why none of these is a prediction' })),
     ],
@@ -1269,10 +1385,10 @@ function goalOption(o, m, profile, existing) {
       el('div', { class: 'row-title' },
         el('span', { class: 'lv-text-' + o.level.key, text: o.level.name }),
       ),
+      // 🔄 OVERHAUL W-13: the ambition's blurb is said once, on the goal screen,
+      // not repeated on every level here.
       el('div', { class: 'row-sub wrap', text:
-        `${ceilUnit(o.targetWeight)} ${m.lift.name} · `
-        + `${o.ambition.name} — ${o.ambition.blurb.charAt(0).toLowerCase()}`
-        + o.ambition.blurb.slice(1) }),
+        `${ceilUnit(o.targetWeight)} ${m.lift.name} · ${o.ambition.name}` }),
     ),
     el('div', { class: 'goal-option-gain mono', text: `+${Math.round(o.gainPct)}%` }),
     chevron(),
@@ -1346,54 +1462,32 @@ async function GoalStallsView() {
     sub: goal.liftName || goal.muscle,
     back: () => go('#/goals'),
     scroll: [
-      // ⚠️ ONE CLAUSE DELETED, NOT MOVED — "knowing which of them this app can
-      // see and which it cannot" is the two headings immediately below it,
-      // *What the app can measure* and *What it cannot see*, and the help line
-      // at the foot of the screen says it a third time. A sentence describing
-      // the layout of the screen it is printed on is the cheapest kind of
-      // duplicate there is.
-      el('p', { class: 'goal-intro-body', text:
-        'Almost everybody who trains gets stronger. When somebody does not, there are usually '
-        + 'practical reasons.' }),
-
+      // 🔄 OVERHAUL W-11 (2026-09-27): the intro is CUT — the title says it.
+      // Each row is its reason, one short line and a ? holding the model's
+      // sentence (same helper as the goal screen's measured rows).
       el('h2', { class: 'section-head', text: 'What the app can measure' }),
-      el('div', { class: 'list' }, seen.map(stallRow)),
+      el('div', { class: 'list' }, seen.map((r) => measuredRow(r, r.reason, req, measured))),
 
       el('h2', { class: 'section-head', text: 'What it cannot see' }),
-      el('div', { class: 'list' }, unseen.map(stallRow)),
+      el('div', { class: 'list' }, unseen.map((r) => measuredRow(r, r.reason, req, measured))),
 
       /* ⚠️ The point of the section, said outright — and it is the answer to
        * goals-plan §3.2, so the SPLIT stays on screen. What went behind the ?
-       * is why two rows can never fill in. */
+       * is why the lower rows can never fill in. */
       el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          'Most of what stalls you is invisible to any training log — so this screen will never '
-          + 'blame your training.' }),
-        helpDot('The app has no reps-in-reserve field and does not track food. Neither is an '
-          + 'oversight: both are deliberate, and both are why two of these rows say "invisible" '
-          + 'rather than showing a number.',
-        { label: 'Why two rows say invisible' })),
+        el('span', { class: 'field-help', text: 'This screen never blames your training.' }),
+        helpDot('Most of what stalls you is invisible to any training log. The app has no '
+          + 'reps-in-reserve field and does not track food. Neither is an oversight: both are '
+          + 'deliberate, and both are why those rows show no number.',
+        { label: 'Why some rows show no number' })),
     ],
   });
-}
-
-function stallRow(r) {
-  return el('div', { class: 'row stall-row is-' + r.status },
-    el('div', { class: 'row-main' },
-      el('div', { class: 'row-title', text: r.reason }),
-      el('div', { class: 'row-sub wrap', text: r.detail }),
-      r.source ? el('div', { class: 'req-source', text: r.source }) : null,
-    ),
-    el('div', { class: 'req-value mono', text: r.visible
-      ? (r.value === null ? '—' : String(r.value))
-      : '' }),
-  );
 }
 
 function noGoal() {
   return emptyState(
     'No goal running',
-    'Set one and this fills in with what your training is actually doing against it.',
+    'Set a goal and this fills in.',
     el('a', { class: 'btn primary', href: '#/goal/new', text: 'Choose a goal' }),
   );
 }
@@ -1424,30 +1518,42 @@ async function GoalSystemsView() {
       // Every row below prints a strength and a growth percentage, so a reader
       // has to be told what the ORDER means — that is WHAT. The argument for
       // ignoring the headline score is Rule 9's "why it is drawn that way".
+      // 🔄 OVERHAUL W-10: the header's sub already names the muscle and the
+      // 7–10, so this line only says what the ORDER is.
       el('div', { class: 'help-line' },
-        el('span', { class: 'field-help', text:
-          `Sorted by hard sets for ${goal.muscle} a week, against the `
-          + `${req.sets[0]}–${req.sets[1]} this goal asks for.` }),
-        helpDot('A program with a high overall rating is the wrong answer if it barely trains '
-          + 'the muscle you care about.', { label: 'Why not the headline rating' })),
+        el('span', { class: 'field-help', text: `Sorted by ${goal.muscle} sets a week.` }),
+        helpDot(`Hard sets for ${goal.muscle} a week, against the ${req.sets[0]}–${req.sets[1]} `
+          + 'this goal asks for. A program with a high overall rating is the wrong answer if it '
+          + 'barely trains the muscle you care about.', { label: 'Why not the headline rating' })),
 
       el('div', { class: 'list' }, ranked.map((r) => systemRow(r, goal))),
 
-      // ⚠️ THE SAME CAVEATS THAT TRAVEL WITH THESE NUMBERS EVERYWHERE ELSE.
-      // Every row above prints a strength percentage and a count of weekly sets
-      // — the identical figures Explore and the system screen show — and this
-      // screen carried neither caveat beside them. The strength one was simply
-      // absent; the fractional-sets one was a hand-written paraphrase that had
-      // already lost "not a measured fact". Imported now, so a number and the
-      // sentence qualifying it cannot appear on one screen and not another.
-      el('div', { class: 'field-help', text: INDIRECT_NOTE_SETS }),
-      el('div', { class: 'field-help', text: STRENGTH_CAVEAT }),
-      el('div', { class: 'field-help', text:
-        'Adding a program copies it into your programs. It never changes a goal, and it never '
-        + 'changes any weight you have recorded.' }),
+      // ⚠️ THE SAME CAVEATS THAT TRAVEL WITH THESE NUMBERS EVERYWHERE ELSE —
+      // imported, so a number and the sentence qualifying it cannot appear on
+      // one screen and not another.
+      // 🔄 OVERHAUL W-2 (2026-09-27): the Workouts pattern — a short fact on the
+      // screen, the full imported caveat word for word behind its ? (57 + 97 +
+      // 22 words were printed as three paragraphs).
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'Indirect work counts half a set.' }),
+        helpDot(INDIRECT_NOTE_SETS, { label: 'Why indirect work counts half' })),
+      el('div', { class: 'help-line' },
+        el('span', { class: 'field-help', text: 'Strength % counts sets, not how heavy they are.' }),
+        helpDot(STRENGTH_CAVEAT, { label: 'What the strength score cannot see' })),
+      el('div', { class: 'field-help', text: 'Adding copies it. Your goal stays as it is.' }),
     ],
   });
 }
+
+// 🔄 OVERHAUL W-10: the fit in a word or two. goals.js exports its own
+// FIT_SHORT, which wins; this copy is only for a goals.js without it, and
+// FIT_LABEL is the last fallback.
+const FIT_SHORT = {
+  fits: 'fits',
+  more: 'more than asked',
+  light: 'under',
+  under: 'below minimum',
+};
 
 async function candidateSystems(muscle) {
   const [{ PRESET_SYSTEMS }, { rateProgramme, rateUserSystem }, { weeklyVolume },
@@ -1526,7 +1632,8 @@ function systemRow(r, goal) {
         r.mine ? el('span', { class: 'tag', text: 'Yours' }) : null,
       ),
       el('div', { class: 'row-sub wrap', text:
-        `${sets} sets a week on ${goal.muscle} · ${FIT_LABEL[r.fit]}` }),
+        `${sets} sets a week on ${goal.muscle} · `
+        + `${(goalsModel.FIT_SHORT || FIT_SHORT)[r.fit] || FIT_LABEL[r.fit]}` }),
       el('div', { class: 'row-sub wrap', text:
         (r.author ? `${r.author} · ` : '')
         + `${trimNum(Math.round(r.days * 10) / 10)} days/week`

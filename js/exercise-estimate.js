@@ -239,6 +239,15 @@ export function estimateOneRM(exercise, muscles, bodyWeight, opts) {
    * silently came out empty the first time this shipped. */
   const used = rating.contributors || rating.used || [];
 
+  /* 🆕 2026-09-27 (overhaul EB-3): D5 HOLDS FOR A PRINTED NUMBER. The map reads
+   * sets to 25 reps (MAX_MAP_REPS) because it prices a long set in a blend; this
+   * module prints ONE number, so it keeps the 15. A bodybuilder with only 16–20
+   * rep bench sets read "Bench 260.8" off the map's rating of those very sets.
+   * When every set behind the rating is past the ceiling, no number. */
+  const repsOf = (u) => Number(u && u.reps);
+  const counted = used.filter((u) => Number.isFinite(repsOf(u)) && repsOf(u) > 0);
+  if (counted.length && counted.every((u) => repsOf(u) > MAX_EVIDENCE_REPS)) return null;
+
   /* The observation that LED the rating, which for a fallback rating is the
    * stand-in worth believing most. `rateMuscle()` sorts `used` by credibility
    * (`evidenceWeight`) before slicing, so element 0 is not "the first one we
@@ -564,6 +573,10 @@ export function ownBestSet(exercise, rows, forDate) {
       e1rm: r.e1rm, load: r.load, weight: Number(weight) || 0, reps: r.reps, date, ageDays,
       perSide: r.perSide, perSideWeight: r.perSideWeight, bodyIncluded: r.bodyIncluded,
       assist: r.assist, quality: r.quality, source, recent,
+      // The weigh-in the set was priced at (body-weight lifts only), so Profile
+      // can rank this seat through the same ratio the recorded row always used.
+      bodyWeight: r.bodyIncluded && bw ? bw.weight : null,
+      bodyWeightQuality: r.bodyIncluded && bw ? bw.quality : null,
       // Lower is more credible: low reps first, then a benchmark over a workout set.
       tier: (r.reps <= OWN_SET_LOW_REPS ? 0 : 2) + (source === 'benchmark' ? 0 : 1),
     };

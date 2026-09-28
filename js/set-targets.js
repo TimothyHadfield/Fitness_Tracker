@@ -143,7 +143,9 @@ export function weightForTarget(percent, max, step) {
   if (!(m > 0)) return null;
   const raw = m * (Number(percent) / 100);
   const s = Number(step);
-  const weight = s > 0 ? Math.floor(raw / s) * s : raw;
+  // 🆕 EA-6: + 1e-9 so float error on a kg step never floors a whole plate low
+  // (100 % of 35 kg came back as 32.5 kg).
+  const weight = s > 0 ? Math.floor(raw / s + 1e-9) * s : raw;
   if (!(weight > 0)) return null;
   return {
     weight,

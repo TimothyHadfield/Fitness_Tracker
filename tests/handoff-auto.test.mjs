@@ -238,19 +238,45 @@ const V = await import(BASE + 'views-social.js');
   ok(/Added Home Legs from Autumn/.test(toasts()), `and said so ("${toasts()}")`);
   Object.assign(social, original);
 }
+/* 🔄 2026-09-27 (overhaul S-3): the switch MOVED from Settings to Account, under
+ * "Who can see you", renamed "Approve group workouts". Same key, still off by
+ * default; a save that fails springs the switch back to what is stored. */
 {
-  const { SettingsView } = await import(BASE + 'views-data.js');
+  const { AccountView } = await import(BASE + 'views-account.js');
   await store.saveSettings({ askBeforeGroupWorkouts: false });
-  const scr = await SettingsView();
-  document.getElementById('app').replaceChildren(scr);
-  await settle();
-  const sw = [...scr.querySelectorAll('.switch-row')].find((r) => /Ask before adding group workouts/.test(r.textContent));
-  ok(Boolean(sw), 'Settings has an "Ask before adding group workouts" switch');
-  const btn = sw && sw.querySelector('[role="switch"]');
+  const original = { ...social };
+  social.state = async () => ({ available: true, reason: null, user: { uid: 'tim' }, uid: 'tim',
+    name: 'Tim H', shareBodyWeight: false, visibility: 'private', connections: [] });
+  const mount = async () => {
+    const scr = await AccountView();
+    document.getElementById('app').replaceChildren(scr);
+    await settle(120);
+    const sw = [...scr.querySelectorAll('.switch-row')].find((r) => /Approve group workouts/.test(r.textContent));
+    return sw && sw.querySelector('[role="switch"]');
+  };
+  let btn = await mount();
+  ok(Boolean(btn), 'Account has an "Approve group workouts" switch');
   ok(btn && btn.getAttribute('aria-checked') === 'false', 'off by default');
   if (btn) btn.click();
   await settle(120);
   ok((await store.getSettings()).askBeforeGroupWorkouts === true, 'turning it on saves the setting');
+
+  // A save that throws: the switch goes back to what is stored (on).
+  const realSave = store.saveSettings;
+  store.saveSettings = async () => { throw new Error('Couldn’t save'); };
+  if (btn) btn.click();
+  await settle(120);
+  store.saveSettings = realSave;
+  ok(btn && btn.getAttribute('aria-checked') === 'true', `a failed save springs it back (${btn && btn.getAttribute('aria-checked')})`);
+  ok((await store.getSettings()).askBeforeGroupWorkouts === true, 'and the stored value is unchanged');
+
+  const { SettingsView } = await import(BASE + 'views-data.js');
+  const set = await SettingsView();
+  document.getElementById('app').replaceChildren(set);
+  await settle();
+  ok(![...set.querySelectorAll('.switch-row')].some((r) => /group workouts/i.test(r.textContent)),
+    'Settings no longer has a group-workouts switch (one place for it)');
+  Object.assign(social, original);
   await store.saveSettings({ askBeforeGroupWorkouts: false });
 }
 {

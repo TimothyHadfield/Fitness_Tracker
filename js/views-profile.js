@@ -147,9 +147,10 @@ export async function ProfileView() {
     el('div', { class: 'section-label', text: 'Muscle Groups' }),
     el('div', { class: 'field-help' },
       ready
+        // 🔄 Shorter, 2026-09-27 (overhaul words W-19); same facts.
         ? (profile.age
-            ? `Ready. You'll be compared against people who lift, aged around ${profile.age}, at ${units.withUnit(profile.bodyWeight)}.`
-            : `Ready. You'll be compared against everyone who lifts at ${units.withUnit(profile.bodyWeight)}. Add a birth year to compare against your own age group instead.`)
+            ? `Compared with people who lift, around ${profile.age}, at ${units.withUnit(profile.bodyWeight)}.`
+            : `Compared with lifters at ${units.withUnit(profile.bodyWeight)}, any age. Add a birth year to match your age.`)
         : `Still needs your ${profile.missing.join(' and ')} before it can rank anything.`),
   );
 
@@ -197,7 +198,7 @@ export async function ProfileView() {
 
       !history.length
         ? emptyState('No weigh-ins yet',
-            'Log your weight above. Weighing in regularly also gives you a body-weight trend over time.')
+            'Log your weight above.')
         : null,
     ],
   });

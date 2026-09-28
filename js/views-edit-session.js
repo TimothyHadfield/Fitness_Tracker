@@ -17,13 +17,19 @@ import { LOAD_LABEL } from './exercises.js';
 import { minisOf, miniLabel, dropOrphanGroups } from './set-types.js';
 import {
   setChildren, el, icon, iconBtn, toast, screenShell, emptyState, stepper,
-  confirmSheet, fmtDateLong, exerciseLabel,
+  confirmSheet, fmtDateLong, exerciseLabel, goBack,
 } from './ui.js';
+import * as ui from './ui.js';
 import { openExercisePicker } from './views-workouts.js';
 import { photoField } from './photo.js';
 import { warmupChips } from './workout-card.js';
 
 const go = (hash) => { location.hash = hash; };
+
+/* A plain sentence for a failed write. `friendlyError` is ui.js's (overhaul
+ * contract); guarded so this screen still works on a ui.js without it. */
+const plainError = (err, fallback) => (typeof ui.friendlyError === 'function'
+  ? ui.friendlyError(err) : (err && err.message)) || fallback;
 
 export async function EditSessionView(sessionId) {
   const [session, exMap] = await Promise.all([
@@ -307,11 +313,12 @@ export async function EditSessionView(sessionId) {
       await store.saveSession(row);
       if (photoChange === null && session.photo) await store.deletePhoto(row.id).catch(() => {});
     } catch (err) {
-      toast(`Not saved. ${(err && err.message) || 'Could not save this record.'}`);
+      toast(`Not saved. ${plainError(err, 'Could not save this record.')}`, { error: true });
       return;
     } finally {
       saveBtn.disabled = false;
     }
+    released = true;
     toast('Record updated');
     go('#/day/' + draft.date);
   }
@@ -322,26 +329,68 @@ export async function EditSessionView(sessionId) {
       message: `“${draft.workoutName || 'Workout'}” from ${fmtDateLong(originalDate)} will be `
         + 'permanently removed, including from your graphs.',
       onConfirm: async () => {
-        await store.deleteSession(draft.id);
+        try {
+          await store.deleteSession(draft.id);
+        } catch (err) {
+          toast(`Not deleted. ${plainError(err, 'Could not delete this record.')}`, { error: true });
+          return;
+        }
+        released = true;
         toast('Record deleted');
         go('#/calendar');
       },
     });
   }
 
+  /* 🆕 DIRTY GUARD (overhaul I-6, 2026-09-27). Measured before: change the
+   * name → Back → the edit was gone, no question asked; the phone's edge swipe
+   * clicks this same back arrow, so it lost them too. The form is snapshotted
+   * as drawn, and leaving by the arrow while it differs asks first. Tab taps
+   * and the OS back are not intercepted (rare on a screen with no tab bar).
+   * `released` turns it off once Save or Delete has left on purpose. */
+  const formState = () => JSON.stringify({
+    draft,
+    dur: durBox ? durBox.value : null,
+    photo: photoChange === undefined ? 'same' : (photoChange ? 'new' : 'removed'),
+  });
+  const opened = formState();
+  let released = false;
+  const isDirty = () => !released && formState() !== opened;
+  const leave = () => goBack(() => go('#/day/' + originalDate));
+  const guardedBack = () => {
+    if (!isDirty()) { leave(); return; }
+    confirmSheet({
+      title: 'Discard changes?',
+      message: 'The record stays as it was.',
+      confirmLabel: 'Discard',
+      onConfirm: () => { released = true; leave(); },
+    });
+  };
+  const onUnload = (e) => {
+    // Gone from the page (another route drew over it): stop listening.
+    if (!screen.isConnected) { window.removeEventListener('beforeunload', onUnload); return; }
+    if (!isDirty()) return;
+    e.preventDefault();
+    e.returnValue = '';
+  };
+  window.addEventListener('beforeunload', onUnload);
+
   const saveBtn = el('button', { class: 'btn primary block', onClick: save }, 'Save changes');
 
-  return screenShell({
+  // `backExact`: the guard decides, then goBack() keeps Rule 8 (the screen you
+  // were just on, or this record's day on a cold link).
+  const screen = screenShell({
     title: 'Edit record',
     sub: fmtDateLong(originalDate),
-    back: () => go('#/day/' + originalDate),
+    back: guardedBack,
+    backExact: true,
     scroll: [
       el('div', { class: 'field' }, el('label', { text: 'Workout name' }), nameInput),
       el('div', { class: 'field' },
         el('label', { text: 'Day' }),
         dateInput,
         el('div', { class: 'field-help', text:
-          'Moving this changes which day it appears on, and where it sits in your graphs.' }),
+          'Changes its day and where it sits in your graphs.' }),
       ),
       durBox
         ? el('div', { class: 'field' },
@@ -353,22 +402,20 @@ export async function EditSessionView(sessionId) {
         el('label', { text: 'Location' }),
         locationInput,
         el('div', { class: 'field-help', text:
-          'Optional, and whatever you type is the whole location — the app never reads GPS. '
-          + 'Shown to friends you share your workouts with.' }),
+          'Typed, never GPS. Friends you share with see it.' }),
       ),
       el('div', { class: 'field' },
         el('label', { text: 'Description' }),
         noteInput,
         el('div', { class: 'field-help', text:
-          'Optional — a line about how this workout went. '
-          + 'Shown to friends you share your workouts with.' }),
+          'A line about how it went. Friends see it.' }),
       ),
       photoInput,
       el('div', { class: 'field' },
         el('label', { text: 'Kind' }),
         el('div', { class: 'chips' }, benchToggle),
         el('div', { class: 'field-help', text:
-          'A benchmark record files the best set of each exercise as a benchmark for that day.' }),
+          "Saves each exercise's best set as a benchmark." }),
       ),
 
       el('div', { class: 'section-label', text: 'Exercises' }),
@@ -399,4 +446,5 @@ export async function EditSessionView(sessionId) {
     ],
     bottom: saveBtn,
   });
+  return screen;
 }

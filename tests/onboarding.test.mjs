@@ -145,8 +145,13 @@ for (const days of DAYS) {
 // Reps follow the goal.
 const repsOf = (goal) => buildProgram({ goal, experience: '1to3', days: 4, minutes: 60, equipment: 'gym', focus: [] })
   .workouts.map((w) => w.exercises.map((e) => e.reps));
-const muscle = repsOf('muscle').flat();
-ok(muscle.every(([lo, hi]) => lo === 8 && hi === 12), 'build muscle: 8–12 reps throughout');
+// 🔄 2026-09-27 (O-8): the deadlift is never prescribed above 8 reps, so it is
+// the one lift a muscle program does not give 8–12.
+const muscleEx = buildProgram({ goal: 'muscle', experience: '1to3', days: 4, minutes: 60, equipment: 'gym', focus: [] })
+  .workouts.flatMap((w) => w.exercises);
+ok(muscleEx.every((e) => (e.exerciseId === 'deadlift' || /^Deadlift$/.test(e.name)
+  ? e.reps[1] <= 8 : e.reps[0] === 8 && e.reps[1] === 12)),
+   `build muscle: 8–12 reps throughout, the deadlift capped at 8 (${muscleEx.filter((e) => e.reps[1] !== 12).map((e) => `${e.name} ${e.reps}`)})`);
 const strength = repsOf('strength');
 ok(strength.every((day) => day[0][0] === 3 && day[0][1] === 6), 'get stronger: each day opens on a 3–6 main lift');
 ok(strength.every((day) => day.slice(2).every(([lo, hi]) => lo === 6 && hi === 10)), 'get stronger: 6–10 after the main lifts');
@@ -183,8 +188,14 @@ const m3 = matchingPresets({ days: 3, experience: 'new', equipment: 'gym' });
 ok(m3.length >= 1 && m3.length <= 2 && m3.every((p) => PRESET_SYSTEMS.some((x) => x.id === p.id)),
    `1–2 real presets offered (${m3.map((p) => p.name).join(', ')})`);
 ok(m3[0] && PRESET_SYSTEMS.find((x) => x.id === m3[0].id).daysPerWeek === 3, 'the first one trains the same days a week');
-ok(matchingPresets({ days: 4, experience: '1to3', equipment: 'bodyweight' }).length === 0,
-   'none offered for bodyweight only — every ready-made one needs a gym');
+// 🔄 2026-09-27 (S-15): a bodyweight ready-made program now exists, and it is
+// the only kind a bodyweight answer may be offered.
+{
+  const bwOffers = matchingPresets({ days: 4, experience: '1to3', equipment: 'bodyweight' });
+  const bwOnly = (p) => PRESET_SYSTEMS.find((x) => x.id === p.id).workouts
+    .every((w) => w.exercises.every((e) => (BUILT_IN_EXERCISES.find((x) => x.name === e.name) || {}).equipment === 'Bodyweight'));
+  ok(bwOffers.every(bwOnly), `bodyweight only: never offered a program that needs a gym (${bwOffers.map((p) => p.name)})`);
+}
 
 /* ================= 2. the gate ================= */
 const { shouldOnboard, ONBOARDED_KEY } = onboarding;
@@ -253,32 +264,79 @@ const tapChoice = async (label) => {
 const current = () => q('.ob-screen.is-current');
 const title = () => (current() && current().querySelector('.ob-q') ? current().querySelector('.ob-q').textContent : '');
 
-// Skip
+// Words, not symbols: "Barbell + rack at home" is Tim's own label (the plan) and reads as four.
+const words = (s) => s.trim().split(/\s+/).filter((w) => /\w/.test(w)).length;
+const skipBtn = () => qa('.ob-overlay .ob-skip')[0];
+
+// The pure helpers: the unit a locale starts on (O-2), the week line (O-7).
 {
-  let done = 0;
-  openOnboarding({ onDone: () => { done++; } });
+  const { defaultUnitsFor, planLine, PATHS, ABOUT_WHY } = onboarding;
+  const cases = [['en-US', 'lbs'], ['en-GB', 'kg'], ['de-DE', 'kg'], ['en-LR', 'lbs'], ['my-MM', 'lbs'],
+    ['fr', 'kg'], ['en', 'lbs'], ['', 'lbs'], ['es-MX', 'kg'], ['en-AU', 'kg']];
+  const wrong = cases.filter(([l, u]) => defaultUnitsFor(l) !== u);
+  ok(wrong.length === 0, `kg is pre-selected outside the US, Liberia and Myanmar (${wrong.map(([l]) => `${l}→${defaultUnitsFor(l)}`).join(', ') || 'all right'})`);
+  const fb = buildProgram({ goal: 'muscle', experience: '1to3', days: 3, minutes: 60, equipment: 'gym', focus: [] });
+  ok(planLine(fb) === 'A · rest · B · rest · C · rest · rest', `the week line drops the shared "Full Body " (${planLine(fb)})`);
+  const ul = buildProgram({ goal: 'muscle', experience: '1to3', days: 4, minutes: 60, equipment: 'gym', focus: [] });
+  ok(planLine(ul) === 'Upper A · Lower A · rest · Upper B · Lower B · rest · rest', `names that differ stay whole (${planLine(ul)})`);
+  ok(PATHS.length === 4 && PATHS.every(([, label]) => words(label) <= 4), 'four ways in, each ≤4 words');
+  // 🚨 The ? must not promise more privacy than the code keeps (store.js publishes
+  // gender and age; body weight only behind settings.shareBodyWeight).
+  ok(/Gender and age show/.test(ABOUT_WHY) && /Body weight stays private unless you share it/.test(ABOUT_WHY),
+     'the About-you ? says gender and age are shown and body weight is private unless shared');
+  const storeSrc = (await import('node:fs')).readFileSync(new URL('../js/store.js', import.meta.url), 'utf8');
+  ok(/gender: mine\.gender,\s*\n\s*age: mine\.age,/.test(storeSrc) && /shareBodyWeight: Boolean\(settings\.shareBodyWeight\)/.test(storeSrc),
+     'and store.js still publishes exactly that (gender, age; body weight behind its switch)');
+}
+
+// Skip — one Skip ends the whole intro, and says so to app.js (O-9)
+{
+  let done = [];
+  openOnboarding({ onDone: (r) => { done.push(r); } });
   await settle();
   ok(Boolean(q('.ob-overlay')), 'the questions open as a full-screen overlay');
   ok(localStorage.getItem('ftrack:v1:onboarded'), 'and mark themselves seen the moment they open');
+  ok(title() === 'How do you want to start?', `the first screen asks how to start (${title()})`);
+  const startLabels = qa('.ob-screen.is-current .ob-choice').map((b) => b.textContent.trim());
+  ok(JSON.stringify(startLabels) === JSON.stringify(['Build me a program', 'Pick a ready-made one', 'Use my own program', 'Just log workouts']),
+     `four ways in (${startLabels.join(' | ')})`);
+  const icon = q('.ob-screen.is-current img.ob-icon');
+  ok(icon && icon.getAttribute('src') === 'icon.svg' && icon.getAttribute('width') === '48', 'the app icon sits on the start screen at 48px');
   const skip = qa('.ob-overlay button').find((b) => b.textContent.trim() === 'Skip');
   ok(Boolean(skip), 'Skip is there from the first screen');
   skip.click();
   await settle(320);
   ok(!q('.ob-overlay'), 'Skip closes it');
-  ok(done === 1, 'and calls onDone once');
+  ok(done.length === 1 && done[0] && done[0].skipped === true, `and calls onDone once, with skipped: true (${JSON.stringify(done)})`);
+}
+
+// "I already have an account" → Sign in, closed, no tour (O-4)
+{
+  let done = [];
+  openOnboarding({ onDone: (r) => { done.push(r); } });
+  await settle();
+  const link = qa('.ob-screen.is-current a').find((a) => a.textContent.trim() === 'I already have an account');
+  ok(link && link.getAttribute('href') === '#/signin', 'a sign-in link sits under the choices');
+  link.click();
+  await settle(320);
+  ok(!q('.ob-overlay'), 'it closes the intro');
+  ok(done.length === 1 && done[0].skipped === true, 'and asks for no tour');
+  ok((await store.getSystems()).length === 0, 'having saved nothing');
 }
 
 // Word limits and the full flow
 {
-  let done = 0;
-  openOnboarding({ onDone: () => { done++; } });
+  let done = [];
+  openOnboarding({ onDone: (r) => { done.push(r); } });
   await settle();
   const titles = [];
-  // Words, not symbols: "Barbell + rack at home" is Tim's own label (the plan) and reads as four.
-  const words = (s) => s.trim().split(/\s+/).filter((w) => /\w/.test(w)).length;
   const back = () => qa('.ob-overlay .ob-back')[0];
-  ok(back() && (back().disabled || back().style.visibility === 'hidden'), 'no Back on the first question');
+  ok(back() && (back().disabled || back().style.visibility === 'hidden'), 'no Back on the start screen');
   const progress = () => qa('.ob-progress .is-done').length;
+  titles.push(title());
+  await tapChoice('Build me a program');
+  ok(/goal/i.test(title()), `Build me a program opens the questions (${title()})`);
+  ok(qa('.ob-progress .ob-seg').length === 7, `the bar counts 6 questions + About you (${qa('.ob-progress .ob-seg').length})`);
   titles.push(title());
   await tapChoice('Build muscle');
   ok(progress() === 1, `one tap advances, and the progress shows it (${progress()})`);
@@ -293,11 +351,13 @@ const title = () => (current() && current().querySelector('.ob-q') ? current().q
   titles.push(title());
   await tapChoice('60');
   titles.push(title());
+  const equip = qa('.ob-screen.is-current .ob-choice').map((b) => b.textContent.trim());
+  ok(equip.includes('Bodyweight + pull-up bar') && !equip.includes('Bodyweight only'),
+     `the bodyweight choice is honest about the bar (${equip.join(' | ')})`);
   await tapChoice('Full gym');
   titles.push(title());
   const labels = qa('.ob-overlay .ob-choice').map((b) => b.textContent.trim());
   ok(labels.every((l) => words(l) <= 4), `choice labels are short (${labels.filter((l) => words(l) > 4)})`);
-  ok(titles.every((t) => t && words(t) <= 15), `every question is ≤15 words (${titles.join(' | ')})`);
   // Focus: multi-select, up to two, then Next.
   await tapChoice('Chest');
   ok(current().querySelector('.ob-choice[aria-pressed="true"]'), 'focus is a toggle, and does not advance by itself');
@@ -307,6 +367,23 @@ const title = () => (current() && current().querySelector('.ob-q') ? current().q
   const next = qa('.ob-screen.is-current button').find((b) => b.textContent.trim() === 'Next');
   ok(Boolean(next), 'the focus step has Next');
   next.click();
+  await settle(320);
+  // About you (O-1, O-2): every path passes through it.
+  titles.push(title());
+  ok(title() === 'About you', `after the questions: About you (${title()})`);
+  ok(Boolean(current().querySelector('.ob-title .help-dot')), 'with a ? right beside its title');
+  const chip = (label) => [...current().querySelectorAll('.chip')].find((c) => c.textContent.trim() === label);
+  ok(chip('lbs') && chip('lbs').getAttribute('aria-pressed') === 'true', 'this harness is en-US, so lbs starts selected');
+  ok(chip('Male') && chip('Female') && chip('Male').getAttribute('aria-pressed') === 'false', 'gender is two chips, neither assumed');
+  ok(progress() === 6, `the bar shows the six questions done (${progress()})`);
+  chip('Female').click();
+  const [yearIn, weightIn] = current().querySelectorAll('input');
+  const born = new Date().getFullYear() - 64;
+  yearIn.value = String(born); yearIn.dispatchEvent(new window.Event('input'));
+  weightIn.value = '70'; weightIn.dispatchEvent(new window.Event('input'));
+  chip('kg').click();
+  ok(chip('kg').getAttribute('aria-pressed') === 'true' && chip('lbs').getAttribute('aria-pressed') === 'false', 'the unit toggle flips');
+  qa('.ob-screen.is-current button').find((b) => b.textContent.trim() === 'Next').click();
   await settle(50);
   ok(/Building your program/.test(document.querySelector('.ob-overlay').textContent), 'a short "Building your program" moment');
   await settle(900);
@@ -314,6 +391,19 @@ const title = () => (current() && current().querySelector('.ob-q') ? current().q
   ok(/Your 4-day Upper\/Lower/.test(result.textContent), `the result names the program (${result.querySelector('.ob-q') && result.querySelector('.ob-q').textContent})`);
   ok(qa('.ob-screen.is-current .ob-day').length === 4, 'and lists its four days');
   ok(/\d+ exercises/.test(result.textContent), 'each with an exercise count');
+  const exLines = qa('.ob-screen.is-current .ob-day-ex').map((n) => n.textContent);
+  ok(exLines.length === 4 && exLines.every((t) => t.split(' · ').length >= 3 && t.split(' · ').every((n) => BUILT_IN_EXERCISES.some((e) => e.name === n))),
+     `each day names its exercises (${exLines[0]})`);
+  const plan = q('.ob-screen.is-current .ob-plan');
+  ok(plan && plan.textContent === 'Week: Upper A · Lower A · rest · Upper B · Lower B · rest · rest', `the week is one line (${plan && plan.textContent})`);
+  ok(skipBtn().textContent === 'Not now', `Skip reads "Not now" on the result (${skipBtn().textContent})`);
+  back().click();
+  await settle(320);
+  ok(title() === 'About you' && current().querySelector('.chip[aria-pressed="true"]') && current().querySelector('input').value === String(born),
+     'Back from the result returns to About you with the answers kept');
+  qa('.ob-screen.is-current button').find((b) => b.textContent.trim() === 'Next').click();
+  await settle(1000);
+  ok(titles.every((t) => t && words(t) <= 15), `every question is ≤15 words (${titles.join(' | ')})`);
   const alt = qa('.ob-screen.is-current a[href^="#/explore/"]');
   ok(alt.length >= 1 && alt.length <= 2, `1–2 ready-made alternatives link to Explore (${alt.map((a) => a.textContent)})`);
   const start = qa('.ob-screen.is-current button').find((b) => b.textContent.trim() === 'Start with this');
@@ -329,8 +419,46 @@ const title = () => (current() && current().querySelector('.ob-q') ? current().q
      'reps are stored as {lo, hi} per set, never an array inside an array (Firestore refuses those)');
   ok(ws.every((w) => w.exercises.every((e) => e.reps.length === e.sets)), 'one rep target per planned set');
   ok(!q('.ob-overlay') || q('.ob-overlay').classList.contains('is-leaving'), 'the overlay closes');
-  ok(done === 1, 'and onDone runs once');
-  ok((await store.getSettings()).onboardedAt, 'the account remembers it was shown');
+  ok(done.length === 1 && done[0].skipped === false, `and onDone runs once, asking for the tour (${JSON.stringify(done)})`);
+  const s = await store.getSettings();
+  ok(s.onboardedAt, 'the account remembers it was shown');
+  // About you, saved through the store's public methods (O-1, O-17).
+  const prof = await store.getProfile();
+  ok(prof.gender === 'female' && prof.birthYear === born, `gender and birth year saved (${prof.gender}, ${prof.birthYear})`);
+  ok(prof.bodyWeight && Math.abs(prof.bodyWeight - 70 * 2.2046226218) < 0.01, `70 kg stored as pounds (${prof.bodyWeight})`);
+  ok(s.units === 'kg', `the unit chosen becomes the account's (${s.units})`);
+  const intro = s.intro || {};
+  ok(intro.path === 'build' && intro.goal === 'strength' && intro.experience === '1to3' && intro.days === 4
+     && intro.minutes === 60 && intro.equipment === 'gym' && JSON.stringify(intro.focus) === '["chest","arms"]'
+     && intro.age === 64 && intro.at,
+     `settings.intro keeps the answers and the age (${JSON.stringify(intro)})`);
+}
+
+// The other three ways in: About you, then straight there (O-3). Kept apart
+// from the program path: nothing is built.
+for (const [label, dest, skipIt] of [['Just log workouts', '#/record', false], ['Use my own program', '#/system/new', false],
+  ['Pick a ready-made one', '#/explore', true]]) {
+  location.hash = '#/home';
+  const before = (await store.getSystems()).length;
+  let done = [];
+  openOnboarding({ onDone: (r) => { done.push(r); } });
+  await settle();
+  await tapChoice(label);
+  ok(title() === 'About you', `${label} → About you first (${title()})`);
+  ok(qa('.ob-progress .ob-seg').length === 1, 'with a one-step bar');
+  // Reopened by someone who already chose kg: the toggle keeps it, not the locale's guess.
+  const kg = [...current().querySelectorAll('.chip')].find((c) => c.textContent.trim() === 'kg');
+  ok(kg && kg.getAttribute('aria-pressed') === 'true', 'the saved unit is pre-selected over the locale');
+  if (skipIt) skipBtn().click();
+  else qa('.ob-screen.is-current button').find((b) => b.textContent.trim() === 'Next').click();
+  await settle(320);
+  ok(location.hash === dest, `${skipIt ? 'Skip' : 'Next'} lands on ${dest} (${location.hash})`);
+  ok(done.length === 1 && done[0].skipped === skipIt, `onDone skipped: ${skipIt}`);
+  ok((await store.getSystems()).length === before, 'no program was made');
+}
+{
+  const src = (await import('node:fs')).readFileSync(new URL('../js/onboarding.js', import.meta.url), 'utf8');
+  ok(/buildProgram\(\{[^)]*age/.test(src), 'the builder is handed the age (older beginners get easier lifts, O-8)');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

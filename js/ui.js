@@ -789,16 +789,109 @@ export function takeRiseRequest() {
   return was;
 }
 
+/* 🆕 ERRORS IN PLAIN WORDS — overhaul R-7 (2026-09-27). Toasts showed
+ * `err.message` verbatim, so a dropped connection read
+ * "FirebaseError: [code=unavailable]…". The app's OWN errors are already plain
+ * sentences ("Enter a weight.", "That is you.") and pass through unchanged; a
+ * system error is mapped by its code or name to one short line. `fallback`
+ * replaces the generic line when the caller knows what failed. */
+const ERROR_WORDS = {
+  offline: "No connection — try again when you're back online.",
+  denied: "Your account isn't allowed to do that.",
+  busy: 'Too many changes at once — try again in a minute.',
+  full: "This phone's storage is full.",
+  generic: 'Something went wrong — try again.',
+};
+const ERROR_CODES = {
+  unavailable: 'offline', 'deadline-exceeded': 'offline', 'network-request-failed': 'offline',
+  'permission-denied': 'denied', unauthenticated: 'denied',
+  'resource-exhausted': 'busy', 'too-many-requests': 'busy',
+  'quota-exceeded': 'full',
+};
+// What a system error looks like when printed: a class-name prefix, a Firebase
+// code in brackets, or the engines' words for a failed fetch or module load.
+const SYSTEM_MESSAGE = /^\w*Error\b|Firebase|\[code=|\bauth\/|firestore\/|Failed to fetch|NetworkError|Load failed|dynamically imported module|Importing a module script failed|Unexpected token|is not a function|of undefined|of null|is not defined/i;
+const OFFLINE_MESSAGE = /Failed to fetch|NetworkError|Load failed|network|offline|dynamically imported module|Importing a module script failed/i;
+
+export function friendlyError(err, fallback = null) {
+  if (err == null) return fallback || ERROR_WORDS.generic;
+  const name = String((err && err.name) || '');
+  const message = typeof err === 'string' ? err : String((err && err.message) || '');
+  if (name === 'QuotaExceededError' || /quota/i.test(message) && /exceed/i.test(message)) return ERROR_WORDS.full;
+  const raw = String((err && err.code) || '') || ((message.match(/\[code=([\w-]+)\]/) || [])[1] || '');
+  const code = raw.replace(/^(auth|firestore|storage|functions)\//, '');
+  if (ERROR_CODES[code]) return ERROR_WORDS[ERROR_CODES[code]];
+  if (message && SYSTEM_MESSAGE.test(message)) {
+    if (OFFLINE_MESSAGE.test(message)) return ERROR_WORDS.offline;
+    return fallback || ERROR_WORDS.generic;
+  }
+  if (!code && message && message.length <= 160) return message;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return ERROR_WORDS.offline;
+  return fallback || ERROR_WORDS.generic;
+}
+
+/* ONE LIVE REGION, KEPT FOR THE LIFE OF THE PAGE — R-7. A toast is a new element
+ * created with its words already inside, and VoiceOver often says nothing for
+ * that. A region that already exists and has its text replaced is what screen
+ * readers reliably announce. Visually hidden, so nothing on screen changes. */
+let liveRegion = null;
+function announce(text) {
+  if (typeof document === 'undefined' || !document.body) return;
+  if (!liveRegion || !liveRegion.isConnected) {
+    liveRegion = document.getElementById('app-live') || el('div', {
+      id: 'app-live', 'aria-live': 'polite', 'aria-atomic': 'true',
+      style: 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap',
+    });
+    if (!liveRegion.isConnected) document.body.append(liveRegion);
+  }
+  // Cleared first, so the same words twice in a row are still announced.
+  liveRegion.textContent = '';
+  setTimeout(() => { if (liveRegion) liveRegion.textContent = text; }, 60);
+}
+
+const TOAST_MS = 2400;
+const TOAST_ERROR_MS = 6000;
+const TOAST_ACTION_MS = 5000;
+
 let toastTimer = null;
-export function toast(message) {
+/**
+ * A short message over the tab bar.
+ *   toast('Saved')
+ *   toast(friendlyError(err), { error: true })              stays 6 s, role=alert
+ *   toast('Set 3 deleted', { action: { label: 'Undo', run } })  5 s, one button
+ */
+export function toast(message, opts = {}) {
+  const { error = false, action = null } = opts || {};
   // ⚠️ The one already on screen LEAVES rather than vanishing under the new
   // one — two toasts in a row is a queue, and a queue that teleports reads as
   // a flicker.
   document.querySelectorAll('.toast').forEach((t) => dismissToast(t));
-  const t = el('div', { class: 'toast', role: 'status', text: message });
+  const hasAction = Boolean(action && action.label && typeof action.run === 'function');
+  // An error is said at once (role=alert on the toast itself); everything else
+  // goes through the page's one live region.
+  const t = el('div', { class: 'toast' + (error ? ' toast-error' : ''), ...(error ? { role: 'alert' } : {}) });
+  if (hasAction) {
+    t.append(el('span', { class: 'toast-text', text: message }), ' ');
+    let used = false;
+    t.append(el('button', {
+      type: 'button', class: 'toast-action', text: action.label,
+      onClick: (e) => {
+        e.stopPropagation();
+        if (used) return;
+        used = true;
+        clearTimeout(toastTimer);
+        dismissToast(t);
+        try { action.run(); } catch (err) { console.error(err); }
+      },
+    }));
+  } else {
+    t.textContent = message;
+  }
   document.body.append(t);
+  if (!error) announce(hasAction ? `${message}. ${action.label} available.` : message);
+  const ms = error ? TOAST_ERROR_MS : hasAction ? TOAST_ACTION_MS : TOAST_MS;
   clearTimeout(toastTimer);
-  if (!canAnimate()) { toastTimer = setTimeout(() => leave(t, 200), 2400); return; }
+  if (!canAnimate()) { toastTimer = setTimeout(() => leave(t, 200), ms); return; }
 
   /* 🆕 MOTION 2 · SURFACES: it springs up from just above the tab bar, and a
    * flick sends it away — sideways or down — at the speed it was thrown.
@@ -806,7 +899,7 @@ export function toast(message) {
   t.classList.add('s2-live');
   springTransform(t, { y: 0, opacity: 1, scale: 1 }, SURFACE_SPRINGS.toast,
     { from: { y: 28, opacity: 0, scale: 0.96 } });
-  const arm = () => { clearTimeout(toastTimer); toastTimer = setTimeout(() => dismissToast(t), 2400); };
+  const arm = () => { clearTimeout(toastTimer); toastTimer = setTimeout(() => dismissToast(t), ms); };
   arm();
 
   /* The finger moves it directly (a spring would lag it); the springs take
@@ -814,6 +907,9 @@ export function toast(message) {
   let tr = null;
   t.addEventListener('pointerdown', (e) => {
     if (t.dataset.leaving) return;
+    // ⚠️ A press on the action button is a tap, not a drag: capturing the
+    // pointer on the toast would send the click to the toast, not the button.
+    if (e.target && e.target.closest && e.target.closest('.toast-action')) return;
     clearTimeout(toastTimer);
     const cur = springTransform(t, {}).stop().value;
     tr = { id: e.pointerId, x0: e.clientX - cur.x, y0: e.clientY - cur.y, vt: velocityTracker(), x: cur.x, y: cur.y, o: cur.opacity, dx: cur.x, dy: cur.y };
@@ -2348,10 +2444,14 @@ export function loadBadge(loadType) {
  * Empty state
  * ------------------------------------------------------------------ */
 
-export function emptyState(title, message, action) {
+/* `help` (optional, overhaul words P6): the WHY behind the message, in a ? that
+ * sits right after its words (Rule 9). Pass `{ help }` or the text itself. */
+export function emptyState(title, message, action, opts = null) {
+  const help = typeof opts === 'string' || (opts && opts.nodeType) ? opts : (opts && opts.help) || null;
+  const dot = help ? helpDot(help) : null;
   return el('div', { class: 'empty' },
-    el('div', { class: 'empty-title', text: title }),
-    el('p', { text: message }),
+    el('div', { class: 'empty-title' }, title, message ? null : (dot ? [' ', dot] : null)),
+    el('p', {}, message, message && dot ? [' ', dot] : null),
     action || null,
   );
 }
@@ -2426,6 +2526,22 @@ const TAB_INTENT_MS = 1500;
 /** The tab bar was tapped: the navigation it causes is a tab switch. */
 export function markTabNav() { tabIntentAt = Date.now(); }
 
+/* 🆕 A TAB REACHED BY A LINK — overhaul I-8a (2026-09-27). Profile's best lift
+ * opens the Data tab; with no back arrow there, the reader was stranded (Rule
+ * 8). The router calls `markLinkNav()` when a tab's root is reached by a link
+ * from ANOTHER tab's screen (not a tab tap, not "Back to home" off a pushed
+ * screen), and the fact is stamped on that history entry, so it holds for the
+ * whole visit — including coming back to it from deeper in. A tab root's view
+ * asks `arrivedByLink()` and, if true, shows the standard back arrow
+ * (`screenShell({ back })`, which goes back through history). */
+let linkIntent = false;
+export function markLinkNav() { linkIntent = true; }
+export function arrivedByLink() {
+  const h = hist();
+  const state = h && h.state;
+  return Boolean(state && state.navLink === true && typeof state.navIndex === 'number' && state.navIndex > 0);
+}
+
 /** Pure core of navDirection(), for the tests. */
 export function navDirectionFor({ fresh = false, tab = false, from = -1, to = -1, fromVia = null, toVia = null } = {}) {
   if (fresh) return tab ? 'tab' : 'push';
@@ -2450,6 +2566,8 @@ export function markRoute() {
   const fromVia = lastVia;
   const tab = tabIntentAt > 0 && Date.now() - tabIntentAt < TAB_INTENT_MS;
   tabIntentAt = 0;
+  const link = linkIntent;
+  linkIntent = false;
   if (state && typeof state.navIndex === 'number') {
     lastIndex = state.navIndex;
     lastVia = state.navVia || null;
@@ -2464,7 +2582,7 @@ export function markRoute() {
   // `replaceState` rather than `pushState`: the entry already exists — the hash
   // change made it — and this only writes what it is.
   try {
-    h.replaceState({ ...(state || {}), navIndex: lastIndex, ...(tab ? { navVia: 'tab' } : {}) }, '');
+    h.replaceState({ ...(state || {}), navIndex: lastIndex, ...(tab ? { navVia: 'tab' } : {}), ...(link ? { navLink: true } : {}) }, '');
   } catch (_) {}
 }
 

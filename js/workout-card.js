@@ -28,7 +28,8 @@
    / `name` split would otherwise have leaked into the view.
    ========================================================================== */
 
-import { el, icon, relativeDay, fmtSet } from './ui.js';
+import { el, icon, relativeDay, fmtSet, fmtClock } from './ui.js';
+import { fmtWeight } from './units.js';
 import { sessionStats, setsLabel, recordedSetCount } from './session-stats.js';
 import { BUILT_IN_EXERCISES } from './exercises.js';
 // 🆕 Motion 2 · Moments (docs/motion2-plan.md package E) — see the end of file.
@@ -64,14 +65,95 @@ export const FEED_EX_LIMIT = 5;
  * Small grey label above, bold value below, in columns — their shape, because
  * it is a good one. No boxes and no rules between the columns (Rule 2); the
  * gaps do the separating. */
-function statRow(pairs) {
+function statRow(pairs, cardId = null) {
   const cells = pairs.filter((p) => p && p[1] != null && p[1] !== '');
   if (!cells.length) return null;
   return el('div', { class: 'feed-stats' },
-    ...cells.map(([label, value]) => el('div', { class: 'feed-stat' },
-      el('div', { class: 'feed-stat-label', text: label }),
-      el('div', { class: 'feed-stat-value', text: String(value) }),
-    )));
+    ...cells.map(([label, value]) => {
+      const node = el('div', { class: 'feed-stat-value', text: String(value) });
+      if (cardId && sameAsLastShown(`${cardId}|${label}`, String(value))) {
+        // Marked as already seen, so motion.js draws it final at once.
+        node.dataset.mSeen = '1';
+      }
+      return el('div', { class: 'feed-stat' },
+        el('div', { class: 'feed-stat-label', text: label }),
+        node,
+      );
+    }));
+}
+
+/* ==========================================================================
+   COUNT-UPS ONLY WHEN THE NUMBER CHANGED — overhaul 2026-09-27 (I-16).
+
+   Measured: every Home visit showed a friend's "Sets 0" for ~200ms and rolled
+   it to 15. A roll says "this changed"; it had not. So each card's stat values
+   are remembered per device (sessionStorage — the demo may keep nothing past
+   the tab, and a new tab is a fair place to roll again), and a value equal to
+   the one last shown is marked `data-m-seen`, which is the flag motion.js
+   already skips. A NEW card, or a number that really moved, still rolls.
+   ========================================================================== */
+
+const SHOWN_KEY = 'ftrack:v1:shownCounts';
+const SHOWN_MAX = 600;
+let shownCache = null;
+
+function shownMap() {
+  if (shownCache) return shownCache;
+  shownCache = {};
+  try {
+    const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(SHOWN_KEY) : null;
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === 'object') shownCache = parsed;
+  } catch (_) { /* private mode: every number rolls, as before */ }
+  return shownCache;
+}
+
+/** True when `value` is what this device last showed under `key`; records it either way. */
+export function sameAsLastShown(key, value) {
+  const map = shownMap();
+  const same = Object.prototype.hasOwnProperty.call(map, key) && map[key] === value;
+  if (!same) {
+    delete map[key];          // re-inserted last, so the oldest keys fall off first
+    map[key] = value;
+    const keys = Object.keys(map);
+    if (keys.length > SHOWN_MAX) keys.slice(0, keys.length - SHOWN_MAX).forEach((k) => { delete map[k]; });
+    try { sessionStorage.setItem(SHOWN_KEY, JSON.stringify(map)); } catch (_) { /* nothing to do */ }
+  }
+  return same;
+}
+
+/** Tests only: forget what was shown, as a new tab would. */
+export function __resetShownForTest() {
+  shownCache = null;
+  try { sessionStorage.removeItem(SHOWN_KEY); } catch (_) { /* none */ }
+}
+
+/* ==========================================================================
+   THE TOP SET ON EACH EXERCISE ROW — overhaul 2026-09-27 (screens S-8).
+   "4 sets Leg Press" says what was touched, not how it went; a training
+   partner wants the top set. The HEAVIEST recorded set (ties: more reps),
+   measured, never an estimate. Only sets carrying a weight — a run or a
+   bodyweight row shows nothing extra. Drops/minis are not walked (one set).
+   ========================================================================== */
+
+/** The heaviest recorded set of an entry → { weight, reps } or null. */
+export function topSetOf(entry) {
+  let best = null;
+  for (const s of (entry && Array.isArray(entry.sets) ? entry.sets : [])) {
+    if (!s || typeof s !== 'object') continue;
+    const w = Number(s.weight);
+    if (!(w > 0)) continue;
+    const r = Number(s.reps) > 0 ? Number(s.reps) : 0;
+    if (!best || w > best.weight || (w === best.weight && r > best.reps)) best = { weight: w, reps: r };
+  }
+  return best;
+}
+
+/** "245 × 5", in the reader's unit and without it (the row is already dense). */
+export function topSetLabel(entry) {
+  const t = topSetOf(entry);
+  if (!t) return null;
+  return t.reps ? `${fmtWeight(t.weight)} × ${t.reps}` : fmtWeight(t.weight);
 }
 
 /** "1h 4min" / "45 min" — their format, because a two-hour session in minutes
@@ -211,8 +293,9 @@ export function cardBody(a) {
   // How many warm-ups each listed row had, in the SAME order and by the same
   // filter `sessionStats()` builds `byExercise` with. Only your own sessions
   // carry any; a friend's projection reads 0 for every row.
-  const warmCounts = (a.entries || []).filter((e) => recordedSetCount(e) > 0)
-    .map((e) => recordedWarmups(e).length);
+  const counted = (a.entries || []).filter((e) => recordedSetCount(e) > 0);
+  const warmCounts = counted.map((e) => recordedWarmups(e).length);
+  const topSets = counted.map((e) => topSetLabel(e));
 
   const did = rows.length
     ? el('div', { class: 'feed-exs' },
@@ -224,6 +307,8 @@ export function cardBody(a) {
             ? el('span', { class: 'feed-ex-warm',
                 text: `+ ${warmCounts[i]} warm-up${warmCounts[i] === 1 ? '' : 's'}` })
             : null,
+          // The heaviest set, right-aligned and muted (screens S-8).
+          topSets[i] ? el('span', { class: 'feed-ex-top', text: topSets[i] }) : null,
         )),
         rows.length > FEED_EX_LIMIT
           ? el('div', { class: 'feed-ex is-quiet', text:
@@ -259,7 +344,7 @@ export function cardBody(a) {
     // is stored, not something anybody did, and D27 is explicit that activities
     // are recorded first-class and modelled not at all. Time is the honest
     // column for them and it is already there.
-    statRow([['Time', fmtMinutes(a.minutes)], ['Sets', isActivity ? null : (stats.sets || null)]]),
+    statRow([['Time', fmtMinutes(a.minutes)], ['Sets', isActivity ? null : (stats.sets || null)]], a.id || null),
     did,
   ].filter(Boolean);
 }
@@ -285,9 +370,17 @@ export function cardMeta(a, fmtClock) {
  *   href    string — where the body goes. Omit for a card that is not a way in.
  *   foot    node   — the bottom row (their action buttons, or your reactions).
  *   id      string — stamped as `data-session`, so a link can find this card.
+ *   self    bool   — YOUR OWN card (overhaul 2026-09-27, screens S-7): no
+ *                    author row — every card on your list would open with the
+ *                    same "You" face, 40px saying nothing new — and the date,
+ *                    time and gym become the card's top line instead. `head`
+ *                    is ignored when this is set.
  */
 export function workoutCard(a, opts = {}) {
   const body = cardBody(a);
+  const head = opts.self
+    ? el('div', { class: 'feed-meta feed-self-meta', text: cardMeta(a, fmtClock) })
+    : (opts.head || null);
   /* ⚠️ WHERE IT GOES DEGRADES RATHER THAN DYING. A friend's session with
    * nothing inside it has no workout to open, so the body is not a link and the
    * quiet line above says why. A dead tap is the failure this project keeps
@@ -306,12 +399,66 @@ export function workoutCard(a, opts = {}) {
     class: 'feed-card',
     ...(opts.id ? { 'data-session': opts.id } : {}),
   },
-    opts.head || null,
+    head,
     openable
       ? el('a', { class: 'feed-open', href: opts.href }, ...body)
       : el('div', { class: 'feed-open is-flat' }, ...body),
     opts.foot || null,
   );
+}
+
+/* ==========================================================================
+   A LONG LIST OF CARDS, TWENTY AT A TIME — overhaul 2026-09-27 (screens S-7).
+   Measured: `#/me/workouts` built 208 cards at once (65,319 px). This draws
+   the first page and adds the next as a sentinel under the last card nears
+   the screen (IntersectionObserver, 600px early so nobody sees the seam).
+   Where there is no IntersectionObserver the whole list is drawn, as before —
+   a list that stops at 20 with no way on would lose workouts.
+
+   @param {HTMLElement} list    the container the cards go in
+   @param {Array} items         anything; `build(item)` turns one into a node
+   @param {Function} build      item → card node (or null to skip)
+   @param {object} [o]
+   @param {number} [o.page]     cards per page (CARD_PAGE)
+   @param {HTMLElement} [o.root] the scrolling pane, if not the viewport
+   @returns {{ shown: () => number, more: () => void }}
+   ========================================================================== */
+export const CARD_PAGE = 20;
+
+export function renderPaged(list, items, build, { page = CARD_PAGE, root = null } = {}) {
+  const all = Array.isArray(items) ? items : [];
+  let shown = 0;
+  let io = null;
+  const sentinel = el('div', { class: 'feed-sentinel', 'aria-hidden': 'true' });
+  const more = () => {
+    const slice = all.slice(shown, shown + page);
+    shown += slice.length;
+    const nodes = slice.map(build).filter(Boolean);
+    if (sentinel.parentNode === list) sentinel.before(...nodes); else list.append(...nodes);
+    if (shown >= all.length) {
+      if (io) io.disconnect();
+      sentinel.remove();
+    }
+  };
+  const IO = typeof IntersectionObserver === 'function' ? IntersectionObserver : null;
+  if (!IO) {
+    list.append(...all.map(build).filter(Boolean));
+    shown = all.length;
+    return { shown: () => shown, more: () => {} };
+  }
+  more();
+  if (shown < all.length) {
+    list.append(sentinel);
+    io = new IO((hits) => {
+      if (!hits.some((h) => h.isIntersecting)) return;
+      more();
+      // Still in range after a short page? Re-observing asks again at once
+      // (an observer only calls back on a CHANGE of intersection).
+      if (sentinel.parentNode === list) { io.unobserve(sentinel); io.observe(sentinel); }
+    }, { root, rootMargin: '600px 0px' });
+    io.observe(sentinel);
+  }
+  return { shown: () => shown, more };
 }
 
 /* ==========================================================================

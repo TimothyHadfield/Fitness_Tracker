@@ -311,6 +311,30 @@ export function localShardCache(storage) {
 }
 
 /**
+ * 🆕 R-2 (2026-09-27): DROP EVERY SHARD SNAPSHOT ON THIS DEVICE, for every
+ * account and collection. Called when localStorage is full and a workout
+ * draft could not be saved: these copies are only a read shortcut (the next
+ * sync re-reads the server), so they are the one thing here that is safe to
+ * throw away to make room. Never throws. Returns how many keys went.
+ */
+export function clearAllShardCaches(storage) {
+  const store = storage || (typeof localStorage === 'undefined' ? null : localStorage);
+  if (!store) return 0;
+  let gone = 0;
+  try {
+    const keys = [];
+    for (let i = 0; i < store.length; i++) {
+      const k = store.key(i);
+      if (k && k.startsWith(SHARD_CACHE_PREFIX)) keys.push(k);
+    }
+    for (const k of keys) {
+      try { store.removeItem(k); gone++; } catch { /* keep going */ }
+    }
+  } catch { /* storage denied: nothing to clear */ }
+  return gone;
+}
+
+/**
  * Firestore Timestamp | {seconds,nanoseconds} | null → `{seconds, nanoseconds}`.
  *
  * ⚠️ SECONDS AND NANOSECONDS, NOT MILLISECONDS — see the header. A whole

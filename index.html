@@ -8,8 +8,9 @@
   <title>Fitness Tracker</title>
   <meta name="description" content="Track your lifts, build your own workouts, and see your progress over time.">
 
-  <meta name="theme-color" content="#0F1214" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#EDEEEB" media="(prefers-color-scheme: light)">
+  <!-- ONE theme-color: the ground the app is showing, set by the script below
+       before the first paint and kept current by app.js (overhaul R-10). -->
+  <meta name="theme-color" content="#0F1214">
   <meta name="color-scheme" content="dark light">
 
   <!-- Add to Home Screen on iOS -->
@@ -20,10 +21,49 @@
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <!-- Fetched in parallel with the stylesheet, not one import at a time (overhaul I-13). -->
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/store.js">
   <link rel="stylesheet" href="css/app.css">
+  <!-- The saved look BEFORE the first paint (overhaul R-10): no dark flash for a
+       Light user. After the stylesheet on purpose — it reads --ground from it.
+       Same key and shape as app.js rememberLook(): {theme: dark|light|auto, palette, glass}. -->
+  <script>
+    (function () {
+      var r = document.documentElement, l = null, t;
+      try { l = JSON.parse(localStorage.getItem('ftrack:v1:look') || 'null'); } catch (e) {}
+      t = l && l.theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : (l && l.theme === 'light' ? 'light' : 'dark');
+      r.setAttribute('data-theme', t);
+      if (l && l.theme === 'auto') r.setAttribute('data-theme-pref', 'auto');
+      if (l && ['teal', 'indigo', 'ember'].indexOf(l.palette) >= 0) r.setAttribute('data-palette', l.palette);
+      if (l && l.glass === false) r.setAttribute('data-glass', 'off');
+      var g = getComputedStyle(r).getPropertyValue('--ground').trim();
+      if (g) document.querySelector('meta[name="theme-color"]').setAttribute('content', g);
+      if (t === 'light') document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'default');
+    })();
+  </script>
 </head>
 <body>
-  <div id="app"></div>
+  <!-- BOOT SKELETON (overhaul R-8c): the tab bar, painted before any module has
+       loaded. Same markup as app.js navbar(); paintShell() swaps it for the real
+       one. NAV_SKEL / FULL_SKEL mirror app.js NAV and FULLSCREEN (a test keeps
+       them in step). -->
+  <div id="app" data-skel><nav class="navbar"><div class="nav-brand"><a class="avatar-btn" href="#/account" aria-label="Account" title="Account"><span class="avatar-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></span></a><span class="nav-brand-name">Fitness Tracker</span></div><a href="#/home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a><a href="#/workouts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6M20 9v6M7.5 6.5v11M16.5 6.5v11M7.5 12h9"/></svg><span>Workouts</span></a><a href="#/record" class="nav-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Record</span></a><a href="#/graphs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16M7.5 15.5l4-5 3 3 5-6.5"/></svg><span>Data</span></a><a href="#/me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span>Profile</span></a></nav><div class="screen boot-shell"></div></div>
+  <script>
+    (function () {
+      var NAV_SKEL = [['home'], ['workouts', 'system', 'workout', 'explore'], ['record', 'start', 'benchmark', 'session', 'activity'], ['graphs'],
+        ['me', 'social', 'friend', 'invite', 'find', 'add', 'compare', 'calendar', 'day', 'edit']];
+      var FULL_SKEL = ['record', 'session', 'workout', 'system', 'explore', 'benchmark', 'settings', 'day', 'edit', 'start', 'account', 'signin', 'profile', 'friend', 'invite', 'find', 'add', 'goal', 'goals', 'import', 'compare', 'notes'];
+      var app = document.getElementById('app'), name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
+      var links = app.querySelectorAll('.navbar > a');
+      for (var i = 0; i < NAV_SKEL.length; i++) if (NAV_SKEL[i].indexOf(name) >= 0) links[i].setAttribute('aria-current', 'page');
+      if (FULL_SKEL.indexOf(name) >= 0) {
+        app.lastChild.className += ' no-nav';
+        if (!matchMedia('(min-width: 860px)').matches) app.removeChild(app.firstChild);
+      }
+    })();
+  </script>
   <noscript>
     <div style="padding:40px 24px;text-align:center;font-family:system-ui;color:#ECEFEE">
       <h1>JavaScript required</h1>

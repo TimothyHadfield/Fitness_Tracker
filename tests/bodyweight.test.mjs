@@ -381,7 +381,8 @@ ok(/log a weigh-in/.test(normalizeBlockedReason(pullUp, { bodyWeight: null }) ||
    '⚠️ with no weigh-in the caption SAYS SO rather than silently guessing a body weight');
 ok(/never been measured/.test(rankBlockedReason(ex('Inverted Row')) || ''),
    'the muscle panel distinguishes "never measured" from "we don\'t know your weight"');
-ok(/log a weigh-in/.test(rankBlockedReason(pullUp, {}) || ''),
+// 🔄 2026-09-27: shortened to "bodyweight lift and no weigh-in — log one to count it".
+ok(/no weigh-in — log one/.test(rankBlockedReason(pullUp, {}) || ''),
    'and tells somebody with no weigh-in the one thing they can act on');
 ok(rankBlockedReason(pullUp, { bodyWeight: 180 }) === null,
    'and says nothing once the exercise actually counts');
@@ -814,6 +815,48 @@ ok([...before.values()].every((r) => r.level.key !== 'elite' && r.level.key !== 
      '⚠️ but is worth LESS than a full push-up: the ratio is CARRIED from it rather than calibrated '
      + 'against knee push-up standards, which do not exist. §0h\'s lesson — the worst entries in '
      + 'that table were the ones somebody had reasoned about');
+}
+
+/* ================================================================== *
+ * E-1 (overhaul 2026-09-27): LESS HELP IS THE BETTER SET
+ *
+ * `dominate()` compared the typed number, and on an assist machine the typed
+ * number is the HELP. So 90 lb of help "dominated" every set done with less,
+ * and six weeks of 90 → 40 lb at 8 reps rated Back off the first and weakest
+ * set: 95.8 instead of 144.1, measured. It compares `curveWeight` now — the
+ * resistance the curve was fed — as exercise-estimate.js already did.
+ * ================================================================== */
+{
+  const { buildObservations } = await import('../js/strength-observations.js');
+  const exMap = new Map(BUILT_IN_EXERCISES.map((e) => [e.id, e]));
+  const T = '2026-09-27';
+  const back = (iso, n) => {
+    const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - n);
+    return d.toISOString().slice(0, 10);
+  };
+  const apu = ex('Assisted Pull-Up');
+  const entry = (sets) => ({ exerciseId: apu.id, exerciseName: apu.name,
+    sets: sets.map(([w, r]) => ({ weight: w, reps: r })) });
+  const bw = [{ date: back(T, 300), weight: 180 }];
+  const rateBack = (sessions) => {
+    const { byMuscle } = buildObservations({ sessions, benchmarks: [], exMap, bodyWeights: bw, today: T, sex: 'male' });
+    return rateMuscle(byMuscle.get('Back') || [], 'Back');
+  };
+
+  // Six weeks, help falling 90 → 40 lb, 8 reps each.
+  const weekly = [0, 1, 2, 3, 4, 5].map((wk) => ({
+    id: 'apu' + wk, date: back(T, 42 - wk * 7), entries: [entry([[90 - wk * 10, 8]])] }));
+  const r = rateBack(weekly);
+  ok(r && r.used[0].weight === 40,
+     `🚨 an assisted series rates off its LEAST-assisted set (led by ${r && r.used[0].weight} lb of help, want 40)`);
+  ok(r && r.estimate > 130,
+     `and so reads well above the 90-lb-help reading (${r && r.estimate.toFixed(1)}; was 95.8 when help counted as load)`);
+
+  // One day, both sets: the per-day pick uses the same comparison.
+  const oneDay = [{ id: 'apu-day', date: back(T, 3), entries: [entry([[90, 8], [40, 8]])] }];
+  const d = rateBack(oneDay);
+  ok(d && d.used[0].weight === 40,
+     `within one day too, 40 lb of help beats 90 at the same reps (led by ${d && d.used[0].weight})`);
 }
 
 console.log(fails === 0 ? '\nAll checks passed.' : `\n${fails} check(s) FAILED.`);

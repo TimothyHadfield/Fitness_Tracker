@@ -36,8 +36,9 @@ const {
   AMBITIONS, ambitionFor, ambitionByKey, requirementsFor, candidateGoals, buildGoal,
   goalProgress, stallReasons, rankSystems, addDays, daysBetween, parseDay, formatDay,
   HORIZON_WEEKS, MINUTES_PER_SET, SLEEP_LINE, EFFORT_LINE,
-  modelChangedSince, refreezeGoal, goalSourceRefusal,
+  modelChangedSince, refreezeGoal, goalSourceRefusal, GOAL_SOURCE_WHY,
 } = await import('../js/goals.js');
+const { e1rm } = await import('../js/e1rm.js');
 const { MODEL_VERSION } = await import('../js/model-version.js');
 const {
   LOAD_BAND, ISOLATION_MAX, LAYOFF_DAYS, REP_BANDS, repRangeFor, trainingRange,
@@ -480,8 +481,11 @@ ok(typeof inferredByKind === 'string' && inferredByKind.length > 20,
 ok(inferredByBasis === inferredByKind,
    'and it is refused whether the rating spells the stand-in `kind` or `basis` — one sentence, both '
    + 'spellings, because a rating that named it the other way would sail straight through');
-ok(/directly/.test(inferredByKind),
-   'the sentence says what to do about it — log something that trains the muscle directly');
+// 🔄 2026-09-27 (W-12): the row line is short; the full reason is GOAL_SOURCE_WHY for the ?.
+ok(/direct exercise/.test(inferredByKind) && inferredByKind.split(/\s+/).length <= 8,
+   'the sentence says what to do about it — log a direct exercise — in a short row line');
+ok(/trains it directly/.test(GOAL_SOURCE_WHY) && /inferred from the big lifts/.test(GOAL_SOURCE_WHY),
+   'and the full reason is kept for the ? beside it, not deleted');
 ok(typeof nothingYet === 'string' && nothingYet !== inferredByKind,
    'and "nothing recorded yet" is its OWN sentence rather than the stand-in one, because the two '
    + 'send a person to different places');
@@ -787,33 +791,48 @@ ok(movedWeight.kind === 'repeat',
 
 /* ---- when no honest increment exists, SAY SO (§8.2 rule 4) ---- */
 
+/* 🔄 2026-09-27 (EA-2). Before, every one of these added a rep past the top of
+ * the range, and a 65 lb press walked 8 → 20 and froze. Now: when the one real
+ * step, taken at the BOTTOM of the range, is no harder on the app's own curve
+ * than what was just done at the top, it is offered (`bigStep`). Otherwise the
+ * lift HOLDS at the top of its range and the sentence names the ways up. */
 const tooSmall = suggestProgression({
   history: [S(30, 12), S(30, 12)], exercise: PUSHDOWN, step: 5,
 });
-ok(tooSmall.kind === 'noIncrement' && tooSmall.weight === 30 && tooSmall.reps === 13,
-   'at 30 lb it refuses to add weight and proposes another rep instead');
-ok(tooSmall.smallestPct === 16.7,
-   'naming the jump it declined — 16.7 %, which is the figure in research.md §12.2');
-ok(/microplates/.test(tooSmall.why) && /extra set/.test(tooSmall.why),
-   'and it names the three real ways up: a rep, a set, or microplates');
+ok(tooSmall.kind === 'load' && tooSmall.bigStep === true && tooSmall.weight === 35
+   && tooSmall.reps === 8,
+   'at 30 lb × 12 twice, the one real step is offered: 35 × 8, since it is no harder than 30 × 12');
+ok(tooSmall.pct === 16.7 && /bigger than the usual 2–10 %/.test(tooSmall.why),
+   'naming the jump — 16.7 %, the figure in research.md §12.2 — and saying it is past the usual band');
 
-// ⚠️ Two different refusals, and they must not share a sentence. 8.3 % is
+const heldOver = suggestProgression({
+  history: [S(20, 15), S(20, 15)], exercise: PUSHDOWN, step: 5,
+});
+ok(heldOver.kind === 'noIncrement' && heldOver.weight === 20 && heldOver.reps === 15,
+   'where the step WOULD be harder (20 × 15 → 25 × 12), it holds at the top of the range — no rep past it');
+ok(heldOver.smallestPct === 25,
+   'naming the jump it declined');
+ok(/microplates/.test(heldOver.why) && /extra set/.test(heldOver.why),
+   'and it names the real ways up: an extra set, or microplates');
+const tooSmall2 = heldOver;
+
+// ⚠️ Two different refusals, and they must not share a sentence. 9.1 % is
 // INSIDE the published 2–10 %; it is refused only because this app sizes the
 // step by the lift. A message quoting "2–10 % is the recommended step" while
-// refusing 8.3 % would contradict itself on screen.
+// refusing 9.1 % would contradict itself on screen.
 const isoRefusal = suggestProgression({
-  history: [S(60, 12), S(60, 12)], exercise: PUSHDOWN, step: 5,
+  history: [S(55, 8), S(55, 8)], exercise: PUSHDOWN, step: 5,
 });
 const compoundOK = suggestProgression({
-  history: [S(60, 12), S(60, 12)], exercise: BENCH, step: 5,
+  history: [S(55, 8), S(55, 8)], exercise: BENCH, step: 5,
 });
-ok(isoRefusal.kind === 'noIncrement' && compoundOK.kind === 'load',
-   'the same 60 lb and the same sessions: a compound takes the step, a single-muscle lift does not');
+ok(isoRefusal.kind === 'noIncrement' && compoundOK.kind === 'load' && !compoundOK.bigStep,
+   'the same 55 lb and the same sessions: a compound takes the step, a single-muscle lift does not');
 ok(/sized by the lift/.test(isoRefusal.why) && !/past the recommended/.test(isoRefusal.why),
-   'and the isolation refusal explains the LIFT — it never claims 8.3 % is outside a band it is '
+   'and the isolation refusal explains the LIFT — it never claims 9.1 % is outside a band it is '
    + 'plainly inside');
-ok(/past the recommended/.test(tooSmall.why) && !/sized by the lift/.test(tooSmall.why),
-   'while 16.7 % is refused for the plain reason that it is past the band');
+ok(/past the recommended/.test(tooSmall2.why) && !/sized by the lift/.test(tooSmall2.why),
+   'while 25 % is refused for the plain reason that it is past the band');
 
 /* ---- microplates change the answer, so "no honest increment" is not a dead end ---- */
 
@@ -896,12 +915,22 @@ ok(!/Date\.now|new Date\(/.test(progressionSource),
 let worstJump = 0;
 let unearned = 0;
 let repsFell = 0;
+let bigSteps = 0;
+let bigHarder = 0;
 for (let w = 10; w <= 500; w += 5) {
   for (const ex of [BENCH, PUSHDOWN, PEC_DECK]) {
     for (const hist of [[S(w, 10)], [S(w, 12)], [S(w, 12), S(w, 12)], [S(w, 20), S(w, 20)]]) {
       const s = suggestProgression({ history: hist, exercise: ex, step: 5 });
       if (!s) continue;
-      worstJump = Math.max(worstJump, s.weight / w - 1);
+      // 🔄 EA-2: the one real step past the band is allowed ONLY when, at the
+      // bottom of the range, it is no harder on the app's curve than the top of
+      // the range at the old weight. That is its own swept property below.
+      if (s.bigStep) {
+        bigSteps++;
+        if (e1rm(s.weight, s.reps) > e1rm(w, s.range[1]) + 1e-9) bigHarder++;
+      } else {
+        worstJump = Math.max(worstJump, s.weight / w - 1);
+      }
       // A load increase may ONLY come from two consecutive sessions at the top.
       if (s.weight > w && !(hist.length === 2 && s.kind === 'load')) unearned++;
       if (s.kind !== 'load' && s.reps < sessionSummary(hist[0]).repsAtTop) repsFell++;
@@ -909,8 +938,11 @@ for (let w = 10; w <= 500; w += 5) {
   }
 }
 ok(worstJump <= LOAD_BAND.max + 1e-9,
-   `over every lift from 10 to 500 lb the heaviest jump proposed is ${(worstJump * 100).toFixed(1)} %, `
+   `over every lift from 10 to 500 lb the heaviest in-band jump proposed is ${(worstJump * 100).toFixed(1)} %, `
    + 'inside the 10 % ceiling');
+ok(bigSteps > 0 && bigHarder === 0,
+   `⚠️ and each of the ${bigSteps} steps past the band is no harder, on the app's own curve, than `
+   + 'the top of the range at the old weight — the only condition that allows one');
 ok(unearned === 0,
    'and not one of them raises the weight without two consecutive sessions at the top of the range');
 ok(repsFell === 0,
@@ -1004,13 +1036,19 @@ ok(walk(60, 16)[0].range.join('-') === '15-20', 'and somebody training in sixtee
     return { last, reps: last && last.reps, weight: last && last.weight };
   };
 
+  /* 🔄 2026-09-27 (EA-2): in 8–12 the one real step is no harder at 8 reps, so
+   * the raise now PROGRESSES (20 → 25 → …) instead of freezing at 20 reps. In
+   * 12–15 the step would be harder, so it HOLDS at the top — the terminal state
+   * this block was written to guarantee, reached sooner and inside the range. */
   const lat = walkEx(DUMBBELL, 20, 10);
-  ok(lat.reps <= 20,
-     `⚠️ forty obedient sessions on a 20 lb lateral raise end at ${lat.reps} reps, not 37 — `
-     + 'the rep ladder has a top');
-  ok(lat.last.kind === 'repCeiling' && lat.weight === 20,
-     'and it stops by REFUSING — last time\'s numbers and a reason, never a smaller step it cannot justify');
-  ok(/microplates|extra set|harder variation/i.test(lat.last.why),
+  ok(lat.reps <= 12 && lat.weight > 20,
+     `⚠️ forty obedient sessions on a 20 lb lateral raise end at ${lat.weight} × ${lat.reps}, not 20 × 37 — `
+     + 'it takes the real step and never walks past its range');
+  const latHigh = walkEx(DUMBBELL, 20, 13);
+  ok(latHigh.reps === 15 && latHigh.weight === 20 && latHigh.last.kind === 'noIncrement',
+     'where the step would be harder, it stops by HOLDING at the top of the range — never a smaller '
+     + 'step it cannot justify, never a rep past it');
+  ok(/microplates|extra set|harder variation/i.test(latHigh.last.why),
      'and it names the ways on from there rather than leaving somebody stuck at the top of a range');
 
   const push = walkEx(PUSHUP, 0, 15);
@@ -1033,10 +1071,10 @@ ok(walk(60, 16)[0].range.join('-') === '15-20', 'and somebody training in sixtee
   ok(!/weigh-in|belt/i.test(dumbbellCeiling.why),
      'and a loaded lift at the ceiling is not given the bodyweight advice');
 
-  // Vacuity guard: below the ceiling the rep step is untouched.
-  const below = suggestProgression({ history: [S(20, 12), S(20, 12)], exercise: DUMBBELL, step: 5 });
-  ok(below.kind === 'noIncrement' && below.reps === 13,
-     'and below the ceiling another rep is still exactly what it asks for');
+  // Vacuity guard: below the top of the range the rep step is untouched.
+  const below = suggestProgression({ history: [S(20, 10)], exercise: DUMBBELL, step: 5 });
+  ok(below.kind === 'reps' && below.reps === 11,
+     'and below the top of the range another rep is still exactly what it asks for');
 }
 
 // The property underneath, swept: history may only ever WIDEN the range upward.
@@ -1200,9 +1238,13 @@ const beltBlind = suggestProgression({
 const beltSeeing = suggestProgression({
   history: [S(25, 12), S(25, 12)], exercise: PULLUP, step: 5, bodyWeight: 180,
 });
-ok(beltBlind.kind === 'noIncrement' && beltBlind.smallestPct === 20,
-   'without a body weight, 5 lb on a 25 lb dip belt reads as a 20 % jump and is refused');
-ok(beltSeeing.kind === 'load' && beltSeeing.addedWeight === 5 && beltSeeing.pct === 2.4,
+// 🔄 2026-09-27 (EA-2): without a body weight it still reads as 20 %, past the
+// band — but 30 × 8 is no harder than 25 × 12 even on the belt alone, so the
+// one real step is offered as a big step rather than a rep past the range.
+ok(beltBlind.kind === 'load' && beltBlind.bigStep === true && beltBlind.pct === 20
+   && beltBlind.weight === 30 && beltBlind.reps === 8,
+   'without a body weight, 5 lb on a 25 lb dip belt reads as a 20 % jump — offered only as a big step');
+ok(beltSeeing.kind === 'load' && !beltSeeing.bigStep && beltSeeing.addedWeight === 5 && beltSeeing.pct === 2.4,
    '⚠️ with one, the same 5 lb is 2.4 % of ~205 lb of real resistance and is exactly the step the '
    + 'position stand describes');
 ok(beltSeeing.resistance > 200 && beltSeeing.resistance < 210,

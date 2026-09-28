@@ -415,7 +415,17 @@ function freshnessLine(muscle, daysAgo) {
   const limit = LOWER_BODY.has(muscle) ? RECENT_DAYS.lower : RECENT_DAYS.upper;
   if (daysAgo > limit) return null;
   const when = daysAgo === 0 ? 'Trained today' : daysAgo === 1 ? 'Trained yesterday' : 'Trained two days ago';
-  return `${when} — a reading today usually comes in a little low.`;
+  return `${when} — may read a little low today.`;
+}
+
+/** "a" or "an" before a number as it is SAID: an 8, an 11, an 18, an 80–89, an 800… */
+export function articleFor(n) {
+  const s = String(Math.round(Math.abs(Number(n))));
+  if (!/^\d+$/.test(s)) return 'a';
+  if (s[0] === '8') return 'an';
+  // 11 and 18 (and 11,000-style groups) are said "eleven", "eighteen".
+  const lead = s.length % 3 === 2 ? s.slice(0, 2) : null;
+  return lead === '11' || lead === '18' ? 'an' : 'a';
 }
 
 export async function muscleGroupsPane(host, top) {
@@ -447,12 +457,20 @@ export async function muscleGroupsPane(host, top) {
      states rather than only in the one that showed no map. */
   if (!muscles.size) {
     setChildren(top, assumedNote(profile));
-    setChildren(host, emptyState(
+    // P5 (2026-09-27): the WHY moved behind a ? beside the sentence (Rule 9).
+    const why = 'Any exercise that trains a muscle rates it — a hammer curl rates biceps like a barbell curl.';
+    const empty = emptyState(
       'Nothing to rank yet',
-      'Any exercise that trains a muscle rates it — a hammer curl rates biceps just as a barbell '
-      + 'curl does. Log a workout or record a benchmark and the map lights up.',
+      'Log a workout or benchmark and the map lights up.',
       el('a', { class: 'btn primary', href: '#/benchmark', text: 'Record a benchmark' }),
-    ));
+      { help: why },
+    );
+    // ui.emptyState gains `{ help }` in this wave (SHELL); until it does, add the dot here.
+    if (!empty.querySelector('.help-dot')) {
+      const p = empty.querySelector('p');
+      if (p) { const line = el('div', { class: 'help-line' }); p.replaceWith(line); line.append(p, helpDot(why, { label: 'Why?' })); }
+    }
+    setChildren(host, empty);
     return;
   }
 
@@ -767,8 +785,12 @@ async function pickSomebodyToCompare() {
  * percentile is a little harsh for some people."* The level is the answer; the
  * percentile behind it is the working.
  */
+/* 🆕 ONE COMPACT BLOCK — overhaul SC-3, 2026-09-27. `lv-compact` lets the stylesheet
+ * flow the chips and the notes into one wrapping line of small chips (≤44px on a
+ * 393px phone) so the freed height goes to the figure. The chips keep their names
+ * inside, shaded in the level colour (Tim, 2026-08-25) — only their size changes. */
 export function legend(moreDetails, anyTrainedUnrankable = false) {
-  return el('div', { class: 'lv-key-wrap' },
+  return el('div', { class: 'lv-key-wrap lv-compact' },
     el('div', { class: 'lv-key' },
       ...LEVELS.map((l) =>
         el('span', { class: 'lv-chip lv-' + l.key },
@@ -940,6 +962,15 @@ function pressedPreset(current, offered, profile) {
  *   which changes one word on one chip and nothing else
  */
 export function openCompareSheet(profile, onChange, save, opts = {}) {
+  /* 🆕 ST-14 (2026-09-27): Settings opens this same sheet with NO arguments. It
+   * then reads your own profile (the one your map is ranked on) and saves to
+   * `settings.compare` through store.saveSettings, exactly as your own map does.
+   * Returns a promise in that case; the map's own call stays synchronous. */
+  if (!profile) {
+    return muscleStrength().then(({ profile: own }) =>
+      openCompareSheet(own || {}, onChange, save, opts));
+  }
+  if (typeof onChange !== 'function') onChange = () => {};
   let current = normalizeCompare(profile.compare);
   const body = el('div', { class: 'compare-sheet' });
   /* ⚠️ OPT-IN, not inferred from `profile.whose`. The caller knows whether there
@@ -1009,7 +1040,7 @@ export function openCompareSheet(profile, onChange, save, opts = {}) {
              broken until it says so. Rule 9: WHAT stays, WHY moves. */
           axis.key === 'sex' && opts.perPerson && current.sex === 'own'
             ? el('div', { class: 'field-help', text:
-                'Each body is using its own — pick one here to hold both to the same standard instead.' })
+                'Each body uses its own. Pick one to hold both to it.' })
             : null,
         )),
 
@@ -1070,8 +1101,13 @@ function isChosen(axis, key, current, profile, perPerson) {
  * corroborated, and "40 sessions, all of one exercise" is the same fact told
  * honestly. It is the shortest form of that, not the absence of it.
  */
-function confidenceLine(m) {
-  const sessions = m.contributorCount === 1 ? '1 session' : `${m.contributorCount} sessions`;
+export function confidenceLine(m) {
+  /* 🆕 E-3a, 2026-09-27: `contributorCount` counts OBSERVATIONS (each set that fed
+   * the reading), so one workout of four exercises printed "4 sessions". The rating
+   * now carries `sessionCount` (distinct session dates, muscle-evidence.js); the old
+   * count is only the fallback for a rating built before that field existed. */
+  const n = Number.isFinite(m.sessionCount) ? m.sessionCount : m.contributorCount;
+  const sessions = n === 1 ? '1 session' : `${n} sessions`;
   const sources = m.exerciseCount > 1
     ? `${sessions}, ${m.exerciseCount} exercises`
     : sessions;
@@ -1194,8 +1230,10 @@ function summary(muscles, trained = new Map(), onPick = null) {
       : null,
     other.length
       ? el('div', { class: 'field-help', text:
-          `Your ${other.join(' and ')} work is recorded and counted toward volume, `
-          + 'but nothing in it could be placed against other people. Tap for what it found.' })
+          // P5 (2026-09-27): shortened. The muscle names stay — without them the
+          // reader can't tell which hatch the line is about. The panel a tap opens
+          // still says the work counts toward volume (trainedNote).
+          `${other.join(' and ')}: recorded, but can't be ranked. Tap for why.` })
       : null,
     /* ⚠️ "counts toward volume" IS SAID ON BOTH BRANCHES ON PURPOSE. It is the
        one reassurance this state exists to give — the work was not lost — and
@@ -1205,8 +1243,7 @@ function summary(muscles, trained = new Map(), onPick = null) {
        point of splitting them. */
     longSets.length
       ? el('div', { class: 'field-help', text:
-          `Your ${longSets.join(' and ')} work is all long sets — it counts toward volume, `
-          + 'but a maximum cannot be read off a set that long. Tap for what would rate it.' })
+          `${longSets.join(' and ')}: only long sets — no max from those. Tap for why.` })
       : null,
   );
 }
@@ -1413,10 +1450,12 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
         note
           ? 'Nothing here can be ranked yet, but that is not the same as nothing recorded.'
           : lift
-            ? `Nothing recorded for this muscle yet. Any exercise that trains it counts — `
-              + `${lift.name} is the standard it is measured against, but it is not the only thing `
-              + 'that rates it.'
-            : 'Nothing recorded for this muscle yet. Any exercise that trains it counts.'),
+            // P5 (2026-09-27): shortened; the key-lift clause moved behind the ?.
+            ? el('span', { class: 'help-line' },
+                el('span', { text: 'Nothing recorded yet. Any exercise that trains it counts.' }),
+                helpDot(`${lift.name} is the standard it is measured against, but it is not the only thing that rates it.`,
+                  { label: 'Why?' }))
+            : 'Nothing recorded yet. Any exercise that trains it counts.'),
       /* 🚨 THE HALF THE PANEL WAS MISSING. Tapping Core used to say only that it
          cannot be ranked, which is a statement about the world rather than about
          you — and it is what made grey feel like the app had not noticed. What
@@ -1535,7 +1574,7 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
    * panel's words. The node is kept and re-filled so that the button, which lives after it,
    * is not rebuilt out from under the reader's focus. */
   const SOURCE_NOTE =
-    'Exercise, set and date are recorded. The last two columns are worked out from them.';
+    'Exercise, set and date are recorded; the rest is worked out.';
   const sourceNote = el('div', { class: 'field-help' });
 
   /* ⚠️ A REAL `<button>`, not a tappable div: it is in the tab order, it fires on Enter and
@@ -1808,8 +1847,8 @@ function detail(m, muscle, profile, blocked, moreDetails, trained, recentDays) {
      * carry no `share`, so their panel keeps `m.best` and `m.confident`. */
     !leadConfident
       ? el('div', { class: 'muscle-warn', text:
-          `From a ${lead.performedReps || lead.reps}-rep set. `
-          + 'Benchmark heavier for a firmer placing.' })
+          `From ${articleFor(lead.performedReps || lead.reps)} ${lead.performedReps || lead.reps}-rep set. `
+          + 'Benchmark heavier to firm it up.' })
       : null,
 
     // Softer evidence than a ranking against lifters, and it must never be

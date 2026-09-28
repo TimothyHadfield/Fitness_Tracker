@@ -92,7 +92,10 @@ ok(metricOf(widened, 'e1rm').mine === 315 && metricOf(widened, 'e1rm').better ==
 ok(metricOf(windowed, 'e1rm').better !== metricOf(widened, 'e1rm').better,
   'the two runs disagree, so the windowed assertion above is really testing the window');
 
-ok(windowed.caveats.some((c) => c.key === 'window' && /publish/.test(c.text)),
+// 🔄 2026-09-27 (overhaul P8): the period is `text` (on screen), the reason is
+// `help` (behind the ?). Both must still be there.
+ok(windowed.caveats.some((c) => c.key === 'window' && c.text.includes('2026-06-01')
+    && /publish/.test(c.help || '')),
   'and the result says out loud what period it covers, and whose limit set it');
 
 /* ================================================================== *
@@ -115,11 +118,12 @@ ok(metricOf(gate, 'top-weight').mine === 205,
   'and the heaviest-set row reads the same pool, so the two rows describe the same sets');
 ok(metricOf(gate, 'sets').mine === 2,
   'the 20-rep set still HAPPENED — it counts as a set, it just proves nothing about a max');
-ok(gate.caveats.some((c) => c.key === 'rep-gate' && c.text.includes('15')),
+ok(gate.caveats.some((c) => c.key === 'rep-gate' && /1 burnout set/.test(c.text) && (c.help || '').includes('15')),
   'and the set that was left out is admitted to, rather than quietly dropped');
 
 /* ================================================================== *
- * 3. PER SIDE — 50 lbs in each hand is 100 lbs
+ * 3. PER SIDE — 🔄 2026-09-27 (overhaul EB-11): PER HAND, flagged `each`,
+ *    as Profile, the finish-screen bests and the runner all print it
  * ================================================================== */
 
 const dbEntry = (date, sets, key) => ({
@@ -131,12 +135,13 @@ const perSide = compareExercise({
   exerciseId: DB_BENCH.id,
   exercise: DB_BENCH,
 });
-ok(metricOf(perSide, 'top-weight').mine === 100 && metricOf(perSide, 'top-weight').theirs === 90,
-  'a dumbbell set is doubled to the load the body actually carried — both sides identically');
+ok(metricOf(perSide, 'top-weight').mine === 50 && metricOf(perSide, 'top-weight').theirs === 45
+  && metricOf(perSide, 'top-weight').each === true,
+  'a dumbbell set reads per hand, flagged "each", like every other screen — both sides identically');
 ok(metricOf(perSide, 'top-weight').mineSet.weight === 50,
   'and the set behind it keeps the number that was typed, so the screen can print both');
-ok(perSide.caveats.some((c) => c.key === 'per-side'),
-  'per-side doubling is stated, not left for somebody to notice');
+ok(perSide.caveats.some((c) => c.key === 'per-side' && /per hand/i.test(c.text)),
+  'per hand is stated, not left for somebody to notice');
 
 /* ================================================================== *
  * 4. BODY WEIGHT — a refusal, not a zero
@@ -157,7 +162,7 @@ ok(!metricOf(bw, 'e1rm') && !metricOf(bw, 'top-weight'),
   'no load row for a pull-up: their body weight is theirs to publish, and most people do not');
 ok(bw.metrics.every((m) => m.mine !== 0 && m.theirs !== 0),
   'and the refusal is a missing row, never a zero — a zero reads as somebody who lifts nothing');
-ok(bw.caveats.some((c) => c.key === 'no-load' && /body weight/i.test(c.text)),
+ok(bw.caveats.some((c) => c.key === 'no-load' && /body ?weight/i.test(c.text) && /body weight/i.test(c.help || '')),
   'the refusal says why, in words a person can act on');
 ok(metricOf(bw, 'top-reps') && metricOf(bw, 'top-reps').mine === 12,
   'reps are still comparable — a pull-up rep is a pull-up rep');
@@ -190,7 +195,7 @@ ok(windowed.caveats.some((c) => c.key === 'estimate'),
  * 6. RULE 6 — no winner, anywhere in the output
  * ================================================================== */
 
-ok(/no overall result/i.test(windowed.header),
+ok(/no overall winner/i.test(windowed.header),
   'the result carries a header saying there is no overall answer here');
 ok(windowed.metrics.every((m) => m.better === null || ['mine', 'theirs', 'tie'].includes(m.better)),
   'every per-row claim is one of mine / theirs / tie, and bounded to its row');

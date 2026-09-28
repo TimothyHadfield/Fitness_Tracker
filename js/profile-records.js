@@ -111,7 +111,7 @@
    history always produces the same list.
    ========================================================================== */
 
-import { allSetsOf, kindsFor, measure, contextFor, typoQuarantine } from './personal-bests.js';
+import { allSetsOf, kindsFor, measure, contextFor, typoQuarantine, holdTypos } from './personal-bests.js';
 
 /** How many lifts a profile shows before it stops being a readout. */
 export const DEFAULT_LIMIT = 6;
@@ -326,11 +326,19 @@ export function bestLifts(sessions, opts = {}) {
       };
     });
     const held = new Set([...typoQuarantine(screen)].map((r) => r.row));
-    const rows = held.size ? b.rows.filter((r) => !held.has(r)) : b.rows;
 
     // 'weight' and 'reps' are mutually exclusive upstream, so exactly one of
     // them is in `kinds` and it is the headline. Neither is modelled.
     const headKind = kinds.includes('weight') ? 'weight' : 'reps';
+
+    // 🆕 2026-09-27 (overhaul EB-6): a lift logged by reps alone has no 1RM for
+    // the screen above to read, so push-ups 5, 5, 5 then a slipped 50 read "50"
+    // on Profile for good. `holdTypos()`'s reps rule holds it until a later day agrees.
+    if (headKind === 'reps') {
+      const repRows = b.rows.map((row) => ({ row, date: row.date, reps: Number(row.set.reps) }));
+      for (const r of holdTypos(repRows, { metric: 'reps' })) held.add(r.row);
+    }
+    const rows = held.size ? b.rows.filter((r) => !held.has(r)) : b.rows;
     const best = bestOf(rows, headKind, ctxOn);
     if (!best) continue;
 

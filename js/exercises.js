@@ -496,7 +496,11 @@ const FORCE_PER_SIDE = new Set([
   // ~~'Machine Lateral Raise',~~ moved to FORCE_TOTAL 2026-09-13 — one stack,
   // one number; Strength Level's own table reads it that way (136 lb at the
   // median, which no pair of arms raises per side).
-  'Single-Arm Lat Pulldown', 'Meadows Row', 'Landmine Press',
+  'Single-Arm Lat Pulldown', 'Meadows Row',
+  // ~~'Landmine Press',~~ moved OUT 2026-09-27 (overhaul EB-8): one bar in one
+  // socket is ONE load, whichever arm presses it. Doubled, 70 lb of plates read
+  // Shoulders p87.7 Advanced; its Strength Level page (the 0.90 ratio's source)
+  // is on the plates as logged. Barbell equipment → 'total', no bar, k = 1.
   'Cable Press Around', 'Cross-Body Cable Y-Raise', 'Cross-Body Cable Triceps Extension',
   'Kroc Row',
   'Suitcase Carry', 'Farmer Carry', 'Overhead Carry', 'Plate Pinch Hold',

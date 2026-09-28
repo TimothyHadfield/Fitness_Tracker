@@ -53,7 +53,8 @@
 import {
   isRankableSet, MAX_EVIDENCE_REPS, canNormalize, normalizeBlockedReason,
 } from './e1rm.js';
-import { setE1rm } from './set-e1rm.js';
+import { setE1rm, shownMax } from './set-e1rm.js';
+import { holdTypos } from './personal-bests.js';
 import { totalLoad } from './muscle-evidence.js';
 import { bodyWeightFractionFor } from './exercises.js';
 
@@ -126,7 +127,7 @@ function sessionList(input) {
  * here: every mini is lighter than the set it hangs off, so it can be neither
  * the heaviest set nor the best e1RM.
  */
-function observations(sessions, exerciseId, exerciseName) {
+function observations(sessions, exerciseId, exerciseName, held) {
   const out = [];
   for (const session of sessions) {
     for (const entry of session.entries) {
@@ -141,11 +142,33 @@ function observations(sessions, exerciseId, exerciseName) {
           date: session.date,
           weight: Number(set.weight),
           reps: Number(set.reps),
+          // EB-6: a set the typo hold keeps out of the strength rows. Still a set.
+          held: Boolean(held && held.has(obsKey(session.date, set))),
         });
       }
     }
   }
   return out;
+}
+
+const obsKey = (date, set) => `${date}|${Number(set && set.weight) || 0}|${Number(set && set.reps) || 0}`;
+
+/**
+ * 🆕 2026-09-27 (overhaul EB-6): A MISTYPED SET IS NOT A SIDE'S BEST HERE EITHER.
+ * The muscle map, the finish screen and Profile already set a slip aside; this
+ * screen put a 1350×5 beside a friend's 225×5. `holdTypos()` (personal-bests.js)
+ * runs over each side's WHOLE history — the window would hide the days that show
+ * it is a slip — and a held set is left out of every "best" row. It still counts
+ * in "Sets logged". Keyed on (date, weight, reps), so its twins that day go too.
+ */
+function heldKeys(sessions, exerciseId, exerciseName, exercise) {
+  const all = observations(sessions, exerciseId, exerciseName);
+  const keys = new Set();
+  if (all.length < 2) return keys;
+  const loaded = all.some((o) => Number(o.weight) > 0);
+  const held = holdTypos(all, loaded ? { exercise: exercise || null } : { metric: 'reps' });
+  for (const o of held) keys.add(obsKey(o.date, o));
+  return keys;
 }
 
 /* ------------------------------------------------------------------ *
@@ -249,13 +272,15 @@ function betterOf(mine, theirs) {
  */
 function metric({
   key, label, unit, mine, theirs, judged = true, estimate = false, note = null,
-  mineSet = null, theirsSet = null, mineConverted = false, theirsConverted = false,
+  mineSet = null, theirsSet = null, mineConverted = false, theirsConverted = false, each = false,
 }) {
   const both = Number.isFinite(mine) && Number.isFinite(theirs);
   return {
     key,
     label,
     unit,
+    // EB-11: a per-hand weight — the screen prints "each" after it.
+    each: Boolean(each),
     mine: Number.isFinite(mine) ? mine : null,
     theirs: Number.isFinite(theirs) ? theirs : null,
     // Bigger is better, or nothing is claimed at all.
@@ -329,10 +354,10 @@ function windowLabel(days) {
  * The comparison
  * ------------------------------------------------------------------ */
 
+// 🔄 2026-09-27 (overhaul words P8): 32 words → 12. The refusal itself stays on
+// screen, never behind a ? (views-social.js compareSheet).
 export const NO_VERDICT_HEADER =
-  'Two sets of numbers on one exercise, over the same weeks. '
-  + 'There is no overall result here — each row stands on its own, and one lift '
-  + 'does not decide who is stronger.';
+  'One exercise, the same weeks. No overall winner — each row stands alone.';
 
 /**
  * Compare me and one friend on one exercise.
@@ -353,8 +378,12 @@ export const NO_VERDICT_HEADER =
  *   window: {start, end, days, label}|null,
  *   common: boolean, reason: string|null, message: string|null,
  *   counts: { mine: {sessions, sets}, theirs: {sessions, sets} },
- *   metrics: Array, caveats: Array<{key, text}>
+ *   metrics: Array, caveats: Array<{key, text, help?}>
  * }}
+ *
+ * A caveat's `text` is WHAT (stays on screen); `help`, when present, is WHY and
+ * belongs behind a ? right beside it (Rule 9). A metric's `each: true` means
+ * its weights are PER HAND and the screen prints "each" after them (EB-11).
  *
  * `common: false` is a real answer and comes back with a `reason` and a
  * sentence — never with a metric list full of zeros, which would say the two
@@ -387,8 +416,8 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
       ...base,
       reason: !mySessions.length ? 'you-have-nothing-recorded' : 'they-have-published-nothing',
       message: !mySessions.length
-        ? 'There is nothing recorded on your side yet, so there is nothing to compare.'
-        : 'They have not published any sessions, so there is nothing to compare against.',
+        ? 'Nothing recorded on your side yet, so nothing to compare.'
+        : "They haven't published any sessions yet, so nothing to compare.",
     };
   }
 
@@ -408,8 +437,7 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
     return {
       ...base,
       reason: 'windows-do-not-overlap',
-      message: 'Your sessions and the ones they publish do not cover any of the same days, '
-        + 'so there is no period to compare over.',
+      message: 'Your sessions and theirs share no days — no period to compare.',
     };
   }
 
@@ -423,8 +451,12 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
   /* ---- 3. the sets ---- */
   const myAll = observations(mySessions, exerciseId, exerciseName);
   const theirAll = observations(theirSessions, exerciseId, exerciseName);
-  const myObs = observations(myWindowed, exerciseId, exerciseName);
-  const theirObs = observations(theirWindowed, exerciseId, exerciseName);
+  const myObs = observations(myWindowed, exerciseId, exerciseName,
+    heldKeys(mySessions, exerciseId, exerciseName, exercise));
+  const theirObs = observations(theirWindowed, exerciseId, exerciseName,
+    heldKeys(theirSessions, exerciseId, exerciseName, exercise));
+  // EB-6: what a "best" row may read. Counts and "Sets logged" keep every set.
+  const clean = (obs) => obs.filter((o) => !o.held);
 
   const counts = {
     mine: { sessions: new Set(myObs.map((o) => o.date)).size, sets: myObs.length },
@@ -477,29 +509,27 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
      * sentence says which of the two happened. Telling somebody they have not
      * done an exercise, when the real answer is that they have trained nothing
      * this exercise converts from, sends them to the wrong place. */
-    const nothingConverts = ' and nothing else you have recorded converts to it';
+    // 🔄 2026-09-27 (overhaul words P8): each sentence cut to about a dozen words.
+    const orConverts = estimates ? ' or anything that converts to it' : '';
+    const named = exerciseName || 'this exercise';
     let reason;
     let message;
     if (!myObs.length && !myEst && !theirObs.length && !theirEst) {
       reason = 'neither-of-you-logged-it';
-      message = `Neither of you has recorded ${exerciseName || 'this exercise'} in ${window.label}${
-        estimates ? ', and neither of you has trained anything it converts from' : ''}.`;
+      message = `Neither of you has recorded ${named}${orConverts} in ${window.label}.`;
     } else if (!myObs.length && !myEst) {
       reason = myAll.length ? 'yours-is-outside-the-window' : 'you-have-not-logged-it';
       message = myAll.length
-        ? `You have done ${exerciseName || 'this'}, but not within ${window.label} — the period you both have data for.`
-        : `You have never recorded ${exerciseName || 'this exercise'}${estimates ? nothingConverts : ''}`
-          + ', so there is nothing of yours to put beside theirs.';
+        ? `You've done ${exerciseName || 'this'}, but not in ${window.label}, your shared period.`
+        : `You've never recorded ${named}${orConverts}.`;
     } else if (!theirsDetailed) {
       reason = 'they-do-not-publish-the-detail';
-      message = 'They share the day and the name of each workout, not what was in it, '
-        + 'so there is nothing to compare exercise by exercise.';
+      message = 'They share workout names and days, not the sets inside.';
     } else {
       reason = theirAll.length ? 'theirs-is-outside-the-window' : 'they-have-not-logged-it';
       message = theirAll.length
-        ? `They have done ${exerciseName || 'this'}, but not within ${window.label} — the period you both have data for.`
-        : `They have not recorded ${exerciseName || 'this exercise'} in anything they have published`
-          + `${estimates ? ', and nothing they share converts to it' : ''}.`;
+        ? `They've done ${exerciseName || 'this'}, but not in ${window.label}, your shared period.`
+        : `They have not recorded ${named}${orConverts} in what they publish.`;
     }
     return { ...base, window, common: false, reason, message, counts };
   }
@@ -515,7 +545,7 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
   // it. Filtering the estimate but not the heaviest set would mean the two
   // rows describe different sets — a second, looser rule wearing the first
   // one's name.
-  const rankable = (obs) => obs.filter((o) => isRankableSet(o.reps));
+  const rankable = (obs) => clean(obs).filter((o) => isRankableSet(o.reps));
   const overGate = (obs) => obs.filter((o) => Number.isFinite(o.reps) && o.reps > MAX_EVIDENCE_REPS).length;
   const myRank = rankable(myObs);
   const theirRank = rankable(theirObs);
@@ -529,14 +559,19 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
   // 🚨 Without it this screen is "who typed a bigger number": 225 × 3 and
   // 185 × 10 are not orderable as raw weight, and whichever of us trains in
   // the lower rep range wins every time. e1rm() puts both on one axis.
+  /* 🔄 2026-09-27 (overhaul EB-11): PER HAND, LIKE EVERY OTHER SCREEN. This
+   * sheet printed a dumbbell lift's e1RM and heaviest set as BOTH hands (168.4)
+   * where Profile, the finish-screen bests and the runner print one hand (84.2)
+   * — the same set, two numbers, no label. A per-side row now holds the per-hand
+   * figure and carries `each: true` so the screen can say "each". The curve
+   * still sees one hand and doubles inside setE1rm() (D30); only the printed
+   * half changes, identically on both sides, so no `better` can turn on it. */
+  const each = loadType === 'per_side';
+
   if (loadIsComparable(exercise)) {
-    // The TOTAL estimated maximum — both dumbbells — from the one convention
-    // (set-e1rm.js). No body weight is handed in, and none is needed: a lift
-    // carried by body weight never reaches this branch (loadIsComparable).
-    const score = (o) => {
-      const r = setE1rm(exercise, o.weight, o.reps);
-      return r ? r.e1rm : NaN;
-    };
+    // No body weight is handed in, and none is needed: a lift carried by body
+    // weight never reaches this branch (loadIsComparable).
+    const score = (o) => shownMax(setE1rm(exercise, o.weight, o.reps)) ?? NaN;
     const mineBest = bestBy(myRank, score);
     const theirsBest = bestBy(theirRank, score);
 
@@ -544,8 +579,9 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
      * and ONLY here. See the note at step 4: this row is already an inference,
      * so an inference belongs in it; the heaviest-set row below is a
      * measurement and stays blank rather than borrowing a number. */
-    const mineValue = mineBest ? mineBest.score : (myEst ? myEst.oneRM : null);
-    const theirsValue = theirsBest ? theirsBest.score : (theirEst ? theirEst.oneRM : null);
+    const estShown = (e) => (each ? (Number(e.shown) > 0 ? e.shown : e.oneRM / 2) : e.oneRM);
+    const mineValue = mineBest ? mineBest.score : (myEst ? estShown(myEst) : null);
+    const theirsValue = theirsBest ? theirsBest.score : (theirEst ? estShown(theirEst) : null);
     const converted = [];
     if (!mineBest && myEst) converted.push('yours');
     if (!theirsBest && theirEst) converted.push('theirs');
@@ -555,13 +591,13 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
         key: 'e1rm',
         label: 'Best estimated 1RM',
         unit: 'weight',
+        each,
         mine: mineValue,
         theirs: theirsValue,
         estimate: true,
         note: converted.length
-          ? 'Worked out from recorded sets — and where somebody has never done this lift, '
-            + 'converted from the ones they have.'
-          : 'Worked out from a recorded set, not lifted.',
+          ? 'From recorded sets, or converted from other lifts.'
+          : 'From a recorded set, not lifted.',
         mineSet: setDetail(mineBest),
         theirsSet: setDetail(theirsBest),
         // So the screen can mark the converted side without re-deriving which.
@@ -570,9 +606,7 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
       }));
       caveats.push({
         key: 'estimate',
-        text: 'Nobody has lifted the 1RM figures — they are estimated from sets that were '
-          + 'actually recorded, so treat them as the same lift on a common scale rather '
-          + 'than as a number either of you has hit.',
+        text: 'Estimated maxes, not lifted ones — the same lift on a common scale.',
       });
       /* ⚠️ A CONVERTED SIDE IS A SECOND INFERENCE ON TOP OF THE FIRST, and the
        * caveat says so in those terms rather than hiding it inside the word
@@ -587,8 +621,8 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
           : 'other lifts';
         caveats.push({
           key: 'converted',
-          text: `${whose} figure is converted rather than recorded — neither of these sets was `
-            + `done on this exercise. It comes from ${from}, through ${est.muscle.toLowerCase()}, `
+          text: `${whose} figure is converted from ${from}.`,
+          help: `No set of it was done on this exercise. It goes through ${est.muscle.toLowerCase()}, `
             + `at ${est.band.name.toLowerCase()} confidence.`,
         });
       }
@@ -598,31 +632,36 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
     // wording for it where it has one, so this screen does not invent a second
     // way of saying the same thing.
     const why = normalizeBlockedReason(exercise);
-    caveats.push({
+    const carried = bodyWeightFractionFor(exercise) || exercise.equipment === 'Bodyweight';
+    caveats.push(carried ? {
       key: 'no-load',
-      text: bodyWeightFractionFor(exercise) || exercise.equipment === 'Bodyweight'
-        ? 'There is no load row for this one: it is carried by body weight, and a friend '
-          + 'publishes their body weight only at the top tier and only if they chose to. '
-          + 'Rather than guess at it, or count it as nothing, the weight is left out — '
-          + 'the reps below are still the same reps for both of you.'
-        : `There is no load row for this one — ${why || 'the logged weight is not the resistance'}.`,
+      text: "No load row: bodyweight lift, and their weight isn't shared.",
+      help: 'A friend publishes their body weight only at the top tier, and only if they '
+        + 'chose to. Rather than guess at it, or count it as nothing, the weight is left '
+        + 'out — the reps are still the same reps for both of you.',
+    } : {
+      key: 'no-load',
+      text: `No load row — ${why || 'the logged weight is not the resistance'}.`,
     });
   } else {
     caveats.push({
       key: 'unknown-exercise',
-      text: 'This exercise is not in your library, so there is no way to tell whether its '
-        + 'weights are per side or carried by body weight. Only the counts are shown.',
+      text: 'Not in your library — counts only.',
+      help: 'Without it there is no way to tell whether the weights are per side or '
+        + 'carried by body weight.',
     });
   }
 
   /* ---- 7. heaviest set — a measurement, no model ---- */
   if (weightIsComparable(exercise)) {
+    // Per hand where the lift is logged per hand (EB-11): the number that was typed.
     const score = (o) => {
-      const load = loadOf(o, loadType);
+      const load = each ? (Number(o.weight) > 0 ? Number(o.weight) : null) : loadOf(o, loadType);
       return load === null ? NaN : load;
     };
     // Rep-gated too, for the reason in section 5 — one pool, one rule.
-    const pool = (exercise.fields || []).includes('reps') ? [myRank, theirRank] : [myObs, theirObs];
+    const pool = (exercise.fields || []).includes('reps')
+      ? [myRank, theirRank] : [clean(myObs), clean(theirObs)];
     const mineBest = bestBy(pool[0], score);
     const theirsBest = bestBy(pool[1], score);
     if (mineBest || theirsBest) {
@@ -630,26 +669,22 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
         key: 'top-weight',
         label: 'Heaviest set recorded',
         unit: 'weight',
+        each,
         mine: mineBest && mineBest.score,
         theirs: theirsBest && theirsBest.score,
-        note: loadType === 'per_side'
-          ? 'Both hands together — half of it was in each.'
-          : 'What was actually on the bar.',
+        note: each ? 'Per hand, as logged.' : 'What was actually on the bar.',
         mineSet: setDetail(mineBest),
         theirsSet: setDetail(theirsBest),
       }));
     }
-    if (loadType === 'per_side') {
+    if (each) {
       caveats.push({
         key: 'per-side',
-        /* ⚠️ THE EXAMPLE LOST ITS UNITS ON 2026-09-13, and that is the header's rule
-         * applied to its own prose. It read "a 50 lb dumbbell in each hand counts as
-         * 100 lb" — a sentence in pounds, on a sheet whose every number now converts
-         * to the reader's own unit, so a kilogram reader got the one pounds figure on
-         * the screen and it was the one explaining the arithmetic. Doubling is the
-         * point and doubling needs no unit to state. */
-        text: 'The weights here are the total of both sides, because that is what the body '
-          + 'lifted — a dumbbell in each hand counts as both of them together, for both of you.',
+        /* ⚠️ No unit in the prose (2026-09-13): every number on this sheet
+         * converts to the reader's unit, so a sentence may not name one. */
+        text: 'Per hand, for both of you.',
+        help: 'As every other screen shows a dumbbell lift. Both hands together is '
+          + 'twice each number.',
       });
     }
   }
@@ -669,8 +704,8 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
   // above fifteen would be refusing to show a measurement.
   if (!loadIsComparable(exercise) && exercise && (exercise.fields || []).includes('reps')) {
     const score = (o) => o.reps;
-    const mineBest = bestBy(myObs, score);
-    const theirsBest = bestBy(theirObs, score);
+    const mineBest = bestBy(clean(myObs), score);
+    const theirsBest = bestBy(clean(theirObs), score);
     if (mineBest || theirsBest) {
       metrics.push(metric({
         key: 'top-reps',
@@ -708,20 +743,25 @@ export function compareExercise({ mine, theirs, exerciseId, exercise, estimates 
     note: 'Neither number is the better one — training more is not training better.',
   }));
 
-  /* ---- 10. caveats about the comparison itself ---- */
+  /* ---- 10. caveats about the comparison itself ----
+   *
+   * 🔄 2026-09-27 (overhaul words P8): each caveat is `text` — WHAT, on the
+   * screen — and an optional `help` — WHY, for the ? beside it (Rule 9). The
+   * reason is moved, never deleted. */
   caveats.unshift({
     key: 'window',
-    text: `Both sides cover ${window.label} — ${start} to ${end}. That is as far back as `
-      + 'they publish, so anything either of you did before it is left out on purpose: '
-      + 'your whole history against their recent months would flatter you every time.',
+    text: `Both cover ${start}–${end} only, so your history can't flatter you.`,
+    help: `That is ${window.label}, as far back as they publish. Anything either of you did `
+      + 'before it is left out on purpose: your whole history against their recent months '
+      + 'would flatter you every time.',
   });
 
   if (dropped) {
     caveats.push({
       key: 'rep-gate',
-      text: `${dropped} set${dropped === 1 ? '' : 's'} above ${MAX_EVIDENCE_REPS} reps `
-        + `${dropped === 1 ? 'is' : 'are'} left out of the strength rows. This app does not `
-        + 'read a maximum off a burnout set, for either of you.',
+      text: `${dropped} burnout set${dropped === 1 ? '' : 's'} left out of the strength rows.`,
+      help: `Sets above ${MAX_EVIDENCE_REPS} reps. This app does not read a maximum off a `
+        + 'burnout set, for either of you.',
     });
   }
 

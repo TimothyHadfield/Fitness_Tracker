@@ -164,7 +164,11 @@ for (const s of [STRENGTH_CAVEAT, STRENGTH_CAVEAT_SHORT]) {
 await safe('notes', async () => {
   await store.clearAll();
   const sys = await store.saveSystem({ name: 'Mine', notes: 'First paragraph.\n\nSecond paragraph.' });
-  const screen = await mount(views.SystemRouteView(sys.id));
+  const page = await mount(views.SystemRouteView(sys.id));
+  // I-17 (overhaul 2026-09-27): on a phone the notes sit behind one row.
+  const more = page.querySelector('.sys-more');
+  if (more) { more.click(); await new Promise((r) => setTimeout(r, 30)); }
+  const screen = [...document.querySelectorAll('.sys-more-body')].pop() || page;
   const ps = screen.querySelectorAll('.preset-notes p');
   ok(ps.length === 2, `two paragraphs of notes are two <p> (got ${ps.length})`);
 });

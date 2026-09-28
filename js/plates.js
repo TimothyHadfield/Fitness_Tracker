@@ -28,7 +28,7 @@
  *   "5 lb steps" hint is still true, so nothing is lost by refusing.
  *
  *   **It never claims a bar it cannot weigh.** The bar comes from the inventory
- *   (45 lb / 20 kg) or it is zero; there is no table of specialty-bar weights,
+ *   (45 lb / 20 kg, or the bar the user picked in Settings) or it is zero; there is no table of specialty-bar weights,
  *   because an EZ bar is anywhere from 15 to 25 lb and a trap bar from 45 to 75.
  *   `plateLoadFor()` in exercises.js keeps those exercises out entirely.
  *
@@ -45,7 +45,7 @@
  * 2.2046226218 in this repository is a second thing that can drift.
  */
 
-import { LB_PER_KG } from './units.js';
+import { LB_PER_KG, platePrefs } from './units.js';
 
 /* ------------------------------------------------------------------ *
  * The inventories
@@ -95,10 +95,44 @@ export const KG_INVENTORY = Object.freeze({
   plates: Object.freeze([25, 20, 15, 10, 5, 2.5, 1.25]),
 });
 
-/** The inventory for a `units.units()` value. Anything unrecognised is pounds, which is what is stored. */
+// One object per distinct choice, so a caller comparing inventories by identity
+// (a memo, a re-render check) sees "unchanged" when nothing changed.
+const customCache = new Map();
+
+/**
+ * The inventory for a `units.units()` value. Anything unrecognised is pounds, which is what is stored.
+ *
+ * 🆕 2026-09-27 (settings ST-5): it is the USER'S bar and plates — the "Plates"
+ * sheet, seeded into units.js by `setWeightPrefs()`. A user who never opened
+ * the sheet gets the very same frozen LB_INVENTORY / KG_INVENTORY object as
+ * before, so every default label is byte-identical and greedy still runs. Any
+ * other choice gets its own inventory marked `custom`, and `plateLoad()` solves
+ * that one exactly (fewest plates), because a user's set can be non-canonical —
+ * a gym with 35s is the textbook case. The one module-state read in this file,
+ * and it is keyed by the unit the caller names.
+ */
 export function inventoryFor(unit) {
-  return unit === 'kg' ? KG_INVENTORY : LB_INVENTORY;
+  const u = unit === 'kg' ? 'kg' : 'lbs';
+  const std = u === 'kg' ? KG_INVENTORY : LB_INVENTORY;
+  const mine = platePrefs(u);
+  if (!mine) return std;
+  const same = mine.bar === std.bar && mine.have.length === std.plates.length
+    && mine.have.every((p, i) => p === std.plates[i]);
+  if (same) return std;
+  const key = `${u}|${mine.bar}|${mine.have.join(',')}`;
+  let inv = customCache.get(key);
+  if (!inv) {
+    inv = Object.freeze({
+      unit: u, lbPer: std.lbPer, bar: mine.bar,
+      plates: Object.freeze([...mine.have].sort((a, b) => b - a)),
+      custom: true,
+    });
+    customCache.set(key, inv);
+  }
+  return inv;
 }
+/** The plan's name for the same thing. */
+export const plateInventory = inventoryFor;
 
 /* ⚠️ THE TOLERANCE IS ABOUT FLOATING POINT, NOT ABOUT UNCERTAINTY.
  *
@@ -138,6 +172,8 @@ const tidy = (n) => Math.round(n * 1e6) / 1e6;
  * left, so `loaded` is always ≤ the weight asked for and `short` is always ≥ 0.
  * The label refuses to print either way, but it is worth knowing that the
  * failure direction is "not enough on the bar" and never "more than you asked".
+ * A user's own (`custom`) inventory is solved by `fewestPlates()` instead, which
+ * keeps that same promise.
  */
 export function plateLoad(totalLb, { inventory = LB_INVENTORY, bar = true, points = 2 } = {}) {
   const inv = inventory;
@@ -158,11 +194,16 @@ export function plateLoad(totalLb, { inventory = LB_INVENTORY, bar = true, point
   if (usable <= EPS) return { ...base, exact: true };
 
   let remaining = tidy(usable / points);
-  const each = [];
-  for (const plate of inv.plates) {
-    while (remaining >= plate - EPS) {
-      each.push(plate);
-      remaining = tidy(remaining - plate);
+  let each = inv.custom ? fewestPlates(remaining, inv.plates) : null;
+  if (each) {
+    remaining = tidy(remaining - each.reduce((a, b) => a + b, 0));
+  } else {
+    each = [];
+    for (const plate of inv.plates) {
+      while (remaining >= plate - EPS) {
+        each.push(plate);
+        remaining = tidy(remaining - plate);
+      }
     }
   }
 
@@ -179,6 +220,47 @@ export function plateLoad(totalLb, { inventory = LB_INVENTORY, bar = true, point
     short: exact ? 0 : tidy(remaining),
     loaded: tidy(barWeight + onePoint * points),
   };
+}
+
+/* FEWEST PLATES FOR A USER'S OWN INVENTORY (2026-09-27, settings ST-5).
+ *
+ * The canonicity note above is why the default sets can stay greedy — and why
+ * a user's set cannot: pick 35s and 60 a side comes out 45 + 10 + 5 where
+ * 35 + 25 is two plates. So a `custom` inventory gets the exact answer, a
+ * change-making DP over the per-side weight in steps of the plates' common
+ * divisor (1.25 lb or 0.25 kg at worst, so a 500 lb side is 400 cells).
+ *
+ * Same contract as greedy: it never goes OVER the ask. When the ask cannot be
+ * built it returns the heaviest buildable load under it, and plateLoad() then
+ * reports `exact: false` and the label prints nothing. Ties go to the heavier
+ * first plate (70 = 45 + 25, not 35 + 35), which is also what makes it agree
+ * with greedy wherever greedy is already minimal.
+ *
+ * Returns the plates biggest first, or null (the caller falls back to greedy)
+ * for a side so heavy the table would be silly — never reached by a real lift. */
+const DP_MAX_CELLS = 20000;
+function fewestPlates(target, plates) {
+  if (!plates.length || !(target > EPS)) return [];
+  const cents = plates.map((p) => Math.round(p * 100));
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const g = cents.reduce(gcd);
+  const n = Math.floor(((target + EPS) * 100) / g);
+  if (n > DP_MAX_CELLS) return null;
+  const steps = cents.map((c) => c / g);
+  const cnt = new Array(n + 1).fill(Infinity);
+  const pick = new Array(n + 1).fill(-1);
+  cnt[0] = 0;
+  for (let a = 1; a <= n; a++) {
+    for (let i = 0; i < steps.length; i++) {       // heaviest first; strict < keeps it on a tie
+      const s = steps[i];
+      if (s <= a && cnt[a - s] + 1 < cnt[a]) { cnt[a] = cnt[a - s] + 1; pick[a] = i; }
+    }
+  }
+  let a = n;
+  while (a > 0 && cnt[a] === Infinity) a--;
+  const each = [];
+  while (a > 0) { const i = pick[a]; each.push(plates[i]); a -= steps[i]; }
+  return each.sort((x, y) => y - x);
 }
 
 /**

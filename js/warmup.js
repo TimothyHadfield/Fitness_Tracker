@@ -8,9 +8,11 @@
  * warmups, then don't put that."* His 225 x 4 squat example (bar x 10, 95 x 8,
  * 145 x 4, 175 x 2) is illustrative, not a table to copy.
  *
- * Pure. No DOM, no store, no clock, and no unit read from `units.js`: every
+ * No DOM, no store, no clock, and no unit read from `units.js`: every
  * weight in and out is in the unit the caller names (the display unit), so the
- * rounding lands on plates and dumbbells that exist in THAT gym.
+ * rounding lands on plates and dumbbells that exist in THAT gym. The one thing
+ * read from module state is the user's bar and step FOR that unit (Settings,
+ * 2026-09-27), and a caller can pass both to pin them.
  *
  * ── WHAT THE EVIDENCE SAYS, AND WHICH PART OF IT IS JUDGEMENT ──────────────
  *
@@ -57,6 +59,8 @@
 
 import { plateLoadFor, bodyWeightFractionFor } from './exercises.js';
 import { isCompoundLift } from './optimal.js';
+import { weightStepFor } from './units.js';
+import { inventoryFor } from './plates.js';
 
 /** The most warm-up sets ever suggested (on a bar lift). */
 export const WARMUP_MAX_SETS = 4;
@@ -83,12 +87,26 @@ export function warmupKind(exercise) {
   return 'load';
 }
 
-/** Step, smallest load and the light reference load, in the given unit. */
-function gear(kind, unit) {
+/**
+ * Step, smallest load and the light reference load, in the given unit.
+ *
+ * 🆕 2026-09-27 (settings ST-4/ST-5): a bar lift starts at the user's OWN bar
+ * and a bar or machine ramp rounds to the user's weight step — a lifter on a
+ * 35 lb bar was told "45 × 10" first. Both come from the caller when it names
+ * them, else from the Settings choice for THIS unit (units.js, keyed by the
+ * unit argument, never by the display unit). Defaults are 45 lb / 20 kg and
+ * 5 lb / 2.5 kg, so an untouched account ramps exactly as before. Dumbbells
+ * keep their rack steps: a plate choice says nothing about a dumbbell rack.
+ */
+function gear(kind, unit, { bar, step } = {}) {
   const kg = unit === 'kg';
-  if (kind === 'bar') return { step: kg ? 2.5 : 5, min: kg ? 20 : 45, ref: kg ? 20 : 45 };
+  const s = Number(step) > 0 ? Number(step) : weightStepFor(unit);
+  if (kind === 'bar') {
+    const b = Number(bar) > 0 ? Number(bar) : inventoryFor(unit).bar;
+    return { step: s, min: b, ref: b };
+  }
   if (kind === 'dumbbell') return { step: kg ? 2 : 5, min: kg ? 2 : 5, ref: kg ? 10 : 20 };
-  return { step: kg ? 2.5 : 5, min: kg ? 2.5 : 5, ref: kg ? 20 : 45 };
+  return { step: s, min: s, ref: kg ? 20 : 45 };
 }
 
 function setCount(ratio, reps, cap) {
@@ -116,14 +134,16 @@ function repsAt(p, workReps, i, emptyBar) {
  * @param weight    the first working set's weight, in `unit` (per side for a dumbbell)
  * @param reps      its reps (0 when blank)
  * @param unit      'lbs' | 'kg'
+ * @param bar       optional: the empty bar in `unit` (default: the user's Plates choice)
+ * @param step      optional: the rounding step in `unit` (default: the user's Weight steps)
  * @returns {{weight: number, reps: number}[]}  in `unit`; [] for none
  */
-export function warmupRamp({ exercise, weight, reps, unit = 'lbs' } = {}) {
+export function warmupRamp({ exercise, weight, reps, unit = 'lbs', bar, step } = {}) {
   const kind = warmupKind(exercise);
   const W = Number(weight);
   if (!kind || !(W > 0)) return [];
   const workReps = Number(reps) > 0 ? Math.round(Number(reps)) : 0;
-  const g = gear(kind, unit);
+  const g = gear(kind, unit, { bar, step });
   const n = setCount(W / g.ref, workReps, kind === 'bar' ? WARMUP_MAX_SETS : OTHER_MAX_SETS);
   if (!n) return [];
 

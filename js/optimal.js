@@ -364,7 +364,15 @@ export function observedDaysPerWeek(dates, todayISO, windowDays = OBSERVE_WINDOW
   // Measured from their FIRST session in the window, not from the window edge —
   // somebody three weeks into a new programme should be judged on those three
   // weeks, not marked down for the week before it existed.
-  const spanDays = today - Math.min(...days) + 1;
+  //
+  // 🆕 EA-10 (2026-09-27): ONLY WHEN NOTHING OLDER EXISTS — the fix store.js
+  // volumeWindow got on 2026-09-24. With older history, measuring from the
+  // first date inside the window made a steady Mon/Wed/Fri lifter read 3.00 to
+  // 3.23 days a week depending on the weekday, and "% optimal" jumped every
+  // Friday. With older history the span is the whole window.
+  const olderExists = (dates || []).map(dayNumber)
+    .some((d) => d !== null && d <= today - windowDays);
+  const spanDays = olderExists ? windowDays : today - Math.min(...days) + 1;
   if (spanDays < MIN_OBSERVED_SPAN_DAYS) return null;
 
   const perWeek = days.length / (spanDays / 7);

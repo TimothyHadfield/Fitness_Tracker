@@ -181,6 +181,21 @@ export function mechanicsFor(exercise, picked) {
   return null;
 }
 
+/**
+ * 🆕 2026-09-27 (overhaul EB-8, Rule 5): the words to print after a shown number
+ * whose LEVEL counts a bar the number leaves out — '+ bar' on the landmine family
+ * (T-bar, landmine row/squat, Meadows) and the Smith bar. Null for everything
+ * else, including the hip-thrust machines, whose `A` is an arm, not a bar.
+ *
+ * @param {object} exercise  a library exercise
+ * @returns {string|null}
+ */
+export function addedLoadNote(exercise) {
+  const m = mechanicsFor(exercise, null);
+  if (!m || !(m.A > 0)) return null;
+  return m.design === 'landmine' || m.design === 'smith' ? '+ bar' : null;
+}
+
 /** A picked leverage, or null when it is not one of the offered values. */
 export function validLeverage(v) {
   const n = Number(v);

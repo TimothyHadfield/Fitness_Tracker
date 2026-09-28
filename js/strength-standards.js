@@ -477,13 +477,23 @@ export function muscleForLift(exerciseId) {
  * Age grading
  * ------------------------------------------------------------------ */
 
-// Strength peaks roughly 23–40. Powerlifting age-grades with the McCulloch
-// coefficients above 40 and Foster below 23; these are those published tables,
-// linearly interpolated. Without this a 55-year-old is silently measured against
-// a population of 25–35 year olds and reads as permanently weak.
+// Strength peaks roughly 23–40. Without this a 55-year-old is silently measured
+// against a population of 25–35 year olds and reads as permanently weak.
+// Linearly interpolated between rows; Foster's junior coefficients below 23.
+//
+// 🔄 ABOVE 40, HARBO 2012 — NOT McCULLOCH — since 2026-09-27 (overhaul E-4).
+// The McCulloch rows (1.13 at 50, 1.381 at 60, 1.786 at 70, 2.549 at 80) have no
+// published derivation (docs/research.md §16.9, 🔴 provenance), and the app's
+// own cited age data contradicted them: research-data.js (Harbo, Brincks &
+// Andersen 2012, Table 5, men, eight muscle groups averaged, each as % of its
+// peak band) reads 0.856 of peak at a mean age of 64 (×1.17) and 0.693 at 74
+// (×1.44), where McCulloch graded ×1.55 and ×2.1. Measured before: a 185 lb
+// 75-year-old benching 155×5 read Elite p98.5. The rows below are those bands,
+// rounded (the estimates review's rows). 80 lies past the oldest band (74);
+// 1.50 there matches van den Hoek's −33 % bench at 80+ (×1.49, §16.9).
 const AGE_COEFFICIENTS = [
   [14, 1.23], [16, 1.13], [18, 1.06], [20, 1.03], [23, 1.00],
-  [40, 1.00], [50, 1.13], [60, 1.381], [70, 1.786], [80, 2.549],
+  [40, 1.00], [50, 1.10], [60, 1.17], [70, 1.35], [80, 1.50],
 ];
 
 export function ageCoefficient(age) {
