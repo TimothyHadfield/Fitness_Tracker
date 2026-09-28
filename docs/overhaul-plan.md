@@ -97,6 +97,13 @@ Status: **wave 1 building.** The analyst reports (read-only, with measurements) 
 ## Wave 3
 - R-14: two-device merge, with emulator tests.
 
+## BUILT 2026-09-27
+All 5 waves live: 69cd88d · 88353d8/bc07d2c/1eb1545 · dc931dc/3413389/b021f76/c277558/7a486b9 ·
+6c513fd · 0668e46. Where the plan was wrong: worktrees fail under OneDrive (builders shared the
+checkout on disjoint files); the sticky head-first scroll hid steppers (row wins, name sticky in CSS);
+wave 5 gave `.set-del` a 44px hit area against the list below, reverted at checkpoint. Verified:
+suite 9325/0, emulator rules + sync-merge, WebKit smoke 30 routes phone + laptop.
+
 ## Must not change
 - The locked decisions: D5, D6, D11, D13, D14, D21, D22, D23, D28, D29, D30, D33.
 - Untouched plan numbers count.

@@ -777,3 +777,19 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Open:** wave 3 results; report to Tim with the choices he hasn't seen (Barlow font, glass 80/78 %,
   grain + ember glow, sidebar mark, Settings layout, new labels incl. "Bring my history", "Lighter
   week", "Equipment today", "Empty workout", "Update <Workout>", "Sit out").
+
+## 2026-09-27 late (cont.) — overhaul waves 3–5, DONE
+- **Built:** wave 3: two-device list merge (dc931dc), word-cap test + ~20 cuts (3413389), deploy
+  notice fixed (b021f76), Auto theme follows phone live (c277558), import skips logged days + unit
+  question + Sets column (7a486b9). Wave 4 (6c513fd): offline edits/settings/deletes reach the cloud,
+  undo safety, equipment/warm-up plate snap, sticky exercise name, estimate fixes (singles rule, break
+  rule, Reached = 2 days at target), laptop two-column lists. Wave 5 (0668e46): light buttons, toast,
+  ? pop-ups 95 %, laptop alignment, Settings fits with mini strip, tap targets, glass name band.
+- **Decided (not seen by Tim):** Barlow titles; glass 80/78 %; grain + ember glow; sidebar mark;
+  Settings layout 13px/32px chips; labels "Bring my history", "Lighter week", "Equipment today",
+  "Empty workout", "Update <Workout>", "Sit out"; two-column laptop lists; sticky name on a glass band;
+  "End this goal" a button; import collisions skipped by default; 7-day break rule; warm-ups snap to
+  plates; white light-theme controls; `.set-del` 44px hit area REVERTED (must-not-change).
+- **Verified how:** no-Chrome suite 9325 PASS / 0 FAIL; rules 274/0 and sync-merge 14/0 under the
+  emulator; WebKit smoke 30 routes at 393×659 + 1366×820, no overflow/errors; screenshots looked at.
+- **Open:** NOT verified list in progress.md (real iPhone, real exports, SDK versions).

@@ -1,10 +1,11 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-27 late: **OVERHAUL in progress** (Tim: analyse estimates, interaction, design,
+_Last updated 2026-09-27 late: **OVERHAUL DONE, all 5 waves live** (Tim: analyse estimates, interaction, design,
 intro, words, scenarios; "Deploy many many sub-agents… Don't stop working"). Plan + contracts + owners:
-`docs/overhaul-plan.md`. Wave 1 live 69cd88d, wave 2 live 88353d8/bc07d2c/1eb1545; wave 3 running
-(two-device merge, sitewide word cap, deploy-notice test, code review, visual QA). Earlier: 2026-09-25 night, checkpoint (motion pass 2 DONE and live through 7cc8d43 —
+`docs/overhaul-plan.md` (BUILT section at the end). Waves: 1 69cd88d · 2 88353d8/bc07d2c/1eb1545 ·
+3 dc931dc (two-device merge) 3413389 (word cap) b021f76 (deploy notice) c277558 7a486b9 · 4 6c513fd
+(review + QA fixes) · 5 0668e46 (visual QA polish). Choices Tim hasn't seen: chat.md last entry. Earlier: 2026-09-25 night, checkpoint (motion pass 2 DONE and live through 7cc8d43 —
 `docs/motion2-plan.md`; addition ideas waiting on Tim in `docs/additions-ideas.md`; previous version of
 this file: `docs/archive/progress-2026-09-25.md`). Before that 2026-09-24 (whole-app review: 39 bugs fixed; Tim delegated the 42 picks to Claude —
 40 built and live through 81fada0, 2 skipped; picks page
@@ -101,8 +102,8 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **2026-09-27 overhaul — authorized in full, Claude decides every aspect** (Tim, verbatim: "Make your
   own executive decisions on every single aspect so that it really fits well… Deploy many many
   sub-agents… Don't stop working for any reason… You have permission for every single aspect").
-  Waves, owners and decisions: `docs/overhaul-plan.md`. Remaining after wave 3: act on the review and
-  visual-QA findings, then report to Tim with the list of choices he hasn't seen.
+  Waves, owners and decisions: `docs/overhaul-plan.md`. **DONE and live through 0668e46** (5 waves);
+  the choices he hasn't seen were reported to him. Nothing further authorized from it.
 - **2026-09-27 evening: ALL DONE and live** — 16 machine ratios reworked (7 left with reasons), warm-ups
   in history/day/edit, labelled 48px plates + aligned numbers + wording cut, group Finished hands over
   to the next person, and **Auto-guide** (`js/guide-steps.js` order, `js/guide-mode.js` view; toggle
@@ -273,6 +274,9 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## Decisions
 - **Locked decisions D1–D33 live in `docs/handbook.md` §6** and design Rules 1–9 in §5. Recent,
   not yet D-numbered:
+- 2026-09-27 · overhaul decisions (Look 3 glass/Barlow/grain, two-device list merge via
+  arrayUnion/arrayRemove, word cap test, import skips logged days, 7-day break rule, warm-ups snap to
+  plates, `.set-del` stays 21px on purpose) are in `docs/overhaul-plan.md` and chat.md's last entry.
 - 2026-09-27 · Auto-guide draws the whole bar, both sides (`js/bar-view.js`, only in the guide; the
   runner keeps its small one-side hint); plates slide on/off with the `snap` spring. Back sits left of
   Next, greyed on the first step; it walks a history stack, else `prevStep()` in guide order (b67b8c2).
@@ -303,8 +307,12 @@ can check._
   stranded-write merge · the first-save nudge in real anonymous cloud mode · a real Strong/Hevy export
   (fixtures from published headers; Strong 6 warm-up marker "W" assumed) · thousands-row imports
   against real Firestore/phone storage · `--chrome-b` tracking a footer that grows mid-set (jsdom
-  wiring only) · `tests/sw-update.test.mjs` failed 3 checks even at a9a92c7 (pre-overhaul) — wave 3
-  SWUPDATE is on it.
+  wiring only) · (sw-update fixed b021f76; needs Chrome, not in the default suite) · list merge:
+  browser SDK 10.12.2 vs the Node SDK the emulator test used, and the narrow race between read and
+  arrayUnion (reasoned) · settings merge on reconnect runs outside inSettingsQueue (reasoned) ·
+  wave 5: widths under 390px, the light Months calendar, Settings with the mini strip looks tight ·
+  a stray anonymous Firestore user may exist from a headless run before `serviceWorkers:'block'`
+  (harmless; never delete without Tim).
 - **2026-09-26:** Autumn's cause (no gender / no weigh-in in her Body details) is REASONED — her data
   was never read. Hip thrust machine ratio 0.60 is reasoned (lever brands vary). Warm-up set COUNT
   rule is judgement, not from a paper. Plate drawing in kg only checked in a stepper panel.
