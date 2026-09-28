@@ -960,6 +960,37 @@ ok(/\.pill-action\s*\{[\s\S]*?border-radius:\s*999px[\s\S]*?background:\s*var\(-
      'Glass effects off makes --glass-bar, --glass-float and --glass-sheet solid surfaces');
   ok(rules.some((r) => reducedAt(r) && r.sel.split(',').some((s) => s.trim() === ':root') && solid(r)),
      'and so does Reduce Transparency');
+
+  /* ---------- Overhaul wave 5 · visual QA (2026-09-27) ----------
+   * Three measured paint bugs, pinned where a stylesheet edit could bring them
+   * back. Each assert was watched failing on the wave-4 stylesheet
+   * (A11Y_CSS=<git show 6c513fd:css/app.css>) before the fix. */
+
+  // 4. A ? box is a pop-up read OVER rows: at 84 % / 80 % the rows read
+  //    through its text (QA). Every --glass-float that mixes with transparent
+  //    keeps ≥ 94 %, like the sheets.
+  const floats = rules.flatMap((r) => decls(r.body, '--glass-float')).filter((v) => /transparent/.test(v));
+  const thinFloat = floats.filter((v) => { const m = /(\d+(?:\.\d+)?)%\s*,\s*transparent/.exec(v); return !m || Number(m[1]) < 94; });
+  ok(floats.length >= 2 && thinFloat.length === 0,
+     `? pop-ups (--glass-float) are ≥ 94% opaque in every theme (${floats.length} found`
+     + `${thinFloat.length ? `; too thin: ${thinFloat.join(' | ')}` : ''})`);
+
+  // 1. Light: `--raised` on the grained light ground measured 231,233,228 vs
+  //    231,232,229 — the runner's ± and pills had no visible fill. A light rule
+  //    must give each of them a face AND a hairline edge; dark is not touched.
+  const lightCtl = rules.filter((r) => top(r) && /^:root\[data-theme="light"\]\s/.test(r.sel.trim())
+    && !/:active/.test(r.sel)
+    && ['.step-btn', '.pill-action', '.set-done-btn', '.add-set'].every((c) => r.sel.includes(c)));
+  ok(lightCtl.some((r) => /background(-color)?\s*:\s*var\(--surface\)/.test(r.body)
+      && /box-shadow\s*:\s*inset 0 0 0 1px/.test(r.body)),
+     'light theme: the runner / Auto-guide ± and pill buttons get a --surface face and a 1px inset edge');
+  ok(!rules.some((r) => top(r) && /^:root:not\(\[data-theme="light"\]\)/.test(r.sel.trim()) && r.sel.includes('.step-btn')),
+     'and no dark-only rule restyles them (dark must look unchanged)');
+
+  // 11. Light calendar: empty days were --rule-soft on the grained ground (~1:1).
+  ok(rules.some((r) => top(r) && /:root\[data-theme="light"\]\s+\.yr-cell:not\(\.on\)/.test(r.sel)
+      && /background(-color)?\s*:\s*var\(--surface\)/.test(r.body)),
+     'light theme: an empty year-grid day has a visible --surface fill');
 }
 
 console.log(fails ? `\n${fails} check(s) FAILED.` : '\nAll checks passed.');

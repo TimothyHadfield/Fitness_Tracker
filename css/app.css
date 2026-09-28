@@ -7858,7 +7858,7 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
   /* Glass. --glass-a is the one number the contrast measurement rests on. */
   --glass-a: 80%;
   --glass-bar:   color-mix(in srgb, var(--surface) var(--glass-a), transparent);
-  --glass-float: color-mix(in srgb, var(--raised) 84%, transparent);
+  --glass-float: color-mix(in srgb, var(--raised) 95%, transparent);   /* wave 5: was 84 %, rows read through */
   --glass-sheet: color-mix(in srgb, var(--ground) 92%, transparent);
   --glass-rule:  color-mix(in srgb, var(--rule) 70%, transparent);
   --rim: rgb(255 255 255 / .07);
@@ -7876,7 +7876,7 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 }
 :root[data-theme="light"] {
   --glass-a: 78%;
-  --glass-float: color-mix(in srgb, var(--surface) 80%, transparent);
+  --glass-float: color-mix(in srgb, var(--surface) 95%, transparent);  /* wave 5: was 80 % */
   --glass-sheet: color-mix(in srgb, var(--surface) 92%, transparent);
   --rim: rgb(255 255 255 / .75);
   --grain: var(--grain-dk);
@@ -8344,3 +8344,194 @@ body { background: var(--ground-paint); }
   background-clip: padding-box;
 }
 /* === end Overhaul wave 2 · hit areas === */
+
+/* === Overhaul wave 5 · visual QA (2026-09-27) === */
+/* Fixes from the wave-4 visual QA, each re-measured in WebKit at 393×659 and
+   1366×820 (demo). Level colours untouched; new tokens are rgb()/color-mix();
+   nothing here animates or transitions (Rule 7). */
+
+/* ── 1. Light: the runner's and Auto-guide's buttons had no visible fill ────
+   Measured: `--raised` rgb(231,233,228) on a painted ground of rgb(231,232,229)
+   (the ground + dark grain). Light controls now wear the light theme's own
+   raised look — a white face, a warm hairline and the small drop the `.btn`
+   family has — so they read as buttons on any ground. Dark is untouched. */
+:root[data-theme="light"] :is(.step-btn, .pill-action, .set-done-btn:not(.is-done), .add-set) {
+  background-color: var(--surface);
+  box-shadow: inset 0 0 0 1px rgb(var(--shadow-rgb) / .28), 0 1px 2px rgb(var(--shadow-rgb) / .12);
+}
+:root[data-theme="light"] :is(.step-btn, .pill-action, .set-done-btn:not(.is-done), .add-set):active {
+  background-color: var(--raised-hi);
+  box-shadow: inset 0 0 0 1px rgb(var(--shadow-rgb) / .28);
+}
+
+/* ── 2. A toast sits above whatever floats at the bottom ───────────────────
+   It sat at a fixed 24px on a laptop — on the runner, over Back / Next.
+   `--chrome-b` (app.js) is the live height of the footers, the mini strip and
+   the phone tab bar, so the toast clears all of them at every width. */
+.toast, .toast-x { bottom: calc(max(var(--chrome-b, 0px), var(--bar-h) + var(--safe-b)) + 14px); }
+@media (min-width: 860px) {
+  .toast, .toast-x { bottom: calc(var(--chrome-b, 0px) + 24px); }
+}
+
+/* ── 3. Data → Muscles (phone): the summary line was cut off ───────────────
+   The footer under the figures is 104px; its content was 128 ("Furthest
+   behind: Calves (Novice)" hidden). Tighter gaps and leading, same words,
+   and the figures give up 8px. */
+@media (max-width: 859px) {
+  .graph-host.is-muscles .body-wrap { height: 292px; }
+  .graph-host.is-muscles .body-foot { gap: 4px; }
+  .graph-host.is-muscles .body-foot > .card { gap: 2px; }
+  .graph-host.is-muscles .body-foot > .card > .field-help { line-height: 1.3; }
+}
+
+/* ── 4. ? boxes stay readable over rows ────────────────────────────────────
+   At 84 % (dark) / 80 % (light) the rows under a ? box read through its text.
+   Pop-ups are now 95 %, like the sheets; the bars keep their 80 / 78 %. The
+   value is set in Look 3's own :root blocks (--glass-float), so glass off and
+   Reduce Transparency still make it solid. */
+
+/* ── 5. An inline ? in running text no longer overlaps the last word ──────
+   Its -9px margins cancel the 44px halo; to the left that pulled it over
+   "…away." The halo stays; the left side takes a real gap instead. */
+.empty :is(.empty-title, p) > .help-dot,
+p > .help-dot { margin: -9px -9px -9px 4px; }
+
+/* ── 6. A wrapped sentence keeps its ? right after its last word ──────────
+   As a flex row the wrapped sentence's box was the full width, so the ? sat
+   at x=353 while the words ended at x=122 (Explore, 393px). A sentence and its
+   ? are now one run of text; the ? follows the last word on whatever line
+   that is. Labels (Settings) and three-part lines keep the flex row. */
+.help-line:has(> :is(.field-help, .note):first-child):has(> .help-dot:nth-child(2):last-child) { display: block; }
+:where(.help-line:has(> .field-help:first-child):has(> .help-dot:nth-child(2):last-child)) { font-size: var(--fs-md); line-height: 1.45; }
+:where(.help-line:has(> .note:first-child):has(> .help-dot:nth-child(2):last-child)) { font-size: var(--fs-md); line-height: 1.5; }
+.help-line:has(> .help-dot:nth-child(2):last-child) > :is(.field-help, .note):first-child { display: inline; }
+.help-line:has(> :is(.field-help, .note):first-child) > .help-dot:nth-child(2):last-child { margin: -9px -9px -9px 6px; }
+
+/* ── 7. Laptop alignment ─────────────────────────────────────────────────── */
+/* The rule: a section head starts where its rows start. A reading screen is
+   the 820 / 940px centred column; a two-pane screen is the 1180 grid. The
+   heads were outside the column (`.section-head`'s `margin: 18px 0 2px` beat
+   the column's `margin-inline: auto`), 91px left of their rows on Goals. */
+@media (min-width: 860px) {
+  .pane-scroll > .section-head { margin-inline: auto; }
+  /* The runner's exercise name, its meta line and Swap / Remove (lifted out
+     of their column by `display: contents`) sit back in the column. */
+  .pane-scroll > .session-head > * { width: 100%; max-width: 820px; margin-inline: auto; }
+  /* Steppers: − and + were 285px apart at 1366. The − value + row stops at
+     240px, like the Auto-guide's; the captions above keep their width. */
+  .set-open .stepper-controls { max-width: 240px; margin-inline: auto; }
+  /* Auto-guide: one centred column. The set list and Swap / Skip, the
+     progress dashes and Back / Next share the steppers' 416px column. */
+  .guide-top { width: 100%; max-width: 460px; margin-inline: auto; }
+  .screen:has(> .guide:not([hidden])) > .session-progress { padding-inline: max(var(--pad), (100% - 416px) / 2); }
+  .guide > .guide-footer { padding-inline: max(var(--pad), (100% - 416px) / 2); }
+  .guide > .guide-footer .btn { max-width: none; }
+  /* Save: "Discard workout" peeked under the Save footer (54px over at
+     1366×820). Tighter gaps and a shorter note box; the form fits. */
+  .save-screen { gap: 10px; }
+  .save-screen textarea.input { height: 64px; }
+}
+@media (min-width: 1200px) {
+  .pane-scroll > .session-head > * { max-width: 940px; }
+}
+
+/* ── 8 + 9. Settings ─────────────────────────────────────────────────────
+   One text size for the row labels, the chips and the Account row (13px);
+   one chip height (the door chips were 31, the rest 29). With a workout
+   running, the mini strip took 65px and hid Account: the rows tighten so the
+   screen still fits without a scroll. */
+.set-group label, .set-group .chip { font-size: var(--fs-md); }
+.set-group label { white-space: nowrap; }
+.set-group .chip { min-height: 32px; }
+/* The Workout group's two-to-a-line switches keep their labels on one line at
+   13px: the gaps inside each pair tighten, and under 390px the label steps
+   back to 11.5px rather than wrap. */
+@media (max-width: 859px) {
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) { column-gap: 10px; }
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) > .switch-row { gap: 6px; }
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) .help-line { gap: 6px; }
+}
+@media (max-width: 389px) {
+  .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) label { font-size: var(--fs-sm); }
+}
+.pane-scroll:has(> .set-group) > .row .row-title { font-size: var(--fs-md); font-weight: var(--fw-med); }
+@media (max-width: 859px) {
+  .screen:has(> .session-mini) > .pane-scroll:has(> .set-group) { gap: 2px; }
+  .screen:has(> .session-mini) .set-group .switch-row,
+  .screen:has(> .session-mini) .set-group .chip { min-height: 28px; }
+  .screen:has(> .session-mini) .set-group > .section-label { line-height: 14px; }
+}
+
+/* ── 10. The Auto-guide's set list reads at arm's length ──────────────────
+   It was 11.5px regular. 13px at medium weight; still six rows before it
+   scrolls inside itself, and the guide still fits 393×659. */
+.guide-sets { font-size: var(--fs-md); font-weight: var(--fw-med); line-height: 18px; max-height: calc(6 * 18px); }
+
+/* ── 11. Light calendar: empty days are visible ───────────────────────────
+   `--rule-soft` on the grained light ground measured ~1:1. Empty days take the
+   white face; trained days keep their colours. */
+:root[data-theme="light"] .yr-cell:not(.on),
+:root[data-theme="light"] .cal-cell:not(.blank):not(.has-workout):not(.has-benchmark-only) {
+  background-color: var(--surface);
+}
+
+/* ── 12. Hit areas without moving anything ────────────────────────────────
+   `.set-del` painted 21×21 and hit 21×21. A 44px invisible square around it
+   (a later neighbour still wins where they overlap). `.m-name-btn` gets a
+   44px floor for short names. `.help-dot` already hits 44×44 (its ::after). */
+.set-del { position: relative; }
+.set-del::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
+.m-name-btn::after { inset: -13px auto; left: 50%; width: max(100% + 8px, 44px); transform: translateX(-50%); }
+
+/* ── 13. Profile (laptop): a best lift's source line wraps to two lines ────
+   "Estimated from Overhead Press, Barbell Bench Press, Incline Dumbbell Bench
+   Press · ne…" was cut at one line. The phone keeps its one-line ellipsis. */
+@media (min-width: 860px) {
+  .me-best .row-sub.wrap {
+    white-space: normal;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  }
+  .me-best .row-sub.wrap .me-best-bit { white-space: normal; }
+}
+
+/* ── 14. The deploy notice is one line ────────────────────────────────────
+   Centred by `left: 50%`, it could only use half the screen (197px), so "A new
+   version is ready." wrapped to three lines. It sizes to its content now. */
+.update-bar { width: max-content; white-space: nowrap; }
+
+/* ── 15. The runner's sticky exercise name blends into the ground ─────────
+   A solid `--ground` band showed against the glow and grain. It is a thin
+   glass strip now, like the other floating chrome (one layer; the runner has
+   no tab bar), and solid again with glass off.
+   The glass is a layer behind the row that also covers the pane's 11px top
+   padding: a sticky box stops at the padding edge, and the rows scrolling
+   through that strip showed above the name. */
+.pane-scroll > .session-head > .session-head-row { background: none; }
+.pane-scroll > .session-head > .session-head-row::before {
+  content: '';
+  position: absolute;
+  inset: -11px 0 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--ground) 80%, transparent);
+  background-image: var(--grain);
+  -webkit-backdrop-filter: saturate(170%) blur(20px);
+  backdrop-filter: saturate(170%) blur(20px);
+}
+[data-glass="off"] .pane-scroll > .session-head > .session-head-row::before {
+  background-color: var(--ground);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .pane-scroll > .session-head > .session-head-row::before {
+    background-color: var(--ground);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
+/* === end Overhaul wave 5 · visual QA === */

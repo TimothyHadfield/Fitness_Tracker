@@ -192,6 +192,15 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## Traps / rules that bite
 - **All 22 environment traps are the handbook's §0 numbered list** — read it before the first tool
   call. The ones hit most recently:
+- **Headless runs MUST pass `serviceWorkers: 'block'`** (2026-09-27): Playwright's route-abort does
+  not cover requests the service worker makes, and one review run opened live Firestore channels from
+  an empty profile (both failed CORS; a stray anonymous user may exist in fitness-tracker-th —
+  harmless, not Tim's; never delete without Tim).
+- **List collections merge, they don't overwrite** (dc931dc, `createListIO` in firebase-backend.js):
+  a write sends arrayRemove/arrayUnion of only what changed vs this device's last read. Settings and
+  Restore (`{replace:true}`) are still plain replaces. Emulator tests: `sync-merge.test.mjs` and
+  `rules.test.mjs` (`firebase emulators:exec --only firestore "node tests/<f>"`); exclude both plus
+  `sw-update` (needs Chrome) from the plain suite.
 - **Firestore refuses an array inside an array, and BOTH test backends accept one** (§0.22). One bad
   field loses a whole collection document. → the data-layer suite walks every collection for nested
   arrays; never "tidy" `reps` back from `{lo, hi}` to `[lo, hi]`.
