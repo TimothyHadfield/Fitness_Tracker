@@ -4162,7 +4162,7 @@ export async function SessionView(workoutId) {
     renderAll({ keepScroll: true });
     const left = kind === 'full' ? 0 : state.entries.filter((e) => {
       const ex = exMap.get(e.exerciseId);
-      return ex && !EQUIPMENT_TODAY[kind].has(ex.equipment) && !(e.sets || []).some((s) => isDone(s) || s.touched);
+      return ex && !fitsEquipment(ex, EQUIPMENT_TODAY[kind]) && !(e.sets || []).some((s) => isDone(s) || s.touched);
     }).length;
     if (kind === 'full') toast('Full gym — nothing swapped');
     else toast(`${targets.length} swapped${left ? ` · ${left} with no match kept` : ''}`);

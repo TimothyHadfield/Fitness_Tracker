@@ -37,6 +37,14 @@ now also against **50 famous lifters** (221 lifts; Seid, Eubank, Togi added 2026
 PWA with deploy notice · a temporary note-to-the-developer inbox (`#/notes`, take it out when the
 first users stop being new).
 
+**Sweep 2026-10-16 (laptop-ops bug sweep, `tests/sweep-1016.test.mjs`):** 9 defects fixed (fractional
+"13.33 days", stand-in select carry-over, custom exercise missing from the picker's map, deleted
+legacy drops returning, docs/404 page cached as the offline shell, quick second tab tap dropped,
+display-name save leaving #/add, offline 'online' listener never removed, equipment toast rule);
+CLAUDE.md added. Unfixed findings for Tim (deleted sessions resurrected from the frozen legacy
+`collections/sessions` doc, 'time' import alias, undefined `--line` CSS var, ...) are in
+laptop-ops `coding-and-claude/reports/sweep-2026-10-16/Fitness_Tracker.md`.
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber:
 
 Closed rows 1–5, 7, 9–13, 15, 0c, 32, 35 (Tim: "Leave it" — don't re-raise), 36 → with their

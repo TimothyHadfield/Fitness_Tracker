@@ -440,6 +440,11 @@ function demoBar() {
 }
 
 let rendering = false;
+/* A hashchange that arrived while a render was still awaiting its view. It used
+ * to be dropped, leaving the old screen up under the new address (two quick
+ * taps: Graphs, then Profile, showed Graphs). The render that is running checks
+ * this when it finishes and draws the address the page is on now. */
+let missedRender = false;
 /* ⚠️ WHICH HASH THE LAST RENDER DREW, and it is not the same question as
  * `markRoute()`'s history position. That one answers "where does back go"; this
  * one answers "is this an arrival or a repaint", which is what decides whether
@@ -453,7 +458,7 @@ let lastNavKey = null;
 let lastTabTap = 0;
 
 async function render() {
-  if (rendering) return;
+  if (rendering) { missedRender = true; return; }
   rendering = true;
 
   const app = document.getElementById('app');
@@ -695,6 +700,10 @@ async function render() {
   }
 
   rendering = false;
+  if (missedRender) {
+    missedRender = false;
+    if (location.hash !== prevHash) render();
+  }
 }
 
 window.addEventListener('hashchange', render);

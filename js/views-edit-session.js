@@ -196,7 +196,9 @@ export async function EditSessionView(sessionId) {
           label: miniLabel(entry.setType, di + 1),
           onDelete: () => {
             set.minis.splice(di, 1);
-            if (!set.minis.length) delete set.minis;
+            // The legacy `drops` key goes too, or minisOf() falls back to it
+            // and every deleted drop comes back (sweep 2026-10-16).
+            if (!set.minis.length) { delete set.minis; delete set.drops; }
             renderList();
           },
         })),

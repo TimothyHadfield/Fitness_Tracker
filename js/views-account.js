@@ -1241,11 +1241,15 @@ function offlineScreen(state, sections = [], settings = {}) {
   retryBtn.addEventListener('click', () => attempt(false));
 
   // Coming back online is the common ending, so take it without being asked.
-  const onOnline = () => attempt(true);
+  // ⚠️ The listener removes ITSELF once this screen has gone (sweep
+  // 2026-10-16). The old check ran at setTimeout 0, when the screen is already
+  // mounted, so it never removed anything: coming back online later, on any
+  // screen, re-ran auth.retry() and re-rendered whatever was open.
+  const onOnline = () => {
+    if (!retryBtn.isConnected) { window.removeEventListener('online', onOnline); return; }
+    attempt(true);
+  };
   window.addEventListener('online', onOnline);
-  setTimeout(() => {
-    if (!retryBtn.isConnected) window.removeEventListener('online', onOnline);
-  }, 0);
 
   return screenShell({
     title: 'Account',

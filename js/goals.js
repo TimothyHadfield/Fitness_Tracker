@@ -764,7 +764,8 @@ export function stallReasons({ requirements, measured, muscle }) {
    * window at all — is still its own case, and still shows no number.
    */
   const shortWindow = Boolean(measured) && measured.enough === false;
-  const overDays = (n) => `${n} day${n === 1 ? '' : 's'}`;
+  // Whole days in the words; `spanDays` itself can be fractional (sweep 2026-10-16).
+  const overDays = (n) => { const d = Math.round(n); return `${d} day${d === 1 ? '' : 's'}`; };
   const loggedSessions = (n) => `${n} logged session${n === 1 ? '' : 's'}`;
 
   const volume = (() => {

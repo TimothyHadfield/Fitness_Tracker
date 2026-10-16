@@ -3787,7 +3787,15 @@ export async function openExercisePicker({ exMap, onPick, title = 'Add exercise'
     title,
     body: [search, chipRow, results],
     footer: el('div', { class: 'btn-row' },
-      el('button', { class: 'btn ghost', text: 'Create custom', onClick: () => { close(); openCustomExerciseSheet(onPick); } }),
+      // The new exercise joins the map the calling screen holds, so its row is
+      // not "Unknown exercise" and its own fields are used (sweep 2026-10-16).
+      el('button', { class: 'btn ghost', text: 'Create custom', onClick: () => {
+        close();
+        openCustomExerciseSheet((ex) => {
+          if (exMap && typeof exMap.set === 'function' && ex && ex.id) exMap.set(ex.id, ex);
+          return onPick(ex);
+        });
+      } }),
       el('button', { class: 'btn primary', text: 'Done', onClick: () => close() }),
     ),
   });
@@ -3839,6 +3847,9 @@ export function openCustomExerciseSheet(onPick) {
   const standIn = el('select', { class: 'input' },
     el('option', { value: '', text: 'None' }),
     standInOptions());
+  // The cached <option> nodes keep their selected state between sheets, so the
+  // last sheet's pick would carry over; "None" is the default every time.
+  standIn.value = '';
 
   const chosen = new Set(['weight', 'reps']);
   let loadType = 'total';

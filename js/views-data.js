@@ -4515,7 +4515,11 @@ export async function renderVolumePane(host, top, opts = {}) {
   }
   drawPicked();
 
-  const span = `${data.spanDays} ${data.spanDays === 1 ? 'day' : 'days'}`;
+  // Rounded for the words only: `spanDays` can be fractional (store.js
+  // stretches a short window by the mean gap), and `data.weeks` keeps the exact
+  // value for the rate. Sweep 2026-10-16: it printed "13.333333333333334 days".
+  const spanWhole = Math.round(data.spanDays);
+  const span = `${spanWhole} ${spanWhole === 1 ? 'day' : 'days'}`;
   const sess = `${data.sessions} ${data.sessions === 1 ? 'session' : 'sessions'}`;
 
   setChildren(host,

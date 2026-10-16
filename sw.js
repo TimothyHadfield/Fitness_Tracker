@@ -299,8 +299,16 @@ self.addEventListener('fetch', (e) => {
     e.respondWith((async () => {
       try {
         const fresh = await fetch(req);
-        const cache = await caches.open(CACHE);
-        cache.put('./index.html', fresh.clone());
+        // ⚠️ Only the APP's page may become the offline shell (sweep
+        // 2026-10-16). Opening docs/running-costs.html, or a 404, used to be
+        // stored as index.html, so the next offline launch showed that page.
+        const scope = new URL((self.registration && self.registration.scope)
+          || new URL('./', self.location).href);
+        const path = new URL(req.url).pathname;
+        if (fresh.ok && (path === scope.pathname || path === scope.pathname + 'index.html')) {
+          const cache = await caches.open(CACHE);
+          cache.put('./index.html', fresh.clone()).catch(() => {});
+        }
         return fresh;
       } catch {
         const cache = await caches.open(CACHE);

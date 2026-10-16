@@ -642,7 +642,10 @@ function nameSetupScreen() {
   const save = async () => {
     try {
       await social.setDisplayName(input.value);
-      refresh();
+      // Re-render WHERE IT IS: this screen also stands in front of #/add and
+      // #/find, and this module's own refresh would jump to #/social and lose the person who
+      // was scanned (sweep 2026-10-16; same flaw renameSheet() fixed).
+      refreshRoute();
     } catch (err) { toast(friendly(err)); }
   };
 
