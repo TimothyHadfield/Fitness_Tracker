@@ -108,6 +108,25 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
+    // 🆕 2026-10-16 — WHICH LEGACY ROWS HAVE ALREADY BEEN OFFERED TO THE SHARD.
+    // Adoption used to copy every legacy row missing from the shard on EVERY
+    // read, so a session deleted from the shard came straight back from the
+    // frozen whole-list document. The owner's client now records the legacy
+    // ids it has adopted here, and a recorded id is never adopted again: a
+    // delete sticks. The legacy document itself is still never written.
+    // Owner-only, the two sharded names only, one list of ids (same 5000 cap
+    // as validPayload()).
+    match /users/{userId}/adoptions/{name} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+                            && name in ['sessions', 'guestSessions']
+                            && request.resource.data.keys().hasOnly(['ids', 'updatedAt'])
+                            && request.resource.data.ids is list
+                            && request.resource.data.ids.size() <= 5000
+                            && request.resource.data.updatedAt is timestamp;
+      allow delete: if isOwner(userId);
+    }
+
     // ================================================================
     // BACKUPS — users/{uid}/backups/*, 2026-08-28. Safety copies of the
     // account's own collections, written by the owner's client: a 7-day
@@ -160,6 +179,20 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // 🆕 2026-10-16 — A REAL ACCOUNT, NOT AN ANONYMOUS ONE. Every visitor gets an
+    // anonymous account automatically and a script can make one with a single
+    // HTTP call, so signedIn() alone meant "anyone on the internet". The app
+    // already refuses social features and notes to an anonymous account
+    // (store.js social.state() / feedback.state()); this makes the rules agree.
+    // ⚠️ Used ONLY where somebody reaches OTHER people (projections, photos,
+    // reactions, handoffs, invites, requests, disconnects, the directory,
+    // notes). Everything owner-only stays isOwner, so a guest keeps all of its
+    // own data, and deleting your own directory row stays signedIn().
+    function realUser() {
+      return signedIn()
+          && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     // A published projection. 🚨 ONE DOCUMENT PER AUDIENCE since 2026-09-03,
     // where there used to be one per visibility tier — `friends` and `public`.
     // Tim: *"you can either make your account private so only friends you accept
@@ -174,7 +207,7 @@ service cloud.firestore {
     // request.resource and read is checked against resource. Merging the two
     // into one condition makes create fail closed and look like a broken write.
     function isPublishedViewer() {
-      return signedIn()
+      return realUser()
              && resource != null
              && resource.data.viewers is list
              && request.auth.uid in resource.data.viewers;
@@ -191,7 +224,7 @@ service cloud.firestore {
     // an unauthenticated read is not that — it is the whole internet with a
     // scraper, and it would also make every read unattributable.
     function isPublicDoc() {
-      return signedIn()
+      return realUser()
              && resource != null
              && resource.data.isPublic == true;
     }
@@ -278,7 +311,7 @@ service cloud.firestore {
       // depends on operand order, and the next person to add a condition here
       // would be reordering something they cannot see. The emulator run on
       // 2026-08-18 showed exactly this on three of the invite denials.
-      return signedIn()
+      return realUser()
              && resource != null
              && !('claimedBy' in resource.data)
              && 'expiresAt' in resource.data
@@ -330,7 +363,7 @@ service cloud.firestore {
     // billed read now rather than three — the tiers are gone and there is a
     // single document to consult.
     function isFriendOf(userId) {
-      return signedIn()
+      return realUser()
           && exists(/databases/$(database)/documents/users/$(userId)/shared/friends)
           && get(/databases/$(database)/documents/users/$(userId)/shared/friends).data.viewers is list
           && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)/shared/friends).data.viewers;
@@ -375,7 +408,13 @@ service cloud.firestore {
       // validReaction(), so the owner cannot post in a friend's name.
       allow create: if (isFriendOf(userId)
                         || (isOwner(userId) && request.resource.data.kind == 'comment'))
-                    && validReaction();
+                    && validReaction()
+                    // 🆕 2026-10-16: a kudos id is `k_{sessionId}_{fromUid}`
+                    // (js/social.js kudosId()), pinned here so a friend cannot
+                    // take another friend's id first or stack kudos under
+                    // made-up ids. validReaction() already proved the types.
+                    && (request.resource.data.kind != 'kudos'
+                        || reactionId == 'k_' + request.resource.data.sessionId + '_' + request.auth.uid);
 
       // No update path AT ALL. Editing is delete-and-repost; a kudos toggle
       // is create/delete of a deterministic id. Every mutation a rule does
@@ -423,7 +462,7 @@ service cloud.firestore {
     // ================================================================
 
     function isPublicAccount(userId) {
-      return signedIn()
+      return realUser()
           && exists(/databases/$(database)/documents/users/$(userId)/shared/public)
           && get(/databases/$(database)/documents/users/$(userId)/shared/public).data.isPublic == true;
     }
@@ -582,7 +621,7 @@ service cloud.firestore {
       // It also makes the write idempotent — pressing Disconnect twice
       // writes the same document.
       // Fields checked to exist before they are read — see validHandoff().
-      allow create, update: if signedIn()
+      allow create, update: if realUser()
                             && leaverId == request.auth.uid
                             && request.resource.data.keys().hasOnly(['from', 'at'])
                             && 'from' in request.resource.data
@@ -600,7 +639,7 @@ service cloud.firestore {
       // here. Anyone signed in can redeem a link they were GIVEN — they must be
       // able to read it to redeem it — but nobody can enumerate anyone's
       // invites, so a leaked link costs one invite rather than the whole set.
-      allow get: if signedIn();
+      allow get: if realUser();
       allow list: if isOwner(userId);
 
       allow create: if isOwner(userId)
@@ -644,7 +683,7 @@ service cloud.firestore {
       //
       // `from` is checked against the caller too, so neither half can be
       // forged alone — the same belt-and-braces the handoff rule uses.
-      allow create, update: if signedIn()
+      allow create, update: if realUser()
                             && fromUid == request.auth.uid
                             && request.resource.data.keys().hasOnly(['from', 'name', 'at'])
                             && 'from' in request.resource.data
@@ -707,13 +746,13 @@ service cloud.firestore {
 
     match /directory/{uid} {
       // The whole point, and the whole cost. See above.
-      allow get, list: if signedIn();
+      allow get, list: if realUser();
 
       // ⚠️ Your own row and nobody else's — the id is the access control, the
       // same shape as requests and disconnects. Shape-checked so the document
       // cannot grow fields nobody audited: a directory row that can carry
       // arbitrary keys is a directory row somebody puts an email in.
-      allow create, update: if signedIn()
+      allow create, update: if realUser()
                             && uid == request.auth.uid
                             && request.resource.data.keys().hasOnly(['uid', 'name', 'nameLower', 'updatedAt'])
                             && request.resource.data.uid == request.auth.uid
@@ -794,7 +833,7 @@ service cloud.firestore {
 
     match /feedback/{noteId} {
       // Anybody signed in may send one, and that is the whole write surface.
-      allow create: if signedIn() && validNote();
+      allow create: if realUser() && validNote();
 
       // 🛑 NO UPDATE, FOR ANYBODY, INCLUDING THE DEVELOPER. A note is a record of
       // what somebody said; an edit path would let it become a record of what

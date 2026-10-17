@@ -46,8 +46,10 @@ const env = await initializeTestEnvironment({
   projectId: 'fitness-tracker-rules-test',
   firestore: {
     rules: readFileSync(join(here, '..', 'firestore.rules'), 'utf8'),
-    host: '127.0.0.1',
-    port: 8080,
+    // `emulators:exec` sets FIRESTORE_EMULATOR_HOST; honouring it lets this run
+    // on another port while a second emulator holds 8080.
+    host: (process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080').split(':')[0],
+    port: Number((process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080').split(':')[1]),
   },
 });
 
@@ -857,6 +859,103 @@ console.log('\n--- Workout photos: the workout’s audience, and nobody else ---
 }
 
 /* ================================================================
+ * 🆕 2026-10-16 — AN ANONYMOUS ACCOUNT IS NOT A REAL USER TO OTHER PEOPLE.
+ *
+ * Every visitor gets an anonymous account automatically, and a script can
+ * make one with one HTTP call, so `signedIn()` alone meant "anyone on the
+ * internet". The app already refuses social and notes to an anonymous
+ * account (store.js social.state() / feedback.state()); realUser() makes the
+ * rules agree. 🔒 Its OWN data is untouched: everything isOwner stays open.
+ * ================================================================ */
+console.log('\n--- 🆕 Anonymous accounts: own data yes, other people no ---\n');
+{
+  const ANON = 'anon-uid';
+  const asAnon = env.authenticatedContext(ANON, { firebase: { sign_in_provider: 'anonymous' } }).firestore();
+  // A real account signed in with a password, said out loud, so the positive
+  // controls below are not leaning on the test library's default token.
+  const asReal = env.authenticatedContext('real-uid', { firebase: { sign_in_provider: 'password' } }).firestore();
+
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(shared(db, SAM, 'public'), projection('public', []));
+    // Even an anonymous uid that somehow got onto a viewers list gets nothing.
+    await setDoc(shared(db, ALEX, 'friends'), projection('friends', [ANON, 'real-uid']));
+    await setDoc(doc(db, 'directory', SAM), { uid: SAM, name: 'Sam', nameLower: 'sam', updatedAt: new Date() });
+    await setDoc(doc(db, 'directory', ANON), { uid: ANON, name: 'Anon', nameLower: 'anon', updatedAt: new Date() });
+    await setDoc(invite(db, TIM, 'tok-anon'), { token: 'tok-anon', createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 86400000) });
+    await setDoc(doc(db, 'users', SAM, 'photos', 's1'), { image: 'data:image/jpeg;base64,AAAA', w: 1, h: 1, updatedAt: new Date() });
+  });
+
+  // --- other people: refused ---
+  await denied(getDoc(shared(asAnon, SAM, 'public')), '🆕 an anonymous account cannot read a public profile');
+  await denied(getDoc(shared(asAnon, ALEX, 'friends')), '🆕 nor a friends document, even listed in viewers');
+  await denied(getDocs(collection(asAnon, 'directory')), '🆕 nor list the name directory');
+  await denied(getDoc(doc(asAnon, 'directory', SAM)), '🆕 nor read one directory row');
+  await denied(setDoc(doc(asAnon, 'directory', ANON), dirDoc(ANON, 'Anon')), '🆕 nor put itself in the directory');
+  await denied(setDoc(req(asAnon, TIM, ANON), reqDoc(ANON, 'Anon')), '🆕 nor send a friend request');
+  await denied(setDoc(disc(asAnon, TIM, ANON), discDoc(ANON)), '🆕 nor file a disconnect');
+  await denied(getDoc(invite(asAnon, TIM, 'tok-anon')), '🆕 nor read an invite by its token');
+  await denied(updateDoc(invite(asAnon, TIM, 'tok-anon'),
+    { claimedBy: ANON, claimedName: 'Anon', claimedAt: '2026-10-16' }), '🆕 nor claim one');
+  await denied(setDoc(doc(asAnon, 'feedback', 'anon-note'), note(ANON)), '🆕 nor send a note to the developer');
+  await denied(getDoc(doc(asAnon, 'users', SAM, 'photos', 's1')), '🆕 nor read a public account\'s photo');
+  await denied(setDoc(reaction(asAnon, ALEX, 'k_sess-1_' + ANON), kudosDoc(ANON)), '🆕 nor give kudos');
+  await denied(setDoc(handoff(asAnon, ALEX, 'h-anon'), handoffDoc(ANON)), '🆕 nor offer a workout');
+
+  // --- the same reads for a real account still work (no legitimate flow changed) ---
+  await allowed(getDoc(shared(asReal, SAM, 'public')), 'a real account still reads a public profile');
+  await allowed(getDoc(shared(asReal, ALEX, 'friends')), 'and a friends document it is listed in');
+  await allowed(getDocs(collection(asReal, 'directory')), 'and lists the directory');
+  await allowed(setDoc(doc(asReal, 'directory', 'real-uid'), dirDoc('real-uid', 'Real')), 'and writes its own row');
+  await allowed(setDoc(doc(asReal, 'feedback', 'real-note'), note('real-uid')), 'and sends a note');
+
+  // --- its OWN data: everything the app lets a guest do ---
+  await allowed(setDoc(priv(asAnon, ANON, 'workouts'), { rows: [{ id: 'w1' }], updatedAt: serverTimestamp() }),
+    'an anonymous account still saves its own whole-list collections');
+  await allowed(getDoc(priv(asAnon, ANON, 'workouts')), 'and reads them');
+  await allowed(setDoc(shard(asAnon, ANON, 'sessions', 's1'), { row: { id: 's1' }, updatedAt: serverTimestamp() }),
+    'and its own sessions');
+  await allowed(getDocs(collection(asAnon, 'users', ANON, 'sessions')), 'and lists them');
+  await allowed(deleteDoc(shard(asAnon, ANON, 'sessions', 's1')), 'and deletes one');
+  await allowed(setDoc(shard(asAnon, ANON, 'guestSessions', 'g1'), { row: { id: 'g1' }, updatedAt: serverTimestamp() }),
+    'and guest sessions');
+  await allowed(setDoc(backup(asAnon, ANON, 'rolling-mon-sessions'), backupDoc), 'and backups');
+  await allowed(setDoc(graph(asAnon, ANON), { connections: [] }), 'and its own social graph');
+  await allowed(setDoc(doc(asAnon, 'users', ANON, 'adoptions', 'sessions'), { ids: ['s1'], updatedAt: serverTimestamp() }),
+    'and its own legacy-adoption marker');
+  await allowed(deleteDoc(doc(asAnon, 'directory', ANON)),
+    'and can still REMOVE its own directory row (sign-out / delete account clean-up)');
+}
+
+/* ---- 🆕 2026-10-16: a kudos id is pinned to its sender ----
+ * The id is `k_{sessionId}_{fromUid}` (js/social.js kudosId()). Without this a
+ * friend could take another friend's id first, and that friend's own kudos then
+ * became an update, which is denied. */
+console.log('\n--- 🆕 Kudos ids belong to the sender ---\n');
+await denied(setDoc(reaction(asAlex, TIM, 'k_sess-9_' + SAM), kudosDoc(ALEX, 'sess-9')),
+  '🆕 a friend cannot squat another friend\'s kudos id');
+await denied(setDoc(reaction(asAlex, TIM, 'k_random-1'), kudosDoc(ALEX, 'sess-9')),
+  '🆕 nor stack kudos under made-up ids');
+await allowed(setDoc(reaction(asAlex, TIM, 'k_sess-9_' + ALEX), kudosDoc(ALEX, 'sess-9')),
+  'while the real id still works');
+
+/* ---- 🆕 2026-10-16: the legacy-adoption marker is owner-only and shape-checked ---- */
+console.log('\n--- 🆕 The adoption marker ---\n');
+await allowed(setDoc(doc(asTim, 'users', TIM, 'adoptions', 'sessions'), { ids: ['s1', 's2'], updatedAt: serverTimestamp() }),
+  'the owner records which legacy rows were already offered');
+await allowed(getDoc(doc(asTim, 'users', TIM, 'adoptions', 'sessions')), 'and reads it back');
+await allowed(setDoc(doc(asTim, 'users', TIM, 'adoptions', 'guestSessions'), { ids: [], updatedAt: serverTimestamp() }),
+  'for guest sessions too');
+await denied(getDoc(doc(asAlex, 'users', TIM, 'adoptions', 'sessions')), 'a friend cannot read it');
+await denied(setDoc(doc(asAlex, 'users', TIM, 'adoptions', 'sessions'), { ids: [], updatedAt: serverTimestamp() }),
+  'nor write it');
+await denied(setDoc(doc(asTim, 'users', TIM, 'adoptions', 'workouts'), { ids: [], updatedAt: serverTimestamp() }),
+  'only the two sharded collections have one');
+await denied(setDoc(doc(asTim, 'users', TIM, 'adoptions', 'sessions'), { ids: [], updatedAt: serverTimestamp(), extra: 1 }),
+  'and it holds nothing else');
+
+/* ================================================================
  * 🚨 DELETING AN ACCOUNT — every path the purge has to reach. 2026-09-10.
  *
  * Open work 27. "Delete everything permanently" left most of the account in
@@ -885,7 +984,8 @@ const storeSrc = readFileSync(join(here, '..', 'js', 'store.js'), 'utf8');
 const COLLECTIONS = [...storeSrc.match(/const COLLECTIONS = \[([^\]]*)\]/)[1]
   .matchAll(/'([^']+)'/g)].map((m) => m[1]);
 
-ok(PURGED_SUBCOLLECTIONS.length === 11,
+// 12 since 2026-10-16: `adoptions`, the legacy-adoption marker.
+ok(PURGED_SUBCOLLECTIONS.length === 12,
   `the purge walks ${PURGED_SUBCOLLECTIONS.length} subcollections`);
 ok(PURGED_SUBCOLLECTIONS[0] === 'shared',
   '🚨 starting with `shared`, the only one anybody else can read — if a purge is interrupted, '

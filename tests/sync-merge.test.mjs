@@ -31,8 +31,9 @@ const env = await initializeTestEnvironment({
   projectId: 'fitness-tracker-sync-test',
   firestore: {
     rules: readFileSync(join(here, '..', 'firestore.rules'), 'utf8'),
-    host: '127.0.0.1',
-    port: 8080,
+    // `emulators:exec` sets FIRESTORE_EMULATOR_HOST (see rules.test.mjs).
+    host: (process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080').split(':')[0],
+    port: Number((process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080').split(':')[1]),
   },
 });
 await env.clearFirestore();

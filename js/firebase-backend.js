@@ -624,9 +624,45 @@ export function createShardIO(c, uid, cache = localShardCache()) {
    * that row's id is new; that was already the documented collision rule.
    */
 
+  /* 🆕 2026-10-16 — ADOPTED AT MOST ONCE PER ID, SO A DELETE STICKS.
+   *
+   * 🚨 THE BUG THIS FIXES: adoption copied every legacy row missing from the
+   * shard on EVERY read. A deleted session is exactly a row missing from the
+   * shard, so it came straight back from the frozen legacy document — Delete,
+   * Clear all and Restore never stuck for an account with pre-2026-08-28 data.
+   *
+   * ✅ The ids already offered are recorded at users/{uid}/adoptions/{name}
+   * (firestore.rules), and a recorded id is never adopted again. An old
+   * client's genuinely NEW row has an id never offered, so it is still picked
+   * up. The legacy document is still never written.
+   *
+   * ⚠️ Every failure falls back to the OLD behaviour, never to less data: an
+   * unreadable marker means "adopt everything as before, write no marker"
+   * (`null` below), and a marker write that fails leaves the next read to try
+   * again. The marker goes in AFTER the shard writes have committed. */
+  const markerRef = (collection) => c.fs.doc(c.db, 'users', uid, 'adoptions', collection);
+
+  async function readOffered(collection) {
+    try {
+      const snap = await c.fs.getDoc(markerRef(collection));
+      const data = snap && snap.exists() ? snap.data() : null;
+      return new Set(data && Array.isArray(data.ids) ? data.ids.map(String) : []);
+    } catch (err) {
+      console.warn('Adoption marker unreadable; adopting as before.', err);
+      return null;
+    }
+  }
+
+  /** @returns the merged rows, or null when nothing is left to adopt. */
   async function adopt(collection, legacyRows) {
+    const offered = await readOffered(collection);
+    const candidates = offered
+      ? legacyRows.filter((r) => r && r.id != null && !offered.has(String(r.id)))
+      : legacyRows;
+    if (offered && !candidates.length) return null;
+
     const existing = await readShard(collection);
-    const merged = mergeShardAndLegacy(existing, legacyRows);
+    const merged = mergeShardAndLegacy(existing, candidates);
     const { writes } = shardDiff(shardSnapshot(existing), merged);
     if (writes.length) {
       await commitOps(writes.map((row) => ({
@@ -637,6 +673,20 @@ export function createShardIO(c, uid, cache = localShardCache()) {
       // question of whether a cursor from before an adoption still means
       // anything.
       cache.clear(uid, collection);
+    }
+    if (offered) {
+      const seen = legacyRows.filter((r) => r && r.id != null).map((r) => String(r.id));
+      let ids = [...new Set([...offered, ...seen])];
+      // The rules cap the list at 5000, as they cap the legacy rows. Past it,
+      // keep what this legacy document holds — the ids that could come back.
+      if (ids.length > 5000) ids = [...new Set(seen)].slice(0, 5000);
+      try {
+        const batch = c.fs.writeBatch(c.db);
+        batch.set(markerRef(collection), { ids, updatedAt: c.fs.serverTimestamp() });
+        await batch.commit();
+      } catch (err) {
+        console.warn('Could not record adopted ids; the next read adopts again.', err);
+      }
     }
     return merged;
   }
@@ -658,9 +708,10 @@ export function createShardIO(c, uid, cache = localShardCache()) {
       // against a legacy document and has to see all of both. Once everything
       // is adopted, `legacyRows` for a new account is empty forever and this
       // never runs again.
-      const rows = legacyRows.length
-        ? await adopt(collection, legacyRows)
-        : await readShardIncremental(collection);
+      // 🆕 2026-10-16: adopt() answers null once every legacy id has been
+      // offered, and then this is the ordinary incremental read.
+      let rows = legacyRows.length ? await adopt(collection, legacyRows) : null;
+      if (rows === null) rows = await readShardIncremental(collection);
       memo.set(collection, shardSnapshot(rows));
       return rows;
     },
@@ -963,6 +1014,8 @@ export const PURGED_SUBCOLLECTIONS = [
   'shared', 'reactions', 'photos',
   'sessions', 'guestSessions',
   'social', 'invites', 'handoffs', 'disconnects', 'requests', 'backups',
+  // 🆕 2026-10-16: which legacy rows were already adopted (see adopt()).
+  'adoptions',
 ];
 
 /**

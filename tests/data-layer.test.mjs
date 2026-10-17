@@ -1846,6 +1846,80 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'while the legacy document keeps what the old client wrote — nothing empties it');
   }
 
+  /* ---- 🆕 2026-10-16: A DELETED WORKOUT STAYS DELETED ----
+     The bug: adoption copied every legacy row missing from the shard on EVERY
+     read, and a deleted session is exactly a row missing from the shard — so
+     it came straight back from the frozen legacy document, on this device and
+     every other one. Delete, Clear all and Restore did not stick for anyone
+     with pre-2026-08-28 data. Fixed by recording which legacy ids have been
+     offered (users/{uid}/adoptions/{collection}); a recorded id is never
+     adopted again. Rows are the real shape views-session.js's finish() writes. */
+  {
+    const real = (id, date, w) => ({
+      id, workoutId: 'w-push', workoutName: 'Push', date,
+      startedAt: `${date}T17:00:00.000Z`, finishedAt: `${date}T18:00:00.000Z`,
+      createdAt: `${date}T18:00:00.000Z`, isBenchmark: false,
+      entries: [{ exerciseId: 'barbell-bench-press', exerciseName: 'Barbell Bench Press',
+        sets: [{ weight: w, reps: 5 }, { weight: w, reps: 5 }, { weight: w, reps: 4 }] }],
+    });
+    const legacyRows = Array.from({ length: 40 }, (_, i) =>
+      real(`s-legacy-${i}`, `2026-0${1 + Math.floor(i / 6)}-${String(1 + (i % 6) * 4).padStart(2, '0')}`, 135 + i));
+    const { c, docs } = fakeFirestore();
+    docs.set(LEGACY, { rows: legacyRows, updatedAt: 'TS' });
+    const shardIds = () => [...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length;
+
+    const io = fb.createShardIO(c, 'u1');
+    const first = await io.read('sessions', docs.get(LEGACY).rows);
+    ok(first.length === 40 && shardIds() === 40, `all 40 legacy sessions adopt (${first.length})`);
+
+    // Delete one, exactly as store.deleteSession() does: read, drop the row, write.
+    await io.write('sessions', first.filter((r) => r.id !== 's-legacy-7'));
+    const again = await io.read('sessions', docs.get(LEGACY).rows);
+    ok(!again.some((r) => r.id === 's-legacy-7'),
+       '🆕 a deleted legacy session does NOT come back on the next read');
+    ok(!docs.has('users/u1/sessions/s-legacy-7'), '🆕 and its document is not re-created');
+
+    // Another device (or this one after Safari wiped its storage) — a fresh io.
+    const other = await fb.createShardIO(c, 'u1').read('sessions', docs.get(LEGACY).rows);
+    ok(other.length === 39 && !other.some((r) => r.id === 's-legacy-7'),
+       `🆕 nor on another device (${other.length} rows)`);
+
+    // Clear all: the wholesale path, after its snapshot.
+    await io.write('sessions', [], { wholesale: true });
+    const cleared = await fb.createShardIO(c, 'u1').read('sessions', docs.get(LEGACY).rows);
+    ok(cleared.length === 0, `🆕 Clear all sticks: ${cleared.length} sessions after it`);
+
+    // Restore from a backup holding 5 of them: exactly those 5, not all 40.
+    await io.write('sessions', legacyRows.slice(0, 5), { wholesale: true });
+    const restored = await fb.createShardIO(c, 'u1').read('sessions', docs.get(LEGACY).rows);
+    ok(restored.length === 5, `🆕 Restore sticks: ${restored.length} sessions, the 5 restored`);
+
+    // The legacy document is still never written, and an old client's NEW row
+    // (an id never offered before) is still picked up.
+    ok(docs.get(LEGACY).rows.length === 40, '⚠️ the legacy document still holds all 40 — never written');
+    docs.set(LEGACY, { rows: [...legacyRows, real('s-oldclient', '2026-10-01', 200)], updatedAt: 'TS' });
+    const picked = await fb.createShardIO(c, 'u1').read('sessions', docs.get(LEGACY).rows);
+    ok(picked.length === 6 && picked.some((r) => r.id === 's-oldclient'),
+       `an old client's genuinely new session is still adopted (${picked.length})`);
+    const marker = docs.get('users/u1/adoptions/sessions');
+    ok(marker && Array.isArray(marker.ids) && marker.ids.length === 41,
+       `the marker lists every legacy id offered (${marker && marker.ids.length})`);
+  }
+
+  /* ---- 🆕 an account whose marker cannot be read behaves exactly as before ---- */
+  {
+    const { c, docs } = fakeFirestore();
+    docs.set(LEGACY, { rows: [sess('s1', 100), sess('s2', 200)], updatedAt: 'TS' });
+    const realGet = c.fs.getDoc;
+    c.fs.getDoc = async (ref) => {
+      if (ref.__path.includes('/adoptions/')) throw new Error('permission-denied');
+      return realGet(ref);
+    };
+    const rows = await fb.createShardIO(c, 'u1').read('sessions', docs.get(LEGACY).rows);
+    ok(rows.length === 2, 'an unreadable marker still adopts (the old behaviour, never less data)');
+    ok(!docs.has('users/u1/adoptions/sessions'), 'and does not write a marker it could not read first');
+  }
+
   /* ---- guestSessions get the same treatment, on their own path ---- */
   {
     const { c, docs } = fakeFirestore();
@@ -1880,7 +1954,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     const rows = await io.read('sessions', many);
     ok(rows.length === 1200, `all 1,200 adopt (${rows.length})`);
     const commits = log.filter((e) => e[0] === 'commit');
-    ok(commits.length === 3 && commits.every((e) => e[1] <= fb.BATCH_LIMIT),
+    // 3 batches of sessions + 1 for the adoption marker (2026-10-16), last.
+    ok(commits.length === 4 && commits.every((e) => e[1] <= fb.BATCH_LIMIT)
+       && commits[3][1] === 1,
        `in ${commits.length} batches, none over Firestore's limit of ${fb.BATCH_LIMIT}`);
     ok(docs.get(LEGACY).rows.length === 1200,
        '⚠️ and the legacy document still holds all 1,200 — nothing empties it, ever');
