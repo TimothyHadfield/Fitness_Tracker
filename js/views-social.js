@@ -1308,7 +1308,15 @@ async function fillFriendProfile(body, { uid, name, seen, conn, isFriend, state,
    * dot's own handler stops the tap, so it never follows the tile's link. */
   const withDot = (tile, text, label) => {
     const l = tile.querySelector('.me-stat-l');
-    if (l) l.append(helpDot(text, { label }));
+    /* The ? travels with the LAST WORD (2026-10-17): on a 393px phone
+     * "Workouts shared ?" is wider than its tile, and the dot on its own
+     * dropped to a second line under the words. Now "shared ?" wraps as one. */
+    if (l) {
+      const words = l.textContent;
+      const cut = words.lastIndexOf(' ') + 1;
+      l.textContent = words.slice(0, cut);
+      l.append(el('span', { class: 'me-stat-last' }, words.slice(cut), helpDot(text, { label })));
+    }
     return tile;
   };
   const stats = statRow(

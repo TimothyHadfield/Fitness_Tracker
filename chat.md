@@ -870,3 +870,13 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   50/side after 55/side × 12 reads "maybe 12–15" (was "15+"), visible without scrolling, no overflow.
 - **Open (Tim's call):** the caption change partly reverses his 09-13 "Nuzzo with a band" pick;
   "usual 0" now shows; 9-in-19-days reads 3.11/wk (fencepost rule), not exactly 3.0.
+
+## 2026-10-17 · Visual bug fixes (builder fix-visuals, from the manager's audit)
+- **Asked:** Tim: *"extreamly in-depth analysis … visuals that don't work … work on improving."* 7
+  listed visual bugs; not his calls (goal wording, feed layout, tiny text, colour ramp…) left alone.
+- **Built:** css/app.css + `withDot` in views-social.js (list in progress.md "Visual bug fixes").
+- **Decided (Tim hasn't seen):** a friend's calendar now sits at the top of the right column beside
+  their face (was 14px lower); laptop Bars shows ~14 rows and scrolls inside instead of 20 cramped;
+  under 380px the Colour chips wrap to two lines.
+- **Verified how:** headless WebKit probe (demo, SW + Firebase blocked), original CSS vs new at
+  393×659 and 1280×800, dark + light; 360×640 spot check; full plain suite after rebase (0 FAIL).

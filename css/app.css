@@ -4805,7 +4805,14 @@ a.seg {
 /* ⚠️ A count the app cannot know is a DASH and is not a link — see the comment
    above `countsHelp()` in views-me.js. Off the cloud there is no graph to count,
    and printing 0 would be a claim rather than an absence. */
-.me-stat.is-off { opacity: 0.55; }
+/* 🔄 2026-10-17: only the dash dims. Dimming the whole tile took its label and
+   its ? down to 2.7:1; the word still says what the tile is, in full ink. */
+.me-stat.is-off .me-stat-n { opacity: 0.55; }
+/* The ? on a tile's label sits AFTER the word: its -9px side margins (they
+   cancel the 44px halo) pulled it 9px back over "shared" / "Friends". The
+   halo stays; the left side takes a real 4px gap, as `p > .help-dot` does. */
+.me-stat-l .help-dot { margin: -9px -9px -9px 4px; }
+.me-stat-last { white-space: nowrap; }
 
 /* ================================================================== *
  * PROFILE'S SECTIONS — 2026-09-10 and -11, the Data/Profile split.
@@ -5517,7 +5524,9 @@ a.row { text-decoration: none; }
    compared; the name is what it applies to. Mono on the count keeps the names
    on a straight left edge without a table. */
 .feed-exs { display: flex; flex-direction: column; gap: 2px; }
-.feed-ex { display: flex; gap: 8px; font-size: var(--fs-md); line-height: 1.45; min-width: 0; }
+/* `baseline` (2026-10-17): the smaller "235 × 8" at the end sat 2px above the
+   name's baseline when the row stretched its items. */
+.feed-ex { display: flex; align-items: baseline; gap: 8px; font-size: var(--fs-md); line-height: 1.45; min-width: 0; }
 .feed-ex-sets {
   flex: none; min-width: 52px;
   font-variant-numeric: tabular-nums;
@@ -6830,6 +6839,14 @@ a.pick-row { text-decoration: none; }
   .me-body > .me-head { grid-column: 1; grid-row: 1; align-self: center; margin-top: 0; }
   .me-body > .me-stats { grid-column: 2; grid-row: 1; align-self: center; margin-top: 0; }
   .me-body > .me-bests, .me-body > .me-slot > .me-bests { grid-column: 1; grid-row: 2 / -1; }
+  /* 🔄 2026-10-17 · A FRIEND'S head holds their face AND figures, and nothing
+     else sits in its row but their calendar — which made row 1 332px tall and
+     left ~250px of nothing between the head and their best lifts. The head
+     sits at the top and the calendar spans the 12 auto rows (not the last
+     `1fr` one, so their Disconnect footer still lands right under it); row 1
+     is then only as tall as the head. Your own profile is unchanged. */
+  .me-body > .friend-head { align-self: start; }
+  .me-body:has(> .friend-head) > .me-slot > .me-cal { grid-row: 1 / span 12; margin-top: 0; }
   /* 🆕 2026-09-25: the calendar column scrolls on its own. Months lands on the
      current month (Tim, 09-12); with the whole pane as the scroller that
      landing took the left column 6,000px out of view and left ~600px empty
@@ -6848,6 +6865,12 @@ a.pick-row { text-decoration: none; }
    1440). It keeps the chevron's width, empty — only in a list that has
    chevrons, so a friend's list (none open) stays flush. Both widths. */
 .list:has(> .me-best > .row-chev) > .me-best:not(:has(> .row-chev))::after {
+  content: ''; flex: none; width: 17px;
+}
+/* Same fault on Choose a goal (2026-10-17): a muscle that cannot be a goal
+   (Forearms, Traps) is not a button and has no chevron, so its level sat 27px
+   right of the others' column. It keeps the chevron's width, empty. */
+:has(> .row > .row-chev) > .row.goal-refused::after {
   content: ''; flex: none; width: 17px;
 }
 
@@ -8235,6 +8258,16 @@ body { background: var(--ground-paint); }
 }
 @media (min-width: 1024px) {
   .bars { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; align-content: stretch; }
+  /* 🔄 2026-10-17: rows size to their content. As `auto` tracks in this
+     scrolling grid they were held at the 62px minimum while their content was
+     67px, so each name sat 5px INTO the "Now" bar above it. Content-sized,
+     a row keeps its 8px padding either side of the rule — 18px between one
+     lift's last bar and the next name, as on a phone — and the list scrolls
+     inside itself (Rule 1 allows a list to). */
+  .bars { grid-auto-rows: max-content; }
+  /* The caption's ? hangs its 44px halo 14px below the line; with only the
+     pane's 11px under it, that halo made the whole pane scroll 2px. */
+  .bars + .chart-foot { padding-bottom: 4px; }
 }
 
 /* ── DATA: Settings fits without a page scroll ────────────────────────────
@@ -8248,6 +8281,15 @@ body { background: var(--ground-paint); }
 .pane-scroll:has(> .set-group) { gap: 6px; }
 .plates-sheet { display: flex; flex-direction: column; gap: 12px; }
 .set-note { margin-left: 6px; }
+/* 2026-10-17: a chip row's label never shrinks under its own word. At 393px
+   "Colour" was squeezed 9px narrower than itself and ran under its ?. Below
+   380px even that does not fit beside four colour chips, so there the chips
+   may wrap (right-aligned) instead of sliding over the ?. */
+.set-chips > .help-line > label { min-width: max-content; }
+@media (max-width: 380px) {
+  .set-chips > .help-line { flex: none; }
+  .set-chips > .chips.tight { flex: 0 1 auto; min-width: 0; justify-content: flex-end; }
+}
 .set-door-chip { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 859px) {
   .set-group:has(> .switch-row + .switch-row + .switch-row):not(:has(> .set-chips, > .set-door, > .help-line, > .set-rows)) {

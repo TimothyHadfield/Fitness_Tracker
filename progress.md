@@ -73,6 +73,14 @@ Nuzzo's table now sets only the band WIDTH (SD/mean). This partly reverses Tim's
 reads drop/myo minis (`allSetsOf`, now in set-types.js) · Profile "usual": whole weeks only, a real 0
 shows "usual 0". NOT changed (Tim's calls): volume attribution, Goals effort wording, D11 bias.
 
+**Visual bug fixes 2026-10-17 (branch fix-visuals, css/app.css + views-social.js `withDot`):** profile
+tile ? sits after its word (was 9px over "shared"/"Friends"; on a phone "shared ?" wraps as one) ·
+`.me-stat.is-off` dims only the dash · laptop Bars rows content-sized (`grid-auto-rows: max-content`:
+names sat 5px into the bar above; now 17px gap, list scrolls inside) and no 2px pane scroll ·
+laptop friend profile: head at top, calendar spans rows 1–12 (bests 241 not 478) · Settings chip
+labels never shrink under their word (<380px the chips wrap) · Choose a goal: refused rows keep the
+chevron's 17px · feed "235 × 8" on the name's baseline. Measured headless WebKit, before/after.
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
 old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
