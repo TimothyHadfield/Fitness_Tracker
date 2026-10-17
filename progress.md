@@ -88,6 +88,17 @@ refused; `MAX_TYPED_LB` in ui.js) · Today's exercises: tap a name to go there �
 Auto-guide reserves two caption lines. Left as Tim's: finished vs untouched sets on save, the
 Edit-record restructure, the laptop runner layout, the rest timer.
 
+**Motion/speed audit 2026-10-17 (`tests/motion-fix.test.mjs`, 14 of 17 seen failing on 3ffe3c3):**
+sw.js serves the cached app after 2 s on a slow network (`NAV_WAIT_MS`; 8 s server → drawn 8.6 s →
+2.6 s) · first Profile tap 4x CPU long task 4.5 s → 0.6 s (e1rm `sortedWeighIns` memo, idle
+`idleTask`/`idleBreath` chunked warm-up, ratings memo key now carries sex, `warmScreensWhenIdle` +
+`prewarmProfile`) · motion.js reads once per frame; gestures `isPhone` caches a REAL MediaQueryList
+only (a stub falls back to innerWidth — nav-motion's stub broke otherwise) · Profile Years keeps the
+switch under the finger (`holdSwitchStart/End`, `.cal-hold` spacer); Months GLIDES to this month ·
+Data `.graph-controls` min-height 44 · update bar springs like a toast, above the runner footer,
+"Updating…" on Refresh, gone ≤260 ms on dismiss (sw-update checks 300 ms) · `:active` for `.seg`,
+`.set-del`, `.help-dot` · runner date box 16px scaled ×0.71875 (no iOS zoom).
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
 old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
@@ -413,6 +424,8 @@ can check._
 - **2026-10-17 data safety:** the 4 s queue on a real offline iPhone, the reads before the commit
   while offline, and races ACROSS tabs/devices (the queue is per tab) are reasoned · sign-out cache
   clear is a source check · republish after a wipe and `photos/*` listing never ran on real Firestore.
+- **2026-10-17 motion audit:** that a 16px date box stops iOS's focus zoom (WebKit engine can't show
+  it); the slow-network race on a real flaky connection (measured only with a delayed local server).
 - Delete account ran on live Firestore 2026-09-23 (`tools/live-check.mjs` S4, 45/45); not run for an
   email/password re-auth or a Google-linked account. Two orphan ANONYMOUS auth users may remain.
 - File import has never parsed a real export from any service.
@@ -475,7 +488,8 @@ can check._
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
 - **Tests:** `node tests/<name>.test.mjs` for each no-Chrome suite (needs `npm i --no-save jsdom
   jsqr`); `rules` and `sync-merge` need the emulator + Temurin 21; `sw-update` needs Chrome.
-  **Last run 2026-10-17 (calc audit, on top of data safety): 94 suites, 9,666 PASS, 0 FAIL (count includes plates-visual's "ok" lines — grep `PASS|ok `);
+  **Last run 2026-10-17 (motion audit, on top of data safety + calc + visuals + runner): 96 suites,
+  9,704 PASS, 0 FAIL, sw-update 13/0 (count includes plates-visual's "ok" lines — grep `PASS|ok `);
   `motion`'s "lets go of them at rest" flaked once under load, passes alone;
   rules/sync-merge last 2026-09-27: 274/0 and 14/0 under the emulator.** Check
   EXIT CODES too — a crashed suite prints no FAIL. All at once (PowerShell):

@@ -898,3 +898,20 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
 - **Open / not fixed:** WebKit still scrolls the pane 10–26px when the number box takes focus
   (native focus-scroll, pre-existing); a typed weight that removes warm-ups while the pane is near
   the top can't be fully compensated (nothing to scroll back).
+
+## 2026-10-17 · Motion/speed audit fixes (builder fix-motion, from the manager's audit)
+- **Asked (Tim via manager):** *"… movement that is poor … work on improving."* Rule: content never
+  moves when you tap; visible motion, not teleportation. Not done (Tim's calls): minify step, runner
+  row jump on Finished, stiffer nav springs.
+- **Built:** progress.md Status "Motion/speed audit 2026-10-17" (sw race, idle warm-up, memo, frame-
+  batched reads, Profile switch hold + Months glide, Data row height, update bar spring, :active,
+  16px date box).
+- **Decided (Tim hasn't seen):** Months still lands on this month (his 09-12 ask) but slides there
+  (~200 ms) instead of keeping the switch put; Data → Graph's two-line controls row on a phone still
+  moves content 40px (only the other tabs are level now); pressed looks copy chip/icon-button styles.
+- **Verified how (Chrome iPhone size, demo, Firebase blocked):** first Profile tap 1x gap 683 → 117
+  ms, 4x 4,744 → 1,032 ms; slow nav 8.6 → 2.6 s; Profile Years switch y 119 → 116 (WebKit + Chrome),
+  laptop 399 → 399; Data content top 180/165/220/136 → 180/180/220/180; update bar above the runner
+  footer at 393 and 1280, no overflow or console errors. Suites 96 / 9,704 PASS / 0 FAIL, sw-update
+  13/0. Live at b4d3c81.
+- **Open:** iOS zoom on the date box only provable on a phone.
