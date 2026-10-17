@@ -859,3 +859,14 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   rules emulator 306 PASS, then rules deployed. WebKit 393px + 1280px demo shots of the save line.
 - **Open (Tim's call):** wording "Saved on this phone — will upload." and "That day does not exist /
   The link may be broken." Not done (brief): comment purge on delete-account, cloud-fallback banner.
+
+## 2026-10-17 · Calculation audit fixes (builder, manager brief)
+- **Asked:** 5 audit findings: rep caption contradicting max/plan; observedDaysPerWeek fencepost;
+  trainingForMuscle counting empty entries; Graph skipping drop/myo minis; Profile "usual" ceil and 0.
+- **Built:** progress.md Status "Calculation audit 2026-10-17". Tests estimate/prog-overhaul/
+  review-runnerA re-pinned to the new rules (old Nuzzo mean, span 16 → 16.33, column guard).
+- **Verified how:** calc-1017 25/30 FAIL on 151b08b, 30/30 after; full plain suite 94 suites 9,666/0
+  after rebase on 3ffe3c3. WebKit demo (SW + Google hosts blocked) Upper B at 393×659 and 1440×900:
+  50/side after 55/side × 12 reads "maybe 12–15" (was "15+"), visible without scrolling, no overflow.
+- **Open (Tim's call):** the caption change partly reverses his 09-13 "Nuzzo with a band" pick;
+  "usual 0" now shows; 9-in-19-days reads 3.11/wk (fencepost rule), not exactly 3.0.

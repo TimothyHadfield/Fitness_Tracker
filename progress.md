@@ -64,6 +64,15 @@ copy and delete `photos/*` not kept · a failed lazy import reloads once a minut
 ids to `c_<session>_<uid>_…` (deployed) · sign-out clears the uid's session shard cache ·
 `#/day/<not a date>` reads Not found.
 
+**Calculation audit 2026-10-17 (`tests/calc-1017.test.mjs` 30; 25 seen failing on 151b08b):** the
+runner/benchmark "maybe N to failure" middle number is the max's own curve read backwards
+(`repPrediction` → `repsForWeight`, per hand for per-side) so it agrees with the max and the rep plan;
+Nuzzo's table now sets only the band WIDTH (SD/mean). This partly reverses Tim's 2026-09-13 pick
+("Nuzzo with a band") — flagged to him · `observedDaysPerWeek` has volumeWindow's EB-13 fencepost
+(`fencepostSpan` in optimal.js) · `trainingForMuscle` skips entries with no recorded sets · the Graph
+reads drop/myo minis (`allSetsOf`, now in set-types.js) · Profile "usual": whole weeks only, a real 0
+shows "usual 0". NOT changed (Tim's calls): volume attribution, Goals effort wording, D11 bias.
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
 old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
@@ -449,7 +458,7 @@ can check._
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
 - **Tests:** `node tests/<name>.test.mjs` for each no-Chrome suite (needs `npm i --no-save jsdom
   jsqr`); `rules` and `sync-merge` need the emulator + Temurin 21; `sw-update` needs Chrome.
-  **Last run 2026-10-17 (lead batch): 91 suites, 9,596 PASS, 0 FAIL (count includes plates-visual's "ok" lines — grep `PASS|ok `);
+  **Last run 2026-10-17 (calc audit, on top of data safety): 94 suites, 9,666 PASS, 0 FAIL (count includes plates-visual's "ok" lines — grep `PASS|ok `);
   `motion`'s "lets go of them at rest" flaked once under load, passes alone;
   rules/sync-merge last 2026-09-27: 274/0 and 14/0 under the emulator.** Check
   EXIT CODES too — a crashed suite prints no FAIL. All at once (PowerShell):
