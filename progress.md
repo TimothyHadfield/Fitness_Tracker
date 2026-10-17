@@ -1,14 +1,12 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-10-17 (project-lead batch for the portfolio manager): 9 sweep leftovers fixed +
-the update bar now refreshes the WHOLE new build before reloading (`tests/lead-1017.test.mjs`); the
-Waiting table was cut to 5 decisions (old table: `docs/archive/progress-2026-10-17.md`). Repo-local
-`core.autocrlf=false` set and the working copy converted to LF (CRLF broke `shell.test`). See chat.md
-2026-10-17; then the data-safety fixes (Status, "Data safety 2026-10-17"). Before: 2026-09-28 sign-in
-hardening and 2026-09-27 overhaul, both live (chat.md). Previous snapshots of this file:
-`docs/archive/progress-2026-09-28.md` (just before this rewrite — the closed ✅ rows of the Waiting
-table live there now), `-09-27`, `-09-25`. Headings in chat.md are a SESSION sequence; git is the
+_Last updated 2026-10-17 evening (manager close-out of the in-depth audit): 5 audit builders merged
+and live through fd8e47e (Status blocks "Data safety", "Calculation audit", "Visual bug fixes",
+"Runner audit", "Motion/speed audit"); full plain suite 0 FAIL on fd8e47e. Earlier the same day: lead
+batch (`tests/lead-1017.test.mjs`), Waiting cut to 5. Repo-local `core.autocrlf=false` (CRLF broke
+`shell.test`). Snapshots: `docs/archive/progress-2026-10-17b.md` (blocks moved out this checkpoint),
+`-10-17`, `-09-28`, `-09-27`, `-09-25`. Headings in chat.md are a SESSION sequence; git is the
 tie-breaker on dates. For Claude only; Tim doesn't read this.
 **Catch-up authorizes nothing**: only "Authorized next steps" below is approved work._
 1. Read this file (short on purpose — the full pre-2026-09-27 version, every essay and dated summary,
@@ -37,12 +35,11 @@ now also against **50 famous lifters** (221 lifts; Seid, Eubank, Togi added 2026
 PWA with deploy notice · a temporary note-to-the-developer inbox (`#/notes`, take it out when the
 first users stop being new).
 
-**Sweep 2026-10-16 (laptop-ops bug sweep, `tests/sweep-1016.test.mjs`):** 9 defects fixed (fractional
-"13.33 days", stand-in select carry-over, custom exercise missing from the picker's map, deleted
-legacy drops returning, docs/404 page cached as the offline shell, quick second tab tap dropped,
-display-name save leaving #/add, offline 'online' listener never removed, equipment toast rule);
-CLAUDE.md added. Then d25fab3 (Tim: "Fix all three"): rules `realUser()`, kudos id pinned, deleted
-workouts stay deleted (`users/{uid}/adoptions/*` marker).
+**In-depth audit 2026-10-17 (Tim: "extreamly in-depth analysis … Keep working until you don't think
+you know what to improve"): DONE.** 5 analysts → 5 builders, all live (data safety, calculation,
+visuals, runner, motion/speed — blocks below). Every remaining finding is Tim's call (looks, wording,
+layout); the manager put the top ones to him on 2026-10-17. Older Status blocks (sweep 10-16, motion
+pass 2, whole-app review, 09-23 fixes) → `docs/archive/progress-2026-10-17b.md`.
 
 **Lead batch 2026-10-17 (`tests/lead-1017.test.mjs`, 26 checks, all seen failing on d25fab3):**
 import "Time" beside Date+Weight is the time of day, not a duration · an import never replaces a
@@ -114,19 +111,11 @@ and App Store sign-in (hosting parked). Unanswered → defaults stand after 7 da
 | 8 | Benchmark workouts in another program don't appear on Record | list benchmarks from every program on Record |
 | fb | Firestore `social/*` has no shape check; App Check is off (spam can burn the free daily writes) | add the shape check (emulator-tested); App Check later, when strangers arrive |
 
-**Motion pass 2 (2026-09-25 night): done, live 7cc8d43.** Springs (`js/spring.js`), push/back slides,
-edge swipe, tab line and pulls (`js/gestures.js`), sheet drag, photo viewer, chart draw-in, laptop
-two-pane layouts, 2 additions (goal bar on Profile, tappable strongest/weakest). Choices Tim hasn't
-seen + NOT verified: `docs/motion2-plan.md`; 8 more addition ideas await him in `docs/additions-ideas.md`.
+**Rules that came out of 2026-09-24:** never re-raise c-icons or c-levelcolours; UI words are
+**"Body details"**, **"gender"**, **"program"** (code ids/routes unchanged); CSS has 5 font-size
+tokens / 3 weights — use them, not new px values.
 
-**Whole-app review 2026-09-24: done.** Tim said *"you just choose what to do"* for all 42; Claude built
-40 (a7f1bf3, a791c9a, 81fada0) and skipped c-icons and c-levelcolours — never re-raise those. New UI
-words: the body form is **"Body details"**, the field is **"gender"**, and **"program"** (US) replaces
-system/programme in UI text (code identifiers, routes and the hash-guarded preset notes are unchanged).
-CSS now has 5 font-size tokens / 3 weights; use them, not new px values. Choices Tim hasn't seen are in
-chat.md 2026-09-24 entries.
-
-**Flagged to Tim, unchanged:** ~~Months/Years pill repaints~~ (slides since a1855bb); `pointercancel` on the exercises drag commits
+**Flagged to Tim, unchanged:** `pointercancel` on the exercises drag commits
 the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
 "Nothing to rank yet" and no figure; a neck panel runs 70 words against the 40-word cap; `.body-wrap`
 letterboxes the two figures differently on a phone.
@@ -137,41 +126,15 @@ snapshot); the calendar does not draw the current month when the last recording 
 famous lifter's arms/shoulders are converted from bench, not measured; a partner gets no pull-up
 caption (their bodyweight isn't on this phone).
 
-**Fixed 2026-09-23 (Autumn's feedback, 889e005):** the runner's subtitle is a **workout clock — tap
-to pause/resume** (`pausedAt`/`pausedMs` on the draft, `activeSeconds()` in session-draft.js, the
-mini bar reads the same); the save screen's **Duration is an editable minutes box**, and save writes
-`finishedAt = startedAt + that`. Picking anyone in the Compare sheet now closes it.
-**Fixed 2026-09-23:** `ensureSystems()` adopts orphans into the first system WITHOUT a `presetId`
-(or a new "My Workouts"), never into a programme copied from Explore.
-
 ## Authorized next steps
 - **2026-10-17 (Tim via the manager): "any fixes or improvements you feel confident about go ahead
   and do, pretty much always. You don't have to ask me."** Not covered: new looks, new wording beyond
   fixing errors, new features, money, deleting/migrating real data. The 5 Waiting decisions are NOT
   authorized until he answers (or 7 days pass, then defaults stand).
-- **2026-09-28: nothing open.** Brother's sign-in bug ("Could you check it out and fix whatever
-  problems you think might be happening?") and the log-in investigation are DONE and live (49fb4da).
-  The sign-in items in the Waiting table (row "si") are NOT authorized.
-- **2026-09-27 overhaul — authorized in full, Claude decides every aspect** (Tim, verbatim: "Make your
-  own executive decisions on every single aspect so that it really fits well… Deploy many many
-  sub-agents… Don't stop working for any reason… You have permission for every single aspect").
-  Waves, owners and decisions: `docs/overhaul-plan.md`. **DONE and live through 0668e46** (5 waves);
-  the choices he hasn't seen were reported to him. Nothing further authorized from it.
-- **2026-09-27 evening: ALL DONE and live** — 16 machine ratios reworked (7 left with reasons), warm-ups
-  in history/day/edit, labelled 48px plates + aligned numbers + wording cut, group Finished hands over
-  to the next person, and **Auto-guide** (`js/guide-steps.js` order, `js/guide-mode.js` view; toggle
-  "Auto-guide"/"Edit" in the runner top bar; `draft.view = 'guide'`). Choices Tim hasn't seen: guide
-  labels "Next: <name>", warm-ups alternate people too, a pre-filled number counts on Next, no slide
-  between steps, the "Dynamic stretch" line and %-of-max caption are not in the guide, drop sets need
-  Edit. Meadows row / landmine press probably over-credited (bar added before one-arm doubling in
-  strength-observations.js) — flagged, not fixed.
-- **Nothing open.** 2026-09-26 (after his joint legs workout) all 4 DONE and live: compare reshare
-  389bd52, plate drawing 14e0ae1, glutes ab0505c, auto warm-ups a37bd57 — see
-  chat.md 2026-09-26. Item 35 was REOPENED at Tim's word and is now fixed for Glutes only.
-- Every authorization through 2026-09-25 is DONE: motion pass 2 (2026-09-25 night,
-  live 7cc8d43) and the 2026-09-23 set (Finished/Edit, warm-ups, logging notes, typo warning, smooth
-  fade, "at least X", blend every set, level-aware ratios). Their verbatim quotes are in
-  `docs/archive/progress-2026-09-25.md` → "Authorized next steps".
+- **2026-10-17 in-depth audit: DONE** (see Status). Nothing further authorized from it.
+- Every authorization through 2026-09-28 is DONE and live (sign-in fixes 49fb4da, overhaul 0668e46,
+  Auto-guide, 09-26 legs batch, motion pass 2). Verbatim quotes: `docs/archive/progress-2026-10-17b.md`
+  and `docs/archive/progress-2026-09-25.md`.
 - Still standing from 2026-09-23: *"stop asking about accuracy check and friend's sign in problem"*
   (Open work 30, 0f) and *"leave the famous lifters comparison for now"* (34) — never raise.
 
