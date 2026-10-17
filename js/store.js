@@ -918,8 +918,10 @@ export function clearReadCache() {
  * collection it misses is simply read the old way when a screen asks.
  */
 export function warmReadCache() {
+  // Resolves once the idle strength warm-up behind it has run too (app.js
+  // warms the screens' own modules after it, never alongside).
   return Promise.all(COLLECTIONS.map((c) => readCached(c).catch(() => null)))
-    .then(() => { warmStrengthWhenIdle(); })
+    .then(() => warmStrengthWhenIdle())
     .catch(() => undefined);
 }
 
@@ -4953,7 +4955,7 @@ export async function muscleRatings(rows) {
   return memoized('ratings', () => ratingsKey(rows), () => computeMuscleRatings(rows));
 }
 
-async function computeMuscleRatings(rows) {
+async function computeMuscleRatings(rows, { pause = null } = {}) {
   const [benchmarks, sessions, exMap, bodyWeights, sex] = rows
     ? [rows.benchmarks || [], rows.sessions || [], await store.getExerciseMap(), rows.bodyWeights || [],
       rows.sex || null]
@@ -4982,6 +4984,7 @@ async function computeMuscleRatings(rows) {
 
   const out = new Map();
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
+    if (pause) await pause();   // idle warm-up only, as in computeMuscleStrength
     // The muscle is passed so the rating can carry the STANDARD's reliability
     // as well as the evidence's — see rateMuscle() (2026-09-04).
     const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);
@@ -5296,11 +5299,16 @@ function strengthKey() {
 const sameKey = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
 
 export async function muscleStrength() {
+  return strengthKept();
+}
+
+/** `muscleStrength()`, with the walk's options (`pause` — idle warm-up only). */
+async function strengthKept(opts = {}) {
   const key = strengthKey();
   if (key && strengthMemo && sameKey(key, strengthMemo.key)) {
     try { return structuredClone(strengthMemo.value); } catch (_) { strengthMemo = null; }
   }
-  const value = await computeMuscleStrength();
+  const value = await computeMuscleStrength(opts);
   // Kept only if nothing moved while it was being worked out.
   if (key && sameKey(key, strengthKey())) {
     try { strengthMemo = { key, value: structuredClone(value) }; } catch (_) { strengthMemo = null; }
@@ -5398,40 +5406,61 @@ function volumeKey(windowDays, today, rows) {
  * inside its transition. The same calls, with the same arguments, those
  * screens make — nothing is computed that they would not compute themselves.
  * Each is its own idle task. No idle callback (Safari): a timer, later. Never
- * under jsdom or node, and never an error. */
-function warmStrengthWhenIdle() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  try { if (/jsdom/i.test(navigator.userAgent || '')) return; } catch (_) { return; }
-  // Never inside a screen transition (js/motion.js navMoving's attribute): an
-  // idle gap between two of its frames is no place for a 400ms walk.
-  const moving = () => { try { return document.documentElement.hasAttribute('data-nav-moving'); } catch (_) { return false; } };
-  const idle = (fn, tries = 8) => {
-    const run = () => (moving() && tries > 0 ? setTimeout(() => idle(fn, tries - 1), 300) : fn());
+ * under jsdom or node, and never an error.
+ *
+ * 🔄 2026-10-17 (motion audit): IN PIECES. The strength walk ran as one
+ * ~590 ms task on Safari's 1.2 s timer, so a tap in the first seconds after
+ * opening the app froze until it finished. Each muscle is now its own slice
+ * (`pause` below: a macrotask turn, and a wait while a screen is sliding), so
+ * the longest piece is the observation walk itself. And Profile's call passes
+ * the SEX since 2026-09-27 (views-me.js fill) — the warm call did not, so it
+ * filled a memo slot Profile never read. Resolves when every job has run. */
+export function idleTask(fn, tries = 8) {
+  return new Promise((resolve) => {
+    const run = () => (navIsMoving() && tries > 0
+      ? setTimeout(() => idleTask(fn, tries - 1).then(resolve), 300)
+      : Promise.resolve().then(fn).catch(() => {}).then(resolve));
     if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 4000 });
     else setTimeout(run, 1200);
-  };
+  });
+}
+function navIsMoving() {
+  try { return document.documentElement.hasAttribute('data-nav-moving'); } catch (_) { return false; }
+}
+/** One breath between slices of an idle computation: a timer turn, so input
+ *  and frames run in between, and no slice while a screen is sliding. */
+export function idleBreath() {
+  return new Promise((resolve) => {
+    let waited = 0;
+    const go = () => {
+      if (navIsMoving() && waited < 1500) { waited += 50; setTimeout(go, 50); } else resolve();
+    };
+    setTimeout(go, 0);
+  });
+}
+function warmStrengthWhenIdle() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.resolve();
+  try { if (/jsdom/i.test(navigator.userAgent || '')) return Promise.resolve(); } catch (_) { return Promise.resolve(); }
   const jobs = [
-    () => muscleStrength(),
+    () => strengthKept({ pause: idleBreath }),
+    // Exactly Profile's call (views-me.js fill): the getters' own copies, and
+    // the profile's sex — the memo key includes it.
+    async () => {
+      const [sessions, benchmarks, bodyWeights, profile] = await Promise.all([
+        store.getSessions(), store.getBenchmarks(), store.getBodyWeights(),
+        store.getProfile().catch(() => null)]);
+      const rows = { sessions, benchmarks, bodyWeights, sex: (profile && profile.gender) || null };
+      return memoized('ratings', () => ratingsKey(rows), () => computeMuscleRatings(rows, { pause: idleBreath }));
+    },
     // Data › Muscles asks for a year (views-muscles.js TRAINED_WINDOW_DAYS);
     // Volume opens on four weeks (views-data.js volDays).
-    // Exactly Profile's call (views-me.js fill): the getters' own copies, no sex.
-    async () => {
-      const [sessions, benchmarks, bodyWeights] = await Promise.all([
-        store.getSessions(), store.getBenchmarks(), store.getBodyWeights()]);
-      return muscleRatings({ sessions, benchmarks, bodyWeights });
-    },
     () => weeklyVolumeByMuscle(365),
     () => weeklyVolumeByMuscle(28),
   ];
-  const next = () => {
-    const job = jobs.shift();
-    if (!job) return;
-    idle(() => { Promise.resolve().then(job).catch(() => {}).finally(next); });
-  };
-  next();
+  return jobs.reduce((p, job) => p.then(() => idleTask(job)), Promise.resolve());
 }
 
-async function computeMuscleStrength() {
+async function computeMuscleStrength({ pause = null } = {}) {
   const [profile, benchmarks, sessions, exMap, bodyWeights] = await Promise.all([
     store.getProfile(), store.getBenchmarks(), store.getSessions(), store.getExerciseMap(),
     store.getBodyWeights(),
@@ -5500,6 +5529,9 @@ async function computeMuscleStrength() {
   });
 
   for (const muscle of Object.keys(MUSCLE_LIFTS)) {
+    // Idle warm-up only (warmStrengthWhenIdle): a breath between muscles so a
+    // tap is never stuck behind the whole walk. Same work, same answer.
+    if (pause) await pause();
     // The muscle is passed so the rating can carry the STANDARD's reliability
     // as well as the evidence's — see rateMuscle() (2026-09-04).
     const rating = rateMuscle(byMuscle.get(muscle) || [], muscle);

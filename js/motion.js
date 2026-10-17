@@ -137,34 +137,73 @@ function arrive(root, key, first) {
   // their slot; after that, or after the window, the observer goes — later
   // additions are re-draws.
   if (typeof MutationObserver === 'undefined') return true;
+  /* 🔄 2026-10-17 (motion audit): ONE PASS PER FRAME, not one per mutation. A
+   * screen filling in fires dozens of mutation batches before its next paint,
+   * and every pass measured rows — a forced layout each (Profile's first open
+   * spent ~130 ms here at 1× CPU). Batches that land in one frame are now one
+   * pass, run just before that frame paints, so nothing shows unanimated. */
+  let queued = false;
+  let done = false;
+  const pass = () => {
+    queued = false;
+    if (done) return;
+    if (!root.isConnected) { done = true; mo.disconnect(); return; }
+    if (settled(play(root, ctx))) { done = true; mo.disconnect(); }
+  };
+  const frame = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
   const mo = new MutationObserver(() => {
-    if (!root.isConnected) { mo.disconnect(); return; }
-    if (settled(play(root, ctx))) mo.disconnect();
+    if (!frame) { pass(); return; }
+    if (!queued) { queued = true; frame(pass); }
   });
   mo.observe(root, { childList: true, subtree: true });
   setTimeout(() => mo.disconnect(), FILL_WINDOW_MS);
   return true;
 }
 
-/** Is any part of `n` inside the window? jsdom's all-zero rect counts as yes. */
-function inView(n) {
+/** Is any part of `n` inside the window? jsdom's all-zero rect counts as yes.
+ *  `view` is the window's size, read once per pass by the caller. */
+function inView(n, view) {
   if (!n.getBoundingClientRect) return true;
   const r = n.getBoundingClientRect();
-  const h = (typeof window !== 'undefined' && window.innerHeight) || 0;
-  const w = (typeof window !== 'undefined' && window.innerWidth) || 0;
-  return r.bottom >= 0 && r.top <= h && r.right >= 0 && r.left <= w;
+  return r.bottom >= 0 && r.top <= view.h && r.right >= 0 && r.left <= view.w;
 }
 
-/** One pass over a root. Returns how many things it found to consider. */
+/** One pass over a root. Returns how many things it found to consider.
+ *  🔄 2026-10-17: every measurement first, then every write — a write between
+ *  two reads made each read lay the page out again. */
 function play(root, ctx) {
   let found = 0;
+  const view = {
+    h: (typeof window !== 'undefined' && window.innerHeight) || 0,
+    w: (typeof window !== 'undefined' && window.innerWidth) || 0,
+  };
 
+  // Reads.
   const rows = [...root.querySelectorAll(ROW_SEL)].filter((n) => !n.dataset.mSeen);
-  rows.forEach((n) => { n.dataset.mSeen = '1'; });
   found += rows.length;
   const elapsed = clock() - ctx.t0;
-  if (ctx.first && ctx.rows > 0 && rows.length && elapsed <= ROW_WINDOW_MS) {
-    const shown = rows.filter(inView).slice(0, ctx.rows);
+  const cascade = ctx.first && ctx.rows > 0 && rows.length && elapsed <= ROW_WINDOW_MS;
+  const shown = cascade ? rows.filter((n) => inView(n, view)).slice(0, ctx.rows) : [];
+  const counts = [];
+  for (const n of root.querySelectorAll(COUNT_SEL)) {
+    if (n.dataset.mSeen) continue;
+    found++;
+    const i = ctx.countIndex++;
+    const text = n.textContent;
+    ctx.now[i] = text;
+    const changed = !ctx.first && ctx.prev[i] !== undefined && ctx.prev[i] !== text;
+    counts.push([n, (ctx.first || changed) && inView(n, view)]);
+  }
+  const bars = [];
+  for (const n of root.querySelectorAll(BAR_SEL)) {
+    if (n.dataset.mSeen) continue;
+    found++;
+    bars.push([n, ctx.first && inView(n, view)]);
+  }
+
+  // Writes.
+  rows.forEach((n) => { n.dataset.mSeen = '1'; });
+  if (cascade) {
     // Each row keeps its slot in the cascade, counted from the arrival.
     staggerIn(shown, { lead: Math.max(0, STAGGER_LEAD + ctx.started * STAGGER_STEP - elapsed) });
     ctx.started += shown.length;
@@ -172,23 +211,8 @@ function play(root, ctx) {
     // A batch with nothing in view ends the cascade: what follows is below it.
     if (!shown.length) ctx.rows = 0;
   }
-
-  for (const n of root.querySelectorAll(COUNT_SEL)) {
-    if (n.dataset.mSeen) continue;
-    n.dataset.mSeen = '1';
-    found++;
-    const i = ctx.countIndex++;
-    const text = n.textContent;
-    ctx.now[i] = text;
-    const changed = !ctx.first && ctx.prev[i] !== undefined && ctx.prev[i] !== text;
-    if ((ctx.first || changed) && inView(n)) countUp(n);
-  }
-  for (const n of root.querySelectorAll(BAR_SEL)) {
-    if (n.dataset.mSeen) continue;
-    n.dataset.mSeen = '1';
-    found++;
-    if (ctx.first && inView(n)) once(n, 'm-fill', 'm-grow', 240);
-  }
+  for (const [n, go] of counts) { n.dataset.mSeen = '1'; if (go) countUp(n); }
+  for (const [n, go] of bars) { n.dataset.mSeen = '1'; if (go) once(n, 'm-fill', 'm-grow', 240); }
   return found;
 }
 

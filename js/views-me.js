@@ -588,6 +588,25 @@ function rankedLiftsKept(args, key) {
   return value;
 }
 
+/* 🆕 2026-10-17 (motion audit): THE RANKING, WORKED OUT BEFORE THE FIRST OPEN.
+ * Profile's first open froze its slide while it ranked every lift (429 ms at
+ * 1× CPU, 2.8 s at 4×). app.js calls this once in idle time after start-up,
+ * after the ratings are warm: the same reads and the same call `fill()` makes,
+ * so the open is a hit on `liftsKept`. Nothing is drawn; any failure is
+ * silent and the screen simply computes it as before. */
+export async function prewarmProfile() {
+  const dataKey = cachedDataKey(LIFT_READS);
+  if (!dataKey) return;
+  const [sessions, benchmarks, exMap, bodyWeights, profile] = await Promise.all([
+    store.getSessions(), store.getBenchmarks(), store.getExerciseMap(), store.getBodyWeights(),
+    store.getProfile(),
+  ]);
+  const muscles = await muscleRatings({
+    sessions, benchmarks, bodyWeights, sex: (profile && profile.gender) || null,
+  });
+  rankedLiftsKept({ sessions, benchmarks, exMap, muscles, profile, bodyWeights, today: todayISO() }, dataKey);
+}
+
 /* 🆕 S-1 (overhaul 2026-09-27): "now 228" WHERE THE ESTIMATE MOVED. The big
  * number is the best-ever set's 1RM (Profile is what you DID); Muscles and
  * Goals print the lift's estimate NOW, and a reader saw 236 here and 228 there.

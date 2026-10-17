@@ -1,6 +1,6 @@
 // Router + boot.
 
-import { store, demo, warmReadCache, social, auth, todayISO } from './store.js';
+import { store, demo, warmReadCache, idleTask, social, auth, todayISO } from './store.js';
 import { liveSessionBar } from './live-session.js';
 import {
   el, icon, iconBtn, clear, profileButton, associateLabels, autoGrowTextareas, wireSegmented,
@@ -13,6 +13,9 @@ import * as unitsMod from './units.js';
 import { setLeverageChoices } from './machine-mechanics.js';
 // 🆕 First-paint motion and the tab pop (2026-09-25, docs/polish-plan.md M).
 import { arriveScreen, tabPop } from './motion.js';
+// The update bar moves the way a toast does (offerRefresh).
+import { springTransform } from './spring.js';
+import { SURFACE_SPRINGS } from './ui.js';
 // 🆕 Screens that move like objects: push, back, tabs, the Record card, the
 // back swipe, the tab bar's sliding selection (2026-09-25, motion2 package B).
 import {
@@ -65,6 +68,24 @@ const VIEWS = {
   goals: lazy(() => import('./views-goals.js')),
   me: lazy(() => import('./views-me.js')),
 };
+
+/* 🆕 2026-10-17 (motion audit): THE BIG SCREENS ARE FETCHED AND PARSED QUIETLY
+ * AFTER START-UP, so their first open is not a module download inside the
+ * slide. One idle task each (store.js `idleTask`: never during a screen
+ * transition), after the strength warm-up, through the same `VIEWS` loaders
+ * the router uses — so a failure here is forgotten exactly as a failed open
+ * is. Then Profile's ranking is worked out ahead of its first open. Not in
+ * jsdom (no layout, and the suites import app.js). */
+function warmScreensWhenIdle() {
+  try { if (/jsdom/i.test(navigator.userAgent || '')) return Promise.resolve(); } catch (_) { return Promise.resolve(); }
+  const jobs = [
+    () => VIEWS.me(),
+    () => VIEWS.data(),
+    () => VIEWS.session(),
+    () => VIEWS.me().then((m) => m.prewarmProfile && m.prewarmProfile()),
+  ];
+  return jobs.reduce((p, job) => p.then(() => idleTask(job)), Promise.resolve());
+}
 
 /**
  * FIVE TABS, AND THE MIDDLE ONE IS THE POINT.
@@ -1177,7 +1198,7 @@ function followSidebarLine() {
   // parallel here means the whole app costs one round trip of latency instead
   // of one per collection per tab. Nothing waits for it and it cannot fail
   // loudly: this screen already works without it.
-  warmReadCache();
+  warmReadCache().then(warmScreensWhenIdle).catch(() => {});
   // 🆕 2026-09-28: ask the browser not to evict this site's storage (Safari
   // wipes it after 7 days unvisited, taking a guest's sign-in with it). A
   // no-op where unsupported or refused; never awaited. Not on Firefox, which
@@ -1336,15 +1357,41 @@ function offerRefresh() {
   if (refreshOffered) return;
   refreshOffered = true;
 
+  /* 🔄 2026-10-17 (motion audit): it ARRIVES and LEAVES like a toast — the
+   * toast's own spring up from just below, and a drop-and-fade away — instead
+   * of blinking in and out; it sits above whatever floats at the bottom
+   * (`--chrome-b`: the tab bar, or the runner's footer, where it used to sit
+   * over the plate drawing); and Refresh says "Updating…" while the new build
+   * is fetched. No movement under reduced motion. */
   const bar = el('div', { class: 'update-bar', role: 'status' },
     el('span', { text: 'A new version is ready.' }),
     el('button', {
       class: 'btn small primary', text: 'Refresh',
-      onClick: (e) => { e.currentTarget.disabled = true; reloadWhenReady(); },
+      onClick: (e) => {
+        const b = e.currentTarget;
+        b.disabled = true;
+        b.textContent = 'Updating…';
+        reloadWhenReady();
+      },
     }),
-    iconBtn('x', 'Dismiss', () => bar.remove()),
+    iconBtn('x', 'Dismiss', () => dismissUpdateBar(bar)),
   );
   document.body.append(bar);
+  if (canMove()) {
+    springTransform(bar, { y: 0, opacity: 1, scale: 1 }, SURFACE_SPRINGS.toast,
+      { from: { y: 28, opacity: 0, scale: 0.96 } });
+  }
+}
+
+function dismissUpdateBar(bar) {
+  if (!bar || bar.dataset.leaving) return;
+  bar.dataset.leaving = '1';
+  bar.style.pointerEvents = 'none';
+  if (!canMove()) { bar.remove(); return; }
+  // The toast's own exit (ui.js dismissToast): drop a little and fade.
+  springTransform(bar, { y: 14, opacity: 0, scale: 0.97 }, 'snap').done.then(() => bar.remove());
+  // Backstop: a spring whose frames never come (a hidden tab) still ends it.
+  setTimeout(() => bar.remove(), 900);
 }
 
 /**

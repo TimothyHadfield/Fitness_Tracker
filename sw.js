@@ -31,6 +31,9 @@
 
 const VERSION = 'v1';
 const CACHE = `fitness-tracker-${VERSION}`;
+// How long a page load waits for the network before the cached app is served
+// instead (see the navigation branch of the fetch handler).
+const NAV_WAIT_MS = 2000;
 
 // Everything the app needs to boot with no network. Kept in agreement with the
 // repo by a test — see "the precache list covers every shipped asset" in
@@ -334,25 +337,57 @@ self.addEventListener('fetch', (e) => {
     // finds different sets it again below.
     sawUpdate = false;
     shellPass = null;
-    e.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        // ⚠️ Only the APP's page may become the offline shell (sweep
-        // 2026-10-16). Opening docs/running-costs.html, or a 404, used to be
-        // stored as index.html, so the next offline launch showed that page.
-        const scope = new URL((self.registration && self.registration.scope)
-          || new URL('./', self.location).href);
-        const path = new URL(req.url).pathname;
-        if (fresh.ok && (path === scope.pathname || path === scope.pathname + 'index.html')) {
-          const cache = await caches.open(CACHE);
-          cache.put('./index.html', fresh.clone()).catch(() => {});
-        }
-        return fresh;
-      } catch {
+    // ⚠️ Only the APP's page may become the offline shell (sweep 2026-10-16).
+    // Opening docs/running-costs.html, or a 404, used to be stored as
+    // index.html, so the next offline launch showed that page.
+    const scope = new URL((self.registration && self.registration.scope)
+      || new URL('./', self.location).href);
+    const path = new URL(req.url).pathname;
+    const isApp = path === scope.pathname || path === scope.pathname + 'index.html';
+    let servedCached = false;
+    const network = (async () => {
+      const fresh = await fetch(req);
+      if (fresh.ok && isApp) {
         const cache = await caches.open(CACHE);
-        return (await cache.match('./index.html'))
-          || (await cache.match('./'))
-          || Response.error();
+        const old = await cache.match('./index.html').catch(() => null);
+        // Served the cached shell because the network was slow (below)? Then
+        // a changed page is a deploy this load did not get: say so, as for
+        // any other shell file.
+        if (servedCached && old && isDifferent(old, fresh)) announceUpdate();
+        await cache.put('./index.html', fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    })();
+    const cachedShell = async () => {
+      const cache = await caches.open(CACHE);
+      return (await cache.match('./index.html')) || (await cache.match('./')) || null;
+    };
+    /* 🆕 2026-10-17 (motion audit): A SLOW NETWORK NO LONGER MEANS A BLANK
+     * SCREEN. Network-first had no time limit: with the server answering in
+     * 8 s, the app stayed white for 8.5 s (measured), on the gym signal this
+     * file exists for. Now the network gets NAV_WAIT_MS; if it has not
+     * answered, the cached shell is served and the network carries on in the
+     * background — it still refreshes the cached page, and a changed page
+     * raises the "new version" bar, so a deploy still arrives. Only the app's
+     * own page is ever swapped for the cache. */
+    const timer = (ms) => new Promise((r) => {
+      if (typeof setTimeout === 'function') setTimeout(r, ms);   // (never resolves in a test sandbox without timers)
+    });
+    e.respondWith((async () => {
+      const slow = isApp ? timer(NAV_WAIT_MS).then(() => 'slow') : new Promise(() => {});
+      const first = await Promise.race([network.then(() => 'net', () => 'net'), slow]);
+      if (first === 'slow') {
+        const hit = await cachedShell();
+        if (hit) {
+          servedCached = true;
+          if (e.waitUntil) e.waitUntil(network.catch(() => null));
+          return hit;
+        }
+      }
+      try {
+        return await network;
+      } catch {
+        return (await cachedShell()) || Response.error();
       }
     })());
     return;

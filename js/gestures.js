@@ -101,7 +101,32 @@ const inBrowser = () => typeof window !== 'undefined' && typeof document !== 'un
   && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
 /** Can anything move right now? False in jsdom and under reduced motion. */
 export function canMove() { return inBrowser() && !reducedMotion(); }
-const isPhone = () => (window.innerWidth || 0) < LAPTOP_MIN;
+/* 🔄 2026-10-17 (motion audit): a media query, read once and kept current by
+ * its own change event. `innerWidth` was read at every navigation and touch,
+ * and reading it can force a whole layout first (74 ms of a cold start at 1×
+ * CPU, inside the first slide). No matchMedia (jsdom): innerWidth, as before. */
+let phoneQuery;
+let phoneNow = null;
+const isPhone = () => {
+  if (phoneQuery === undefined) {
+    phoneQuery = null;
+    try {
+      if (typeof window.matchMedia === 'function') {
+        const q = window.matchMedia(`(max-width: ${LAPTOP_MIN - 0.02}px)`);
+        // Only a real MediaQueryList (it names its query and can be listened
+        // to) is trusted to stay current; a stub falls back to innerWidth.
+        const onChange = (e) => { phoneNow = e.matches; };
+        if (q && typeof q.media === 'string' && (q.addEventListener || q.addListener)) {
+          phoneQuery = q;
+          phoneNow = q.matches;
+          if (q.addEventListener) q.addEventListener('change', onChange);
+          else q.addListener(onChange);
+        }
+      }
+    } catch (_) { phoneQuery = null; }
+  }
+  return phoneQuery ? phoneNow : (window.innerWidth || 0) < LAPTOP_MIN;
+};
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 

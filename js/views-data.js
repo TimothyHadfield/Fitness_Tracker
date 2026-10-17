@@ -821,8 +821,47 @@ export function ownCalendar(activity, today, opts = {}) {
   const tabs = [['months', 'Months'], ['years', 'Years']].map(([m, label]) =>
     el('button', {
       class: 'seg', role: 'tab', 'aria-selected': String(readMode() === m), text: label,
-      onClick: () => { if (readMode() !== m) { writeMode(m); paint(); } },
+      onClick: () => {
+        if (readMode() === m) return;
+        const held = land ? null : holdSwitchStart();
+        writeMode(m);
+        paint();
+        if (held) holdSwitchEnd(held);
+      },
     }));
+
+  /* 🆕 2026-10-17 (motion audit): ON PROFILE THE SWITCH STAYS UNDER THE FINGER.
+   * Profile's pane holds the whole profile, so swapping a tall Months list for
+   * the short Years grid used to clamp the scroller and drop the switch (and
+   * everything under it) down the screen — layout shift 0.67, measured. The
+   * switch's screen position is recorded before the swap and the scroller is
+   * put back so it is still there after; when the page has become too short
+   * for that, a spacer at the very end gives it the room (the same trade
+   * `landOnCurrentMonth` makes for the last month). The Months tap still lands
+   * on the current month (Tim, 2026-09-12) — `glide` below makes that a
+   * visible slide from where the switch was, not a jump. */
+  function holdSwitchStart() {
+    const pane = host && host.isConnected ? scrollerOf(host) : null;
+    if (!pane) return null;
+    const spacer = pane.querySelector(':scope > .cal-hold');
+    if (spacer) spacer.remove();
+    return { pane, at: top.getBoundingClientRect().top };
+  }
+  function holdSwitchEnd({ pane, at }) {
+    if (readMode() !== 'years') return;   // Months: the landing glides (paint → landOnCurrentMonth)
+    // Where the switch sits IN THE FLOW now — a stuck (sticky) switch reports
+    // where it is pinned instead, so it is unstuck for the one measurement.
+    const was = top.style.position;
+    top.style.position = 'static';
+    const natural = top.getBoundingClientRect().top;
+    top.style.position = was;
+    const want = pane.scrollTop + (natural - at);
+    const room = pane.scrollHeight - pane.clientHeight;
+    if (want > room) {
+      pane.append(el('div', { class: 'cal-hold', 'aria-hidden': 'true', style: `height:${Math.ceil(want - room)}px;flex:none` }));
+    }
+    pane.scrollTop = Math.max(0, want);
+  }
 
   // ⚠️ THE CAVEAT GOES DIRECTLY UNDER THE SWITCH, and the readout stays LAST.
   // `.yr-readout` carries a hairline on its top edge and is drawn as the closing
@@ -956,7 +995,9 @@ export function ownCalendar(activity, today, opts = {}) {
       // the caveat sentence and wraps to a different height.
       const box = host.closest('.me-cal');
       if (box) requestAnimationFrame(() => box.style.setProperty('--cal-modes-h', `${top.offsetHeight}px`));
-      if (land || !arriving) landOnCurrentMonth(host);
+      // 🆕 2026-10-17: a tap on Profile GLIDES to the month (the switch stayed
+      // put through the swap; the page then slides, it does not teleport).
+      if (land || !arriving) landOnCurrentMonth(host, { glide: !land && !arriving });
       wireMonthSwipe(host);
     }
   }
@@ -1022,7 +1063,7 @@ export async function CalendarView() {
  * and renaming it would strand five comments and a docs row that call it by
  * name — the fallback is a second case of one behaviour, not a second
  * behaviour. */
-function landOnCurrentMonth(container) {
+function landOnCurrentMonth(container, { glide = false } = {}) {
 
   // Land on the current month once the screen is in the document.
   //
@@ -1067,8 +1108,34 @@ function landOnCurrentMonth(container) {
     // subtracting one from the other only works by coincidence of layout.
     // 🆕 2026-09-25: minus a stuck Months/Years switch (phone Profile), so the
     // month's heading lands just under the switch rather than beneath it.
-    pane.scrollTop += current.getBoundingClientRect().top - pane.getBoundingClientRect().top
+    const delta = current.getBoundingClientRect().top - pane.getBoundingClientRect().top
       - stuckCover(container, pane);
+    // 🆕 2026-10-17 (motion audit): on a Profile tap the page slides to the month
+    // with the app's travel spring instead of jumping (Tim's rule: visible
+    // motion, not teleportation). Reduced motion, or a finger landing on the
+    // pane mid-slide, ends it where it is / at the target at once.
+    if (glide && delta && motionAllowed()) {
+      const from = pane.scrollTop;
+      const room = pane.scrollHeight - pane.clientHeight;
+      const to = Math.max(0, Math.min(room, from + delta));
+      let ctl = null;
+      let stopped = false;
+      const stop = () => { stopped = true; if (ctl) ctl.stop(); ctl = null; };
+      pane.addEventListener('touchstart', stop, { once: true, passive: true });
+      pane.addEventListener('wheel', stop, { once: true, passive: true });
+      ctl = spring({
+        from, to, preset: 'glide',
+        onUpdate: (y) => { if (!stopped) pane.scrollTop = y; },
+        onRest: () => {
+          stopped = true;
+          ctl = null;
+          pane.removeEventListener('touchstart', stop);
+          pane.removeEventListener('wheel', stop);
+        },
+      });
+    } else {
+      pane.scrollTop += delta;
+    }
 
     // ⚠️ THE MONTH THE SCROLLER WAS AIMED AT, STAMPED ON THE MONTH. jsdom lays
     // nothing out — every rect above is zero and `scrollTop` stays 0 — so a test

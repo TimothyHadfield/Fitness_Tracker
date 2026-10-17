@@ -225,6 +225,38 @@ function dayNumber(iso) {
   return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000;
 }
 
+/* 🆕 2026-10-17 (motion audit): THE SORTED SERIES IS KEPT PER ARRAY. Every
+ * call used to re-parse and re-sort every weigh-in, and a Profile build asks
+ * once per set — measured as the single largest self-time on that screen's
+ * first open (103 ms at 1× CPU). Kept in a WeakMap keyed by the array the
+ * caller handed in, so it dies with the array.
+ *
+ * ⚠️ A HIT IS CHECKED, NOT TRUSTED. The store hands out fresh copies of its
+ * lists, but a caller could still edit a row or the array in place; so the
+ * kept entry remembers each row object and the weight/date it read off it, and
+ * any difference recomputes. That check is one pass of comparisons — no date
+ * parsing, no sort — which is what made the old call expensive. */
+const sortedCache = new WeakMap();
+function sortedWeighIns(rows) {
+  if (!Array.isArray(rows)) return [];
+  const kept = sortedCache.get(rows);
+  if (kept && kept.refs.length === rows.length && kept.refs.every((r, i) => rows[i] === r
+    && (!r || (r.weight === kept.w[i] && r.date === kept.d[i])))) {
+    return kept.usable;
+  }
+  const usable = rows
+    .map((r) => ({ weight: Number(r && r.weight), date: r && r.date, day: dayNumber(r && r.date) }))
+    .filter((r) => r.weight > 0 && r.day !== null)
+    .sort((a, b) => a.day - b.day);
+  sortedCache.set(rows, {
+    refs: rows.slice(),
+    w: rows.map((r) => (r ? r.weight : undefined)),
+    d: rows.map((r) => (r ? r.date : undefined)),
+    usable,
+  });
+  return usable;
+}
+
 /**
  * What you weighed on `date`, from the dated weigh-in series.
  *
@@ -245,14 +277,15 @@ function dayNumber(iso) {
  */
 export function bodyWeightOn(rows, date) {
   const day = dayNumber(date);
-  const usable = (Array.isArray(rows) ? rows : [])
-    .map((r) => ({ weight: Number(r && r.weight), date: r && r.date, day: dayNumber(r && r.date) }))
-    .filter((r) => r.weight > 0 && r.day !== null)
-    .sort((a, b) => a.day - b.day);
+  const usable = sortedWeighIns(rows);
   if (!usable.length || day === null) return null;
 
-  let best = null;
-  for (const r of usable) { if (r.day <= day) best = r; else break; }
+  // The newest weigh-in at or before `day`: a binary search over the sorted
+  // list (same answer as walking it; equal days keep their sorted order, and
+  // the LAST of them wins, as the walk did).
+  let lo = 0, hi = usable.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (usable[mid].day <= day) lo = mid + 1; else hi = mid; }
+  const best = lo > 0 ? usable[lo - 1] : null;
   if (best) {
     const gapDays = day - best.day;
     return {

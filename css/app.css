@@ -1419,6 +1419,19 @@ select.input {
   padding: 0 0 1px; cursor: pointer; min-width: 0;
 }
 .session-date::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
+/* 🆕 2026-10-17 (motion audit): iOS ZOOMS THE PAGE INTO ANY INPUT UNDER 16px,
+   and the runner's date was 11.5px — a tap on it left the whole runner zoomed.
+   The field is 16px now and drawn at its old size: scaled by 11.5/16 from its
+   left edge, with negative margins (in its own ems) handing back the room the
+   bigger box takes, so nothing beside or below it moves. The save screen's
+   date input is invisible over its text, so it only needs the size. */
+.session-sub > input.session-date {
+  font-size: 16px;
+  transform: scale(.71875);
+  transform-origin: 0 50%;
+  margin: -0.197em -3.875em -0.197em 0;
+}
+input.session-date:has(+ .save-date-text) { font-size: 16px; }
 .session-date.is-moved {
   color: var(--accent); border-bottom-color: var(--accent); font-weight: var(--fw-med);
 }
@@ -2791,6 +2804,13 @@ select.input {
 
 /* The chart claims the screen; controls take what's left. */
 .graph-controls { display: flex; flex-direction: column; gap: 6px; }
+/* 🆕 2026-10-17 (motion audit): ONE CONTROLS HEIGHT FOR EVERY DATA TAB. The
+   row was 44px on Muscles, 29 on Volume and nothing on Bars and Research, so
+   the content under it jumped up and down on each tab tap (measured: its top
+   at 180 → 165 → 220 → 136). It holds one 44px control row's height on every
+   tab now, the shorter Volume chips centred in it. Graph's two-line row on a
+   phone is still taller (flagged, not changed). */
+.graph-controls { min-height: 44px; justify-content: center; }
 
 .control-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* ⚠️ 44, not 36 — raised 2026-08-24 after the a11y audit reached this screen for
@@ -3948,6 +3968,13 @@ a.seg {
 }
 .row:active, .chip:active, .vol-row:active { transform: scale(.99); }
 .chip:active { transform: scale(.96); }
+/* 🆕 2026-10-17 (motion audit): three controls that never answered a press.
+   A segment gives a little, as a chip does; the set's trash goes red on its
+   own small square, as the mini strip's does; a "?" darkens, as an icon
+   button does. */
+.seg:active { transform: scale(.96); }
+.set-del:active { color: var(--danger); background: var(--rule-soft); border-radius: 6px; }
+.help-dot:active { background: var(--raised); }
 
 /* ---- a row opens ------------------------------------------------------- */
 /* ⚠️ grid-template-rows: 0fr -> 1fr IS THE POINT, and a plain fade would have
@@ -5287,11 +5314,14 @@ a.row { text-decoration: none; }
    content, and never covers the primary action of a screen. It OFFERS a
    refresh — reloading unasked would be right almost always and catastrophic
    once, mid-set with numbers typed and unsaved. */
+/* 🔄 2026-10-17 (motion audit): centred like the toast — without a transform,
+   so its spring (app.js offerRefresh) owns `transform` whole — and lifted
+   above whatever floats at the bottom (`--chrome-b`, as the toast is): in the
+   runner that is the footer, and the bar used to sit on the plate drawing. */
 .update-bar {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--bar-h) + 12px + env(safe-area-inset-bottom, 0px));
+  left: 12px; right: 12px; margin-inline: auto;
+  bottom: calc(max(var(--chrome-b, 0px), var(--bar-h) + env(safe-area-inset-bottom, 0px)) + 12px);
   z-index: 60;
   display: flex;
   align-items: center;
@@ -5305,9 +5335,14 @@ a.row { text-decoration: none; }
   font-size: var(--fs-md);
 }
 .update-bar .icon-btn { margin-right: -4px; }
+/* While it shows over a screen with a footer (the runner), that list can scroll
+   clear of it: only how far it scrolls changes, nothing on it moves. */
+body:has(> .update-bar) .screen > .pane-scroll:has(~ :is(.pane-bottom, .session-footer, .session-mini)) {
+  padding-bottom: calc(11px + var(--chrome-b, 0px) + 64px);
+}
 /* On desktop the nav is a left sidebar, so there is no bottom bar to clear. */
 @media (min-width: 880px) {
-  .update-bar { bottom: 16px; left: auto; right: 16px; transform: none; }
+  .update-bar { bottom: calc(var(--chrome-b, 0px) + 16px); left: auto; right: 16px; margin-inline: 0; }
 }
 
 /* ================= Goals =================
