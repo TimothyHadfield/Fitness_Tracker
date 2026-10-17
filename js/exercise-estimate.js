@@ -113,6 +113,11 @@
    carries the more direct figure. Recent beats old: the best set within 180 days
    wins over an older, bigger one; only with nothing recent does "ever" count.
 
+   🔄 2026-10-17: REVERSED FOR THE MIDDLE NUMBER — see `repPrediction()`. The
+   caption contradicted the max and the plan beside it (25/side × 10 curl read
+   "15+" at 25/side). The curve's inverse is the middle number again; the table
+   now sets only the band's width. The 2026-09-13 reasoning stays below.
+
    ── THE REP CAPTION READS THE LAB TABLE, NOT THE CURVE'S INVERSE — 2026-09-13 ─
    `repPrediction()` no longer inverts the Marzagão curve. It interpolates
    Nuzzo et al. 2024's measured reps-at-%1RM table (docs/research.md §16.4:
@@ -138,7 +143,7 @@ import {
   contributionsFor, confidenceBand, CONFIDENCE_BANDS, FALLBACK_MIN_QUALITY, fromKeyLift,
 } from './muscle-evidence.js';
 import { e1rm, weightForReps, repsForWeight, MAX_EVIDENCE_REPS, bodyWeightOn } from './e1rm.js';
-import { bodyWeightFractionFor } from './exercises.js';
+import { bodyWeightFractionFor, loadTypeFor } from './exercises.js';
 import { setE1rm } from './set-e1rm.js';
 import { typoQuarantine } from './personal-bests.js';
 
@@ -430,8 +435,21 @@ function tableAt(column, pct) {
  * The rep prediction as it may be PUT ON A SCREEN — a band, clamped, rounded,
  * and with the two cases a number cannot express.
  *
- * Since 2026-09-13 it reads Nuzzo's measured table (the header says why) and
- * carries the between-person spread: `low`/`high` are mean ∓ one SD, whole
+ * 🔄 2026-10-17 (calculation audit): THE MIDDLE NUMBER IS THE MAX'S OWN CURVE
+ * READ BACKWARDS (`repsForWeight`, D11), and only the band's WIDTH comes from
+ * Nuzzo's table — the between-person SD as a fraction of the table's mean at
+ * that %1RM, applied to the curve's figure. 2026-09-13 to 2026-10-17 the
+ * middle number was the table's mean, and the caption contradicted the two
+ * numbers beside it: a Dumbbell Curl done 25/side × 10 captioned 25/side
+ * "maybe 15+", and a bench plan of 8–10 reps prefilled at 180 off a 225 × 5
+ * captioned 180 "15+" where the plan's own arithmetic is 12 to failure. Now
+ * the caption at a set's own weight gives that set's reps back, and the plan,
+ * the max and the caption are one curve (tests/calc-1017.test.mjs).
+ * `perSide` (or the exercise's loadType) inverts per hand, the way setE1rm()
+ * and weightRangeForReps() apply the curve.
+ *
+ * Before that, from 2026-09-13 it read Nuzzo's measured table and
+ * carried the between-person spread: `low`/`high` are mean ∓ one SD, whole
  * reps, floored at 1. The caption prints the band — "maybe 8–12 to failure" —
  * because a single integer at ±2.5 reps was the one runner estimate with no
  * band, no source and no caveat (agent E's D13).
@@ -480,19 +498,23 @@ export function repPrediction(oneRM, weight, opts) {
   // prints "100 % of your estimated max" is at the max, not one rep short of it.
   if (Math.round(pct) >= 100) return { reps: null, low: null, high: null, highCapped: false, atLeast: false, over: true, column };
   const cap = MAX_EVIDENCE_REPS;
-  let cell = pct < 60 ? null : tableAt(column, pct);
-  if (pct > 95) {
-    // The top of the table to the max itself: one rep at 100 %, by definition.
-    const top = tableAt(column, 95);
-    const t = (100 - pct) / 5;
-    cell = { mean: 1 + (top.mean - 1) * t, sd: top.sd * t };
-  }
-  if (!cell || cell.mean >= cap) {
+  // The curve, per hand for a per-side lift (setE1rm doubles AFTER the curve).
+  const ex = opts && opts.exercise;
+  const perSide = opts && opts.perSide != null
+    ? Boolean(opts.perSide)
+    : Boolean(ex && (ex.loadType || loadTypeFor(ex.name, ex.equipment, ex.fields)) === 'per_side');
+  const div = perSide ? 2 : 1;
+  const mean = repsForWeight(max / div, w / div) || 1;
+  if (mean >= cap) {
     return { reps: cap, low: null, high: null, highCapped: true, atLeast: true, over: false, column };
   }
-  const reps = Math.max(1, Math.round(cell.mean));
-  const low = Math.max(1, Math.round(cell.mean - cell.sd));
-  const rawHigh = Math.max(low, Math.round(cell.mean + cell.sd));
+  // The band's width: Nuzzo's between-person SD as a share of its mean, read at
+  // this %1RM (clamped to the table's 60–95 % rows).
+  const cell = tableAt(column, Math.min(95, Math.max(60, pct)));
+  const spread = cell && cell.mean > 0 ? (cell.sd / cell.mean) * mean : 0;
+  const reps = Math.max(1, Math.round(mean));
+  const low = Math.max(1, Math.round(mean - spread));
+  const rawHigh = Math.max(low, Math.round(mean + spread));
   return {
     reps, low,
     high: Math.min(cap, rawHigh),

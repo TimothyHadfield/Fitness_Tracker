@@ -160,8 +160,10 @@ const daysAgo = (n) => localISO(new Date(ty, tm - 1, td - n));
   const general = repPrediction(own.e1rm, totalW);
   const cap = run.querySelectorAll('.step-est')[1];
   const txt = cap ? cap.textContent : '';
-  ok(want && general && want.low !== general.low,
-     `(guard) the leg-press column really differs here (${want && want.low}-${want && want.high} vs ${general && general.low}-${general && general.high})`);
+  // 🔄 2026-10-17: the column now sets only the band's width (the middle
+  // number is the curve's inverse), so at this load the two bands can match.
+  ok(want && general && want.column === 'legPress' && general.column === 'general',
+     `(guard) the leg press reads its own column (${want && want.column}; ${want && want.low}-${want && want.high} vs ${general && general.low}-${general && general.high})`);
   ok(txt.includes(`${want.low}–${want.high}`),
      `🚨 the rep caption uses the leg-press column (${JSON.stringify(txt)})`);
   clearDraft();

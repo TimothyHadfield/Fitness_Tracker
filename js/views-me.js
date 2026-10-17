@@ -330,10 +330,12 @@ export function weekSummary(sessions, today = todayISO()) {
     }
   }
   // Only whole weeks the lifter was already training in count toward "usual".
-  const weeks = first === null || first >= monday ? 0 : Math.min(4, Math.ceil((monday - first) / 7));
+  // 2026-10-17: floor, not ceil — a partial first week is not a whole one; and
+  // a real 0 (weeks of history, none trained) stays 0 rather than vanishing.
+  const weeks = first === null || first >= monday ? 0 : Math.min(4, Math.floor((monday - first) / 7));
   const total = before.slice(0, weeks).reduce((a, b) => a + b, 0);
   const usual = weeks ? Math.round(total / weeks) : null;
-  return { days, todayIndex, workouts, sets, usual: usual || null };
+  return { days, todayIndex, workouts, sets, usual: usual ?? null };
 }
 
 function weekSection(sessions) {

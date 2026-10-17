@@ -2267,7 +2267,10 @@ export async function SessionView(workoutId) {
     }
     // `{ exercise }` so a bench or leg press reads its own column of the
     // table, not the pooled one (review, 2026-09-24).
-    const p = live ? repPrediction(oneRM, totalW, { exercise: ex }) : null;
+    // `perSide` matches how totalW was doubled above, so the curve is read per hand.
+    const p = live
+      ? repPrediction(oneRM, totalW, { exercise: ex, perSide: !assistSpec && entry.loadType === 'per_side' })
+      : null;
     /* ⚠️ AND THE PREDICTION FALLS ACROSS A RUN OF SETS (2026-09-13, plan
      * §5.1-5.2). "maybe 8 to failure" was printed identically on set 1 and
      * set 4, and the literature is unambiguous that it should not be: at
@@ -6127,7 +6130,9 @@ export async function BenchmarkView() {
           : el('span', {}, el('b', { text: `${Math.round(pct)}%` }), ' of your estimated max'));
       }
       if (caps.reps) {
-        const p = oneRM > 0 && totalW > 0 ? repPrediction(oneRM, totalW, { exercise: state.exercise }) : null;
+        const p = oneRM > 0 && totalW > 0
+          ? repPrediction(oneRM, totalW, { exercise: state.exercise, perSide: state.exercise.loadType === 'per_side' })
+          : null;
         setChildren(caps.reps, !p
           ? ''
           : p.over

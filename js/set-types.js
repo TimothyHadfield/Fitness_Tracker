@@ -71,6 +71,23 @@ export function minisOf(set) {
 }
 
 /**
+ * Every row of an entry a maximum may be read off: each set, then the drops or
+ * myo-rep minis hanging off it. The one iterator for the personal bests
+ * (personal-bests.js re-exports it; its comment says why minis count) and the
+ * Graph's walk in store.js (2026-10-17: the Graph skipped minis, so a best set
+ * could be missing from the chart).
+ */
+export function allSetsOf(sets) {
+  const out = [];
+  for (const s of sets || []) {
+    if (!s) continue;
+    out.push(s);
+    for (const m of minisOf(s)) if (m) out.push(m);
+  }
+  return out;
+}
+
+/**
  * HARD SETS — the number that volume is counted in.
  *
  * One drop set is one hard set no matter how many drops hang off it, and the

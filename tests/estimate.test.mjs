@@ -75,14 +75,17 @@ const byName = (n) => BUILT_IN_EXERCISES.find((e) => e.name === n);
    *
    * So: ~10 at 80 %, not ~7, and it carries a band from the between-person SD
    * rather than pretending to a single number. */
+  /* 🔄 2026-10-17 (calculation audit, tests/calc-1017.test.mjs): the MIDDLE
+   * number is the curve's inverse again, because the table's mean contradicted
+   * the max and the plan printed beside it (a 25/side × 10 curl captioned
+   * "15+" at 25/side). The table keeps the band's WIDTH: its between-person SD
+   * as a share of its mean (25.7 % at 80 %), applied to the curve's figure. */
   const at80shown = repPrediction(225, 180);
-  ok(at80shown.reps === 10, 'the screen figure comes from the measured table, not the curve');
-  ok(at80shown.low === 7 && at80shown.high === 12,
-     '⚠️ and it carries the spread between people (±1 SD, 7–12) — at 80 % that band is as wide as '
-     + 'the fatigue correction on a third set, so a bare integer was always overstating what is known');
-  ok(repsForWeight(225, 180) < at80shown.reps,
-     'the curve still says fewer than the table does — the disagreement did not go away, the caption '
-     + 'just stopped being the place it was resolved in the app\'s favour');
+  ok(at80shown.reps === Math.round(repsForWeight(225, 180)),
+     `the screen figure is the max's own curve read backwards (${at80shown.reps})`);
+  ok(at80shown.low === 5 && at80shown.high === 8,
+     '⚠️ and it carries the spread between people (Nuzzo\'s SD as a share of the mean, 5–8) — a bare '
+     + 'integer was always overstating what is known');
   ok(repPrediction(225, 225).over === true && repPrediction(225, 225).reps === null,
      'at the max it says so instead of printing a rep count');
 

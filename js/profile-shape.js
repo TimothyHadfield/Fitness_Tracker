@@ -121,7 +121,7 @@ export function weekBlock({ days, todayIndex, workouts, sets, usual, onOpen }) {
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: title }),
         ),
-        usual ? el('span', { class: 'me-week-usual', text: `usual ${usual}` }) : null,
+        usual != null ? el('span', { class: 'me-week-usual', text: `usual ${usual}` }) : null,
         el('span', { class: 'row-chev' }, chevron()),
       ),
     ),

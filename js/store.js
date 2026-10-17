@@ -21,7 +21,7 @@ import {
   normalizeWeight, modalReps, canNormalize, clampReps, bodyWeightOn, isRankableSet,
 } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
-import { normalizeGroups, plannedMinis, isNested } from './set-types.js';
+import { normalizeGroups, plannedMinis, isNested, allSetsOf } from './set-types.js';
 import { normalizeTargets } from './set-targets.js';
 import { normalizeReps, expandRepSpec } from './set-reps.js';
 import { normalizeSchedule, pruneSchedule } from './schedule.js';
@@ -4604,7 +4604,7 @@ export async function seriesForExercise(exerciseId, field, source = null, rows =
   };
   if (source !== 'benchmark') {
     for (const s of sessions) {
-      for (const entry of entriesFor(s, exerciseId)) for (const set of entry.sets || []) screenRow(s.date, set, false);
+      for (const entry of entriesFor(s, exerciseId)) for (const set of allSetsOf(entry.sets)) screenRow(s.date, set, false);
     }
   }
   if (source !== 'workout') {
@@ -4619,7 +4619,7 @@ export async function seriesForExercise(exerciseId, field, source = null, rows =
       // Every entry for this exercise, not just the first — see entriesFor().
       // The day's best set is the best across all of them.
       const vals = entriesFor(s, exerciseId)
-        .flatMap((entry) => (entry.sets || []).filter((set) => !heldSets.has(set)).map((set) => set[field]))
+        .flatMap((entry) => allSetsOf(entry.sets).filter((set) => !heldSets.has(set)).map((set) => set[field]))
         .filter((v) => typeof v === 'number' && !Number.isNaN(v));
       if (!vals.length) continue;
       points.push({ date: s.date, value: Math.max(...vals), source: 'workout', label: s.workoutName });
@@ -4717,7 +4717,9 @@ export async function weightRepObservations(exerciseId, source = null, rows = nu
         // published one does — the label is decoration on the chart's hover
         // readout, so it degrades rather than being made a special case.
         const label = s.workoutName || s.name || '';
-        for (const set of entry.sets || []) push(s.date, set.weight, set.reps, 'workout', label);
+        // 🆕 2026-10-17: drops and myo-rep minis too — the bests count them
+        // (allSetsOf), so a best set made on a drop was missing from the chart.
+        for (const set of allSetsOf(entry.sets)) push(s.date, set.weight, set.reps, 'workout', label);
       }
     }
   }
@@ -6074,6 +6076,9 @@ export async function trainingForMuscle(muscle, windowDays = 28, today = null) {
   let direct = 0;
   for (const s of inWindow) {
     const hit = (s.entries || []).some((e) => {
+      // 🆕 2026-10-17: an entry with no recorded sets is not training — the
+      // same skip weeklyVolumeByMuscle makes, so Goals and Volume agree.
+      if (!recordedSetCount(e)) return false;
       const ex = exMap.get(e.exerciseId);
       if (!ex) return false;
       return volumeContributions(ex).some((c) => c.muscle === muscle && c.kind === 'direct');

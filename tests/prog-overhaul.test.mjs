@@ -233,7 +233,9 @@ safe('EA-10', () => {
      `EA-10: a steady 3-day lifter reads ${reads.map((x) => x.toFixed(2)).join('/')} across a week`);
   const fresh = observedDaysPerWeek(['2026-09-01', '2026-09-03', '2026-09-05', '2026-09-08', '2026-09-10',
     '2026-09-12', '2026-09-15'], '2026-09-16');
-  ok(fresh && fresh.spanDays === 16, 'EA-10 guard: a new account is still measured from its first session');
+  // 16 days from the first session, plus EB-13's fencepost (2026-10-17): 7 days × 14/6 = 16.33.
+  ok(fresh && fresh.spanDays >= 16 && fresh.spanDays < 17,
+    `EA-10 guard: a new account is still measured from its first session (${fresh && fresh.spanDays})`);
 });
 
 /* ---- EA-12: "Reached" needs two days at the target ---- */

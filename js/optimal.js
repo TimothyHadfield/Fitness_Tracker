@@ -349,6 +349,20 @@ const dayNumber = (iso) => {
 };
 
 /**
+ * EB-13's fencepost (store.js `volumeWindow`, 2026-09-27), for a span measured
+ * from the first session: each training day stands for one mean gap, so the
+ * span is at least (training days × mean gap), capped at the window. Without
+ * it 9 sessions at 3 a week over 19 days read 3.32 a week here while Data →
+ * Volume read the same days at 3.1. `days` are distinct day numbers.
+ */
+export function fencepostSpan(days, rawSpan, windowDays) {
+  const d = [...new Set(days)].sort((a, b) => a - b);
+  if (d.length < 2) return rawSpan;
+  const meanGap = (d[d.length - 1] - d[0]) / (d.length - 1);
+  return Math.min(windowDays, Math.max(rawSpan, d.length * meanGap));
+}
+
+/**
  * How many days a week they actually train this system.
  *
  * @param {string[]} dates    session dates (YYYY-MM-DD) belonging to the system
@@ -384,8 +398,10 @@ export function observedDaysPerWeek(dates, todayISO, windowDays = OBSERVE_WINDOW
   const windowStart = today - windowDays + 1;
   const older = (dates || []).map(dayNumber).filter((d) => d !== null && d < windowStart);
   const olderNear = older.length > 0 && Math.max(...older) >= windowStart - 7;
-  const spanDays = olderNear ? windowDays : today - Math.min(...days) + 1;
-  if (spanDays < MIN_OBSERVED_SPAN_DAYS) return null;
+  const rawSpan = olderNear ? windowDays : today - Math.min(...days) + 1;
+  if (rawSpan < MIN_OBSERVED_SPAN_DAYS) return null;
+  // 🆕 2026-10-17: store.js volumeWindow's EB-13 fencepost, same rule.
+  const spanDays = olderNear ? rawSpan : fencepostSpan(days, rawSpan, windowDays);
 
   const perWeek = days.length / (spanDays / 7);
   return { daysPerWeek: Math.min(7, perWeek), spanDays, sessions: days.length };

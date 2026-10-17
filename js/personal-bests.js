@@ -93,7 +93,7 @@
 import { bodyWeightOn, e1rm, MAX_EVIDENCE_REPS } from './e1rm.js';
 import { setE1rm, shownMax } from './set-e1rm.js';
 import { bodyWeightFractionFor } from './exercises.js';
-import { minisOf } from './set-types.js';
+import { allSetsOf } from './set-types.js';
 import { screenDaily, dailyValues, RELEASE_TOLERANCE } from './strength-estimate.js';
 import { QUARANTINE_MIN_RATIO } from './muscle-evidence.js';
 import { units, LB_PER_KG } from './units.js';
@@ -285,15 +285,9 @@ const KIND_ORDER = { weight: 0, reps: 0, volume: 1, e1rm: 2 };
  * of "which rows of an entry are sets a maximum may be read off", and a second
  * copy in the all-time module would be the same asymmetry bug in a new place.
  */
-export function allSetsOf(sets) {
-  const out = [];
-  for (const s of sets || []) {
-    if (!s) continue;
-    out.push(s);
-    for (const m of minisOf(s)) if (m) out.push(m);
-  }
-  return out;
-}
+// 🔄 2026-10-17: the body moved to set-types.js so store.js's Graph walk can
+// use the same iterator without loading this module at boot. Re-exported here.
+export { allSetsOf };
 
 /**
  * Which kinds of record an exercise's sets are even eligible for.
