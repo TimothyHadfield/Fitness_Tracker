@@ -1372,6 +1372,17 @@ function handoffRow(guest, date) {
 }
 
 export async function DayView(date) {
+  // 🆕 2026-10-17: a link to a day that is not a real date ("#/day/garbage")
+  // printed "Invalid Date" twice; it reads Not found like any missing record.
+  const asDate = new Date(`${date}T00:00:00Z`);
+  const real = /^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))
+    && !Number.isNaN(asDate.getTime()) && asDate.toISOString().slice(0, 10) === date;
+  if (!real) {
+    return screenShell({
+      title: 'Not found', back: () => go('#/calendar'),
+      scroll: emptyState('That day does not exist', 'The link may be broken.'),
+    });
+  }
   const [activity, exMap, guestRows] = await Promise.all([
     activityByDate(), store.getExerciseMap(),
     // Older stores have no guest collection; an empty list is the right read.

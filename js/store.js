@@ -439,7 +439,8 @@ export async function absorbStrandedWrites(remote, opts) {
           if (!row) continue;
           if (rowTime(row) > Date.parse(at)) continue;
           next = next.filter((r) => r !== row);
-          await remote.write(c, next);
+          // Named: the cloud backend deletes only ids it is told (2026-10-17).
+          await remote.write(c, next, { deletes: [row.id] });
         }
         // Only rows the cloud now holds exactly leave this device. A copy that
         // lost to a newer cloud edit stays here; nothing is deleted unseen.
@@ -493,11 +494,39 @@ async function carryStrandedWrites(mod) {
  * promise chain per tab: each job starts after the previous one SETTLES, and a
  * rejection goes to its own caller without jamming the queue. Nothing queued
  * may call saveSettings itself, or it would wait on itself forever. */
-let settingsTail = Promise.resolve();
-function inSettingsQueue(job) {
-  const run = settingsTail.then(job);
-  settingsTail = run.catch(() => {});
+/* 🚨 2026-10-17 (data-safety audit): THE SAME QUEUE FOR EVERY COLLECTION. Two
+ * overlapping saveSession()s (Save workout while a group workout auto-applies)
+ * each read the list without the other's row, and the later write took the
+ * earlier one's new workout out of the cloud. Every read-modify-write in this
+ * store now runs through inQueue() for the collections it touches; a job that
+ * touches several waits for all of them, taken at once, so two jobs can never
+ * hold one each and wait on each other. Never call a queued function from
+ * inside a job on the same collection (it would wait on itself). */
+const queueTails = new Map();
+function inQueue(collections, job) {
+  const names = Array.isArray(collections) ? collections : [collections];
+  const before = names.map((c) => queueTails.get(c) || Promise.resolve());
+  const run = Promise.all(before).then(() => job());
+  const settled = run.catch(() => {});
+  for (const c of names) queueTails.set(c, settled);
   return run;
+}
+function inSettingsQueue(job) { return inQueue(['settings'], job); }
+
+/**
+ * One read-modify-write of one collection, queued. `change(rows)` gets a copy
+ * of the list just read and returns the new list (or undefined to write
+ * nothing). Deletes are the ids the read held that the new list left out —
+ * named, never inferred by the backend.
+ */
+function rmw(collection, change, opts) {
+  return inQueue([collection], async () => {
+    const rows = await backend.read(collection);
+    const next = await change(rows.slice());
+    if (next === undefined) return undefined;
+    await backend.write(collection, next, { ...(opts || {}), from: rows });
+    return next;
+  });
 }
 
 /**
@@ -585,6 +614,12 @@ const backend = {
      * it resolves, and it can only know that if the generation has already
      * moved. See writeGeneration. */
     bumpGeneration(collection);
+    // `from` = the rows this caller read before changing them. The backend is
+    // told which ids to delete; it never works that out for itself (2026-10-17).
+    if (opts && Array.isArray(opts.from)) {
+      const { from, ...rest } = opts;
+      opts = { ...rest, deletes: removedIds(from, rows) };
+    }
     const impl = await active();
     const stranded = impl === LocalBackend && wantRemote();
     const before = stranded ? await LocalBackend.read(collection) : null;
@@ -1207,21 +1242,28 @@ export function pickBenchmarkSet(sets, fields, opts) {
 }
 
 async function dropSessionBenchmarks(sessionId) {
-  const rows = await backend.read('benchmarks');
-  const kept = rows.filter((r) => r.sourceSessionId !== sessionId);
   // ⚠️ `wholesale`: every benchmark can come from one session, so deleting that
   // session legitimately empties the collection. The filter ran over rows read
   // in this same call, which is the invariant the zero-guard exists to protect.
-  if (kept.length !== rows.length) await backend.write('benchmarks', kept, { wholesale: true });
+  await rmw('benchmarks', (rows) => {
+    const kept = rows.filter((r) => r.sourceSessionId !== sessionId);
+    return kept.length !== rows.length ? kept : undefined;
+  }, { wholesale: true });
 }
 
 async function syncSessionBenchmarks(session) {
+  // Read through the cache BEFORE taking the queue: these are not the
+  // collection being written, and a getter inside a queued job could wait on
+  // a queue of its own.
+  const [exMap, bodyWeights] = session.isBenchmark
+    ? await Promise.all([store.getExerciseMap(), store.getBodyWeights()])
+    : [null, null];
+  return inQueue(['benchmarks'], async () => {
   const rows = await backend.read('benchmarks');
   const kept = rows.filter((r) => r.sourceSessionId !== session.id);
 
   const made = [];
   if (session.isBenchmark) {
-    const [exMap, bodyWeights] = await Promise.all([store.getExerciseMap(), store.getBodyWeights()]);
     // The weigh-in of the SESSION'S day, never today's — the same rule the
     // rating walk keeps (strength-observations.js), so the set this picks is
     // the set the map would have picked. Read through the cache: weigh-ins are
@@ -1254,8 +1296,9 @@ async function syncSessionBenchmarks(session) {
     // ⚠️ `wholesale` for the same reason dropSessionBenchmarks gives: re-saving
     // the session every benchmark came from, with its flag now off, produces a
     // legitimately empty list from rows read in this same call.
-    await backend.write('benchmarks', [...kept, ...made], { wholesale: true });
+    await backend.write('benchmarks', [...kept, ...made], { wholesale: true, from: rows });
   }
+  });
 }
 
 // A SYSTEM is a named group of workouts — a programme. "Push Pull Legs" holding
@@ -1455,7 +1498,55 @@ const localPhotos = {
     if (!db) { localPhotoFallback.delete(sid); return; }
     await this.run('readwrite', (s) => s.delete(sid));
   },
+  async keys() {
+    const db = await photoDb();
+    if (!db) return [...localPhotoFallback.keys()];
+    return (await this.run('readonly', (s) => s.getAllKeys())) || [];
+  },
 };
+
+/* 🔒 2026-10-17 (data-safety audit): Clear all and Restore replace every
+ * session, but the pictures live apart from them (users/{uid}/photos/*, this
+ * device's IndexedDB), and a friend could still open one by id. Every picture
+ * whose workout is no longer in the account goes. Best-effort: the wipe or the
+ * restore has already happened and must not be reported as failed over this. */
+async function dropOrphanPhotos(keepIds) {
+  const keep = new Set((keepIds || []).map(String));
+  try {
+    const impl = await active();
+    if (impl === MemoryBackend) {
+      for (const k of [...demoPhotos.keys()]) {
+        if (k.startsWith('me/') && !keep.has(k.slice(3))) demoPhotos.delete(k);
+      }
+    } else {
+      for (const sid of await localPhotos.keys().catch(() => [])) {
+        if (!keep.has(String(sid))) await localPhotos.del(sid).catch(() => {});
+      }
+      if (impl !== LocalBackend && impl.deletePhotosExcept) await impl.deletePhotosExcept(keep);
+    }
+  } catch (err) {
+    console.warn('Some workout photos could not be removed.', err);
+  }
+  photoCache.clear();
+  photoKnown.clear();
+}
+
+/** After Clear all / Restore: republish the friends/public copy (the boot heal
+ * only looks for a copy OLDER than the data, which a wipe never produces) and
+ * drop orphaned photos. Never throws. */
+async function afterWholesale(keepSessionIds) {
+  const work = (async () => {
+    if (remoteImpl && !demo.active()) {
+      try { await republish(); } catch (err) { console.warn('Could not refresh what friends see.', err); }
+    }
+    await dropOrphanPhotos(keepSessionIds.filter(Boolean));
+  })();
+  // With no signal Firestore keeps these writes queued on its own; the screen
+  // is not held for longer than this waiting for an answer.
+  let timer = null;
+  await Promise.race([work, new Promise((r) => { timer = setTimeout(r, 10000); })]);
+  clearTimeout(timer);
+}
 
 /** A stored/received record → `{url, w, h}` or null. Both ends validate. */
 function cleanPhoto(rec) {
@@ -1503,15 +1594,12 @@ export const store = {
   },
 
   async addCustomExercise(ex) {
-    const rows = await backend.read('customExercises');
-    rows.push(ex);
-    await backend.write('customExercises', rows);
+    await rmw('customExercises', (rows) => [...rows, ex]);
     return ex;
   },
 
   async deleteCustomExercise(id) {
-    const rows = await backend.read('customExercises');
-    await backend.write('customExercises', rows.filter((r) => r.id !== id));
+    await rmw('customExercises', (rows) => rows.filter((r) => r.id !== id));
   },
 
   /* --- workout systems --- */
@@ -1554,7 +1642,9 @@ export const store = {
 
       // ⚠️ From here it is a READ-MODIFY-WRITE, so it re-reads the real thing.
       // Rewriting a whole collection from a cached copy is how a change made
-      // somewhere else gets erased.
+      // somewhere else gets erased. Queued with every other systems/workouts
+      // mutation (2026-10-17).
+      return inQueue(['systems', 'workouts'], async () => {
       const [freshSystems, freshWorkouts] = await Promise.all([
         backend.read('systems'), backend.read('workouts'),
       ]);
@@ -1597,6 +1687,7 @@ export const store = {
       for (const w of orphans) w.systemId = home.id;
       await backend.write('workouts', workoutsRows);
       return systemsRows.map(normalizeSystem);
+      });
     })();
     // Cleared once settled, so a later call re-checks. After the first run there
     // are no orphans left, so re-checking costs two reads and writes nothing.
@@ -1686,11 +1777,10 @@ export const store = {
   },
 
   async saveSystem(sys) {
-    const rows = await backend.read('systems');
     const row = { ...normalizeSystem(sys), updatedAt: new Date().toISOString() };
     if (!row.id) row.id = uid('sys');
     if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('systems', upsert(rows, row));
+    await rmw('systems', (rows) => upsert(rows, row));
     return row;
   },
 
@@ -1699,14 +1789,18 @@ export const store = {
   // touched: history is a record of what happened and does not become untrue
   // because the plan behind it was thrown away.
   async deleteSystem(id) {
-    const [systems, workouts] = await Promise.all([
-      backend.read('systems'), backend.read('workouts'),
-    ]);
-    // ⚠️ `wholesale`: deleting the only system legitimately empties `workouts`,
-    // and the zero-guard would otherwise refuse a flow the user just confirmed
-    // on a screen that names what it deletes. The rows really were read first.
-    await backend.write('workouts', workouts.filter((w) => w.systemId !== id), { wholesale: true });
-    await backend.write('systems', systems.filter((r) => r.id !== id), { wholesale: true });
+    await inQueue(['systems', 'workouts'], async () => {
+      const [systems, workouts] = await Promise.all([
+        backend.read('systems'), backend.read('workouts'),
+      ]);
+      // ⚠️ `wholesale`: deleting the only system legitimately empties `workouts`,
+      // and the zero-guard would otherwise refuse a flow the user just confirmed
+      // on a screen that names what it deletes. The rows really were read first.
+      await backend.write('workouts', workouts.filter((w) => w.systemId !== id),
+        { wholesale: true, from: workouts });
+      await backend.write('systems', systems.filter((r) => r.id !== id),
+        { wholesale: true, from: systems });
+    });
 
     /* ⚠️ The current-system pointer goes with it. currentSystem() tolerates a
      * dangling id and falls back, so this is not a guard against a crash — it is
@@ -2023,12 +2117,11 @@ export const store = {
   },
 
   async saveWorkout(workout) {
-    const rows = await backend.read('workouts');
     const row = { ...normalizeWorkout(workout), updatedAt: new Date().toISOString() };
     delete row.exerciseIds; // superseded by `exercises`
     if (!row.id) row.id = uid('w');
     if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('workouts', upsert(rows, row));
+    await rmw('workouts', (rows) => upsert(rows, row));
     return row;
   },
 
@@ -2057,11 +2150,12 @@ export const store = {
    * that lived in this one.
    */
   async deleteWorkout(id) {
+    return inQueue(['systems', 'workouts'], async () => {
     const [rows, systems] = await Promise.all([
       backend.read('workouts'), backend.read('systems'),
     ]);
     const left = rows.filter((r) => r.id !== id);
-    await backend.write('workouts', left);
+    await backend.write('workouts', left, { from: rows });
 
     const live = new Set(left.map((r) => r.id));
     let touched = false;
@@ -2072,7 +2166,8 @@ export const store = {
       touched = true;
       return { ...s, schedule, updatedAt: new Date().toISOString() };
     });
-    if (touched) await backend.write('systems', repaired);
+    if (touched) await backend.write('systems', repaired, { from: systems });
+    });
   },
 
   /* --- completed sessions --- */
@@ -2088,14 +2183,14 @@ export const store = {
   },
 
   async saveSession(session) {
-    const rows = await backend.read('sessions');
     const row = normalizeSession({ ...session });
     if (!row.id) row.id = uid('s');
     // updatedAt on every save (wave 4): an edit must beat the older copy on
     // another device or in the cloud, and createdAt never moves.
     row.updatedAt = new Date().toISOString();
     if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('sessions', upsert(rows, row));
+    // Queued (2026-10-17): see inQueue() for the workout this used to lose.
+    await rmw('sessions', (rows) => upsert(rows, row));
     // Benchmarks derived from this session are rebuilt from scratch every save,
     // so editing the date, changing a set or clearing the flag can never leave a
     // stale benchmark behind pointing at a day the workout is no longer on.
@@ -2106,9 +2201,15 @@ export const store = {
     return row;
   },
 
+  /** How many cloud writes are saved on this phone but not yet uploaded (no
+   * signal). 0 off the cloud. See commitOrQueue() in firebase-backend.js. */
+  queuedWrites() {
+    try { return remoteImpl && remoteImpl.queuedWrites ? remoteImpl.queuedWrites() : 0; }
+    catch (_) { return 0; }
+  },
+
   async deleteSession(id) {
-    const rows = await backend.read('sessions');
-    await backend.write('sessions', rows.filter((r) => r.id !== id));
+    await rmw('sessions', (rows) => rows.filter((r) => r.id !== id));
     await dropSessionBenchmarks(id);
     // Its photo goes with it (2026-09-25). Best-effort: the workout is already
     // gone, and a photo that failed to delete is unreachable from any card.
@@ -2209,18 +2310,16 @@ export const store = {
   },
 
   async saveGuestSession(session) {
-    const rows = await backend.read('guestSessions');
     const row = { ...session };
     if (!row.id) row.id = uid('g');
     row.updatedAt = new Date().toISOString();
     if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('guestSessions', upsert(rows, row));
+    await rmw('guestSessions', (rows) => upsert(rows, row));
     return row;
   },
 
   async deleteGuestSession(id) {
-    const rows = await backend.read('guestSessions');
-    await backend.write('guestSessions', rows.filter((r) => r.id !== id));
+    await rmw('guestSessions', (rows) => rows.filter((r) => r.id !== id));
   },
 
   /* --- people: the roster you record for ---
@@ -2266,20 +2365,22 @@ export const store = {
    * put it.
    */
   async savePerson(person) {
-    const rows = await backend.read('people');
     const row = { ...person };
     row.name = String(row.name || '').trim().slice(0, 40);
     if (!row.name) throw new Error('Give them a name first.');
-    if (!row.id) {
-      const key = row.name.toLowerCase();
-      const existing = rows.find((r) => String(r.name || '').trim().toLowerCase() === key);
-      if (existing) return existing;
-      row.id = uid('p');
-    }
-    row.updatedAt = new Date().toISOString();
-    if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('people', upsert(rows, row));
-    return row;
+    let found = null;
+    await rmw('people', (rows) => {
+      if (!row.id) {
+        const key = row.name.toLowerCase();
+        found = rows.find((r) => String(r.name || '').trim().toLowerCase() === key) || null;
+        if (found) return undefined;
+        row.id = uid('p');
+      }
+      row.updatedAt = new Date().toISOString();
+      if (!row.createdAt) row.createdAt = row.updatedAt;
+      return upsert(rows, row);
+    });
+    return found || row;
   },
 
   /**
@@ -2293,23 +2394,22 @@ export const store = {
   async touchPeople(ids, at) {
     const want = new Set((Array.isArray(ids) ? ids : []).filter(Boolean));
     if (!want.size) return 0;
-    const rows = await backend.read('people');
     const stamp = at || new Date().toISOString();
     let hit = 0;
-    const next = rows.map((r) => {
-      if (!want.has(r.id)) return r;
-      hit++;
-      return { ...r, lastUsedAt: stamp, updatedAt: new Date().toISOString() };
+    await rmw('people', (rows) => {
+      const next = rows.map((r) => {
+        if (!want.has(r.id)) return r;
+        hit++;
+        return { ...r, lastUsedAt: stamp, updatedAt: new Date().toISOString() };
+      });
+      return hit ? next : undefined;
     });
-    if (!hit) return 0;
-    await backend.write('people', next);
     return hit;
   },
 
   /** Forget the name. Never the training — see the note above. */
   async deletePerson(id) {
-    const rows = await backend.read('people');
-    await backend.write('people', rows.filter((r) => r.id !== id));
+    await rmw('people', (rows) => rows.filter((r) => r.id !== id));
   },
 
   /* --- benchmarks --- */
@@ -2324,19 +2424,17 @@ export const store = {
   },
 
   async saveBenchmark(mark) {
-    const rows = await backend.read('benchmarks');
     const row = { ...mark };
     if (!row.id) row.id = uid('b');
     row.updatedAt = new Date().toISOString();
     if (!row.createdAt) row.createdAt = row.updatedAt;
-    await backend.write('benchmarks', upsert(rows, row));
+    await rmw('benchmarks', (rows) => upsert(rows, row));
     schedulePublish();
     return row;
   },
 
   async deleteBenchmark(id) {
-    const rows = await backend.read('benchmarks');
-    await backend.write('benchmarks', rows.filter((r) => r.id !== id));
+    await rmw('benchmarks', (rows) => rows.filter((r) => r.id !== id));
     schedulePublish();
   },
 
@@ -2390,7 +2488,6 @@ export const store = {
   // replacement — the view asks first — but the store guarantees the invariant
   // rather than trusting every caller to remember it.
   async setGoal(goal) {
-    const rows = await backend.read('goals');
     const now = new Date().toISOString();
     const row = {
       ...goal,
@@ -2399,24 +2496,24 @@ export const store = {
       createdAt: goal.createdAt || now,
       updatedAt: now,
     };
-    const others = rows.map((g) => (g.id === row.id || g.status !== 'active'
-      ? g
-      : { ...g, status: 'ended', endedAt: now, endedReason: 'replaced', updatedAt: now }));
-    await backend.write('goals', upsert(others, row));
+    await rmw('goals', (rows) => {
+      const others = rows.map((g) => (g.id === row.id || g.status !== 'active'
+        ? g
+        : { ...g, status: 'ended', endedAt: now, endedReason: 'replaced', updatedAt: now }));
+      return upsert(others, row);
+    });
     return row;
   },
 
   async endGoal(id, reason = 'ended') {
-    const rows = await backend.read('goals');
     const now = new Date().toISOString();
-    await backend.write('goals', rows.map((g) => (g.id === id
+    await rmw('goals', (rows) => rows.map((g) => (g.id === id
       ? { ...g, status: 'ended', endedAt: now, endedReason: reason, updatedAt: now }
       : g)));
   },
 
   async deleteGoal(id) {
-    const rows = await backend.read('goals');
-    await backend.write('goals', rows.filter((g) => g.id !== id));
+    await rmw('goals', (rows) => rows.filter((g) => g.id !== id));
   },
 
   /* --- settings --- */
@@ -2634,14 +2731,19 @@ export const store = {
     await snapshotBeforeWipe('pre-restore');
     // `replace`: the cloud's whole-list collections otherwise MERGE a write
     // with what other devices saved (R-14); a restore means "exactly this".
-    for (const c of COLLECTIONS) {
-      await backend.write(c, Array.isArray(data[c]) ? data[c] : [], { wholesale: true, replace: true });
-    }
+    await inQueue(COLLECTIONS, async () => {
+      for (const c of COLLECTIONS) {
+        await backend.write(c, Array.isArray(data[c]) ? data[c] : [], { wholesale: true, replace: true });
+      }
+    });
     // ⚠️ A restored backup is the ONE way old-shape workouts — the ones with no
     // systemId — can come back after the migration has already run and latched
     // itself off. Clearing it makes the next read re-check. The cache is
     // cleared with it: every collection has just been replaced wholesale.
     clearReadCache();
+    // 🔒 2026-10-17: friends see the restored account, not the one before it,
+    // and photos of workouts the backup does not hold go.
+    await afterWholesale((Array.isArray(data.sessions) ? data.sessions : []).map((s) => s && s.id));
     return summary;
   },
 
@@ -2662,22 +2764,23 @@ export const store = {
     const w = Number(weight);
     if (!(w > 0)) throw new Error('Enter a weight.');
     const day = date || todayISO();
-    const rows = await backend.read('bodyWeight');
-    // One weigh-in per day; a second on the same day replaces the first rather
-    // than making the trend jagged with intra-day noise.
-    const existing = rows.find((r) => r.date === day);
-    const row = existing
-      ? { ...existing, weight: w, updatedAt: new Date().toISOString() }
-      : { id: uid('bw'), date: day, weight: w, createdAt: new Date().toISOString() };
-    await backend.write('bodyWeight', upsert(rows, row));
+    let row = null;
+    await rmw('bodyWeight', (rows) => {
+      // One weigh-in per day; a second on the same day replaces the first rather
+      // than making the trend jagged with intra-day noise.
+      const existing = rows.find((r) => r.date === day);
+      row = existing
+        ? { ...existing, weight: w, updatedAt: new Date().toISOString() }
+        : { id: uid('bw'), date: day, weight: w, createdAt: new Date().toISOString() };
+      return upsert(rows, row);
+    });
     // Body weight is published when sharing allows it — same rule as sessions.
     schedulePublish();
     return row;
   },
 
   async deleteBodyWeight(id) {
-    const rows = await backend.read('bodyWeight');
-    await backend.write('bodyWeight', rows.filter((r) => r.id !== id));
+    await rmw('bodyWeight', (rows) => rows.filter((r) => r.id !== id));
     schedulePublish();
   },
 
@@ -2708,13 +2811,12 @@ export const store = {
     const incoming = Array.isArray(rows) ? rows.filter(Boolean) : [];
     if (!incoming.length) return { added: 0, replaced: 0 };
 
-    const existing = await backend.read(collection);
     const byDate = collection === 'bodyWeight';
     const keyOf = (r) => (byDate ? r.date : r.id);
-
-    const index = new Map(existing.map((r) => [keyOf(r), r]));
     let added = 0;
     let replaced = 0;
+    await rmw(collection, (existing) => {
+    const index = new Map(existing.map((r) => [keyOf(r), r]));
     for (const row of incoming) {
       const key = keyOf(row);
       if (key === undefined || key === null || key === '') continue;
@@ -2729,7 +2831,8 @@ export const store = {
         index.set(key, { ...row, createdAt: row.createdAt || new Date().toISOString() });
       }
     }
-    await backend.write(collection, [...index.values()]);
+    return [...index.values()];
+    });
     // 200 imported activities are 200 things friends should see; one publish.
     schedulePublish();
     return { added, replaced };
@@ -2850,10 +2953,16 @@ export const store = {
     // row another device adds during the clear survives it.
     // `wiping`: an offline Clear all stays on this device, never carried to
     // the cloud as deletes (no snapshot is possible offline). See backend.write.
-    wiping = true;
-    try {
-      for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
-    } finally { wiping = false; }
+    // Queued behind every save in flight (2026-10-17), so none lands after it.
+    await inQueue(COLLECTIONS, async () => {
+      wiping = true;
+      try {
+        for (const c of COLLECTIONS) await backend.write(c, [], { wholesale: true });
+      } finally { wiping = false; }
+    });
+    // 🔒 2026-10-17: what friends (or the public) can read goes with it — the
+    // published copy is rebuilt from the now-empty account, and the photos go.
+    await afterWholesale([]);
   },
 };
 

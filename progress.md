@@ -5,12 +5,8 @@ _Last updated 2026-10-17 (project-lead batch for the portfolio manager): 9 sweep
 the update bar now refreshes the WHOLE new build before reloading (`tests/lead-1017.test.mjs`); the
 Waiting table was cut to 5 decisions (old table: `docs/archive/progress-2026-10-17.md`). Repo-local
 `core.autocrlf=false` set and the working copy converted to LF (CRLF broke `shell.test`). See chat.md
-2026-10-17. Before that, 2026-09-28: **sign-in hardening DONE and live** (9511103, 14c5c1a, 49fb4da). Tim's
-brother hit "Not signed in." on every screen → fixed; then Tim: *"Investigate how people log in and
-anticipatin any other problems that they might face"* → 3-reviewer audit, 10+ fixes (chat.md last two
-entries). Tim declined moving off GitHub Pages (*"okay don't do it"*). Nothing is running or open.
-Before that 2026-09-27 late: **OVERHAUL DONE, all 5 waves live** (`docs/overhaul-plan.md`, BUILT
-section; choices Tim hasn't seen: chat.md 2026-09-27 late (cont.)). Previous snapshots of this file:
+2026-10-17; then the data-safety fixes (Status, "Data safety 2026-10-17"). Before: 2026-09-28 sign-in
+hardening and 2026-09-27 overhaul, both live (chat.md). Previous snapshots of this file:
 `docs/archive/progress-2026-09-28.md` (just before this rewrite — the closed ✅ rows of the Waiting
 table live there now), `-09-27`, `-09-25`. Headings in chat.md are a SESSION sequence; git is the
 tie-breaker on dates. For Claude only; Tim doesn't read this.
@@ -57,8 +53,16 @@ read ~14 % high) · compare's `isRecorded` ignores `done:true` · wake-lock rele
 saves toast on failure · `.just-for` dashed edge uses `--rule` (was undefined `--line`; a test now
 fails on any undefined CSS var) · **sw.js: after a deploy every shell file is refreshed
 (`refreshShell()`), and Refresh waits for `'reload-ready'` (4 s cap)** so a reload can't run new
-app.js beside an old lazy screen. Still open from the sweep (low): `listReactions()` uncapped,
-settings-queue pattern not applied to bodyWeight/goals/systems.
+app.js beside an old lazy screen. Still open from the sweep (low): `listReactions()` uncapped.
+
+**Data safety 2026-10-17 (`tests/datasafety-1017.test.mjs` 30, `-ui-1017` 11; seen failing first):**
+every store mutation runs in a per-collection queue (`inQueue`/`rmw` in store.js) · **deletes are
+NAMED** (`opts.deletes`, from `from:` rows) — only `wholesale`/`replace` infer them, so two overlapping
+saves can't delete each other's workout · cloud commits race 4 s / offline (`commitOrQueue`); a
+queued Save shows "Saved on this phone — will upload." · Clear all / Restore republish the friends
+copy and delete `photos/*` not kept · a failed lazy import reloads once a minute · rules pin comment
+ids to `c_<session>_<uid>_…` (deployed) · sign-out clears the uid's session shard cache ·
+`#/day/<not a date>` reads Not found.
 
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
@@ -208,12 +212,14 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 - **All 22 environment traps are the handbook's §0 numbered list** — read it before the first tool
   call. The ones hit most recently:
 - **(2026-10-17, manager rule) Never write or run commands inside any `.claude` folder** (incl.
-  `.claude/worktrees/`): it prompts Tim. New worktrees go to `C:/Users/timha/wt/Fitness_Tracker-<name>`
+  `.claude/worktrees/`): it prompts Tim. New worktrees go to `C:/Users/timha/AppData/Local/Temp/claude/wt/fitness-<name>`
   (`git -C <project> -c core.autocrlf=false worktree add ...`); remove old ones only via PowerShell.
 - **(2026-10-17) The working copy had gone CRLF** (264 files; system git has `autocrlf=true`), which
   crashes `shell.test` ("Cannot read properties of null"). Repo-local `core.autocrlf=false` is now set
   and non-.md files were converted byte-exact to LF (Fitness_Research untouched). If git status lists
   files whose `git diff` is empty, `git add` those names (same blob; only refreshes the stat).
+- **(2026-10-17) A store write deletes ONLY what it names.** New mutations: use `rmw()` or wrap in
+  `inQueue([...])` and pass `from: rows` (the read they changed); a write with neither deletes nothing.
 - **Every anonymous sign-in goes through `createUserKeeper()`** (firebase-backend.js, 2026-09-28):
   `init()` = `connect()` + wait for a user; the auth listener re-signs a dropped user; signOut /
   deleteAccount use it too. `tests/auth-keeper.test.mjs` fails if any `signInAnonymously(` appears
@@ -378,12 +384,11 @@ can check._
   lines); sheet slide checked by computed style only; reduced motion and light theme not shot.
 - The 2026-09-27 race fixes (`writeGeneration` in `store.js`; `ensureSystems()` re-read) are reasoned,
   not asserted — the window is zero on `LocalBackend` and seconds on Firestore.
-- ~~"Delete account" never ran against real Firestore~~ — **ran 2026-09-23**: `tools/live-check.mjs`
-  S4 deletes a throwaway account through `FirebaseBackend.deleteAccount()` on the live project
-  (45/45: all 10 collections + shared docs gone, the purge's own re-read clean, a second account's
-  session untouched). Not run: an email/password account's re-auth path, or a Google-linked one.
-  A crashed first run's docs under `users/nTwoaNKNBoYweqmYvamBo0ediSA3` were deleted by path (the
-  guard refuses `--recursive`); two orphaned ANONYMOUS auth users may remain (no data; harmless).
+- **2026-10-17 data safety:** the 4 s queue on a real offline iPhone, the reads before the commit
+  while offline, and races ACROSS tabs/devices (the queue is per tab) are reasoned · sign-out cache
+  clear is a source check · republish after a wipe and `photos/*` listing never ran on real Firestore.
+- Delete account ran on live Firestore 2026-09-23 (`tools/live-check.mjs` S4, 45/45); not run for an
+  email/password re-auth or a Google-linked account. Two orphan ANONYMOUS auth users may remain.
 - File import has never parsed a real export from any service.
 - No preset has been version-bumped for real; the stamped update path has only run in tests.
 - The live read pattern (Open work 26) was measured on 3–4 sessions, not a training history.

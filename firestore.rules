@@ -414,7 +414,14 @@ service cloud.firestore {
                     // take another friend's id first or stack kudos under
                     // made-up ids. validReaction() already proved the types.
                     && (request.resource.data.kind != 'kudos'
-                        || reactionId == 'k_' + request.resource.data.sessionId + '_' + request.auth.uid);
+                        || reactionId == 'k_' + request.resource.data.sessionId + '_' + request.auth.uid)
+                    // 🆕 2026-10-17: a comment id is `c_{sessionId}_{fromUid}_{nonce}`
+                    // (js/social.js commentId()), so a comment can no longer be
+                    // filed under a kudos id (`k_…_{otherUid}`) or another
+                    // friend's comment id. The nonce is base 36.
+                    && (request.resource.data.kind != 'comment'
+                        || reactionId.matches('c_' + request.resource.data.sessionId + '_'
+                                              + request.auth.uid + '_[0-9a-z]{1,16}'));
 
       // No update path AT ALL. Editing is delete-and-repost; a kudos toggle
       // is create/delete of a deterministic id. Every mutation a rule does

@@ -940,6 +940,22 @@ await denied(setDoc(reaction(asAlex, TIM, 'k_random-1'), kudosDoc(ALEX, 'sess-9'
 await allowed(setDoc(reaction(asAlex, TIM, 'k_sess-9_' + ALEX), kudosDoc(ALEX, 'sess-9')),
   'while the real id still works');
 
+/* ---- 🆕 2026-10-17: a comment id is pinned to its sender too ----
+ * `c_{sessionId}_{fromUid}_{nonce}` (js/social.js commentId()). Before, only a
+ * kudos id was pinned, so a friend could file a COMMENT under another friend's
+ * kudos id `k_{session}_{them}` and that friend's kudos was then refused. */
+console.log('\n--- 🆕 Comment ids belong to the sender ---\n');
+await denied(setDoc(reaction(asAlex, TIM, 'k_sess-8_' + SAM), commentDoc(ALEX, 'squat', 'sess-8')),
+  '🆕 a friend cannot file a comment under another friend\'s kudos id');
+await denied(setDoc(reaction(asAlex, TIM, 'c_sess-8_' + SAM + '_n1'), commentDoc(ALEX, 'squat', 'sess-8')),
+  '🆕 nor under another friend\'s comment id');
+await denied(setDoc(reaction(asAlex, TIM, 'c_other_' + ALEX + '_n1'), commentDoc(ALEX, 'hi', 'sess-8')),
+  '🆕 nor under an id for a different workout');
+await allowed(setDoc(reaction(asAlex, TIM, 'c_sess-8_' + ALEX + '_mgv2k1x0'), commentDoc(ALEX, 'nice', 'sess-8')),
+  'while the id the app writes still works');
+await allowed(setDoc(reaction(asAlex, TIM, 'k_sess-8_' + ALEX), kudosDoc(ALEX, 'sess-8')),
+  'and kudos ids are unaffected by the comment rule');
+
 /* ---- 🆕 2026-10-16: the legacy-adoption marker is owner-only and shape-checked ---- */
 console.log('\n--- 🆕 The adoption marker ---\n');
 await allowed(setDoc(doc(asTim, 'users', TIM, 'adoptions', 'sessions'), { ids: ['s1', 's2'], updatedAt: serverTimestamp() }),

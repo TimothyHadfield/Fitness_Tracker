@@ -4778,6 +4778,10 @@ export async function SessionView(workoutId) {
 
     clearDraft();
     showFinished(cleaned, guests, prs);
+    // 🆕 2026-10-17: no signal after the app had connected — the save waited
+    // ~4 s for the server, then counted as saved (Firestore holds it on this
+    // phone and uploads it later). One line says so instead of a silent wait.
+    if (store.queuedWrites() > 0) toast('Saved on this phone — will upload.');
     // 🆕 O-13 (wave 2): after the FIRST saved workout only, "Keep your
     // training". Held until the finish sequence has played (FINISH_PR_LAST).
     if (cleaned.length) {

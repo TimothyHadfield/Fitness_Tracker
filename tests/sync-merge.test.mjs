@@ -113,7 +113,8 @@ async function freshReader(uid) {
   await A.list.write('goals', [workout('g0', 'Keep'), workout('gx', 'Delete me')]);
   const a = await A.list.read('goals');
   const b = await B.list.read('goals');
-  await A.list.write('goals', a.filter((r) => r.id !== 'gx'));
+  // Deletes are NAMED, as the store names them (2026-10-17).
+  await A.list.write('goals', a.filter((r) => r.id !== 'gx'), { deletes: ['gx'] });
   await B.list.write('goals', upsert(b, workout('gB', 'Added on B')));   // b still has gx
   let truth = await (await freshReader(uid)).list.read('goals');
   ok(ids(truth) === 'g0,gB', `goals: delete on A + add on B keeps the add, deleted row stays gone (got ${ids(truth)})`);
@@ -137,7 +138,8 @@ async function freshReader(uid) {
   pending.catch(() => {});
   // Meanwhile B, online, adds one and deletes bw0.
   const b = await B.list.read('bodyWeight');
-  await B.list.write('bodyWeight', upsert(b.filter((r) => r.id !== 'bw0'), { id: 'bwB', date: '2026-09-27', weight: 179 }));
+  await B.list.write('bodyWeight', upsert(b.filter((r) => r.id !== 'bw0'), { id: 'bwB', date: '2026-09-27', weight: 179 }),
+    { deletes: ['bw0'] });
   const seenOffline = await A.list.read('bodyWeight').catch(() => null);
   ok(Array.isArray(seenOffline) && seenOffline.some((r) => r.id === 'bwA'),
      'bodyWeight: the offline device sees its own write before reconnecting');
@@ -179,7 +181,7 @@ if (!OLD) {
   await A.list.write('customExercises', [{ muscle: 'biceps', name: 'Curl', id: 'e1' }]);
   let raw = (await fs.getDoc(fs.doc(A.db, 'users', uid, 'collections', 'customExercises'))).data().rows;
   ok(raw.length === 1, `customExercises: a reordered-equal row is not duplicated (stored ${raw.length})`);
-  await A.list.write('customExercises', []);
+  await A.list.write('customExercises', [], { deletes: ['e1'] });
   raw = (await fs.getDoc(fs.doc(A.db, 'users', uid, 'collections', 'customExercises'))).data().rows;
   ok(raw.length === 0, `customExercises: and deleting it really deletes it (stored ${raw.length})`);
 }
@@ -222,7 +224,7 @@ if (!OLD) {
 
   const a2 = await A.shard.read('sessions', []);
   const b2 = await B.shard.read('sessions', []);
-  await A.shard.write('sessions', a2.filter((r) => r.id !== 's0'));
+  await A.shard.write('sessions', a2.filter((r) => r.id !== 's0'), { deletes: ['s0'] });
   await B.shard.write('sessions', upsert(b2, session('sC', '2026-09-27')));   // b2 still has s0
   truth = await (await freshReader(uid)).shard.read('sessions', []);
   ok(ids(truth) === 'sA,sB,sC', `sessions: delete on A + add on B, deleted stays gone (got ${ids(truth)})`);

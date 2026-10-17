@@ -1706,6 +1706,9 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
 
   const LEGACY = 'users/u1/collections/sessions';
   const sess = (id, w) => ({ id, date: '2026-08-01', entries: [{ exerciseId: 'x', sets: [{ weight: w, reps: 5 }] }] });
+  // 2026-10-17: an ordinary write deletes only the ids it is told to — what
+  // store.js derives from its own read (`from`) minus the new list.
+  const named = (before, after) => ({ deletes: before.filter((r) => !after.some((a) => a.id === r.id)).map((r) => r.id) });
 
   /* ---- ⚠️ THE PROHIBITION: adoption never touches the legacy document ---- */
   {
@@ -1767,17 +1770,17 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
        'ten sessions stand');
 
     let threw = null;
-    try { await io.write('sessions', ten.slice(0, 3)); } catch (e) { threw = e; }
+    try { await io.write('sessions', ten.slice(0, 3), named(ten, ten.slice(0, 3))); } catch (e) { threw = e; }
     ok(Boolean(threw), '⚠️ a write that would delete 7 of 10 sessions is REFUSED outright');
     ok([...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length === 10,
        'and not one document was touched — a wrong delete half means no trustworthy halves');
 
-    await io.write('sessions', ten.slice(0, 8));
+    await io.write('sessions', ten.slice(0, 8), named(ten, ten.slice(0, 8)));
     ok([...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length === 8,
        `deleting 2 — within MASS_DELETE_MAX (${fb.MASS_DELETE_MAX}) — still works, because ordinary deletes must`);
 
     let threw2 = null;
-    try { await io.write('sessions', []); } catch (e) { threw2 = e; }
+    try { await io.write('sessions', [], named(ten.slice(0, 8), [])); } catch (e) { threw2 = e; }
     ok(Boolean(threw2), 'and writing [] over 8 sessions without the wholesale flag is refused');
 
     await io.write('sessions', [], { wholesale: true });
@@ -1804,12 +1807,12 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(docs.get('users/u1/sessions/s1').row.entries[0].sets[0].weight === 100, 'while the others sat still');
 
     // Deleting a session deletes its document.
-    await io.write('sessions', edited.filter((r) => r.id !== 's1'));
+    await io.write('sessions', edited.filter((r) => r.id !== 's1'), { deletes: ['s1'] });
     ok(!docs.has('users/u1/sessions/s1'), 'deleting a session deletes its document');
     ok(docs.has('users/u1/sessions/s2') && docs.has('users/u1/sessions/s3'), 'and only that one');
 
-    // clearAll() writes [].
-    await io.write('sessions', []);
+    // clearAll() writes [] on the wholesale path.
+    await io.write('sessions', [], { wholesale: true });
     ok([...docs.keys()].filter((k) => k.startsWith('users/u1/sessions/')).length === 0,
        'clearing the collection removes every document');
   }
@@ -1823,7 +1826,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     docs.set('users/u1/sessions/old2', { row: sess('old2', 200), updatedAt: 'TS' });
     const io = fb.createShardIO(c, 'u1');       // never read — memo is cold
 
-    await io.write('sessions', [sess('new1', 300)]);
+    await io.write('sessions', [sess('new1', 300)], { wholesale: true });   // Restore
     ok(!docs.has('users/u1/sessions/old1') && !docs.has('users/u1/sessions/old2'),
        '⚠️ a cold write still clears what was there — otherwise a restore merges instead of replacing');
     ok(docs.has('users/u1/sessions/new1'), 'and writes the new row');
@@ -1873,7 +1876,7 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
     ok(first.length === 40 && shardIds() === 40, `all 40 legacy sessions adopt (${first.length})`);
 
     // Delete one, exactly as store.deleteSession() does: read, drop the row, write.
-    await io.write('sessions', first.filter((r) => r.id !== 's-legacy-7'));
+    await io.write('sessions', first.filter((r) => r.id !== 's-legacy-7'), { deletes: ['s-legacy-7'] });
     const again = await io.read('sessions', docs.get(LEGACY).rows);
     ok(!again.some((r) => r.id === 's-legacy-7'),
        '🆕 a deleted legacy session does NOT come back on the next read');
@@ -2386,7 +2389,11 @@ ok(fb.mergeRows(once, localRows).length === once.length, 'uploading twice is a n
       const { c: c2, docs: docs2 } = fakeFirestore();
       plant(docs2, 'u1');
       let threw = null;
-      try { await fb.createShardIO(c2, 'u1').write('sessions', []); } catch (e) { threw = e; }
+      // 2026-10-17: deletes are named now (the store names the rows its read
+      // held that the new list leaves out), so the stale-read bug the guard
+      // catches arrives as a long `deletes` list.
+      const all200 = [...docs2.keys()].filter((k) => k.startsWith('users/u1/sessions/')).map((k) => k.split('/').pop());
+      try { await fb.createShardIO(c2, 'u1').write('sessions', [], { deletes: all200 }); } catch (e) { threw = e; }
       ok(threw && /Refusing to delete/.test(threw.message),
          '🔒 while an ordinary write of [] over those same sessions is still refused');
       ok(docs2.has('users/u1/sessions/s0'), 'and changed nothing');

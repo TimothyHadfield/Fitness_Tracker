@@ -280,6 +280,56 @@ function docRef(c, collection) {
 // one at a time; two leaves room for a same-write edge nobody has met yet.
 export const MASS_DELETE_MAX = 2;
 
+/* 🆕 2026-10-17 (data-safety audit) — A SAVE NEVER WAITS FOR THE SERVER.
+ * `batch.commit()` resolves only when the server acknowledges it, so with no
+ * signal after the app had connected, Save workout sat there for ever with no
+ * word on screen. Firestore has already applied the write on this device and
+ * queued it the moment commit() is called, and it uploads it by itself when
+ * the signal comes back — so after a short wait the write is treated as saved
+ * and the store says "queued". A later refusal is logged, as it always was
+ * for anything the SDK replays. */
+export const COMMIT_WAIT_MS = 4000;
+let commitWaitMs = COMMIT_WAIT_MS;
+let queuedCommits = 0;
+
+/** Tests shorten the wait. */
+export function setCommitWait(ms) { commitWaitMs = ms; }
+
+/** Writes still waiting for the server (queued on this device). */
+export function queuedWriteCount() { return queuedCommits; }
+
+/** @returns 'sent' when the server took it in time, 'queued' when it did not. */
+export async function commitOrQueue(commit, ms = commitWaitMs) {
+  const offline = typeof navigator !== 'undefined' && navigator && navigator.onLine === false;
+  let timer = null;
+  let late = false;       // the caller has been told "queued"
+  let done = false;       // the server has answered
+  const waited = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      if (done) return;
+      late = true;
+      queuedCommits++;
+      resolve('queued');
+    }, offline ? 0 : ms);
+  });
+  const sent = commit.then(() => {
+    done = true;
+    if (late) queuedCommits = Math.max(0, queuedCommits - 1);
+    return 'sent';
+  }, (err) => {
+    done = true;
+    if (!late) throw err;
+    queuedCommits = Math.max(0, queuedCommits - 1);
+    console.warn('A queued write was refused when it reached the server.', err);
+    return 'sent';
+  });
+  try {
+    return await Promise.race([sent, waited]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * 💷 READING ONLY WHAT CHANGED — 2026-09-08, and it is a COST fix
  *
@@ -586,15 +636,18 @@ export function createShardIO(c, uid, cache = localShardCache()) {
     return out.rows;
   }
 
+  /** @returns true when a commit was left queued on this device (no signal). */
   async function commitOps(ops) {
+    let queued = false;
     for (const chunk of inBatches(ops, BATCH_LIMIT)) {
       const batch = c.fs.writeBatch(c.db);
       for (const op of chunk) {
         if (op.kind === 'set') batch.set(op.ref, { row: op.row, updatedAt: c.fs.serverTimestamp() });
         else batch.delete(op.ref);
       }
-      await batch.commit();
+      if ((await commitOrQueue(batch.commit())) === 'queued') queued = true;
     }
+    return queued;
   }
 
   /* ⚠️ THE LEGACY DOCUMENT IS NEVER WRITTEN BY THIS MODULE. NOT EMPTIED, NOT
@@ -730,7 +783,20 @@ export function createShardIO(c, uid, cache = localShardCache()) {
         memo.set(collection, shardSnapshot(await readShard(collection)));
       }
 
-      const { writes, deletes } = shardDiff(memo.get(collection), rows);
+      /* 🚨 DELETES ARE NAMED, NEVER INFERRED — 2026-10-17 (data-safety audit).
+       * The memo is shared by every read in this tab, so two overlapping
+       * read-modify-writes (Save workout while a group workout auto-applies)
+       * each diffed against the OTHER one's read, and the later write deleted
+       * the earlier one's brand-new session from the cloud. Now a write deletes
+       * only the ids the store names in `opts.deletes` (the rows its own read
+       * held that it left out). Only Clear all and Restore, which pass no list,
+       * still mean "the collection is exactly this" and diff against the memo. */
+      const named = opts && Array.isArray(opts.deletes);
+      const diff = shardDiff(memo.get(collection), rows);
+      const writes = diff.writes;
+      const deletes = named
+        ? [...new Set(opts.deletes.map(String))]
+        : (opts && (opts.wholesale || opts.replace) ? diff.deletes : []);
 
       /* ⚠️ THE MASS-DELETE GUARD — 2026-08-28, Tim: "make it extremely
        * difficult to erase data from people's accounts."
@@ -751,7 +817,7 @@ export function createShardIO(c, uid, cache = localShardCache()) {
       }
 
       const target = col(collection);
-      await commitOps([
+      const queued = await commitOps([
         ...writes.map((row) => ({ kind: 'set', ref: c.fs.doc(target, String(row.id)), row })),
         // ⚠️ Deleting a row is a DOCUMENT DELETE here, where in a whole-list
         // collection it was a write of a shorter list. That is a permission the
@@ -762,8 +828,12 @@ export function createShardIO(c, uid, cache = localShardCache()) {
 
       // After the await, for the reason the store's own write cache gives: a
       // commit that threw has changed nothing, and recording what we hoped to
-      // store is a lie the next diff reads back as fact.
-      memo.set(collection, shardSnapshot(rows));
+      // store is a lie the next diff reads back as fact. Rows this write did not
+      // mention and did not delete are still there, so they stay in the memo.
+      const after = new Map(memo.get(collection) || []);
+      for (const id of deletes) after.delete(id);
+      for (const [id, json] of shardSnapshot(rows)) after.set(id, json);
+      memo.set(collection, after);
 
       /* 💷 The between-sessions snapshot follows the write, and ⚠️ THE CURSOR
        * DELIBERATELY DOES NOT MOVE. We do not know what `serverTimestamp()`
@@ -774,8 +844,15 @@ export function createShardIO(c, uid, cache = localShardCache()) {
        * other write, so the snapshot is replaced rather than left describing
        * an account that no longer looks like that. */
       const prior = cache.get(uid, collection);
-      if (prior) cache.set(uid, collection, { rows, cursor: prior.cursor });
-      return true;
+      if (prior) {
+        // Same rule as the memo: what this write did not name is kept.
+        const gone = new Set(deletes);
+        const mine = new Set((rows || []).filter((r) => r && r.id != null).map((r) => String(r.id)));
+        const kept = prior.rows.filter((r) => r && r.id != null
+          && !gone.has(String(r.id)) && !mine.has(String(r.id)));
+        cache.set(uid, collection, { rows: [...kept, ...(rows || [])], cursor: prior.cursor });
+      }
+      return queued ? 'queued' : true;
     },
   };
 }
@@ -871,12 +948,13 @@ export function createListIO(c, uid) {
     // Recorded before the await, dropped again if the write fails — see below.
     base.set(collection, (rows || []).slice());
     try {
-      await c.fs.setDoc(ref(collection), { rows, updatedAt: c.fs.serverTimestamp() });
+      const out = await commitOrQueue(
+        c.fs.setDoc(ref(collection), { rows, updatedAt: c.fs.serverTimestamp() }));
+      return out === 'queued' ? 'queued' : true;
     } catch (err) {
       base.delete(collection);
       throw err;
     }
-    return true;
   }
 
   return {
@@ -893,10 +971,27 @@ export function createListIO(c, uid) {
       // No base means no idea what this device is changing FROM. Read first,
       // the same rule the sharded path follows.
       if (!base.has(collection)) base.set(collection, await readRaw(collection));
-      const plan = listMergePlan(base.get(collection), rows);
+      // 🚨 2026-10-17: only the ids the store NAMES are removed (see the shard
+      // write). A row in the base that this write left out was added by an
+      // overlapping save, not deleted. Clear all passes no list and still
+      // removes everything it read.
+      const named = opts && Array.isArray(opts.deletes)
+        ? new Set(opts.deletes.map(String)) : null;
+      const deleting = named || (opts && opts.wholesale ? 'all' : new Set());
+      const prior = base.get(collection);
+      const plan = listMergePlan(prior, rows, deleting === 'all' ? null : deleting);
       if (!plan) return replace(collection, rows);
+      // What the document holds after this write, as far as this device knows:
+      // the rows written, plus every base row this write neither replaced nor
+      // removed.
+      const mine = new Set((rows || []).map((r) => String(r.id)));
+      const nextBase = [
+        ...(rows || []),
+        ...(deleting === 'all' ? [] : (prior || []).filter((r) => r && r.id != null
+          && !mine.has(String(r.id)) && !deleting.has(String(r.id)))),
+      ];
       if (!plan.removes.length && !plan.adds.length) {
-        base.set(collection, (rows || []).slice());
+        base.set(collection, nextBase);
         return true;
       }
 
@@ -920,14 +1015,14 @@ export function createListIO(c, uid) {
       // edit made meanwhile must diff against THIS one, or it would remove the
       // old copy again (a no-op) and leave this edit behind as a duplicate. A
       // commit that fails drops the base, so the next write re-reads.
-      base.set(collection, (rows || []).slice());
+      base.set(collection, nextBase);
       try {
-        await batch.commit();
+        const out = await commitOrQueue(batch.commit());
+        return out === 'queued' ? 'queued' : true;
       } catch (err) {
         base.delete(collection);
         throw err;
       }
-      return true;
     },
   };
 }
@@ -1119,6 +1214,9 @@ export function createAccountPurge(c, uid, collections) {
 export const FirebaseBackend = {
   async ready() { await init(); return describeUser(user); },
 
+  /** Writes kept on this device until the signal returns (commitOrQueue). */
+  queuedWrites() { return queuedCommits; },
+
   async read(collection) {
     const c = await init();
     // Deliberately NOT caught. The store does read-modify-write, so swallowing
@@ -1247,6 +1345,24 @@ export const FirebaseBackend = {
     if (!user) throw new Error('Not signed in.');
     await c.fs.deleteDoc(c.fs.doc(c.db, 'users', user.uid, 'photos', String(sessionId)));
     return true;
+  },
+
+  /** 🔒 2026-10-17: after Clear all / Restore, every photo whose workout is no
+   * longer in the account goes too (friends could still open it by id).
+   * @param {Set<string>} keep  session ids that still exist
+   * @returns how many were deleted */
+  async deletePhotosExcept(keep) {
+    const c = await init();
+    if (!user) throw new Error('Not signed in.');
+    const snap = await c.fs.getDocs(c.fs.collection(c.db, 'users', user.uid, 'photos'));
+    const gone = [];
+    snap.forEach((d) => { if (!(keep && keep.has(d.id))) gone.push(d.id); });
+    for (const chunk of inBatches(gone, BATCH_LIMIT)) {
+      const batch = c.fs.writeBatch(c.db);
+      for (const id of chunk) batch.delete(c.fs.doc(c.db, 'users', user.uid, 'photos', id));
+      await commitOrQueue(batch.commit());
+    }
+    return gone.length;
   },
 
   /* --- reactions: kudos + comments on published workouts --- */
@@ -1582,6 +1698,14 @@ export const FirebaseBackend = {
     const c = await init();
     forgetDropped();
     leftAt = Date.now();
+    // 🔒 2026-10-17: the between-sessions copy of this account's workouts is
+    // keyed by its uid and would stay in this browser after signing out (a
+    // shared phone). It is only a read-cost saving; the next sign-in re-reads.
+    const leaving = c.authClient.currentUser || user;
+    if (leaving && leaving.uid) {
+      const snap = localShardCache();
+      for (const name of SHARDED_COLLECTIONS) snap.clear(leaving.uid, name);
+    }
     await c.auth.signOut(c.authClient);
     // Through the keeper: the listener asks for a guest account at the same
     // moment, and two asks must not make two accounts.
@@ -2088,7 +2212,7 @@ export function dedupeRows(rows) {
  * ⚠️ A ROW UNCHANGED SINCE THE BASE IS NEVER SENT. That is what stops a device
  * holding a stale copy of a row somebody else deleted from bringing it back.
  */
-export function listMergePlan(base, rows) {
+export function listMergePlan(base, rows, deletes = null) {
   const prev = new Map();   // id → [{ row, json }]
   for (const r of Array.isArray(base) ? base : []) {
     if (!r || r.id == null) return null;
@@ -2115,8 +2239,12 @@ export function listMergePlan(base, rows) {
     }
     if (!kept) adds.push(r);
   }
+  // A row missing from `rows` is removed only when it is named in `deletes`
+  // (2026-10-17); `null` keeps the old meaning, "rows is the whole list".
   for (const [key, copies] of prev) {
-    if (!seen.has(key)) for (const copy of copies) removes.push(copy.row);
+    if (seen.has(key)) continue;
+    if (deletes && !deletes.has(key)) continue;
+    for (const copy of copies) removes.push(copy.row);
   }
   return { removes, adds };
 }

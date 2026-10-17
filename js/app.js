@@ -32,7 +32,26 @@ import {
  * again instead of replaying the failure. */
 function lazy(load) {
   let p = null;
-  return () => (p || (p = load().catch((err) => { p = null; throw err; })));
+  return () => (p || (p = load().catch((err) => { p = null; reloadOnceForNewBuild(); throw err; })));
+}
+
+/* 🆕 2026-10-17 (data-safety audit): AFTER A DEPLOY, A SCREEN LOADED FOR THE
+ * FIRST TIME CAN BE THE NEW BUILD'S while store.js in memory is the old one —
+ * the import then fails ("does not provide an export named …") and the screen
+ * never opens. A failed screen load while online reloads the page ONCE, so the
+ * whole app comes up on one build. The time is kept per tab: a second failure
+ * within a minute is a real fault (or no signal) and is shown, not looped on. */
+const RELOAD_KEY = 'ftrack:v1:lazyReloadAt';
+export function reloadOnceForNewBuild(env = globalThis) {
+  try {
+    if (env.navigator && env.navigator.onLine === false) return false;
+    const ss = env.sessionStorage;
+    const last = Number(ss.getItem(RELOAD_KEY)) || 0;
+    if (Date.now() - last < 60000) return false;
+    ss.setItem(RELOAD_KEY, String(Date.now()));
+    env.location.reload();
+    return true;
+  } catch (_) { return false; }
 }
 const VIEWS = {
   workouts: lazy(() => import('./views-workouts.js')),

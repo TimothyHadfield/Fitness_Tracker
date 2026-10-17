@@ -848,3 +848,14 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   overflow; live curl of sw.js after push.
 - **Open:** 5 decisions in progress.md Waiting table. chat.md is just over 60 KB — move 09-19..09-21
   to docs/archive at the next checkpoint.
+
+## 2026-10-17 · Data-safety fixes (builder, manager brief)
+- **Asked:** 7 audit findings: overlapping saves deleting a cloud workout; Save hanging offline;
+  Clear all/Restore leaving the friends copy + photos; lazy-import failure after a deploy; comment id
+  spoofing in rules; sign-out leaving the shard cache; `#/day/garbage`.
+- **Built:** list in progress.md Status "Data safety 2026-10-17". data-layer tests now name deletes.
+- **Verified how:** old code: shard race lost a session 3/10, list 1/10, store saveSession 1/10;
+  clearAll 0 publishes. New: datasafety 30/30, ui 11/11, sync-merge 14/14 (emulator), data-layer 3018/0, full plain suite 0 FAIL,
+  rules emulator 306 PASS, then rules deployed. WebKit 393px + 1280px demo shots of the save line.
+- **Open (Tim's call):** wording "Saved on this phone — will upload." and "That day does not exist /
+  The link may be broken." Not done (brief): comment purge on delete-account, cloud-fallback banner.
