@@ -880,3 +880,21 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   under 380px the Colour chips wrap to two lines.
 - **Verified how:** headless WebKit probe (demo, SW + Firebase blocked), original CSS vs new at
   393×659 and 1280×800, dark + light; 360×640 spot check; full plain suite after rebase (0 FAIL).
+
+## 2026-10-17 · Runner audit fixes (builder fix-runner, from the manager's in-depth audit)
+- **Asked (Tim via manager):** *"an extreamly in-depth analysis … features that you think are
+  annoying … movement that is poor … work on improving."* Rule: content never moves when you tap.
+- **Built (`tests/runner-1017.test.mjs`, 21 checks, 15 failing on 151b08b first):** ± hold-repeat
+  stops on a window-level lift/cancel/blur or a detached button (was 205 → 315 on its own) · set 1's
+  steppers stay put when suggested warm-ups are added/removed above (`refreshWarmRows` anchor) ·
+  number boxes are `type=text` and select the old number on tap (1800 over 180 gave 1180080); a typed
+  weight > 5000 lb is refused silently; "62,5" reads as 62.5; laptop ↑/↓ still step · Today's
+  exercises: tapping a name goes there and closes · person chips get their full 44px (strip clipped
+  it to 40; `overflow-y:hidden` + 7px padding given back by margin) · Auto-guide holds two caption
+  lines so warm-up → set 1 doesn't drop the steppers 23px.
+- **Verified how:** headless WebKit 393×659, demo, SW blocked: + stepped 180→250→150, + button y
+  spread 194px → 0; guide steps y spread 23 → 0; chip hit 40 → 44 with content y unchanged (174);
+  no overflow, no console errors at 393 and 1280.
+- **Open / not fixed:** WebKit still scrolls the pane 10–26px when the number box takes focus
+  (native focus-scroll, pre-existing); a typed weight that removes warm-ups while the pane is near
+  the top can't be fully compensated (nothing to scroll back).

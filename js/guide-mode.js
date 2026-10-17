@@ -347,7 +347,10 @@ export function attachGuide(ctx) {
       for (const f of ['weight', 'reps']) if (caps[f]) setChildren(caps[f], c ? c[f] : '');
     };
     const nodes = (entry.fields || []).map((f) => {
-      const cap = (f === 'weight' || f === 'reps') && ctx.captions && ctx.captions(entry, ex, target, onWarm)
+      // ⚠️ THE SLOT IS THERE ON A WARM-UP TOO, EMPTY (2026-10-17). Measured at
+      // 393×659: the ± buttons dropped 23px going from the last warm-up to set
+      // 1, because only set 1 had a caption row. app.css reserves its height.
+      const cap = (f === 'weight' || f === 'reps') && ctx.captions
         ? el('div', { class: 'step-est' }) : null;
       if (cap) caps[f] = cap;
       let box = null;

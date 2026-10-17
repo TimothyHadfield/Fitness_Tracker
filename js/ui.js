@@ -2163,6 +2163,9 @@ export function relativeDay(iso) {
 /* 🆕 `plates: false` (2026-09-27) — the Auto-guide draws the whole bar big
  * above its steppers (js/bar-view.js), so its weight stepper shows the plain
  * steps hint instead of a second, small drawing. */
+// A typed weight above this (in pounds) is refused as a keypad slip.
+export const MAX_TYPED_LB = 5000;
+
 export function stepper({ field, value, onChange, suffix, exercise, duration = false, plates = true }) {
   const meta = FIELD_META[field];
   // Weight is STORED in pounds and SHOWN in the user's unit, so the stepper
@@ -2179,7 +2182,12 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
 
   const input = el('input', {
     class: 'step-value mono',
-    type: field === 'time' ? 'text' : 'number',
+    // ⚠️ ALWAYS `text`, never `number` (2026-10-17). WebKit refuses select() on
+    // a number box, so a tap left the caret inside "180" and typing 1800 gave
+    // 1180080 — which then carried to every later set and the warm-ups. The
+    // keypad comes from `inputmode` below, not from the type.
+    type: 'text',
+    autocomplete: 'off',
     // ⚠️ `numeric` is the iOS keypad WITH NO DECIMAL POINT, so it must only go
     // on a field that can never hold one. Weight can: kilograms are stored as
     // pounds and shown to one decimal, and the kg step is 2.5 — so a kg user
@@ -2312,26 +2320,77 @@ export function stepper({ field, value, onChange, suffix, exercise, duration = f
       if (!canAnimate()) return;
       springTransform(btn, { scale: on ? 0.94 : 1 }, on ? SURFACE_SPRINGS.press : SURFACE_SPRINGS.release);
     };
+    /* ⚠️ THE REPEAT ENDS WHEREVER THE FINGER LIFTS — 2026-10-17. Measured at
+     * 393×659: dialling set 1 from 200 to 205 added a warm-up row above it, the
+     * button slid out from under a still finger, and the lift landed on another
+     * element — no pointerup or pointerleave ever reached this button, and the
+     * repeat ran 205 → 315 on its own. Now the pointer is captured, and the
+     * lift, a cancel, the window losing focus or the button leaving the page
+     * all stop it. */
+    const ends = ['pointerup', 'pointercancel'];
     const start = (e) => {
       e.preventDefault();
+      stop();
+      try { if (e.pointerId != null && btn.setPointerCapture) btn.setPointerCapture(e.pointerId); } catch { /* not capturable: the window listeners still stop it */ }
       press(true);
       bump(dir);
-      to = setTimeout(() => { iv = setInterval(() => bump(dir), 90); }, 420);
+      ends.forEach((ev) => window.addEventListener(ev, stop, true));
+      window.addEventListener('blur', stop);
+      to = setTimeout(() => {
+        iv = setInterval(() => { if (!btn.isConnected) stop(); else bump(dir); }, 90);
+      }, 420);
     };
-    const stop = () => { press(false); clearTimeout(to); clearInterval(iv); to = iv = null; };
+    function stop() {
+      press(false);
+      clearTimeout(to); clearInterval(iv); to = iv = null;
+      ends.forEach((ev) => window.removeEventListener(ev, stop, true));
+      window.removeEventListener('blur', stop);
+    }
     btn.addEventListener('pointerdown', start);
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => btn.addEventListener(ev, stop));
+    ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach((ev) => btn.addEventListener(ev, stop));
     return btn;
   }
 
   // A set's time shows raw seconds while typing; a duration keeps its "30:00",
   // since a bare number there would read back as minutes.
-  input.addEventListener('focus', () => { if (field === 'time' && !isDuration) input.value = current; input.select(); });
+  // ⚠️ THE OLD NUMBER IS SELECTED, SO TYPING REPLACES IT (2026-10-17). Safari
+  // puts the caret where the finger landed AFTER focus runs, so the selection
+  // is made again a tick later, and the tap's own mouseup is not allowed to
+  // collapse it.
+  let justFocused = false;
+  const selectAll = () => {
+    if (document.activeElement !== input) return;
+    try { input.setSelectionRange(0, input.value.length); } catch { input.select(); }
+  };
+  input.addEventListener('focus', () => {
+    if (field === 'time' && !isDuration) input.value = current;
+    justFocused = true;
+    selectAll();
+    setTimeout(selectAll, 0);
+    setTimeout(() => { justFocused = false; }, 400);
+  });
+  input.addEventListener('mouseup', (e) => { if (justFocused) { e.preventDefault(); justFocused = false; } });
   input.addEventListener('blur', () => {
-    const raw = field === 'time' ? parseTime(input.value, { bareMinutes: isDuration }) : parseFloat(input.value);
+    // A comma is a decimal point on some keypads ("62,5" kg).
+    let raw = field === 'time' ? parseTime(input.value, { bareMinutes: isDuration }) : parseFloat(String(input.value).replace(',', '.'));
+    // Nothing anyone lifts weighs 5000 lb; a number past it is a slip of the
+    // keypad, and the box goes back to what it held.
+    // Silently: a refused number changes nothing, so it must not count as the
+    // touch that makes a pre-filled set real.
+    if (isWeight && !Number.isNaN(raw) && outbound(raw) > MAX_TYPED_LB) { set(current, true); return; }
     set(Number.isNaN(raw) ? current : raw);
   });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') input.blur();
+    // The arrow keys a number box answered on a laptop still step it.
+    else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !isDuration) {
+      e.preventDefault();
+      const typed = parseFloat(String(input.value).replace(',', '.'));
+      if (!Number.isNaN(typed) && !(isWeight && outbound(typed) > MAX_TYPED_LB)) current = typed;
+      bump(e.key === 'ArrowUp' ? 1 : -1);
+      selectAll();
+    }
+  });
 
   const minus = holdable(el('button', { class: 'step-btn', type: 'button', 'aria-label': `Decrease ${meta.label}` }, icon('minus')), -1);
   const plus = holdable(el('button', { class: 'step-btn', type: 'button', 'aria-label': `Increase ${meta.label}` }, icon('plus')), 1);

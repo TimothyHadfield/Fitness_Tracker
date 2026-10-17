@@ -2805,12 +2805,22 @@ export async function SessionView(workoutId) {
     /* Swap the warm-up rows for fresh ones WITHOUT touching the working rows —
      * set 1's open stepper is the thing being typed into (see `liveRows`). */
     function refreshWarmRows() {
+      // ⚠️ AND THE OPEN SET STAYS UNDER THE THUMB (2026-10-17). Measured at
+      // 393×659: dialling 200 → 205 added a warm-up row above set 1 and its ±
+      // buttons jumped 53px down mid-press. The pane is scrolled by however far
+      // the open row moved — the `rowAnchor` idea, for a change no tap made.
+      const anchor = editor.isConnected && typeof editor.getBoundingClientRect === 'function'
+        ? editor.getBoundingClientRect().top : null;
       warms = Array.isArray(entry.warmups) ? entry.warmups : [];
       for (const n of [...setList.children]) if (n.classList.contains('set-warm')) n.remove();
       for (let i = liveRows.length - 1; i >= 0; i--) if (liveRows[i].warm) liveRows.splice(i, 1);
       const first = setList.firstChild;
       for (const r of buildWarmRows(entry.editing !== false)) setList.insertBefore(r, first);
       if (warmLine) warmLine.hidden = !warms.length;
+      if (anchor != null) {
+        const moved = editor.getBoundingClientRect().top - anchor;
+        if (moved) pane.scrollTop += moved;
+      }
     }
 
     function renderSets() {
@@ -4365,6 +4375,12 @@ export async function SessionView(workoutId) {
       handle.addEventListener('pointercancel', end);
     }
 
+    function jumpTo(i) {
+      const at = steps().findIndex((s) => s.entryIndex === i || (s.members || []).includes(i));
+      close();
+      if (at >= 0 && at !== state.index) goToStep(at);
+    }
+
     function render() {
       const step = currentStep();
       const hereIndex = step ? step.entryIndex : -1;
@@ -4403,7 +4419,17 @@ export async function SessionView(workoutId) {
               if (!moveEntry(i, i + dir)) focusIndex = null;
             },
           }, icon('grip', 17)),
-          el('div', { class: 'row-main' },
+          // 🆕 2026-10-17: tapping the name GOES to that exercise and closes the
+          // sheet — the list is also the quickest way to jump around. The grip
+          // and the bin stay the row's other two controls.
+          el('div', {
+            class: 'row-main',
+            role: 'button',
+            tabindex: '0',
+            'aria-label': `Go to ${entry.exerciseName}`,
+            onClick: () => jumpTo(i),
+            onKeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); jumpTo(i); } },
+          },
             // `inControl` even though this row is not a button: four controls
             // already live on it, and a fifth that only opens a picture would
             // be the loudest thing in a list about ORDER. The picture is one

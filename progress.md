@@ -81,6 +81,13 @@ laptop friend profile: head at top, calendar spans rows 1–12 (bests 241 not 47
 labels never shrink under their word (<380px the chips wrap) · Choose a goal: refused rows keep the
 chevron's 17px · feed "235 × 8" on the name's baseline. Measured headless WebKit, before/after.
 
+**Runner audit fixes 2026-10-17 (`tests/runner-1017.test.mjs`, chat.md same date):** ± hold-repeat
+can't run away (window-level stop) · set 1's steppers stay still when suggested warm-ups change above
+them · number boxes are `type=text` and select the old number on tap (a typed weight > 5000 lb is
+refused; `MAX_TYPED_LB` in ui.js) · Today's exercises: tap a name to go there · person chips 44px ·
+Auto-guide reserves two caption lines. Left as Tim's: finished vs untouched sets on save, the
+Edit-record restructure, the laptop runner layout, the rest timer.
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
 old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
@@ -242,6 +249,8 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   deleteAccount use it too. `tests/auth-keeper.test.mjs` fails if any `signInAnonymously(` appears
   outside it. A REAL account dropped by Firebase (not our sign-out: `leftAt` 10 s window) is stored at
   `ftrack:v1:droppedAccount` → Account shows "You were signed out" and Sign in pre-fills the email.
+- **(2026-10-17) The stepper's number box must stay `type="text"`** (keypad from `inputmode`):
+  WebKit can't select inside `type=number`, so typing appended to the old value (1800 → 1180080).
 - **`.btn` beats `[hidden]`** (display: inline-flex): any button toggled with `.hidden` needs a
   `[hidden]` rule. `.btn[hidden]` exists now (49fb4da) — "Continue in this window" had shown to every
   guest for weeks.

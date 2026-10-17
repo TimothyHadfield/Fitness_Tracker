@@ -1513,6 +1513,12 @@ select.input {
   flex: none; display: flex; gap: 6px; align-items: center;
   padding: 8px var(--pad) 0;
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  /* 2026-10-17: a scrolling strip clips the chips' 44px ::before hit area, and
+     measured 40px with 0 below. 7px of padding under the chips, taken back by
+     the margin so nothing below moves (it lands on the progress bar's own 7px
+     top padding), and no vertical scroll inside the strip. */
+  overflow-y: hidden;
+  padding-bottom: 7px; margin-bottom: -7px;
 }
 .people-bar::-webkit-scrollbar { display: none; }
 .person-chip { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-md); }
@@ -7747,6 +7753,9 @@ h1, h2, h3, .empty-title, .section-head, .help-pop-title, .feed-title { text-wra
 .guide-note .note-card { text-align: left; }
 .guide-note .prefill-note { justify-content: center; }
 .guide-steppers { margin-top: 18px; text-align: left; }
+/* Two caption lines are always held, so the steppers sit at one height on a
+   warm-up (no caption) and on a working set ("76% of your estimated max…"). */
+.guide .step-est { min-height: 2.6em; }
 .guide-assist { margin-top: 6px; }
 .guide-assist[hidden] { display: none; }
 .guide .step-value { font-size: 38px; }
