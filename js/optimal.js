@@ -283,6 +283,10 @@ export function rateProgramme(workouts, exMap, opts = {}) {
     // nobody else shows.
     perHour: weeklyMinutes > 0 ? hypertrophy / (weeklyMinutes / 60) : null,
     daysPerWeek,
+    // How many weeks one pass of the rotation takes, as used above. Exported so
+    // a screen that counts one muscle's sets reads the SAME weeks (Goals →
+    // Programs that fit counted its own way and read Bumstead ~14 % high).
+    weeks,
     weeklyMinutes: weeklyMinutes || null,
     // What one session costs, for the summary badge. Declared beats estimated
     // and `minutesEstimated` says which it is, because "~70 min because the

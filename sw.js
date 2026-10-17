@@ -226,6 +226,15 @@ self.addEventListener('message', (e) => {
   // feature that had been live for hours. The live site was serving it; his
   // phone had simply never asked.
   if (e.data === 'check-assets') e.waitUntil(revalidateShell());
+
+  // The update bar's Refresh asks this first, and reloads on the answer (or
+  // after a few seconds regardless — see reloadWhenReady in js/app.js). By the
+  // time 'reload-ready' goes back, every shell file in the cache is the new
+  // build, so the reload cannot mix new and old modules.
+  if (e.data === 'prepare-reload') {
+    const reply = () => { if (e.source) e.source.postMessage('reload-ready'); };
+    e.waitUntil(refreshShell().then(reply, reply));
+  }
 });
 
 // How long to leave it between checks. A resume is a common event and the shell
@@ -252,18 +261,46 @@ async function revalidateShell() {
   const now = Date.now();
   if (sawUpdate || now - lastCheck < RECHECK_MS) return;
   lastCheck = now;
+  await fetchShell();
+}
 
-  const cache = await caches.open(CACHE);
-  await Promise.all(SHELL.map(async (url) => {
-    try {
-      const hit = await cache.match(url);
-      if (!hit) return;
-      const res = await fetch(new Request(url, { cache: 'no-cache' }));
-      if (!res || !res.ok || res.type !== 'basic') return;
-      if (isDifferent(hit, res)) await announceUpdate();
-      await cache.put(url, res.clone());
-    } catch (_) { /* offline, and that is not an error here */ }
-  }));
+/**
+ * One pass over every cached shell file: a conditional GET each (304 when
+ * unchanged), the new copy stored when it moved. Concurrent callers share the
+ * pass in flight rather than starting a second one.
+ */
+let shellInFlight = null;
+function fetchShell() {
+  if (shellInFlight) return shellInFlight;
+  shellInFlight = (async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(SHELL.map(async (url) => {
+      try {
+        const hit = await cache.match(url);
+        if (!hit) return;
+        const res = await fetch(new Request(url, { cache: 'no-cache' }));
+        if (!res || !res.ok || res.type !== 'basic') return;
+        if (isDifferent(hit, res)) await announceUpdate();
+        await cache.put(url, res.clone());
+      } catch (_) { /* offline, and that is not an error here */ }
+    }));
+  })().finally(() => { shellInFlight = null; });
+  return shellInFlight;
+}
+
+/**
+ * ⚠️ AFTER A DEPLOY, BRING THE WHOLE SHELL UP TO DATE — not only the files this
+ * page happened to request (lead batch 2026-10-17). Stale-while-revalidate
+ * refreshes a file only when it is fetched, and the screens are lazy modules:
+ * a screen not opened before Refresh stayed OLD in the cache, so the reload ran
+ * the new app.js beside an old views-*.js — a mixed build, which can break a
+ * screen outright when an import changed. One full pass per page load; a
+ * navigation clears it (see the fetch handler).
+ */
+let shellPass = null;
+function refreshShell() {
+  if (!shellPass) shellPass = fetchShell();
+  return shellPass;
 }
 
 self.addEventListener('fetch', (e) => {
@@ -296,6 +333,7 @@ self.addEventListener('fetch', (e) => {
     // again and the bar would come straight back. Anything this load still
     // finds different sets it again below.
     sawUpdate = false;
+    shellPass = null;
     e.respondWith((async () => {
       try {
         const fresh = await fetch(req);
@@ -383,6 +421,8 @@ let sawUpdate = false;
 async function announceUpdate() {
   if (sawUpdate) return;      // a deploy changes a dozen files; say it once
   sawUpdate = true;
+  // Start fetching the rest of the new build now, while the bar is read.
+  refreshShell().catch(() => {});
   const windows = await self.clients.matchAll({ type: 'window' });
   for (const c of windows) c.postMessage('assets-updated');
 }

@@ -84,7 +84,9 @@ function dayNumber(iso) {
  * a friend's projection is written by an app build we do not control.
  */
 function isRecorded(set) {
-  return Boolean(set) && Object.values(set).some((v) => Number(v) > 0);
+  // The measured fields only: `done: true` is Number 1 and used to count an
+  // empty ticked set as recorded (sweep 2026-10-16).
+  return Boolean(set) && ['weight', 'reps', 'time', 'distance'].some((k) => Number(set[k]) > 0);
 }
 
 /**

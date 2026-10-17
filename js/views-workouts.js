@@ -76,7 +76,7 @@ import { INDIRECT_NOTE_RATING } from './volume-map.js';
 import {
   setChildren, el, icon, iconBtn, chevron, toast, openSheet, confirmSheet, screenShell, goBack,
   emptyState, relativeDay, miniStepper, loadBadge, trimNum, exerciseLabel,
-  personFace, helpDot, parkScreen, refreshRoute, fmtClock, fmtDateShort,
+  personFace, helpDot, parkScreen, refreshRoute, fmtClock, fmtDateShort, friendlyError,
 } from './ui.js';
 
 const go = (hash) => { location.hash = hash; };
@@ -3132,7 +3132,14 @@ async function SystemEditorView(id) {
 
   async function save() {
     if (!draft.name.trim()) { toast('Give your program a name first'); nameInput.focus(); return; }
-    const saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
+    // A failed save used to reject unseen (sweep 2026-10-16): say so, stay put.
+    let saved;
+    try {
+      saved = await store.saveSystem({ ...draft, name: draft.name.trim() });
+    } catch (err) {
+      toast(friendlyError(err, 'That program could not be saved.'), { error: true });
+      return;
+    }
     toast(isNew ? 'Program created' : 'Program saved');
     // Both cases now land on the system itself. Saving an EXISTING one used to
     // drop you back on the top-level list, which was the right escape from a
@@ -3553,7 +3560,14 @@ export async function WorkoutBuilderView(param) {
   async function save() {
     if (!draft.name.trim()) { toast('Give your workout a name first'); nameInput.focus(); return; }
     if (!draft.exercises.length) { toast('Add at least one exercise'); return; }
-    const saved = await store.saveWorkout({ ...draft, name: draft.name.trim() });
+    // A failed save used to reject unseen (sweep 2026-10-16): say so, stay put.
+    let saved;
+    try {
+      saved = await store.saveWorkout({ ...draft, name: draft.name.trim() });
+    } catch (err) {
+      toast(friendlyError(err, 'That workout could not be saved.'), { error: true });
+      return;
+    }
     toast(isNew ? 'Workout created' : 'Workout saved');
     // Editing returns to the workout you were reading; creating returns to the
     // system, which is where the "New workout" button is and therefore where

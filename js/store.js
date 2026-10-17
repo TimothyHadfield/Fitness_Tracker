@@ -1011,6 +1011,17 @@ export function todayISO() {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 
+/** A timestamp's LOCAL day (YYYY-MM-DD). Slicing an ISO string gives the UTC
+ * day, so an evening in Utah read as tomorrow (sweep 2026-10-16). A bare day
+ * passes through. */
+export function localDayOf(iso) {
+  const s = String(iso || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s.slice(0, 10);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 /**
  * 🆕 R-2/R-3 (2026-09-27): ask the browser to keep this site's storage.
  * Safari evicts script-written storage from sites unused for 7 days unless

@@ -830,3 +830,21 @@ I want to build it myself." Dropped. Then prepared the notes for a reset.
   Claude: not now — popup already works in the home-screen app, a new origin strands every guest's
   data + installs + links; do it once with the rename if ever. Tim: *"okay don't do it."*
   Suggested cheap check for him: Continue with Google in a plain Safari tab. Then checkpoint.
+
+## 2026-10-17 · Project-lead batch (portfolio manager, batch 1)
+- **Asked (Tim via manager):** *"any fixes or improvements you feel confident about go ahead and do,
+  pretty much always. You don't have to ask me."* Goals: fix open sweep bugs; make sure phones get new
+  builds without a hard refresh; commit `Fitness_Research/weightlifting.md` if it belongs; cut the
+  Waiting table to ≤5 decisions.
+- **Built:** 9 fixes + the update gap, one commit, test `tests/lead-1017.test.mjs` (26 checks, all
+  failing on d25fab3 first). List in progress.md "Lead batch 2026-10-17". The update mechanism
+  already existed (network-first page, update bar, check on resume); the gap was a MIXED BUILD after
+  Refresh (lazy screens never fetched stayed old). Fixed in sw.js + app.js.
+- **Decided:** `Fitness_Research/weightlifting.md` NOT read or committed — Tim's standing rule
+  (2026-09-18) says that folder is his research agent's; never read, edit or report on it.
+  Working copy was CRLF (system autocrlf) → shell.test crashed; repo-local autocrlf=false + LF.
+- **Verified how:** full plain suite (see progress Map line); WebKit demo, local server, Firebase
+  hosts blocked, SW blocked: `#/goal/systems` and `#/account` at 393×659 and 1440×900, no errors or
+  overflow; live curl of sw.js after push.
+- **Open:** 5 decisions in progress.md Waiting table. chat.md is just over 60 KB — move 09-19..09-21
+  to docs/archive at the next checkpoint.

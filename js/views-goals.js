@@ -1597,13 +1597,14 @@ async function candidateSystems(muscle) {
       cycleDays: sys.cycleDays,
       minutesPerSession: sys.minutes,
     });
-    const weeks = rating.daysPerWeek > 0 ? own.length / rating.daysPerWeek : 1;
+    // The rating's own rotation length (weeksForRotation), so a copied
+    // eight-day cycle is 8/7 of a week here too (sweep 2026-10-16).
     out.push({
       id: sys.id,
       name: sys.name,
       mine: true,
       href: '#/system/' + sys.id,
-      sets: weeklyVolume(own, exMap, weeks).get(muscle) || 0,
+      sets: weeklyVolume(own, exMap, rating.weeks).get(muscle) || 0,
       days: rating.daysPerWeek,
       rating,
     });
@@ -1622,15 +1623,14 @@ async function candidateSystems(muscle) {
       minutesPerSession: p.minutes,
       cycleDays: p.cycleDays || 0,
     });
-    // The same rotation length the rating used, so the two cannot disagree:
-    // Bumstead's eight-day cycle is 8/7 of a week however many days he trains.
-    const weeks = p.cycleDays > 0 ? p.cycleDays / 7 : built.length / p.daysPerWeek;
+    // The same rotation length the rating used (rating.weeks), so the two
+    // cannot disagree: Bumstead's eight-day cycle is 8/7 of a week.
     out.push({
       id: p.id,
       name: p.name,
       author: p.author && p.author !== 'Fitness Tracker' ? p.author : null,
       href: '#/explore/' + p.id,
-      sets: weeklyVolume(built, exMap, weeks).get(muscle) || 0,
+      sets: weeklyVolume(built, exMap, rating.weeks).get(muscle) || 0,
       days: p.daysPerWeek,
       minutes: p.minutes,
       rating,

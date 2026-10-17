@@ -8,7 +8,7 @@
 // An anonymous account lives in one browser and nothing recovers it — clearing
 // site data destroys it permanently. That is stated plainly rather than buried.
 
-import { store, auth, probeOffline, demo, todayISO, social, feedback } from './store.js';
+import { store, auth, probeOffline, demo, todayISO, social, feedback, localDayOf } from './store.js';
 import {
   el, screenShell, toast, confirmSheet, emptyState, openSheet, icon, chevron, refreshRoute,
   setChildren, fmtDateShort, helpDot,
@@ -1704,7 +1704,7 @@ export async function NotesView() {
       ...notes.map((n) => {
         const card = el('div', { class: 'card' },
           el('div', { class: 'muscle-meta', text:
-            `${n.name || 'Someone'} · ${n.createdAt ? fmtDateShort(n.createdAt.slice(0, 10)) : 'undated'}` }),
+            `${n.name || 'Someone'} · ${n.createdAt ? fmtDateShort(localDayOf(n.createdAt)) : 'undated'}` }),
           // ⚠️ `text`, never `html`. A note is somebody else's free text and it
           // is the only such text in this app; rendering it as markup would be
           // a script injection with an invitation attached.

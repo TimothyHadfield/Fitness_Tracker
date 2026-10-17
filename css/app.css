@@ -1567,7 +1567,7 @@ select.input {
 .just-for {
   flex: none; margin-left: auto; font-size: var(--fs-md);
   background: none; color: var(--ink-soft);
-  border: 1px dashed var(--line);
+  border: 1px dashed var(--rule);
 }
 .just-for.is-on {
   background: var(--accent); color: var(--accent-ink);

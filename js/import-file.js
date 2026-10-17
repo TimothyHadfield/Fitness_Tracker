@@ -111,6 +111,13 @@ export function detectColumns(headers) {
       if (hit) { found[field] = hit; seen.add(hit); break; }
     }
   }
+  // ⚠️ A BARE "Time" BESIDE A DATE AND A WEIGHT IS THE TIME OF DAY (sweep
+  // 2026-10-16). A scale export writes Date, Time, Weight; reading its 07:15 as
+  // a seven-minute duration made every weigh-in a fake activity too. With no
+  // distance column there is nothing that says it is a workout's length.
+  if (found.duration && norm(found.duration) === 'time' && found.weight && !found.distance) {
+    delete found.duration;
+  }
   return found;
 }
 
@@ -209,6 +216,8 @@ export function readNumber(cell) {
 export function readDuration(cell, unit) {
   const s = String(cell || '').trim();
   if (!s) return null;
+  // "7:15 AM" is a time of day, never a length (sweep 2026-10-16).
+  if (/\b[ap]\.?m\.?$/i.test(s)) return null;
   const clock = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
   if (clock) {
     return clock[3] !== undefined
@@ -390,19 +399,25 @@ export function readWeights(records, cols, opts = {}) {
  * not what happens when 190 of them are already on the calendar, and somebody
  * who is told the wrong number learns not to read the sheet.
  */
-export function planImport(rows, existing, keyOf) {
+export function planImport(rows, existing, keyOf, opts = {}) {
   const have = new Set((existing || []).map((r) => r.id));
   const dayOf = new Set((existing || []).map(keyOf).filter(Boolean));
   const fresh = [];
   let repeat = 0;
   let collides = 0;
+  let kept = 0;
   for (const row of rows) {
     if (have.has(row.id)) { repeat++; continue; }
+    // ⚠️ WEIGH-INS: what is already on that day is KEPT (sweep 2026-10-16). The
+    // store keeps one weigh-in per day and an import upserts by day, so letting
+    // the row through replaced a hand-logged weight while the confirm sheet
+    // said "Nothing is deleted".
+    if (opts.keepSameDay && dayOf.has(keyOf(row))) { kept++; continue; }
     // Same day and same name as something already recorded, but not the same
     // id — most likely the user logged it by hand and is now importing it too.
     // Counted and reported rather than dropped: it is their call.
     if (dayOf.has(keyOf(row))) collides++;
     fresh.push(row);
   }
-  return { fresh, repeat, collides, total: rows.length };
+  return { fresh, repeat, collides, kept, total: rows.length };
 }

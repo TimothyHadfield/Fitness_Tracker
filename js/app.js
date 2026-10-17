@@ -1321,9 +1321,27 @@ function offerRefresh() {
     el('span', { text: 'A new version is ready.' }),
     el('button', {
       class: 'btn small primary', text: 'Refresh',
-      onClick: () => location.reload(),
+      onClick: (e) => { e.currentTarget.disabled = true; reloadWhenReady(); },
     }),
     iconBtn('x', 'Dismiss', () => bar.remove()),
   );
   document.body.append(bar);
+}
+
+/**
+ * Reload once the worker has the WHOLE new build cached (sw.js 'prepare-reload'
+ * → 'reload-ready'), so the reload never runs new and old modules side by side
+ * (lead batch 2026-10-17). Capped at 4 s: on bad signal it reloads anyway, which
+ * is exactly what the button did before.
+ */
+function reloadWhenReady() {
+  const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+  let done = false;
+  const reload = () => { if (!done) { done = true; location.reload(); } };
+  if (!sw) { reload(); return; }
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data === 'reload-ready') reload();
+  });
+  setTimeout(reload, 4000);
+  try { sw.postMessage('prepare-reload'); } catch (_) { reload(); }
 }

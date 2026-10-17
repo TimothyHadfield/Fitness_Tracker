@@ -35,7 +35,7 @@
 // anybody's private collections. This file cannot read another person's real
 // data even if it tries — the rules refuse it.
 
-import { store, auth, social, activityByDate, todayISO } from './store.js';
+import { store, auth, social, activityByDate, todayISO, localDayOf } from './store.js';
 import {
   el, icon, screenShell, emptyState, openSheet, confirmSheet, toast,
   fmtDateLong, fmtDateShort, relativeDay, chevron, setChildren, fmtSet, personFace,
@@ -613,7 +613,7 @@ async function fillSocial(body, state) {
       parts.push(el('div', { class: 'row' },
         el('div', { class: 'row-main' },
           el('div', { class: 'row-title', text: 'Unused link' }),
-          el('div', { class: 'row-sub', text: `Made ${relativeDay(String(i.createdAt).slice(0, 10))} · expires after 7 days` }),
+          el('div', { class: 'row-sub', text: `Made ${relativeDay(localDayOf(i.createdAt))} · expires after 7 days` }),
         ),
         el('button', {
           class: 'btn small ghost', text: 'Cancel',

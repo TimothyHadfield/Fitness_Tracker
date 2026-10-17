@@ -202,7 +202,7 @@ async function renderPlan(body, fileName, headers, records, cols, opts) {
     if (!unit) needsWeightUnit = true;
     else {
       const read = imp.readWeights(records, cols, { ...opts, weightUnit: unit, sourceName });
-      weightPlan = imp.planImport(read.rows, weights, (r) => r.date);
+      weightPlan = imp.planImport(read.rows, weights, (r) => r.date, { keepSameDay: true });
       weightPlan.problems = read.problems;
       weightPlan.unit = unit;
     }
@@ -278,6 +278,9 @@ function planCard(title, plan, one, many) {
   lines.push(`${plan.fresh.length} new ${plan.fresh.length === 1 ? one : many} to add.`);
   if (plan.repeat) {
     lines.push(`${plan.repeat} already imported from a file before — they will be left alone.`);
+  }
+  if (plan.kept) {
+    lines.push(`${plan.kept} fall on a day you already have a ${one} — yours is kept.`);
   }
   if (plan.collides) {
     lines.push(`⚠️ ${plan.collides} fall on a day you already have something recorded with the `

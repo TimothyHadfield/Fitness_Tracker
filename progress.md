@@ -1,7 +1,11 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-09-28: **sign-in hardening DONE and live** (9511103, 14c5c1a, 49fb4da). Tim's
+_Last updated 2026-10-17 (project-lead batch for the portfolio manager): 9 sweep leftovers fixed +
+the update bar now refreshes the WHOLE new build before reloading (`tests/lead-1017.test.mjs`); the
+Waiting table was cut to 5 decisions (old table: `docs/archive/progress-2026-10-17.md`). Repo-local
+`core.autocrlf=false` set and the working copy converted to LF (CRLF broke `shell.test`). See chat.md
+2026-10-17. Before that, 2026-09-28: **sign-in hardening DONE and live** (9511103, 14c5c1a, 49fb4da). Tim's
 brother hit "Not signed in." on every screen → fixed; then Tim: *"Investigate how people log in and
 anticipatin any other problems that they might face"* → 3-reviewer audit, 10+ fixes (chat.md last two
 entries). Tim declined moving off GitHub Pages (*"okay don't do it"*). Nothing is running or open.
@@ -41,25 +45,35 @@ first users stop being new).
 "13.33 days", stand-in select carry-over, custom exercise missing from the picker's map, deleted
 legacy drops returning, docs/404 page cached as the offline shell, quick second tab tap dropped,
 display-name save leaving #/add, offline 'online' listener never removed, equipment toast rule);
-CLAUDE.md added. Unfixed findings for Tim (deleted sessions resurrected from the frozen legacy
-`collections/sessions` doc, 'time' import alias, undefined `--line` CSS var, ...) are in
-laptop-ops `coding-and-claude/reports/sweep-2026-10-16/Fitness_Tracker.md`.
+CLAUDE.md added. Then d25fab3 (Tim: "Fix all three"): rules `realUser()`, kudos id pinned, deleted
+workouts stay deleted (`users/{uid}/adoptions/*` marker).
 
-**Waiting on Tim** — numbered as the code comments cite them; never renumber:
+**Lead batch 2026-10-17 (`tests/lead-1017.test.mjs`, 26 checks, all seen failing on d25fab3):**
+import "Time" beside Date+Weight is the time of day, not a duration · an import never replaces a
+weigh-in already on that day (`planImport(..., { keepSameDay: true })`, line "yours is kept") ·
+Goals → Programs that fit reads `rating.weeks` (new field on `rateProgramme()`; Bumstead copies
+read ~14 % high) · compare's `isRecorded` ignores `done:true` · wake-lock release rejection caught ·
+`localDayOf()` (store.js) for the notes inbox and invite "Made …" days · program/workout editor
+saves toast on failure · `.just-for` dashed edge uses `--rule` (was undefined `--line`; a test now
+fails on any undefined CSS var) · **sw.js: after a deploy every shell file is refreshed
+(`refreshShell()`), and Refresh waits for `'reload-ready'` (4 s cap)** so a reload can't run new
+app.js beside an old lazy screen. Still open from the sweep (low): `listReactions()` uncapped,
+settings-queue pattern not applied to bodyWeight/goals/systems.
 
-Closed rows 1–5, 7, 9–13, 15, 0c, 32, 35 (Tim: "Leave it" — don't re-raise), 36 → with their
-commits in `docs/archive/progress-2026-09-28.md`.
+**Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
+2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
+old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
+— (per-workout visibility / D18), 25 (demo hatched muscle), 3a (activities circle), 0i (body-map
+targets; accessibility deferred), 8-estimator (Tim took the check himself), si's reset-toast wording
+and App Store sign-in (hosting parked). Unanswered → defaults stand after 7 days.
 
-| # | What | Needs from Tim |
+| # | Decision | Default if he doesn't answer |
 |---|---|---|
-| 6 | An ordinary lifter flaps MORE than one on a level boundary (0.75 vs 0.19), contrary to the comment | an answer, not a fix |
-| 8 | Benchmark workouts in a separate programme no longer appear on Record; the switcher has no "look without switching" | his word |
-| — | Per-workout visibility (social-plan §13 decision B) · ratify D18 (open question 1) | his decisions |
-| si | **Sign-in (2026-09-28 review):** Safari's 7-day storage wipe loses a guest's data → nudge to secure after the first workout? · "Add to Home Screen" hint implies data comes along (separate storage; say secure first) · email typo check / verification · reset toast wording + spam hint · sign-out keeps the workout draft (shared phones) · App Store needs native Google + Sign in with Apple | his calls (reported to him) |
-| 25 | Demo has no hatched muscle any more (Neck ranks), so "trained but unrankable" is unreachable in the audit account — fixing re-rolls the seeded year | his call |
-| 3a | Activities Phase 2 item 6: which activities his circle logs | ask Tim |
-| 0i | Body-map touch targets under 44 px land on his illustration | his call |
-| 8 | Estimator Phases 1–3 (the Goals verdict waits on it); §6.1 hard constraint, §14 question | his answers |
+| si-a | Sign-out on a shared phone keeps the unfinished workout draft | clear the draft on sign-out |
+| si-b | Guest nudge's "Add to Home Screen" line implies the data comes along (home-screen app has separate storage) | add "secure your account first" to that line |
+| si-c | No email typo check at sign-up ("gmial.com") | add a "did you mean gmail.com?" hint |
+| 8 | Benchmark workouts in another program don't appear on Record | list benchmarks from every program on Record |
+| fb | Firestore `social/*` has no shape check; App Check is off (spam can burn the free daily writes) | add the shape check (emulator-tested); App Check later, when strangers arrive |
 
 **Motion pass 2 (2026-09-25 night): done, live 7cc8d43.** Springs (`js/spring.js`), push/back slides,
 edge swipe, tab line and pulls (`js/gestures.js`), sheet drag, photo viewer, chart draw-in, laptop
@@ -92,6 +106,10 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 (or a new "My Workouts"), never into a programme copied from Explore.
 
 ## Authorized next steps
+- **2026-10-17 (Tim via the manager): "any fixes or improvements you feel confident about go ahead
+  and do, pretty much always. You don't have to ask me."** Not covered: new looks, new wording beyond
+  fixing errors, new features, money, deleting/migrating real data. The 5 Waiting decisions are NOT
+  authorized until he answers (or 7 days pass, then defaults stand).
 - **2026-09-28: nothing open.** Brother's sign-in bug ("Could you check it out and fix whatever
   problems you think might be happening?") and the log-in investigation are DONE and live (49fb4da).
   The sign-in items in the Waiting table (row "si") are NOT authorized.
@@ -189,6 +207,13 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
 ## Traps / rules that bite
 - **All 22 environment traps are the handbook's §0 numbered list** — read it before the first tool
   call. The ones hit most recently:
+- **(2026-10-17, manager rule) Never write or run commands inside any `.claude` folder** (incl.
+  `.claude/worktrees/`): it prompts Tim. New worktrees go to `C:/Users/timha/wt/Fitness_Tracker-<name>`
+  (`git -C <project> -c core.autocrlf=false worktree add ...`); remove old ones only via PowerShell.
+- **(2026-10-17) The working copy had gone CRLF** (264 files; system git has `autocrlf=true`), which
+  crashes `shell.test` ("Cannot read properties of null"). Repo-local `core.autocrlf=false` is now set
+  and non-.md files were converted byte-exact to LF (Fitness_Research untouched). If git status lists
+  files whose `git diff` is empty, `git add` those names (same blob; only refreshes the stat).
 - **Every anonymous sign-in goes through `createUserKeeper()`** (firebase-backend.js, 2026-09-28):
   `init()` = `connect()` + wait for a user; the auth listener re-signs a dropped user; signOut /
   deleteAccount use it too. `tests/auth-keeper.test.mjs` fails if any `signInAnonymously(` appears
@@ -419,7 +444,8 @@ can check._
   `docs/chat-archive.md` · chat before 2026-09-15 · `docs/*-plan.md` · feature plans · `docs/research.md`.
 - **Tests:** `node tests/<name>.test.mjs` for each no-Chrome suite (needs `npm i --no-save jsdom
   jsqr`); `rules` and `sync-merge` need the emulator + Temurin 21; `sw-update` needs Chrome.
-  **Last run 2026-09-28 at 49fb4da: 9,532 PASS, 0 FAIL (count includes plates-visual's "ok" lines — grep `PASS|ok `);
+  **Last run 2026-10-17 (lead batch): 91 suites, 9,596 PASS, 0 FAIL (count includes plates-visual's "ok" lines — grep `PASS|ok `);
+  `motion`'s "lets go of them at rest" flaked once under load, passes alone;
   rules/sync-merge last 2026-09-27: 274/0 and 14/0 under the emulator.** Check
   EXIT CODES too — a crashed suite prints no FAIL. All at once (PowerShell):
   `$global:tp=0;$global:tf=0; Get-ChildItem tests/*.test.mjs | ? { $_.Name -notin 'rules.test.mjs','sw-update.test.mjs','sync-merge.test.mjs' } | % { $o = node $_.FullName 2>&1 | Out-String; $p=([regex]::Matches($o,'(?m)^\s*PASS')).Count; $f=([regex]::Matches($o,'(?m)^\s*FAIL')).Count; $global:tp+=$p; $global:tf+=$f; if($f -or $LASTEXITCODE){ "$($_.Name): $f FAIL exit $LASTEXITCODE" } }; "TOTAL PASS $tp FAIL $tf"`

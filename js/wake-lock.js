@@ -49,7 +49,8 @@ export function keepAwake(on) {
   } else {
     if (listening) { document.removeEventListener('visibilitychange', onVisible); listening = false; }
     const s = sentinel; sentinel = null;
-    if (s) { try { s.release(); } catch (_) {} }
+    // release() returns a promise; a rejection (already released) is not an error.
+    if (s) { try { Promise.resolve(s.release()).catch(() => {}); } catch (_) {} }
   }
 }
 
