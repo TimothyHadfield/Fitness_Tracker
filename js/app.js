@@ -1390,8 +1390,11 @@ function dismissUpdateBar(bar) {
   if (!canMove()) { bar.remove(); return; }
   // The toast's own exit (ui.js dismissToast): drop a little and fade.
   springTransform(bar, { y: 14, opacity: 0, scale: 0.97 }, 'snap').done.then(() => bar.remove());
-  // Backstop: a spring whose frames never come (a hidden tab) still ends it.
-  setTimeout(() => bar.remove(), 900);
+  // Backstop at Rule 7's 250 ms: the fade is visually done by then (snap is
+  // 90% in ~160 ms), and a spring whose frames never come (a hidden tab, a
+  // throttled phone) still ends on time — tests/sw-update.test.mjs checks
+  // the bar is gone 300 ms after the tap.
+  setTimeout(() => bar.remove(), 260);
 }
 
 /**
