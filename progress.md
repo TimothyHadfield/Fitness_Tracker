@@ -131,7 +131,9 @@ caption (their bodyweight isn't on this phone).
   and do, pretty much always. You don't have to ask me."** Not covered: new looks, new wording beyond
   fixing errors, new features, money, deleting/migrating real data. The 5 Waiting decisions are NOT
   authorized until he answers (or 7 days pass, then defaults stand).
-- **2026-10-17 in-depth audit: DONE** (see Status). Nothing further authorized from it.
+- **2026-10-17 in-depth audit: DONE** (see Status). Tim then answered (Decisions 10-17): build
+  (a) runner rows don't jump when a set is finished, (b) delete-account purges own comments. Both
+  are confident fixes under the standing go — next chat may build them.
 - Every authorization through 2026-09-28 is DONE and live (sign-in fixes 49fb4da, overhaul 0668e46,
   Auto-guide, 09-26 legs batch, motion pass 2). Verbatim quotes: `docs/archive/progress-2026-10-17b.md`
   and `docs/archive/progress-2026-09-25.md`.
@@ -319,6 +321,11 @@ caption (their bodyweight isn't on this phone).
 ## Decisions
 - **Locked decisions D1–D33 live in `docs/handbook.md` §6** and design Rules 1–9 in §5. Recent,
   not yet D-numbered:
+- 2026-10-17 · Tim (question box, all "Recommended"): KEEP the rep guess on the max's own curve
+  (supersedes 09-13 "Nuzzo with a band" for the middle number); Months tap SLIDES to this month;
+  FIX the ~51px runner row jump on finishing a set; delete-account ALSO deletes the person's comments
+  on friends' workouts. Last two are NOT built yet — open work (Authorized next steps). Tim added:
+  *"stop asking me questions if you already have recommended answers."*
 - 2026-09-27 · overhaul decisions (Look 3 glass/Barlow/grain, two-device list merge via
   arrayUnion/arrayRemove, word cap test, import skips logged days, 7-day break rule, warm-ups snap to
   plates, `.set-del` stays 21px on purpose) are in `docs/overhaul-plan.md` and chat.md's last entry.
