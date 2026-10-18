@@ -56,3 +56,23 @@ mini bar reads the same); the save screen's **Duration is an editable minutes bo
   live 7cc8d43) and the 2026-09-23 set (Finished/Edit, warm-ups, logging notes, typo warning, smooth
   fade, "at least X", blend every set, level-aware ratios). Their verbatim quotes are in
   `docs/archive/progress-2026-09-25.md` → "Authorized next steps".
+
+## Decisions moved out of progress.md on 2026-10-17 (final builder, size cap)
+- 2026-09-21 · famous lifters are rated from their PEAK window (Tim: "the lifts they were doing when
+  they were in the peak of their fitness"), each lift with its own weigh-in (`lift.bodyweightLb`) and
+  a `peak` label. Each lift's `note` says why it's in.
+- 2026-09-21 (same day, after Tim: *"Jeff Nippard is strongest right now"*) · peak means STRONGEST IN
+  ABSOLUTE TERMS, not strongest for bodyweight — a filmed gym PR counts (`reported: true`) and a
+  stated bodyweight from the period is enough. **47 people, 213 lifts**, one sourced set per muscle
+  group wherever it exists (the estimator converts within a muscle, so one is enough).
+- 2026-09-21 · a test must not pin a real person's researched numbers (render's famous-summary
+  assertion reads `figureSummary()`); re-research would break it every time.
+- 2026-09-27 · Auto-guide draws the whole bar, both sides (`js/bar-view.js`, only in the guide; the
+  runner keeps its small one-side hint); plates slide on/off with the `snap` spring. Back sits left of
+  Next, greyed on the first step; it walks a history stack, else `prevStep()` in guide order (b67b8c2).
+- 2026-09-27 · a notification links to `#/me/workouts/<sessionId>`, not `#/day/<date>` (a day can hold
+  two sessions) and not a new screen (views-social.js refuses an owner-side twin).
+- **Flagged to Tim, unchanged:** `pointercancel` on the exercises drag commits
+  the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
+  "Nothing to rank yet" and no figure; a neck panel runs 70 words against the 40-word cap; `.body-wrap`
+  letterboxes the two figures differently on a phone.

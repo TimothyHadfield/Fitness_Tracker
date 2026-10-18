@@ -344,3 +344,21 @@ Asked · Decided · Built · Verified how · Open.
 - **Verified how:** full plain suite on main fd8e47e, 0 FAIL (rules/sync-merge/sw-update excluded);
   live-check confirmed each build on Pages.
 - **Open:** OneDrive-locked `.git/worktrees/fitness-*` leftovers for the weekly sweep.
+
+## 2026-10-17 · Row jump + comment purge (builder fix-final, Tim's question-box answers)
+- **Asked:** "when you finish a set, the rows below jump about 51px. Fix it so nothing moves?" →
+  "Fix it"; "should deleting an account also delete that person's comments on friends' workouts?" →
+  "Yes."
+- **Built:** the jump was NOT a row-height change (finished and untouched rows are both 51px): the
+  next set opens one row lower and `revealOpenRow` scrolled the whole list 51px to show its plate
+  drawing. After Finished, only the ± row must be above the footer (`finishHandover`,
+  `lowestControls` in views-session.js). `deleteOwnComments()` (firebase-backend.js) runs in
+  `deleteAccount()` after re-auth, before the purge: friends from `social/graph`, their
+  `reactions` listed, `kind:'comment' && from:uid` deleted. No rules change needed.
+- **Verified how:** `tests/final-1017.test.mjs` 7 FAIL on 3776132 → 16/0 (layout model from the
+  WebKit numbers). Headless WebKit demo, SW + Firebase hosts blocked: 393×659 every row dy 51 → 0
+  on the 1st Finished, 2nd Finished moves 35px (± row bottom 588 vs footer 596); 1280×800 51 → 0;
+  no overflow, no console errors. Full plain suite 97 suites, 9,720 PASS / 0 FAIL (data-layer's
+  order check caught the first error wording; reworded). Delete flow never run on live data.
+- **Open:** plate drawing can sit under the glass footer; kudos are not purged (not asked);
+  comments on people no longer friends can't be found.

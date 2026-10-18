@@ -96,6 +96,14 @@ Data `.graph-controls` min-height 44 · update bar springs like a toast, above t
 "Updating…" on Refresh, gone ≤260 ms on dismiss (sw-update checks 300 ms) · `:active` for `.seg`,
 `.set-del`, `.help-dot` · runner date box 16px scaled ×0.71875 (no iOS zoom).
 
+**Tim's two answers 2026-10-17 (`tests/final-1017.test.mjs` 16; 7 seen failing on 3776132):**
+Finished no longer scrolls the list: the finished row and rows below stay put (393×659 WebKit: 51 →
+0px; laptop 51 → 0); the pane scrolls only when the next set's ± row would sit under the footer, by
+the least that frees it (2nd Finished in the demo: 35px; `finishHandover`/`lowestControls`) — the
+plate drawing may sit under the glass footer · `deleteAccount()` first deletes the user's comments
+on every friend's workouts (`deleteOwnComments`, before the purge; an unreachable friend aborts with
+nothing else deleted). Kudos stay; comments on ex-friends can't be found (rules) and stay.
+
 **Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
 2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
 old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
@@ -115,10 +123,8 @@ and App Store sign-in (hosting parked). Unanswered → defaults stand after 7 da
 **"Body details"**, **"gender"**, **"program"** (code ids/routes unchanged); CSS has 5 font-size
 tokens / 3 weights — use them, not new px values.
 
-**Flagged to Tim, unchanged:** `pointercancel` on the exercises drag commits
-the slot; the demo reads eleven Novice + one Intermediate; a lifter whose only work is long sets sees
-"Nothing to rank yet" and no figure; a neck panel runs 70 words against the 40-word cap; `.body-wrap`
-letterboxes the two figures differently on a phone.
+**Flagged to Tim, unchanged:** 5 small items (drag pointercancel, demo levels, long-sets-only
+lifter, neck panel words, `.body-wrap`) — `docs/archive/progress-2026-10-17b.md`.
 
 **Expect these reports — all deliberate:** a friend's gender/age/friends appear only after THEIR app
 republishes (`healStalePublish()`); his pre-2026-09-20 Nippard copy has no percentages (unstamped
@@ -131,9 +137,8 @@ caption (their bodyweight isn't on this phone).
   and do, pretty much always. You don't have to ask me."** Not covered: new looks, new wording beyond
   fixing errors, new features, money, deleting/migrating real data. The 5 Waiting decisions are NOT
   authorized until he answers (or 7 days pass, then defaults stand).
-- **2026-10-17 in-depth audit: DONE** (see Status). Tim then answered (Decisions 10-17): build
-  (a) runner rows don't jump when a set is finished, (b) delete-account purges own comments. Both
-  are confident fixes under the standing go — next chat may build them.
+- **2026-10-17 in-depth audit: DONE**, and Tim's two follow-up answers (row jump, comment purge)
+  are BUILT and live (Status).
 - Every authorization through 2026-09-28 is DONE and live (sign-in fixes 49fb4da, overhaul 0668e46,
   Auto-guide, 09-26 legs batch, motion pass 2). Verbatim quotes: `docs/archive/progress-2026-10-17b.md`
   and `docs/archive/progress-2026-09-25.md`.
@@ -324,16 +329,12 @@ caption (their bodyweight isn't on this phone).
 - 2026-10-17 · Tim (question box, all "Recommended"): KEEP the rep guess on the max's own curve
   (supersedes 09-13 "Nuzzo with a band" for the middle number); Months tap SLIDES to this month;
   FIX the ~51px runner row jump on finishing a set; delete-account ALSO deletes the person's comments
-  on friends' workouts. Last two are NOT built yet — open work (Authorized next steps). Tim added:
+  on friends' workouts. Last two BUILT 2026-10-17 (Status "Tim's two answers"). Tim added:
   *"stop asking me questions if you already have recommended answers."*
 - 2026-09-27 · overhaul decisions (Look 3 glass/Barlow/grain, two-device list merge via
   arrayUnion/arrayRemove, word cap test, import skips logged days, 7-day break rule, warm-ups snap to
   plates, `.set-del` stays 21px on purpose) are in `docs/overhaul-plan.md` and chat.md's last entry.
-- 2026-09-27 · Auto-guide draws the whole bar, both sides (`js/bar-view.js`, only in the guide; the
-  runner keeps its small one-side hint); plates slide on/off with the `snap` spring. Back sits left of
-  Next, greyed on the first step; it walks a history stack, else `prevStep()` in guide order (b67b8c2).
-- 2026-09-27 · a notification links to `#/me/workouts/<sessionId>`, not `#/day/<date>` (a day can hold
-  two sessions) and not a new screen (views-social.js refuses an owner-side twin).
+- 2026-09-27 · Auto-guide bar view and notification links: see `docs/archive/progress-2026-10-17b.md`.
 - 2026-09-27 · your workouts and a friend's feed share one card (`js/workout-card.js`); `alwaysOpen`
   is the only difference.
 - 2026-09-27 · adding a preset still does NOT make it current; the screen says so instead.
@@ -341,15 +342,8 @@ caption (their bodyweight isn't on this phone).
 - 2026-09-27 · swap keeps only `locked || touched` sets; Open work 15's save question untouched.
 - 2026-09-27 · famous lifters are rated by `buildStrengthShare()` like anyone, each muscle as of its
   freshest lift (`figureStrength()`); meet singles are benchmarks, gym sets sessions.
-- 2026-09-21 · famous lifters are rated from their PEAK window (Tim: "the lifts they were doing when
-  they were in the peak of their fitness"), each lift with its own weigh-in (`lift.bodyweightLb`) and
-  a `peak` label. Each lift's `note` says why it's in.
-- 2026-09-21 (same day, after Tim: *"Jeff Nippard is strongest right now"*) · peak means STRONGEST IN
-  ABSOLUTE TERMS, not strongest for bodyweight — a filmed gym PR counts (`reported: true`) and a
-  stated bodyweight from the period is enough. **47 people, 213 lifts**, one sourced set per muscle
-  group wherever it exists (the estimator converts within a muscle, so one is enough).
-- 2026-09-21 · a test must not pin a real person's researched numbers (render's famous-summary
-  assertion reads `figureSummary()`); re-research would break it every time.
+- 2026-09-21 · famous lifters: PEAK window, strongest in absolute terms; tests never pin a real
+  person's numbers (full lines in `docs/archive/progress-2026-10-17b.md`).
 
 ## NOT verified
 _Tim's rule bans device warnings ("not verified on a phone"). This list is only for claims no screen

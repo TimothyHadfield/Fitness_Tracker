@@ -1786,6 +1786,30 @@ export const FirebaseBackend = {
         u, c.auth.EmailAuthProvider.credential(u.email, currentPassword));
     }
 
+    /* 🆕 2026-10-17 — THE COMMENTS YOU LEFT ON FRIENDS' WORKOUTS GO TOO (Tim:
+     * "Yes" to "should deleting an account also delete that person's comments
+     * on friends' workouts?"). They live under the FRIEND's uid
+     * (users/{friend}/reactions/c_…), which the purge below never touches.
+     * BEFORE the purge, because the friends list is read from this account's
+     * own social/graph, which the purge deletes; and a friend that could not be
+     * reached stops the deletion here, while nothing is gone yet — afterwards
+     * there would be no list left to try again from. Kudos stay (not asked). */
+    const swept = await deleteOwnComments(u.uid, {
+      friendUids: async () => {
+        const snap = await c.fs.getDoc(c.fs.doc(c.db, 'users', u.uid, 'social', 'graph'));
+        const graph = snap.exists() ? snap.data() : null;
+        return (graph && Array.isArray(graph.connections) ? graph.connections : [])
+          .map((x) => x && x.uid).filter((x) => typeof x === 'string' && x && x !== u.uid);
+      },
+      listReactions: (owner) => FirebaseBackend.listReactions(owner),
+      deleteReaction: (owner, id) => FirebaseBackend.deleteReaction(owner, id),
+    });
+    if (swept.failed.length) {
+      throw new Error(
+        'Your account and data were kept: some of your comments on friends’ workouts '
+        + 'could not be removed. Try again.');
+    }
+
     const { left, errors } = await createAccountPurge(c, u.uid, collections)();
     if (left.length) {
       if (errors.length) console.error('account purge', errors);
@@ -1815,6 +1839,39 @@ export const FirebaseBackend = {
 /* ------------------------------------------------------------------ *
  * Pure helpers — no SDK, unit-tested
  * ------------------------------------------------------------------ */
+
+/**
+ * Delete every comment `uid` wrote on a friend's workouts (deleteAccount,
+ * 2026-10-17). Only friends can be searched: the rules let a friend list a
+ * person's reactions and let the author delete their own (`from == uid`), so a
+ * comment on somebody who has since dropped you can't be found and stays —
+ * that person can still delete it. A friend whose list could not be read or
+ * whose comment would not delete is reported in `failed`; the others still go.
+ * permission-denied is an empty list already (`listReactions`).
+ *
+ * @param {string} uid
+ * @param {{ friendUids: () => Promise<string[]>,
+ *           listReactions: (owner: string) => Promise<object[]>,
+ *           deleteReaction: (owner: string, id: string) => Promise<unknown> }} api
+ * @returns {Promise<{ deleted: number, failed: string[] }>}
+ */
+export async function deleteOwnComments(uid, api) {
+  let deleted = 0;
+  const failed = [];
+  for (const owner of await api.friendUids()) {
+    try {
+      const mine = (await api.listReactions(owner))
+        .filter((r) => r && r.kind === 'comment' && r.from === uid && typeof r.id === 'string');
+      for (const r of mine) {
+        await api.deleteReaction(owner, r.id);
+        deleted++;
+      }
+    } catch {
+      failed.push(owner);
+    }
+  }
+  return { deleted, failed };
+}
 
 // A plain snapshot of the signed-in user for the UI. Never hand the raw
 // Firebase user object to views; it carries tokens and refreshes underneath you.

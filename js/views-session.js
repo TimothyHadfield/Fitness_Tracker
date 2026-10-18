@@ -2869,7 +2869,7 @@ export async function SessionView(workoutId) {
                   entry.activeDrop = null;
                   if (passTurn(step.entryIndex, entry.exerciseId)) return;
                   const next = entry.sets.findIndex((x, j) => j > i && !isDone(x));
-                  if (next !== -1) { select(next, null); return; }
+                  if (next !== -1) { finishHandover = true; select(next, null); return; }
                 }
                 saveDraft(state);
                 renderPane({ keepScroll: true });
@@ -3477,8 +3477,29 @@ export async function SessionView(workoutId) {
      * below the fold of the row somebody tapped. Scroll the minimum that fixes
      * it, never more — a jump to centre would move a list that was already fine.
      * jsdom reports every rect as zero, so this is inert there and the browser
-     * pass is what checks it. */
-    revealOpenRow(editor, { whole: false });
+     * pass is what checks it.
+     *
+     * 🆕 2026-10-17 (Tim: "when you finish a set, the rows below jump about
+     * 51px" → "Fix it"): AFTER FINISHED HANDS OVER TO THE NEXT SET, ONLY ITS ±
+     * BUTTONS HAVE TO BE REACHABLE. Measured at 393×659: the next set opens one
+     * row lower, its plate drawing landed under the floating footer, and the
+     * whole list was scrolled up 51px to show it — the finished row slid out
+     * from under the thumb. Now nothing moves while the ± row is above the
+     * footer, and when it is not, the list moves the least that frees it. */
+    const handover = finishHandover;
+    finishHandover = false;
+    revealOpenRow((handover && lowestControls(editor)) || editor, { whole: false });
+  }
+
+  /** The open set's lowest row of ± buttons (null when it has none). */
+  function lowestControls(node) {
+    const rows = node && typeof node.querySelectorAll === 'function'
+      ? [...node.querySelectorAll('.stepper-controls')] : [];
+    let low = null;
+    for (const r of rows) {
+      if (!low || r.getBoundingClientRect().bottom > low.getBoundingClientRect().bottom) low = r;
+    }
+    return low;
   }
 
   /**
@@ -3535,6 +3556,8 @@ export async function SessionView(workoutId) {
   /* The row a tap landed on, and where it was, read BEFORE the tap's handler
    * re-renders (a capture listener runs first). See I-2 in `renderPane`. */
   let rowAnchor = null;
+  // Set by Finished when it opens the next set; read once by `renderPane`.
+  let finishHandover = false;
   pane.addEventListener('click', (e) => {
     const t = e.target;
     const row = t && typeof t.closest === 'function' ? t.closest('[data-row]') : null;
