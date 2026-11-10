@@ -28,6 +28,7 @@ import {
 // ⚠️ `units` LEFT WITH THE PROFILE READOUT on 2026-09-11 — this screen prints no
 // weight of its own any more. The one on Profile does the converting.
 import * as crop from './image-crop.js';
+import { liveDraft, draftRecordedSets } from './session-draft.js';
 
 const go = (hash) => { location.hash = hash; };
 
@@ -857,13 +858,16 @@ export function wantsHomeScreenHint(nav = (typeof navigator !== 'undefined' ? na
   return !standalone;
 }
 
+/* si-b (2026-11-10): shown only to accounts that are not secured, and the Home
+ * Screen app has its own storage — a guest's data does not come along. So the
+ * line says to secure the account first. */
 function homeScreenHint() {
   if (!wantsHomeScreenHint()) return null;
   return el('div', { class: 'help-line home-hint' },
-    el('span', { class: 'field-help', text: 'Add to Home Screen so your iPhone keeps your data' }),
+    el('span', { class: 'field-help', text: 'Secure your account first, then Add to Home Screen so your iPhone keeps your data' }),
     helpDot(el('div', {},
       el('p', { text: 'Safari clears websites you haven’t opened for 7 days. An app on your '
-        + 'Home Screen is kept.' }),
+        + 'Home Screen is kept, but it starts empty: sign in there to bring your data.' }),
       el('p', { text: 'Tap Share, then Add to Home Screen.' }),
     ), { label: 'Why add it to the Home Screen' }));
 }
@@ -1434,6 +1438,60 @@ function googleButton({ label, className, onDone }) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 🆕 si-c (2026-11-10, default built): "did you mean gmail.com?"
+ *
+ * A typo in the email at sign-up makes an account nobody can reset. Only the
+ * common slips are caught — a misspelt big provider, or a mistyped `.com` —
+ * and the hint never blocks: it offers the fix as a tap, nothing more.
+ * ------------------------------------------------------------------ */
+const PROVIDER_TYPOS = {
+  gmail: ['gmial', 'gmai', 'gmal', 'gmil', 'gamil', 'gmali', 'gmaill', 'gnail', 'gmaiil'],
+  hotmail: ['hotmial', 'hotmai', 'hotmal', 'hotmil', 'hotmali', 'homail', 'hotamil', 'hotmaill'],
+  yahoo: ['yahooo', 'yaho', 'yhoo', 'yahho', 'yaoo', 'yahoooo'],
+  outlook: ['outlok', 'outllok', 'outook', 'outloo', 'otlook', 'outlookk'],
+  icloud: ['iclod', 'icoud', 'iclould', 'icloude', 'icluod', 'iclou', 'icload'],
+};
+const TLD_TYPOS = ['con', 'cmo', 'cpm', 'vom', 'xom', 'comm', 'ocm'];
+
+/** The corrected address, or null when nothing looks mistyped. */
+export function suggestEmailFix(email) {
+  const s = String(email || '').trim();
+  const at = s.lastIndexOf('@');
+  if (at < 1 || at === s.length - 1) return null;
+  const parts = s.slice(at + 1).toLowerCase().split('.');
+  if (parts.length < 2 || parts.some((p) => !p)) return null;
+  let changed = false;
+  for (const [right, typos] of Object.entries(PROVIDER_TYPOS)) {
+    if (typos.includes(parts[0])) { parts[0] = right; changed = true; break; }
+  }
+  const last = parts.length - 1;
+  if (TLD_TYPOS.includes(parts[last])) { parts[last] = 'com'; changed = true; }
+  // gmail.co / icloud.co: these two only ever end in .com.
+  if (parts.length === 2 && ['gmail', 'icloud'].includes(parts[0]) && ['co', 'cm', 'om'].includes(parts[1])) {
+    parts[1] = 'com'; changed = true;
+  }
+  return changed ? s.slice(0, at + 1) + parts.join('.') : null;
+}
+
+/** The hint line under an email field. Hidden until the address looks mistyped. */
+function emailTypoHint(input) {
+  const line = el('div', { class: 'field-help email-typo', hidden: true });
+  const update = () => {
+    const fix = suggestEmailFix(input.value);
+    line.hidden = !fix;
+    if (!fix) { setChildren(line); return; }
+    setChildren(line, 'Did you mean ',
+      el('button', {
+        type: 'button', class: 'text-link', style: 'font-size: inherit', text: fix,
+        onClick: () => { input.value = fix; update(); },
+      }), '?');
+  };
+  input.addEventListener('input', update);
+  input.addEventListener('blur', update);
+  return line;
+}
+
+/* ------------------------------------------------------------------ *
  * Anonymous — the upgrade path
  * ------------------------------------------------------------------ */
 
@@ -1503,7 +1561,7 @@ function anonymousScreen(sections = [], settings = {}, dropped = null) {
       el('div', { class: 'or-rule' }, el('span', { text: 'or' })),
 
       el('div', { class: 'card' },
-        el('div', { class: 'field' }, el('label', { text: 'Email' }), email),
+        el('div', { class: 'field' }, el('label', { text: 'Email' }), email, emailTypoHint(email)),
         el('div', { class: 'field' }, el('label', { text: 'Password' }), password),
         createBtn,
       ),
@@ -1599,9 +1657,12 @@ async function signedInScreen(user, sections = [], settings = {}) {
   const signOutBtn = el('button', {
     class: 'btn ghost block',
     text: 'Sign out',
+    // si-a (2026-11-10): sign-out clears the workout draft (store.js), so a
+    // workout with sets in it says so first.
     onClick: () => confirmSheet({
       title: 'Sign out?',
-      message: 'Your data stays in your account. This device will start a fresh empty session until you sign back in.',
+      message: 'Your data stays in your account. This device will start a fresh empty session until you sign back in.'
+        + (draftRecordedSets(liveDraft(todayISO())) ? ' The unfinished workout on this device is discarded.' : ''),
       confirmLabel: 'Sign out',
       danger: false,
       onConfirm: async () => {

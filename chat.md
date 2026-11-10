@@ -362,3 +362,20 @@ Asked · Decided · Built · Verified how · Open.
   order check caught the first error wording; reworded). Delete flow never run on live data.
 - **Open:** plate drawing can sit under the glass footer; kudos are not purged (not asked);
   comments on people no longer friends can't be found.
+
+## 2026-11-10 · The 5 Waiting defaults built (builder, branch defaults-1110)
+- **Asked:** Tim: *"Build those now"* — si-a, si-b, si-c, 8, fb at their stated defaults.
+- **Built:** si-a `auth.signOut` clears the draft after a successful sign-out (+ one line on the
+  Sign out sheet when the draft has sets) · si-b "Secure your account first" on the first-save iOS
+  line and Account's guest Home Screen hint (+ "it starts empty" in its ?) · si-c
+  `suggestEmailFix()` + "Did you mean …?" tap-to-fix under the sign-up email · 8 #/start lists
+  other programs' benchmark workouts under "Benchmark workouts", program in the sub-line · fb
+  firestore.rules `validGraph`: social/* create/update only `graph`, keys connections(+pending),
+  lists ≤2000. store.js gained `__setRemoteForTest` (tests only).
+- **Verified how:** `tests/defaults-1110` 12 FAIL on f968b5c (+ the draft check with only the hook
+  added) → 44/0; rules suite 7 FAIL on old rules → 322/0 (emulator, Temurin 21), sync-merge 14/0;
+  plain suite 98 suites 9,757 PASS / 7 FAIL — the same 7 fail on unchanged f968b5c (motion,
+  spring, surfaces-motion transforms; render "at least" + Volume), not from this work. Headless
+  WebKit 393×659 + 1280×800, demo, SW + external hosts blocked: no overflow, no console errors.
+- **Open:** rules NOT deployed (manager) · the 7 pre-existing FAILs on HEAD need a look · wording
+  of the new lines is Tim's to change · OneDrive-locked `.git/worktrees/*-base` for the sweep.

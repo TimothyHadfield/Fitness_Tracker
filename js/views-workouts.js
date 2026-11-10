@@ -1805,6 +1805,26 @@ export async function StartPickerView({ tab = false } = {}) {
             icon('plus'), 'Build my own'),
         ];
 
+  /* 🆕 Waiting 8 (2026-11-10, default built): BENCHMARK WORKOUTS FROM EVERY
+   * PROGRAM. Scoping the list to the current program (2026-09-19) hid a
+   * benchmark workout kept in another one, with no way to run it short of
+   * switching programs. Those are listed here, each labelled with its program;
+   * the current program's own are already in the list above, so never twice. */
+  const sysName = new Map(systems.map((s) => [s.id, s.name]));
+  const otherBench = workouts.filter((w) => w && w.isBenchmark && !(current && w.systemId === current.id));
+  if (otherBench.length) {
+    scroll.push(
+      el('div', { class: 'section-label', text: 'Benchmark workouts' }),
+      el('div', { class: 'list pick-grid' }, otherBench.map((w) => {
+        const r = row(w);
+        const sub = r.querySelector('.row-sub');
+        const prog = sysName.get(w.systemId);
+        if (sub && prog) sub.textContent = `${prog} · ${sub.textContent}`;
+        return r;
+      })),
+    );
+  }
+
   // 🆕 Overhaul 2026-09-27 (S-03/O-18): a session with no template, as the
   // LAST row — the list above stays the common case. Opens `#/session/new-empty`.
   const empty = emptyWorkoutRow(openEmpty);

@@ -23,7 +23,9 @@ export const NUDGE = {
   google: 'Continue with Google',
   email: 'Use email',
   later: 'Later',
-  ios: 'Add to Home Screen: tap Share, then Add to Home Screen.',
+  // si-b (2026-11-10): the Home Screen app keeps its own storage, so a guest
+  // account does not come along — secure it first, then sign in there.
+  ios: 'Secure your account first, then tap Share, then Add to Home Screen.',
 };
 
 /**

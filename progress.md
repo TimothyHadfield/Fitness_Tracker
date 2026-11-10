@@ -1,7 +1,8 @@
 # Fitness Tracker — progress (handoff for Claude)
 
 ## START HERE
-_Last updated 2026-10-17 evening (manager close-out of the in-depth audit): 5 audit builders merged
+_2026-11-10: the 5 Waiting defaults built on branch defaults-1110 (Status "Defaults built"); rules
+not yet deployed. Last full update 2026-10-17 evening (manager close-out of the in-depth audit): 5 audit builders merged
 and live through fd8e47e (Status blocks "Data safety", "Calculation audit", "Visual bug fixes",
 "Runner audit", "Motion/speed audit"); full plain suite 0 FAIL on fd8e47e. Earlier the same day: lead
 batch (`tests/lead-1017.test.mjs`), Waiting cut to 5. Repo-local `core.autocrlf=false` (CRLF broke
@@ -104,20 +105,19 @@ plate drawing may sit under the glass footer · `deleteAccount()` first deletes 
 on every friend's workouts (`deleteOwnComments`, before the purge; an unreachable friend aborts with
 nothing else deleted). Kudos stay; comments on ex-friends can't be found (rules) and stay.
 
-**Waiting on Tim** — numbered as the code comments cite them; never renumber. **Cut to 5 on
-2026-10-17** (Tim's rule: ≤5 decisions, defaults stated, >3 weeks with no impact dropped). The full
-old table is in `docs/archive/progress-2026-10-17.md`; dropped there as stale: 6 (flapping answer),
-— (per-workout visibility / D18), 25 (demo hatched muscle), 3a (activities circle), 0i (body-map
-targets; accessibility deferred), 8-estimator (Tim took the check himself), si's reset-toast wording
-and App Store sign-in (hosting parked). Unanswered → defaults stand after 7 days.
+**Defaults built 2026-11-10 (Tim: "Build those now"; branch defaults-1110, `tests/defaults-1110`
+44 checks, 12 seen failing on f968b5c; rules +20, 7 seen failing):** si-a sign-out clears the
+workout draft (store.js `auth.signOut`, after a successful sign-out; the Sign out sheet adds "The
+unfinished workout on this device is discarded." only when it has sets) · si-b the first-save iOS
+line and Account's guest Home Screen hint say "Secure your account first" (the ? adds "it starts
+empty: sign in there") · si-c "Did you mean …?" under the sign-up email (`suggestEmailFix`, tap to
+fix, never blocks) · 8 Record (#/start) lists benchmark workouts from other programs under
+"Benchmark workouts", sub-line prefixed with the program · fb `social/*` writes: only `graph`, keys
+`connections` (+ optional `pending`), both lists ≤2000; read/delete unchanged. **Rules NOT deployed
+— the manager deploys.** App Check still off (later, when strangers arrive).
 
-| # | Decision | Default if he doesn't answer |
-|---|---|---|
-| si-a | Sign-out on a shared phone keeps the unfinished workout draft | clear the draft on sign-out |
-| si-b | Guest nudge's "Add to Home Screen" line implies the data comes along (home-screen app has separate storage) | add "secure your account first" to that line |
-| si-c | No email typo check at sign-up ("gmial.com") | add a "did you mean gmail.com?" hint |
-| 8 | Benchmark workouts in another program don't appear on Record | list benchmarks from every program on Record |
-| fb | Firestore `social/*` has no shape check; App Check is off (spam can burn the free daily writes) | add the shape check (emulator-tested); App Check later, when strangers arrive |
+**Waiting on Tim:** none. Numbers si-a/si-b/si-c/8/fb are cited in code comments; never reuse them.
+Old table: `docs/archive/progress-2026-10-17.md`.
 
 **Rules that came out of 2026-09-24:** never re-raise c-icons or c-levelcolours; UI words are
 **"Body details"**, **"gender"**, **"program"** (code ids/routes unchanged); CSS has 5 font-size
@@ -135,8 +135,8 @@ caption (their bodyweight isn't on this phone).
 ## Authorized next steps
 - **2026-10-17 (Tim via the manager): "any fixes or improvements you feel confident about go ahead
   and do, pretty much always. You don't have to ask me."** Not covered: new looks, new wording beyond
-  fixing errors, new features, money, deleting/migrating real data. The 5 Waiting decisions are NOT
-  authorized until he answers (or 7 days pass, then defaults stand).
+  fixing errors, new features, money, deleting/migrating real data.
+- **2026-11-10: "Build those now"** — the 5 Waiting defaults: BUILT on branch defaults-1110 (Status).
 - **2026-10-17 in-depth audit: DONE**, and Tim's two follow-up answers (row jump, comment purge)
   are BUILT and live (Status).
 - Every authorization through 2026-09-28 is DONE and live (sign-in fixes 49fb4da, overhaul 0668e46,

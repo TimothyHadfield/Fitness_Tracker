@@ -341,6 +341,45 @@ await denied(setDoc(graph(asAlex, TIM), { connections: [{ uid: ALEX }] }),
   'and nobody can write themselves into it');
 await allowed(getDoc(graph(asTim, TIM)), 'the owner reads their own graph');
 
+/* 🆕 2026-11-10 (Waiting fb): the graph's SHAPE. Every shape store.js writes
+ * today, and the older ones already stored, must still pass; junk must not. */
+console.log('\n--- The graph is shape-checked (fb, 2026-11-10) ---\n');
+await allowed(setDoc(graph(asTim, TIM), { connections: [] }),
+  'an empty graph (normalizeSocialGraph() of a missing document)');
+await allowed(setDoc(graph(asTim, TIM), {
+  connections: [{ uid: ALEX, name: 'Alex', since: '2026-09-01' }],
+  pending: [{ uid: SAM, name: 'Sam', at: '2026-11-01' }],
+}), 'normalizeGraph() output: connections + pending (request / accept paths)');
+await allowed(setDoc(graph(asTim, TIM), { connections: [{ uid: ALEX, name: 'Alex', since: '2026-09-01' }], pending: [] }),
+  'pending emptied after an accept');
+await allowed(setDoc(graph(asTim, TIM), {
+  connections: [{ uid: ALEX, name: 'Friend', tier: 'full', since: '2026-08-20' }, { uid: SAM, name: 'Sam', tier: 'light' }],
+}), 'a legacy pre-2026-09-03 graph written back as stored (rows with `tier`, no pending)');
+await allowed(setDoc(graph(asTim, TIM), {
+  connections: [{ uid: ALEX, name: 'Alex', tier: 'mid', since: '2026-08-20' }, { uid: 'new-uid', name: 'New', since: '2026-11-10' }],
+  pending: [{ uid: SAM, name: 'Sam', at: '2026-08-30' }],
+}), 'a stored graph with an added connection (addConnection keeps old rows as they are)');
+await allowed(setDoc(graph(asTim, TIM), {
+  connections: Array.from({ length: 600 }, (_, i) => ({ uid: 'u' + i, name: 'Person ' + i, since: '2026-10-01' })),
+}), 'a graph past the 500-viewer cap (the app has no graph cap of its own)');
+await denied(setDoc(graph(asTim, TIM), { connections: [], junk: 'x'.repeat(1000) }), 'an unknown top-level key');
+await denied(setDoc(graph(asTim, TIM), { connections: 'everyone' }), 'connections that is not a list');
+await denied(setDoc(graph(asTim, TIM), { pending: [] }), 'a graph with no connections');
+await denied(setDoc(graph(asTim, TIM), { connections: [], pending: { a: 1 } }), 'pending that is not a list');
+await denied(setDoc(graph(asTim, TIM), { connections: Array.from({ length: 2001 }, (_, i) => 'u' + i) }),
+  'a runaway list (over 2000)');
+await denied(setDoc(doc(asTim, 'users', TIM, 'social', 'spam'), { connections: [] }),
+  'any document but `graph`');
+await allowed(updateDoc(graph(asTim, TIM), { pending: [{ uid: SAM, name: 'Sam', at: '2026-11-10' }] }),
+  'a partial update that keeps the shape');
+await denied(updateDoc(graph(asTim, TIM), { extra: true }), 'an update that adds a stray key');
+await env.withSecurityRulesDisabled(async (ctx) => {
+  await setDoc(doc(ctx.firestore(), 'users', TIM, 'social', 'old-thing'), { x: 1 });
+});
+await allowed(deleteDoc(doc(asTim, 'users', TIM, 'social', 'old-thing')),
+  'the owner can still delete anything here (the account purge)');
+await allowed(setDoc(graph(asTim, TIM), { connections: [{ uid: ALEX }] }), '(restore the seed graph)');
+
 console.log('\n--- Invites: get yes, list no ---\n');
 
 await allowed(getDoc(invite(asStranger, TIM, 'open-token')),

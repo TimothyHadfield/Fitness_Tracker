@@ -154,6 +154,8 @@ const wantRemote = () => BACKEND === 'firebase' || (BACKEND === 'auto' && IS_CON
 let activePromise = null;
 let remoteImpl = null;
 let remoteFailure = null;
+/** Tests only: stand in for the cloud backend (tests/defaults-1110, sign-out). */
+export function __setRemoteForTest(impl) { remoteImpl = impl; }
 
 async function active() {
   if (activePromise) return activePromise;
@@ -3185,7 +3187,13 @@ export const auth = {
   async signOut() {
     forgetLastAccount();
     clearReadCache();
-    return requireRemote().signOut();
+    const out = await requireRemote().signOut();
+    // 🆕 2026-11-10 (Waiting si-a, default built): the unfinished workout's
+    // draft goes too. On a shared phone the next person must not open the
+    // runner on someone else's sets. After the sign-out, so a failed one keeps
+    // it. Imported lazily: session-draft.js imports this module.
+    try { (await import('./session-draft.js')).clearDraft(); } catch (_) { /* nothing to clear */ }
+    return out;
   },
   async changePassword(currentPassword, newPassword) {
     return requireRemote().changePassword(currentPassword, newPassword);

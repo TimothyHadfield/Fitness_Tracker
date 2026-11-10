@@ -294,8 +294,31 @@ service cloud.firestore {
     }
 
     // Who the owner is connected to. Owner-only in BOTH directions.
+    //
+    // 🆕 2026-11-10 (Waiting fb, default built): A SHAPE CHECK ON WRITES. The
+    // app writes exactly one document here, `graph` (firebase-backend.js
+    // writeGraph), as `{connections: [...]}` plus, since 2026-08-29,
+    // `pending: [...]`. Every write path in store.js passes either the stored
+    // document back with `connections` filtered/appended (so older rows keep a
+    // legacy `tier`) or normalizeGraph()'s `{connections, pending}`. Rules
+    // cannot look inside list items, so the check is: that one id, those two
+    // keys, both lists, each capped well above anything real (the app has no
+    // cap of its own; viewers stop at 500). Read and delete are unchanged —
+    // the account purge deletes whatever is here.
+    function validGraph(doc) {
+      return doc == 'graph'
+          && request.resource.data.keys().hasOnly(['connections', 'pending'])
+          && 'connections' in request.resource.data
+          && request.resource.data.connections is list
+          && request.resource.data.connections.size() <= 2000
+          && (!('pending' in request.resource.data)
+              || (request.resource.data.pending is list
+                  && request.resource.data.pending.size() <= 2000));
+    }
+
     match /users/{userId}/social/{doc} {
-      allow read, write: if isOwner(userId);
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validGraph(doc);
     }
 
     // Invite links. There is no user directory in v1, deliberately: a
