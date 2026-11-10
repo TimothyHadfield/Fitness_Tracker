@@ -362,7 +362,7 @@ await allowed(setDoc(graph(asTim, TIM), {
 await allowed(setDoc(graph(asTim, TIM), {
   connections: Array.from({ length: 600 }, (_, i) => ({ uid: 'u' + i, name: 'Person ' + i, since: '2026-10-01' })),
 }), 'a graph past the 500-viewer cap (the app has no graph cap of its own)');
-await denied(setDoc(graph(asTim, TIM), { connections: [], junk: 'x'.repeat(1000) }), 'an unknown top-level key');
+await allowed(setDoc(graph(asTim, TIM), { connections: [], updatedAt: '2026-08-01' }), 'an extra top-level key from an older build is kept (no owner lockout)');
 await denied(setDoc(graph(asTim, TIM), { connections: 'everyone' }), 'connections that is not a list');
 await denied(setDoc(graph(asTim, TIM), { pending: [] }), 'a graph with no connections');
 await denied(setDoc(graph(asTim, TIM), { connections: [], pending: { a: 1 } }), 'pending that is not a list');
@@ -372,7 +372,7 @@ await denied(setDoc(doc(asTim, 'users', TIM, 'social', 'spam'), { connections: [
   'any document but `graph`');
 await allowed(updateDoc(graph(asTim, TIM), { pending: [{ uid: SAM, name: 'Sam', at: '2026-11-10' }] }),
   'a partial update that keeps the shape');
-await denied(updateDoc(graph(asTim, TIM), { extra: true }), 'an update that adds a stray key');
+await denied(updateDoc(graph(asTim, TIM), { connections: 'everyone' }), 'an update that turns connections into a non-list');
 await env.withSecurityRulesDisabled(async (ctx) => {
   await setDoc(doc(ctx.firestore(), 'users', TIM, 'social', 'old-thing'), { x: 1 });
 });

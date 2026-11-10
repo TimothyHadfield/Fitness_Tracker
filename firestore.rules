@@ -306,8 +306,10 @@ service cloud.firestore {
     // cap of its own; viewers stop at 500). Read and delete are unchanged —
     // the account purge deletes whatever is here.
     function validGraph(doc) {
+      // (manager 2026-11-10: no keys().hasOnly — a stored graph carrying any
+      // key the code no longer writes would lock its owner out of every
+      // friend change; the size caps are what limit spam.)
       return doc == 'graph'
-          && request.resource.data.keys().hasOnly(['connections', 'pending'])
           && 'connections' in request.resource.data
           && request.resource.data.connections is list
           && request.resource.data.connections.size() <= 2000
